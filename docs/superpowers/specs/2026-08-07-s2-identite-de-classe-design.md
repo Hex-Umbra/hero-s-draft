@@ -1,7 +1,7 @@
 # S2 — Identité de classe — Conception
 
-Date : 2026-08-07 · **Révisée le 2026-09-16**
-Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D non implémentés ; chantier frère P-49 implémenté (branche `feat/p49-passifs-partages`), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
+Date : 2026-08-07 · **Révisée le 2026-09-16 et le 2026-09-17**
+Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D non implémentés, **lot B reconçu le 2026-09-17** (§0.3) ; chantier frère P-49 implémenté (fusionné dans `main`, PR #39), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
 
 > [!IMPORTANT]
 > **Révision du 2026-09-16 — lire le §0 avant tout le reste.** La conception du 2026-08-07 a été
@@ -12,6 +12,10 @@ Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D 
 > La revue du plan du lot A, le même jour, a ajouté la décision D8 et la dépendance de P-49 au lot A.
 > Toute référence `fichier:ligne` de ce document a été **re-mesurée le 2026-09-16**.
 > La version antérieure reste lisible dans l'historique git.
+>
+> **Révision du 2026-09-17 — la Puissance.** Les trois puissances du lot A sont remplacées, au lot B, par
+> une **Puissance unique que la classe oriente** : lire le §0.3 avant les §6 et §7. Les références des
+> sections reconçues ont été mesurées le 2026-09-17 sur `56be78d`.
 
 Chantier ROADMAP : **P-41**, Tier B (`docs/ROADMAP.md` §4) — lot S2 du programme **P-40 → P-44**
 Sources amont :
@@ -24,7 +28,7 @@ Sources amont :
 >
 > **S2 en est le lot racine**, au sens technique et non par ordre de préférence : ses décisions
 > déterminent la composition des pools de S3. Une seule règle de stat suffit à le montrer. Si le
-> Berserker **convertit** l'armure en Force, `iron_wall` et `defend_basic` restent dans son pool —
+> Berserker **convertit** l'armure en Puissance, `iron_wall` et `defend_basic` restent dans son pool —
 > elles y lisent simplement autrement. S'il la **bloque**, ces deux cartes doivent en être retirées,
 > sous peine qu'il drafte des cartes qui ne font littéralement rien. On ne peut donc pas écrire les
 > pools de S3 avant d'avoir tranché ici. La réciproque ne tient pas : les neuf passifs se conçoivent
@@ -50,6 +54,8 @@ Sources amont :
 | D6 | Méta-progression | **Pour plus tard** (P-13), mais **préparée ici** et documentée dans la ROADMAP | §10 |
 | D7 | Maîtrise d'Armure | **À refondre en bonus de passif**, pour rester cohérente avec les neuf passifs : stat globale ou stat par passif, **à trancher au brainstorm de P-49**. Le lot A n'y touche pas. **Tranchée le 2026-09-16** : une seule stat, *Maîtrise*, dont chaque passif déclare l'effet — [spec de P-49](2026-09-16-p49-passifs-partages-design.md), N1 | §5.4 |
 | D8 | Sauvegardes et versions publiées | **Nouvelle clé `run_save`**, relue en repli sur `run_save_v1` ; une sauvegarde écrite par un build plus récent n'est **jamais effacée** | §4.3 |
+| D9 | Stats de puissance *(2026-09-17)* | **Une seule Puissance, que la classe oriente** : la classe déclare ce que sa Puissance renforce, et plus aucun gain de puissance n'est converti. Remplace, au lot B, la scission en trois puissances du lot A. La Force devient la Puissance temporaire | §7.1 |
+| D10 | Nom de la stat *(2026-09-17)* | **Puissance** en français, **Might** en anglais, `might` dans le code | §7.1, §7.4 |
 
 ### 0.2. Ce que la re-vérification a changé
 
@@ -70,6 +76,28 @@ Sources amont :
 | *Revue du plan du lot A* : toutes les versions web partagent le même stockage, et les builds publiés effacent toute version autre que 1 | La clé change une fois, et aucun build n'efface plus une sauvegarde plus récente (§4.3, D8) |
 | *Revue du plan du lot A* : l'étape v2 → v3 de P-49 s'ajoute à la chaîne du lot A | P-49 dépend du lot A (§2) |
 | *Revue du plan du lot A* : `RunState.effectiveAttaque` n'alimente qu'un champ jamais lu, `HeroCard.bonusAttack` | La chaîne morte est supprimée au lot A au lieu d'être renommée (§4.2) |
+
+### 0.3. Révision du 2026-09-17 — la Puissance
+
+Au moment d'écrire le plan du lot B, ses deux questions ouvertes — la conversion du Mage porte-t-elle sur
+la Force (§4.2), et sur le retrait d'une relique (§7.1) ? — ont révélé une même cause : les règles de
+classe visaient la puissance **au moment du gain**. Tout ce qui défait un gain devait alors refaire la
+conversion, et tout ce qui n'est pas un gain y échappait. Le propriétaire a retenu, contre deux autres
+approches (§11), une **Puissance unique que la classe oriente au moment de la lecture** (D9), nommée
+*Puissance* (D10) : le mécanisme de la Maîtrise de P-49, appliqué à la classe. Il a confirmé le même jour
+les identités qui en découlent — le Paladin polyvalent, le Mage qui frappe par ses Compétences et ses
+altérations, le Berserker par ses seules Attaques.
+
+| Section | Ce qui change |
+|:---|:---|
+| §2, §12 | Le lot B se livre en deux parties : la Puissance à comportement identique, puis l'identité de classe |
+| §3 | La scission en trois puissances est remplacée ; `statRules` ne convertit plus qu'une ressource |
+| §4.1, §4.2 | Notes : ce que le lot A a livré reste, la scission est remplacée au lot B |
+| §6.2, §6.3 | Les passifs gagnent de la Puissance ; les classes orientent au lieu de bloquer ou de convertir |
+| §7 | Reconçue : orientation de la Puissance, conversion d'armure, textes joueur, sauvegarde, deux parties |
+| §8.2, §8.3 | *Aiguisage* n'est plus scindée ; l'écran de sélection montre ce que renforce la Puissance |
+| §9 | Le tutoriel et la console lisent l'orientation |
+| §11 | Neuf alternatives ajoutées |
 
 ---
 
@@ -168,8 +196,8 @@ combat que voit un joueur diverge silencieusement du jeu réel.
 |:---|:---|:---|
 | **A** | Point de passage unique des gains, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé | §4 |
 | **P-49** | Passifs partagés : modèle, éligibilité par classe, point d'accès unique, Maîtrise — [spec de P-49](2026-09-16-p49-passifs-partages-design.md) | §5 |
-| **B** | `statRules`, les neuf passifs, stats de départ différenciées | §6, §7 |
-| **C** | Partie 1 : récompenses de niveau data-driven. Partie 2 : nouvelles récompenses et écran de sélection | §8 |
+| **B** | Partie 1 : la Puissance (`might`), à comportement identique. Partie 2 : l'orientation de la Puissance par classe, la conversion d'armure du Berserker, les neuf passifs, stats de départ différenciées | §6, §7 |
+| **C** | Partie 1 : récompenses de niveau data-driven. Partie 2 : filtre d'*Affinité* et écran de sélection | §8 |
 | **D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | §9 |
 
 L'ordre des lots — qui dépend de quoi, ce qui est livré — est tenu dans
@@ -180,10 +208,13 @@ donne les **causes** :
   qui s'ajoute à la chaîne que pose A (§4.3). Livré avant A, P-49 trouverait un `SaveService` qui efface
   toute version autre que 1. *(P11 abandonnée le 2026-09-16 ; P-49 retire la règle de Maîtrise que A a
   posée dans `StatGains` — la dépendance demeure, et A est fusionné.)*
-- **A avant B.** Les stats de départ de B donnent de l'`armorMastery` au Paladin : le passage unique doit
-  exister avant, pour que la règle d'application de la maîtrise soit posée en un seul point. Et deux des
-  neuf passifs de B (M1, M2) ont pour axe de croissance une puissance que crée A.
+- **A avant B.** La conversion d'armure du Berserker ne peut s'appliquer qu'au passage unique des gains,
+  et la partie 1 de B réunit en une seule Puissance les trois que A a posées, lues par la règle
+  d'attribution de A (`PowerRules`).
 - **P-49 avant B.** Les neuf passifs ont besoin d'un modèle où vivre.
+- **Dans B, la partie 1 avant la partie 2.** La partie 1 renomme et réunit sans rien changer au jeu : la
+  suite existante suffit à la vérifier. La partie 2 change le comportement des trois classes sur une base
+  déjà renommée (§7.6).
 - **La partie 1 de C est indépendante** : elle peut avancer en parallèle de A.
 - **D en dernier**, parce qu'il expose et enseigne les mécanismes livrés par tous les autres.
 
@@ -198,10 +229,11 @@ donne les **causes** :
 
 ## 3. Ce que P-41 livre
 
-1. **Un mécanisme de règles de stat par classe**, piloté en JSON, réutilisable pour toute classe et
-   toute stat future (§7).
+1. **Une Puissance unique que chaque classe oriente**, et un mécanisme de règles de stat par classe,
+   pilotés en JSON, réutilisables pour toute classe future (§7.1).
 2. **La scission de `attaque` en trois puissances** — `attackPower`, `skillPower`, `alterationPower` —
-   à comportement identique au jeu actuel (§4.2).
+   à comportement identique au jeu actuel (§4.2), livrée au lot A puis **remplacée au lot B par la
+   Puissance** (D9).
 3. **Neuf passifs sélectionnables**, sur le modèle partagé de P-49 (§5, §6).
 4. **Des stats de départ réellement différenciées**, et un écran de sélection qui cesse de mentir (§7.3, §8.3).
 5. **Des récompenses de niveau data-driven**, conditionnées par la classe et par le passif actif (§8).
@@ -268,6 +300,9 @@ C'est pourtant le seul du jeu : sans lui dans le passage unique, les règles de 
 puissance — celle du Mage, `attackPower → alterationPower` — ne s'appliqueraient à rien. Et il ne sert
 pas qu'à la récompense de niveau : deux reliques, leur retrait et deux événements l'empruntent aussi
 (tableau ci-dessus), donc la même règle (§7.1).
+*(Depuis D9, aucune règle de classe ne vise plus la puissance au gain : la classe l'oriente à la lecture,
+et le retrait d'une relique n'a plus rien à reconvertir — §7.1. Le passage unique garde tout son rôle
+pour l'armure.)*
 
 Hors du périmètre du passage unique, et volontairement : les autres montées permanentes portées par
 `applyHeroStatModifier` (`player_stats_manager.dart:45-53` — `maxPv`, `maxMana` et le mana courant qui
@@ -312,6 +347,12 @@ s'applique au paramètre du passif avant son calcul, et la règle quitte `StatGa
 voulue, de la remontée du mana courant qui suit une hausse de `maxMana` (ci-dessus).
 
 ### 4.2. La scission des stats de puissance
+
+> [!NOTE]
+> **Remplacée au lot B par la décision D9 (2026-09-17).** La scission est livrée et fusionnée ; le lot B
+> réunit les trois puissances en une seule, `might`, que la classe oriente (§7.1). La règle d'attribution
+> par type de carte et par cible, décrite ci-dessous, reste celle qu'applique l'orientation. Le texte est
+> conservé comme conception du lot A.
 
 #### Pourquoi maintenant, et seulement maintenant
 
@@ -362,6 +403,10 @@ dessus.
 >
 > La première tient la promesse d'origine mais étend `statRules` aux statuts. La seconde est plus
 > simple mais perd le tri automatique des pools pour S3.
+>
+> **Tranchée le 2026-09-17 par D9, sans l'une ni l'autre** : la Force devient la Puissance temporaire, que
+> la classe oriente comme la Puissance permanente. Le Mage ne tire plus rien de `demon_form` sur ses
+> cartes Attaque, et aucune règle ne s'étend aux statuts (§7.1).
 
 **Les runes d'altération scalent aussi.** Les runes de forge `burning`, `freezing` et `shocking` ajoutent
 valeur et durée à `burn`, `freeze` et `shock`. Elles sont résolues **en ligne**, dans
@@ -589,24 +634,30 @@ survivante en PV. Zéro carte de soin requise.
 vérifie alors **pour chaque classe déclarée** : un passif qui produit de l'armure ne peut pas déclarer
 une classe qui la bloque.
 
+*(Depuis D9, la Puissance n'est jamais interdite, seulement orientée, et le lot B ne livre aucun mode
+`block` : R3 ne contraint aujourd'hui aucune paire. Elle reste la règle du jour où un blocage sera
+ajouté — §7.1.)*
+
 ### 6.3. Les neuf passifs
 
 Aucune valeur chiffrée : elles relèvent de l'équilibrage, pas de la conception. **La colonne
-« Croissance » de P1, P3 et M3 (`armorMastery`) dépend de la question ouverte §5.4.** *(Tranchée : chaque
-passif déclare ce que la Maîtrise augmente, par son bloc `mastery` — la colonne se relit ainsi au lot B.)* Les neuf sont conçus
+« Croissance » suit les décisions postérieures à la conception d'origine** : la Maîtrise, dont chaque
+passif déclare l'effet par son bloc `mastery` (spec de P-49, N1), remplace `armorMastery` ; la Puissance
+remplace les trois puissances (D9). Les neuf sont conçus
 **un par classe** (`"classes"` à un élément) ; leur partage éventuel est une décision de contenu
-ultérieure, que le modèle de P-49 rend possible sans changement de code.
+ultérieure, que le modèle de P-49 rend possible sans changement de code. La Puissance le facilite : un
+passif qui en donne sert toute classe, puisque chacune l'oriente (§7.1).
 
-#### Paladin — aucune règle de stat · `armorMastery` de départ > 0
+#### Paladin — Puissance : `attack`, `skill`, `alteration` · aucune règle de stat · Maîtrise de départ > 0
 
 | | Passif | Trigger | Effet | Croissance |
 |:---|:---|:---|:---|:---|
-| P1 | **Régénération d'Armure** *(existant, `regen_armor`)* | `endOfTurn` | Gain d'armure | `armorMastery` |
-| P2 | **Ferveur** | `onDamageTaken` | L'armure qui absorbe des dégâts octroie de la Force, à durée courte | `attackPower` |
-| P3 | **Bénédiction** | `startOfTurn`, **avant le reset de §1.1** | L'armure survivante devient des PV | `armorMastery` |
+| P1 | **Régénération d'Armure** *(existant, `regen_armor`)* | `endOfTurn` | Gain d'armure | Maîtrise |
+| P2 | **Ferveur** | `onDamageTaken` | L'armure qui absorbe des dégâts octroie de la Puissance temporaire, à durée courte | Puissance |
+| P3 | **Bénédiction** | `startOfTurn`, **avant le reset de §1.1** | L'armure survivante devient des PV | Maîtrise |
 
-Seule classe à conserver l'accès aux trois puissances : c'est son identité de généraliste, et le repère
-du joueur qui découvre.
+Seule classe dont la Puissance renforce tout : c'est son identité de généraliste, et le repère du
+joueur qui découvre.
 
 *Ferveur* referme une boucle propre : chez le Paladin, **encaisser devient une ressource offensive**. Il
 tape parce qu'il tient, là où le Berserker tape parce qu'il meurt — les deux classes lisent le même
@@ -616,15 +667,15 @@ verbe à l'envers l'une de l'autre.
 sinon il n'a rien à convertir. C'est le seul passif du jeu dont l'ordre d'exécution est contraignant ;
 il doit être couvert par un test dédié.
 
-#### Berserker — `armure → strength(1)` · `skillPower: block` · `critChance` de départ > 0
+#### Berserker — Puissance : `attack` · armure convertie en Puissance temporaire (1 tour) · `critChance` de départ > 0
 
 | | Passif | Trigger | Effet | Croissance |
 |:---|:---|:---|:---|:---|
-| B1 | **Rage** | `startOfTurn` | Force proportionnelle aux PV manquants | `attackPower` |
+| B1 | **Rage** | `startOfTurn` | Puissance temporaire proportionnelle aux PV manquants | Puissance |
 | B2 | **Soif de Sang** | `onAttackPlayed` | Vol de vie, croissant à mesure que les PV baissent | `critChance` |
-| B3 | **Frénésie** | `onEnemyKilled` | Force et pioche à chaque ennemi abattu | `attackPower` |
+| B3 | **Frénésie** | `onEnemyKilled` | Puissance temporaire et pioche à chaque ennemi abattu | Puissance |
 
-*Rage* est la formule de `berserker_armor` redirigée vers la Force. Elle corrige au passage le défaut
+*Rage* est la formule de `berserker_armor` redirigée vers la Puissance temporaire. Elle corrige au passage le défaut
 relevé au diagnostic (§I.3.2) : le passif ne sera plus muet à pleine vie, un plancher étant possible.
 
 **_Soif de Sang_ est le passif le plus cher des neuf** — l'inverse de ce que laissait croire la conception
@@ -632,21 +683,21 @@ du 2026-08-07. `lifesteal` est orphelin trois fois (§1.2) : B2 doit créer la *
 **hook** de soin après résolution des dégâts, et brancher son axe de croissance. `DamageEffectStrategy`
 dispose déjà des stats du héros ; le hook s'y pose.
 
-**Le blocage de `skillPower` se paie en axes de croissance.** Le Berserker n'a que `attackPower` et
-`critChance` ; ses trois passifs se distinguent par le *pattern* — attrition, soutien, boule de neige — et
-non par la stat. Conforme à R2, mais c'est le coût réel du blocage, nommé ici plutôt que découvert au
-playtest.
+**Une Puissance tournée vers les seules Attaques se paie en axes de croissance.** Le Berserker n'a que
+la Puissance et `critChance` ; ses trois passifs se distinguent par le *pattern* — attrition, soutien,
+boule de neige — et non par la stat. Conforme à R2, mais c'est le coût réel de l'orientation, nommé ici
+plutôt que découvert au playtest.
 
-Le blocage est **souple** : les cartes `skill` restent jouables et leurs effets non offensifs (pioche,
-mana, armure convertie) fonctionnent normalement. Seul leur scaling de dégâts est nul.
+L'orientation est **souple** : les cartes `skill` restent jouables et leurs effets non offensifs (pioche,
+mana, armure convertie) fonctionnent normalement. Seuls leurs dégâts ne profitent pas de la Puissance.
 
-#### Mage — `attackPower → alterationPower`
+#### Mage — Puissance : `skill`, `alteration`
 
 | | Passif | Trigger | Effet | Croissance |
 |:---|:---|:---|:---|:---|
-| M1 | **Flux de Mana** | `onSkillPlayed`, compteur | Mana supplémentaire pour le tour | `skillPower` |
-| M2 | **Marque du Mage** | 1ʳᵉ attaque du tour | La cible devient `vulnerable` | `alterationPower` |
-| M3 | **Canalisation** | `endOfTurn` | Le mana non dépensé devient de l'armure | `armorMastery` |
+| M1 | **Flux de Mana** | `onSkillPlayed`, compteur | Mana supplémentaire pour le tour | Puissance |
+| M2 | **Marque du Mage** | 1ʳᵉ attaque du tour | La cible devient `vulnerable` | Puissance |
+| M3 | **Canalisation** | `endOfTurn` | Le mana non dépensé devient de l'armure | Maîtrise |
 
 **M1 et M3 sont activement opposés** : l'un récompense de vider sa main, l'autre de garder du mana. Le même
 deck ne peut pas viser les deux. C'est ce qui fait du choix de passif une vraie décision.
@@ -677,73 +728,190 @@ l'utilisent encore (`mage_amulet`, `pen_nib`).
 
 ---
 
-## 7. Lot B — `statRules` et stats de départ
+## 7. Lot B — La Puissance, `statRules` et stats de départ
 
-### 7.1. La forme de la donnée
+> [!NOTE]
+> **Reconçue le 2026-09-17** (D9, D10, §0.3). La conception du 2026-08-07 convertissait les gains de
+> puissance au moment du gain : le Mage recevait de l'`alterationPower` à la place de l'`attackPower`.
+> Cette section la remplace ; la version antérieure reste lisible dans l'historique git. Références
+> mesurées le 2026-09-17 sur `56be78d`.
 
-Une **liste de règles** dans `assets/data/classes/<id>/class.json`. Le blocage dur et la conversion sont
-**deux valeurs de la même donnée**, décidées classe par classe :
+### 7.1. La Puissance et `statRules`
+
+#### Le principe : la classe oriente la Puissance, elle ne convertit pas ses gains
+
+L'identité d'une classe peut s'appliquer à deux moments : au **gain** d'une stat, ou à sa **lecture**,
+quand une carte se résout. Les deux questions ouvertes de la révision du 2026-09-16 venaient toutes deux
+du premier choix :
+
+| Le Mage… | Au gain *(conception du 2026-08-07)* | À la lecture *(D9)* |
+|:---|:---|:---|
+| prend *Pierre à aiguiser* | +1 `alterationPower` est écrit | +1 Puissance est écrite ; sa classe dit ce qu'elle renforce |
+| la sacrifie au Sanctuaire des reliques (`exchangeRelics`, `player_stats_manager.dart:404`) | Le retrait est un gain négatif (`removeRelicEffect`, `:382`) : il doit repasser par la même conversion, faute de quoi le Mage garde le bonus et sa puissance d'attaque tombe à −1 | −1 Puissance : retour exact à l'état de départ |
+| joue *Forme Démoniaque* (+2 Force pendant 4 tours) | La Force est un statut, pas un gain : elle échappe à la conversion et renforce ses cartes Attaque | +2 Puissance temporaire, orientée comme la permanente |
+
+À la lecture, **l'inverse d'un gain est exact par construction**, et un bonus temporaire suit la même
+orientation que la stat permanente. Aucune règle n'est à se rappeler au prochain mécanisme qui retire ou
+prête de la Puissance, méta-progression comprise.
+
+C'est le mécanisme de la Maîtrise de P-49, appliqué à la classe : une seule stat, dont la donnée déclare
+l'effet — là le passif, ici la classe.
+
+#### La stat `might`
+
+| Aujourd'hui | Au lot B |
+|:---|:---|
+| `EntityStats.attackPower`, `skillPower`, `alterationPower` (`entity_stats.dart:12-14`) | `EntityStats.might`, seule : `skillPower` et `alterationPower` disparaissent |
+| `effectiveAttackPower`, `attackPower` plus les statuts `strength` (`entity_stats.dart:179`) | `effectiveMight`, `might` plus les statuts `might` |
+| Statut `strength`, nommé « Attaque » ou « Force (Relique) » selon le site qui le crée | Statut `might`, la **Puissance temporaire** |
+| Statut `strength_regen`, « Éveil d'Attaque » (`effect_resolver.dart:50`) | `might_regen`, « Éveil de Puissance » |
+| `GainResource.attackPower`, `skillPower`, `alterationPower` (`stat_gains.dart:4`) | `GainResource.might` |
+| `applyHeroStatModifier(attackAcc:)` (`draft_screen.dart:648`) et `DraftChoice.atkBoost` (`level_up_reward_service.dart:22`) | `mightAcc:` et `mightBoost` |
+| `effectType` `gain_strength`, `charge_strength_turn`, `charge_strength_combat` des reliques et des événements | `gain_might`, `charge_might_turn`, `charge_might_combat` |
+| `statusId` `strength` des cartes `demon_form` et `rage_form` | `might` |
+| `playerAttaque`, entrée du budget de rencontre (`game_screen.dart:259` → `encounter_system.dart:98`) | `playerMight` |
+
+**Les ennemis ne changent que de nom.** `EntityStats` leur est partagé (§1) : leur `might` est leur
+puissance d'attaque (`combat_controller.dart:155`, `enemy_instance.dart:21-26`), et leur intention
+« Buff » leur donne de la Puissance temporaire (`turn_phase_manager.dart:140-148`). Ils ne jouent aucune
+carte : l'orientation ne les concerne pas.
+
+**Code mort supprimé plutôt que renommé** : `applyAttackBuff` (`player_stats_manager.dart:439`, façade
+`run_controller.dart:430`) n'a aucun appelant — comme la chaîne `bonusAttack` au lot A.
+
+#### L'orientation : `mightTargets`
+
+La classe déclare dans son `class.json` ce que sa Puissance renforce :
+
+| Cible | Ce que la Puissance renforce |
+|:---|:---|
+| `attack` | Les dégâts d'un effet `damage` porté par une carte Attaque |
+| `skill` | Les dégâts d'un effet `damage` porté par une carte Compétence |
+| `alteration` | L'intensité d'un statut posé **sur un ennemi**, par une carte ou par l'une de ses runes — jamais sa durée |
+
+La règle d'attribution du lot A (§4.2) est conservée telle quelle : une carte Pouvoir ou Statut n'est
+jamais renforcée, un statut posé sur soi non plus — ce qui empêche la Puissance temporaire de se nourrir
+d'elle-même.
+
+- **Obligatoire et non vide.** `HeroData.fromJson` lève `FormatException` sur une clé absente, une liste
+  vide ou une cible inconnue. Une classe dont la Puissance ne renforcerait rien est une faute de donnée,
+  et une valeur par défaut ferait d'une clé oubliée une classe mal réglée sans que rien ne le dise.
+- **`MightTarget`** est un enum sans dépendance, rangé dans `lib/models/might_target.dart` et importé par
+  `EntityStats` et `HeroData`.
+- **L'orientation est copiée dans les stats du héros**, champ `EntityStats.mightTargets`, là où ces stats
+  naissent de la classe : `RunController.startNewRun` (`run_controller.dart:239`) et
+  `TutorialMockState.baseStatsForHero` (`tutorial_engine.dart:55`). Par défaut, `{attack}` : c'est la
+  valeur des ennemis et des stats de repli (`run_controller.dart:208`, `tutorial_engine.dart:25`, `:46`).
+  Elle est sérialisée avec les stats.
+
+**Pourquoi dans les stats, et non lue sur la classe à chaque résolution.** Les huit appels de
+`PowerRules`, répartis dans cinq fichiers, ne tiennent que les stats du héros : côté Flame par
+`game.heroCard` (`card_component.dart:344`, `card_text_renderer.dart:95`, `:357`), côté jeu par
+`RunState` (`strategies.dart:34`, `:46`, `:148`, `effect_resolver.dart:182`), et dans le tutoriel
+(`tutorial_engine.dart:347`). Copiée dans les stats, l'orientation les atteint tous **sans qu'un seul
+appel change de forme**. La règle ne vit pas pour autant sur `EntityStats` (§11) : le modèle porte un
+ensemble de valeurs, `PowerRules` leur correspondance avec `CardType` et `CardTarget`.
+
+```dart
+// Forme indicative — lib/game/systems/power_rules.dart
+int damageBonusFor(CardType type) => switch (type) {
+      CardType.attack => _mightFor(MightTarget.attack),
+      CardType.skill => _mightFor(MightTarget.skill),
+      CardType.power || CardType.status => 0,
+    };
+
+int statusBonusFor(CardTarget target) => switch (target) {
+      CardTarget.singleEnemy || CardTarget.allEnemies => _mightFor(MightTarget.alteration),
+      CardTarget.self || CardTarget.none => 0,
+    };
+
+int _mightFor(MightTarget target) =>
+    mightTargets.contains(target) ? effectiveMight : 0;
+```
+
+**Une différence de lecture, voulue.** Au lot A, `skillPower` et `alterationPower` étaient lus sans
+statut. `effectiveMight` compte la Puissance temporaire pour toutes les cibles : c'est ce qui permet à un
+Mage sous *Forme Démoniaque* de renforcer ses altérations. Sans effet à la partie 1 (§7.6), où les deux
+valent 0 partout.
+
+**Un cumul à surveiller**, déjà relevé à la revue finale du lot A (`docs/ROADMAP.md` §4) : une carte qui
+pose une altération et sa rune d'altération reçoivent chacune le bonus. Il devient réel à la partie 2, dès
+qu'une classe oriente sa Puissance vers `alteration`.
+
+#### Les orientations des trois classes
+
+| Classe | `mightTargets` | Identité |
+|:---|:---|:---|
+| Paladin | `attack`, `skill`, `alteration` | Polyvalent : toutes ses cartes profitent de sa Puissance |
+| Berserker | `attack` | Frappe en direct, et seulement ainsi : ses Compétences n'en profitent pas |
+| Mage | `skill`, `alteration` | Frappe par ses Compétences et ses altérations : ses cartes Attaque n'en profitent pas |
+
+**Conséquence assumée, confirmée par le propriétaire le 2026-09-17.** Toutes les cartes de dégâts du jeu
+sont de type Attaque (§1), y compris *Projectile Magique*, la carte de classe du Mage, et les sorts neutres
+*Boule de Feu*, *Trait de Glace* et *Coup de Tonnerre*. Jusqu'à ce que P-42 écrive des Compétences
+offensives, la Puissance du Mage ne renforce donc aucun de ses dégâts : elle renforce l'intensité de ses
+brûlures, gels, poisons et chocs.
+
+**À surveiller à l'équilibrage, pas à la conception** : le Paladin tire parti de chaque point de Puissance
+sur tout son deck.
+
+#### Ce qui reste à `statRules` : convertir une ressource
+
+L'orientation règle la Puissance. Reste une règle qui ne peut s'appliquer qu'au gain, parce qu'elle porte
+sur une **ressource consommée** et non sur un bonus lu : l'armure du Berserker, remise à zéro chaque tour
+(§1.1).
 
 ```jsonc
 // Berserker
 "statRules": [
-  { "stat": "armure",     "mode": "convert", "to": "status:strength", "duration": 1 },
-  { "stat": "skillPower", "mode": "block" }
+  { "stat": "armor", "mode": "convert", "to": "status:might", "duration": 1 }
 ]
 
-// Mage
-"statRules": [
-  { "stat": "attackPower", "mode": "convert", "to": "alterationPower", "ratio": 1.0 }
-]
-
-// Paladin — aucune règle
+// Mage, Paladin — clé absente : aucune règle
 ```
 
-Modes retenus : `block` (le gain est annulé) et `convert` (le gain est redirigé). Le modèle est extensible —
-`cap`, `decay` — sans changement de forme.
-
-**Une liste, et non la table de la conception du 2026-08-07.** Le langage de chemins de l'éditeur de
-contenu (`lib/services/content_editor/field_path.dart`) sait désigner un élément de liste
-(`statRules[].mode`), pas une clé arbitraire d'une table. Sous forme de table, `statRules` ne pourrait pas
-être validé par l'éditeur sans étendre ce langage.
-
-**Compatible avec l'autorité du répertoire (ADR-086).** La source des classes n'injecte que `id`
-(`lib/services/game_data_service.dart:116`) : `statRules` n'est imposé par aucun répertoire, l'écrire dans
-le fichier est légal.
-
-**`HeroData` doit le lire.** Sans champ ni lecture dans `HeroData.fromJson`, la clé serait chargée et jetée
-en silence — le mode d'échec le plus coûteux à diagnostiquer.
-
-**Les règles s'appliquent dans la fonction pure du lot A** (§4.1). C'est ce qui les rend applicables au
-tutoriel sans recopie.
-
-**Toutes les sources passent par la règle.** Le seul site de gain de puissance ne sert pas qu'à la
-récompense de niveau : les reliques `whetstone` et `cursed_blade`, leur retrait et deux événements
-l'empruntent aussi (§4.1). La conversion du Mage s'y appliquera donc d'office. Reste à trancher au lot B :
-un retrait de relique, gain négatif de source `progression`, est-il converti comme l'a été le gain ?
+- **Vocabulaire.** `stat` : une ressource de `GainResource` autre que la Puissance, `armor` ou `mana` ;
+  `mode` : `convert` ; `to` : `status:might` au lot B.
+- **La Puissance n'est jamais une `stat` de `statRules`.** La convertir au gain rouvrirait exactement les
+  deux problèmes que l'orientation règle : `HeroData.fromJson` le refuse.
+- **`block` n'est pas livré.** Son seul usage prévu, les Compétences du Berserker, est devenu une
+  orientation : livré sans lecteur, ce serait du code mort. Il reste une extension possible, avec `cap` et
+  `decay`, sans changement de forme.
+- **Une liste, et non une table.** Le langage de chemins de l'éditeur de contenu
+  (`lib/services/content_editor/field_path.dart`) sait désigner un élément de liste (`statRules[].mode`),
+  pas une clé arbitraire d'une table.
+- **Compatible avec l'autorité du répertoire (ADR-086).** La source des classes n'injecte que `id`
+  (`lib/services/game_data_service.dart:116-117`) : écrire `statRules` ou `mightTargets` dans le fichier
+  est légal.
+- **`HeroData` doit les lire.** Sans champ ni lecture dans `HeroData.fromJson`, une clé serait chargée et
+  jetée en silence — le mode d'échec le plus coûteux à diagnostiquer.
+- **Les règles s'appliquent dans la fonction pure du lot A** (§4.1) : `StatGains.apply` les reçoit en
+  paramètre obligatoire, celles de la classe pour le héros et une liste vide pour un ennemi. Toute source
+  d'armure y passe : cartes, runes, passifs, reliques et statut `armor_regen`.
 
 ### 7.2. R5 — la règle qui protège l'économie
 
 > **Une conversion ne peut jamais transformer une ressource éphémère en ressource permanente.**
 
-L'armure est remise à zéro chaque tour (§1.1) ; `attackPower` est une stat de run permanente, ajoutée à
-chaque effet `damage`. Convertir l'armure en `attackPower` ferait gagner au Berserker de la puissance
-**définitive** à chaque `iron_wall` jouée (10 armure, 2 mana — carte neutre, donc présente dans tous les
-decks). Le jeu serait cassé au troisième combat.
+L'armure est remise à zéro chaque tour (§1.1) ; la Puissance est une stat de run permanente, ajoutée à
+chaque effet qu'elle renforce. Convertir l'armure en Puissance permanente ferait gagner au Berserker de la
+puissance **définitive** à chaque `iron_wall` jouée (10 armure, 2 mana — carte neutre, donc présente dans
+tous les decks). Le jeu serait cassé au troisième combat.
 
-La conversion vise donc le **statut** `strength`, qui porte une durée et se décrémente comme tout statut
-(`entity_stats.dart`, `tickStatuses`) : l'armure d'un tour devient de la Force d'un tour. La symétrie est
-exacte.
+La conversion vise donc la **Puissance temporaire**, le statut `might`, qui porte une durée et se
+décrémente comme tout statut (`entity_stats.dart`, `tickStatuses`) : l'armure d'un tour devient de la
+Puissance d'un tour. La symétrie est exacte.
 
-La même règle borne *Ferveur* (P2), dont le gain de Force est à durée courte et non permanent.
+La même règle borne *Ferveur* (P2), dont le gain de Puissance est temporaire. Elle explique aussi pourquoi
+un bonus temporaire reste un statut, au lieu d'être écrit dans la stat permanente le temps d'un effet (§11).
 
 ### 7.3. Stats de départ
 
 | Classe | Levier | Justification |
 |:---|:---|:---|
-| Paladin | `armorMastery` > 0 | Amplifie son propre passif à chaque fin de tour |
-| Berserker | `critChance` > 0 | Colle à « Orienté Dégâts » sans toucher aux puissances |
-| Mage | *(aucune stat)* | Son identité passe par `statRules` et ses trois passifs |
+| Paladin | `mastery` > 0 | Amplifie son passif, quel qu'il soit, par le bloc `mastery` que celui-ci déclare |
+| Berserker | `critChance` > 0 | Colle à « Orienté Dégâts » sans toucher à la Puissance |
+| Mage | *(aucune stat)* | Son identité passe par l'orientation de sa Puissance et par ses trois passifs |
 
 **`maxMana` reste à 3 pour les trois classes.** Les cartes coûtent 0 à 2 : un point de mana supplémentaire
 représente environ **+33 % d'actions par tour**, de loin le levier le plus explosif du jeu — et c'est
@@ -752,11 +920,120 @@ défaut dans le béton des classes.
 
 `luck` reste à 0 partout. Le champ attend un porteur — une classe orientée hasard — pas un rééquilibrage.
 
-**`critChance` est à ajouter à `HeroData`** ; `EntityStats` le porte déjà (`entity_stats.dart:17`).
-Aujourd'hui, aucune classe ne déclare ni `critChance` ni `armorMastery`.
+**`critChance` est à ajouter à `HeroData`** ; `EntityStats` le porte déjà (`entity_stats.dart:19`).
+Aujourd'hui, aucune classe ne déclare ni `critChance` ni `mastery`.
 
 **Conséquence pour le tutoriel :** un Berserker à `critChance` > 0 rend les dégâts aléatoires. Traité au
 lot D (§9.1).
+
+### 7.4. Textes joueur
+
+Un seul mot désormais : **Puissance**, **Might** en anglais. « Attaque » ne désigne plus que le type de
+carte et l'intention d'attaque d'un ennemi ; « Force » et « ATK » disparaissent.
+
+| Élément | Français | English |
+|:---|:---|:---|
+| Stat | Puissance | Might |
+| Statut `might` : `statusStrength` devient `statusMight` (`status_effects_panel.dart:83`) | `Puissance : +{value}` | `Might: +{value}` |
+| Statut `might_regen` : `statusMightRegen` | `Éveil de Puissance : +{value}` | `Might Awakening: +{value}` |
+| Effet de carte : `cardDescStatusMight` (`card_component.dart:396`, `card_text_renderer.dart:410`, `ui_card_helpers.dart:388`) | `Gagne {amount} Puissance pendant {duration} tours.` | `Gains {amount} Might for {duration} turns.` |
+| Effet de carte : `cardDescStatusMightRegen` | `Gagne {amount} Éveil de Puissance pendant {duration} tours.` | `Gains {amount} Might Awakening for {duration} turns.` |
+| Intention d'ennemi : `intentBuff` (`enemy_intents_panel.dart:134`, `model_extensions.dart:107`) | `Buff Puissance : +{value}` | `Buff Might: +{value}` |
+| Fiche d'un ennemi : `enemyStatsDesc` (`enemy_card.dart:205`) | `Santé : {hp}/{maxHp} PV.\nPuissance : {might}.\nArmure : {armor}.` | `Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.` |
+| *Aiguisage* : `draftChoiceSharpeningDesc` (`draft_choice_labels.dart:72`) | `+{amount} Puissance` | `+{amount} Might` |
+| Gain d'événement : `eventGainAttack` devient `eventGainMight` (`event_screen.dart:125`, `:259`) | `+{amount} Puissance` | `+{amount} Might` |
+| Badge de combat : `tooltipAttackTitle` devient `tooltipMightTitle` (`stat_badge.dart:519`) | `Puissance` | `Might` |
+| Sa description : `tooltipMightDesc`, **générée depuis `mightTargets`** | `Renforce {cibles}.` | `Strengthens {targets}.` |
+| Les cibles de cette description, dans cet ordre | `les dégâts de vos Attaques` · `les dégâts de vos Compétences` · `vos altérations` | `your Attack damage` · `your Skill damage` · `your alterations` |
+| Les cibles en abrégé, pour les emplacements étroits | `Attaques` · `Compétences` · `Altérations` | `Attacks` · `Skills` · `Alterations` |
+| Fiche des stats (`stats_dialog.dart:175-177`) | Titre `Puissance` ; sous-titre : les cibles en abrégé, jointes par ` · ` | Title `Might`; subtitle: the short targets, joined by ` · ` |
+| Mini-panneau des stats (`hero_mini_stats_panel.dart:100`) | `{n} Puissance` | `{n} Might` |
+| Noms des statuts créés en code (`name:`) : « Attaque », « Force (Relique) », « Éveil d'Attaque » | « Puissance », « Puissance (Relique) », « Éveil de Puissance » | — *(les noms de statut ne sont qu'en français)* |
+
+Les textes générés suivent ADR-090 : aucun écran ne compare l'identifiant d'une classe. Deux cibles se
+joignent par « et » / « and », trois par une virgule puis « et » / « and ».
+
+**Données** — `description_fr` et `description_en`, ou `text_fr` et `text_en` pour un choix d'événement :
+
+| Fichier | Français | English |
+|:---|:---|:---|
+| `cards/demon_form.json` | Gagne 2 Puissance pendant 4 tours. | Gain 2 Might for 4 turns. |
+| `classes/berserker/cards/rage_form.json` | Applique 2 Puissance ce tour-ci. Pioche 1 carte. | Apply 2 Might this turn. Draw 1 card. |
+| `relics/whetstone.json` | +1 Puissance de manière permanente pour toute la run. | +1 Might permanently for the entire run. |
+| `relics/cursed_blade.json` | +2 Puissance de manière permanente pour toute la run. | +2 Might permanently for the entire run. |
+| `relics/pen_nib.json` | Toutes les 5 cartes jouées, gagne 3 Puissance pour le tour en cours. | Every 5 cards played, gain 3 Might for the current turn. |
+| `relics/shuriken.json` | Toutes les 3 attaques jouées dans un tour, gagne 1 Puissance pour le combat. | Every 3 Attacks played in a turn, gain 1 Might for combat. |
+| `events/blessed_fountain.json` | Purifier son esprit (-12 PV Max, +1 Puissance) | Purify your mind (-12 Max HP, +1 Might) |
+| `events/mysterious_altar.json` | Sacrifier votre sang (-15 PV, +1 Puissance) | Sacrifice your blood (-15 HP, +1 Might) |
+
+**Tutoriel** (`lib/tutorial/tutorial_data.dart`) — trois phrases nomment la stat :
+
+| Site (français, anglais) | Français | English |
+|:---|:---|:---|
+| Étape des cartes (`:141-143`, `:129-130`) | « Les dégâts imprimés sur une carte ne sont pas le chiffre final : la Puissance de votre héros s'y ajoute, selon ce que renforce sa classe, et la rareté multiplie la valeur de base. » | « The damage printed on a card is not the final number: your Hero's Might is added on top, depending on what their class strengthens, and rarity multiplies the base value. » |
+| Étape des ennemis (`:237`, `:226`) | « Il en existe trois : Attaque, Défense et Buff Puissance. » | « There are three: Attack, Defend, and Buff Might. » |
+| Même étape (`:243-245`, `:231-232`) | « …il monte avec le niveau de l'ennemi et sa Puissance accumulée, et se divise par deux tant qu'il est Gelé. » | « …it grows with the enemy's level and accumulated Might, and halves while they are Frozen. » |
+
+Le reste de la prose du tutoriel n'est pas réécrit : c'est le lot D.
+
+**Icônes, à la partie 2.** L'épée qui accompagne la stat (`SwordIcon` : `player_health_bar.dart:128`,
+`stats_dialog.dart:174`, `hero_mini_stats_panel.dart:99` ; `FlameSwordIcon` : `stat_badge.dart:80`) et le
+💪 du statut (`status_indicator.dart:146`) disent l'attaque physique, ce que D10 a écarté pour le nom. Tant
+que les trois classes orientent leur Puissance vers `attack`, ils restent justes. À la partie 2, ils
+deviennent l'éclair qui marque déjà le statut dans le panneau des statuts et sur les cartes
+(`Icons.flash_on`, `Icons.bolt_rounded`), et ⚡ pour le statut. `FlameSwordIcon`, sans autre usage,
+disparaît alors ; `SwordIcon` reste à l'écran de sélection jusqu'au retrait de `baseDamage` (§8.3).
+
+### 7.5. La sauvegarde
+
+**Aucune étape de migration : `SaveMigrator.currentVersion` reste à 2.** Avant la `1.0.0`, une sauvegarde
+n'a pas à survivre à un changement de version (spec de P-49, N6).
+
+| Écrit avant le lot B | Relu après |
+|:---|:---|
+| `heroStats.attackPower`, `skillPower`, `alterationPower` | Ignorés : `might`, absent, est lu à 0. **La Puissance accumulée est perdue** |
+| `heroStats.mightTargets`, absent | `{attack}`, la valeur par défaut |
+| Blob v1 (`attaque`) | Migré en v2 par l'étape du lot A, puis même sort que ci-dessus |
+
+Aucun statut `strength` n'est à relire : les statuts sont vidés à la fin de chaque combat
+(`map_progression_manager.dart:37`), avant la sauvegarde. La partie reste jouable. Une partie commencée
+avant la partie 2 et rechargée après garde l'orientation `{attack}` jusqu'à sa fin ; ce n'est ni testé ni
+annoncé.
+
+### 7.6. Deux parties, deux livraisons
+
+**Partie 1 — La Puissance, à comportement identique.**
+
+- la stat `might`, `effectiveMight`, les statuts `might` et `might_regen`, `GainResource.might`, et le
+  retrait de `skillPower` et `alterationPower` ;
+- `MightTarget`, `mightTargets` sur `HeroData` et sur `EntityStats`, et `PowerRules` qui la lit ;
+- **les trois classes déclarent `["attack"]`** : c'est exactement le jeu d'aujourd'hui, où `skillPower` et
+  `alterationPower` valent 0 partout ;
+- les `effectType` et `statusId` renommés dans les données, les textes du §7.4 et la génération de la
+  description de la Puissance ;
+- éditeur de contenu : `mightTargets` déclaré en `enumListKeys` sur le descripteur de classe, ce qui
+  ouvre des cases à cocher sans nouveau type de champ (`entity_descriptor.dart:97` ; précédent :
+  `eligibleCardTypes`, `:309`), et `["attack"]` au gabarit de classe ; console de debug : le réglage
+  `attackPower` devient `might` (`debug_hero_tab.dart:40-43`) ;
+- la suppression d'`applyAttackBuff`.
+
+Mesuré le 2026-09-17 par `git grep -l` : les identifiants renommés figurent dans **37 fichiers de `lib/`**
+(ARB compris, fichiers générés exclus), **23 de `test/`** et **8 d'`assets/data/`**.
+
+**Critère d'acceptation** : la suite existante reste verte, et seules changent les attentes qui nomment un
+identifiant renommé ou un texte du §7.4. Aucun dégât, aucune armure, aucune intensité ne change.
+
+**Partie 2 — L'identité de classe.**
+
+- les orientations du Mage et du Paladin (§7.1) ;
+- `statRules`, la conversion d'armure du Berserker et les règles en paramètre obligatoire de
+  `StatGains.apply` (§4.1, §7.1) ;
+- les neuf passifs, leurs triggers et le hook `lifesteal` (§6) ;
+- les stats de départ (§7.3) ;
+- les icônes de la Puissance (§7.4).
+
+Chaque partie a son plan, sa branche et sa PR (D4). La partie 1 se vérifie par la suite existante ; la
+partie 2 part d'une base renommée et ne teste que l'identité de classe.
 
 ---
 
@@ -793,24 +1070,23 @@ Les deux mythiques (Trèfle, Miroir) sont construits hors du tirage.
 
 **Cette partie est indépendante de tout le reste de P-41** et peut avancer en parallèle du lot A.
 
-### 8.2. Partie 2 — Les nouvelles récompenses
+### 8.2. Partie 2 — Les récompenses conditionnées
 
-#### Conditionnement par la classe — automatique
+#### Conditionnement par la classe — sans objet depuis D9
 
-*Aiguisage* se scinde en trois récompenses (`attackPower`, `skillPower`, `alterationPower`). Le filtre
-n'est pas une table à écrire : **c'est `statRules` lui-même**. Un Berserker ne tire jamais `skillPower`
-parce que sa classe le bloque ; un Mage ne tire jamais `attackPower` parce que sa classe le convertit.
-Les reliques et les événements qui en donnent restent, et leur gain est converti (§7.1).
-
-Le tirage passe de **6 à 8 types de stat**, dont chaque classe n'en voit qu'une partie. Les trois
-puissances **héritent des paliers d'*Aiguisage***, sans en inventer, et entrent dans le test de valeurs.
+> [!NOTE]
+> **Remplacé le 2026-09-17 par D9.** La conception d'origine scindait *Aiguisage* en trois récompenses,
+> une par puissance, filtrées par `statRules`. Avec une seule Puissance que la classe oriente, *Aiguisage*
+> reste **une** récompense, « +N Puissance », valable pour toutes les classes et sans filtre. La table de
+> tirage garde ses **6 types de stat** (`level_up_reward_service.dart:148`), *Affinité* comprise, et
+> *Aiguisage* ses paliers.
 
 #### Conditionnement par le passif — neuf récompenses dédiées
 
 > [!NOTE]
 > **Remplacé le 2026-09-16 par la récompense unique *Affinité*** ([spec de P-49](2026-09-16-p49-passifs-partages-design.md), N1). Elle monte la
-> Maîtrise, dont chaque passif déclare l'effet ; la table de tirage compte toujours **8 types de stat plus
-> un — 9**. Reste au lot C : ne pas la tirer quand le passif actif ne déclare pas `mastery`. Le texte
+> Maîtrise, dont chaque passif déclare l'effet ; elle a pris la place de *Forge d'Acier* parmi les 6 types
+> de stat. Reste au lot C : ne pas la tirer quand le passif actif ne déclare pas `mastery`. Le texte
 > ci-dessous est conservé pour la trace.
 
 Une récompense dédiée par passif, améliorant ses chiffres propres — seuil de *Flux de Mana*, ratio de
@@ -839,9 +1115,9 @@ sont retirés avec le champ, sans quoi la suite de l'éditeur rougit.
 L'écran affiche à la place ce qui diffère réellement :
 
 - PV max et stats de départ non nulles ;
-- les règles de `statRules` en clair — « ne peut pas se blinder », « ne renforce pas ses compétences » —,
-  **générées à partir de la paire stat / mode**, jamais écrites classe par classe : c'est la règle d'ADR-090,
-  aucun écran ne compare `hero.id` ;
+- **ce que renforce sa Puissance**, généré depuis `mightTargets` avec les textes du §7.4, et sa règle de
+  stat en clair — « son Armure devient de la Puissance pour un tour » —, **générée à partir de la
+  règle**, jamais écrite classe par classe : c'est la règle d'ADR-090, aucun écran ne compare `hero.id` ;
 - le **choix du passif** parmi les passifs disponibles pour la classe, **lus par le point d'accès de P-49**.
 
 ### 8.4. Hors périmètre
@@ -861,8 +1137,8 @@ Ce lot porte la **mise à jour fonctionnelle** ; les ajustements mécaniques ont
 
 Contrainte : le tutoriel ne lit aucun provider d'état (ADR-081).
 
-- **Les règles viennent de la fonction pure du lot A** (§4.1) : aucune recopie de `statRules`, de la
-  maîtrise ou des puissances dans `lib/tutorial/`.
+- **Les règles viennent de la fonction pure du lot A** (§4.1) et de `PowerRules` : aucune recopie de
+  `statRules`, de la maîtrise ou de l'orientation de la Puissance dans `lib/tutorial/`.
 - **Déterminisme.** Le tutoriel compte aujourd'hui sur `critChance: 0` pour être déterministe
   (`tutorial_engine.dart:327`) — ce qui ne tient que parce qu'aucune classe n'a de critique. Avec un
   Berserker à `critChance` > 0 (§7.3), le tutoriel **force** la valeur à 0. C'est une **exception
@@ -880,8 +1156,9 @@ Contrainte : le tutoriel ne lit aucun provider d'état (ADR-081).
 
 **Menu de debug** (manipulateur de run, P-30 lot 1) :
 
-- le réglage unique `attaque` (`debug_hero_tab.dart:40-43`) devient **trois réglages de puissance** ;
-- la run affichée expose ses règles de stat et son passif actif.
+- le réglage de Puissance, renommé mécaniquement à la partie 1 du lot B (`debug_hero_tab.dart:40-43`),
+  gagne le choix des cibles de `mightTargets` ;
+- la run affichée expose l'orientation de sa Puissance, ses règles de stat et son passif actif.
 
 **Éditeur de contenu** (P-30 lot 2) :
 
@@ -892,7 +1169,7 @@ Contrainte : le tutoriel ne lit aucun provider d'état (ADR-081).
   console ne porte aucune classe mal orthographiée** (§5.2).
 - **Classes** : `statRules` est validé — `stat` et `mode` bornés aux vocabulaires du moteur, `to` à une
   cible valide. Sans cela, l'éditeur laisserait écrire `"mode": "convrt"`, exactement le cas qu'il existe
-  pour refuser.
+  pour refuser. `mightTargets` l'est dès la partie 1 du lot B (§7.6).
 - **Création guidée de classe** (`class_recipe.dart`) : elle crée aujourd'hui une classe avec ses cartes de
   signature, sans passif. Une classe sans aucun passif disponible afficherait un choix vide à la sélection :
   la recette **garantit au moins un passif disponible** pour la classe créée.
@@ -928,7 +1205,7 @@ la sauvegarde de run est effacée à la mort du héros.
 | **Rendre `baseDamage` réel** | La puissance d'attaque est ajoutée **par cible** sur les AoE (`strategies.dart:44`). Un Berserker démarrant à 15 ferait de `sweep` (1 mana) une carte à 18 dégâts par ennemi. C'est très probablement la raison de la neutralisation d'origine. |
 | **Différencier `maxMana`** | §7.3 — levier le plus explosif du jeu, et sujet de P-16. |
 | **Convertir l'armure en `attackPower`** | §7.2 — viole R5, casse le jeu au troisième combat. |
-| **Deux stats de puissance au lieu de trois** | Le Mage n'aurait plus qu'un axe de build, et `alterationPower` est précisément la stat qui manque au seul archétype sans courbe propre au héros (§4.2). |
+| **Deux stats de puissance au lieu de trois** | Le Mage n'aurait plus qu'un axe de build, et `alterationPower` est précisément la stat qui manque au seul archétype sans courbe propre au héros (§4.2). *Dépassé le 2026-09-17 par D9 : une seule Puissance, que la classe oriente ; la variété de build passe par les passifs (R2) et les cartes.* |
 | **Quatre stats (`healPower`)** | Deux cartes de soin dans tout le jeu : stat sans substrat. |
 | **Un passif Paladin adossé aux soins** | R4 — se déclencherait sur 2 cartes sur 23. Remplacé par *Bénédiction*. |
 | **Passif Berserker générant une carte en main** | `addCardToHand` n'existe pas (§1). Le précédent — provenance, épuisement, comptage dans la taille du deck — appartient à S5. Remplacé par *Frénésie*. |
@@ -947,6 +1224,15 @@ la sauvegarde de run est effacée à la mort du héros.
 | **`onDamageTaken` réservé aux passifs, dans un enum séparé** | Deux enums de triggers à maintenir. Écarté au profit d'un dispatch aussi pour les reliques (§5.1, P9). |
 | **Écrire les nouvelles récompenses en Dart** | Chaque récompense future aurait demandé de toucher environ cinq fichiers de code. Écarté par décision du propriétaire (D3). |
 | **Un seul chantier** | Une PR géante, et un problème sur une partie bloque tout. Écarté par décision du propriétaire (D4). |
+| **Trois puissances, redirigées par la classe à la lecture** | Plus de choix de build — le Paladin entre Attaques et Compétences, le Mage entre Compétences et altérations —, mais trois nombres pour le joueur, et un « +1 Attaque » qui renforcerait en réalité les altérations d'un Mage : la confusion revient par l'affichage. Écarté par décision du propriétaire (D9). |
+| **Convertir les gains de puissance au moment du gain** *(conception du 2026-08-07)* | Tout ce qui défait un gain — le sacrifice d'une relique au Sanctuaire, la fin d'un bonus — doit refaire la conversion, et un statut comme la Force y échappe. Chaque mécanisme futur rouvre la question (§7.1). Écarté par décision du propriétaire (D9). |
+| **Étendre `statRules` aux statuts, pour convertir la Force du Mage** | Ne répare qu'un des deux trous, et fait porter à la donnée d'une classe la liste des statuts à convertir (§4.2). Rendu sans objet par D9. |
+| **Renommer seulement la Force (`attackPowerTemp`)** | Le code s'éclaire, mais la conversion du Mage et le retrait de relique restent à régler. |
+| **Écrire un bonus temporaire dans la stat permanente** | Le plus simple à lire, mais il faut le retirer à coup sûr — fin de durée, fin de combat, mort du héros —, et un seul oubli le rend permanent : le danger qu'écarte R5 (§7.2). La simplicité voulue s'obtient à l'affichage, qui additionne déjà les deux (`player_health_bar.dart:131`). |
+| **Nommer la stat Force / Strength** | Le mot le plus répandu dans les textes actuels, mais il évoque le muscle et colle mal au Mage (D10). |
+| **Nommer la stat Power, `power` dans le code** | *Power* est le nom anglais du type de carte Pouvoir, et `CardType.power` existe déjà (D10). |
+| **Lire l'orientation sur la classe à chaque résolution** | Les lecteurs Flame de `PowerRules` ne tiennent que les stats du héros : il faudrait leur faire passer la classe, et changer les huit appels. Copiée dans les stats, l'orientation n'en change aucun (§7.1). |
+| **Livrer le mode `block` de `statRules`** | Son seul usage, les Compétences du Berserker, est devenu une orientation : ce serait du code sans lecteur (§7.1). |
 
 ---
 
@@ -957,8 +1243,10 @@ la sauvegarde de run est effacée à la mort du héros.
 - **Lot A** : le point de passage unique des gains, à source étiquetée, la fonction pure de règles, la scission des trois
   puissances, la chaîne de migration sous sa nouvelle clé et son étape v1 → v2, la suppression de la
   chaîne morte `bonusAttack`.
-- **Lot B** : `statRules`, les neuf passifs, le hook `lifesteal`, les stats de départ.
-- **Lot C** : les récompenses data-driven, les récompenses de puissance et de passif, l'écran de sélection.
+- **Lot B** : partie 1, la Puissance (`might`) à comportement identique ; partie 2, l'orientation de la
+  Puissance par classe, `statRules` et la conversion d'armure, les neuf passifs, le hook `lifesteal`, les
+  stats de départ.
+- **Lot C** : les récompenses data-driven, le filtre d'*Affinité*, l'écran de sélection.
 - **Lot D** : la mise à jour fonctionnelle du tutoriel et de la console de debug.
 
 ### Dans P-49 — [spec de P-49](2026-09-16-p49-passifs-partages-design.md)

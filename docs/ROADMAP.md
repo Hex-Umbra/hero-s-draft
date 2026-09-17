@@ -255,7 +255,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-13** | **Méta-progression** : monnaie persistante inter-runs + boutique de méta-upgrades | **3-5 j** | ★★★☆☆ | 🔥🔥 |
 | **P-14** | **Variantes d'Élite adaptatives** (5 affixes, triggers côté ennemi) | **5-8 j** | ★★★★★ | 🔥🔥🔥 |
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
-| **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée le 2026-09-16 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
+| **P-41** | **Identité de classe** — Puissance orientée par la classe, `statRules`, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée les 2026-09-16 et 2026-09-17 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
 | **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · ✅ **Fusionné dans `main` le 2026-09-17 (PR #39)** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | *non chiffré* | ★★★☆☆ | 🔥🔥 |
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
@@ -401,24 +401,24 @@ causes de leur ordre et invariant de découpage :
 |:---|:---|:---|
 | **P-41 A** | ✅ **Fusionné dans `main` le 2026-09-16 (PR #38)** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
 | **P-49** | ✅ **Fusionné dans `main` le 2026-09-17 (PR #39)** — passifs partagés, dont la refonte de la Maîtrise d'Armure en Maîtrise/Affinité — [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | P-41 A |
-| **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
-| **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |
+| **P-41 B** | Partie 1 : la Puissance (`might`), à comportement identique · Partie 2 : orientation de la Puissance par classe, conversion d'armure (`statRules`), les neuf passifs, stats de départ — [spec, §7](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), reconçue le 2026-09-17 | P-41 A, P-49 ; la partie 2 après la partie 1 |
+| **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis filtre d'*Affinité* et écran de sélection | B, pour sa seconde partie |
 | **P-41 D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | B, C |
 
-**Deux questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot** — une
-troisième, la forme de la Maîtrise, a été tranchée au brainstorm de P-49 le 2026-09-16
-([spec de P-49](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), N1) :
-- **La conversion du Mage porte-t-elle aussi sur la Force ?** — à trancher au lot B (spec, §4.2) ;
-- **Et sur le retrait d'une relique**, gain négatif de source `progression` ? — à trancher au lot B
-  (spec, §7.1).
+**Les questions ouvertes du lot B sont tranchées.** La forme de la Maîtrise l'a été au brainstorm de P-49
+le 2026-09-16 ([spec de P-49](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), N1). Les
+deux autres — la conversion du Mage porte-t-elle sur la Force, et sur le retrait d'une relique ? — le
+sont le 2026-09-17 par le propriétaire : une **Puissance unique que la classe oriente** remplace les trois
+puissances, et plus aucun gain de puissance n'est converti
+([spec, §0.3 et §7.1](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), D9 et D10).
 
 **Une suite relevée à la revue finale du lot A, à traiter aux lots suivants** — voir aussi les six
 suites techniques listées dans le plan du lot A lui-même
 ([§ Suites relevées, hors du lot A](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md#suites-relevées-hors-du-lot-a)) :
-- **Surveiller le double bonus d'`alterationPower`** si une carte de statut et une rune élémentaire
-  s'appliquent toutes deux à la même carte : les deux passent par `PowerRules.statusBonusFor`
-  indépendamment, et rien n'empêche aujourd'hui un cumul non voulu — à vérifier dès que l'un des deux
-  chemins devient réel, aux lots B ou C.
+- **Surveiller le double bonus de Puissance sur les altérations** si une carte de statut et une rune
+  élémentaire s'appliquent toutes deux à la même carte : les deux passent par
+  `PowerRules.statusBonusFor` indépendamment, et rien n'empêche aujourd'hui un cumul non voulu — à
+  vérifier dès qu'une classe oriente sa Puissance vers les altérations, à la partie 2 du lot B.
 
 Deux autres suites de la revue finale portaient sur la compatibilité des sauvegardes entre versions
 (arbitrage par `savedAt` entre `run_save` et `run_save_v1`, avertissement d'écrasement d'une partie

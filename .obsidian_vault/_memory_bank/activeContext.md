@@ -14,10 +14,11 @@ lus par un point d'accès unique et un répartiteur de stratégies — voir
 d'ADR-086. La note `0.5.2` a été rouverte en place pour l'absorber (`5f168db`), **toujours pas
 taguée**. Les métriques de `main` sont dans `progress.md`.
 
-Le programme « Identité de classe & catalogue » continue avec **P-41 lot B** (`statRules`, les neuf
-passifs, stats de départ) : ses deux dépendances, le lot A et P-49, sont fusionnées. Il n'a pas
-encore de plan, et ses deux questions ouvertes (`docs/ROADMAP.md` §4) sont en cours de clarification
-avec le propriétaire.
+Le programme « Identité de classe & catalogue » continue avec **P-41 lot B**, dont les deux dépendances,
+le lot A et P-49, sont fusionnées. Sa conception a été **reprise le 2026-09-17** : une Puissance unique,
+`might`, que la classe oriente, remplace les trois puissances du lot A, et le lot se livre en deux
+parties ([spec, §0.3 et §7](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)).
+Aucun plan encore.
 
 Réserves à ne pas perdre de vue :
 
@@ -103,9 +104,9 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Trancher les deux questions ouvertes du lot B de P-41, puis écrire son plan.** La conception est
-dans la [spec de P-41](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), §6
-et §7 ; les questions sont listées dans `docs/ROADMAP.md` §4. Le tag `v0.5.2` — seul geste déclenchant
+**Écrire le plan de la partie 1 du lot B de P-41** : la Puissance, `might`, à comportement identique
+([spec, §7.6](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)). Le tag
+`v0.5.2` — seul geste déclenchant
 `release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
 classe des cartes de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et
 combien.
