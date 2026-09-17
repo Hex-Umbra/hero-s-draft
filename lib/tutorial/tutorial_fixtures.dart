@@ -1,3 +1,4 @@
+import '../game/systems/passive_availability.dart';
 import '../models/data/card_data.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/game_data_registry.dart';
@@ -50,8 +51,10 @@ class TutorialFixtures {
       .map((id) => registry.heroes.firstWhere((h) => h.id == id))
       .toList();
 
+  /// Le passif de la classe au tutoriel : le premier que lui ouvre le point
+  /// d'accès unique, comme à l'écran de sélection (spec P-49, §4.2).
   PassiveData passiveFor(HeroData hero) =>
-      registry.passives.firstWhere((p) => p.id == hero.passiveTrait);
+      availablePassivesFor(hero, registry).first;
 
   /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
   List<CardData> get starterPool => registry.cards

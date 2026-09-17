@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -30,6 +31,37 @@ void main() {
   test('le registre contient au moins un heros et un ennemi', () {
     expect(registry.heroes, isNotEmpty);
     expect(registry.enemies, isNotEmpty);
+  });
+
+  test('toute classe declaree par un passif existe', () {
+    final known = registry.heroes.map((h) => h.id).toSet();
+    final offenders = <String>[];
+
+    for (final passive in registry.passives) {
+      for (final heroId in passive.classes ?? const <String>[]) {
+        if (!known.contains(heroId)) {
+          offenders.add('${passive.id} → classe "$heroId" introuvable');
+        }
+      }
+    }
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Une classe sans passif disponible démarrerait sa run sans passif : le jeu
+  // le permet (`passive_absent_test`), mais aucune classe livrée n'est dans ce
+  // cas (spec P-49, §4.2).
+  test('chaque classe a au moins un passif disponible', () {
+    final offenders = [
+      for (final hero in registry.heroes)
+        if (availablePassivesFor(hero, registry).isEmpty) hero.id,
+    ];
+
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'classes sans passif : ${offenders.join(', ')}',
+    );
   });
 
   test('tout passiveTrait designe un passif existant', () {

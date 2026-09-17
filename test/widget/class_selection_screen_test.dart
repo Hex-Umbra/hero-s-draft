@@ -7,6 +7,8 @@ import 'package:roguelike_card_game/ui/screens/class_selection_screen.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
 
@@ -58,12 +60,15 @@ const _heroes = [
 
 // Mock registry so ClassSelectionScreen (which calls `.requireValue` on
 // gameDataLoaderProvider) can build without loading real JSON assets.
-GameDataRegistry _registryOf(List<HeroData> heroes) => GameDataRegistry(
+GameDataRegistry _registryOf(
+  List<HeroData> heroes, {
+  List<PassiveData> passives = const [],
+}) => GameDataRegistry(
   enemies: const [],
   heroes: heroes,
   cards: const [],
   events: const [],
-  passives: const [],
+  passives: passives,
   relics: const [],
   forgeUpgrades: const [],
 );
@@ -72,6 +77,7 @@ Future<ProviderContainer> _buildAndReady(
   WidgetTester tester, {
   Locale locale = const Locale('en', ''),
   List<HeroData> heroes = _heroes,
+  List<PassiveData> passives = const [],
 }) async {
   // GridView.builder only lays out visible children. The default test
   // surface (800x600) fits just one row of hero cards at the desktop
@@ -84,7 +90,9 @@ Future<ProviderContainer> _buildAndReady(
 
   final container = ProviderContainer(
     overrides: [
-      gameDataLoaderProvider.overrideWith((ref) => _registryOf(heroes)),
+      gameDataLoaderProvider.overrideWith(
+        (ref) => _registryOf(heroes, passives: passives),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -223,5 +231,41 @@ void main() {
     expect(find.text('CHOISISSEZ VOTRE CLASSE'), findsOneWidget);
     expect(find.text('Le Paladin'), findsOneWidget);
     expect(find.text('Sélectionner'), findsNWidgets(_heroes.length));
+  });
+
+  group('le passif montre est lu par le point d acces unique', () {
+    const ward = PassiveData(
+      id: 'ward',
+      nameEn: 'Ward',
+      nameFr: 'Garde',
+      classes: ['paladin'],
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+    );
+    const aegis = PassiveData(
+      id: 'aegis',
+      nameEn: 'Aegis',
+      nameFr: 'Egide',
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 1,
+    );
+
+    testWidgets('seule la classe que le passif declare le montre', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(tester, passives: const [ward]);
+      expect(find.text('WARD'), findsOneWidget);
+    });
+
+    testWidgets(
+      'un passif ouvert a toutes les classes, premier par id, est montre partout',
+      (WidgetTester tester) async {
+        await _buildAndReady(tester, passives: const [ward, aegis]);
+        expect(find.text('AEGIS'), findsNWidgets(3));
+        expect(find.text('WARD'), findsNothing);
+      },
+    );
   });
 }
