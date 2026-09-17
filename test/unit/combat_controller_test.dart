@@ -291,8 +291,8 @@ void main() {
         // Inject +5 strength to player hero to test force bonus scaling (Strike 6 + 5 = 11 dmg)
         runController.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: 5,
             duration: 99,

@@ -83,8 +83,8 @@ void main() {
       expect(stats.effectiveMight, 5);
 
       final strength = StatusEffect(
-        id: 'strength',
-        name: 'Force',
+        id: 'might',
+        name: 'Puissance',
         type: StatusType.buff,
         value: 3,
         duration: 1,
@@ -135,8 +135,8 @@ void main() {
       var buffedEnemy = enemy.copyWith(
         stats: enemy.stats.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: 2,
             duration: 99,
@@ -155,8 +155,8 @@ void main() {
       var debuffedEnemy = enemy.copyWith(
         stats: enemy.stats.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: -2,
             duration: 99,
@@ -204,8 +204,8 @@ void main() {
         eliteEnemy = eliteEnemy.copyWith(
           stats: eliteEnemy.stats.addStatus(
             const StatusEffect(
-              id: 'strength',
-              name: 'Force',
+              id: 'might',
+              name: 'Puissance',
               type: StatusType.buff,
               value: 2,
               duration: 99,

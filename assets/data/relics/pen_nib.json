@@ -5,7 +5,7 @@
   "description_en": "Every 5 cards played, gain 3 Strength for the current turn.",
   "description_fr": "Toutes les 5 cartes jouées, gagne 3 Force pour le tour en cours.",
   "trigger": "onCardPlayed",
-  "effectType": "charge_strength_turn",
+  "effectType": "charge_might_turn",
   "value": 3,
   "rarity": "uncommon",
   "emoji": "🖋️"

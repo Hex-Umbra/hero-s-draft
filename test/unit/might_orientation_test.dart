@@ -18,8 +18,8 @@ import 'package:roguelike_card_game/models/might_target.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 
 const _temporaryMight = StatusEffect(
-  id: 'strength',
-  name: 'Attaque',
+  id: 'might',
+  name: 'Puissance',
   type: StatusType.buff,
   value: 5,
   duration: 2,
@@ -224,11 +224,11 @@ void main() {
 
     test('un statut pose sur soi ignore la Puissance', () {
       play(card(CardType.skill, CardTarget.self, const [
-        CardEffect(type: 'apply_status', value: 2, statusId: 'strength', duration: 1),
+        CardEffect(type: 'apply_status', value: 2, statusId: 'might', duration: 1),
       ]));
 
       final applied = run.currentState.heroStats.statuses
-          .singleWhere((s) => s.id == 'strength');
+          .singleWhere((s) => s.id == 'might');
       expect(applied.value, 2);
     });
 

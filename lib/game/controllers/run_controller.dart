@@ -427,11 +427,6 @@ class RunController extends Notifier<RunState> {
     return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
   }
 
-  /// Applique un buff d'attaque pour une durée donnée
-  void applyAttackBuff(int duration) {
-    _playerStatsManager.applyAttackBuff(duration);
-  }
-
   /// Applique un effet de Vol de vie pour une durée donnée
   void applyLifestealBuff(int duration) {
     _playerStatsManager.applyLifestealBuff(duration);

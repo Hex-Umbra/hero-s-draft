@@ -5,7 +5,7 @@
   "description_en": "Every 3 Attacks played in a turn, gain 1 Strength for combat.",
   "description_fr": "Toutes les 3 attaques jouées dans un tour, gagne 1 Force pour le combat.",
   "trigger": "onAttackPlayed",
-  "effectType": "charge_strength_combat",
+  "effectType": "charge_might_combat",
   "value": 1,
   "rarity": "rare",
   "emoji": "🥏"

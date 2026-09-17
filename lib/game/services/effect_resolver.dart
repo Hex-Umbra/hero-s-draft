@@ -23,10 +23,10 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
-      case 'strength':
+      case 'might':
         return StatusEffect(
-          id: 'strength',
-          name: 'Attaque',
+          id: 'might',
+          name: 'Puissance',
           type: StatusType.buff,
           value: value,
           duration: duration,
@@ -47,10 +47,10 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
-      case 'strength_regen':
+      case 'might_regen':
         return StatusEffect(
-          id: 'strength_regen',
-          name: 'Éveil d\'Attaque',
+          id: 'might_regen',
+          name: 'Éveil de Puissance',
           type: StatusType.buff,
           value: value,
           duration: duration,

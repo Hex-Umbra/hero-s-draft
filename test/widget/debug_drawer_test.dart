@@ -49,7 +49,7 @@ const _talisman = RelicData(
   nameEn: 'Iron Talisman',
   nameFr: 'Talisman de fer',
   trigger: RelicTrigger.startOfRun,
-  effectType: 'gain_strength',
+  effectType: 'gain_might',
   value: 2,
   rarity: RelicRarity.common,
   emoji: '🛡️',

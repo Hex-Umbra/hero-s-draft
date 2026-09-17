@@ -180,7 +180,7 @@ class EntityStats {
   int get effectiveMight {
     int bonus = 0;
     for (var status in statuses) {
-      if (status.id == 'strength') {
+      if (status.id == 'might') {
         bonus += status.value;
       }
     }

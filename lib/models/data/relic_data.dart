@@ -23,7 +23,7 @@ class RelicData implements AudioSource {
   final String descriptionEn;
   final String descriptionFr;
   final RelicTrigger trigger;
-  final String effectType; // ex: 'gain_energy', 'gain_strength', 'heal_on_kill'
+  final String effectType; // ex: 'gain_energy', 'gain_might', 'heal_on_kill'
   final int value;
   final RelicRarity rarity;
   final String emoji;

@@ -98,8 +98,8 @@ UiCardEffectVisuals getEffectVisuals(CardEffect effect) {
   }
   if (effect.type == 'apply_status') {
     switch (effect.statusId) {
-      case 'strength':
-      case 'strength_regen':
+      case 'might':
+      case 'might_regen':
         return const UiCardEffectVisuals(
           icon: Icons.bolt_rounded,
           color: Colors.orangeAccent,
@@ -384,7 +384,7 @@ String buildDetailedDescription(
       final duration = effect.duration ?? 1;
       final localeCode = Localizations.localeOf(context).languageCode;
       switch (effect.statusId) {
-        case 'strength':
+        case 'might':
           desc += '${l10n.cardDescStatusStrength(scaledValue, duration)}\n';
           break;
         case 'armor_regen':
@@ -411,7 +411,7 @@ String buildDetailedDescription(
               ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
               : '  (Enemy takes 50% more damage from attacks)\n';
           break;
-        case 'strength_regen':
+        case 'might_regen':
           desc +=
               '${l10n.cardDescStatusStrengthRegen(scaledValue, duration)}\n';
           break;

@@ -77,7 +77,7 @@ class StatusEffectsPanel extends StatelessWidget {
               String label;
 
               switch (status.id) {
-                case 'strength':
+                case 'might':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
                   label = l10n.statusStrength(status.value);
@@ -103,7 +103,7 @@ class StatusEffectsPanel extends StatelessWidget {
                   color = Colors.redAccent;
                   label = l10n.statusVulnerable(status.value);
                   break;
-                case 'strength_regen':
+                case 'might_regen':
                   icon = Icons.flash_on;
                   color = Colors.orangeAccent;
                   label = l10n.statusStrengthRegen(status.value);

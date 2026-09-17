@@ -132,8 +132,8 @@ class CardTextRenderer {
             effect.type == 'gain_mana' ||
             effect.type == 'draw' ||
             (effect.type == 'apply_status' &&
-                (effect.statusId == 'strength' ||
-                    effect.statusId == 'strength_regen' ||
+                (effect.statusId == 'might' ||
+                    effect.statusId == 'might_regen' ||
                     effect.statusId == 'armor_regen'));
         final shouldDouble = isAllEnemies && !isPlayerEffect;
 
@@ -303,8 +303,8 @@ class CardTextRenderer {
     }
     if (effect.type == 'apply_status') {
       switch (effect.statusId) {
-        case 'strength':
-        case 'strength_regen':
+        case 'might':
+        case 'might_regen':
           return const _RendererEffectVisuals(
             icon: Icons.bolt_rounded,
             color: Colors.orangeAccent,
@@ -405,7 +405,7 @@ class CardTextRenderer {
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
-          case 'strength':
+          case 'might':
             desc +=
                 '${card.getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: "Gagne $scaledValue ATK pendant $duration tours.")}\n';
             break;
@@ -425,7 +425,7 @@ class CardTextRenderer {
             desc +=
                 '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: "Applique $scaledValue Vulnérable pendant $duration tours.")}\n';
             break;
-          case 'strength_regen':
+          case 'might_regen':
             desc +=
                 '${card.getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: "Gagne $scaledValue Éveil d'Attaque pendant $duration tours.")}\n';
             break;
