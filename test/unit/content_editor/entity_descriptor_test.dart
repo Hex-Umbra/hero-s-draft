@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 
@@ -189,6 +190,9 @@ void main() {
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
   // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
   // - `heroClass` et `category`, imposes par le repertoire ;
+  // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
+  //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
+  //   qui suit la table le verifie.
   test('chaque gabarit porte exactement les cles attendues', () {
     const expected = <EntityCategory, Set<String>>{
       EntityCategory.card: {
@@ -208,7 +212,7 @@ void main() {
         'rarity',
         'emoji',
       },
-      EntityCategory.passive: {'trigger', 'effectType', 'value'},
+      EntityCategory.passive: {'trigger', 'effectType', 'value', 'mastery'},
       // Un evenement n'a qu'une cle de mecanique : le texte de ses choix est
       // imbrique dans `choices`, et le gabarit en montre un exemplaire complet.
       EntityCategory.event: {'choices'},
@@ -256,6 +260,17 @@ void main() {
         reason: '${kEntityDescriptors[category]!.label} : gabarit divergent',
       );
     });
+  });
+
+  test('classes est atteignable par le catalogue, pas par le gabarit', () {
+    final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+    expect(descriptor.decodeTemplate().containsKey('classes'), isFalse);
+    expect(descriptor.referenceListKeys, {'classes': EntityCategory.heroClass});
+  });
+
+  test('mastery.field propose les parametres que le modele accepte', () {
+    final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+    expect(descriptor.enumKeys['mastery.field'], PassiveMastery.fields);
   });
 
   test('sfx est une ressource son des trois categories qui le lisent', () {

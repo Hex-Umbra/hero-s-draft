@@ -292,6 +292,15 @@ void main() {
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
       expectReadable(const ['Neutre', 'mage', 'paladin']);
+
+      await tester.tap(find.text('Passif'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Créer'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('paladin'));
+      await tester.tap(find.text('paladin'));
+      await tester.pumpAndSettle();
+      expectReadable(const ['paladin']);
     });
 
     testWidgets('seul le choix actif est marque choisi', (tester) async {
@@ -834,6 +843,22 @@ void main() {
       isTrue,
       reason: 'le propriétaire choisi décide du répertoire',
     );
+  });
+
+  testWidgets('les classes d un passif se choisissent dans le catalogue',
+      (tester) async {
+    // Une classe presente sur le disque qu'aucun passif ne declare : le cas
+    // que `knownValues`, qui liste les valeurs *employees*, manquerait.
+    Directory('$root/assets/data/classes/barde').createSync(recursive: true);
+    File('$root/assets/data/classes/barde/class.json').writeAsStringSync('{}');
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Passif'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    expect(buttonOf('barde'), findsOneWidget);
   });
 
   testWidgets('une saisie non entiere est une faute, et rien n est ecrit',

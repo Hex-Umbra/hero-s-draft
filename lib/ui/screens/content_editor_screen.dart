@@ -856,12 +856,15 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           )..sort())
         : const [];
 
-    // Le catalogue de chaque `referenceKeys` du descripteur — tire de
-    // `entityIdsByOwner`, jamais de `knownValues` : ce dernier ne liste que
-    // les valeurs deja employees, et un passif jamais utilise y serait
-    // invisible.
+    // Le catalogue de chaque `referenceKeys` et `referenceListKeys` du
+    // descripteur — tire de `entityIdsByOwner`, jamais de `knownValues` : ce
+    // dernier ne liste que les valeurs deja employees, et une entite jamais
+    // referencee y serait invisible.
     _references = {
-      for (final entry in _descriptor.referenceKeys.entries)
+      for (final entry in {
+        ..._descriptor.referenceKeys,
+        ..._descriptor.referenceListKeys,
+      }.entries)
         entry.key: [
           for (final ids
               in entityIdsByOwner(fs, root, kEntityDescriptors[entry.value]!)

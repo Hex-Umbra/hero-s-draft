@@ -5,6 +5,7 @@ import 'field_path.dart';
 enum FieldKind {
   asset,
   reference,
+  referenceList,
   color,
   enumChoice,
   enumMulti,
@@ -32,6 +33,9 @@ FieldKind inferFieldKind({
   final pattern = patternOf(path);
   if (descriptor.assetKeys.containsKey(pattern)) return FieldKind.asset;
   if (descriptor.referenceKeys.containsKey(pattern)) return FieldKind.reference;
+  if (descriptor.referenceListKeys.containsKey(pattern)) {
+    return FieldKind.referenceList;
+  }
   if (descriptor.hexColorKeys.contains(pattern)) return FieldKind.color;
   if (descriptor.enumKeys.containsKey(pattern)) return FieldKind.enumChoice;
   if (descriptor.enumListKeys.containsKey(pattern)) return FieldKind.enumMulti;

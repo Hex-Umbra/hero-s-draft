@@ -1,6 +1,7 @@
 import 'package:roguelike_card_game/models/data/audio_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
@@ -32,13 +33,24 @@ PassiveData fixturePassive(String id) => PassiveData.fromJson({
       'value': 1,
     });
 
+HeroData fixtureHero(String id) => HeroData.fromJson({
+      'id': id,
+      'name_en': 'x',
+      'name_fr': 'x',
+      'classCard': 'assets/data/classes/$id/$id.png',
+      'maxHp': 80,
+      'maxMana': 3,
+      'baseDamage': 5,
+    });
+
 GameDataRegistry fixtureRegistry({
   List<CardData> cards = const [],
+  List<HeroData> heroes = const [],
   List<PassiveData> passives = const [],
 }) =>
     GameDataRegistry(
       enemies: const [],
-      heroes: const [],
+      heroes: heroes,
       cards: cards,
       events: const [],
       passives: passives,

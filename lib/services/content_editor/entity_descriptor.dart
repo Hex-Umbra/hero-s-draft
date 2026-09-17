@@ -65,6 +65,7 @@ class EntityDescriptor {
     this.enumKeys = const {},
     this.enumListKeys = const {},
     this.referenceKeys = const {},
+    this.referenceListKeys = const {},
     this.hexColorKeys = const {},
     this.assetKeys = const {},
     this.vocabularyKeys = const {},
@@ -99,6 +100,11 @@ class EntityDescriptor {
   /// n'en declare depuis que la classe ne nomme plus son passif (spec P-49,
   /// §3.4) : le mecanisme reste, verifie sur un descripteur de test.
   final Map<String, EntityCategory> referenceKeys;
+
+  /// Comme [referenceKeys], pour une cle portant une **liste** de references.
+  /// Absente, la cle vaut « toute la categorie » ; une liste vide est refusee.
+  /// `classes` d'un passif (spec P-49, §8).
+  final Map<String, EntityCategory> referenceListKeys;
 
   /// Les cles dont la valeur, si presente, doit etre un `#RRGGBB` valide —
   /// `themeColor` pour une classe. Une cle absente reste optionnelle et
@@ -243,7 +249,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Passif',
     directory: 'passives',
     requiredKeys: const {'trigger', 'effectType', 'value'},
-    enumKeys: {'trigger': _names(RelicTrigger.values)},
+    enumKeys: {
+      'trigger': _names(RelicTrigger.values),
+      'mastery.field': PassiveMastery.fields,
+    },
+    // Absente du gabarit : sans `classes`, le passif est ouvert a toutes les
+    // classes (spec P-49, §3.2).
+    referenceListKeys: const {'classes': EntityCategory.heroClass},
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
     vocabularyKeys: const {'effectType'},
@@ -251,7 +263,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
 {
   "trigger": "startOfTurn",
   "effectType": "gain_armor",
-  "value": 2
+  "value": 2,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_fr": "+{amount} Armure en debut de tour",
+    "description_en": "+{amount} Block at start of turn"
+  }
 }''',
   ),
   EntityCategory.event: EntityDescriptor(

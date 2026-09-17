@@ -336,6 +336,38 @@ class EntityValidator {
         );
       }
     });
+    draft.descriptor.referenceListKeys.forEach((key, category) {
+      final value = mechanics[key];
+      if (value == null) return; // absente : toute la categorie
+      if (value is! List) {
+        faults.add(ValidationFault('doit être une liste', field: key));
+        return;
+      }
+      if (value.isEmpty) {
+        faults.add(
+          ValidationFault(
+            'une liste vide ne désigne personne — retirer la clé pour viser '
+            'toute la catégorie',
+            field: key,
+          ),
+        );
+        return;
+      }
+      final ids = _idsOf(category);
+      if (ids == null) return; // registre indisponible : on ne devine pas
+      for (final element in value) {
+        if (element is! String || !ids.contains(element)) {
+          faults.add(
+            ValidationFault(
+              'aucune entité de la catégorie '
+              '"${kEntityDescriptors[category]!.label}" ne porte l\'identifiant '
+              '"$element"',
+              field: key,
+            ),
+          );
+        }
+      }
+    });
     return faults;
   }
 

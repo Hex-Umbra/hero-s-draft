@@ -146,6 +146,44 @@ void main() {
     expect(document.root['mentor'], 'regen_armor');
   });
 
+  group('une liste de references', () {
+    final passive = kEntityDescriptors[EntityCategory.passive]!;
+    const catalogue = {
+      'classes': ['mage', 'paladin'],
+    };
+
+    testWidgets('absente, elle se coche', (tester) async {
+      final document = templateOf(passive);
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('paladin'));
+      expect(document.root['classes'], ['paladin']);
+    });
+
+    testWidgets('cocher ajoute dans l ordre du catalogue', (tester) async {
+      final document = EditorDocument({
+        ...passive.decodeTemplate(),
+        'classes': ['paladin'],
+      });
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('mage'));
+      expect(document.root['classes'], ['mage', 'paladin']);
+    });
+
+    testWidgets('decocher la derniere retire la cle', (tester) async {
+      // `[]` est refuse au chargement : l'absence vaut « toutes ».
+      final document = EditorDocument({
+        ...passive.decodeTemplate(),
+        'classes': ['paladin'],
+      });
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('paladin'));
+      expect(document.root.containsKey('classes'), isFalse);
+    });
+  });
+
   testWidgets('un vocabulaire montre aussi la valeur fautive', (tester) async {
     final document = EditorDocument({
       'effects': [

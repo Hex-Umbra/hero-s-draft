@@ -9,6 +9,7 @@ void main() {
   final hero = kEntityDescriptors[EntityCategory.heroClass]!;
   final enemy = kEntityDescriptors[EntityCategory.enemy]!;
   final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+  final passive = kEntityDescriptors[EntityCategory.passive]!;
   // Aucun descripteur livre ne declare de reference unique depuis que la
   // classe ne nomme plus son passif (spec P-49, §3.4) : le mecanisme se
   // verifie sur un descripteur de test.
@@ -40,6 +41,12 @@ void main() {
   test('les metadonnees du descripteur passent avant le type JSON', () {
     expect(kindOf(relic, const ['sfx'], 'clang'), FieldKind.asset);
     expect(kindOf(mentor, const ['mentor'], null), FieldKind.reference);
+    // Une liste de chaines serait une `stringList` sans la declaration.
+    expect(kindOf(passive, const ['classes'], ['paladin']),
+        FieldKind.referenceList);
+    expect(kindOf(passive, const ['classes'], null), FieldKind.referenceList);
+    expect(kindOf(passive, const ['mastery', 'field'], 'value'),
+        FieldKind.enumChoice);
     expect(kindOf(hero, const ['themeColor'], '#FF00FF'), FieldKind.color);
     // `rarity` est une chaine, mais une enumeration d'abord.
     expect(kindOf(card, const ['rarity'], 'common'), FieldKind.enumChoice);

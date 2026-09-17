@@ -312,6 +312,63 @@ void main() {
     });
   });
 
+  group('famille 6 — listes de references', () {
+    final passive = kEntityDescriptors[EntityCategory.passive]!;
+
+    EntityDraft passiveDraft(Object? classes) {
+      final mechanics = passive.decodeTemplate();
+      if (classes != null) mechanics['classes'] = classes;
+      return EntityDraft(
+        descriptor: passive,
+        id: 'garde',
+        bilingual: const {
+          'name_fr': 'Garde',
+          'name_en': 'Guard',
+          'description_fr': 'Gagne 1 Armure.',
+          'description_en': 'Gain 1 Block.',
+        },
+        mechanics: jsonEncode(mechanics),
+      );
+    }
+
+    EntityValidator withClasses() => validatorWith(
+          registry: fixtureRegistry(
+            heroes: [fixtureHero('paladin'), fixtureHero('mage')],
+          ),
+        );
+
+    test('sans classes, le passif est ouvert a toutes et passe', () {
+      expect(withClasses().validate(passiveDraft(null)), isEmpty);
+    });
+
+    test('des classes existantes passent', () {
+      expect(
+        withClasses().validate(passiveDraft(['paladin', 'mage'])),
+        isEmpty,
+      );
+    });
+
+    test('une classe inconnue est refusee', () {
+      final faults =
+          withClasses().validate(passiveDraft(['paladin', 'paladn']));
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'classes');
+      expect(faults.first.message, contains('paladn'));
+    });
+
+    test('une liste vide est refusee', () {
+      final faults = withClasses().validate(passiveDraft(<String>[]));
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'classes');
+    });
+
+    test('une valeur qui n est pas une liste est refusee', () {
+      final faults = withClasses().validate(passiveDraft('paladin'));
+      expect(faults, isNotEmpty);
+      expect(faults.first.field, 'classes');
+    });
+  });
+
   group('famille couleur hex — themeColor', () {
     EntityDraft classDraftWithColor(String? hex) {
       final mechanics = <String, dynamic>{
