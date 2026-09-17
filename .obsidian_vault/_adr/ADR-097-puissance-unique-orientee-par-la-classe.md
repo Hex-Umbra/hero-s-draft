@@ -1,0 +1,86 @@
+## 🧮 ADR-097 : La Puissance Unique, Orientée par la Classe (P-41, lot B, partie 1)
+
+### Statut
+✅ Accepté & Implémenté — branche `feat/p41-lot-b-puissance` (commits `f20c353`..`e9b193d`,
+6 commits), **pas encore fusionnée** — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
+(décision 2, scission de `attaque` en trois puissances).
+
+### Contexte
+Le lot A ([ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)) avait
+scindé `attaque` en trois stats numériques — `attackPower`, `skillPower`, `alterationPower` —
+en anticipant que la spec [S2 — Identité de classe](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
+§4 ferait viser des cartes différentes à des classes différentes. La conception du lot B,
+reprise le 2026-09-17 (§7 de la spec, partie 1 = §7.6), a tranché autrement : trois champs
+numériques dont deux valent 0 pour tout le monde ne modélisent pas mieux l'identité de classe
+qu'un seul champ assorti de ce qu'il renforce. Une seule **Puissance**, `might`, remplace les
+trois ; chaque classe déclare vers quelles cibles elle l'oriente. Aucun changement de jeu : les
+trois classes actuelles orientent leur Puissance vers `attack`, exactement le comportement
+d'aujourd'hui. Plan détaillé —
+[`docs/superpowers/plans/2026-09-17-p41-lot-b-partie-1-puissance.md`](../../docs/superpowers/plans/2026-09-17-p41-lot-b-partie-1-puissance.md).
+
+### Décision
+1. **`enum MightTarget { attack, skill, alteration }`** (`lib/models/might_target.dart`),
+   ordre = ordre d'affichage. `MightTarget.parseAll(Object?)` lit une liste JSON et lève
+   `FormatException` sur une valeur qui n'est pas une liste, une liste vide, ou une cible
+   inconnue — une classe dont la Puissance ne renforcerait rien est une faute de donnée.
+2. **`HeroData.mightTargets`** (`Set<MightTarget>`) : champ **obligatoire** dans `class.json`,
+   lu par `MightTarget.parseAll(json['mightTargets'])`, donc une classe sans cette clé ne se
+   charge pas. Les trois classes (`berserker`, `mage`, `paladin`) déclarent `["attack"]`.
+   L'éditeur de contenu (`entity_descriptor.dart`) l'expose en cases à cocher via
+   `enumListKeys`, au même gabarit que `eligibleCardTypes`.
+3. **`EntityStats.might`** remplace `attackPower`/`skillPower`/`alterationPower` ; **`EntityStats.mightTargets`**
+   (`Set<MightTarget>`, défaut `{attack}` si absent en JSON) porte une **copie** de
+   l'orientation de la classe. `RunController.startNewRun` et `TutorialMockState` la
+   remplissent depuis `chosenClass.mightTargets`/`hero.mightTargets` à la création du héros.
+   `EntityStats.effectiveMight` (renommage d'`effectiveAttackPower`) additionne `might` et le
+   bonus du statut `might` (renommage du statut `strength`).
+4. **`PowerRules`** (`lib/game/systems/power_rules.dart`) devient un unique point de lecture :
+   `damageBonusFor`/`statusBonusFor` délèguent à `_mightFor(MightTarget target) => mightTargets.contains(target) ? effectiveMight : 0`.
+   La forme des huit appels existants ne change pas ; seule la règle interne fusionne.
+5. **`GainResource`** (`lib/game/systems/stat_gains.dart`) perd `attackPower`/`skillPower`/`alterationPower`
+   au profit d'un seul `might`.
+6. **Le statut `strength` devient `might`**, et les effets de relique associés :
+   `gain_strength` → `gain_might`, `charge_strength_turn` → `charge_might_turn`,
+   `charge_strength_combat` → `charge_might_combat`. La chaîne morte `applyAttackBuff`
+   (`RunController` et `PlayerStatsManager`) est supprimée, façade et implémentation.
+7. **Tous les textes joueur disent Puissance / Might** : cartes, reliques, événements portant
+   `_fr`/`_en`, ARB régénérés. Le sous-titre de la carte « Puissance » de la fiche de stats liste
+   ce qu'elle renforce via `Set<MightTarget>.shortLabel(l10n)`
+   (`lib/models/data/model_extensions.dart`), qui itère `MightTarget.values` pour un ordre
+   d'affichage stable quel que soit l'ordre interne du `Set`.
+8. **Aucune migration de sauvegarde** (spec §7.5) : `SaveMigrator.currentVersion` reste à 2.
+   L'étape v1→v2 du lot A continue d'écrire `attackPower` — format v2 gelé — que
+   `EntityStats.fromJson` ignore désormais (`might` lu à défaut `0`, `mightTargets` à défaut
+   `{attack}` si absent). Une sauvegarde du lot A se recharge donc sans étape supplémentaire et
+   sans perte visible.
+
+### Preuves dans le code
+- `lib/models/might_target.dart` (`MightTarget`, `parseAll`).
+- `lib/models/data/hero_data.dart` (`mightTargets`, requis dans `fromJson`).
+- `lib/models/entity_stats.dart` (`might`, `mightTargets`, `effectiveMight`).
+- `lib/game/systems/power_rules.dart` (`_mightFor`).
+- `lib/game/systems/stat_gains.dart` (`GainResource.might`).
+- `lib/game/controllers/run_controller.dart` (`mightTargets: chosenClass.mightTargets`),
+  `lib/tutorial/tutorial_engine.dart` (`TutorialMockState`).
+- `lib/game/controllers/run/player_stats_manager.dart` (`gain_might`, `charge_might_turn`,
+  `charge_might_combat` ; `applyAttackBuff` supprimée).
+- `lib/models/data/model_extensions.dart` (`MightTargetsLabels.shortLabel`).
+- `lib/services/content_editor/entity_descriptor.dart` (`mightTargets` en `enumListKeys`).
+- `assets/data/classes/{berserker,mage,paladin}/class.json` (`"mightTargets": ["attack"]`).
+- Tests : `test/unit/might_target_test.dart`, `test/unit/might_orientation_test.dart`,
+  `test/unit/might_targets_label_test.dart` — remplacent `test/unit/power_split_test.dart`
+  (supprimé).
+
+### Conséquences
+- ✅ **Une seule stat numérique remplace trois**, dont deux valaient 0 pour tout le monde : le
+  modèle colle enfin à l'identité de classe que la spec vise, sans les porter à vide.
+- ✅ **Comportement de jeu strictement inchangé** : les trois classes orientent vers `attack`,
+  938 tests au vert, `dart analyze` propre.
+- ✅ **`PowerRules` reste l'unique règle** lue par la résolution de carte, les runes, le tutoriel
+  (ADR-081) et l'aperçu de dégâts — la fusion ne recrée pas de copie parallèle.
+- ⚠️ **`EntityStats.mightTargets` est un `Set` mutable** sur un modèle par ailleurs immuable —
+  la partie 2 du lot B doit l'envelopper en non-modifiable (`docs/ROADMAP.md`, P-41 B).
+- ⚠️ **L'icône d'épée à côté d'`effectiveMight` reste unique** quelle que soit l'orientation ; à
+  différencier quand Mage et Paladin s'écarteront réellement d'`attack` (partie 2).
+- ⚠️ **`docs/formation-heros-draft/` (ch08, 11, 13, 15, 16, 17)** montre encore les noms d'API
+  d'avant renommage (`attackPower`, etc.) — instantané figé et daté, non corrigé par ce lot.

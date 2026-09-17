@@ -5,6 +5,9 @@
 **fusionnée dans `main` par la PR #38 le 2026-09-16** (merge `f8be03a`) — **amende
 [ADR-069](ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md)**
 (point 5, chaîne de sauvegarde).
+**Décision 2 (scission de `attaque` en trois puissances) remplacée par
+[ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md)** (P-41, lot B, partie 1,
+2026-09-17) : les trois puissances fusionnent en une seule, `might`, que la classe oriente.
 
 ### Contexte
 La spec [S2 — Identité de classe](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)
