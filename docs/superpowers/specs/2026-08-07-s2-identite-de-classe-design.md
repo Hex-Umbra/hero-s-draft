@@ -1,7 +1,7 @@
 # S2 — Identité de classe — Conception
 
 Date : 2026-08-07 · **Révisée le 2026-09-16 et le 2026-09-17**
-Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — **lot B, partie 1 implémentée** (branche `feat/p41-lot-b-puissance`) ; partie 2 et lots C, D non implémentés ; lot B reconçu le 2026-09-17 (§0.3) ; chantier frère P-49 implémenté (fusionné dans `main`, PR #39), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
+Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — **lot B, partie 1 implémentée** (fusionnée dans `main`, PR #40) ; partie 2 en cours (branche `feat/p41-lot-b-identite`), lots C et D non implémentés ; lot B reconçu le 2026-09-17 (§0.3) ; chantier frère P-49 implémenté (fusionné dans `main`, PR #39), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
 
 > [!IMPORTANT]
 > **Révision du 2026-09-16 — lire le §0 avant tout le reste.** La conception du 2026-08-07 a été
