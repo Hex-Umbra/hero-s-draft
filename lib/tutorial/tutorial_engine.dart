@@ -60,6 +60,7 @@ class TutorialMockState {
       armure: 0,
       mastery: hero.mastery,
       might: 0,
+      mightTargets: hero.mightTargets,
       luck: hero.luck,
     );
   }

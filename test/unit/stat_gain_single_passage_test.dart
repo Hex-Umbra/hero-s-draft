@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Aucune ligne de `lib/` n'ajoute à l'armure, au mana ou à une puissance par
+/// Aucune ligne de `lib/` n'ajoute à l'armure, au mana ou à la Puissance par
 /// une addition écrite à la main : tout gain passe par `StatGains.apply`
 /// (spec P-41, §4.1). Un gain écrit ailleurs échapperait aux règles de classe
 /// que le lot B de P-41 y fera entrer.
@@ -15,9 +15,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// hausse de `maxMana`, dans `applyHeroStatModifier`.
 final _additiveGains = [
   // `armure: s.armure + g`, éventuellement entre parenthèses ou sur deux lignes.
-  RegExp(r'\b(armure|currentMana|might|skillPower|alterationPower)\s*:\s*\(?\s*[\w.\[\]!?]*\b\1\b\s*\+'),
+  RegExp(r'\b(armure|currentMana|might)\s*:\s*\(?\s*[\w.\[\]!?]*\b\1\b\s*\+'),
   // `armure: g + s.armure`.
-  RegExp(r'\b(armure|currentMana|might|skillPower|alterationPower)\s*:[^,;{}]*?\+\s*[\w.\[\]!?]*\b\1\b'),
+  RegExp(r'\b(armure|currentMana|might)\s*:[^,;{}]*?\+\s*[\w.\[\]!?]*\b\1\b'),
 ];
 
 bool _isAdditiveGain(String source) =>

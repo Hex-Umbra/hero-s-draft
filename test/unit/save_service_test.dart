@@ -240,8 +240,7 @@ void main() {
       final run = save['run'] as Map<String, dynamic>;
       final heroStats = run['heroStats'] as Map<String, dynamic>;
       heroStats['attaque'] = heroStats.remove('might');
-      heroStats.remove('skillPower');
-      heroStats.remove('alterationPower');
+      heroStats.remove('mightTargets');
       save['schemaVersion'] = 1;
       await prefs.setString('run_save_v1', jsonEncode(save));
       await prefs.remove('run_save');

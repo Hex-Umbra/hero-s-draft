@@ -29,7 +29,7 @@ void main() {
       expect(StatGains.apply(stats(), gain).currentMana, 3 + 2);
     });
 
-    test('puissances : chacune dans sa stat, et un gain negatif retire', () {
+    test('Puissance : un gain ajoute, un gain negatif retire', () {
       final s = stats();
       expect(
         StatGains.apply(s, const StatGain(GainResource.might, 4, GainSource.progression)).might,
@@ -38,14 +38,6 @@ void main() {
       expect(
         StatGains.apply(s, const StatGain(GainResource.might, -2, GainSource.progression)).might,
         0,
-      );
-      expect(
-        StatGains.apply(s, const StatGain(GainResource.skillPower, 3, GainSource.progression)).skillPower,
-        3,
-      );
-      expect(
-        StatGains.apply(s, const StatGain(GainResource.alterationPower, 5, GainSource.progression)).alterationPower,
-        5,
       );
     });
 

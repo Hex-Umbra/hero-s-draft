@@ -202,6 +202,7 @@ void main() {
 
       expect(engine.mockState.heroStats.maxPv, 60);
       expect(engine.mockState.heroStats.maxMana, 3);
+      expect(engine.mockState.heroStats.mightTargets, mage.mightTargets);
     });
 
     test('le deck drafté survit aux changements d\'étape', () {

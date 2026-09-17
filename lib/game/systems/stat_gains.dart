@@ -1,7 +1,7 @@
 import '../../models/entity_stats.dart';
 
 /// La ressource qu'un gain augmente.
-enum GainResource { armor, mana, might, skillPower, alterationPower }
+enum GainResource { armor, mana, might }
 
 /// D'où vient un gain : l'étiquette qu'une règle peut viser — les règles de
 /// classe du lot B de P-41. La Maîtrise n'en est plus une : elle agit sur le
@@ -50,12 +50,6 @@ abstract final class StatGains {
         ),
       GainResource.might => stats.copyWith(
           might: stats.might + gain.amount,
-        ),
-      GainResource.skillPower => stats.copyWith(
-          skillPower: stats.skillPower + gain.amount,
-        ),
-      GainResource.alterationPower => stats.copyWith(
-          alterationPower: stats.alterationPower + gain.amount,
         ),
     };
   }
