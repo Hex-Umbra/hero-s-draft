@@ -375,6 +375,7 @@ void main() {
         'maxHp': 90,
         'maxMana': 3,
         'baseDamage': 4,
+        'mightTargets': ['attack'],
       };
       if (hex != null) mechanics['themeColor'] = hex;
       return EntityDraft(
@@ -434,7 +435,7 @@ void main() {
             'description_en': 'Plays the odds.',
           },
           mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5, '
-              '"skills": $skillsJson}',
+              '"mightTargets": ["attack"], "skills": $skillsJson}',
           isModification: true,
         );
 
@@ -472,7 +473,8 @@ void main() {
             'description_fr': 'Rien.',
             'description_en': 'Nothing.',
           },
-          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5}',
+          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5, '
+              '"mightTargets": ["attack"]}',
         ),
       );
       expect(faults, isEmpty);

@@ -14,7 +14,7 @@ void main() {
         maxMana: 10,
         currentMana: 10,
         armure: 10,
-        attackPower: 0,
+        might: 0,
       );
 
       stats = stats.takeDamage(15);
@@ -30,7 +30,7 @@ void main() {
         maxMana: 10,
         currentMana: 10,
         armure: 0,
-        attackPower: 0,
+        might: 0,
       );
 
       final poison = StatusEffect(
@@ -70,21 +70,21 @@ void main() {
       expect(stats.statuses.first.duration, 1);
     });
 
-    test('effectiveAttackPower calculates base + strength', () {
+    test('effectiveMight calculates base + strength', () {
       var stats = EntityStats(
         maxPv: 100,
         currentPv: 100,
         maxMana: 10,
         currentMana: 10,
         armure: 0,
-        attackPower: 5,
+        might: 5,
       );
 
-      expect(stats.effectiveAttackPower, 5);
+      expect(stats.effectiveMight, 5);
 
       final strength = StatusEffect(
-        id: 'strength',
-        name: 'Force',
+        id: 'might',
+        name: 'Puissance',
         type: StatusType.buff,
         value: 3,
         duration: 1,
@@ -92,7 +92,7 @@ void main() {
 
       stats = stats.addStatus(strength);
 
-      expect(stats.effectiveAttackPower, 8); // 5 base + 3 strength
+      expect(stats.effectiveMight, 8); // 5 base + 3 strength
     });
 
     test('EnemyInstance effectiveIntent scales attack with current stats', () {
@@ -101,7 +101,7 @@ void main() {
           maxPv: 20,
           currentPv: 20,
           armure: 0,
-          attackPower: 8,
+          might: 8,
         ),
         data: const EnemyData(
           id: 'test',
@@ -119,31 +119,31 @@ void main() {
       );
       expect(enemy.effectiveIntent?.value, 8);
 
-      // 1. Permanent/spawn-time scaling: Boost base stats.attackPower to 10 (e.g. from level)
+      // 1. Permanent/spawn-time scaling: Boost base stats.might to 10 (e.g. from level)
       var scaledEnemy = enemy.copyWith(
-        stats: enemy.stats.copyWith(attackPower: 10),
+        stats: enemy.stats.copyWith(might: 10),
       );
       expect(scaledEnemy.effectiveIntent?.value, 10); // 8 * 1.25 = 10
 
-      // Raw intent with value 12 (special attack) when base stats.attackPower is scaled to 10
+      // Raw intent with value 12 (special attack) when base stats.might is scaled to 10
       scaledEnemy = scaledEnemy.copyWith(
         currentIntent: EnemyIntent(type: IntentType.attack, value: 12),
       );
       expect(scaledEnemy.effectiveIntent?.value, 15); // 12 * 1.25 = 15
 
-      // 2. In-battle strength status: Keep base stats.attackPower at 8, add a +2 strength buff
+      // 2. In-battle strength status: Keep base stats.might at 8, add a +2 strength buff
       var buffedEnemy = enemy.copyWith(
         stats: enemy.stats.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: 2,
             duration: 99,
           ),
         ),
       );
-      expect(buffedEnemy.stats.effectiveAttackPower, 10);
+      expect(buffedEnemy.stats.effectiveMight, 10);
 
       // Raw intent with value 12 (special attack) with +2 strength
       buffedEnemy = buffedEnemy.copyWith(
@@ -151,19 +151,19 @@ void main() {
       );
       expect(buffedEnemy.effectiveIntent?.value, 14); // 12 + 2 = 14
 
-      // 3. In-battle strength debuff: Keep base stats.attackPower at 8, add a -2 strength debuff
+      // 3. In-battle strength debuff: Keep base stats.might at 8, add a -2 strength debuff
       var debuffedEnemy = enemy.copyWith(
         stats: enemy.stats.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: -2,
             duration: 99,
           ),
         ),
       );
-      expect(debuffedEnemy.stats.effectiveAttackPower, 6);
+      expect(debuffedEnemy.stats.effectiveMight, 6);
 
       // Raw intent with value 12 (special attack) with -2 strength
       debuffedEnemy = debuffedEnemy.copyWith(
@@ -176,13 +176,13 @@ void main() {
       'EnemyInstance effectiveIntent scales attack proportionally for Elites with buffs',
       () {
         // Simulate an elite enemy spawned with a multiplier of 2.25
-        // JSON baseDamage = 8. Spawns with stats.attackPower = 18.
+        // JSON baseDamage = 8. Spawns with stats.might = 18.
         var eliteEnemy = EnemyInstance(
           stats: EntityStats(
             maxPv: 50,
             currentPv: 50,
             armure: 0,
-            attackPower: 18,
+            might: 18,
           ),
           data: const EnemyData(
             id: 'orc',
@@ -204,15 +204,15 @@ void main() {
         eliteEnemy = eliteEnemy.copyWith(
           stats: eliteEnemy.stats.addStatus(
             const StatusEffect(
-              id: 'strength',
-              name: 'Force',
+              id: 'might',
+              name: 'Puissance',
               type: StatusType.buff,
               value: 2,
               duration: 99,
             ),
           ),
         );
-        expect(eliteEnemy.stats.effectiveAttackPower, 20);
+        expect(eliteEnemy.stats.effectiveMight, 20);
 
         // 3rd action: Attack 8 in JSON should now scale to 18 + 2 (inBattleBonus) = 20
         eliteEnemy = eliteEnemy.copyWith(

@@ -87,7 +87,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
       );
@@ -117,7 +117,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 500,
-        playerAttaque: 20,
+        playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
         playerCardsCount: 20,
@@ -134,7 +134,7 @@ void main() {
         playerLevel: 1,
         act: 3,
         playerMaxHp: 500,
-        playerAttaque: 20,
+        playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
         playerCardsCount: 20,
@@ -152,7 +152,7 @@ void main() {
         playerLevel: 1,
         act: 3,
         playerMaxHp: 500,
-        playerAttaque: 20,
+        playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
         playerCardsCount: 20,
@@ -170,7 +170,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 500,
-        playerAttaque: 20,
+        playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
         playerCardsCount: 20,
@@ -187,7 +187,7 @@ void main() {
         playerLevel: 5,
         act: 5,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
       );
@@ -202,7 +202,7 @@ void main() {
         playerLevel: 5,
         act: 6,
         playerMaxHp: 300,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 10,
         playerRelicsCount: 10,
       );
@@ -220,7 +220,7 @@ void main() {
         playerLevel: 5,
         act: 1,
         playerMaxHp: 300,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 10,
         playerRelicsCount: 10,
       );
@@ -240,7 +240,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
       );
@@ -256,7 +256,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
       );
@@ -272,7 +272,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
       );
@@ -292,7 +292,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 200,
-        playerAttaque: 10,
+        playerMight: 10,
         playerMaxMana: 5,
         playerRelicsCount: 5,
       );
@@ -317,7 +317,7 @@ void main() {
         playerLevel: 1,
         act: 6,
         playerMaxHp: 500,
-        playerAttaque: 20,
+        playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
         playerCardsCount: 20,
@@ -336,22 +336,22 @@ void main() {
       final active1 = EnemyInstance(
         id: 'active_1',
         data: slimeData,
-        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attackPower: 4),
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, might: 4),
       );
       final active2 = EnemyInstance(
         id: 'active_2',
         data: slimeData,
-        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, attackPower: 4),
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, might: 4),
       );
       final reserve1 = EnemyInstance(
         id: 'reserve_1',
         data: goblinData,
-        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attackPower: 5),
+        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, might: 5),
       );
       final reserve2 = EnemyInstance(
         id: 'reserve_2',
         data: goblinData,
-        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, attackPower: 5),
+        stats: EntityStats(maxPv: 28, currentPv: 28, armure: 0, might: 5),
       );
 
       combatController.state = CombatState(
@@ -366,7 +366,7 @@ void main() {
       // 1. Defeat active_1 (set its PV to 0)
       combatController.updateEnemyStats(
         'active_1',
-        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attackPower: 4),
+        EntityStats(maxPv: 18, currentPv: 0, armure: 0, might: 4),
       );
 
       // Trigger cleanDeadEnemies by starting enemy turn
@@ -392,11 +392,11 @@ void main() {
       // 2. Defeat both remaining enemies
       combatController.updateEnemyStats(
         'active_2',
-        EntityStats(maxPv: 18, currentPv: 0, armure: 0, attackPower: 4),
+        EntityStats(maxPv: 18, currentPv: 0, armure: 0, might: 4),
       );
       combatController.updateEnemyStats(
         'reserve_1',
-        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attackPower: 5),
+        EntityStats(maxPv: 28, currentPv: 0, armure: 0, might: 5),
       );
 
       combatController.startEnemyTurn();
@@ -411,7 +411,7 @@ void main() {
       // 3. Defeat the last reserve enemy
       combatController.updateEnemyStats(
         'reserve_2',
-        EntityStats(maxPv: 28, currentPv: 0, armure: 0, attackPower: 5),
+        EntityStats(maxPv: 28, currentPv: 0, armure: 0, might: 5),
       );
       combatController.startEnemyTurn();
 
@@ -539,7 +539,7 @@ void main() {
         playerLevel: 3,
         act: 2,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 2,
         playerCardsCount: 10,
@@ -566,7 +566,7 @@ void main() {
         playerLevel: 1,
         act: 1,
         playerMaxHp: 100,
-        playerAttaque: 0,
+        playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
         playerCardsCount: 0,

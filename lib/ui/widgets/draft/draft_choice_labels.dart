@@ -69,7 +69,7 @@ class DraftChoiceLabels {
       case LevelUpRewardType.vitality:
         return l10n.draftChoiceVitalityDesc(choice.pvBoost);
       case LevelUpRewardType.sharpening:
-        return l10n.draftChoiceSharpeningDesc(choice.atkBoost);
+        return l10n.draftChoiceSharpeningDesc(choice.mightBoost);
       case LevelUpRewardType.affinity:
         final mastery = passive?.mastery;
         if (passive == null || mastery == null) {

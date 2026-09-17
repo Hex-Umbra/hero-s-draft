@@ -7,14 +7,14 @@ class StatusEffectProcessor {
   /// Retourne les nouvelles statistiques du joueur.
   static EntityStats processPlayerStatuses(EntityStats stats) {
     int poisonDamage = 0;
-    int strengthGain = 0;
+    int mightGain = 0;
     int armorGain = 0;
 
     for (var status in stats.statuses) {
       if (status.id == 'poison') {
         poisonDamage += status.value;
-      } else if (status.id == 'strength_regen') {
-        strengthGain += status.value;
+      } else if (status.id == 'might_regen') {
+        mightGain += status.value;
       } else if (status.id == 'armor_regen') {
         armorGain += status.value;
       }
@@ -24,13 +24,13 @@ class StatusEffectProcessor {
     if (poisonDamage > 0) {
       updatedStats = updatedStats.takeDamage(poisonDamage);
     }
-    if (strengthGain > 0) {
+    if (mightGain > 0) {
       updatedStats = updatedStats.addStatus(
         StatusEffect(
-          id: 'strength',
-          name: 'Attaque',
+          id: 'might',
+          name: 'Puissance',
           type: StatusType.buff,
-          value: strengthGain,
+          value: mightGain,
           duration: 3, // 3 tours maximum pour le joueur
         ),
       );
@@ -49,15 +49,15 @@ class StatusEffectProcessor {
   /// Retourne les nouvelles statistiques de l'ennemi.
   static EntityStats processEnemyStatuses(EntityStats stats) {
     int poisonDamage = 0;
-    int strengthGain = 0;
+    int mightGain = 0;
     int armorGain = 0;
     int burnDamage = 0;
 
     for (var status in stats.statuses) {
       if (status.id == 'poison') {
         poisonDamage += status.value;
-      } else if (status.id == 'strength_regen') {
-        strengthGain += status.value;
+      } else if (status.id == 'might_regen') {
+        mightGain += status.value;
       } else if (status.id == 'armor_regen') {
         armorGain += status.value;
       } else if (status.id == 'burn') {
@@ -72,13 +72,13 @@ class StatusEffectProcessor {
     if (burnDamage > 0) {
       updatedStats = updatedStats.takeDamage(burnDamage);
     }
-    if (strengthGain > 0) {
+    if (mightGain > 0) {
       updatedStats = updatedStats.addStatus(
         StatusEffect(
-          id: 'strength',
-          name: 'Attaque',
+          id: 'might',
+          name: 'Puissance',
           type: StatusType.buff,
-          value: strengthGain,
+          value: mightGain,
           duration: 1, // 1 tour maximum pour l'ennemi
         ),
       );

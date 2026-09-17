@@ -77,7 +77,7 @@ void main() {
 
         final goblinInstance = combatController.currentState.enemies.first;
         expect(goblinInstance.stats.maxPv, 20); // 20 * 1.0
-        expect(goblinInstance.stats.attackPower, 5); // 5 * 1.0
+        expect(goblinInstance.stats.might, 5); // 5 * 1.0
         expect(goblinInstance.currentIntent?.type, IntentType.attack);
         expect(goblinInstance.intentStep, 1); // incremented step
         expect(combatController.currentState.selectedEnemyId, isNull);
@@ -88,14 +88,14 @@ void main() {
         combatController.initializeCombat(1, MapNodeType.elite, [goblinData]);
         final eliteGoblin = combatController.currentState.enemies.first;
         expect(eliteGoblin.stats.maxPv, 32); // 20 * 1.59 = 31.8 -> 32
-        expect(eliteGoblin.stats.attackPower, 8); // 5 * 1.56 = 7.8 -> 8
+        expect(eliteGoblin.stats.might, 8); // 5 * 1.56 = 7.8 -> 8
 
         // Boss Node (Enemy Lvl 3: HP Multiplier = 1.12 * 3.0 = 3.36)
         combatController.initializeCombat(1, MapNodeType.boss, [goblinData]);
         expect(combatController.currentState.enemies.length, 1);
         final bossGoblin = combatController.currentState.enemies.first;
         expect(bossGoblin.stats.maxPv, 67); // 20 * 3.36 = 67.2 -> 67
-        expect(bossGoblin.stats.attackPower, 16); // 5 * 3.24 = 16.2 -> 16
+        expect(bossGoblin.stats.might, 16); // 5 * 3.24 = 16.2 -> 16
       },
     );
 
@@ -109,7 +109,7 @@ void main() {
           maxPv: 20,
           currentPv: 20,
           armure: 0,
-          attackPower: 5,
+          might: 5,
         ),
       );
       final enemy2 = EnemyInstance(
@@ -118,7 +118,7 @@ void main() {
           maxPv: 30,
           currentPv: 30,
           armure: 0,
-          attackPower: 8,
+          might: 8,
         ),
       );
 
@@ -150,7 +150,7 @@ void main() {
           maxPv: 20,
           currentPv: 20,
           armure: 0,
-          attackPower: 5,
+          might: 5,
         ),
         currentIntent: EnemyIntent(type: IntentType.attack, value: 5),
         intentStep: 1,
@@ -205,7 +205,7 @@ void main() {
             maxPv: 20,
             currentPv: 20,
             armure: 0,
-            attackPower: 5,
+            might: 5,
           ),
         );
         final enemy2 = EnemyInstance(
@@ -214,7 +214,7 @@ void main() {
             maxPv: 30,
             currentPv: 30,
             armure: 0,
-            attackPower: 8,
+            might: 8,
           ),
         );
 
@@ -291,8 +291,8 @@ void main() {
         // Inject +5 strength to player hero to test force bonus scaling (Strike 6 + 5 = 11 dmg)
         runController.addStatus(
           const StatusEffect(
-            id: 'strength',
-            name: 'Force',
+            id: 'might',
+            name: 'Puissance',
             type: StatusType.buff,
             value: 5,
             duration: 99,
@@ -305,7 +305,7 @@ void main() {
             maxPv: 20,
             currentPv: 20,
             armure: 0,
-            attackPower: 5,
+            might: 5,
           ),
         );
 
@@ -338,7 +338,7 @@ void main() {
         expect(runController.currentState.heroStats.currentMana, 3);
         expect(combatController.currentState.enemies.first.stats.currentPv, 20);
 
-        // Play strike: hero effectiveAttackPower is 5, card damage is 6, total damage is 6 + 5 = 11.
+        // Play strike: hero effectiveMight is 5, card damage is 6, total damage is 6 + 5 = 11.
         combatController.applyPlayerCardPlay(
           strikeCard,
         );
@@ -381,7 +381,7 @@ void main() {
             maxPv: 20,
             currentPv: 20,
             armure: 0,
-            attackPower: 5,
+            might: 5,
           ),
         );
         final enemy2 = EnemyInstance(
@@ -390,7 +390,7 @@ void main() {
             maxPv: 30,
             currentPv: 30,
             armure: 0,
-            attackPower: 8,
+            might: 8,
           ),
         );
 
@@ -409,7 +409,7 @@ void main() {
         // Kill enemy1
         combatController.updateEnemyStats(
           actualEnemy1Id,
-          EntityStats(maxPv: 20, currentPv: 0, armure: 0, attackPower: 5),
+          EntityStats(maxPv: 20, currentPv: 0, armure: 0, might: 5),
         );
         combatController.startEnemyTurn(); // This will clean up dead enemies (enemy1)
 
@@ -434,7 +434,7 @@ void main() {
             maxPv: 20,
             currentPv: 20,
             armure: 0,
-            attackPower: 5,
+            might: 5,
           ),
           currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
         );

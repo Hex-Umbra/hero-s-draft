@@ -61,7 +61,7 @@ void main() {
         id: 'relic_1',
         nameEn: 'Relic 1',
         trigger: RelicTrigger.startOfRun,
-        effectType: 'gain_strength',
+        effectType: 'gain_might',
         value: 2,
         rarity: RelicRarity.common,
         emoji: '1️⃣',
@@ -89,7 +89,7 @@ void main() {
       inventoryController.addRelic(relic2);
       inventoryController.addRelic(relic3);
 
-      expect(runController.state.heroStats.attackPower, 2);
+      expect(runController.state.heroStats.might, 2);
       expect(runController.state.heroStats.luck, 1);
       expect(inventoryController.state.relics.length, 3);
 
@@ -97,7 +97,7 @@ void main() {
         id: 'gained_relic',
         nameEn: 'Gained Relic',
         trigger: RelicTrigger.startOfRun,
-        effectType: 'gain_strength',
+        effectType: 'gain_might',
         value: 5,
         rarity: RelicRarity.uncommon,
         emoji: '🌟',
@@ -108,7 +108,7 @@ void main() {
       expect(inventoryController.state.relics.length, 1);
       expect(inventoryController.state.relics.first.id, 'gained_relic');
 
-      expect(runController.state.heroStats.attackPower, 5);
+      expect(runController.state.heroStats.might, 5);
       expect(runController.state.heroStats.luck, 0);
     });
 
@@ -128,7 +128,7 @@ void main() {
         nameEn: 'Filler',
         nameFr: 'Bouche-trou',
         trigger: RelicTrigger.startOfRun,
-        effectType: 'gain_strength',
+        effectType: 'gain_might',
         value: 1,
         rarity: RelicRarity.common,
         emoji: '⬜',

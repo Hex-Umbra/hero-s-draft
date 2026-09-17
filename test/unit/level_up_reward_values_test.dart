@@ -69,7 +69,7 @@ num? _valeurDe(DraftChoice choix) {
     case LevelUpRewardType.vitality:
       return choix.pvBoost;
     case LevelUpRewardType.sharpening:
-      return choix.atkBoost;
+      return choix.mightBoost;
     case LevelUpRewardType.affinity:
       return choix.masteryBoost;
     case LevelUpRewardType.wisdom:

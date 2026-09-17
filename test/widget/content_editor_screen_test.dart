@@ -1703,6 +1703,7 @@ void main() {
           'maxHp': 100,
           'maxMana': 3,
           'baseDamage': 5,
+          'mightTargets': ['attack'],
           'displayOrder': 1,
           'themeColor': '#9C27B0',
           'skills': <String>[],

@@ -73,8 +73,8 @@ class EventController extends Notifier<EventState> {
         case 'gain_max_hp':
           runController.applyHeroStatModifier(maxPvAcc: action.value as int);
           break;
-        case 'gain_strength':
-          runController.applyHeroStatModifier(attackAcc: action.value as int);
+        case 'gain_might':
+          runController.applyHeroStatModifier(mightAcc: action.value as int);
           break;
         case 'gain_relic':
           if (allRelics.isNotEmpty) {

@@ -28,7 +28,7 @@ class TutorialMockState {
     maxMana: 3,
     currentMana: 3,
     armure: 0,
-    attackPower: 0,
+    might: 0,
   );
   List<CardInstance> hand = [];
   EnemyInstance? enemy;
@@ -49,7 +49,7 @@ class TutorialMockState {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attackPower: 0,
+        might: 0,
       );
     }
     return EntityStats(
@@ -59,7 +59,8 @@ class TutorialMockState {
       currentMana: hero.maxMana,
       armure: 0,
       mastery: hero.mastery,
-      attackPower: 0,
+      might: 0,
+      mightTargets: hero.mightTargets,
       luck: hero.luck,
     );
   }
@@ -273,7 +274,7 @@ class TutorialEngine extends ChangeNotifier {
         maxPv: data.maxHp,
         currentPv: data.maxHp,
         armure: 0,
-        attackPower: data.baseDamage,
+        might: data.baseDamage,
       ),
       currentIntent: data.intents?.first,
     );

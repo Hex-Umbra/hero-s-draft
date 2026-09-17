@@ -88,7 +88,7 @@ const _relics = [
     descriptionEn: 'Rallies the troops.',
     descriptionFr: 'Rassemble les troupes.',
     trigger: RelicTrigger.startOfCombat,
-    effectType: 'gain_strength',
+    effectType: 'gain_might',
     value: 2,
     rarity: RelicRarity.rare,
     emoji: '🚩',

@@ -146,7 +146,7 @@ void main() {
         maxPv: 20,
         currentPv: 20,
         armure: 1,
-        attackPower: 2,
+        might: 2,
         statuses: const [metallicize],
       );
       expect(StatusEffectProcessor.processEnemyStatuses(enemyStats).armure, 4);
@@ -238,11 +238,11 @@ void main() {
     setUp(() => run.startNewRun(paladin));
 
     test('un gain, puis un retrait de meme valeur', () {
-      run.applyHeroStatModifier(attackAcc: 4);
-      expect(heroStats().attackPower, 4);
+      run.applyHeroStatModifier(mightAcc: 4);
+      expect(heroStats().might, 4);
 
-      run.applyHeroStatModifier(attackAcc: -4);
-      expect(heroStats().attackPower, 0);
+      run.applyHeroStatModifier(mightAcc: -4);
+      expect(heroStats().might, 0);
     });
   });
 }

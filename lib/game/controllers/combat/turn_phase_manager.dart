@@ -141,8 +141,8 @@ class TurnPhaseManager {
         final updatedEnemy = enemy.copyWith(
           stats: enemy.stats.addStatus(
             StatusEffect(
-              id: 'strength',
-              name: 'Attaque',
+              id: 'might',
+              name: 'Puissance',
               type: StatusType.buff,
               value: intent.value,
               duration: 99,

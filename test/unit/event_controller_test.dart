@@ -37,7 +37,7 @@ void main() {
           textEn: 'Pray for strength (+2 Strength, -10 HP)',
           textFr: 'Prier pour la force (+2 Force, -10 PV)',
           actions: [
-            EventAction(type: 'gain_strength', value: 2),
+            EventAction(type: 'gain_might', value: 2),
             EventAction(type: 'take_damage', value: 10),
           ],
         ),
@@ -74,7 +74,7 @@ void main() {
         descriptionEn: 'Gain 2 Strength at run start',
         descriptionFr: 'Gagne 2 Force au début de la run',
         trigger: RelicTrigger.startOfRun,
-        effectType: 'gain_strength',
+        effectType: 'gain_might',
         value: 2,
         rarity: RelicRarity.rare,
         emoji: '⚔️',
@@ -123,7 +123,7 @@ void main() {
         expect(eventController.state.isResolved, true);
         expect(eventController.state.selectedChoice, choice);
         // Hero stats update: strength + 2
-        expect(runController.state.heroStats.attackPower, 2);
+        expect(runController.state.heroStats.might, 2);
         // HP decreases by 10
         expect(runController.state.heroStats.currentPv, 90);
       },

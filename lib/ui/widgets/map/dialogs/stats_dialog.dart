@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
+import '../../../../models/data/model_extensions.dart';
 import '../../../../services/game_data_service.dart';
 import '../../class_identity.dart';
 import '../../sword_icon.dart';
@@ -172,9 +173,9 @@ class StatsDialog extends ConsumerWidget {
                 Expanded(
                   child: _buildCompactStatCard(
                     icon: SwordIcon(size: 16, color: Colors.orangeAccent),
-                    title: locale == 'fr' ? 'Attaque' : 'Attack',
-                    value: '${stats.attackPower}',
-                    subtitle: locale == 'fr' ? 'Dégâts de base' : 'Base damage',
+                    title: locale == 'fr' ? 'Puissance' : 'Might',
+                    value: '${stats.might}',
+                    subtitle: stats.mightTargets.shortLabel(l10n),
                   ),
                 ),
                 const SizedBox(width: 12),

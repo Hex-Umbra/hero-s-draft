@@ -18,7 +18,7 @@ class PlayerStatsManager {
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
   void applyHeroStatModifier({
     int maxPvAcc = 0,
-    int attackAcc = 0,
+    int mightAcc = 0,
     int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
@@ -55,7 +55,7 @@ class PlayerStatsManager {
       controller.currentState.copyWith(
         heroStats: StatGains.apply(
           modifiedStats,
-          StatGain(GainResource.attackPower, attackAcc, GainSource.progression),
+          StatGain(GainResource.might, mightAcc, GainSource.progression),
         ),
       ),
     );
@@ -195,14 +195,14 @@ class PlayerStatsManager {
       case 'gain_armor':
         grant(StatGain(GainResource.armor, relic.value, GainSource.relic));
         break;
-      case 'gain_strength':
+      case 'gain_might':
         if (relic.trigger == RelicTrigger.startOfRun) {
-          applyHeroStatModifier(attackAcc: relic.value);
+          applyHeroStatModifier(mightAcc: relic.value);
         } else {
           addStatus(
             StatusEffect(
-              id: 'strength',
-              name: 'Force (Relique)',
+              id: 'might',
+              name: 'Puissance (Relique)',
               type: StatusType.buff,
               value: relic.value,
               duration: 99, // 99 tours (durée du combat)
@@ -282,7 +282,7 @@ class PlayerStatsManager {
           );
         }
         break;
-      case 'charge_strength_combat':
+      case 'charge_might_combat':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'shuriken_charge');
         final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
         if (newVal >= 3) {
@@ -296,8 +296,8 @@ class PlayerStatsManager {
           );
           addStatus(
             StatusEffect(
-              id: 'strength',
-              name: 'Force (Relique)',
+              id: 'might',
+              name: 'Puissance (Relique)',
               type: StatusType.buff,
               value: relic.value,
               duration: 99,
@@ -316,7 +316,7 @@ class PlayerStatsManager {
           );
         }
         break;
-      case 'charge_strength_turn':
+      case 'charge_might_turn':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'pen_nib_charge');
         final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
         if (newVal >= 5) {
@@ -330,8 +330,8 @@ class PlayerStatsManager {
           );
           addStatus(
             StatusEffect(
-              id: 'strength',
-              name: 'Force (Relique)',
+              id: 'might',
+              name: 'Puissance (Relique)',
               type: StatusType.buff,
               value: relic.value,
               duration: 1,
@@ -385,8 +385,8 @@ class PlayerStatsManager {
         case 'gain_mana':
           applyHeroStatModifier(maxManaAcc: -relic.value);
           break;
-        case 'gain_strength':
-          applyHeroStatModifier(attackAcc: -relic.value);
+        case 'gain_might':
+          applyHeroStatModifier(mightAcc: -relic.value);
           break;
         case 'gain_luck':
           applyHeroStatModifier(luckAcc: -relic.value);
@@ -433,24 +433,6 @@ class PlayerStatsManager {
       ),
     );
     return true;
-  }
-
-  /// Applique un buff d'attaque pour une durée donnée
-  void applyAttackBuff(int duration) {
-    int bonus = (controller.currentState.heroStats.maxPv * 0.15).round();
-    controller.updateState(
-      controller.currentState.copyWith(
-        heroStats: controller.currentState.heroStats.addStatus(
-          StatusEffect(
-            id: 'strength',
-            name: 'Attaque',
-            type: StatusType.buff,
-            value: bonus,
-            duration: duration,
-          ),
-        ),
-      ),
-    );
   }
 
   /// Applique un effet de Vol de vie pour une durée donnée

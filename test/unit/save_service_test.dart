@@ -217,7 +217,7 @@ void main() {
       expect(await SaveService.hasSave(), isFalse);
     });
 
-    test('load migrates a legacy v1 save: attaque is kept as attackPower', () async {
+    test('load migrates a legacy v1 save stored under run_save_v1', () async {
       const hero = HeroData(
         id: 'paladin',
         classCard: 'paladin.png',
@@ -228,20 +228,19 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       container.read(runProvider.notifier).startNewRun(hero);
-      container.read(runProvider.notifier).applyHeroStatModifier(attackAcc: 4);
       await SaveService.save(container.read);
 
       // Réécrit la sauvegarde telle que l'écrivaient tous les builds jusqu'à
-      // 0.5.1 : version 1, clé `attaque`, sans les deux nouvelles puissances,
-      // sous l'ancienne clé de stockage.
+      // 0.5.1 : version 1, clé `attaque`, sous l'ancienne clé de stockage. La
+      // valeur d'`attaque` n'est plus relue depuis le lot B de P-41 (spec,
+      // §7.5) : seul compte ici que la chaîne de migration ouvre la partie.
       final prefs = await SharedPreferences.getInstance();
       final save =
           jsonDecode(prefs.getString('run_save')!) as Map<String, dynamic>;
       final run = save['run'] as Map<String, dynamic>;
       final heroStats = run['heroStats'] as Map<String, dynamic>;
-      heroStats['attaque'] = heroStats.remove('attackPower');
-      heroStats.remove('skillPower');
-      heroStats.remove('alterationPower');
+      heroStats['attaque'] = heroStats.remove('might');
+      heroStats.remove('mightTargets');
       save['schemaVersion'] = 1;
       await prefs.setString('run_save_v1', jsonEncode(save));
       await prefs.remove('run_save');
@@ -251,9 +250,7 @@ void main() {
       final result = await SaveService.load(fresh.read);
 
       expect(result.success, isTrue);
-      expect(fresh.read(runProvider).heroStats.attackPower, 4);
-      expect(fresh.read(runProvider).heroStats.skillPower, 0);
-      expect(fresh.read(runProvider).heroStats.alterationPower, 0);
+      expect(fresh.read(runProvider).heroClassId, 'paladin');
     });
   });
 }

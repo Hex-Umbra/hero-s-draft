@@ -5,12 +5,13 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-17** — 96 décisions, numéros `ADR-001` à `ADR-096`, sans doublon ni trou, en bijection avec `../_adr/`.
+**Vérifié le 2026-09-17** — 97 décisions, numéros `ADR-001` à `ADR-097`, sans doublon ni trou, en bijection avec `../_adr/`.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
-| `ADR-096` | Passifs Partagés — Éligibilité Déclarée par le Passif et Maîtrise Hybride (chantier P-49, branche `feat/p49-passifs-partages`, **non fusionnée**) — **remplace la D4 d'`ADR-086`** | ✅ | — | [ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
-| `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
+| `ADR-097` | La Puissance Unique, Orientée par la Classe (chantier P-41, lot B, partie 1, branche `feat/p41-lot-b-puissance`, pas encore fusionnée) — **amende la décision 2 d'`ADR-095`** | ✅ | — | [ADR-097-puissance-unique-orientee-par-la-classe.md](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) |
+| `ADR-096` | Passifs Partagés — Éligibilité Déclarée par le Passif et Maîtrise Hybride (chantier P-49, fusionné dans `main` par la PR #39) — **remplace la D4 d'`ADR-086`** | ✅ | — | [ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
+| `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** ; **décision 2 remplacée par `ADR-097`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
 | `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
 | `ADR-092` | Éditeur de Contenu — Formulaire Inféré du Document, Vocabulaires du Disque et Ressources sous Rollback (chantier P-30) | ✅ | — | [ADR-092-formulaire-infere-du-document-et-ressources-liees.md](../_adr/ADR-092-formulaire-infere-du-document-et-ressources-liees.md) |

@@ -391,9 +391,9 @@ class CardComponent extends PositionComponent
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
         switch (effect.statusId) {
-          case 'strength':
+          case 'might':
             desc +=
-                '• ${getTranslation((l) => l.cardDescStatusStrength(scaledValue, duration), fallback: 'Gagne $scaledValue ATK pendant $duration tours.')}\n';
+                '• ${getTranslation((l) => l.cardDescStatusMight(scaledValue, duration), fallback: 'Gagne $scaledValue Puissance pendant $duration tours.')}\n';
             break;
           case 'armor_regen':
             desc +=
@@ -420,9 +420,9 @@ class CardComponent extends PositionComponent
                 ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
                 : '  (Enemy takes 50% more damage from attacks)\n';
             break;
-          case 'strength_regen':
+          case 'might_regen':
             desc +=
-                '• ${getTranslation((l) => l.cardDescStatusStrengthRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil d\'Attaque pendant $duration tours.')}\n';
+                '• ${getTranslation((l) => l.cardDescStatusMightRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil de Puissance pendant $duration tours.')}\n';
             break;
           case 'burn':
             desc +=

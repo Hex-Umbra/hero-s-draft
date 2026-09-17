@@ -6,8 +6,8 @@
   "description_fr": "Vous découvrez un autel ancien couvert de runes rougeoyantes. Une voix semble murmurer dans votre esprit, réclamant un sacrifice en échange de puissance.",
   "choices": [
     {
-      "text_en": "Sacrifice your blood (-15 HP, +1 Attack)",
-      "text_fr": "Sacrifier votre sang (-15 PV, +1 Attaque)",
+      "text_en": "Sacrifice your blood (-15 HP, +1 Might)",
+      "text_fr": "Sacrifier votre sang (-15 PV, +1 Puissance)",
       "result_text_en": "The altar absorbs your blood and a dark power courses through your veins.",
       "result_text_fr": "L'autel absorbe votre sang et une puissance sombre parcourt vos veines.",
       "actions": [
@@ -16,7 +16,7 @@
           "value": 15
         },
         {
-          "type": "gain_strength",
+          "type": "gain_might",
           "value": 1
         }
       ]

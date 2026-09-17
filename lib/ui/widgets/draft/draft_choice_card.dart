@@ -45,7 +45,7 @@ class DraftChoiceCard extends StatelessWidget {
       emoji = '❤️'; // Vitality / HP
     } else if (titleUpper.contains('AIGUIS') ||
         titleUpper.contains('SHARPEN')) {
-      emoji = '⚔️'; // Attack Power
+      emoji = '⚔️'; // Might
     } else if (titleUpper.contains('AFFINIT')) {
       emoji = '💠'; // Affinity / Mastery
     } else if (titleUpper.contains('SAGESSE') ||

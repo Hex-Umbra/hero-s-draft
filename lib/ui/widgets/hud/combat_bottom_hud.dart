@@ -11,7 +11,7 @@ class CombatBottomHud extends StatelessWidget {
   final int currentPv;
   final int maxPv;
   final int armure;
-  final int effectiveAttackPower;
+  final int effectiveMight;
 
   const CombatBottomHud({
     super.key,
@@ -22,7 +22,7 @@ class CombatBottomHud extends StatelessWidget {
     required this.currentPv,
     required this.maxPv,
     required this.armure,
-    required this.effectiveAttackPower,
+    required this.effectiveMight,
   });
 
   @override
@@ -48,7 +48,7 @@ class CombatBottomHud extends StatelessWidget {
                     currentPv: currentPv,
                     maxPv: maxPv,
                     armure: armure,
-                    effectiveAttackPower: effectiveAttackPower,
+                    effectiveMight: effectiveMight,
                   ),
                 ],
               ),

@@ -148,8 +148,11 @@
   "tooltipHpDesc": "Your health pool. If it reaches 0, you die.",
   "tooltipArmorTitle": "Block / Armor",
   "tooltipArmorDesc": "Absorbs next attacks' damage. Removed at turn start.",
-  "tooltipAttackTitle": "Attack Damage Boost",
-  "tooltipAttackDesc": "Increases the damage of your attack cards.",
+  "tooltipAttackTitle": "Might",
+  "tooltipAttackDesc": "Strengthens what your class channels it into: Attacks, Skills or alterations.",
+  "mightTargetAttackShort": "Attacks",
+  "mightTargetSkillShort": "Skills",
+  "mightTargetAlterationShort": "Alterations",
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",
@@ -190,19 +193,19 @@
       "value": { "type": "int" }
     }
   },
-  "intentBuff": "Buff Attack: +{value}",
+  "intentBuff": "Buff Might: +{value}",
   "@intentBuff": {
     "placeholders": {
       "value": { "type": "int" }
     }
   },
   "enemyStatsTitle": "ENEMY STATS",
-  "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nAttack: {attack}.\nArmor: {armor}.",
+  "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.",
   "@enemyStatsDesc": {
     "placeholders": {
       "hp": { "type": "int" },
       "maxHp": { "type": "int" },
-      "attack": { "type": "int" },
+      "might": { "type": "int" },
       "armor": { "type": "int" }
     }
   },
@@ -242,8 +245,8 @@
       "amount": { "type": "int" }
     }
   },
-  "cardDescStatusStrength": "Gains {amount} ATK for {duration} turns.",
-  "@cardDescStatusStrength": {
+  "cardDescStatusMight": "Gains {amount} Might for {duration} turns.",
+  "@cardDescStatusMight": {
     "placeholders": {
       "amount": { "type": "int" },
       "duration": { "type": "int" }
@@ -295,8 +298,8 @@
       "duration": { "type": "int" }
     }
   },
-  "cardDescStatusStrengthRegen": "Gains {amount} Attack Awakening for {duration} turns.",
-  "@cardDescStatusStrengthRegen": {
+  "cardDescStatusMightRegen": "Gains {amount} Might Awakening for {duration} turns.",
+  "@cardDescStatusMightRegen": {
     "placeholders": {
       "amount": { "type": "int" },
       "duration": { "type": "int" }
@@ -445,7 +448,7 @@
     }
   },
   "draftChoiceSharpening": "Sharpening",
-  "draftChoiceSharpeningDesc": "+{amount} Attack",
+  "draftChoiceSharpeningDesc": "+{amount} Might",
   "@draftChoiceSharpeningDesc": {
     "placeholders": {
       "amount": { "type": "int" }
@@ -501,8 +504,8 @@
       "value": { "type": "int" }
     }
   },
-  "statusStrength": "Attack: +{value}",
-  "@statusStrength": {
+  "statusMight": "Might: +{value}",
+  "@statusMight": {
     "placeholders": {
       "value": { "type": "int" }
     }
@@ -519,8 +522,8 @@
       "value": { "type": "int" }
     }
   },
-  "statusStrengthRegen": "Attack Awakening: +{value}",
-  "@statusStrengthRegen": {
+  "statusMightRegen": "Might Awakening: +{value}",
+  "@statusMightRegen": {
     "placeholders": {
       "value": { "type": "int" }
     }
@@ -604,8 +607,8 @@
       "amount": { "type": "int" }
     }
   },
-  "eventGainAttack": "+{amount} Attack",
-  "@eventGainAttack": {
+  "eventGainMight": "+{amount} Might",
+  "@eventGainMight": {
     "placeholders": {
       "amount": { "type": "int" }
     }

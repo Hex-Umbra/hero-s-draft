@@ -127,7 +127,8 @@ const List<TutorialStep> kTutorialSteps = [
         '• **Three types**: Attack, Skill and Power. A Power is exiled once '
         'played — it will not come back this combat.\n\n'
         'The damage printed on a card is not the final number: your Hero\'s '
-        'Attack stat is added on top, and rarity multiplies the base value.',
+        'Might is added on top, depending on what their class strengthens, and '
+        'rarity multiplies the base value.',
     bodyFr:
         'Jouer une carte coûte du Mana. Le coût est inscrit dans le **médaillon '
         'rond cyan en haut à gauche** de la carte.\n\n'
@@ -139,8 +140,8 @@ const List<TutorialStep> kTutorialSteps = [
         '• **Trois types** : Attaque, Compétence et Pouvoir. Un Pouvoir joué part '
         'à l\'exil — il ne reviendra pas de ce combat.\n\n'
         'Les dégâts imprimés sur une carte ne sont pas le chiffre final : '
-        'l\'Attaque de votre héros s\'y ajoute, et la rareté multiplie la valeur '
-        'de base.',
+        'la Puissance de votre héros s\'y ajoute, selon ce que renforce sa '
+        'classe, et la rareté multiplie la valeur de base.',
     type: TutorialStepType.cards,
   ),
   TutorialStep(
@@ -223,25 +224,25 @@ const List<TutorialStep> kTutorialSteps = [
         'Enemies announce what they will do before you play. Their intent is '
         'not shown above them — read it in the **Enemy Intentions panel, '
         'bottom-right**.\n\n'
-        'There are three: Attack, Defend, and Buff Attack. Attacks change icon '
+        'There are three: Attack, Defend, and Buff Might. Attacks change icon '
         'and colour with their size — Quick, Attack, Heavy, Devastating — so a '
         'glance is enough to tell a scratch from a threat.\n\n'
         'Until an enemy has an intent, that same panel shows an hourglass and '
         '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Attack, and halves while they are Frozen.',
+        'accumulated Might, and halves while they are Frozen.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
         'panneau **Intentions Ennemies, en bas à droite**.\n\n'
-        'Il en existe trois : Attaque, Défense et Buff Attaque. Les attaques '
+        'Il en existe trois : Attaque, Défense et Buff Puissance. Les attaques '
         'changent d\'icône et de couleur selon leur ampleur — Rapide, Attaque, '
         'Lourde, Dévastatrice — pour distinguer d\'un coup d\'œil l\'égratignure '
         'de la menace.\n\n'
         'Tant qu\'un ennemi n\'a pas encore d\'intention, ce même panneau '
         'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
-        'l\'ennemi et son Attaque accumulée, et se divise par deux tant qu\'il '
+        'l\'ennemi et sa Puissance accumulée, et se divise par deux tant qu\'il '
         'est Gelé.',
     type: TutorialStepType.enemies,
   ),

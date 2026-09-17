@@ -12,6 +12,7 @@ void main() {
         'maxHp': 100,
         'maxMana': 3,
         'baseDamage': 5,
+        'mightTargets': ['attack'],
       };
 
   test('classCard est lu, et iconPath vaut null quand il est absent', () {

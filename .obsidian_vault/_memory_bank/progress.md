@@ -9,27 +9,29 @@
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 923 au vert | `flutter test` |
-| Fichiers de test | 127 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 938 au vert | `flutter test` |
+| Fichiers de test | 129 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 241 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 48 531 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 242 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 48 620 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **P-49 (passifs partagés) est codé sur la branche `feat/p49-passifs-partages`, pas encore
-> fusionnée dans `main`.** `flutter test` (`+923`) et `dart analyze` (`No issues found!`) ont été
-> mesurés dans cette session au dernier commit de code du lot (`ce8c2aa`, 2026-09-17) ; les trois
-> commits suivants ne touchent que `docs/` et `.obsidian_vault/` — `git diff --stat ce8c2aa HEAD --
-> lib test assets` est vide, donc ces métriques décrivent toujours le code de la branche à `HEAD`.
+> **P-41 lot B, partie 1 — la Puissance orientée par la classe — est sur la branche
+> `feat/p41-lot-b-puissance`, pas encore fusionnée** (2026-09-17, `f20c353`..`e9b193d`, 6 commits).
+> Toutes les métriques ci-dessus sont mesurées sur cette branche. Voir
+> [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende la décision 2
+> d'[ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
+>
+> **P-49 (passifs partagés) reste fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`).
 > Voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
 >
-> **Aucune note de version n'est encore écrite pour ce lot** : la note `0.5.2` sera rouverte en
-> place pour l'absorber, avec l'accord du propriétaire (`docs/ROADMAP.md` §4) — pas encore donné à
-> ce jour. `pubspec.yaml` et `assets/data/patch_notes.json` restent donc inchangés par ce lot.
+> **Note de version `0.5.2` rouverte en place pour P-49** (`5f168db`) : Maîtrise, Affinité, Armure
+> du Berserker rééquilibrée. **Pas encore taguée** (`docs/ROADMAP.md` §4). Ce lot (P-41 B, partie 1)
+> n'a pas encore de note de version — sans effet visible pour le joueur (spec §7.6).
 >
 > **P-41 lot A reste fusionné dans `main`** par la PR #38 (2026-09-16, merge `f8be03a`).
 

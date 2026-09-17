@@ -154,6 +154,7 @@ void main() {
       'baseDamage',
       'luck',
       'mastery',
+      'mightTargets',
       'displayOrder',
       'themeColor',
     ]) {
@@ -233,6 +234,7 @@ void main() {
         'baseDamage',
         'luck',
         'mastery',
+        'mightTargets',
         'displayOrder',
         'themeColor',
       },

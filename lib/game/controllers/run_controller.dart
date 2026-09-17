@@ -211,7 +211,7 @@ class RunController extends Notifier<RunState> {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attackPower: 0, // Force de base à 0
+        might: 0, // Puissance de base à 0
         luck: 0,
       ),
       pendingDrafts: 0,
@@ -243,7 +243,8 @@ class RunController extends Notifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: 0,
         mastery: chosenClass.mastery,
-        attackPower: 0, // Force de base à 0
+        might: 0, // Puissance de base à 0
+        mightTargets: chosenClass.mightTargets,
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,
@@ -291,7 +292,7 @@ class RunController extends Notifier<RunState> {
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
   void applyHeroStatModifier({
     int maxPvAcc = 0,
-    int attackAcc = 0,
+    int mightAcc = 0,
     int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
@@ -300,7 +301,7 @@ class RunController extends Notifier<RunState> {
   }) {
     _playerStatsManager.applyHeroStatModifier(
       maxPvAcc: maxPvAcc,
-      attackAcc: attackAcc,
+      mightAcc: mightAcc,
       masteryAcc: masteryAcc,
       maxManaAcc: maxManaAcc,
       luckAcc: luckAcc,
@@ -424,11 +425,6 @@ class RunController extends Notifier<RunState> {
   /// Consomme les ressources nécessaires. Retourne false si insuffisant.
   bool consumeResource({int mana = 0, int hpPercent = 0}) {
     return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
-  }
-
-  /// Applique un buff d'attaque pour une durée donnée
-  void applyAttackBuff(int duration) {
-    _playerStatsManager.applyAttackBuff(duration);
   }
 
   /// Applique un effet de Vol de vie pour une durée donnée

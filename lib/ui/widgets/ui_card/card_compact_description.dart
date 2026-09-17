@@ -69,8 +69,8 @@ class CardCompactDescription extends StatelessWidget {
           effect.type == 'gain_mana' ||
           effect.type == 'draw' ||
           (effect.type == 'apply_status' &&
-              (effect.statusId == 'strength' ||
-                  effect.statusId == 'strength_regen' ||
+              (effect.statusId == 'might' ||
+                  effect.statusId == 'might_regen' ||
                   effect.statusId == 'armor_regen'));
       final shouldDouble = isAllEnemies && !isPlayerEffect;
 

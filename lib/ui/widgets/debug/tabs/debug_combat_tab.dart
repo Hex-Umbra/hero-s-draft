@@ -11,7 +11,7 @@ import '../debug_number_field.dart';
 ///
 /// Il porte les statistiques du heros qui bougent au fil des tours — PV, mana,
 /// armure — la ou l'onglet Heros garde celles qui relevent de la progression :
-/// maxima, attaque, chance, niveau.
+/// maxima, Puissance, chance, niveau.
 class DebugCombatTab extends ConsumerWidget {
   const DebugCombatTab({super.key});
 

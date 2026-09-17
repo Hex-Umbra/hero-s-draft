@@ -5,14 +5,14 @@ class PlayerHealthBar extends StatefulWidget {
   final int currentPv;
   final int maxPv;
   final int armure;
-  final int effectiveAttackPower;
+  final int effectiveMight;
 
   const PlayerHealthBar({
     super.key,
     required this.currentPv,
     required this.maxPv,
     required this.armure,
-    required this.effectiveAttackPower,
+    required this.effectiveMight,
   });
 
   @override
@@ -114,7 +114,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
               spacing: 14.0,
               runSpacing: 4.0,
               children: [
-                // Dégâts d'Attaque (Rouge Gradient, sans fond)
+                // Puissance (Rouge Gradient, sans fond)
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
                     colors: [Color(0xFFFF2A2A), Color(0xFFFF7A7A)],
@@ -128,7 +128,7 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
                       SwordIcon(size: iconSize, color: Colors.white),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.effectiveAttackPower}',
+                        '${widget.effectiveMight}',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

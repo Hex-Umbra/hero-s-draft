@@ -1,3 +1,5 @@
+import '../might_target.dart';
+
 class HeroData {
   final String id;
   final String nameEn;
@@ -22,6 +24,11 @@ class HeroData {
   final int baseDamage;
   final int luck;
   final int mastery;
+
+  /// Ce que la Puissance de la classe renforce (spec P-41, §7.1). Obligatoire
+  /// dans `class.json` : la valeur par défaut ne sert qu'aux constructions
+  /// écrites en code.
+  final Set<MightTarget> mightTargets;
   final List<String> skills;
 
   /// Rang d'affichage à la sélection de classe. Donnée de présentation :
@@ -42,6 +49,7 @@ class HeroData {
     required this.baseDamage,
     this.luck = 0,
     this.mastery = 0,
+    this.mightTargets = const {MightTarget.attack},
     this.skills = const [],
     this.displayOrder = 0,
   });
@@ -76,6 +84,7 @@ class HeroData {
       baseDamage: json['baseDamage'] as int,
       luck: json['luck'] as int? ?? 0,
       mastery: json['mastery'] as int? ?? 0,
+      mightTargets: MightTarget.parseAll(json['mightTargets']),
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??

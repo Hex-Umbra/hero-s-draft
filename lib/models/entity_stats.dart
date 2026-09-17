@@ -1,4 +1,5 @@
 import 'package:meta/meta.dart';
+import 'might_target.dart';
 import 'status_effect.dart';
 
 @immutable
@@ -9,9 +10,8 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int mastery; // Maîtrise : chaque passif déclare ce qu'un point lui apporte (spec P-49, §6)
-  final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
-  final int skillPower; // Dégâts des cartes Compétence
-  final int alterationPower; // Intensité des statuts posés sur un ennemi
+  final int might; // Puissance permanente : ce qu'elle renforce, voir mightTargets
+  final Set<MightTarget> mightTargets; // Copie de l'orientation de la classe (spec P-41, §7.1)
   final int luck;
   final int level;
   final int xp;
@@ -28,9 +28,8 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     this.mastery = 0,
-    required this.attackPower,
-    this.skillPower = 0,
-    this.alterationPower = 0,
+    required this.might,
+    this.mightTargets = const {MightTarget.attack},
     this.luck = 0,
     this.level = 1,
     this.xp = 0,
@@ -48,9 +47,8 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? mastery,
-    int? attackPower,
-    int? skillPower,
-    int? alterationPower,
+    int? might,
+    Set<MightTarget>? mightTargets,
     int? luck,
     int? level,
     int? xp,
@@ -67,9 +65,8 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       mastery: mastery ?? this.mastery,
-      attackPower: attackPower ?? this.attackPower,
-      skillPower: skillPower ?? this.skillPower,
-      alterationPower: alterationPower ?? this.alterationPower,
+      might: might ?? this.might,
+      mightTargets: mightTargets ?? this.mightTargets,
       luck: luck ?? this.luck,
       level: level ?? this.level,
       xp: xp ?? this.xp,
@@ -96,9 +93,10 @@ class EntityStats {
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
       mastery: json['mastery'] as int? ?? 0,
-      attackPower: json['attackPower'] as int,
-      skillPower: json['skillPower'] as int? ?? 0,
-      alterationPower: json['alterationPower'] as int? ?? 0,
+      might: json['might'] as int? ?? 0,
+      mightTargets: json['mightTargets'] == null
+          ? const {MightTarget.attack}
+          : MightTarget.parseAll(json['mightTargets']),
       luck: json['luck'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
@@ -117,9 +115,11 @@ class EntityStats {
     'currentMana': currentMana,
     'armure': armure,
     'mastery': mastery,
-    'attackPower': attackPower,
-    'skillPower': skillPower,
-    'alterationPower': alterationPower,
+    'might': might,
+    'mightTargets': [
+      for (final target in MightTarget.values)
+        if (mightTargets.contains(target)) target.name,
+    ],
     'luck': luck,
     'level': level,
     'xp': xp,
@@ -175,15 +175,16 @@ class EntityStats {
     return mastery + bonus;
   }
 
-  /// Calcule l'attaque effective en prenant en compte les buffs de force
-  int get effectiveAttackPower {
+  /// La Puissance permanente plus la Puissance temporaire que portent les
+  /// statuts.
+  int get effectiveMight {
     int bonus = 0;
     for (var status in statuses) {
-      if (status.id == 'strength') {
+      if (status.id == 'might') {
         bonus += status.value;
       }
     }
-    return attackPower + bonus;
+    return might + bonus;
   }
 
   int get effectiveCritChance {

@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-17 | commit: 4e937fa -->
+<!-- last-sync: 2026-09-17 | commit: e9b193d -->
 
 # 🧠 Contexte Actuel
 
@@ -7,20 +7,18 @@
 
 ## Focus courant
 
-**P-49 (passifs partagés) est codé sur `feat/p49-passifs-partages`, pas encore fusionné dans
-`main`.** Les onze commits du lot (`a422544` → `4e937fa`, 2026-09-17, détail en « 3 dernières
-livraisons ») font déclarer par chaque passif ses classes éligibles et sa Maîtrise, lus par un
-point d'accès unique et un répartiteur de stratégies — voir
-[ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md), qui remplace la D4
-d'ADR-086. `dart analyze` propre et 923 tests au vert au dernier commit de code du lot (`ce8c2aa`) ;
-les trois commits suivants ne touchent que la documentation (`git diff --stat ce8c2aa HEAD --
-lib test assets` est vide ; métriques de `progress.md`, vérifiées le 2026-09-17). **Aucune note de
-version n'est encore écrite** : la note `0.5.2` sera rouverte en place pour l'absorber, avec
-l'accord du propriétaire — pas encore donné à ce jour (`docs/ROADMAP.md` §4).
+**P-41 lot B, partie 1 (la Puissance) est implémentée sur la branche `feat/p41-lot-b-puissance`,
+pas encore fusionnée** (2026-09-17, `f20c353`..`e9b193d`, 6 commits, détail en « 3 dernières
+livraisons ») : les trois puissances du lot A fusionnent en une seule, `might`, que chaque classe
+oriente (`HeroData.mightTargets`) — comportement de jeu inchangé, les trois classes ciblent
+`attack`. Voir [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende
+la décision 2 d'ADR-095.
 
-Le programme « Identité de classe & catalogue » continue avec **P-41 lot B** (`statRules`, les neuf
-passifs, stats de départ), qui dépend du lot A (fusionné) et de P-49 (livré sur branche, en attente
-de fusion).
+**P-49 (passifs partagés) est fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`) :
+chaque passif déclare ses classes éligibles et sa Maîtrise, lus par un point d'accès unique et un
+répartiteur de stratégies — voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md),
+qui remplace la D4 d'ADR-086. La note `0.5.2` a été rouverte en place pour l'absorber (`5f168db`),
+**toujours pas taguée**. Les métriques de `main` et de la branche sont dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
@@ -59,8 +57,21 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-49 — passifs partagés, éligibilité déclarée par le passif et Maîtrise hybride**
-   (2026-09-17, branche `feat/p49-passifs-partages`, **pas encore fusionnée**, 11 commits,
+1. **P-41 lot B, partie 1 — la Puissance, une seule stat orientée par la classe**
+   (2026-09-17, branche `feat/p41-lot-b-puissance`, **pas encore fusionnée**, 6 commits,
+   `f20c353` → `e9b193d`) — `attackPower`/`skillPower`/`alterationPower` (lot A) fusionnent en une
+   seule `might` ; `HeroData.mightTargets` (`class.json`, obligatoire) déclare ce qu'elle renforce,
+   copié dans `EntityStats.mightTargets` à la création du héros ; `PowerRules` lit cette copie sans
+   changer la forme de ses huit appels. Le statut `strength` devient `might` (`gain_might`,
+   `charge_might_turn`, `charge_might_combat`), `applyAttackBuff` (code mort) supprimé. Tous les
+   textes joueur disent Puissance/Might ; le sous-titre de la fiche de stats liste ce qu'elle
+   renforce (`Set<MightTarget>.shortLabel`). **Comportement de jeu inchangé** : les trois classes
+   ciblent `attack`. **Aucune migration de sauvegarde** (spec §7.5) : `SaveMigrator` reste en
+   version 2, son étape v1→v2 garde `attackPower` en format gelé, désormais ignoré à la lecture.
+   938 tests (+15), `dart analyze` propre. Voir
+   [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) (amende la décision 2 d'ADR-095).
+2. **P-49 — passifs partagés, éligibilité déclarée par le passif et Maîtrise hybride**
+   (2026-09-17, **fusionné dans `main` par la PR #39**, 11 commits,
    `a422544` → `4e937fa`) — chaque passif déclare ses classes éligibles (`classes`, absent = toutes)
    et ce qu'un point de Maîtrise lui apporte (`mastery`) ; `availablePassivesFor` devient l'unique
    point d'accès aux passifs d'une classe (sélection, tutoriel) ; `TraitSystem.dispatch` remplace
@@ -68,7 +79,7 @@ Réserves à ne pas perdre de vue :
    ADR-061). La Maîtrise d'Armure devient la Maîtrise, sa récompense l'Affinité ; `StatGains` perd
    sa règle spéciale. Changement de jeu assumé : Armure du Berserker devient multiplicative avec la
    Maîtrise. 923 tests (+47), `dart analyze` propre. Voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) (remplace la D4 d'ADR-086).
-2. **P-41 lot A — passage unique des gains, scission des puissances, migration de sauvegarde**
+3. **P-41 lot A — passage unique des gains, scission des puissances, migration de sauvegarde**
    (2026-09-16, **fusionné dans `main` par la PR #38**, branche `feat/p41-lot-a` supprimée, 10 commits,
    `674545c` → `b94c854`) — `StatGains.apply` devient le seul point de passage d'un gain d'armure,
    de mana ou de puissance, étiqueté par sa source (`GainSource`) ; la Maîtrise d'Armure ne s'ajoute
@@ -79,22 +90,12 @@ Réserves à ne pas perdre de vue :
    (repli sur `run_save_v1`) et ne détruit plus jamais une sauvegarde écrite par un build plus récent,
    conservée avec un message à l'accueil. 876 tests (+65), `dart analyze` propre. Voir
    [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
-3. **P-40 bloc 2 — cartes et forge** (2026-09-15, branche `fix/p40-bloc-2` **fusionnée par la
-   PR #37**, 11 commits de code et de
-   test, `b19b39a` → `9196a6e`) — une carte de classe porte 5 runes et non plus 10 ; trois
-   légendaires ne fusionnent plus en une `unique`, et une carte ainsi abîmée redevient légendaire
-   au chargement ; ni le draft de boss ni les deux Miroirs ne
-   copient plus une carte de classe ; Persistant retire l'épuisement à tout tier et ne se fusionne
-   plus. Trois causes plutôt que quatre symptômes : l'échelle de rareté devient `CardRarity.next` et
-   `forgeSlotBonus` au lieu de l'ordre de l'enum, la règle d'acquisition `CardRarity.isAcquirable`,
-   et une rune se déclare `stackable: false` en donnée, lue par un service unique, `ForgeRuneRules`
-   ([ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)). 811 tests,
-   38 de plus ; la revue a vérifié que les tests de régression échouent sur l'ancien code.
 
 > [!NOTE]
-> **Rotations.** La livraison sortie le 2026-09-17 (éditeur de contenu, habillage) est conservée
-> verbatim dans `../_archive/2026-09-17-activeContext-livraisons.md`. Les rotations précédentes :
-> `../_archive/2026-09-16-activeContext-livraisons.md`,
+> **Rotations.** Les deux livraisons sorties le 2026-09-17 sont conservées verbatim dans
+> `../_archive/2026-09-17-activeContext-livraisons-2.md` (P-40 bloc 2, cartes et forge) et
+> `../_archive/2026-09-17-activeContext-livraisons.md` (éditeur de contenu, habillage). Les
+> rotations précédentes : `../_archive/2026-09-16-activeContext-livraisons.md`,
 > `../_archive/2026-09-15-activeContext-livraisons-2.md`,
 > `../_archive/2026-09-15-activeContext-livraisons.md`,
 > `../_archive/2026-09-14-activeContext-livraisons.md`,
@@ -106,11 +107,10 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner `feat/p49-passifs-partages`, puis la décision du propriétaire sur la note de
-version.** `superpowers:finishing-a-development-branch` reste à invoquer pour le lot ; la note
-`0.5.2` sera rouverte en place pour l'absorber une fois l'accord donné (`docs/ROADMAP.md` §4).
-Une fois fusionné, **P-41 lot B** (`statRules`, les neuf passifs, stats de départ) devient
-exécutable : il dépend du lot A (fusionné) et de P-49. Le tag `v0.5.2` — seul geste déclenchant
+**Fusionner `feat/p41-lot-b-puissance`, puis écrire le plan de la partie 2 du lot B de P-41** :
+orientations réelles du Mage et du Paladin, conversion d'armure (`statRules`), les neuf passifs,
+stats de départ ([spec, §7](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)).
+Le tag `v0.5.2` — seul geste déclenchant
 `release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
 classe des cartes de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et
 combien.

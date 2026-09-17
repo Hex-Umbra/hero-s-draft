@@ -4,8 +4,8 @@ Pour offrir un défi adapté aux choix stratégiques du joueur tout en évitant 
 
 1. **Mécanique de Difficulté Dynamique (DDA Hybride)** :
    La difficulté ajuste la composition des combats selon un budget de menace calculé en comparant la puissance réelle du joueur avec celle théoriquement attendue :
-   - **Puissance Réelle du Joueur (`PlayerPower`)** : Évaluée en agrégeant ses PV max, son attaque permanente, son mana maximum, son nombre de reliques, et le nombre de cartes dans son deck principal :
-     $$\text{PlayerPower} = \text{maxHP} + (\text{attaque} \times 10) + (\text{maxMana} \times 15) + (\text{relicsCount} \times 5) + (\text{playerCardsCount} \times 2.0)$$
+   - **Puissance Réelle du Joueur (`PlayerPower`)** : Évaluée en agrégeant ses PV max, sa Puissance permanente (`might` — [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)), son mana maximum, son nombre de reliques, et le nombre de cartes dans son deck principal :
+     $$\text{PlayerPower} = \text{maxHP} + (\text{might} \times 10) + (\text{maxMana} \times 15) + (\text{relicsCount} \times 5) + (\text{playerCardsCount} \times 2.0)$$
    - **Puissance Attendue (`ExpectedPower`)** : Modèle de progression théorique basé sur le niveau du joueur et l'acte en cours :
      $$\text{ExpectedPower} = 145 + [(\text{playerLevel} - 1) \times 15] + [(\text{act} - 1) \times 20]$$
    - **Ajustement Amorti (`PowerModifier`)** : Un ratio de puissance amorti à $0.5$ pour éviter les sauts brusques de difficulté :

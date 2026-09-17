@@ -64,9 +64,10 @@ const saveMigrator = SaveMigrator(
   steps: {1: _migrateV1ToV2},
 );
 
-/// v1 → v2 (P-41, lot A) : `attaque` devient `attackPower`. `skillPower` et
-/// `alterationPower` n'ont pas à être écrites : `EntityStats.fromJson` les lit
-/// à 0 quand elles manquent. Aucun ennemi n'est sérialisé : `SaveService`
+/// v1 → v2 (P-41, lot A) : `attaque` devient `attackPower`. Depuis le lot B,
+/// `EntityStats.fromJson` lit `might` et ignore `attackPower` : avant la
+/// 1.0.0, la Puissance d'une ancienne partie est perdue, sans étape de
+/// migration (spec P-41, §7.5). Aucun ennemi n'est sérialisé : `SaveService`
 /// n'est jamais appelé en combat.
 Map<String, dynamic> _migrateV1ToV2(Map<String, dynamic> save) {
   final run = save['run'];

@@ -74,7 +74,7 @@ void main() {
         _harness([
           _status(id: 'poison', name: 'Poison'),
           _status(id: 'burn', name: 'Brûlure'),
-          _status(id: 'strength', name: 'Force', type: StatusType.buff),
+          _status(id: 'might', name: 'Puissance', type: StatusType.buff),
         ]),
       );
       await tester.pumpAndSettle();

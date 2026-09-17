@@ -75,7 +75,7 @@ class StatBadge extends PositionComponent
     if (type == StatType.hp && !isCircle) {
       size = GameConstants.badgeHpSize;
 
-      // 1. Dessine l'Attaque : Épée + Valeur
+      // 1. Dessine la Puissance : Épée + Valeur
       add(
         FlameSwordIcon(
           position: Vector2(0, size.y / 2),

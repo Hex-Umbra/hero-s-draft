@@ -117,12 +117,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         bgColor = Colors.pink.withValues(alpha: 0.12);
         text = l10n.eventGainMaxHp(action.value);
         break;
-      case 'gain_strength':
+      case 'gain_might':
         icon = Icons.bolt;
         iconColor = Colors.orangeAccent;
         textColor = Colors.orangeAccent;
         bgColor = Colors.orange.withValues(alpha: 0.12);
-        text = l10n.eventGainAttack(action.value);
+        text = l10n.eventGainMight(action.value);
         break;
       case 'gain_relic':
         icon = Icons.auto_awesome;
@@ -251,12 +251,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         bgColor = Colors.pink.withValues(alpha: 0.08);
         text = l10n.eventGainMaxHp(action.value);
         break;
-      case 'gain_strength':
+      case 'gain_might':
         icon = Icons.bolt;
         iconColor = Colors.orangeAccent;
         textColor = Colors.orangeAccent;
         bgColor = Colors.orange.withValues(alpha: 0.08);
-        text = l10n.eventGainAttack(action.value);
+        text = l10n.eventGainMight(action.value);
         break;
       case 'gain_relic':
         icon = Icons.auto_awesome;

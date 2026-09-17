@@ -87,7 +87,7 @@ class EncounterSystem {
     required int playerLevel,
     required int act,
     required int playerMaxHp,
-    required int playerAttaque,
+    required int playerMight,
     required int playerMaxMana,
     required int playerRelicsCount,
     required int playerCardsCount,
@@ -95,7 +95,7 @@ class EncounterSystem {
     required bool isElite,
   }) {
     final double playerPower = playerMaxHp +
-        (playerAttaque * 10.0) +
+        (playerMight * 10.0) +
         (playerMaxMana * 15.0) +
         (playerRelicsCount * 5.0) +
         (playerCardsCount * 2.0);
@@ -214,7 +214,7 @@ class EncounterSystem {
     int playerLevel = 1,
     int act = 1,
     int playerMaxHp = 100,
-    int playerAttaque = 0,
+    int playerMight = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
     int playerCardsCount = 0,
@@ -229,7 +229,7 @@ class EncounterSystem {
       playerLevel: playerLevel,
       act: act,
       playerMaxHp: playerMaxHp,
-      playerAttaque: playerAttaque,
+      playerMight: playerMight,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
       playerCardsCount: playerCardsCount,

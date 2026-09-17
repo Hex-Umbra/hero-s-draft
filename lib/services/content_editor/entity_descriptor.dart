@@ -10,6 +10,7 @@ import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/enemy_intent.dart';
+import '../../models/might_target.dart';
 
 /// Les sept categories d'entites editables. Elles sont en regard exact des
 /// sept appels a `loadAll` de `loadGameDataRegistry` — l'audio n'en est pas
@@ -344,7 +345,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       // `ClassIdentity.imageOf` retombe alors sur `classCard`.
       'iconPath': AssetSlot.image('icon.png', isRequired: false),
     },
-    requiredKeys: const {'maxHp', 'maxMana', 'baseDamage'},
+    requiredKeys: const {'maxHp', 'maxMana', 'baseDamage', 'mightTargets'},
+    enumListKeys: {'mightTargets': _names(MightTarget.values)},
     hexColorKeys: const {'themeColor'},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
@@ -359,6 +361,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "baseDamage": 5,
   "luck": 0,
   "mastery": 0,
+  "mightTargets": ["attack"],
   "displayOrder": 99,
   "themeColor": "#FF00FF"
 }''',

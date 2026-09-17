@@ -256,7 +256,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             playerLevel: runState.heroStats.level,
             act: runState.act,
             playerMaxHp: runState.heroStats.maxPv,
-            playerAttaque: runState.heroStats.attackPower,
+            playerMight: runState.heroStats.might,
             playerMaxMana: runState.heroStats.maxMana,
             playerRelicsCount: ref.read(inventoryProvider).relics.length,
             playerCardsCount: ref.read(deckProvider).masterDeck.length,
@@ -496,7 +496,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       currentPv: runState.heroStats.currentPv,
                       maxPv: runState.heroStats.maxPv,
                       armure: runState.heroStats.armure,
-                      effectiveAttackPower: runState.heroStats.effectiveAttackPower,
+                      effectiveMight: runState.heroStats.effectiveMight,
                     ),
 
                   if (!runState.isDead && !_showDraft)
