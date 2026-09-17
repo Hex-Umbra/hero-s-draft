@@ -19,7 +19,7 @@ enum LevelUpRewardType {
 class DraftChoice {
   final LevelUpRewardType type;
   final int pvBoost;
-  final int atkBoost;
+  final int mightBoost;
   final int masteryBoost;
   final int manaBoost;
   final int luckBoost;
@@ -31,7 +31,7 @@ class DraftChoice {
   const DraftChoice({
     required this.type,
     this.pvBoost = 0,
-    this.atkBoost = 0,
+    this.mightBoost = 0,
     this.masteryBoost = 0,
     this.manaBoost = 0,
     this.luckBoost = 0,
@@ -158,7 +158,7 @@ class LevelUpRewardService {
         int boost = (2 * multiplier).round();
         return DraftChoice(
           type: LevelUpRewardType.sharpening,
-          atkBoost: boost,
+          mightBoost: boost,
           rarity: rarity,
         );
       }

@@ -211,7 +211,7 @@ class RunController extends Notifier<RunState> {
         maxMana: 3,
         currentMana: 3,
         armure: 0,
-        attackPower: 0, // Force de base à 0
+        might: 0, // Puissance de base à 0
         luck: 0,
       ),
       pendingDrafts: 0,
@@ -243,7 +243,7 @@ class RunController extends Notifier<RunState> {
         currentMana: chosenClass.maxMana,
         armure: 0,
         mastery: chosenClass.mastery,
-        attackPower: 0, // Force de base à 0
+        might: 0, // Puissance de base à 0
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,
@@ -291,7 +291,7 @@ class RunController extends Notifier<RunState> {
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
   void applyHeroStatModifier({
     int maxPvAcc = 0,
-    int attackAcc = 0,
+    int mightAcc = 0,
     int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
@@ -300,7 +300,7 @@ class RunController extends Notifier<RunState> {
   }) {
     _playerStatsManager.applyHeroStatModifier(
       maxPvAcc: maxPvAcc,
-      attackAcc: attackAcc,
+      mightAcc: mightAcc,
       masteryAcc: masteryAcc,
       maxManaAcc: maxManaAcc,
       luckAcc: luckAcc,

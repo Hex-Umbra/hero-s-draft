@@ -10,7 +10,7 @@ void main() {
         currentMana: 3,
         armure: 1,
         mastery: 3,
-        attackPower: 2,
+        might: 2,
         lastActionWasCrit: true,
       );
 
@@ -32,11 +32,11 @@ void main() {
     test('puissances : chacune dans sa stat, et un gain negatif retire', () {
       final s = stats();
       expect(
-        StatGains.apply(s, const StatGain(GainResource.attackPower, 4, GainSource.progression)).attackPower,
+        StatGains.apply(s, const StatGain(GainResource.might, 4, GainSource.progression)).might,
         2 + 4,
       );
       expect(
-        StatGains.apply(s, const StatGain(GainResource.attackPower, -2, GainSource.progression)).attackPower,
+        StatGains.apply(s, const StatGain(GainResource.might, -2, GainSource.progression)).might,
         0,
       );
       expect(
@@ -55,7 +55,7 @@ void main() {
 
       expect(after.currentPv, 40);
       expect(after.currentMana, 3);
-      expect(after.attackPower, 2);
+      expect(after.might, 2);
       expect(after.mastery, 3);
       expect(after.lastActionWasCrit, isTrue);
     });

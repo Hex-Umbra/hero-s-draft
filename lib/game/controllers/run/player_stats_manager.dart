@@ -18,7 +18,7 @@ class PlayerStatsManager {
   /// Applique un modificateur à la carte héro (ex: récompense de draft)
   void applyHeroStatModifier({
     int maxPvAcc = 0,
-    int attackAcc = 0,
+    int mightAcc = 0,
     int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
@@ -55,7 +55,7 @@ class PlayerStatsManager {
       controller.currentState.copyWith(
         heroStats: StatGains.apply(
           modifiedStats,
-          StatGain(GainResource.attackPower, attackAcc, GainSource.progression),
+          StatGain(GainResource.might, mightAcc, GainSource.progression),
         ),
       ),
     );
@@ -197,7 +197,7 @@ class PlayerStatsManager {
         break;
       case 'gain_strength':
         if (relic.trigger == RelicTrigger.startOfRun) {
-          applyHeroStatModifier(attackAcc: relic.value);
+          applyHeroStatModifier(mightAcc: relic.value);
         } else {
           addStatus(
             StatusEffect(
@@ -386,7 +386,7 @@ class PlayerStatsManager {
           applyHeroStatModifier(maxManaAcc: -relic.value);
           break;
         case 'gain_strength':
-          applyHeroStatModifier(attackAcc: -relic.value);
+          applyHeroStatModifier(mightAcc: -relic.value);
           break;
         case 'gain_luck':
           applyHeroStatModifier(luckAcc: -relic.value);

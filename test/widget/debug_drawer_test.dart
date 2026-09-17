@@ -68,7 +68,7 @@ final _goblinData = EnemyData(
 
 EnemyInstance _freshGoblin() => EnemyInstance(
   data: _goblinData,
-  stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, attackPower: 5),
+  stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, might: 5),
 );
 
 /// Le registre doit etre **peuple** : avec des catalogues vides, les onglets

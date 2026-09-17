@@ -71,8 +71,8 @@ class TutorialEnemyIntentsWidget extends StatelessWidget {
 
   /// Ennemi d'entraînement dont l'intention d'attaque affichée vaut [value].
   ///
-  /// `attackPower: data.baseDamage` annule le multiplicateur de mise à l'échelle
-  /// d'`EnemyInstance.effectiveIntent` (`stats.attackPower / data.baseDamage`) :
+  /// `might: data.baseDamage` annule le multiplicateur de mise à l'échelle
+  /// d'`EnemyInstance.effectiveIntent` (`stats.might / data.baseDamage`) :
   /// la valeur rendue par le panneau est bien [value].
   EnemyInstance _sample(int value) {
     final data = engine.fixtures.trainingEnemy;
@@ -82,7 +82,7 @@ class TutorialEnemyIntentsWidget extends StatelessWidget {
         maxPv: data.maxHp,
         currentPv: data.maxHp,
         armure: 0,
-        attackPower: data.baseDamage,
+        might: data.baseDamage,
       ),
       currentIntent: EnemyIntent(type: IntentType.attack, value: value),
     );

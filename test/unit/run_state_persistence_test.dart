@@ -52,7 +52,7 @@ void main() {
             maxMana: 4,
             currentMana: 4,
             armure: 0,
-            attackPower: 0,
+            might: 0,
           ),
           mapNodes: const [],
           currentNodeId: 'floor_3_node_1',

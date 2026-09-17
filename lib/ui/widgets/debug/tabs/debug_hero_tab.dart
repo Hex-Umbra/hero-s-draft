@@ -36,11 +36,11 @@ class DebugHeroTab extends ConsumerWidget {
           ),
         ),
         DebugNumberField(
-          label: 'Attaque',
-          value: stats.attackPower,
+          label: 'Puissance',
+          value: stats.might,
           onSubmitted: (v) => DebugActions.updateHeroStats(
             ref.read,
-            (s) => s.copyWith(attackPower: v),
+            (s) => s.copyWith(might: v),
           ),
         ),
         DebugNumberField(

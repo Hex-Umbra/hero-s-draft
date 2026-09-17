@@ -18,12 +18,12 @@ class EnemyInstance {
     if (intent == null) return null;
     if (intent.type == IntentType.attack) {
       final double spawnMultiplier = data.baseDamage > 0
-          ? stats.attackPower / data.baseDamage
+          ? stats.might / data.baseDamage
           : 1.0;
       final int scaledValue = (intent.value * spawnMultiplier).round();
-      final int inBattleBonus = stats.effectiveAttackPower - stats.attackPower;
-      int finalValue = (stats.effectiveAttackPower > (scaledValue + inBattleBonus))
-          ? stats.effectiveAttackPower
+      final int inBattleBonus = stats.effectiveMight - stats.might;
+      int finalValue = (stats.effectiveMight > (scaledValue + inBattleBonus))
+          ? stats.effectiveMight
           : (scaledValue + inBattleBonus);
       if (stats.statuses.any((s) => s.id == 'freeze')) {
         finalValue = (finalValue * 0.5).round();

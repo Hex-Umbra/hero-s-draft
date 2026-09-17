@@ -12,7 +12,7 @@ extension PowerRules on EntityStats {
   /// qui le porte. La Force ne renforce que les cartes Attaque ; une carte
   /// Pouvoir ou Statut ne reçoit rien, par construction.
   int damageBonusFor(CardType type) => switch (type) {
-        CardType.attack => effectiveAttackPower,
+        CardType.attack => effectiveMight,
         CardType.skill => skillPower,
         CardType.power || CardType.status => 0,
       };

@@ -9,7 +9,7 @@ class EntityStats {
   final int currentMana;
   final int armure;
   final int mastery; // Maîtrise : chaque passif déclare ce qu'un point lui apporte (spec P-49, §6)
-  final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
+  final int might; // Dégâts des cartes Attaque — la Force s'y ajoute
   final int skillPower; // Dégâts des cartes Compétence
   final int alterationPower; // Intensité des statuts posés sur un ennemi
   final int luck;
@@ -28,7 +28,7 @@ class EntityStats {
     this.currentMana = 0,
     required this.armure,
     this.mastery = 0,
-    required this.attackPower,
+    required this.might,
     this.skillPower = 0,
     this.alterationPower = 0,
     this.luck = 0,
@@ -48,7 +48,7 @@ class EntityStats {
     int? currentMana,
     int? armure,
     int? mastery,
-    int? attackPower,
+    int? might,
     int? skillPower,
     int? alterationPower,
     int? luck,
@@ -67,7 +67,7 @@ class EntityStats {
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
       mastery: mastery ?? this.mastery,
-      attackPower: attackPower ?? this.attackPower,
+      might: might ?? this.might,
       skillPower: skillPower ?? this.skillPower,
       alterationPower: alterationPower ?? this.alterationPower,
       luck: luck ?? this.luck,
@@ -96,7 +96,7 @@ class EntityStats {
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
       mastery: json['mastery'] as int? ?? 0,
-      attackPower: json['attackPower'] as int,
+      might: json['might'] as int? ?? 0,
       skillPower: json['skillPower'] as int? ?? 0,
       alterationPower: json['alterationPower'] as int? ?? 0,
       luck: json['luck'] as int? ?? 0,
@@ -117,7 +117,7 @@ class EntityStats {
     'currentMana': currentMana,
     'armure': armure,
     'mastery': mastery,
-    'attackPower': attackPower,
+    'might': might,
     'skillPower': skillPower,
     'alterationPower': alterationPower,
     'luck': luck,
@@ -176,14 +176,14 @@ class EntityStats {
   }
 
   /// Calcule l'attaque effective en prenant en compte les buffs de force
-  int get effectiveAttackPower {
+  int get effectiveMight {
     int bonus = 0;
     for (var status in statuses) {
       if (status.id == 'strength') {
         bonus += status.value;
       }
     }
-    return attackPower + bonus;
+    return might + bonus;
   }
 
   int get effectiveCritChance {

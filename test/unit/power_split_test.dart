@@ -30,7 +30,7 @@ void main() {
       maxPv: 50,
       currentPv: 50,
       armure: 0,
-      attackPower: 2,
+      might: 2,
       skillPower: 3,
       alterationPower: 4,
       statuses: const [_strength],
@@ -55,7 +55,7 @@ void main() {
       maxPv: 50,
       currentPv: 50,
       armure: 0,
-      attackPower: 2,
+      might: 2,
       alterationPower: 4,
     );
 
@@ -113,7 +113,7 @@ void main() {
           maxPv: 100,
           currentPv: 100,
           armure: 0,
-          attackPower: 1,
+          might: 1,
         ),
       );
       enemyId = enemy.id;

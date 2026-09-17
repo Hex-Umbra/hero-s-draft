@@ -14,7 +14,7 @@ void main() {
               currentPv: 50,
               maxPv: 100,
               armure: 20,
-              effectiveAttackPower: 5,
+              effectiveMight: 5,
             ),
           ),
         ),

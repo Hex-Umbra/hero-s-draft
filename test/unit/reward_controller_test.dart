@@ -52,7 +52,7 @@ void main() {
           maxPv: 20,
           currentPv: 0,
           armure: 0,
-          attackPower: 5,
+          might: 5,
           level: level,
         ),
       );
