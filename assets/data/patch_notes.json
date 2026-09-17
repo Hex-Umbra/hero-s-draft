@@ -10,7 +10,17 @@
         "entries": [
           "Le jeu sait désormais convertir une sauvegarde écrite par une version précédente : une partie en cours se reprend normalement après une mise à jour, au lieu d'être perdue quand le format de sauvegarde évolue.",
           "Une partie sauvegardée par une version plus récente du jeu n'est plus effacée quand vous ouvrez une version plus ancienne : elle est conservée, et l'écran d'accueil vous indique d'ouvrir la version récente pour la reprendre.",
-          "Sur le site, une partie sauvegardée avec cette version n'est plus proposée par les versions précédentes du jeu, qui l'auraient effacée : reprenez-la depuis la version 0.5.2 ou une version plus récente."
+          "Sur le site, une partie sauvegardée avec cette version n'est plus proposée par les versions précédentes du jeu, qui l'auraient effacée : reprenez-la depuis la version 0.5.2 ou une version plus récente.",
+          "La Maîtrise d'Armure devient la Maîtrise : elle renforce désormais ce que produit votre passif, et chaque passif indique ce qu'un point de Maîtrise lui apporte.",
+          "La récompense Forge d'Acier devient Affinité, avec les mêmes valeurs : sa carte indique ce que la Maîtrise obtenue apporte à votre passif actuel.",
+          "La fiche des statistiques affiche l'effet de votre Maîtrise sur votre passif, et l'écran de sélection de classe indique ce qu'un point de Maîtrise apporte au passif de chaque classe."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Armure du Berserker : la Maîtrise s'applique désormais à chaque tranche de 10 PV manquants, au lieu d'une seule fois. Avec 2 points de Maîtrise et 40 PV manquants, vous gagnez 12 points d'Armure au lieu de 6."
         ]
       },
       {
