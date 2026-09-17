@@ -10,7 +10,7 @@ void main() {
         maxMana: 3,
         currentMana: 3,
         armure: 1,
-        armorMastery: 3,
+        mastery: 3,
         attackPower: 2,
         lastActionWasCrit: true,
       );
@@ -33,10 +33,10 @@ void main() {
       expect(StatGains.apply(stats(), gain).armure, 1 + 2 + 3);
     });
 
-    test('la Maitrise d un passif compte le statut armor_mastery', () {
+    test('la Maitrise d un passif compte le statut mastery', () {
       final boosted = stats().addStatus(
         const StatusEffect(
-          id: 'armor_mastery',
+          id: 'mastery',
           name: 'Maitrise',
           type: StatusType.buff,
           value: 1,
@@ -84,7 +84,7 @@ void main() {
       expect(after.currentPv, 40);
       expect(after.currentMana, 3);
       expect(after.attackPower, 2);
-      expect(after.armorMastery, 3);
+      expect(after.mastery, 3);
       expect(after.lastActionWasCrit, isTrue);
     });
   });

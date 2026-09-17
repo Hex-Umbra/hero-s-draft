@@ -32,7 +32,7 @@ void main() {
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,
-    armorMastery: 3,
+    mastery: 3,
   );
 
   const metallicize = StatusEffect(

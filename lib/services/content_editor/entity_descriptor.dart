@@ -358,7 +358,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "maxMana": 3,
   "baseDamage": 5,
   "luck": 0,
-  "armorMastery": 0,
+  "mastery": 0,
   "displayOrder": 99,
   "themeColor": "#FF00FF"
 }''',

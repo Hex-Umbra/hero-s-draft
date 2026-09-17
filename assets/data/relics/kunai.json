@@ -5,7 +5,7 @@
   "description_en": "Every 3 Attacks played in a turn, gain 1 Armor Mastery for combat.",
   "description_fr": "Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise d'Armure pour le combat.",
   "trigger": "onAttackPlayed",
-  "effectType": "charge_armor_mastery_combat",
+  "effectType": "charge_mastery_combat",
   "value": 1,
   "rarity": "rare",
   "emoji": "🗡️"

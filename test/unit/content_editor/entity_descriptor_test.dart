@@ -142,8 +142,8 @@ void main() {
         reason: 'un son n est pas une image');
   });
 
-  // `armorMastery` est lu par run_controller.dart:253 et applique a chaque
-  // gain d armure. Absent du gabarit, il etait invisible dans l editeur et
+  // `mastery` est lu par `startNewRun` : c'est la Maitrise de depart de la
+  // classe. Absent du gabarit, il etait invisible dans l editeur et
   // valait 0 pour les trois classes sans que personne l ait decide.
   test('le gabarit de classe expose toutes les stats que le modele lit', () {
     final template =
@@ -153,7 +153,7 @@ void main() {
       'maxMana',
       'baseDamage',
       'luck',
-      'armorMastery',
+      'mastery',
       'displayOrder',
       'themeColor',
     ]) {
@@ -232,7 +232,7 @@ void main() {
         'maxMana',
         'baseDamage',
         'luck',
-        'armorMastery',
+        'mastery',
         'displayOrder',
         'themeColor',
       },

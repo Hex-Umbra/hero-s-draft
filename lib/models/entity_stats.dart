@@ -8,7 +8,7 @@ class EntityStats {
   final int maxMana;
   final int currentMana;
   final int armure;
-  final int armorMastery; // Bonus permanent ajouté aux gains d'armure des passifs (voir StatGains)
+  final int mastery; // Bonus permanent ajouté aux gains d'armure des passifs (voir StatGains)
   final int attackPower; // Dégâts des cartes Attaque — la Force s'y ajoute
   final int skillPower; // Dégâts des cartes Compétence
   final int alterationPower; // Intensité des statuts posés sur un ennemi
@@ -27,7 +27,7 @@ class EntityStats {
     this.maxMana = 0,
     this.currentMana = 0,
     required this.armure,
-    this.armorMastery = 0,
+    this.mastery = 0,
     required this.attackPower,
     this.skillPower = 0,
     this.alterationPower = 0,
@@ -47,7 +47,7 @@ class EntityStats {
     int? maxMana,
     int? currentMana,
     int? armure,
-    int? armorMastery,
+    int? mastery,
     int? attackPower,
     int? skillPower,
     int? alterationPower,
@@ -66,7 +66,7 @@ class EntityStats {
       maxMana: maxMana ?? this.maxMana,
       currentMana: currentMana ?? this.currentMana,
       armure: armure ?? this.armure,
-      armorMastery: armorMastery ?? this.armorMastery,
+      mastery: mastery ?? this.mastery,
       attackPower: attackPower ?? this.attackPower,
       skillPower: skillPower ?? this.skillPower,
       alterationPower: alterationPower ?? this.alterationPower,
@@ -95,7 +95,7 @@ class EntityStats {
       maxMana: json['maxMana'] as int? ?? 0,
       currentMana: json['currentMana'] as int? ?? 0,
       armure: json['armure'] as int,
-      armorMastery: json['armorMastery'] as int? ?? 0,
+      mastery: json['mastery'] as int? ?? 0,
       attackPower: json['attackPower'] as int,
       skillPower: json['skillPower'] as int? ?? 0,
       alterationPower: json['alterationPower'] as int? ?? 0,
@@ -116,7 +116,7 @@ class EntityStats {
     'maxMana': maxMana,
     'currentMana': currentMana,
     'armure': armure,
-    'armorMastery': armorMastery,
+    'mastery': mastery,
     'attackPower': attackPower,
     'skillPower': skillPower,
     'alterationPower': alterationPower,
@@ -165,14 +165,14 @@ class EntityStats {
     return copyWith(statuses: newStatuses);
   }
 
-  int get effectiveArmorMastery {
+  int get effectiveMastery {
     int bonus = 0;
     for (var status in statuses) {
-      if (status.id == 'armor_mastery') {
+      if (status.id == 'mastery') {
         bonus += status.value;
       }
     }
-    return armorMastery + bonus;
+    return mastery + bonus;
   }
 
   /// Calcule l'attaque effective en prenant en compte les buffs de force

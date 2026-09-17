@@ -59,7 +59,7 @@ void main() {
         maxMana: 3,
         baseDamage: 5,
         luck: 0,
-        armorMastery: 0,
+        mastery: 0,
       );
       container.read(runProvider.notifier).startNewRun(dummyHero);
       container.read(inventoryProvider.notifier).gainGold(37);

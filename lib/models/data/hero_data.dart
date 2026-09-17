@@ -21,7 +21,7 @@ class HeroData {
   final int maxMana;
   final int baseDamage;
   final int luck;
-  final int armorMastery;
+  final int mastery;
   final List<String> skills;
 
   /// Rang d'affichage à la sélection de classe. Donnée de présentation :
@@ -41,7 +41,7 @@ class HeroData {
     required this.maxMana,
     required this.baseDamage,
     this.luck = 0,
-    this.armorMastery = 0,
+    this.mastery = 0,
     this.skills = const [],
     this.displayOrder = 0,
   });
@@ -75,7 +75,7 @@ class HeroData {
       maxMana: json['maxMana'] as int,
       baseDamage: json['baseDamage'] as int,
       luck: json['luck'] as int? ?? 0,
-      armorMastery: json['armorMastery'] as int? ?? 0,
+      mastery: json['mastery'] as int? ?? 0,
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??

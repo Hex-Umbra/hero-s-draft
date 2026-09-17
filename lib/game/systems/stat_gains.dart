@@ -64,5 +64,5 @@ abstract final class StatGains {
   /// (`level_up_reward_service.dart`). Sa refonte en bonus de passif est une
   /// décision de P-49 (spec P-41, §5.4).
   static int _masteryFor(EntityStats stats, StatGain gain) =>
-      gain.source == GainSource.passive ? stats.effectiveArmorMastery : 0;
+      gain.source == GainSource.passive ? stats.effectiveMastery : 0;
 }

@@ -242,7 +242,7 @@ class RunController extends Notifier<RunState> {
         maxMana: chosenClass.maxMana,
         currentMana: chosenClass.maxMana,
         armure: 0,
-        armorMastery: chosenClass.armorMastery,
+        mastery: chosenClass.mastery,
         attackPower: 0, // Force de base à 0
         luck: chosenClass.luck,
       ),
@@ -292,7 +292,7 @@ class RunController extends Notifier<RunState> {
   void applyHeroStatModifier({
     int maxPvAcc = 0,
     int attackAcc = 0,
-    int armorAcc = 0,
+    int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
     int critChanceAcc = 0,
@@ -301,7 +301,7 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.applyHeroStatModifier(
       maxPvAcc: maxPvAcc,
       attackAcc: attackAcc,
-      armorAcc: armorAcc,
+      masteryAcc: masteryAcc,
       maxManaAcc: maxManaAcc,
       luckAcc: luckAcc,
       critChanceAcc: critChanceAcc,

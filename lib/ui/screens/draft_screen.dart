@@ -641,7 +641,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       runController.applyHeroStatModifier(
         maxPvAcc: choice.pvBoost,
         attackAcc: choice.atkBoost,
-        armorAcc: choice.armorBoost,
+        masteryAcc: choice.armorBoost,
         maxManaAcc: choice.manaBoost,
         luckAcc: choice.luckBoost,
         critChanceAcc: choice.critChanceBoost,

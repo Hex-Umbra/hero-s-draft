@@ -55,7 +55,7 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
       luck: 0,
-      armorMastery: 0,
+      mastery: 0,
     );
 
     test(
@@ -635,7 +635,7 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
       luck: 0,
-      armorMastery: 0,
+      mastery: 0,
     );
 
     const ironTalisman = RelicData(

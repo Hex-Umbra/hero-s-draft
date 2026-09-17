@@ -19,7 +19,7 @@ class PlayerStatsManager {
   void applyHeroStatModifier({
     int maxPvAcc = 0,
     int attackAcc = 0,
-    int armorAcc = 0,
+    int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
     int critChanceAcc = 0,
@@ -45,7 +45,7 @@ class PlayerStatsManager {
       currentPv: newCurrentPv,
       maxMana: newMaxMana,
       currentMana: newCurrentMana,
-      armorMastery: currentStats.armorMastery + armorAcc,
+      mastery: currentStats.mastery + masteryAcc,
       luck: currentStats.luck + luckAcc,
       critChance: currentStats.critChance + critChanceAcc,
       critMultiplier: currentStats.critMultiplier + critDamageAcc,
@@ -248,7 +248,7 @@ class PlayerStatsManager {
       case 'increase_cards_per_turn':
         applyRunRuleModifier(cardsPerTurnAcc: relic.value);
         break;
-      case 'charge_armor_mastery_combat':
+      case 'charge_mastery_combat':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'kunai_charge');
         final int newVal = (existing.isEmpty ? 0 : existing.first.value) + 1;
         if (newVal >= 3) {
@@ -262,8 +262,8 @@ class PlayerStatsManager {
           );
           addStatus(
             StatusEffect(
-              id: 'armor_mastery',
-              name: 'Maîtrise d\'Armure (Relique)',
+              id: 'mastery',
+              name: 'Maîtrise (Relique)',
               type: StatusType.buff,
               value: relic.value,
               duration: 99,

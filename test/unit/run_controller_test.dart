@@ -53,7 +53,7 @@ void main() {
           maxMana: 3,
           baseDamage: 5,
           luck: 0,
-          armorMastery: 0,
+          mastery: 0,
         );
 
         runController.startNewRun(dummyHero);
@@ -79,7 +79,7 @@ void main() {
           maxMana: 3,
           baseDamage: 6,
           luck: 0,
-          armorMastery: 1,
+          mastery: 1,
         );
 
         // activePassive n'est déduit d'aucun repli codé en dur : on le
@@ -104,7 +104,7 @@ void main() {
 
         // At the start of combat, the passive should trigger:
         // Missing HP = 20. Gain = 20 ~/ 10 = 2 armor.
-        // Total gain = 2 + armorMastery (1) = 3 armor.
+        // Total gain = 2 + mastery (1) = 3 armor.
         runController.startCombat();
 
         expect(runController.state.heroStats.armure, 3);
@@ -133,7 +133,7 @@ void main() {
           maxMana: 3,
           baseDamage: 5,
           luck: 0,
-          armorMastery: 0,
+          mastery: 0,
         );
         runController.startNewRun(dummyHero);
 
@@ -260,7 +260,7 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
       luck: 0,
-      armorMastery: 0,
+      mastery: 0,
     );
 
     test('vaut 5 au démarrage d\'une run', () {
