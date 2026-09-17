@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/passives/passive_strategy.dart';
 import 'package:roguelike_card_game/game/systems/trait_system.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -153,13 +154,13 @@ void main() {
   group('armure des passifs : la valeur plus la Maitrise', () {
     test('gain_armor en debut de tour', () {
       run.startNewRun(paladin, passive(RelicTrigger.startOfTurn, 'gain_armor', 2));
-      TraitSystem.onTurnStart(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
       expect(heroStats().armure, 2 + 3);
     });
 
     test('gain_armor en fin de tour', () {
       run.startNewRun(paladin, passive(RelicTrigger.endOfTurn, 'gain_armor', 2));
-      TraitSystem.onTurnEnd(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
       expect(heroStats().armure, 2 + 3);
     });
 
@@ -169,7 +170,7 @@ void main() {
         passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
       );
       run.takeDamage(25);
-      TraitSystem.onTurnStart(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
       expect(heroStats().armure, 2 * 1 + 3);
     });
 
@@ -178,7 +179,7 @@ void main() {
         paladin,
         passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
       );
-      TraitSystem.onTurnStart(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
       expect(heroStats().armure, 0);
     });
 
@@ -188,10 +189,22 @@ void main() {
         passive(RelicTrigger.onCardPlayed, 'spell_armor', 1),
       );
 
-      TraitSystem.onCardPlayed(run, card(CardType.attack, const []));
+      TraitSystem.dispatch(
+        run,
+        PassiveEvent(
+          RelicTrigger.onCardPlayed,
+          card: card(CardType.attack, const []),
+        ),
+      );
       expect(heroStats().armure, 0);
 
-      TraitSystem.onCardPlayed(run, card(CardType.skill, const []));
+      TraitSystem.dispatch(
+        run,
+        PassiveEvent(
+          RelicTrigger.onCardPlayed,
+          card: card(CardType.skill, const []),
+        ),
+      );
       expect(heroStats().armure, 1 + 3);
     });
   });

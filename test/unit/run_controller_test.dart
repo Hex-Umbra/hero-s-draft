@@ -285,4 +285,46 @@ void main() {
       expect(container.read(runProvider).cardsPerTurn, 5);
     });
   });
+
+  group('RunController.endTurn', () {
+    const hero = HeroData(
+      id: 'berserker',
+      classCard: 'berserker.png',
+      maxHp: 100,
+      maxMana: 3,
+      baseDamage: 5,
+    );
+
+    test('le passif, puis les reliques de fin de tour', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+
+      const berserkerArmor = PassiveData(
+        id: 'berserker_armor',
+        trigger: RelicTrigger.endOfTurn,
+        effectType: 'berserker_armor',
+        value: 1,
+      );
+      runController.startNewRun(hero, berserkerArmor);
+      runController.takeDamage(30);
+      container.read(inventoryProvider.notifier).addRelic(
+            const RelicData(
+              id: 'test_heal',
+              trigger: RelicTrigger.endOfTurn,
+              effectType: 'heal',
+              value: 20,
+              rarity: RelicRarity.common,
+              emoji: '💧',
+            ),
+          );
+
+      runController.endTurn();
+
+      // Passif d'abord : 30 PV manquants, 3 d'armure. Les reliques d'abord
+      // auraient soigné avant, et laissé 10 PV manquants, 1 d'armure.
+      expect(runController.state.heroStats.armure, 3);
+      expect(runController.state.heroStats.currentPv, 90);
+    });
+  });
 }

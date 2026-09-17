@@ -13,7 +13,6 @@ import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../models/map_node.dart';
 import '../../game/services/effect_resolver.dart';
-import '../../game/systems/trait_system.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
@@ -519,10 +518,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           _showManaWarning = false;
                           _showRemainingManaWarning = false;
                         });
-                        TraitSystem.onTurnEnd(ref.read(runProvider.notifier));
-                        ref
-                            .read(runProvider.notifier)
-                            .applyRelics(RelicTrigger.endOfTurn);
+                        ref.read(runProvider.notifier).endTurn();
                         ref.read(deckProvider.notifier).discardHand();
                         _game.executeTurn();
                       },

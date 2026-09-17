@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
+import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -31,6 +32,16 @@ void main() {
   test('le registre contient au moins un heros et un ennemi', () {
     expect(registry.heroes, isNotEmpty);
     expect(registry.enemies, isNotEmpty);
+  });
+
+  test('chaque effectType de passif a sa strategie', () {
+    final offenders = [
+      for (final passive in registry.passives)
+        if (!PassiveStrategies.byEffectType.containsKey(passive.effectType))
+          '${passive.id} → effectType "${passive.effectType}" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
   test('toute classe declaree par un passif existe', () {
