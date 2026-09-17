@@ -17,14 +17,14 @@ void main() {
       const ReferencePanel(
         entityCount: 3,
         values: {
-          'passiveTrait': ['regen_armor', 'spell_armor'],
+          'effectType': ['regen_armor', 'spell_armor'],
         },
       ),
     );
 
     expect(find.text('VALEURS DÉJÀ UTILISÉES'), findsOneWidget);
     expect(find.text('Relevées dans 3 entités'), findsOneWidget);
-    expect(find.text('passiveTrait'), findsOneWidget);
+    expect(find.text('effectType'), findsOneWidget);
     expect(find.text('regen_armor'), findsOneWidget);
     expect(find.text('spell_armor'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);

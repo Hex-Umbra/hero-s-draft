@@ -55,7 +55,6 @@ void main() {
     classCard: 'test',
     maxHp: 10,
     maxMana: 3,
-    passiveTrait: 'regen_armor',
     baseDamage: 0,
   );
 

@@ -17,7 +17,7 @@
    - **6 Stratégies Spécifiques** :
      - `DamageEffectStrategy` : Gère le calcul des dégâts physiques/magiques (via `DamagePipeline`), l'application aux cibles (mono ou multi-ennemis) et les statuts associés.
      - `HealEffectStrategy` : Gère les soins prodigués avec prise en compte des chances critiques.
-     - `ArmorEffectStrategy` : Traite la génération d'armure intégrant la Maîtrise d'Armure effective.
+     - `ArmorEffectStrategy` : Traite la génération d'armure d'un effet de carte (`GainSource.card`) — la Maîtrise, elle, n'agit que sur les gains d'un passif ([`_patterns/03-3`](03-3-traitsystem-passifs-de-heros.md)), jamais sur ceux d'une carte.
      - `GainManaEffectStrategy` : Gère les gains de mana (restauration ou surcapacité temporaire).
      - `DrawEffectStrategy` : Déclenche la pioche de cartes dans le deck.
      - `ApplyStatusEffectStrategy` : Gère l'application d'effets de statut (buffs/debuffs) sur soi ou sur la cible.

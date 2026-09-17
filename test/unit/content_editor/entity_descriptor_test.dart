@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 
@@ -141,8 +142,8 @@ void main() {
         reason: 'un son n est pas une image');
   });
 
-  // `armorMastery` est lu par run_controller.dart:253 et applique a chaque
-  // gain d armure. Absent du gabarit, il etait invisible dans l editeur et
+  // `mastery` est lu par `startNewRun` : c'est la Maitrise de depart de la
+  // classe. Absent du gabarit, il etait invisible dans l editeur et
   // valait 0 pour les trois classes sans que personne l ait decide.
   test('le gabarit de classe expose toutes les stats que le modele lit', () {
     final template =
@@ -152,7 +153,7 @@ void main() {
       'maxMana',
       'baseDamage',
       'luck',
-      'armorMastery',
+      'mastery',
       'displayOrder',
       'themeColor',
     ]) {
@@ -189,9 +190,9 @@ void main() {
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
   // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
   // - `heroClass` et `category`, imposes par le repertoire ;
-  // - `passiveTrait`, qui est une `referenceKeys` : le formulaire le rend en
-  //   catalogue de passifs, pas en champ texte. L'assertion qui suit la table
-  //   le verifie.
+  // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
+  //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
+  //   qui suit la table le verifie.
   test('chaque gabarit porte exactement les cles attendues', () {
     const expected = <EntityCategory, Set<String>>{
       EntityCategory.card: {
@@ -211,7 +212,7 @@ void main() {
         'rarity',
         'emoji',
       },
-      EntityCategory.passive: {'trigger', 'effectType', 'value'},
+      EntityCategory.passive: {'trigger', 'effectType', 'value', 'mastery'},
       // Un evenement n'a qu'une cle de mecanique : le texte de ses choix est
       // imbrique dans `choices`, et le gabarit en montre un exemplaire complet.
       EntityCategory.event: {'choices'},
@@ -231,7 +232,7 @@ void main() {
         'maxMana',
         'baseDamage',
         'luck',
-        'armorMastery',
+        'mastery',
         'displayOrder',
         'themeColor',
       },
@@ -261,14 +262,15 @@ void main() {
     });
   });
 
-  // `passiveTrait` est la seule cle de modele deliberement absente d'un
-  // gabarit tout en restant atteignable : le formulaire la rend en catalogue
-  // de passifs (§5.5), et la substitution du §5.1 la laisse absente plutot que
-  // d'inventer une reference.
-  test('passiveTrait est atteignable par le catalogue, pas par le gabarit', () {
-    final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
-    expect(descriptor.decodeTemplate().containsKey('passiveTrait'), isFalse);
-    expect(descriptor.referenceKeys.keys, contains('passiveTrait'));
+  test('classes est atteignable par le catalogue, pas par le gabarit', () {
+    final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+    expect(descriptor.decodeTemplate().containsKey('classes'), isFalse);
+    expect(descriptor.referenceListKeys, {'classes': EntityCategory.heroClass});
+  });
+
+  test('mastery.field propose les parametres que le modele accepte', () {
+    final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+    expect(descriptor.enumKeys['mastery.field'], PassiveMastery.fields);
   });
 
   test('sfx est une ressource son des trois categories qui le lisent', () {

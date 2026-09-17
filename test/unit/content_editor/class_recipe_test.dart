@@ -49,7 +49,7 @@ void main() {
         jsonDecode(recipe().toDrafts().first.mechanics) as Map<String, dynamic>;
     expect(mechanics['maxHp'], 90);
     expect(mechanics['maxMana'], 3);
-    expect(mechanics['armorMastery'], 0);
+    expect(mechanics['mastery'], 0);
     expect(mechanics['themeColor'], '#FF00FF');
   });
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../game/systems/passive_availability.dart';
 import '../../models/data/hero_data.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
@@ -151,15 +152,19 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   Widget build(BuildContext context) {
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
-    final matchingPassives =
-        gameData.passives.where((p) => p.id == playerClass.passiveTrait);
-    final passive = matchingPassives.isEmpty ? null : matchingPassives.first;
+    // Le premier passif que le point d'accès unique ouvre à la classe : le
+    // choix entre plusieurs passifs revient au lot C de P-41.
+    final passives = availablePassivesFor(playerClass, gameData);
+    final passive = passives.isEmpty ? null : passives.first;
     final locale = Localizations.localeOf(context).languageCode;
 
     final classColor = ClassIdentity.colorOf(playerClass);
 
     final String traitName = passive?.getName(locale) ?? '—';
     final String traitDesc = passive?.getDescription(locale) ?? '';
+    // Ce qu'un point de Maîtrise apporte au passif (spec P-49, §6.5).
+    final String? masteryPerPoint = passive?.mastery?.describe(locale, 1);
+    final l10n = AppLocalizations.of(context)!;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -411,6 +416,27 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
+                                      if (masteryPerPoint != null) ...[
+                                        SizedBox(
+                                          height: widget.isMobile ? 1 : 3,
+                                        ),
+                                        Text(
+                                          l10n.passiveMasteryPerPoint(
+                                            masteryPerPoint,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: widget.isMobile
+                                                ? 9
+                                                : 10,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.cyanAccent.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            height: 1.2,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),

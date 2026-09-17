@@ -7,6 +7,8 @@ import 'package:roguelike_card_game/ui/screens/class_selection_screen.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
 
@@ -21,7 +23,6 @@ const _heroes = [
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,
-    passiveTrait: 'regen_armor',
     // Declared first but sorts last: keeps the grid order dependent on
     // displayOrder rather than on declaration order or List.sort stability.
     displayOrder: 3,
@@ -36,7 +37,6 @@ const _heroes = [
     maxHp: 80,
     maxMana: 3,
     baseDamage: 15,
-    passiveTrait: 'berserker_armor',
     // Declared second and sorts first (lowest displayOrder).
     displayOrder: 1,
   ),
@@ -50,7 +50,6 @@ const _heroes = [
     maxHp: 60,
     maxMana: 3,
     baseDamage: 10,
-    passiveTrait: 'spell_armor',
     // Declared third and sorts in the middle.
     displayOrder: 2,
   ),
@@ -58,12 +57,15 @@ const _heroes = [
 
 // Mock registry so ClassSelectionScreen (which calls `.requireValue` on
 // gameDataLoaderProvider) can build without loading real JSON assets.
-GameDataRegistry _registryOf(List<HeroData> heroes) => GameDataRegistry(
+GameDataRegistry _registryOf(
+  List<HeroData> heroes, {
+  List<PassiveData> passives = const [],
+}) => GameDataRegistry(
   enemies: const [],
   heroes: heroes,
   cards: const [],
   events: const [],
-  passives: const [],
+  passives: passives,
   relics: const [],
   forgeUpgrades: const [],
 );
@@ -72,6 +74,7 @@ Future<ProviderContainer> _buildAndReady(
   WidgetTester tester, {
   Locale locale = const Locale('en', ''),
   List<HeroData> heroes = _heroes,
+  List<PassiveData> passives = const [],
 }) async {
   // GridView.builder only lays out visible children. The default test
   // surface (800x600) fits just one row of hero cards at the desktop
@@ -84,7 +87,9 @@ Future<ProviderContainer> _buildAndReady(
 
   final container = ProviderContainer(
     overrides: [
-      gameDataLoaderProvider.overrideWith((ref) => _registryOf(heroes)),
+      gameDataLoaderProvider.overrideWith(
+        (ref) => _registryOf(heroes, passives: passives),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -223,5 +228,66 @@ void main() {
     expect(find.text('CHOISISSEZ VOTRE CLASSE'), findsOneWidget);
     expect(find.text('Le Paladin'), findsOneWidget);
     expect(find.text('Sélectionner'), findsNWidgets(_heroes.length));
+  });
+
+  group('le passif montre est lu par le point d acces unique', () {
+    const ward = PassiveData(
+      id: 'ward',
+      nameEn: 'Ward',
+      nameFr: 'Garde',
+      classes: ['paladin'],
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+    );
+    const aegis = PassiveData(
+      id: 'aegis',
+      nameEn: 'Aegis',
+      nameFr: 'Egide',
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 1,
+    );
+
+    testWidgets('seule la classe que le passif declare le montre', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(tester, passives: const [ward]);
+      expect(find.text('WARD'), findsOneWidget);
+    });
+
+    testWidgets(
+      'un passif ouvert a toutes les classes, premier par id, est montre partout',
+      (WidgetTester tester) async {
+        await _buildAndReady(tester, passives: const [ward, aegis]);
+        expect(find.text('AEGIS'), findsNWidgets(3));
+        expect(find.text('WARD'), findsNothing);
+      },
+    );
+
+    testWidgets('le passif dit ce qu un point de Maitrise lui apporte', (
+      WidgetTester tester,
+    ) async {
+      const regen = PassiveData(
+        id: 'regen_armor',
+        nameEn: 'Armor Regeneration',
+        nameFr: "Régénération d'Armure",
+        classes: ['paladin'],
+        trigger: RelicTrigger.endOfTurn,
+        effectType: 'gain_armor',
+        value: 2,
+        mastery: PassiveMastery(
+          field: 'value',
+          perPoint: 1,
+          descriptionEn: '+{amount} Block at end of turn',
+          descriptionFr: '+{amount} Armure en fin de tour',
+        ),
+      );
+      await _buildAndReady(tester, passives: const [regen]);
+      expect(
+        find.text('Per Mastery point: +1 Block at end of turn'),
+        findsOneWidget,
+      );
+    });
   });
 }

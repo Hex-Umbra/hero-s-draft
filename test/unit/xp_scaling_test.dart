@@ -22,7 +22,7 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
       luck: 1,
-      armorMastery: 0,
+      mastery: 0,
     );
 
     setUp(() {

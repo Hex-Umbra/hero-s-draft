@@ -59,8 +59,7 @@ void main() {
         maxMana: 3,
         baseDamage: 5,
         luck: 0,
-        armorMastery: 0,
-        passiveTrait: 'regen_armor',
+        mastery: 0,
       );
       container.read(runProvider.notifier).startNewRun(dummyHero);
       container.read(inventoryProvider.notifier).gainGold(37);
@@ -97,7 +96,6 @@ void main() {
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
-        passiveTrait: 'regen_armor',
       );
       container.read(runProvider.notifier).startNewRun(dummyHero);
       await SaveService.save(container.read);
@@ -187,7 +185,6 @@ void main() {
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
-        passiveTrait: 'regen_armor',
       );
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -227,7 +224,6 @@ void main() {
         maxHp: 100,
         maxMana: 3,
         baseDamage: 5,
-        passiveTrait: 'regen_armor',
       );
       final container = ProviderContainer();
       addTearDown(container.dispose);

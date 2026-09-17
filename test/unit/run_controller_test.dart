@@ -53,8 +53,7 @@ void main() {
           maxMana: 3,
           baseDamage: 5,
           luck: 0,
-          armorMastery: 0,
-          passiveTrait: 'regen_armor',
+          mastery: 0,
         );
 
         runController.startNewRun(dummyHero);
@@ -80,13 +79,12 @@ void main() {
           maxMana: 3,
           baseDamage: 6,
           luck: 0,
-          armorMastery: 1,
-          passiveTrait: 'berserker_armor',
+          mastery: 1,
         );
 
-        // activePassive n'est plus déduit du passiveTrait par un repli codé
-        // en dur : on le fournit explicitement, comme le ferait le vrai
-        // chargement depuis assets/data/passives/ via PassiveData.getById.
+        // activePassive n'est déduit d'aucun repli codé en dur : on le
+        // fournit explicitement, comme le ferait le vrai chargement depuis
+        // assets/data/passives/ via PassiveData.getById.
         const berserkerArmor = PassiveData(
           id: 'berserker_armor',
           nameEn: 'Berserker Armor',
@@ -94,6 +92,7 @@ void main() {
           trigger: RelicTrigger.startOfTurn,
           effectType: 'berserker_armor',
           value: 1,
+          mastery: PassiveMastery(field: 'value', perPoint: 1),
         );
 
         runController.startNewRun(berserkerHero, berserkerArmor);
@@ -105,11 +104,11 @@ void main() {
         runController.travelToNode('node_1');
 
         // At the start of combat, the passive should trigger:
-        // Missing HP = 20. Gain = 20 ~/ 10 = 2 armor.
-        // Total gain = 2 + armorMastery (1) = 3 armor.
+        // Missing HP = 20, i.e. 2 tranches. Mastery raises the passive's
+        // value first (spec P-49, §6.4): 2 × (1 + 1) = 4 armor.
         runController.startCombat();
 
-        expect(runController.state.heroStats.armure, 3);
+        expect(runController.state.heroStats.armure, 4);
 
         // When the node is completed, armor should reset to 0
         runController.completeCurrentNode();
@@ -135,8 +134,7 @@ void main() {
           maxMana: 3,
           baseDamage: 5,
           luck: 0,
-          armorMastery: 0,
-          passiveTrait: 'regen_armor',
+          mastery: 0,
         );
         runController.startNewRun(dummyHero);
 
@@ -263,8 +261,7 @@ void main() {
       maxMana: 3,
       baseDamage: 5,
       luck: 0,
-      armorMastery: 0,
-      passiveTrait: 'regen_armor',
+      mastery: 0,
     );
 
     test('vaut 5 au démarrage d\'une run', () {
@@ -287,6 +284,48 @@ void main() {
 
       runController.applyRunRuleModifier(cardsPerTurnAcc: -1);
       expect(container.read(runProvider).cardsPerTurn, 5);
+    });
+  });
+
+  group('RunController.endTurn', () {
+    const hero = HeroData(
+      id: 'berserker',
+      classCard: 'berserker.png',
+      maxHp: 100,
+      maxMana: 3,
+      baseDamage: 5,
+    );
+
+    test('le passif, puis les reliques de fin de tour', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final runController = container.read(runProvider.notifier);
+
+      const berserkerArmor = PassiveData(
+        id: 'berserker_armor',
+        trigger: RelicTrigger.endOfTurn,
+        effectType: 'berserker_armor',
+        value: 1,
+      );
+      runController.startNewRun(hero, berserkerArmor);
+      runController.takeDamage(30);
+      container.read(inventoryProvider.notifier).addRelic(
+            const RelicData(
+              id: 'test_heal',
+              trigger: RelicTrigger.endOfTurn,
+              effectType: 'heal',
+              value: 20,
+              rarity: RelicRarity.common,
+              emoji: '💧',
+            ),
+          );
+
+      runController.endTurn();
+
+      // Passif d'abord : 30 PV manquants, 3 d'armure. Les reliques d'abord
+      // auraient soigné avant, et laissé 10 PV manquants, 1 d'armure.
+      expect(runController.state.heroStats.armure, 3);
+      expect(runController.state.heroStats.currentPv, 90);
     });
   });
 }

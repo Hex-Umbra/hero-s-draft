@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/systems/passive_availability.dart';
+import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -19,7 +21,7 @@ void main() {
     registry = await loadGameDataRegistry(rootBundle);
   });
 
-  // Garde de tete de fichier : sans elle, les quatre tests suivants
+  // Garde de tete de fichier : sans elle, les tests suivants
   // bouclent sur `registry.heroes` et `registry.enemies` et passeraient a
   // vide si le bundle perdait la totalite de assets/data/classes/*/ ou
   // assets/data/enemies/*/ — une boucle for sur une liste vide ne produit
@@ -32,19 +34,45 @@ void main() {
     expect(registry.enemies, isNotEmpty);
   });
 
-  test('tout passiveTrait designe un passif existant', () {
-    final known = registry.passives.map((p) => p.id).toSet();
+  test('chaque effectType de passif a sa strategie', () {
+    final offenders = [
+      for (final passive in registry.passives)
+        if (!PassiveStrategies.byEffectType.containsKey(passive.effectType))
+          '${passive.id} → effectType "${passive.effectType}" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('toute classe declaree par un passif existe', () {
+    final known = registry.heroes.map((h) => h.id).toSet();
     final offenders = <String>[];
 
-    for (final hero in registry.heroes) {
-      final trait = hero.passiveTrait;
-      if (trait == null) continue;
-      if (!known.contains(trait)) {
-        offenders.add('${hero.id} → passiveTrait "$trait" introuvable');
+    for (final passive in registry.passives) {
+      for (final heroId in passive.classes ?? const <String>[]) {
+        if (!known.contains(heroId)) {
+          offenders.add('${passive.id} → classe "$heroId" introuvable');
+        }
       }
     }
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Une classe sans passif disponible démarrerait sa run sans passif : le jeu
+  // le permet (`passive_absent_test`), mais aucune classe livrée n'est dans ce
+  // cas (spec P-49, §4.2).
+  test('chaque classe a au moins un passif disponible', () {
+    final offenders = [
+      for (final hero in registry.heroes)
+        if (availablePassivesFor(hero, registry).isEmpty) hero.id,
+    ];
+
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'classes sans passif : ${offenders.join(', ')}',
+    );
   });
 
   test('toute carte de signature existe et appartient bien a sa classe', () {

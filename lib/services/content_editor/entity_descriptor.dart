@@ -65,6 +65,7 @@ class EntityDescriptor {
     this.enumKeys = const {},
     this.enumListKeys = const {},
     this.referenceKeys = const {},
+    this.referenceListKeys = const {},
     this.hexColorKeys = const {},
     this.assetKeys = const {},
     this.vocabularyKeys = const {},
@@ -95,9 +96,15 @@ class EntityDescriptor {
   /// Comme [enumKeys], pour une cle portant une **liste** de valeurs.
   final Map<String, List<String>> enumListKeys;
 
-  /// Cle -> categorie que sa valeur doit designer. `passiveTrait` pointe un
-  /// passif, et `referential_integrity_test` le verifie deja.
+  /// Cle -> categorie que sa valeur doit designer. Aucun descripteur livre
+  /// n'en declare depuis que la classe ne nomme plus son passif (spec P-49,
+  /// §3.4) : le mecanisme reste, verifie sur un descripteur de test.
   final Map<String, EntityCategory> referenceKeys;
+
+  /// Comme [referenceKeys], pour une cle portant une **liste** de references.
+  /// Absente, la cle vaut « toute la categorie » ; une liste vide est refusee.
+  /// `classes` d'un passif (spec P-49, §8).
+  final Map<String, EntityCategory> referenceListKeys;
 
   /// Les cles dont la valeur, si presente, doit etre un `#RRGGBB` valide —
   /// `themeColor` pour une classe. Une cle absente reste optionnelle et
@@ -242,7 +249,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Passif',
     directory: 'passives',
     requiredKeys: const {'trigger', 'effectType', 'value'},
-    enumKeys: {'trigger': _names(RelicTrigger.values)},
+    enumKeys: {
+      'trigger': _names(RelicTrigger.values),
+      'mastery.field': PassiveMastery.fields,
+    },
+    // Absente du gabarit : sans `classes`, le passif est ouvert a toutes les
+    // classes (spec P-49, §3.2).
+    referenceListKeys: const {'classes': EntityCategory.heroClass},
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
     vocabularyKeys: const {'effectType'},
@@ -250,7 +263,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
 {
   "trigger": "startOfTurn",
   "effectType": "gain_armor",
-  "value": 2
+  "value": 2,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_fr": "+{amount} Armure en debut de tour",
+    "description_en": "+{amount} Block at start of turn"
+  }
 }''',
   ),
   EntityCategory.event: EntityDescriptor(
@@ -326,7 +345,6 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       'iconPath': AssetSlot.image('icon.png', isRequired: false),
     },
     requiredKeys: const {'maxHp', 'maxMana', 'baseDamage'},
-    referenceKeys: const {'passiveTrait': EntityCategory.passive},
     hexColorKeys: const {'themeColor'},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
@@ -340,7 +358,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "maxMana": 3,
   "baseDamage": 5,
   "luck": 0,
-  "armorMastery": 0,
+  "mastery": 0,
   "displayOrder": 99,
   "themeColor": "#FF00FF"
 }''',

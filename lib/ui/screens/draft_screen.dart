@@ -129,6 +129,8 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     ref.read(musicConductorProvider).onScene(MusicScene.map);
 
     final l10n = AppLocalizations.of(context)!;
+    // Affinité se décrit par le passif actif (spec P-49, §6.5).
+    final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
     final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
 
     return Stack(
@@ -228,6 +230,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                   DraftChoiceLabels.getChoiceDescription(
                                                 l10n,
                                                 choice,
+                                                passive: activePassive,
                                               ),
                                               onTap: () {
                                                 if (_hasMythicChoices &&
@@ -319,6 +322,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             description: DraftChoiceLabels.getChoiceDescription(
                                               l10n,
                                               choice,
+                                              passive: activePassive,
                                             ),
                                             onTap: () {
                                               if (_hasMythicChoices &&
@@ -443,6 +447,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                         description: DraftChoiceLabels.getChoiceDescription(
                                           l10n,
                                           choice,
+                                          passive: activePassive,
                                         ),
                                         onTap: () {},
                                         rarity: DraftChoiceLabels.rarityToString(
@@ -641,7 +646,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       runController.applyHeroStatModifier(
         maxPvAcc: choice.pvBoost,
         attackAcc: choice.atkBoost,
-        armorAcc: choice.armorBoost,
+        masteryAcc: choice.masteryBoost,
         maxManaAcc: choice.manaBoost,
         luckAcc: choice.luckBoost,
         critChanceAcc: choice.critChanceBoost,

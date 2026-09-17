@@ -6,14 +6,14 @@ import 'package:roguelike_card_game/game/services/level_up_reward_service.dart';
 ///
 /// Rien ne couvrait ces valeurs : `probabilities_test.dart` ne teste que les
 /// probabilités de tirage, jamais l'ampleur du gain. C'est ce trou qui a
-/// laissé la Forge d'Acier légendaire retomber sur la valeur d'un commun
+/// laissé la Forge d'Acier — aujourd'hui l'Affinité — légendaire retomber sur la valeur d'un commun
 /// (+1 Maîtrise au lieu de +7), sans que rien ne le signale.
 
 /// La table attendue, une entrée par type et par rareté.
 ///
 /// Les six types passent par deux courbes distinctes : un multiplicateur
 /// générique (×1 / ×1,5 / ×2 / ×3 / ×4) pour Vitalité, Aiguisage et Sagesse,
-/// et des tables propres pour Forge d'Acier, Précision et Férocité. Les
+/// et des tables propres pour Affinité, Précision et Férocité. Les
 /// arrondis sont ceux de `num.round()`, qui écarte de zéro : 7,5 donne 8.
 const Map<LevelUpRewardType, Map<RewardRarity, num>> _attendu = {
   LevelUpRewardType.vitality: {
@@ -30,7 +30,7 @@ const Map<LevelUpRewardType, Map<RewardRarity, num>> _attendu = {
     RewardRarity.epic: 6,
     RewardRarity.legendary: 8,
   },
-  LevelUpRewardType.steelForge: {
+  LevelUpRewardType.affinity: {
     RewardRarity.common: 1,
     RewardRarity.uncommon: 2,
     RewardRarity.rare: 3,
@@ -70,8 +70,8 @@ num? _valeurDe(DraftChoice choix) {
       return choix.pvBoost;
     case LevelUpRewardType.sharpening:
       return choix.atkBoost;
-    case LevelUpRewardType.steelForge:
-      return choix.armorBoost;
+    case LevelUpRewardType.affinity:
+      return choix.masteryBoost;
     case LevelUpRewardType.wisdom:
       return choix.manaBoost;
     case LevelUpRewardType.precision:
@@ -179,12 +179,12 @@ void main() {
       }
     });
 
-    test('la Forge d\'Acier légendaire vaut plus que l\'épique', () {
+    test('l\'Affinité légendaire vaut plus que l\'épique', () {
       // Non-régression directe du défaut trouvé : la cascade de `if` sans
       // palier légendaire renvoyait 1, soit la valeur d'un commun.
-      final forge = _attendu[LevelUpRewardType.steelForge]!;
-      expect(forge[RewardRarity.legendary], greaterThan(forge[RewardRarity.epic]!));
-      expect(forge[RewardRarity.legendary], isNot(forge[RewardRarity.common]));
+      final affinity = _attendu[LevelUpRewardType.affinity]!;
+      expect(affinity[RewardRarity.legendary], greaterThan(affinity[RewardRarity.epic]!));
+      expect(affinity[RewardRarity.legendary], isNot(affinity[RewardRarity.common]));
     });
   });
 }

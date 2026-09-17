@@ -58,7 +58,7 @@ class TutorialMockState {
       maxMana: hero.maxMana,
       currentMana: hero.maxMana,
       armure: 0,
-      armorMastery: hero.armorMastery,
+      mastery: hero.mastery,
       attackPower: 0,
       luck: hero.luck,
     );

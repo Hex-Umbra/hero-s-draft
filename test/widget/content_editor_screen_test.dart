@@ -85,8 +85,6 @@ void main() {
         '"themeColor":"$color","maxHp":100,"maxMana":3,"baseDamage":5}',
       );
     }
-    Directory('$root/assets/data/passives').createSync(recursive: true);
-    File('$root/assets/data/passives/regen_armor.json').writeAsStringSync('{}');
   }
 
   /// Le bouton de choix qui porte [label].
@@ -295,14 +293,14 @@ void main() {
       await tester.pumpAndSettle();
       expectReadable(const ['Neutre', 'mage', 'paladin']);
 
-      await tester.tap(find.text('Classe'));
+      await tester.tap(find.text('Passif'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('regen_armor'));
-      await tester.tap(find.text('regen_armor'));
+      await tester.ensureVisible(find.text('paladin'));
+      await tester.tap(find.text('paladin'));
       await tester.pumpAndSettle();
-      expectReadable(const ['regen_armor']);
+      expectReadable(const ['paladin']);
     });
 
     testWidgets('seul le choix actif est marque choisi', (tester) async {
@@ -847,21 +845,20 @@ void main() {
     );
   });
 
-  testWidgets('le passif se choisit dans le catalogue, pas dans l usage',
+  testWidgets('les classes d un passif se choisissent dans le catalogue',
       (tester) async {
-    // Un passif present sur le disque qu'aucune classe n'emploie : le cas que
-    // `knownValues`, qui liste les valeurs *employees*, manquerait.
-    Directory('$root/assets/data/passives').createSync(recursive: true);
-    File('$root/assets/data/passives/chance_du_joueur.json')
-        .writeAsStringSync('{}');
+    // Une classe presente sur le disque qu'aucun passif ne declare : le cas
+    // que `knownValues`, qui liste les valeurs *employees*, manquerait.
+    Directory('$root/assets/data/classes/barde').createSync(recursive: true);
+    File('$root/assets/data/classes/barde/class.json').writeAsStringSync('{}');
 
     await tester.pumpWidget(harness(projectRoot: root));
-    await tester.tap(find.text('Classe'));
+    await tester.tap(find.text('Passif'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Créer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('chance_du_joueur'), findsWidgets);
+    expect(buttonOf('barde'), findsOneWidget);
   });
 
   testWidgets('une saisie non entiere est une faute, et rien n est ecrit',

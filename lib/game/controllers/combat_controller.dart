@@ -11,6 +11,7 @@ import '../../../models/data/relic_data.dart';
 import '../../../models/map_node.dart';
 import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
+import '../systems/passives/passive_strategy.dart';
 import '../systems/trait_system.dart';
 import '../services/effect_resolver.dart';
 import '../services/effects/effect_strategy.dart';
@@ -224,7 +225,10 @@ class CombatController extends Notifier<CombatState> {
       deckController.playCard(card);
 
       // 3. Déclencher les traits passifs
-      TraitSystem.onCardPlayed(runController, card);
+      TraitSystem.dispatch(
+        runController,
+        PassiveEvent(RelicTrigger.onCardPlayed, card: card),
+      );
 
       // 4. Déclencher les reliques liées aux cartes jouées
       runController.applyRelics(RelicTrigger.onCardPlayed);

@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/passives/passive_strategy.dart';
 import 'package:roguelike_card_game/game/systems/trait_system.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -18,21 +19,21 @@ import 'package:roguelike_card_game/models/status_effect.dart';
 /// Fige le comportement des gains d'armure, de mana et de puissance tel qu'il
 /// était avant leur passage par `StatGains` (spec P-41, §4.1). Ces tests
 /// passent sur le code d'origine et restent inchangés après la conversion :
-/// c'est la preuve que le lot A ne change rien au jeu.
+/// c'est la preuve que le lot A ne change rien au jeu. Une seule valeur a
+/// changé depuis, voulue : Armure du Berserker avec de la Maîtrise (P-49).
 ///
 /// Couverts ailleurs : l'intention « défense » d'un ennemi
 /// (`combat_controller_test.dart`) et l'armure d'une carte du tutoriel
 /// (`tutorial/tutorial_engine_test.dart`).
 void main() {
-  // Une Maîtrise d'Armure non nulle : elle ne doit s'ajouter qu'aux passifs.
+  // Une Maîtrise non nulle : seuls les passifs qui la déclarent en tirent parti.
   const paladin = HeroData(
     id: 'paladin',
     classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
     baseDamage: 5,
-    armorMastery: 3,
-    passiveTrait: 'regen_armor',
+    mastery: 3,
   );
 
   const metallicize = StatusEffect(
@@ -101,6 +102,7 @@ void main() {
         trigger: trigger,
         effectType: effectType,
         value: value,
+        mastery: const PassiveMastery(field: 'value', perPoint: 1),
       );
 
   group('armure hors passifs : la valeur seule, jamais la Maitrise', () {
@@ -151,27 +153,31 @@ void main() {
     });
   });
 
-  group('armure des passifs : la valeur plus la Maitrise', () {
+  // P-49 (spec, §6.4) : la Maîtrise augmente le paramètre que le passif
+  // déclare, avant son calcul. Régénération et Armure Magique n'en voient pas
+  // la différence ; Armure du Berserker, si — changement voulu.
+  group('armure des passifs : la Maitrise augmente le parametre declare', () {
     test('gain_armor en debut de tour', () {
       run.startNewRun(paladin, passive(RelicTrigger.startOfTurn, 'gain_armor', 2));
-      TraitSystem.onTurnStart(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
       expect(heroStats().armure, 2 + 3);
     });
 
     test('gain_armor en fin de tour', () {
       run.startNewRun(paladin, passive(RelicTrigger.endOfTurn, 'gain_armor', 2));
-      TraitSystem.onTurnEnd(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
       expect(heroStats().armure, 2 + 3);
     });
 
-    test('berserker_armor : par tranche de 10 PV manquants', () {
+    test('berserker_armor : la Maitrise compte a chaque tranche (P-49)', () {
       run.startNewRun(
         paladin,
         passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
       );
       run.takeDamage(25);
-      TraitSystem.onTurnStart(run);
-      expect(heroStats().armure, 2 * 1 + 3);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
+      // Avant P-49 : 2 tranches × 1 + 3 = 5.
+      expect(heroStats().armure, 2 * (1 + 3));
     });
 
     test('berserker_armor a pleine vie : rien, pas meme la Maitrise', () {
@@ -179,7 +185,7 @@ void main() {
         paladin,
         passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
       );
-      TraitSystem.onTurnStart(run);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
       expect(heroStats().armure, 0);
     });
 
@@ -189,10 +195,22 @@ void main() {
         passive(RelicTrigger.onCardPlayed, 'spell_armor', 1),
       );
 
-      TraitSystem.onCardPlayed(run, card(CardType.attack, const []));
+      TraitSystem.dispatch(
+        run,
+        PassiveEvent(
+          RelicTrigger.onCardPlayed,
+          card: card(CardType.attack, const []),
+        ),
+      );
       expect(heroStats().armure, 0);
 
-      TraitSystem.onCardPlayed(run, card(CardType.skill, const []));
+      TraitSystem.dispatch(
+        run,
+        PassiveEvent(
+          RelicTrigger.onCardPlayed,
+          card: card(CardType.skill, const []),
+        ),
+      );
       expect(heroStats().armure, 1 + 3);
     });
   });

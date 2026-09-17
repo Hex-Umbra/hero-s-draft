@@ -45,7 +45,6 @@ void main() {
           currentLevel: 5,
           act: 2,
           heroClassId: 'paladin',
-          passiveTrait: 'regen_armor',
           activePassive: regenArmor,
           heroStats: EntityStats(
             maxPv: 80,
@@ -74,7 +73,6 @@ void main() {
       expect(restored.currentLevel, 5);
       expect(restored.act, 2);
       expect(restored.heroClassId, 'paladin');
-      expect(restored.passiveTrait, 'regen_armor');
       expect(restored.activePassive?.id, 'regen_armor');
       expect(restored.heroStats.currentPv, 60);
       expect(restored.currentNodeId, 'floor_3_node_1');
@@ -105,7 +103,6 @@ void main() {
       json['activePassiveId'] = 'removed_passive';
       json['activePassiveNameFr'] = 'Passif Retiré';
       json['activePassiveNameEn'] = 'Removed Passive';
-      json['passiveTrait'] = 'removed_passive';
 
       final (restored, missing) = RunState.fromJsonWithReport(json);
 

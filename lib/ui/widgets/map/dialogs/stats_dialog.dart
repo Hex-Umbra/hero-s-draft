@@ -52,6 +52,12 @@ class StatsDialog extends ConsumerWidget {
     final traitDesc = passive?.getDescription(locale) ?? '';
 
     final stats = runState.heroStats;
+    // L'effet de la Maîtrise acquise sur le passif actif, s'il en tire un
+    // (spec P-49, §6.5).
+    final mastery = passive?.mastery;
+    final masteryEffect = mastery != null && stats.effectiveMastery > 0
+        ? mastery.describe(locale, stats.effectiveMastery)
+        : null;
 
     return GameDialog(
       glowColor: classColor,
@@ -180,9 +186,8 @@ class StatsDialog extends ConsumerWidget {
                       size: 16,
                     ),
                     title: locale == 'fr' ? 'Maîtrise' : 'Mastery',
-                    value: '+${stats.effectiveArmorMastery}',
-                    subtitle:
-                        locale == 'fr' ? "Sur l'Armure Passive" : "On passive armor",
+                    value: '+${stats.effectiveMastery}',
+                    subtitle: locale == 'fr' ? 'Sur votre passif' : 'On your passive',
                   ),
                 ),
               ],
@@ -264,6 +269,18 @@ class StatsDialog extends ConsumerWidget {
                       height: 1.3,
                     ),
                   ),
+                  if (masteryEffect != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.passiveMasteryCurrent(masteryEffect),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent.withValues(alpha: 0.8),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

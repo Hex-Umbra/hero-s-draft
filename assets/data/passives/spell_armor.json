@@ -2,9 +2,16 @@
   "id": "spell_armor",
   "name_en": "Spell Armor",
   "name_fr": "Armure Magique",
-  "description_en": "Gain 1 Block (+ Mastery) instantly each time you play a Skill card.",
-  "description_fr": "Gagne 1 point d'Armure (+ Maîtrise) instantanément chaque fois que vous jouez une carte Compétence.",
+  "description_en": "Gain 1 Block instantly each time you play a Skill card.",
+  "description_fr": "Gagne 1 point d'Armure instantanément chaque fois que vous jouez une carte Compétence.",
+  "classes": ["mage"],
   "trigger": "onCardPlayed",
   "effectType": "spell_armor",
-  "value": 1
+  "value": 1,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Block per Skill played",
+    "description_fr": "+{amount} Armure par Compétence jouée"
+  }
 }

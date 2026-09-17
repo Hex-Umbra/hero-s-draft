@@ -25,8 +25,7 @@ const paladin = HeroData(
   maxMana: 3,
   baseDamage: 5,
   luck: 0,
-  armorMastery: 0,
-  passiveTrait: 'regen_armor',
+  mastery: 0,
 );
 
 /// Une run *debug*, seule dans laquelle `DebugActions` accepte d'agir.

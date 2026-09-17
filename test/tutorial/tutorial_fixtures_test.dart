@@ -25,9 +25,14 @@ void main() {
       expect(fixtures.heroes.map((h) => h.id), ['paladin', 'berserker', 'mage']);
     });
 
-    test('chaque classe a un passif résoluble', () {
+    test('chaque classe a pour passif le premier que lui ouvre le point d acces', () {
+      const attendus = {
+        'paladin': 'regen_armor',
+        'berserker': 'berserker_armor',
+        'mage': 'spell_armor',
+      };
       for (final hero in fixtures.heroes) {
-        expect(fixtures.passiveFor(hero).id, hero.passiveTrait);
+        expect(fixtures.passiveFor(hero).id, attendus[hero.id]);
       }
     });
 

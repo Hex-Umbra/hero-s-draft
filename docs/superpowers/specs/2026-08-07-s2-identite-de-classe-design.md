@@ -1,7 +1,7 @@
 # S2 — Identité de classe — Conception
 
 Date : 2026-08-07 · **Révisée le 2026-09-16**
-Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D et chantier frère P-49 non implémentés
+Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D non implémentés ; chantier frère P-49 implémenté (branche `feat/p49-passifs-partages`), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
 
 > [!IMPORTANT]
 > **Révision du 2026-09-16 — lire le §0 avant tout le reste.** La conception du 2026-08-07 a été
@@ -48,7 +48,7 @@ Sources amont :
 | D4 | Découpage | **Lots distincts**, chacun avec son plan, sa branche et sa PR | §2 |
 | D5 | Tutoriel et console de debug | **Un lot dédié** (lot D) pour leur mise à jour fonctionnelle | §9 |
 | D6 | Méta-progression | **Pour plus tard** (P-13), mais **préparée ici** et documentée dans la ROADMAP | §10 |
-| D7 | Maîtrise d'Armure | **À refondre en bonus de passif**, pour rester cohérente avec les neuf passifs : stat globale ou stat par passif, **à trancher au brainstorm de P-49**. Le lot A n'y touche pas | §5.4 |
+| D7 | Maîtrise d'Armure | **À refondre en bonus de passif**, pour rester cohérente avec les neuf passifs : stat globale ou stat par passif, **à trancher au brainstorm de P-49**. Le lot A n'y touche pas. **Tranchée le 2026-09-16** : une seule stat, *Maîtrise*, dont chaque passif déclare l'effet — [spec de P-49](2026-09-16-p49-passifs-partages-design.md), N1 | §5.4 |
 | D8 | Sauvegardes et versions publiées | **Nouvelle clé `run_save`**, relue en repli sur `run_save_v1` ; une sauvegarde écrite par un build plus récent n'est **jamais effacée** | §4.3 |
 
 ### 0.2. Ce que la re-vérification a changé
@@ -144,7 +144,7 @@ chaque `iron_wall` d'un joueur ayant tiré une Forge d'Acier légendaire.
 **Décision D7 (2026-09-16) : ne pas la généraliser, la refondre.** Le problème n'est pas le périmètre
 de la maîtrise mais son nom et sa forme : une stat qui ne sert qu'aux passifs, mais qui ne vaut que pour
 l'armure, n'a plus de sens face à neuf passifs dont la plupart ne produisent pas d'armure. Elle devient
-un **bonus de passif**. Sa forme exacte est une question ouverte de P-49 (§5.4).
+un **bonus de passif**. Sa forme exacte est une question ouverte de P-49 (§5.4) — tranchée depuis (§5.4).
 
 ### 1.4. Le tutoriel est une seconde implémentation du jeu
 
@@ -167,7 +167,7 @@ combat que voit un joueur diverge silencieusement du jeu réel.
 | Lot | Contenu | Section |
 |:---|:---|:---|
 | **A** | Point de passage unique des gains, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé | §4 |
-| **P-49** | Passifs partagés : modèle, éligibilité par classe, point d'accès unique, cadre des triggers | §5 |
+| **P-49** | Passifs partagés : modèle, éligibilité par classe, point d'accès unique, Maîtrise — [spec de P-49](2026-09-16-p49-passifs-partages-design.md) | §5 |
 | **B** | `statRules`, les neuf passifs, stats de départ différenciées | §6, §7 |
 | **C** | Partie 1 : récompenses de niveau data-driven. Partie 2 : nouvelles récompenses et écran de sélection | §8 |
 | **D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | §9 |
@@ -178,7 +178,8 @@ donne les **causes** :
 
 - **A avant P-49.** P-49 retire `RunState.passiveTrait` par une étape de migration v2 → v3 (§5.1, P11),
   qui s'ajoute à la chaîne que pose A (§4.3). Livré avant A, P-49 trouverait un `SaveService` qui efface
-  toute version autre que 1.
+  toute version autre que 1. *(P11 abandonnée le 2026-09-16 ; P-49 retire la règle de Maîtrise que A a
+  posée dans `StatGains` — la dépendance demeure, et A est fusionné.)*
 - **A avant B.** Les stats de départ de B donnent de l'`armorMastery` au Paladin : le passage unique doit
   exister avant, pour que la règle d'application de la maîtrise soit posée en un seul point. Et deux des
   neuf passifs de B (M1, M2) ont pour axe de croissance une puissance que crée A.
@@ -294,7 +295,8 @@ les règles de son appelant, `RunController.startTurn`. Une liste vide par défa
 s'applique **aux gains de source `passive` seulement**, comme aujourd'hui, et le commentaire de
 `entity_stats.dart:11` est corrigé pour dire ce que fait le code. L'étiquette de source est aussi
 exactement ce dont aura besoin le futur **bonus de passif** (§5.4) : il ne s'appliquera qu'aux gains de
-source `passive`, quelle que soit la ressource gagnée.
+source `passive`, quelle que soit la ressource gagnée. **Tranché autrement par P-49** : la Maîtrise
+s'applique au paramètre du passif avant son calcul, et la règle quitte `StatGains` ([spec de P-49](2026-09-16-p49-passifs-partages-design.md), §6.3).
 
 **Livrable :**
 
@@ -459,14 +461,16 @@ contenu du blob **sans incrémenter** : une clé retirée était ignorée, une r
 
 Aucun ennemi n'est sérialisé : `SaveService` n'est jamais appelé en combat.
 
-**Étapes suivantes :** P-49 ajoute l'étape v2 → v3 (§5) — **P-49 dépend donc du lot A** (§2). P-13
+**Étapes suivantes :** P-49 ajoute l'étape v2 → v3 (§5) — **P-49 dépend donc du lot A** (§2). *(Abandonné le
+2026-09-16 : avant la `1.0.0`, les sauvegardes ne se transfèrent pas — [spec de P-49](2026-09-16-p49-passifs-partages-design.md), N6.)* P-13
 **n'étend pas ce blob** : la méta-progression aura son propre stockage, sous sa propre clé (§10).
 
 ---
 
 ## 5. Chantier frère P-49 — Passifs partagés
 
-> **P-49 a sa propre spec, à écrire.** Cette section ne le conçoit pas en entier : elle fixe la
+> **P-49 a sa propre spec : [spec de P-49](2026-09-16-p49-passifs-partages-design.md), écrite le 2026-09-16.** Elle fait foi ; elle relit une à une les
+> décisions P1 à P12 ci-dessous (§1.2) et en déplace ou abandonne trois. Cette section ne le conçoit pas en entier : elle fixe la
 > **frontière** avec P-41 et consigne les décisions déjà prises le 2026-09-16, pour qu'elles ne se
 > perdent pas d'ici là.
 
@@ -486,10 +490,10 @@ un modèle de donnée à part entière, pas un détail de P-41.
 | P5 | **Tout lecteur passe par ce point d'accès** : écran de sélection, tutoriel, éligibilité des récompenses de passif | Un lecteur qui lirait `classes` directement contournerait le déblocage le jour où P-13 arrive |
 | P6 | **Un seul passif actif par run** : `RunState.activePassive` reste singulier | Voir §11. Plusieurs emplacements relèvent de P-13 |
 | P7 | `PassiveData` s'élargit — durée, seuil, ratio, stat cible — et `TraitSystem` devient une Strategy par `effectType`, sur le modèle d'ADR-061 | Neuf passifs ajouteraient neuf branches à la chaîne `if/else` |
-| P8 | Les triggers manquants sont posés ici : `onDamageTaken`, et une facilité de comptage par tour et par combat | Voir §6.4 |
-| P9 | `onDamageTaken` est ajouté à `RelicTrigger` **et dispatché pour les reliques aussi**, partout où le héros perd des PV : attaque ennemie (`lib/game/controllers/combat/turn_phase_manager.dart:114`), poison, appliqué directement par `EntityStats.takeDamage` (`status_effect_processor.dart:24`, depuis `RunController.startTurn`), dégâts d'événement (`event_controller.dart:68`, hors combat). La spec de P-49 choisit un point qui couvre les trois, ou écarte explicitement ceux qu'elle exclut | L'éditeur de contenu lit cet enum : un trigger ajouté sans dispatch serait proposé aux reliques et ne ferait rien. Posé sur la seule attaque ennemie, il laisserait *Ferveur* muette sur le poison |
+| P8 | Les triggers manquants sont posés ici : `onDamageTaken`, et une facilité de comptage par tour et par combat — **déplacée au lot B le 2026-09-16** (spec de P-49, N2) | Voir §6.4 |
+| P9 | **Déplacée au lot B le 2026-09-16** (spec de P-49, N2), inchangée sur le fond. `onDamageTaken` est ajouté à `RelicTrigger` **et dispatché pour les reliques aussi**, partout où le héros perd des PV : attaque ennemie (`lib/game/controllers/combat/turn_phase_manager.dart:114`), poison, appliqué directement par `EntityStats.takeDamage` (`status_effect_processor.dart:24`, depuis `RunController.startTurn`), dégâts d'événement (`event_controller.dart:68`, hors combat). La spec de P-49 choisit un point qui couvre les trois, ou écarte explicitement ceux qu'elle exclut | L'éditeur de contenu lit cet enum : un trigger ajouté sans dispatch serait proposé aux reliques et ne ferait rien. Posé sur la seule attaque ennemie, il laisserait *Ferveur* muette sur le poison |
 | P10 | L'appel `TraitSystem.onTurnEnd` quitte `game_screen.dart:522` pour un controller | `CLAUDE.md` interdit la logique de jeu dans un écran, et la refonte touche cet appel |
-| P11 | Étape de migration **v2 → v3** pour `RunState.passiveTrait` | Le champ disparaît du modèle (P3). L'étape s'ajoute à la chaîne du lot A, d'où la dépendance de P-49 à A (§2) |
+| P11 | Étape de migration **v2 → v3** pour `RunState.passiveTrait` — **abandonnée le 2026-09-16** (spec de P-49, N6) | Le champ disparaît du modèle (P3). L'étape s'ajoute à la chaîne du lot A, d'où la dépendance de P-49 à A (§2) |
 | P12 | Un ADR **remplace la décision D4 d'ADR-086** à la livraison | D4 renvoyait explicitement à P-41 |
 
 ### 5.2. Ce qu'on perd, et ce qui le compense
@@ -512,6 +516,12 @@ Le stockage des déblocages, la sauvegarde de profil, les conditions et coûts d
 déblocage, et plusieurs passifs actifs : **tout cela est P-13** (§10).
 
 ### 5.4. Question ouverte — la Maîtrise d'Armure devient un bonus de passif (D7)
+
+> [!NOTE]
+> **Tranchée au brainstorm de P-49, le 2026-09-16 : ni l'une ni l'autre forme, un hybride.** Une seule
+> stat, *Maîtrise*, et une seule récompense, *Affinité* ; chaque passif déclare dans son fichier le
+> paramètre qu'un point augmente. Conception : [spec de P-49](2026-09-16-p49-passifs-partages-design.md), §3.3 et §6. Le texte ci-dessous est conservé
+> pour la trace de la question.
 
 **Aujourd'hui.** `armorMastery` — de +1 à +7 par la récompense *Forge d'Acier* — s'ajoute aux gains
 d'armure **des passifs seulement** (§1.3). Face à neuf passifs dont six ne produisent pas d'armure, elle
@@ -582,7 +592,8 @@ une classe qui la bloque.
 ### 6.3. Les neuf passifs
 
 Aucune valeur chiffrée : elles relèvent de l'équilibrage, pas de la conception. **La colonne
-« Croissance » de P1, P3 et M3 (`armorMastery`) dépend de la question ouverte §5.4.** Les neuf sont conçus
+« Croissance » de P1, P3 et M3 (`armorMastery`) dépend de la question ouverte §5.4.** *(Tranchée : chaque
+passif déclare ce que la Maîtrise augmente, par son bloc `mastery` — la colonne se relit ainsi au lot B.)* Les neuf sont conçus
 **un par classe** (`"classes"` à un élément) ; leur partage éventuel est une décision de contenu
 ultérieure, que le modèle de P-49 rend possible sans changement de code.
 
@@ -658,8 +669,8 @@ faisant **payer** : le Mage ne se protège que s'il accepte de jouer moins.
 | `onSkillPlayed` | ✅ dispatché, **aucune relique** | M1 |
 | `onPowerPlayed` | ✅ dispatché, **aucune relique** | *(aucun passif)* |
 | `onEnemyKilled` | ✅ vivant — 2 reliques | B3 |
-| `onDamageTaken` | ❌ **posé par P-49** (§5.1, P9) | P2 |
-| Comptage par tour et par combat | ❌ **posé par P-49** (§5.1, P8) | M1 (« N compétences »), M2 (« 1ʳᵉ attaque du tour ») |
+| `onDamageTaken` | ❌ **posé par le lot B** — déplacé de P-49 le 2026-09-16 (§5.1, P9) | P2 |
+| Comptage par tour et par combat | ❌ **posé par le lot B** — déplacé de P-49 le 2026-09-16 (§5.1, P8) | M1 (« N compétences »), M2 (« 1ʳᵉ attaque du tour ») |
 
 `onCardPlayed` perd son seul consommateur côté passif avec la disparition de `spell_armor` — deux reliques
 l'utilisent encore (`mage_amulet`, `pen_nib`).
@@ -795,6 +806,12 @@ Le tirage passe de **6 à 8 types de stat**, dont chaque classe n'en voit qu'une
 puissances **héritent des paliers d'*Aiguisage***, sans en inventer, et entrent dans le test de valeurs.
 
 #### Conditionnement par le passif — neuf récompenses dédiées
+
+> [!NOTE]
+> **Remplacé le 2026-09-16 par la récompense unique *Affinité*** ([spec de P-49](2026-09-16-p49-passifs-partages-design.md), N1). Elle monte la
+> Maîtrise, dont chaque passif déclare l'effet ; la table de tirage compte toujours **8 types de stat plus
+> un — 9**. Reste au lot C : ne pas la tirer quand le passif actif ne déclare pas `mastery`. Le texte
+> ci-dessous est conservé pour la trace.
 
 Une récompense dédiée par passif, améliorant ses chiffres propres — seuil de *Flux de Mana*, ratio de
 *Rage*, durée de *Marque du Mage*.
@@ -944,11 +961,11 @@ la sauvegarde de run est effacée à la mort du héros.
 - **Lot C** : les récompenses data-driven, les récompenses de puissance et de passif, l'écran de sélection.
 - **Lot D** : la mise à jour fonctionnelle du tutoriel et de la console de debug.
 
-### Dans P-49 — spec à écrire
+### Dans P-49 — [spec de P-49](2026-09-16-p49-passifs-partages-design.md)
 
-Le modèle des passifs partagés, le point d'accès unique, la refonte de `TraitSystem` en Strategy, les
-triggers `onDamageTaken` et de comptage, l'étape de migration v2 → v3 — d'où sa dépendance au lot A —,
-l'ADR qui remplace ADR-086 D4. Frontière et décisions : §5.
+Le modèle des passifs partagés, le point d'accès unique, la refonte de `TraitSystem` en Strategy, la
+Maîtrise hybride et sa récompense *Affinité*, l'ADR qui remplace ADR-086 D4. Les triggers `onDamageTaken`
+et de comptage passent au lot B ; l'étape de migration v2 → v3 est abandonnée. Frontière : §5.
 
 ### Hors P-41
 

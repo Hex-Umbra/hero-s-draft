@@ -82,7 +82,11 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
                       children: List.generate(_choices.length, (index) {
                         final choice = _choices[index];
                         final title = DraftChoiceLabels.getChoiceTitle(l10n, choice);
-                        final desc = DraftChoiceLabels.getChoiceDescription(l10n, choice);
+                        final desc = DraftChoiceLabels.getChoiceDescription(
+                          l10n,
+                          choice,
+                          passive: widget.engine.mockState.activePassive,
+                        );
                         final rarity = DraftChoiceLabels.rarityToString(l10n, choice.rarity);
 
                         final isSelected = _selectedIndex == index;

@@ -82,6 +82,8 @@ class _DocumentFormState extends State<DocumentForm> {
         if (_isField(key)) key: root[key],
       for (final key in descriptor.referenceKeys.keys)
         if (!root.containsKey(key)) key: null,
+      for (final key in descriptor.referenceListKeys.keys)
+        if (!root.containsKey(key)) key: null,
     };
 
     return Column(
@@ -224,6 +226,35 @@ class _DocumentFormState extends State<DocumentForm> {
             onNone: () {
               _document.removeAt(path);
               widget.onChanged();
+            },
+          ),
+          alignTop: true,
+        );
+      case FieldKind.referenceList:
+        final options = widget.referenceOptions[pattern] ?? const <String>[];
+        // Une valeur qui n'est pas une liste ne selectionne rien : la
+        // validation dira pourquoi elle est refusee.
+        final selected = {
+          ...(value is List ? value.whereType<String>() : const <String>[]),
+        };
+        built = row(
+          _choices(
+            path,
+            options,
+            isSelected: selected.contains,
+            onTap: (option) {
+              final next = [
+                for (final o in options)
+                  if (selected.contains(o) != (o == option)) o,
+              ];
+              // Decocher la derniere retire la cle : `[]` est refuse au
+              // chargement, et l'absence vaut « toute la categorie ».
+              if (next.isEmpty) {
+                _document.removeAt(path);
+                widget.onChanged();
+              } else {
+                _set(path, next);
+              }
             },
           ),
           alignTop: true,

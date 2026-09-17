@@ -486,7 +486,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   ///
   /// **Sans cette relecture, « Modifier » ecrit le gabarit par-dessus la
   /// cible** : toute cle que le gabarit ne porte pas — le `skills` d'une
-  /// classe, son `passiveTrait`, les `effects` d'une carte, les `intents` d'un
+  /// classe, les `classes` d'un passif, les `effects` d'une carte, les `intents` d'un
   /// ennemi — disparaitrait en silence, validation passee et ecriture reussie.
   void _load(String root) {
     final draft = _draft();
@@ -856,12 +856,15 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           )..sort())
         : const [];
 
-    // Le catalogue de chaque `referenceKeys` du descripteur — tire de
-    // `entityIdsByOwner`, jamais de `knownValues` : ce dernier ne liste que
-    // les valeurs deja employees, et un passif jamais utilise y serait
-    // invisible.
+    // Le catalogue de chaque `referenceKeys` et `referenceListKeys` du
+    // descripteur — tire de `entityIdsByOwner`, jamais de `knownValues` : ce
+    // dernier ne liste que les valeurs deja employees, et une entite jamais
+    // referencee y serait invisible.
     _references = {
-      for (final entry in _descriptor.referenceKeys.entries)
+      for (final entry in {
+        ..._descriptor.referenceKeys,
+        ..._descriptor.referenceListKeys,
+      }.entries)
         entry.key: [
           for (final ids
               in entityIdsByOwner(fs, root, kEntityDescriptors[entry.value]!)

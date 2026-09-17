@@ -9,6 +9,7 @@ import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
+import '../systems/passives/passive_strategy.dart';
 import '../systems/trait_system.dart';
 import '../systems/stat_gains.dart';
 import 'debug_run_controller.dart';
@@ -25,7 +26,6 @@ class RunState {
   final String heroClassId;
   final List<MapNode> mapNodes;
   final String? currentNodeId;
-  final String? passiveTrait; // Trait passif du héros (ex: regen_armor)
   final PassiveData? activePassive; // Passif dynamique du héros
   final List<String> forgeSlots;
   final String? forgeTargetCardId;
@@ -62,7 +62,6 @@ class RunState {
     required this.heroClassId,
     this.mapNodes = const [],
     this.currentNodeId,
-    this.passiveTrait,
     this.activePassive,
     this.forgeSlots = const [],
     this.forgeTargetCardId,
@@ -80,7 +79,6 @@ class RunState {
     List<MapNode>? mapNodes,
     String? currentNodeId,
     bool resetCurrentNode = false,
-    String? passiveTrait,
     PassiveData? activePassive,
     List<String>? forgeSlots,
     String? forgeTargetCardId,
@@ -100,7 +98,6 @@ class RunState {
       currentNodeId: resetCurrentNode
           ? null
           : (currentNodeId ?? this.currentNodeId),
-      passiveTrait: passiveTrait ?? this.passiveTrait,
       activePassive: activePassive ?? this.activePassive,
       forgeSlots: forgeSlots ?? this.forgeSlots,
       forgeTargetCardId: resetForgeTargetCardId
@@ -122,7 +119,6 @@ class RunState {
         'heroClassId': heroClassId,
         'mapNodes': mapNodes.map((n) => n.toJson()).toList(),
         'currentNodeId': currentNodeId,
-        'passiveTrait': passiveTrait,
         'activePassiveId': activePassive?.id,
         'activePassiveNameFr': activePassive?.nameFr,
         'activePassiveNameEn': activePassive?.nameEn,
@@ -178,7 +174,6 @@ class RunState {
           .map((n) => MapNode.fromJson(n as Map<String, dynamic>))
           .toList(),
       currentNodeId: json['currentNodeId'] as String?,
-      passiveTrait: json['passiveTrait'] as String?,
       activePassive: activePassive,
       forgeSlots: forgeSlots,
       forgeTargetCardId: json['forgeTargetCardId'] as String?,
@@ -209,7 +204,6 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: 'paladin',
-      passiveTrait: 'regen_armor',
       activePassive: null,
       heroStats: EntityStats(
         maxPv: 100,
@@ -241,7 +235,6 @@ class RunController extends Notifier<RunState> {
       currentLevel: 1,
       act: 1,
       heroClassId: chosenClass.id,
-      passiveTrait: chosenClass.passiveTrait,
       activePassive: activePassive,
       heroStats: EntityStats(
         maxPv: chosenClass.maxHp,
@@ -249,7 +242,7 @@ class RunController extends Notifier<RunState> {
         maxMana: chosenClass.maxMana,
         currentMana: chosenClass.maxMana,
         armure: 0,
-        armorMastery: chosenClass.armorMastery,
+        mastery: chosenClass.mastery,
         attackPower: 0, // Force de base à 0
         luck: chosenClass.luck,
       ),
@@ -299,7 +292,7 @@ class RunController extends Notifier<RunState> {
   void applyHeroStatModifier({
     int maxPvAcc = 0,
     int attackAcc = 0,
-    int armorAcc = 0,
+    int masteryAcc = 0,
     int maxManaAcc = 0,
     int luckAcc = 0,
     int critChanceAcc = 0,
@@ -308,7 +301,7 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.applyHeroStatModifier(
       maxPvAcc: maxPvAcc,
       attackAcc: attackAcc,
-      armorAcc: armorAcc,
+      masteryAcc: masteryAcc,
       maxManaAcc: maxManaAcc,
       luckAcc: luckAcc,
       critChanceAcc: critChanceAcc,
@@ -391,7 +384,7 @@ class RunController extends Notifier<RunState> {
     // 2. Déclenchement des reliques
     applyRelics(RelicTrigger.startOfCombat);
     // 3. Déclenchement des passifs de début de combat/tour pour le tour 1 (ex: Berserker)
-    TraitSystem.onTurnStart(this);
+    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.startOfTurn));
   }
 
   void startTurn() {
@@ -412,7 +405,15 @@ class RunController extends Notifier<RunState> {
 
 
     // 4. Déclencher les traits passifs
-    TraitSystem.onTurnStart(this);
+    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.startOfTurn));
+  }
+
+  /// Fin du tour du joueur : le passif, puis les reliques de fin de tour, dans
+  /// l'ordre que suivait `game_screen.dart` (spec P-49, §5.4). La défausse et
+  /// le tour ennemi restent à l'écran : ils ne relèvent pas de ce controller.
+  void endTurn() {
+    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.endOfTurn));
+    applyRelics(RelicTrigger.endOfTurn);
   }
 
   /// Gardé pour la compatibilité avec l'ancien code s'il est appelé ailleurs

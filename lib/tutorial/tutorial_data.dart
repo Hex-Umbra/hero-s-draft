@@ -177,8 +177,8 @@ const List<TutorialStep> kTutorialSteps = [
         'no exception — and again at the end of a combat. It is a one-turn '
         'expense, never a stock you build up.\n\n'
         'What your class changes is *how you earn it*: that is your passive. '
-        'Armor Mastery, a permanent stat, is added to every Armor gain your '
-        'passive produces.',
+        'Mastery, a permanent stat, strengthens what your passive produces — '
+        'each passive states what one point adds.',
     bodyFr:
         'L\'Armure absorbe les dégâts avant vos PV. Ce qui dépasse une fois '
         'l\'Armure épuisée entame votre santé.\n\n'
@@ -187,8 +187,9 @@ const List<TutorialStep> kTutorialSteps = [
         'combat. C\'est une dépense pour un tour, jamais un stock qu\'on '
         'accumule.\n\n'
         'Ce que votre classe change, c\'est la *façon d\'en gagner* : c\'est '
-        'votre passif. La Maîtrise d\'Armure, statistique permanente, s\'ajoute '
-        'à chaque gain d\'Armure produit par votre passif.',
+        'votre passif. La Maîtrise, statistique permanente, renforce ce que '
+        'produit votre passif — chaque passif indique ce qu\'un point lui '
+        'apporte.',
     type: TutorialStepType.armorDamage,
   ),
   TutorialStep(
@@ -309,24 +310,24 @@ const List<TutorialStep> kTutorialSteps = [
     titleFr: 'Le Draft de Récompenses',
     bodyEn:
         'Each level grants a draft. Three options are rolled from six kinds — '
-        'Vitality, Sharpening, Steel Forge, Wisdom, Precision, Ferocity — and '
+        'Vitality, Sharpening, Affinity, Wisdom, Precision, Ferocity — and '
         'up to two **Mythic** options can appear on top: the Four-Leaf Clover '
         'and the Mirror.\n\n'
         'Rarity decides how much you get. Luck raises your odds on every roll, '
         'which makes the Clover the option that improves all the others.\n\n'
-        'Careful with Steel Forge: it grants **Armor Mastery**, added to the '
-        'Armor your passive produces — not a flat block of Armor.',
+        'Careful with Affinity: it grants **Mastery**, which strengthens what '
+        'your passive produces — each passive states what one point adds.',
     bodyFr:
         'Chaque niveau donne droit à un draft. Trois options sont tirées parmi '
-        'six types — Vitalité, Aiguisage, Forge d\'Acier, Sagesse, Précision, '
+        'six types — Vitalité, Aiguisage, Affinité, Sagesse, Précision, '
         'Férocité — et jusqu\'à deux options **Mythiques** peuvent s\'y ajouter : '
         'le Trèfle à 4 feuilles et le Miroir.\n\n'
         'La rareté décide de l\'ampleur du gain. La Chance améliore vos '
         'probabilités à chaque tirage, ce qui fait du Trèfle l\'option qui '
         'améliore toutes les autres.\n\n'
-        'Attention à la Forge d\'Acier : elle donne de la **Maîtrise d\'Armure**, '
-        'ajoutée à l\'Armure que produit votre passif — pas un bloc d\'Armure '
-        'directe.',
+        'Attention à l\'Affinité : elle donne de la **Maîtrise**, qui renforce '
+        'ce que produit votre passif — chaque passif indique ce qu\'un point '
+        'lui apporte.',
     type: TutorialStepType.draft,
   ),
   TutorialStep(

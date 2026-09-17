@@ -4,9 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Aucune ligne de `lib/` n'ajoute à l'armure, au mana ou à une puissance par
 /// une addition écrite à la main : tout gain passe par `StatGains.apply`
-/// (spec P-41, §4.1). Un gain écrit ailleurs échapperait aux règles de classe,
-/// comme les gains de cartes, de runes et de reliques échappaient à la
-/// Maîtrise d'Armure, appliquée aux seuls passifs.
+/// (spec P-41, §4.1). Un gain écrit ailleurs échapperait aux règles de classe
+/// que le lot B de P-41 y fera entrer.
 ///
 /// Le motif reconnaît l'addition écrite en ligne, dans les deux sens et sur
 /// plusieurs lignes. Il ne voit pas une addition calculée dans une variable

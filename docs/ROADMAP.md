@@ -256,7 +256,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-14** | **Variantes d'Élite adaptatives** (5 affixes, triggers côté ennemi) | **5-8 j** | ★★★★★ | 🔥🔥🔥 |
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
 | **P-41** | **Identité de classe** — `statRules`, split des 3 puissances, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée le 2026-09-16 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
-| **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique ; **prépare P-13** · frontière dans la [spec de P-41](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) §5 | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
+| **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · **Codé sur `feat/p49-passifs-partages`, branche non fusionnée dans `main`** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | *non chiffré* | ★★★☆☆ | 🔥🔥 |
 | **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
 | **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
 | **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
@@ -284,8 +284,8 @@ Rien n'existe hors-run aujourd'hui. Gain d'une monnaie à la fin de chaque run p
 
 **Points d'accroche posés par d'autres chantiers :**
 
-- [ ] Éligibilité des passifs par classe, déclarée par le passif (`"classes"`) — *P-49*
-- [ ] Point d'accès unique « passifs disponibles = éligibles **et** débloqués », qui vaut « tous » tant que P-13 n'existe pas — *P-49*
+- [x] Éligibilité des passifs par classe, déclarée par le passif (`"classes"`) — *P-49*, livré sur la branche `feat/p49-passifs-partages` (non fusionnée), voir [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)
+- [x] Point d'accès unique « passifs disponibles = éligibles **et** débloqués », qui vaut « tous » tant que P-13 n'existe pas — *P-49*, `availablePassivesFor` (même livraison)
 - [x] Chaîne de migration de la sauvegarde de run — *P-41, lot A*, fusionné dans `main` le 2026-09-16 (PR #38)
 - [ ] Récompenses de passif éligibles par ce point d'accès — *P-41, lot C*
 
@@ -335,7 +335,7 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. La version que visera P-42 reste une décision ouverte du propriétaire (`0.5.3`, ou rouvrir `0.5.2` avant qu'elle soit taguée) — non tranchée ici.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. Le tag `v0.5.2` attend donc les cartes de P-42.
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
@@ -372,13 +372,13 @@ reste le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
 > [brainstorm](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md)), dont le constat
 > central est que *les trois classes ne se distinguent que par les PV et un passif, et que toute
 > « progression » de carte est l'inflation numérique de l'une des 17 communes*. Seul **P-41** est
-> conçu à ce jour ; les trois suivants attendent leur spec, et **P-49**, chantier frère né de la
-> re-vérification du 2026-09-16, aussi.
+> conçu à ce jour avec **P-49**, chantier frère né de la re-vérification du 2026-09-16 (spec écrite le
+> même jour) ; les trois suivants attendent leur spec.
 
 | Lot | ID | Dépend de |
 |:---|:---|:---|
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
-| *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (chaîne de migration) |
+| *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (passage unique des gains) |
 | S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
 | S3 — Pools de cartes | **P-42** | **P-41** |
 | S4 — Économie de deck | **P-43** | P-42 |
@@ -400,14 +400,14 @@ causes de leur ordre et invariant de découpage :
 | Lot | Contenu | Dépend de |
 |:---|:---|:---|
 | **P-41 A** | ✅ **Fusionné dans `main` le 2026-09-16 (PR #38)** — Point de passage unique des gains, à source étiquetée, scission de `attaque` en trois puissances, chaîne de migration de sauvegarde sous une nouvelle clé — **sans changement de comportement** · [plan](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) | — |
-| **P-49** | Passifs partagés, dont la refonte de la Maîtrise d'Armure en bonus de passif — *spec à écrire* | P-41 A |
+| **P-49** | ✅ **Livré sur la branche `feat/p49-passifs-partages`, non fusionnée** — passifs partagés, dont la refonte de la Maîtrise d'Armure en Maîtrise/Affinité — [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | P-41 A |
 | **P-41 B** | `statRules`, les neuf passifs, stats de départ | P-41 A, P-49 |
 | **P-41 C** | Récompenses de niveau data-driven *(indépendante, parallélisable avec A)*, puis nouvelles récompenses et écran de sélection | B, pour sa seconde partie |
 | **P-41 D** | Mise à jour fonctionnelle du tutoriel et de la console de debug | B, C |
 
-**Trois questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot :**
-- **Refondre la Maîtrise d'Armure en bonus de passif** (décision du propriétaire, 2026-09-16) — stat
-  globale ou stat par passif, **à trancher au brainstorm de P-49** (spec, §5.4) ;
+**Deux questions ouvertes, notées dans la spec pour ne pas être découvertes en cours de lot** — une
+troisième, la forme de la Maîtrise, a été tranchée au brainstorm de P-49 le 2026-09-16
+([spec de P-49](superpowers/specs/2026-09-16-p49-passifs-partages-design.md), N1) :
 - **La conversion du Mage porte-t-elle aussi sur la Force ?** — à trancher au lot B (spec, §4.2) ;
 - **Et sur le retrait d'une relique**, gain négatif de source `progression` ? — à trancher au lot B
   (spec, §7.1).

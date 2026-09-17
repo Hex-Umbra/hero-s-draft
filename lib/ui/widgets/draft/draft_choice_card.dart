@@ -46,8 +46,8 @@ class DraftChoiceCard extends StatelessWidget {
     } else if (titleUpper.contains('AIGUIS') ||
         titleUpper.contains('SHARPEN')) {
       emoji = '⚔️'; // Attack Power
-    } else if (titleUpper.contains('FORGE')) {
-      emoji = '🛡️'; // Armor Mastery
+    } else if (titleUpper.contains('AFFINIT')) {
+      emoji = '💠'; // Affinity / Mastery
     } else if (titleUpper.contains('SAGESSE') ||
         titleUpper.contains('WISDOM')) {
       emoji = '🔮'; // Mana Max

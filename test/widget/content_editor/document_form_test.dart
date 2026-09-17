@@ -124,13 +124,64 @@ void main() {
 
   testWidgets('une reference absente se choisit dans son catalogue',
       (tester) async {
-    final document = templateOf(hero);
-    await pump(tester, document, hero, references: const {
-      'passiveTrait': ['regen_armor'],
+    // Aucun descripteur livre ne declare de reference unique depuis P-49 :
+    // le mecanisme se verifie sur un descripteur de test.
+    final mentor = EntityDescriptor(
+      category: EntityCategory.heroClass,
+      label: 'Classe de test',
+      directory: 'classes',
+      folderFile: 'class.json',
+      requiredKeys: const {},
+      bilingualBases: const [],
+      construct: (_) {},
+      template: '{}',
+      referenceKeys: const {'mentor': EntityCategory.passive},
+    );
+    final document = templateOf(mentor);
+    await pump(tester, document, mentor, references: const {
+      'mentor': ['regen_armor'],
     });
 
     await tester.tap(find.text('regen_armor'));
-    expect(document.root['passiveTrait'], 'regen_armor');
+    expect(document.root['mentor'], 'regen_armor');
+  });
+
+  group('une liste de references', () {
+    final passive = kEntityDescriptors[EntityCategory.passive]!;
+    const catalogue = {
+      'classes': ['mage', 'paladin'],
+    };
+
+    testWidgets('absente, elle se coche', (tester) async {
+      final document = templateOf(passive);
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('paladin'));
+      expect(document.root['classes'], ['paladin']);
+    });
+
+    testWidgets('cocher ajoute dans l ordre du catalogue', (tester) async {
+      final document = EditorDocument({
+        ...passive.decodeTemplate(),
+        'classes': ['paladin'],
+      });
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('mage'));
+      expect(document.root['classes'], ['mage', 'paladin']);
+    });
+
+    testWidgets('decocher la derniere retire la cle', (tester) async {
+      // `[]` est refuse au chargement : l'absence vaut « toutes ».
+      final document = EditorDocument({
+        ...passive.decodeTemplate(),
+        'classes': ['paladin'],
+      });
+      await pump(tester, document, passive, references: catalogue);
+
+      await tester.tap(find.text('paladin'));
+      expect(document.root.containsKey('classes'), isFalse);
+    });
   });
 
   testWidgets('un vocabulaire montre aussi la valeur fautive', (tester) async {

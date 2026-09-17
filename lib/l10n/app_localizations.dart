@@ -314,6 +314,18 @@ abstract class AppLocalizations {
   /// **'Class Passive'**
   String get classPassive;
 
+  /// No description provided for @passiveMasteryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Mastery: {effect}'**
+  String passiveMasteryCurrent(String effect);
+
+  /// No description provided for @passiveMasteryPerPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Mastery point: {effect}'**
+  String passiveMasteryPerPoint(String effect);
+
   /// No description provided for @relicInventory.
   ///
   /// In en, this message translates to:
@@ -1214,17 +1226,23 @@ abstract class AppLocalizations {
   /// **'+{amount} Attack'**
   String draftChoiceSharpeningDesc(int amount);
 
-  /// No description provided for @draftChoiceSteelForge.
+  /// No description provided for @draftChoiceAffinity.
   ///
   /// In en, this message translates to:
-  /// **'Steel Forge'**
-  String get draftChoiceSteelForge;
+  /// **'Affinity'**
+  String get draftChoiceAffinity;
 
-  /// No description provided for @draftChoiceSteelForgeDesc.
+  /// No description provided for @draftChoiceAffinityDesc.
   ///
   /// In en, this message translates to:
-  /// **'+{amount} to your passive\'s Block gain'**
-  String draftChoiceSteelForgeDesc(int amount);
+  /// **'{passive}: {effect}'**
+  String draftChoiceAffinityDesc(String passive, String effect);
+
+  /// No description provided for @draftChoiceAffinityNoEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Mastery, no effect on your passive'**
+  String draftChoiceAffinityNoEffect(int amount);
 
   /// No description provided for @draftChoiceWisdom.
   ///
