@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-17 | commit: e9b193d -->
+<!-- last-sync: 2026-09-17 | commit: e2cc24b -->
 
 # 🧠 Contexte Actuel
 
@@ -7,9 +7,9 @@
 
 ## Focus courant
 
-**P-41 lot B, partie 1 (la Puissance) est implémentée sur la branche `feat/p41-lot-b-puissance`,
-pas encore fusionnée** (2026-09-17, `f20c353`..`e9b193d`, 6 commits, détail en « 3 dernières
-livraisons ») : les trois puissances du lot A fusionnent en une seule, `might`, que chaque classe
+**P-41 lot B, partie 1 (la Puissance) est fusionné dans `main`** par la PR #40 (2026-09-17, merge
+`e2cc24b`, `f20c353`..`e9b193d`, 6 commits, détail en « 3 dernières livraisons ») : les trois
+puissances du lot A fusionnent en une seule, `might`, que chaque classe
 oriente (`HeroData.mightTargets`) — comportement de jeu inchangé, les trois classes ciblent
 `attack`. Voir [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende
 la décision 2 d'ADR-095.
@@ -18,7 +18,7 @@ la décision 2 d'ADR-095.
 chaque passif déclare ses classes éligibles et sa Maîtrise, lus par un point d'accès unique et un
 répartiteur de stratégies — voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md),
 qui remplace la D4 d'ADR-086. La note `0.5.2` a été rouverte en place pour l'absorber (`5f168db`),
-**toujours pas taguée**. Les métriques de `main` et de la branche sont dans `progress.md`.
+puis une seconde fois pour la Puissance (`2da3c23`), **toujours pas taguée** — métriques dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
@@ -58,7 +58,7 @@ Réserves à ne pas perdre de vue :
 ## 3 dernières livraisons
 
 1. **P-41 lot B, partie 1 — la Puissance, une seule stat orientée par la classe**
-   (2026-09-17, branche `feat/p41-lot-b-puissance`, **pas encore fusionnée**, 6 commits,
+   (2026-09-17, **fusionné dans `main` par la PR #40**, 6 commits,
    `f20c353` → `e9b193d`) — `attackPower`/`skillPower`/`alterationPower` (lot A) fusionnent en une
    seule `might` ; `HeroData.mightTargets` (`class.json`, obligatoire) déclare ce qu'elle renforce,
    copié dans `EntityStats.mightTargets` à la création du héros ; `PowerRules` lit cette copie sans
@@ -107,11 +107,11 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner `feat/p41-lot-b-puissance`, puis écrire le plan de la partie 2 du lot B de P-41** :
-orientations réelles du Mage et du Paladin, conversion d'armure (`statRules`), les neuf passifs,
-stats de départ ([spec, §7](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)).
-Le tag `v0.5.2` — seul geste déclenchant
-`release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
+**Écrire le plan de la partie 2 du lot B de P-41** : orientations réelles du Mage et du Paladin,
+conversion d'armure (`statRules`), les neuf passifs, stats de départ
+([spec, §7](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)) ; elle reprend
+au passage le `Set` mutable `EntityStats.mightTargets` (ADR-097, conséquences). Le tag `v0.5.2`
+— seul geste déclenchant `release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
 classe des cartes de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et
 combien.
 

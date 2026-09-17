@@ -1,8 +1,8 @@
 ## 🧮 ADR-097 : La Puissance Unique, Orientée par la Classe (P-41, lot B, partie 1)
 
 ### Statut
-✅ Accepté & Implémenté — branche `feat/p41-lot-b-puissance` (commits `f20c353`..`e9b193d`,
-6 commits), **pas encore fusionnée** — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
+✅ Accepté & Implémenté — **fusionné dans `main` par la PR #40** (2026-09-17, merge `e2cc24b`,
+branche `feat/p41-lot-b-puissance`, 6 commits `f20c353`..`e9b193d`) — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
 (décision 2, scission de `attaque` en trois puissances).
 
 ### Contexte

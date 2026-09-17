@@ -9,7 +9,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
-| `ADR-097` | La Puissance Unique, Orientée par la Classe (chantier P-41, lot B, partie 1, branche `feat/p41-lot-b-puissance`, pas encore fusionnée) — **amende la décision 2 d'`ADR-095`** | ✅ | — | [ADR-097-puissance-unique-orientee-par-la-classe.md](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) |
+| `ADR-097` | La Puissance Unique, Orientée par la Classe (chantier P-41, lot B, partie 1, fusionné dans `main` par la PR #40) — **amende la décision 2 d'`ADR-095`** | ✅ | — | [ADR-097-puissance-unique-orientee-par-la-classe.md](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) |
 | `ADR-096` | Passifs Partagés — Éligibilité Déclarée par le Passif et Maîtrise Hybride (chantier P-49, fusionné dans `main` par la PR #39) — **remplace la D4 d'`ADR-086`** | ✅ | — | [ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
 | `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** ; **décision 2 remplacée par `ADR-097`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
