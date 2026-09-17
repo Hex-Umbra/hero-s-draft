@@ -130,7 +130,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
 
     final l10n = AppLocalizations.of(context)!;
     // Affinité se décrit par le passif actif (spec P-49, §6.5).
-    final activePassive = ref.watch(runProvider).activePassive;
+    final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
     final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
 
     return Stack(
