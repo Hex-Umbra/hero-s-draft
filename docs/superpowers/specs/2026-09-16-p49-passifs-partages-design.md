@@ -1,7 +1,7 @@
 # P-49 — Passifs partagés — Conception
 
 Date : 2026-09-16
-Statut : **Conçue, non implémentée**
+Statut : **Implémentée** (branche `feat/p49-passifs-partages`)
 
 Chantier ROADMAP : **P-49**, Tier B (`docs/ROADMAP.md` §4) — chantier frère de **P-41**, entre son lot A
 (fusionné) et son lot B.

@@ -1,7 +1,7 @@
 # S2 — Identité de classe — Conception
 
 Date : 2026-08-07 · **Révisée le 2026-09-16**
-Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D et chantier frère P-49 non implémentés ; P-49 conçu dans sa [spec de P-49](2026-09-16-p49-passifs-partages-design.md)
+Statut : **Lot A implémenté** (fusionné dans `main`, PR #38) — lots B à D non implémentés ; chantier frère P-49 implémenté (branche `feat/p49-passifs-partages`), voir sa [spec](2026-09-16-p49-passifs-partages-design.md)
 
 > [!IMPORTANT]
 > **Révision du 2026-09-16 — lire le §0 avant tout le reste.** La conception du 2026-08-07 a été
