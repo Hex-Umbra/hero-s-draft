@@ -929,7 +929,7 @@ lot D (§9.1).
 ### 7.4. Textes joueur
 
 Un seul mot désormais : **Puissance**, **Might** en anglais. « Attaque » ne désigne plus que le type de
-carte et l'intention d'attaque d'un ennemi ; « Force » et « ATK » disparaissent.
+carte et l'intention d'attaque d'un ennemi ; « Force » et « ATK » disparaissent de ce que voit le joueur.
 
 | Élément | Français | English |
 |:---|:---|:---|
@@ -942,16 +942,24 @@ carte et l'intention d'attaque d'un ennemi ; « Force » et « ATK » disparaiss
 | Fiche d'un ennemi : `enemyStatsDesc` (`enemy_card.dart:205`) | `Santé : {hp}/{maxHp} PV.\nPuissance : {might}.\nArmure : {armor}.` | `Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.` |
 | *Aiguisage* : `draftChoiceSharpeningDesc` (`draft_choice_labels.dart:72`) | `+{amount} Puissance` | `+{amount} Might` |
 | Gain d'événement : `eventGainAttack` devient `eventGainMight` (`event_screen.dart:125`, `:259`) | `+{amount} Puissance` | `+{amount} Might` |
-| Badge de combat : `tooltipAttackTitle` devient `tooltipMightTitle` (`stat_badge.dart:519`) | `Puissance` | `Might` |
-| Sa description : `tooltipMightDesc`, **générée depuis `mightTargets`** | `Renforce {cibles}.` | `Strengthens {targets}.` |
-| Les cibles de cette description, dans cet ordre | `les dégâts de vos Attaques` · `les dégâts de vos Compétences` · `vos altérations` | `your Attack damage` · `your Skill damage` · `your alterations` |
-| Les cibles en abrégé, pour les emplacements étroits | `Attaques` · `Compétences` · `Altérations` | `Attacks` · `Skills` · `Alterations` |
+| Info-bulle de `StatType.attack` : `tooltipAttackTitle`, `tooltipAttackDesc` (`stat_badge.dart:519-520`) — **branche jamais construite**, `StatBadge` n'étant instancié qu'en `StatType.hp` (`enemy_card.dart:123`) : les clés gardent leur nom | `Puissance` ; `Renforce ce qu'oriente votre classe : Attaques, Compétences ou altérations.` | `Might`; `Strengthens what your class channels it into: Attacks, Skills or alterations.` |
+| Les cibles en abrégé : `mightTargetAttackShort`, `mightTargetSkillShort`, `mightTargetAlterationShort`, dans cet ordre | `Attaques` · `Compétences` · `Altérations` | `Attacks` · `Skills` · `Alterations` |
 | Fiche des stats (`stats_dialog.dart:175-177`) | Titre `Puissance` ; sous-titre : les cibles en abrégé, jointes par ` · ` | Title `Might`; subtitle: the short targets, joined by ` · ` |
 | Mini-panneau des stats (`hero_mini_stats_panel.dart:100`) | `{n} Puissance` | `{n} Might` |
 | Noms des statuts créés en code (`name:`) : « Attaque », « Force (Relique) », « Éveil d'Attaque » | « Puissance », « Puissance (Relique) », « Éveil de Puissance » | — *(les noms de statut ne sont qu'en français)* |
 
-Les textes générés suivent ADR-090 : aucun écran ne compare l'identifiant d'une classe. Deux cibles se
-joignent par « et » / « and », trois par une virgule puis « et » / « and ».
+Les textes générés suivent ADR-090 : aucun écran ne compare l'identifiant d'une classe. **La forme longue
+n'a pas de lecteur à la partie 1** : elle est écrite au lot C, pour l'écran de sélection (§8.3) — « les
+dégâts de vos Attaques », « les dégâts de vos Compétences », « vos altérations » / « your Attack damage »,
+« your Skill damage », « your alterations », deux cibles jointes par « et » / « and », trois par une
+virgule puis « et » / « and ».
+
+**Deux textes écrits en dur**, relevés à la rédaction du plan de la partie 1 :
+
+| Site | Français | English |
+|:---|:---|:---|
+| Glossaire des statuts du tutoriel (`lib/tutorial/widgets/tutorial_elements_widget.dart:100-111`) | « Puissance » : « S'ajoute à ce que renforce votre classe » ; « Éveil de Puissance » : « Donne de la Puissance au début du tour » | « Might »: « Adds to what your class strengthens »; « Might Awakening »: « Grants Might at the start of the turn » |
+| Carrousel des récompenses (`lib/ui/widgets/relic_carousel/draft_card_reel.dart:47-48`) | *Aiguisage* « +4 Puissance » ; *Affinité* « +2 Maîtrise », à la place de *Forge d'Acier*, oubliée par P-49 | — *(le carrousel n'est qu'en français)* |
 
 **Données** — `description_fr` et `description_en`, ou `text_fr` et `text_en` pour un choix d'événement :
 
@@ -1009,8 +1017,8 @@ annoncé.
 - `MightTarget`, `mightTargets` sur `HeroData` et sur `EntityStats`, et `PowerRules` qui la lit ;
 - **les trois classes déclarent `["attack"]`** : c'est exactement le jeu d'aujourd'hui, où `skillPower` et
   `alterationPower` valent 0 partout ;
-- les `effectType` et `statusId` renommés dans les données, les textes du §7.4 et la génération de la
-  description de la Puissance ;
+- les `effectType` et `statusId` renommés dans les données, les textes du §7.4 et les libellés abrégés
+  des cibles ;
 - éditeur de contenu : `mightTargets` déclaré en `enumListKeys` sur le descripteur de classe, ce qui
   ouvre des cases à cocher sans nouveau type de champ (`entity_descriptor.dart:97` ; précédent :
   `eligibleCardTypes`, `:309`), et `["attack"]` au gabarit de classe ; console de debug : le réglage
@@ -1115,7 +1123,7 @@ sont retirés avec le champ, sans quoi la suite de l'éditeur rougit.
 L'écran affiche à la place ce qui diffère réellement :
 
 - PV max et stats de départ non nulles ;
-- **ce que renforce sa Puissance**, généré depuis `mightTargets` avec les textes du §7.4, et sa règle de
+- **ce que renforce sa Puissance**, généré depuis `mightTargets` dans la forme longue du §7.4, écrite à ce lot, et sa règle de
   stat en clair — « son Armure devient de la Puissance pour un tour » —, **générée à partir de la
   règle**, jamais écrite classe par classe : c'est la règle d'ADR-090, aucun écran ne compare `hero.id` ;
 - le **choix du passif** parmi les passifs disponibles pour la classe, **lus par le point d'accès de P-49**.

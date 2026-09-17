@@ -47,6 +47,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 🔍 | [Filtre de classe manquant sur deux pools de cartes](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md) *(→ P-42)* | 08/09/2026 |
 | 📐🔨 | [P-40 bloc 2 — Trois bugs de cartes et de forge](superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md) · [plan](superpowers/plans/2026-09-15-p40-bloc-2-cartes-et-forge.md) | 15/09/2026 |
 | 🔨 | [P-41 — Plan du lot A](superpowers/plans/2026-09-16-p41-lot-a-passage-unique-scission-migration.md) *(passage unique, scission des puissances, migration de sauvegarde)* | 16/09/2026 |
+| 🔨 | [P-41 — Plan du lot B, partie 1](superpowers/plans/2026-09-17-p41-lot-b-partie-1-puissance.md) *(la Puissance, orientée par la classe, à comportement identique)* | 17/09/2026 |
 | 📐🔨 | [P-49 — Passifs partagés](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) *(éligibilité déclarée par le passif, point d'accès unique, Maîtrise hybride)* | 16/09/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
