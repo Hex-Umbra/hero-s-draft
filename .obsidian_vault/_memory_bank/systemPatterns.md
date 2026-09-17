@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 150 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-09-16** — 44 fiches, en bijection avec `../_patterns/`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-09-17** — 44 fiches, en bijection avec `../_patterns/`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -31,7 +31,7 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`) | [02-00-role-des-controleurs-et-architecture-modulair.md](../_patterns/02-00-role-des-controleurs-et-architecture-modulair.md) | 5 |
-| 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 26 |
+| 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 27 |
 | 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 14 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
 | 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 33 |
@@ -47,7 +47,7 @@
 |:---|:---|---:|
 | 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage | [03-1-encountersystem-generateur-de-combats-courbes.md](../_patterns/03-1-encountersystem-generateur-de-combats-courbes.md) | 79 |
 | 3.2. `MapGeneratorService` — Générateur de Graphe de Carte du Monde (DAG World Map) | [03-2-mapgeneratorservice-generateur-de-graphe-de-c.md](../_patterns/03-2-mapgeneratorservice-generateur-de-graphe-de-c.md) | 21 |
-| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 12 |
+| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 37 |
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 36 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 16 |
@@ -74,5 +74,5 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 116 |
+| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 117 |
 | 19.5. Éditeur de Contenu — Interface : Formulaire Inféré et Habillage « Éditeur » | [19-5-editeur-de-contenu-interface.md](../_patterns/19-5-editeur-de-contenu-interface.md) | 90 |

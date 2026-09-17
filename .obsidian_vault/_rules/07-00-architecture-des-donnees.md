@@ -52,7 +52,7 @@ Mécanique complète du chargeur — [`_patterns/17-00`](../_patterns/17-00-char
 ### 7.3. Graphe de relations entre modèles
 
 ```
-HeroData.passiveTrait ──────────► PassiveData.id
+PassiveData.classes ─────────────► HeroData.id (liste optionnelle, lue par availablePassivesFor)
 HeroData.skills ─────────────────► CardData.id  (cartes de signature de la classe)
 CardData.heroClass ──────────────► HeroData.id (nullable = global, injecté par le chemin)
 PassiveData.trigger ─────────────► RelicTrigger (enum partagé avec RelicData)

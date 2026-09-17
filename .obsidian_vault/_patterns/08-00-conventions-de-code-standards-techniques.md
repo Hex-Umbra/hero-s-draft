@@ -30,8 +30,8 @@ Le codebase utilise exhaustivement des enums pour éliminer les typos et optimis
 > vérifie l'exhaustivité d'un `switch` sur un enum **à la compilation** : ajouter une valeur
 > casse le build partout où elle n'est pas traitée. Une cascade de `if` ne dit rien et
 > retombe silencieusement sur sa dernière branche. C'est ainsi que la Forge d'Acier
-> légendaire a rendu la valeur d'un commun pendant des mois sans que rien ne le signale —
-> voir [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md). Attention à `RewardRarity`, qui
+> légendaire (rebaptisée *Affinité* depuis P-49) a rendu la valeur d'un commun pendant des mois
+> sans que rien ne le signale — voir [`_rules/06-00`](../_rules/06-00-economie-de-jeu.md). Attention à `RewardRarity`, qui
 > compte **six** valeurs, `mythic` incluse : un `case legendary: case mythic:` groupé est
 > explicite, un `else` ne l'est pas.
 

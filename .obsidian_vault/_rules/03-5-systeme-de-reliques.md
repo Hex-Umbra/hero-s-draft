@@ -20,7 +20,7 @@
 | `spirit_essence` | Essence Spirituelle | Rare | onEnemyKilled | gain_mana | 1 | Gagne 1 Mana chaque fois qu'un ennemi meurt. |
 | `regen_ring` | Anneau Régenérant | Rare | endOfTurn | heal | 2 | Restaure 2 PV à la fin de chaque tour. |
 | `critical_lens` | Lentille de Focalisation | Rare | startOfRun | gain_crit | 15 | +15% de chance de critique de manière permanente pour toute la run. |
-| `kunai` | Croc Kunaï | Rare | onAttackPlayed | charge_armor_mastery_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise d'Armure pour le combat. |
+| `kunai` | Croc Kunaï | Rare | onAttackPlayed | charge_mastery_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise pour le combat. |
 | `shuriken` | Shuriken | Rare | onAttackPlayed | charge_strength_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Force pour le combat. |
 | `incense_burner` | Encensoir | Rare | startOfTurn | charge_armor_turn | 8 | Tous les 4 tours, gagne 8 points d'Armure. |
 | `lucky_clover` | Trèfle Chanceux | Epic | startOfRun | gain_luck | 1 | +1 Chance de manière permanente pour toute la run. |
@@ -51,7 +51,7 @@
 
 **Système de Charges (Reliques Actives)** :
 Les reliques à charges accumulent des compteurs représentés par des effets de statut temporaires ou de combat sur le Héros. Une fois le seuil de charges atteint, le compteur est réinitialisé et l'effet bénéfique s'applique :
-- **Kunaï** (`kunai`) : Génère `kunai_charge` (durée 1, donc réinitialisé à chaque tour). À 3 charges, reset et ajoute +1 Maîtrise d'Armure pour le combat via le statut temporaire `'armor_mastery'` (durée 99).
+- **Kunaï** (`kunai`) : Génère `kunai_charge` (durée 1, donc réinitialisé à chaque tour). À 3 charges, reset et ajoute +1 Maîtrise pour le combat via le statut temporaire `'mastery'` (durée 99) — valable pour n'importe quel passif qui déclare un bloc `mastery` ([`_rules/03-2`](03-2-gestion-de-l-armure.md)).
 - **Shuriken** (`shuriken`) : Génère `shuriken_charge` (durée 1). À 3 charges, reset et ajoute +1 Force permanente pour le combat (`strength` de 99 tours).
 - **Plume de Scribe** (`pen_nib`) : Génère `pen_nib_charge` (durée 99). À 5 charges, reset et ajoute +3 Force temporaire pour le tour en cours (`strength` de 1 tour).
 - **Encensoir** (`incense_burner`) : Génère `incense_charge` (durée 99). À 4 charges, reset et octroie +8 points d'Armure.

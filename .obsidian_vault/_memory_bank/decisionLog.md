@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-16** — 95 décisions, numéros `ADR-001` à `ADR-095`, sans doublon ni trou, en bijection avec `../_adr/`.
+**Vérifié le 2026-09-17** — 96 décisions, numéros `ADR-001` à `ADR-096`, sans doublon ni trou, en bijection avec `../_adr/`.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-096` | Passifs Partagés — Éligibilité Déclarée par le Passif et Maîtrise Hybride (chantier P-49, branche `feat/p49-passifs-partages`, **non fusionnée**) — **remplace la D4 d'`ADR-086`** | ✅ | — | [ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
 | `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | `ADR-094` | Échelle de Rareté Explicite, Règle d'Acquisition Unique et Runes Non Cumulables (chantier P-40, bloc 2) — **amende `ADR-025`, dépasse en partie `ADR-051`** | ✅ | — | [ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) |
 | `ADR-093` | Éditeur de Contenu — Jetons de Couleur Nommés et Contrat de Choix (habillage « éditeur », chantier P-30) | ✅ | — | [ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md](../_adr/ADR-093-habillage-editeur-jetons-nommes-et-contrat-de-choix.md) |
@@ -18,7 +19,7 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 | `ADR-089` | Éditeur de Contenu — Seam Disque, Validation Totale avant Écriture Transactionnelle (chantier P-30, lot 2) — **amendé par `ADR-092`** | ✅ | — | [ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md](../_adr/ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) |
 | `ADR-088` | Tiroir de Debug Ancré et Sortie de Combat par sa Propre Route (chantier P-30, lot 1) | ✅ | — | [ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md](../_adr/ADR-088-tiroir-de-debug-ancre-et-sortie-de-combat-par-sa-pr.md) |
 | `ADR-087` | Run Debug Déclarée au Lancement et Verrou de Persistance dans `SaveService` (chantier P-30, lot 1) | ✅ | — | [ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
-| `ADR-086` | Autorité du Répertoire sur l'Appartenance, avec Expiration de la Tolérance de Champ Redondant (chantier P-48, lot 3) | ✅ | — | [ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) |
+| `ADR-086` | Autorité du Répertoire sur l'Appartenance, avec Expiration de la Tolérance de Champ Redondant (chantier P-48, lot 3) — **D4 remplacée par `ADR-096`** | ✅ | — | [ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) |
 | `ADR-085` | Règle de Partage Catalogue / Configuration dans `assets/data/` (chantier P-48) | ✅ | — | [ADR-085-regle-de-partage-catalogue-configuration.md](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md) |
 | `ADR-084` | Suppression de la Chaîne de Compétences Héroïques, Morte et Inatteignable (chantier P-40, bloc 1) | ✅ | — | [ADR-084-suppression-de-la-chaine-de-competences-heroiques.md](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md) |
 | `ADR-083` | Latence et Synchronisation du Chemin de Lecture Audio — Réservoirs de Lecteurs, Garde de Disponibilité et Frappe d'Impact | ✅ | — | [ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) |

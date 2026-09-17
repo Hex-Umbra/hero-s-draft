@@ -5,29 +5,33 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-16**
+**Vérifié le 2026-09-17**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 876 au vert | `flutter test` |
-| Fichiers de test | 123 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 923 au vert | `flutter test` |
+| Fichiers de test | 127 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 238 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 48 154 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 241 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 48 531 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **P-41 lot A est fusionné dans `main`** par la PR #38 (2026-09-16, merge `f8be03a`), branche
-> `feat/p41-lot-a` supprimée. `git diff --stat b94c854 f8be03a -- lib test assets` ne montre que
-> `assets/data/patch_notes.json` : les métriques ci-dessus, mesurées à `b94c854`, décrivent donc
-> toujours le code de `main`.
+> **P-49 (passifs partagés) est codé sur la branche `feat/p49-passifs-partages`, pas encore
+> fusionnée dans `main`.** `flutter test` (`+923`) et `dart analyze` (`No issues found!`) ont été
+> mesurés dans cette session au dernier commit de code du lot (`ce8c2aa`, 2026-09-17) ; les trois
+> commits suivants ne touchent que `docs/` et `.obsidian_vault/` — `git diff --stat ce8c2aa HEAD --
+> lib test assets` est vide, donc ces métriques décrivent toujours le code de la branche à `HEAD`.
+> Voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
 >
-> **Note de version `0.5.2` écrite** (`fbec30d`) pour ce lot : « Des Sauvegardes Qui Durent »,
-> aucun changement de gameplay, sauvegardes migrées et conservées. **Pas encore taguée** : le
-> propriétaire tague `v0.5.2` après sa propre campagne de test manuelle.
+> **Aucune note de version n'est encore écrite pour ce lot** : la note `0.5.2` sera rouverte en
+> place pour l'absorber, avec l'accord du propriétaire (`docs/ROADMAP.md` §4) — pas encore donné à
+> ce jour. `pubspec.yaml` et `assets/data/patch_notes.json` restent donc inchangés par ce lot.
+>
+> **P-41 lot A reste fusionné dans `main`** par la PR #38 (2026-09-16, merge `f8be03a`).
 
 > [!NOTE]
 > **La version ne vit pas ici.** La version de référence se lit dans `pubspec.yaml`
@@ -100,7 +104,7 @@ amendé par [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puis
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Pipeline de dégâts et armure | `EffectResolver._calculateDamage()`, `EntityStats.takeDamage()`, `RunController.grant()` | Armure absorbe en priorité ; `armorMastery` s'ajoute aux seuls gains de source passif via `StatGains.apply` ([`_rules/03-2`](../_rules/03-2-gestion-de-l-armure.md)) ; reset à 0 en début de tour joueur |
+| Pipeline de dégâts et armure | `EffectResolver._calculateDamage()`, `EntityStats.takeDamage()`, `RunController.grant()` | Armure absorbe en priorité ; la Maîtrise (`EntityStats.mastery`) est appliquée au passif actif par `TraitSystem.dispatch` **avant** sa stratégie, `StatGains` n'a plus de règle spéciale — [`_rules/03-2`](../_rules/03-2-gestion-de-l-armure.md), [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) ; reset à 0 en début de tour joueur |
 | Fin de tour : synchronisation et double confirmation | `lib/ui/screens/game_screen.dart` | Phase synchronisée à l'entrée du tour joueur ; confirmation supplémentaire si mana restant — [ADR-076](../_adr/ADR-076-synchronisation-synchrone-du-bouton-fin-de-tour.md), [ADR-065](../_adr/ADR-065-double-confirmation-de-fin-de-tour-avec-mana-resta.md) |
 | Intentions ennemies et phase séquentielle | `CombatController._rollIntent()`, `HerosDraftGame._enemyRipostePhase()` | Cycle prédéfini ou aléatoire (60% atk/25% def/15% buff), résolution intent par intent animée |
 | Statuts et nettoyage des morts | `EntityStats.addStatus()`/`.tickStatuses()`, `CombatController._cleanDeadEnemies()` | Stacking, tick de durée, auto-sélection du prochain ennemi, trigger `onEnemyKilled` |
@@ -113,8 +117,8 @@ amendé par [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puis
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Passifs data-driven | `assets/data/passives/` → `TraitSystem` | 3 passifs liés aux héros par `HeroData.passiveTrait` ; ids en `snake_case` |
-| Triggers multiples | `TraitSystem.onTurnStart`/`.onTurnEnd`/`.onCardPlayed` | Logique spécifique par `effectType` (`gain_armor`, `berserker_armor`, `spell_armor`) |
+| Passifs data-driven | `assets/data/passives/` → `TraitSystem` | 3 passifs liés à leurs héros par leur propre champ `classes` (absent = toutes), lus par le point d'accès unique `availablePassivesFor()` (`lib/game/systems/passive_availability.dart`) ; ids en `snake_case` — [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
+| Répartiteur de passifs | `TraitSystem.dispatch()`, `PassiveStrategies.byEffectType` | Vérifie le `trigger` déclaré, applique la Maîtrise au passif (`PassiveData.withMastery`), puis délègue à la stratégie de l'`effectType` (`gain_armor`, `berserker_armor`, `spell_armor`) — registre sur le modèle d'[ADR-061](../_adr/ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md) |
 | Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers (startOfRun → onEnemyKilled) |
 | Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir — compteurs visuels via `StatusEffect` |
 

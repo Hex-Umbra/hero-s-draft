@@ -74,7 +74,7 @@ coupure est ce qui rend le parcours cohérent d'une étape à l'autre :
 
 `prepareStep(int index)` branche sur le **type** de l'étape, jamais sur son indice : insérer
 une étape ne décale pas le câblage. `baseStatsForHero()` dérive les statistiques de départ de
-la classe choisie (`maxHp`, `maxMana`, `armorMastery`, `luck`) et ne retombe sur les valeurs
+la classe choisie (`maxHp`, `maxMana`, `mastery`, `luck`) et ne retombe sur les valeurs
 de repli 80 PV / 3 mana que tant que l'étape 02 n'a pas été franchie.
 
 > [!NOTE]

@@ -30,14 +30,15 @@ jetable, comme `bundle` pour `GameDataLoader`.
 
 `kEntityDescriptors` (`entity_descriptor.dart`) décrit chaque catégorie en données : motif de
 chemin, clés requises et interdites, bases bilingues, `construct` (le vrai `fromJson`), gabarit,
-fichier de dossier, et cinq familles de métadonnées. Ajouter une catégorie = ajouter une entrée,
+fichier de dossier, et six familles de métadonnées. Ajouter une catégorie = ajouter une entrée,
 pas du code d'interface.
 
 | Table | Désigne | Exemple |
 |:---|:---|:---|
 | `enumKeys` / `enumListKeys` | Une ou plusieurs valeurs d'un **enum Dart réel** | `rarity`, `intents[].type`, `eligibleCardTypes` |
 | `vocabularyKeys` | Une chaîne libre dans le modèle, fermée dans le moteur | `effects[].type`, `color` et `icon` d'une forge |
-| `referenceKeys` | Une entité d'une autre catégorie | `passiveTrait` |
+| `referenceKeys` | Une entité d'une autre catégorie | *(aucun descripteur livré ne l'emploie depuis P-49 — `passiveTrait` en était le seul ; le mécanisme reste, vérifié sur un descripteur de test)* |
+| `referenceListKeys` | Une **liste** d'entités d'une autre catégorie, non vide | `classes` d'un passif → catégorie `heroClass` ([ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)) |
 | `hexColorKeys` | Un `#RRGGBB` | `themeColor` |
 | `assetKeys` | Un `AssetSlot` son, ou image à nom imposé (jeton `{id}`) | `sfx`, `classCard`, `iconPath`, `spritePath` d'un ennemi |
 

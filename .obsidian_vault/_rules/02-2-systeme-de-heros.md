@@ -2,11 +2,18 @@
 
 Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `cards/`) :
 
-| Héros | HP | Mana | Attaque | Luck | Armor Mastery | Passif | Cartes de signature (`skills`) |
+| Héros | HP | Mana | Attaque | Luck | Maîtrise | Passif | Cartes de signature (`skills`) |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | **Paladin** | 100 | 3 | 5 | 0 | 0 | `regen_armor` (gain armure fin de tour) | `holy_shield`, `smite` |
 | **Berserker** | 80 | 3 | 15 | 0 | 0 | `berserker_armor` (armure ∝ HP manquants, début tour) | `reckless_strike`, `rage_form` |
 | **Mage** | 60 | 3 | 10 | 0 | 0 | `spell_armor` (armure quand skill jouée) | `magic_missile`, `mana_surge` |
+
+> [!NOTE]
+> **Colonne Maîtrise** : `HeroData.mastery` (clé JSON `mastery`, renommée depuis `armorMastery`
+> par [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)) — aucune
+> classe livrée ne la renseigne aujourd'hui. Le lien classe → passif ne part plus de la classe :
+> chaque passif déclare lui-même ses `classes` éligibles, lues par le point d'accès unique
+> `availablePassivesFor()` (`lib/game/systems/passive_availability.dart`).
 
 > [!WARNING]
 > Le champ `skills` de `class.json` est la liste des **cartes de classe de départ**, résolue
@@ -29,9 +36,12 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > départ et dialogue de stats lisent ces champs ; le dégradé des boutons se dérive de `themeColor`.
 > Une classe ajoutée par un simple dossier s'affiche partout dans sa couleur et avec son image.
 
-**Passifs** (gérés par `TraitSystem`, un fichier par passif sous `assets/data/passives/`) :
+**Passifs** (répartis par `TraitSystem.dispatch`, un fichier par passif sous `assets/data/passives/`,
+chacun réservé à sa classe par son propre champ `classes`) — détail du mécanisme et de la Maîtrise :
+[`_patterns/03-3`](../_patterns/03-3-traitsystem-passifs-de-heros.md).
+
 | ID | Trigger | EffectType | Valeur | Mécanisme |
 |:---|:---|:---|:---|:---|
-| `regen_armor` | `endOfTurn` | `gain_armor` | 2 | +2 armure (+armorMastery) à chaque fin de tour |
-| `berserker_armor` | `startOfTurn` | `berserker_armor` | 1 | +1 armure par tranche de 10 HP manquants (+armorMastery) |
-| `spell_armor` | `onCardPlayed` | `spell_armor` | 1 | +1 armure quand une carte Skill est jouée (+armorMastery) |
+| `regen_armor` | `endOfTurn` | `gain_armor` | 2 | +2 armure (+Maîtrise) à chaque fin de tour |
+| `berserker_armor` | `startOfTurn` | `berserker_armor` | 1 | +1 armure par tranche de 10 HP manquants, ×(1+Maîtrise) |
+| `spell_armor` | `onCardPlayed` | `spell_armor` | 1 | +1 armure quand une carte Skill est jouée (+Maîtrise) |

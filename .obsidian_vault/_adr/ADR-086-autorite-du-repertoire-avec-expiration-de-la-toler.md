@@ -4,6 +4,9 @@
 Complète [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md), qui décidait
 *quels* fichiers éclater sans dire *ce que leur emplacement signifie*. Prolonge
 [ADR-003](ADR-003-architecture-100-data-driven.md).
+**D4 est remplacée par [ADR-096](ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)**
+(chantier P-49) : les passifs restent à plat, mais le lien à la classe part désormais du passif
+(`classes`), plus de `HeroData.passiveTrait`.
 
 ### Contexte
 
