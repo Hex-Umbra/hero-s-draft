@@ -334,6 +334,7 @@ La tuile « Maîtrise +N » de la fiche des stats (`stats_dialog.dart:182-183`) 
 | `DraftChoice.armorBoost` (`level_up_reward_service.dart:23`, `:35`, `:186`) | `masteryBoost` |
 | Consommation : `draft_screen.dart:644` | `masteryAcc: choice.masteryBoost` |
 | ARB `draftChoiceSteelForge`, `draftChoiceSteelForgeDesc` | `draftChoiceAffinity`, `draftChoiceAffinityDesc`, `draftChoiceAffinityNoEffect` (§7) |
+| Icône de la carte de draft, choisie sur le titre : `contains('FORGE')` → 🛡️ (`lib/ui/widgets/draft/draft_choice_card.dart:49-50`) | `contains('AFFINIT')` → 💠 — sans quoi *Affinité* retomberait sur l'icône par défaut ✨ |
 
 **Les valeurs ne changent pas** : 1, 2, 3, 5, 7 selon la rareté. `test/unit/level_up_reward_values_test.dart`
 les verrouille déjà ; il est seulement renommé en suivant l'enum.
@@ -379,6 +380,12 @@ Les `description_en` perdent de même « (+ Mastery) ».
 place de *Forge d'Acier*, et le dernier paragraphe devient : « Attention à l'Affinité : elle donne de la
 **Maîtrise**, qui renforce ce que produit votre passif — chaque passif indique ce qu'un point lui
 apporte. » / « Careful with Affinity: it grants **Mastery**, which strengthens what your passive
+produces — each passive states what one point adds. »
+
+**Étape « Armure & Dégâts »** (`tutorial_data.dart:179-181`, `:189-191`) — sa dernière phrase affirme que la
+Maîtrise d'Armure « s'ajoute à chaque gain d'Armure produit par votre passif », ce que P-49 rend faux.
+Elle devient : « La Maîtrise, statistique permanente, renforce ce que produit votre passif — chaque passif
+indique ce qu'un point lui apporte. » / « Mastery, a permanent stat, strengthens what your passive
 produces — each passive states what one point adds. »
 
 Le reste de la prose du tutoriel n'est pas réécrit : c'est le lot D.
