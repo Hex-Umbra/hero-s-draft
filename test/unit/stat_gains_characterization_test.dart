@@ -19,13 +19,14 @@ import 'package:roguelike_card_game/models/status_effect.dart';
 /// Fige le comportement des gains d'armure, de mana et de puissance tel qu'il
 /// était avant leur passage par `StatGains` (spec P-41, §4.1). Ces tests
 /// passent sur le code d'origine et restent inchangés après la conversion :
-/// c'est la preuve que le lot A ne change rien au jeu.
+/// c'est la preuve que le lot A ne change rien au jeu. Une seule valeur a
+/// changé depuis, voulue : Armure du Berserker avec de la Maîtrise (P-49).
 ///
 /// Couverts ailleurs : l'intention « défense » d'un ennemi
 /// (`combat_controller_test.dart`) et l'armure d'une carte du tutoriel
 /// (`tutorial/tutorial_engine_test.dart`).
 void main() {
-  // Une Maîtrise d'Armure non nulle : elle ne doit s'ajouter qu'aux passifs.
+  // Une Maîtrise non nulle : seuls les passifs qui la déclarent en tirent parti.
   const paladin = HeroData(
     id: 'paladin',
     classCard: 'paladin.png',
@@ -101,6 +102,7 @@ void main() {
         trigger: trigger,
         effectType: effectType,
         value: value,
+        mastery: const PassiveMastery(field: 'value', perPoint: 1),
       );
 
   group('armure hors passifs : la valeur seule, jamais la Maitrise', () {
@@ -151,7 +153,10 @@ void main() {
     });
   });
 
-  group('armure des passifs : la valeur plus la Maitrise', () {
+  // P-49 (spec, §6.4) : la Maîtrise augmente le paramètre que le passif
+  // déclare, avant son calcul. Régénération et Armure Magique n'en voient pas
+  // la différence ; Armure du Berserker, si — changement voulu.
+  group('armure des passifs : la Maitrise augmente le parametre declare', () {
     test('gain_armor en debut de tour', () {
       run.startNewRun(paladin, passive(RelicTrigger.startOfTurn, 'gain_armor', 2));
       TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
@@ -164,14 +169,15 @@ void main() {
       expect(heroStats().armure, 2 + 3);
     });
 
-    test('berserker_armor : par tranche de 10 PV manquants', () {
+    test('berserker_armor : la Maitrise compte a chaque tranche (P-49)', () {
       run.startNewRun(
         paladin,
         passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
       );
       run.takeDamage(25);
       TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
-      expect(heroStats().armure, 2 * 1 + 3);
+      // Avant P-49 : 2 tranches × 1 + 3 = 5.
+      expect(heroStats().armure, 2 * (1 + 3));
     });
 
     test('berserker_armor a pleine vie : rien, pas meme la Maitrise', () {

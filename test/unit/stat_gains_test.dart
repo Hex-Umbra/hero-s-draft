@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/stat_gains.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
-import 'package:roguelike_card_game/models/status_effect.dart';
 
 void main() {
   EntityStats stats() => EntityStats(
@@ -16,41 +15,14 @@ void main() {
       );
 
   group('StatGains.apply', () {
-    test('armure d une carte : la valeur seule', () {
-      const gain = StatGain(GainResource.armor, 10, GainSource.card);
-      expect(StatGains.apply(stats(), gain).armure, 1 + 10);
-    });
-
-    for (final source in GainSource.values.where((s) => s != GainSource.passive)) {
-      test('armure de source ${source.name} : jamais de Maitrise', () {
+    // La Maîtrise agit sur le passif avant son gain (spec P-49, §6.3) :
+    // aucune source, `passive` comprise, ne la reçoit ici.
+    for (final source in GainSource.values) {
+      test('armure de source ${source.name} : la valeur seule', () {
         final gain = StatGain(GainResource.armor, 2, source);
         expect(StatGains.apply(stats(), gain).armure, 1 + 2);
       });
     }
-
-    test('armure d un passif : la valeur plus la Maitrise', () {
-      const gain = StatGain(GainResource.armor, 2, GainSource.passive);
-      expect(StatGains.apply(stats(), gain).armure, 1 + 2 + 3);
-    });
-
-    test('la Maitrise d un passif compte le statut mastery', () {
-      final boosted = stats().addStatus(
-        const StatusEffect(
-          id: 'mastery',
-          name: 'Maitrise',
-          type: StatusType.buff,
-          value: 1,
-          duration: 2,
-        ),
-      );
-      const gain = StatGain(GainResource.armor, 2, GainSource.passive);
-      expect(StatGains.apply(boosted, gain).armure, 1 + 2 + 3 + 1);
-    });
-
-    test('un passif de valeur 0 rend quand meme la Maitrise', () {
-      const gain = StatGain(GainResource.armor, 0, GainSource.passive);
-      expect(StatGains.apply(stats(), gain).armure, 1 + 3);
-    });
 
     test('mana : aucun plafond', () {
       const gain = StatGain(GainResource.mana, 2, GainSource.card);

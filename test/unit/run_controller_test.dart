@@ -92,6 +92,7 @@ void main() {
           trigger: RelicTrigger.startOfTurn,
           effectType: 'berserker_armor',
           value: 1,
+          mastery: PassiveMastery(field: 'value', perPoint: 1),
         );
 
         runController.startNewRun(berserkerHero, berserkerArmor);
@@ -103,11 +104,11 @@ void main() {
         runController.travelToNode('node_1');
 
         // At the start of combat, the passive should trigger:
-        // Missing HP = 20. Gain = 20 ~/ 10 = 2 armor.
-        // Total gain = 2 + mastery (1) = 3 armor.
+        // Missing HP = 20, i.e. 2 tranches. Mastery raises the passive's
+        // value first (spec P-49, §6.4): 2 × (1 + 1) = 4 armor.
         runController.startCombat();
 
-        expect(runController.state.heroStats.armure, 3);
+        expect(runController.state.heroStats.armure, 4);
 
         // When the node is completed, armor should reset to 0
         runController.completeCurrentNode();

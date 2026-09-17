@@ -3,8 +3,9 @@ import '../../models/entity_stats.dart';
 /// La ressource qu'un gain augmente.
 enum GainResource { armor, mana, attackPower, skillPower, alterationPower }
 
-/// D'où vient un gain. C'est ce qui permet à une règle de ne viser qu'une
-/// provenance : la Maîtrise d'Armure ne s'ajoute qu'aux gains `passive`.
+/// D'où vient un gain : l'étiquette qu'une règle peut viser — les règles de
+/// classe du lot B de P-41. La Maîtrise n'en est plus une : elle agit sur le
+/// passif avant qu'il ne calcule son gain (spec P-49, §6.3).
 enum GainSource {
   card,
   rune,
@@ -42,7 +43,7 @@ abstract final class StatGains {
   static EntityStats apply(EntityStats stats, StatGain gain) {
     return switch (gain.resource) {
       GainResource.armor => stats.copyWith(
-          armure: stats.armure + gain.amount + _masteryFor(stats, gain),
+          armure: stats.armure + gain.amount,
         ),
       GainResource.mana => stats.copyWith(
           currentMana: stats.currentMana + gain.amount,
@@ -58,11 +59,4 @@ abstract final class StatGains {
         ),
     };
   }
-
-  /// La Maîtrise d'Armure ne s'ajoute qu'aux gains des passifs : c'est sur ce
-  /// périmètre qu'est calibrée la récompense *Forge d'Acier*
-  /// (`level_up_reward_service.dart`). Sa refonte en bonus de passif est une
-  /// décision de P-49 (spec P-41, §5.4).
-  static int _masteryFor(EntityStats stats, StatGain gain) =>
-      gain.source == GainSource.passive ? stats.effectiveMastery : 0;
 }

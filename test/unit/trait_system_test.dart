@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/game/systems/trait_system.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/models/status_effect.dart';
 
 /// Le répartiteur des passifs (spec P-49, §5.3).
 void main() {
@@ -68,5 +69,58 @@ void main() {
       returnsNormally,
     );
     expect(armor(), 0);
+  });
+
+  group('la Maitrise, appliquee avant la strategie', () {
+    const master = HeroData(
+      id: 'paladin',
+      classCard: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+      baseDamage: 5,
+      mastery: 3,
+    );
+    const regen = PassiveData(
+      id: 'regen_armor',
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+      mastery: PassiveMastery(field: 'value', perPoint: 1),
+    );
+
+    test('un passif qui declare mastery en tire son parametre augmente', () {
+      run.startNewRun(master, regen);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
+      expect(armor(), 2 + 3);
+    });
+
+    test('un passif sans mastery l ignore', () {
+      run.startNewRun(master, passive(RelicTrigger.endOfTurn, 'gain_armor'));
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
+      expect(armor(), 2);
+    });
+
+    test('le statut de combat mastery compte', () {
+      run.startNewRun(master, regen);
+      run.addStatus(
+        const StatusEffect(
+          id: 'mastery',
+          name: 'Maîtrise (Relique)',
+          type: StatusType.buff,
+          value: 1,
+          duration: 99,
+        ),
+      );
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
+      expect(armor(), 2 + 3 + 1);
+    });
+
+    test('la Maitrise ne s accumule pas sur le passif actif', () {
+      run.startNewRun(master, regen);
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
+      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.endOfTurn));
+      expect(armor(), 2 * (2 + 3));
+      expect(run.currentState.activePassive!.value, 2);
+    });
   });
 }

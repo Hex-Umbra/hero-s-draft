@@ -2,10 +2,16 @@
   "id": "regen_armor",
   "name_en": "Armor Regeneration",
   "name_fr": "Régénération d'Armure",
-  "description_en": "Gain 2 Block (+ Mastery) automatically at the end of each turn.",
-  "description_fr": "Gagne 2 points d'Armure (+ Maîtrise) automatiquement à la fin de chaque tour.",
+  "description_en": "Gain 2 Block automatically at the end of each turn.",
+  "description_fr": "Gagne 2 points d'Armure automatiquement à la fin de chaque tour.",
   "classes": ["paladin"],
   "trigger": "endOfTurn",
   "effectType": "gain_armor",
-  "value": 2
+  "value": 2,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Block at end of turn",
+    "description_fr": "+{amount} Armure en fin de tour"
+  }
 }
