@@ -197,6 +197,39 @@ void main() {
 
       expect(vulnerableOnEnemy(), 0);
     });
+
+    test('seule la cible visee est marquee, pas les autres ennemis', () {
+      run.startNewRun(mage, mageMark());
+      final enemyA = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 40, armure: 0, might: 0),
+      );
+      final enemyB = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 40, armure: 0, might: 0),
+      );
+      // `enemyA` est le premier de la liste : un passif qui marquerait
+      // `enemies.first` au lieu de lire `PassiveEvent.enemyId` passerait
+      // encore le reste du groupe, ou un seul ennemi n'est jamais seme.
+      combat.state = CombatState(
+        enemies: [enemyA, enemyB],
+        selectedEnemyId: enemyB.id,
+        turnPhase: TurnPhase.player,
+      );
+
+      combat.applyPlayerCardPlay(card(CardType.attack));
+
+      bool isVulnerable(String enemyId) => combat.currentState.enemies
+          .firstWhere((e) => e.id == enemyId)
+          .stats
+          .statuses
+          .any((s) => s.id == 'vulnerable');
+
+      expect(isVulnerable(enemyB.id), isTrue,
+          reason: 'la cible visee par la carte est marquee');
+      expect(isVulnerable(enemyA.id), isFalse,
+          reason: 'un ennemi non vise ne doit jamais etre marque');
+    });
   });
 
   group('Flux de Mana', () {
@@ -243,6 +276,13 @@ void main() {
       expect(stats().currentMana, 3 + 1);
     });
 
+    // Ce test ne distingue pas le plancher de son absence : le declencheur
+    // ne se resout qu'au premier `onSkillPlayed`, ou le compteur vaut deja 1
+    // et `1 >= threshold` est vrai que `threshold` vaille 1 ou un negatif
+    // profond. Le plancher n'a d'effet observable qu'ailleurs (une future
+    // lecture de `passive.threshold` par l'UI, par exemple) ; ce test
+    // documente l'intention de la strategie, pas un comportement qu'il
+    // pourrait a lui seul faire echouer.
     test('le seuil ne descend jamais sous une Competence', () {
       const veryMasterful = HeroData(
         id: 'mage',
