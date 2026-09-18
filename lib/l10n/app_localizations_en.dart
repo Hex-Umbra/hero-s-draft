@@ -315,6 +315,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mightTargetAlterationShort => 'Alterations';
 
   @override
+  String get mightTargetAttackLong => 'your Attack damage';
+
+  @override
+  String get mightTargetSkillLong => 'your Skill damage';
+
+  @override
+  String get mightTargetAlterationLong => 'your alterations';
+
+  @override
+  String get listJoinAnd => 'and';
+
+  @override
+  String mightTargetsSentence(String targets) {
+    return 'Your Might strengthens $targets.';
+  }
+
+  @override
   String get tooltipManaTitle => 'Mana';
 
   @override

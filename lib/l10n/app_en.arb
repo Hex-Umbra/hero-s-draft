@@ -153,6 +153,19 @@
   "mightTargetAttackShort": "Attacks",
   "mightTargetSkillShort": "Skills",
   "mightTargetAlterationShort": "Alterations",
+  "mightTargetAttackLong": "your Attack damage",
+  "mightTargetSkillLong": "your Skill damage",
+  "mightTargetAlterationLong": "your alterations",
+  "listJoinAnd": "and",
+  "@listJoinAnd": {
+    "description": "Joins the last two items of an enumeration: A, B and C."
+  },
+  "mightTargetsSentence": "Your Might strengthens {targets}.",
+  "@mightTargetsSentence": {
+    "placeholders": {
+      "targets": { "type": "String" }
+    }
+  },
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",

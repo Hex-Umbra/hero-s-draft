@@ -317,6 +317,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mightTargetAlterationShort => 'Altérations';
 
   @override
+  String get mightTargetAttackLong => 'les dégâts de vos Attaques';
+
+  @override
+  String get mightTargetSkillLong => 'les dégâts de vos Compétences';
+
+  @override
+  String get mightTargetAlterationLong => 'vos altérations';
+
+  @override
+  String get listJoinAnd => 'et';
+
+  @override
+  String mightTargetsSentence(String targets) {
+    return 'Votre Puissance renforce $targets.';
+  }
+
+  @override
   String get tooltipManaTitle => 'Mana';
 
   @override

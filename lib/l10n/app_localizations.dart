@@ -656,6 +656,36 @@ abstract class AppLocalizations {
   /// **'Alterations'**
   String get mightTargetAlterationShort;
 
+  /// No description provided for @mightTargetAttackLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your Attack damage'**
+  String get mightTargetAttackLong;
+
+  /// No description provided for @mightTargetSkillLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your Skill damage'**
+  String get mightTargetSkillLong;
+
+  /// No description provided for @mightTargetAlterationLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your alterations'**
+  String get mightTargetAlterationLong;
+
+  /// Joins the last two items of an enumeration: A, B and C.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get listJoinAnd;
+
+  /// No description provided for @mightTargetsSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Might strengthens {targets}.'**
+  String mightTargetsSentence(String targets);
+
   /// No description provided for @tooltipManaTitle.
   ///
   /// In en, this message translates to:
