@@ -356,6 +356,10 @@ class TutorialEngine extends ChangeNotifier {
         mockState.heroStats = StatGains.apply(
           mockState.heroStats,
           StatGain(GainResource.armor, scaled, GainSource.card),
+          // Les règles viennent de la classe choisie, jamais d'une recopie
+          // (ADR-081, spec P-41, §9.1). Une classe qui convertit son armure
+          // la convertit donc aussi au tutoriel.
+          mockState.chosenHero?.statRules ?? const [],
         );
         if (scaled > 0) _armorGainedThisStep = true;
       }

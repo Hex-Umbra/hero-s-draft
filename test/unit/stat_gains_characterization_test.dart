@@ -137,6 +137,7 @@ void main() {
     test('statut armor_regen du heros', () {
       final stats = StatusEffectProcessor.processPlayerStatuses(
         heroStats().addStatus(metallicize),
+        const [],
       );
       expect(stats.armure, 3);
     });

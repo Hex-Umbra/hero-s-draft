@@ -56,6 +56,7 @@ class PlayerStatsManager {
         heroStats: StatGains.apply(
           modifiedStats,
           StatGain(GainResource.might, mightAcc, GainSource.progression),
+          controller.currentState.statRules,
         ),
       ),
     );
@@ -146,7 +147,11 @@ class PlayerStatsManager {
   void grant(StatGain gain) {
     controller.updateState(
       controller.currentState.copyWith(
-        heroStats: StatGains.apply(controller.currentState.heroStats, gain),
+        heroStats: StatGains.apply(
+          controller.currentState.heroStats,
+          gain,
+          controller.currentState.statRules,
+        ),
       ),
     );
   }
