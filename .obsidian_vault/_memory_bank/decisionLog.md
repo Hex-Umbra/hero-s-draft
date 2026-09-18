@@ -5,10 +5,11 @@ Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps 
 > [!IMPORTANT]
 > **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
-**Vérifié le 2026-09-18** — 97 décisions, numéros `ADR-001` à `ADR-097`, sans doublon ni trou, en bijection avec `../_adr/`.
+**Vérifié le 2026-09-18** — 98 décisions, numéros `ADR-001` à `ADR-098`, sans doublon ni trou, en bijection avec `../_adr/`.
 
 | N° | Décision | Statut | Version | Fichier |
 |:---|:---|:---:|:---:|:---|
+| `ADR-098` | Les Récompenses de Niveau en Donnée, Table Explicite et Gabarits à Trous (chantier P-41, **lot C, partie 1**, fusionné dans `main` par la PR #42) — **complète `ADR-085` et `ADR-086`** | ✅ | — | [ADR-098-recompenses-de-niveau-en-donnee-et-gabarits-a-tr.md](../_adr/ADR-098-recompenses-de-niveau-en-donnee-et-gabarits-a-tr.md) |
 | `ADR-097` | La Puissance Unique, Orientée par la Classe (chantier P-41, **lot B en entier, fusionné dans `main`** : partie 1 par la PR #40, partie 2 par la PR #41) — **amende la décision 2 d'`ADR-095`** | ✅ | — | [ADR-097-puissance-unique-orientee-par-la-classe.md](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) |
 | `ADR-096` | Passifs Partagés — Éligibilité Déclarée par le Passif et Maîtrise Hybride (chantier P-49, fusionné dans `main` par la PR #39) — **remplace la D4 d'`ADR-086`** | ✅ | — | [ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
 | `ADR-095` | Passage Unique des Gains, Scission des Puissances et Chaîne de Migration de Sauvegarde (P-41, lot A, fusionné dans `main` par la PR #38) — **amende `ADR-069`** ; **décision 2 remplacée par `ADR-097`** | ✅ | — | [ADR-095-passage-unique-des-gains-scission-des-puissances-et.md](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |

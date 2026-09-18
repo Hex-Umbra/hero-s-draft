@@ -16,7 +16,7 @@
 | `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes |
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des huit sources du jeu**. Le provider de production et le registre des tests du
+déclaration des neuf sources du jeu**. Le provider de production et le registre des tests du
 tutoriel passent tous deux par elle : une seconde déclaration serait une seconde vérité.
 
 ### 17.2. Le motif de chemin porte la sélection *et* l'injection

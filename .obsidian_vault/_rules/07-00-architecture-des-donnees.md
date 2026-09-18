@@ -12,7 +12,7 @@
 assets/data/
 ├── audio.json, patch_notes.json    # à plat : documents de configuration, pas des catalogues
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
-│                                   #   forge_upgrades/, passives/
+│                                   #   forge_upgrades/, passives/, level_up_rewards/
 ├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
@@ -43,7 +43,7 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 ```
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des huit sources du jeu** ; le provider de production et le registre des tests du
+déclaration des neuf sources du jeu** ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
 en une fois, en nommant fichier et champ.
 
