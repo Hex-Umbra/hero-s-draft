@@ -1,0 +1,18 @@
+{
+  "id": "blessing",
+  "name_en": "Blessing",
+  "name_fr": "Bénédiction",
+  "description_en": "At the start of your turn, every 5 points of surviving Block becomes 1 HP.",
+  "description_fr": "Au début du tour, chaque tranche de 5 points d'Armure survivante devient 1 PV.",
+  "classes": ["paladin"],
+  "trigger": "startOfTurn",
+  "effectType": "blessing",
+  "value": 1,
+  "displayOrder": 3,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} HP per tranche",
+    "description_fr": "+{amount} PV par tranche"
+  }
+}

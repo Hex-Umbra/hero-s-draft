@@ -1,0 +1,19 @@
+{
+  "id": "fervor",
+  "name_en": "Fervor",
+  "name_fr": "Ferveur",
+  "description_en": "When your Block absorbs damage, gain 1 Might for 2 turns.",
+  "description_fr": "Quand votre Armure encaisse des dégâts, gagne 1 Puissance pendant 2 tours.",
+  "classes": ["paladin"],
+  "trigger": "onDamageTaken",
+  "effectType": "fervor",
+  "value": 1,
+  "duration": 2,
+  "displayOrder": 2,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Might absorbed",
+    "description_fr": "+{amount} Puissance par absorption"
+  }
+}
