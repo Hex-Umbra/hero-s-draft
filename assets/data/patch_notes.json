@@ -5,6 +5,19 @@
     "title": "Des Sauvegardes Qui Durent",
     "sections": [
       {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les trois classes ne jouent plus de la même manière : la Puissance du Paladin renforce tout ce qu'il joue, celle du Berserker ses seules Attaques, et celle du Mage ses Compétences et ses altérations.",
+          "Le Berserker ne garde plus jamais son Armure : chaque point qu'il aurait gagné devient un point de Puissance pour un tour. Jouer Mur de Fer lui donne donc 10 de Puissance le temps d'un tour, au lieu de 10 d'Armure.",
+          "Chaque classe dispose désormais de trois passifs au lieu d'un : Régénération d'Armure, Ferveur et Bénédiction pour le Paladin ; Rage, Soif de Sang et Frénésie pour le Berserker ; Canalisation, Marque du Mage et Flux de Mana pour le Mage.",
+          "Armure du Berserker et Armure Magique laissent leur place à Rage et à Canalisation.",
+          "Chaque classe démarre pour l'instant avec le premier de ses trois passifs : l'écran qui vous laissera prendre l'un des trois arrive dans une prochaine version.",
+          "Les classes n'ont plus les mêmes statistiques de départ : le Paladin commence avec 1 point de Maîtrise, et le Berserker avec 10 % de chances de coup critique.",
+          "La Puissance est désormais représentée par un éclair, à la place de l'épée."
+        ]
+      },
+      {
         "category": "Améliorations",
         "emoji": "⚡",
         "entries": [
@@ -22,7 +35,8 @@
         "category": "Équilibrage",
         "emoji": "⚖️",
         "entries": [
-          "Armure du Berserker : la Maîtrise s'applique désormais à chaque tranche de 10 PV manquants, au lieu d'une seule fois. Avec 2 points de Maîtrise et 40 PV manquants, vous gagnez 12 points d'Armure au lieu de 6."
+          "Armure du Berserker : la Maîtrise s'applique désormais à chaque tranche de 10 PV manquants, au lieu d'une seule fois. Avec 2 points de Maîtrise et 40 PV manquants, vous gagnez 12 points d'Armure au lieu de 6.",
+          "La Puissance du Mage ne renforce plus ses Attaques : elle renforce l'intensité de ses brûlures, gels, poisons et chocs. Ses cartes d'attaque infligent donc leurs dégâts de base."
         ]
       },
       {
