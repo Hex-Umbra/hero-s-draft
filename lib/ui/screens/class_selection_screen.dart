@@ -95,6 +95,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   double _tiltY = 0.0;
   Offset? _mousePosition;
 
+  /// Le passif retenu, par son rang dans `availablePassivesFor` — le point
+  /// d'accès unique de P-49 (spec §5.1, P5). Le premier par défaut, et le
+  /// choix du joueur ensuite (spec §8.3).
+  int _passiveIndex = 0;
+
   // For float/breath animation of icon
   late final AnimationController _floatController;
   late final Animation<double> _floatAnimation;
@@ -152,10 +157,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   Widget build(BuildContext context) {
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
-    // Le premier passif que le point d'accès unique ouvre à la classe : le
-    // choix entre plusieurs passifs revient au lot C de P-41.
     final passives = availablePassivesFor(playerClass, gameData);
-    final passive = passives.isEmpty ? null : passives.first;
+    // Le rang peut sortir de la liste si la donnée change sous l'écran : on
+    // retombe sur le premier plutôt que de lever.
+    final index = _passiveIndex < passives.length ? _passiveIndex : 0;
+    final passive = passives.isEmpty ? null : passives[index];
     final locale = Localizations.localeOf(context).languageCode;
 
     final classColor = ClassIdentity.colorOf(playerClass);
@@ -210,7 +216,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
         ),
     ];
 
-    final String traitName = passive?.getName(locale) ?? '—';
     final String traitDesc = passive?.getDescription(locale) ?? '';
     // Ce qu'un point de Maîtrise apporte au passif (spec P-49, §6.5).
     final String? masteryPerPoint = passive?.mastery?.describe(locale, 1);
@@ -446,29 +451,77 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                      Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: widget.isMobile ? 6 : 10,
+                                        runSpacing: 2,
                                         children: [
-                                          Icon(
-                                            Icons.shield,
-                                            size: widget.isMobile ? 12 : 16,
-                                            color: Colors.cyanAccent,
-                                          ),
-                                          SizedBox(
-                                            width: widget.isMobile ? 3 : 6,
-                                          ),
-                                          Text(
-                                            traitName.toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: widget.isMobile
-                                                  ? 10
-                                                  : 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.cyanAccent,
-                                              letterSpacing: 0.8,
+                                          for (var i = 0;
+                                              i < passives.length;
+                                              i++)
+                                            GestureDetector(
+                                              onTap: passives.length == 1
+                                                  ? null
+                                                  : () => setState(
+                                                        () => _passiveIndex =
+                                                            i,
+                                                      ),
+                                              child: Row(
+                                                mainAxisSize:
+                                                    MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.shield,
+                                                    size: widget.isMobile
+                                                        ? 12
+                                                        : 16,
+                                                    color: Colors.cyanAccent
+                                                        .withValues(
+                                                      alpha: i == index
+                                                          ? 1.0
+                                                          : 0.35,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width:
+                                                        widget.isMobile ? 3 : 6,
+                                                  ),
+                                                  Text(
+                                                    passives[i]
+                                                        .getName(locale)
+                                                        .toUpperCase(),
+                                                    style: TextStyle(
+                                                      fontSize: widget.isMobile
+                                                          ? 10
+                                                          : 11,
+                                                      fontWeight: i == index
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                      color: Colors.cyanAccent
+                                                          .withValues(
+                                                        alpha: i == index
+                                                            ? 1.0
+                                                            : 0.45,
+                                                      ),
+                                                      letterSpacing: 0.8,
+                                                      decoration: i == index
+                                                          ? TextDecoration
+                                                              .underline
+                                                          : null,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
+                                          if (passives.isEmpty)
+                                            Text(
+                                              '—',
+                                              style: TextStyle(
+                                                fontSize:
+                                                    widget.isMobile ? 10 : 11,
+                                                color: Colors.cyanAccent,
+                                              ),
+                                            ),
                                         ],
                                       ),
                                       SizedBox(height: widget.isMobile ? 2 : 5),

@@ -267,11 +267,14 @@ void main() {
     });
 
     testWidgets(
-      'un passif ouvert a toutes les classes, premier par id, est montre partout',
+      'un passif ouvert a toutes les classes est montre sur chacune',
       (WidgetTester tester) async {
         await _buildAndReady(tester, passives: const [ward, aegis]);
+        // Egide (aegis) ne restreint aucune classe : elle apparait sur les
+        // trois cartes. Garde (ward) ne s'ouvre qu'au paladin, qui a donc
+        // deux passifs proposes ; les deux autres classes n'en ont qu'un.
         expect(find.text('AEGIS'), findsNWidgets(3));
-        expect(find.text('WARD'), findsNothing);
+        expect(find.text('WARD'), findsOneWidget);
       },
     );
 
@@ -414,6 +417,129 @@ void main() {
       );
 
       expect(find.text('10%'), findsOneWidget);
+    });
+  });
+
+  group('le joueur choisit son passif', () {
+    const ward = PassiveData(
+      id: 'ward',
+      nameEn: 'Ward',
+      nameFr: 'Garde',
+      descriptionFr: 'Gagne 2 Armure en fin de tour.',
+      descriptionEn: 'Gain 2 Block at end of turn.',
+      classes: ['paladin'],
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+      displayOrder: 1,
+    );
+    const zeal = PassiveData(
+      id: 'zeal',
+      nameEn: 'Zeal',
+      nameFr: 'Zele',
+      descriptionFr: 'Gagne 1 Puissance au debut du tour.',
+      descriptionEn: 'Gain 1 Might at the start of the turn.',
+      classes: ['paladin'],
+      trigger: RelicTrigger.startOfTurn,
+      effectType: 'rage',
+      value: 1,
+      displayOrder: 2,
+    );
+
+    const paladin = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Le Paladin',
+      classCard: 'hero_paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+    );
+
+    testWidgets('tous les passifs disponibles sont proposes', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      expect(find.text('WARD'), findsOneWidget);
+      expect(find.text('ZEAL'), findsOneWidget);
+    });
+
+    testWidgets('le premier du point d acces est selectionne par defaut', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      // La description du passif selectionne est celle qui s'affiche.
+      expect(find.text('Gain 2 Block at end of turn.'), findsOneWidget);
+      expect(find.text('Gain 1 Might at the start of the turn.'), findsNothing);
+    });
+
+    testWidgets('choisir un autre passif change ce que l ecran pousse', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      await tester.tap(find.text('ZEAL'));
+      await tester.pump();
+
+      expect(find.text('Gain 1 Might at the start of the turn.'), findsOneWidget);
+
+      await tester.tap(find.text('Select'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final pushed = tester.widget<StarterDeckDraftScreen>(
+        find.byType(StarterDeckDraftScreen),
+      );
+      expect(pushed.passive?.id, 'zeal');
+    });
+
+    testWidgets('un seul passif disponible : aucun selecteur, et il est pousse', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward],
+      );
+
+      expect(find.text('WARD'), findsOneWidget);
+
+      await tester.tap(find.text('Select'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final pushed = tester.widget<StarterDeckDraftScreen>(
+        find.byType(StarterDeckDraftScreen),
+      );
+      expect(pushed.passive?.id, 'ward');
+    });
+
+    testWidgets('aucun passif disponible : l ecran reste utilisable', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(tester, heroes: const [paladin]);
+
+      await tester.tap(find.text('Select'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final pushed = tester.widget<StarterDeckDraftScreen>(
+        find.byType(StarterDeckDraftScreen),
+      );
+      expect(pushed.passive, isNull);
     });
   });
 }
