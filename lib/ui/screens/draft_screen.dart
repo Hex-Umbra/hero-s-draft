@@ -134,6 +134,27 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final l10n = AppLocalizations.of(context)!;
     // Affinité se décrit par le passif actif (spec P-49, §6.5).
     final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
+    // Le décor du rouleau : chaque récompense du catalogue, à sa valeur
+    // `rare`. Une valeur arbitraire et assumée — les libellés écrits à la
+    // main qu'elle remplace ne correspondaient à aucun palier cohérent (spec
+    // P-41, §8.1). Une récompense du pool mythique (le Trèfle) ne déclare
+    // aucun palier `rare` dans sa table `values` : `amountFor(RewardRarity.rare)`
+    // y rendrait 0, et le décor afficherait "+0 Chance". Le repli lit alors
+    // son palier `mythic`, et ne tombe à 0 que si ni l'un ni l'autre
+    // n'existe (le Miroir, dont le gabarit n'interpole pas `{amount}`).
+    final spinPool = [
+      for (final reward
+          in ref.read(gameDataLoaderProvider).requireValue.levelUpRewards)
+        (
+          title: reward.getName(l10n.localeName),
+          description: reward.shortLabel(
+            l10n.localeName,
+            amount: reward.values[RewardRarity.rare] ??
+                reward.values[RewardRarity.mythic] ??
+                0,
+          ),
+        ),
+    ];
     final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
 
     return Stack(
@@ -257,6 +278,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               initialLanded: index >= 3
                                                   ? true
                                                   : _baseCompleted,
+                                              spinPool: spinPool,
                                             ),
                                           ),
                                         ),
@@ -349,6 +371,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             initialLanded: index >= 3
                                                 ? true
                                                 : _baseCompleted,
+                                            spinPool: spinPool,
                                           ),
                                         ),
                                       ),
@@ -459,6 +482,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                         ),
                                         index: relativeIndex,
                                         onLand: () => _onMythicReelLanded(choice.rarity),
+                                        spinPool: spinPool,
                                       ),
                                     ),
                                   ),

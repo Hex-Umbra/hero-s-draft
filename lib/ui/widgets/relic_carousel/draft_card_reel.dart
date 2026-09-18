@@ -3,6 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../draft/draft_choice_card.dart';
 
+/// Une entrée du décor qui défile pendant que le rouleau tourne : un titre et
+/// une ligne, rien de plus. Le rouleau ne connaît pas les récompenses ; c'est
+/// l'écran de draft qui les lui donne, lues du registre (spec P-41, §8.1).
+typedef ReelEntry = ({String title, String description});
+
 class DraftCardReel extends StatefulWidget {
   final String title;
   final String description;
@@ -14,6 +19,10 @@ class DraftCardReel extends StatefulWidget {
 
   final bool initialLanded;
 
+  /// Ce qui défile avant l'atterrissage. Jamais vide : le rouleau y pioche à
+  /// chaque cycle.
+  final List<ReelEntry> spinPool;
+
   const DraftCardReel({
     super.key,
     required this.title,
@@ -24,6 +33,7 @@ class DraftCardReel extends StatefulWidget {
     this.onTick,
     this.onLand,
     this.initialLanded = false,
+    required this.spinPool,
   });
 
   @override
@@ -41,18 +51,8 @@ class _DraftCardReelState extends State<DraftCardReel>
   bool _hasLanded = false;
   Timer? _landTimer;
 
-  // Themed upgrade mock data to scroll through during spin phase (neutral / no rarity)
-  final List<Map<String, String>> _mockUpgrades = [
-    {'title': 'Vitalité', 'description': '+10 PV Max'},
-    {'title': 'Aiguisage', 'description': '+4 Puissance'},
-    {'title': 'Affinité', 'description': '+2 Maîtrise'},
-    {'title': 'Sagesse', 'description': '+1 Mana Max'},
-    {'title': 'Trèfle à 4 feuilles', 'description': '+1 Chance'},
-    {'title': 'Miroir', 'description': 'Cloner une carte'},
-  ];
-
-  late Map<String, String> _currentCardData;
-  late Map<String, String> _nextCardData;
+  late ReelEntry _currentCardData;
+  late ReelEntry _nextCardData;
 
   @override
   void initState() {
@@ -68,8 +68,13 @@ class _DraftCardReelState extends State<DraftCardReel>
 
     // 1. Initialize random starting cards for the roll
     final random = Random();
-    _currentCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
-    _nextCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
+    // Un décor vide voudrait dire un catalogue vide : on fait tourner la
+    // récompense réelle plutôt que de planter en plein draft.
+    final pool = widget.spinPool.isEmpty
+        ? <ReelEntry>[(title: widget.title, description: widget.description)]
+        : widget.spinPool;
+    _currentCardData = pool[random.nextInt(pool.length)];
+    _nextCardData = pool[random.nextInt(pool.length)];
 
     // 2. Infinite vertical roll controller
     _rollController = AnimationController(
@@ -84,10 +89,10 @@ class _DraftCardReelState extends State<DraftCardReel>
         if (_prepareToLand && !_hasLanded) {
           // Landed! Stop the roll, set final stationary state, trigger rarity reveal
           setState(() {
-            _currentCardData = {
-              'title': widget.title,
-              'description': widget.description,
-            };
+            _currentCardData = (
+              title: widget.title,
+              description: widget.description,
+            );
             _hasLanded = true;
           });
           _rollController.stop();
@@ -97,7 +102,7 @@ class _DraftCardReelState extends State<DraftCardReel>
           // Standard infinite mock roll loop
           setState(() {
             _currentCardData = _nextCardData;
-            _nextCardData = _mockUpgrades[random.nextInt(_mockUpgrades.length)];
+            _nextCardData = pool[random.nextInt(pool.length)];
           });
           widget.onTick?.call();
           _rollController.forward(from: 0.0);
@@ -127,10 +132,10 @@ class _DraftCardReelState extends State<DraftCardReel>
     )..repeat(reverse: true);
 
     if (widget.initialLanded) {
-      _currentCardData = {
-        'title': widget.title,
-        'description': widget.description,
-      };
+      _currentCardData = (
+        title: widget.title,
+        description: widget.description,
+      );
       _hasLanded = true;
       _prepareToLand = true;
       _rarityController.value = 1.0;
@@ -151,10 +156,10 @@ class _DraftCardReelState extends State<DraftCardReel>
     setState(() {
       _prepareToLand = true;
       // Pre-load the target card as incoming in the final roll cycle
-      _nextCardData = {
-        'title': widget.title,
-        'description': widget.description,
-      };
+      _nextCardData = (
+        title: widget.title,
+        description: widget.description,
+      );
     });
   }
 
@@ -242,8 +247,8 @@ class _DraftCardReelState extends State<DraftCardReel>
                       // Motion blur effect by fading out fast-moving card slightly
                       opacity: 0.85,
                       child: DraftChoiceCard(
-                        title: _currentCardData['title']!,
-                        description: _currentCardData['description']!,
+                        title: _currentCardData.title,
+                        description: _currentCardData.description,
                         rarity: widget.rarity,
                         onTap: () {},
                         showRarity: false,
@@ -258,8 +263,8 @@ class _DraftCardReelState extends State<DraftCardReel>
                     child: Opacity(
                       opacity: 0.85,
                       child: DraftChoiceCard(
-                        title: _nextCardData['title']!,
-                        description: _nextCardData['description']!,
+                        title: _nextCardData.title,
+                        description: _nextCardData.description,
                         rarity: widget.rarity,
                         onTap: () {},
                         showRarity: false,
