@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"de0f25477903f45a","x":-280,"y":-180,"width":250,"height":100,"type":"text","text":"- DiceOMancer\n- Slay the Spire\n- TeamFight Tactics"},
+		{"id":"4e493cb9975c4182","x":-280,"y":-280,"width":250,"height":60,"type":"text","text":"Inspirations"}
+	],
+	"edges":[
+		{"id":"1a1ad187ecfcde8f","fromNode":"4e493cb9975c4182","fromSide":"bottom","toNode":"de0f25477903f45a","toSide":"top"}
+	]
+}
