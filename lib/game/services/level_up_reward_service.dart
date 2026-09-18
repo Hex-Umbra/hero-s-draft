@@ -1,51 +1,36 @@
 import 'dart:math';
 
+import '../../models/data/level_up_reward_data.dart';
 import '../../models/reward_rarity.dart';
 
-/// Stable technical identifier for each level-up reward choice, used both to
-/// resolve localized display strings and to apply the choice's effect.
-/// Replaces matching on the (French, user-facing) display text.
-enum LevelUpRewardType {
-  vitality,
-  sharpening,
-  affinity,
-  wisdom,
-  luckyClover,
-  mirror,
-  precision,
-  ferocity,
-}
-
+/// Une récompense tirée : ce qu'elle est, à quel palier, et pour combien.
+///
+/// Avant P-41 lot C, cette classe portait sept accumulateurs (`pvBoost`,
+/// `mightBoost`, …) dont un seul était non nul à la fois, plus un `type`
+/// d'énumération. La récompense étant devenue de la donnée, elle porte la
+/// donnée.
 class DraftChoice {
-  final LevelUpRewardType type;
-  final int pvBoost;
-  final int mightBoost;
-  final int masteryBoost;
-  final int manaBoost;
-  final int luckBoost;
-  final bool isCloneOption;
+  final LevelUpRewardData data;
   final RewardRarity rarity;
-  final int critChanceBoost;
-  final double critDamageBoost;
+
+  /// La valeur du gain à ce palier. Pour `RewardStat.critDamage`, en points de
+  /// pourcentage : c'est l'application qui divise par 100.
+  final int amount;
 
   const DraftChoice({
-    required this.type,
-    this.pvBoost = 0,
-    this.mightBoost = 0,
-    this.masteryBoost = 0,
-    this.manaBoost = 0,
-    this.luckBoost = 0,
-    this.isCloneOption = false,
-    this.rarity = RewardRarity.common,
-    this.critChanceBoost = 0,
-    this.critDamageBoost = 0.0,
+    required this.data,
+    required this.rarity,
+    required this.amount,
   });
+
+  /// Le Miroir : la seule récompense qui ouvre une modale au lieu de monter
+  /// une stat.
+  bool get isCloneOption => data.effect == RewardEffect.cloneCard;
 }
 
-/// Rolls and generates the "level up" reward choices (permanent stat boosts,
-/// lucky clover, magic mirror clone) offered on [DraftScreen]. Pure/stateless
-/// so it can be unit-tested directly, instead of only through a copy of its
-/// formula duplicated in a test file.
+/// Tire les choix de récompense offerts à la montée de niveau, depuis le
+/// catalogue de `assets/data/level_up_rewards/` (spec P-41, §8.1). Pur et sans
+/// état, pour se tester directement.
 class LevelUpRewardService {
   const LevelUpRewardService._();
 
@@ -100,175 +85,71 @@ class LevelUpRewardService {
     return RewardRarity.common;
   }
 
+  /// Les récompenses d'un groupe, dans l'ordre que la donnée déclare.
+  ///
+  /// `displayOrder` puis `id` : l'ancien `rng.nextInt(6)` tirait un **index**
+  /// dans l'ordre des valeurs de l'énumération. Un tirage qui dépendrait de
+  /// l'ordre de lecture des fichiers serait un piège silencieux ; l'`id`
+  /// tranche à rang égal.
+  static List<LevelUpRewardData> _inPool(
+    List<LevelUpRewardData> rewards,
+    RewardPool pool,
+  ) =>
+      rewards.where((reward) => reward.pool == pool).toList()
+        ..sort((a, b) {
+          final byOrder = a.displayOrder.compareTo(b.displayOrder);
+          return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+        });
+
   static List<DraftChoice> generateChoices({
+    required List<LevelUpRewardData> rewards,
     required int luck,
     bool forceLegendary = false,
   }) {
     final rng = Random();
+    final draftable = _inPool(rewards, RewardPool.draft);
+    // Un registre de test sans récompenses : trois emplacements vides valent
+    // mieux qu'une exception au milieu d'une montée de niveau.
+    if (draftable.isEmpty) return const [];
 
     final choices = List.generate(3, (index) {
-      RewardRarity rarity;
+      final RewardRarity rarity;
       if (forceLegendary) {
-        if (index == 0) {
-          rarity = RewardRarity.uncommon;
-        } else if (index == 1) {
-          rarity = RewardRarity.epic;
-        } else {
-          rarity = RewardRarity.legendary;
-        }
+        rarity = switch (index) {
+          0 => RewardRarity.uncommon,
+          1 => RewardRarity.epic,
+          _ => RewardRarity.legendary,
+        };
       } else {
         rarity = rollRarity(luck, canBeLegendary: true, isLevelReward: false);
       }
 
-      // Un `switch` exhaustif, pas une cascade de `if` : l'analyseur refuse
-      // alors tout palier de rarete oublie. C'est precisement une cascade de
-      // `if` qui avait laisse passer l'absence du palier legendaire sur
-      // l'Affinite ci-dessous, alors Forge d'Acier, ou un legendaire
-      // retombait sur la valeur d'un commun.
-      //
-      // `mythic` est inatteignable ici — `rollRarity` ne le rend que pour
-      // `isLevelReward: true`, et les deux options mythiques (Trefle, Miroir)
-      // sont construites a part, sans passer par ce multiplicateur. On le
-      // groupe avec `legendary` pour rester exhaustif sans inventer un palier.
-      final double multiplier;
-      switch (rarity) {
-        case RewardRarity.common:
-          multiplier = 1.0;
-        case RewardRarity.uncommon:
-          multiplier = 1.5;
-        case RewardRarity.rare:
-          multiplier = 2.0;
-        case RewardRarity.epic:
-          multiplier = 3.0;
-        case RewardRarity.legendary:
-        case RewardRarity.mythic:
-          multiplier = 4.0;
-      }
-
-      int type = rng.nextInt(6);
-      if (type == 0) {
-        int boost = (5 * multiplier).round();
-        return DraftChoice(
-          type: LevelUpRewardType.vitality,
-          pvBoost: boost,
-          rarity: rarity,
-        );
-      }
-      if (type == 1) {
-        int boost = (2 * multiplier).round();
-        return DraftChoice(
-          type: LevelUpRewardType.sharpening,
-          mightBoost: boost,
-          rarity: rarity,
-        );
-      }
-      if (type == 2) {
-        // L'Affinite a sa propre courbe : la Maitrise augmente le parametre
-        // du passif a *chacun* de ses declenchements — chaque tour pour le
-        // Paladin, chaque Competence jouee pour le Mage (spec P-49, §6). Elle
-        // compose plus fort que les autres recompenses, d'ou une progression
-        // distincte.
-        final int boost;
-        switch (rarity) {
-          case RewardRarity.common:
-            boost = 1;
-          case RewardRarity.uncommon:
-            boost = 2;
-          case RewardRarity.rare:
-            boost = 3;
-          case RewardRarity.epic:
-            boost = 5;
-          case RewardRarity.legendary:
-          case RewardRarity.mythic:
-            boost = 7;
-        }
-        return DraftChoice(
-          type: LevelUpRewardType.affinity,
-          masteryBoost: boost,
-          rarity: rarity,
-        );
-      }
-      if (type == 3) {
-        int boost = (1 * multiplier).round();
-        if (boost < 1) boost = 1;
-        return DraftChoice(
-          type: LevelUpRewardType.wisdom,
-          manaBoost: boost,
-          rarity: rarity,
-        );
-      }
-      if (type == 4) {
-        int boost;
-        switch (rarity) {
-          case RewardRarity.common:
-            boost = 1;
-            break;
-          case RewardRarity.uncommon:
-            boost = 2;
-            break;
-          case RewardRarity.rare:
-            boost = 3;
-            break;
-          case RewardRarity.epic:
-            boost = 4;
-            break;
-          case RewardRarity.legendary:
-          case RewardRarity.mythic:
-            boost = 5;
-            break;
-        }
-        return DraftChoice(
-          type: LevelUpRewardType.precision,
-          critChanceBoost: boost,
-          rarity: rarity,
-        );
-      }
-      double boost;
-      switch (rarity) {
-        case RewardRarity.common:
-          boost = 0.10;
-          break;
-        case RewardRarity.uncommon:
-          boost = 0.20;
-          break;
-        case RewardRarity.rare:
-          boost = 0.30;
-          break;
-        case RewardRarity.epic:
-          boost = 0.40;
-          break;
-        case RewardRarity.legendary:
-        case RewardRarity.mythic:
-          boost = 0.50;
-          break;
-      }
+      final reward = draftable[rng.nextInt(draftable.length)];
       return DraftChoice(
-        type: LevelUpRewardType.ferocity,
-        critDamageBoost: boost,
+        data: reward,
         rarity: rarity,
+        amount: reward.amountFor(rarity),
       );
     });
 
-    if (rollRarity(luck, isLevelReward: true, forceLegendary: forceLegendary) ==
-        RewardRarity.mythic) {
-      choices.add(
-        const DraftChoice(
-          type: LevelUpRewardType.luckyClover,
-          luckBoost: 1,
-          rarity: RewardRarity.mythic,
-        ),
+    // Un jet indépendant par récompense mythique, dans l'ordre déclaré — c'est
+    // exactement ce que faisaient les deux blocs écrits en dur, Trèfle puis
+    // Miroir. Une troisième mythique n'est plus qu'un fichier.
+    for (final mythic in _inPool(rewards, RewardPool.mythic)) {
+      final rolled = rollRarity(
+        luck,
+        isLevelReward: true,
+        forceLegendary: forceLegendary,
       );
-    }
-
-    if (rollRarity(luck, isLevelReward: true, forceLegendary: forceLegendary) ==
-        RewardRarity.mythic) {
-      choices.add(
-        const DraftChoice(
-          type: LevelUpRewardType.mirror,
-          isCloneOption: true,
-          rarity: RewardRarity.mythic,
-        ),
-      );
+      if (rolled == RewardRarity.mythic) {
+        choices.add(
+          DraftChoice(
+            data: mythic,
+            rarity: RewardRarity.mythic,
+            amount: mythic.amountFor(RewardRarity.mythic),
+          ),
+        );
+      }
     }
 
     return choices;

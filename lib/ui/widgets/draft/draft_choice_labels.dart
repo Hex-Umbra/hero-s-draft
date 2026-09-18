@@ -35,63 +35,23 @@ class DraftChoiceLabels {
   }
 
   /// Titre affiché pour ce choix de draft.
-  static String getChoiceTitle(AppLocalizations l10n, DraftChoice choice) {
-    switch (choice.type) {
-      case LevelUpRewardType.vitality:
-        return l10n.draftChoiceVitality;
-      case LevelUpRewardType.sharpening:
-        return l10n.draftChoiceSharpening;
-      case LevelUpRewardType.affinity:
-        return l10n.draftChoiceAffinity;
-      case LevelUpRewardType.wisdom:
-        return l10n.draftChoiceWisdom;
-      case LevelUpRewardType.luckyClover:
-        return l10n.draftChoiceClover;
-      case LevelUpRewardType.mirror:
-        return l10n.draftChoiceMirror;
-      case LevelUpRewardType.precision:
-        return l10n.draftChoicePrecision;
-      case LevelUpRewardType.ferocity:
-        return l10n.draftChoiceFerocity;
-    }
-  }
+  static String getChoiceTitle(AppLocalizations l10n, DraftChoice choice) =>
+      choice.data.getName(l10n.localeName);
 
   /// Description (avec la valeur du gain) affichée pour ce choix de draft.
   ///
-  /// [passive] est le passif actif : *Affinité* se décrit par ce que la
-  /// Maîtrise tirée lui apporte (spec P-49, §6.5). Les autres récompenses
-  /// l'ignorent.
+  /// [passive] est le passif actif : une récompense dont le gabarit nomme
+  /// `{passive}` ou `{effect}` se décrit par ce que la Maîtrise tirée lui
+  /// apporte — c'est le cas d'*Affinité* (spec P-49, §6.5). Les autres
+  /// l'ignorent, sans qu'aucune branche ne les distingue.
   static String getChoiceDescription(
     AppLocalizations l10n,
     DraftChoice choice, {
     PassiveData? passive,
-  }) {
-    switch (choice.type) {
-      case LevelUpRewardType.vitality:
-        return l10n.draftChoiceVitalityDesc(choice.pvBoost);
-      case LevelUpRewardType.sharpening:
-        return l10n.draftChoiceSharpeningDesc(choice.mightBoost);
-      case LevelUpRewardType.affinity:
-        final mastery = passive?.mastery;
-        if (passive == null || mastery == null) {
-          return l10n.draftChoiceAffinityNoEffect(choice.masteryBoost);
-        }
-        return l10n.draftChoiceAffinityDesc(
-          passive.getName(l10n.localeName),
-          mastery.describe(l10n.localeName, choice.masteryBoost),
-        );
-      case LevelUpRewardType.wisdom:
-        return l10n.draftChoiceWisdomDesc(choice.manaBoost);
-      case LevelUpRewardType.luckyClover:
-        return l10n.draftChoiceCloverDesc(choice.luckBoost);
-      case LevelUpRewardType.mirror:
-        return l10n.draftChoiceMirrorDesc;
-      case LevelUpRewardType.precision:
-        return l10n.draftChoicePrecisionDesc(choice.critChanceBoost);
-      case LevelUpRewardType.ferocity:
-        return l10n.draftChoiceFerocityDesc(
-          (choice.critDamageBoost * 100).round(),
-        );
-    }
-  }
+  }) =>
+      choice.data.describe(
+        l10n.localeName,
+        amount: choice.amount,
+        passive: passive,
+      );
 }

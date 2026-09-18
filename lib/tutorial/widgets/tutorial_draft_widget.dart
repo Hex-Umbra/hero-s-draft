@@ -38,7 +38,10 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
     // le moteur du tutoriel) : le tirer ici via le vrai service de draft,
     // avec luck: 0 (Chance d'un héros niveau 1), est donc légitime et rend
     // la démo fidèle au vrai premier draft du jeu.
-    _choices = LevelUpRewardService.generateChoices(luck: 0);
+    _choices = LevelUpRewardService.generateChoices(
+      rewards: widget.engine.data.levelUpRewards,
+      luck: 0,
+    );
   }
 
   @override

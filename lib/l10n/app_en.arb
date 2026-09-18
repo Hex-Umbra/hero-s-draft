@@ -440,64 +440,6 @@
     }
   },
   "confirmMerge": "Confirm Merge",
-  "draftChoiceVitality": "Vitality",
-  "draftChoiceVitalityDesc": "+{amount} Max HP",
-  "@draftChoiceVitalityDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceSharpening": "Sharpening",
-  "draftChoiceSharpeningDesc": "+{amount} Might",
-  "@draftChoiceSharpeningDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceAffinity": "Affinity",
-  "draftChoiceAffinityDesc": "{passive}: {effect}",
-  "@draftChoiceAffinityDesc": {
-    "placeholders": {
-      "passive": { "type": "String" },
-      "effect": { "type": "String" }
-    }
-  },
-  "draftChoiceAffinityNoEffect": "+{amount} Mastery, no effect on your passive",
-  "@draftChoiceAffinityNoEffect": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceWisdom": "Wisdom",
-  "draftChoiceWisdomDesc": "+{amount} Max Mana",
-  "@draftChoiceWisdomDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceClover": "4-Leaf Clover",
-  "draftChoiceCloverDesc": "+{amount} Luck",
-  "@draftChoiceCloverDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceMirror": "Mirror",
-  "draftChoiceMirrorDesc": "Clone a card chosen from 3 random cards in your deck",
-  "draftChoicePrecision": "Precision",
-  "draftChoicePrecisionDesc": "+{amount}% Crit Chance",
-  "@draftChoicePrecisionDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "draftChoiceFerocity": "Ferocity",
-  "draftChoiceFerocityDesc": "+{amount}% Crit Damage",
-  "@draftChoiceFerocityDesc": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
   "statusPoison": "Poison: {value}",
   "@statusPoison": {
     "placeholders": {
