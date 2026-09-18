@@ -51,7 +51,7 @@ void main() {
 
     expect(find.text('Régénération d\'Armure'), findsOneWidget);
     expect(find.text('Rage'), findsOneWidget);
-    expect(find.text('Armure Magique'), findsOneWidget);
+    expect(find.text('Canalisation'), findsOneWidget);
   });
 
   testWidgets('choisir une classe l\'écrit dans la tranche persistante', (tester) async {
@@ -62,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(engine.mockState.chosenHero?.id, 'mage');
-    expect(engine.mockState.activePassive?.id, 'spell_armor');
+    expect(engine.mockState.activePassive?.id, 'channeling');
     expect(engine.mockState.heroStats.maxPv, 60);
   });
 }

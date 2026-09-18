@@ -1,10 +1,12 @@
-import '../../../models/data/card_data.dart';
 import '../../../models/data/passive_data.dart';
 import '../../../models/status_effect.dart';
+import '../../controllers/combat_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/run_controller.dart';
 import '../../game_constants.dart';
+import '../../services/effect_resolver.dart';
 import '../stat_gains.dart';
+import 'passive_counters.dart';
 import 'passive_strategy.dart';
 
 /// La Puissance temporaire qu'un passif accorde. Le nom est celui que voient
@@ -28,18 +30,83 @@ class GainArmorPassive extends PassiveStrategy {
   }
 }
 
-/// `spell_armor` : accorde `value` d'armure quand la carte jouée est une
-/// Compétence.
-class SpellArmorPassive extends PassiveStrategy {
-  const SpellArmorPassive();
+/// `channeling` : à la fin du tour, chaque point de mana non dépensé devient
+/// `value` d'armure.
+///
+/// Le mana n'est pas consommé : il est remis au maximum au début du tour
+/// suivant de toute façon. Le coût du passif est de **ne pas avoir joué**
+/// (spec §6.3) — l'exact opposé de `mana_flux`, et c'est voulu.
+class ChannelingPassive extends PassiveStrategy {
+  const ChannelingPassive();
 
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    if (event.card?.data.type == CardType.skill) {
-      run.grant(
-        StatGain(GainResource.armor, passive.value, GainSource.passive),
-      );
+    final mana = run.currentState.heroStats.currentMana;
+    if (mana <= 0) return;
+    run.grant(
+      StatGain(GainResource.armor, mana * passive.value, GainSource.passive),
+    );
+  }
+}
+
+/// `mage_mark` : la première Attaque de chaque tour rend sa cible
+/// `vulnerable`, pendant `duration` tours.
+///
+/// Première source de `vulnerable` du jeu : le statut était pleinement
+/// consommé par `DamagePipeline` sans qu'aucune donnée ne l'applique
+/// (spec §6.3). Le passif ne dépend d'aucune carte : R4 est satisfaite dès
+/// aujourd'hui.
+///
+/// L'intensité n'est pas lue par le pipeline, qui applique `vulnerable` en
+/// tout ou rien (+50 %) : c'est la **durée** qui grandit avec la Maîtrise, et
+/// `value` reste l'intensité pour le jour où le pipeline la lira.
+class MageMarkPassive extends PassiveStrategy {
+  const MageMarkPassive();
+
+  @override
+  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
+    final enemyId = event.enemyId;
+    if (enemyId == null) return;
+    if (PassiveCounters.bump(run, passive, scope: CounterScope.turn) > 1) {
+      return;
     }
+
+    final status = EffectResolver.createStatus(
+      'vulnerable',
+      passive.value,
+      passive.duration,
+    );
+    if (status == null) return;
+
+    final combat = run.ref.read(combatProvider.notifier);
+    final index =
+        combat.currentState.enemies.indexWhere((e) => e.id == enemyId);
+    // La cible peut être morte de la carte qui vient d'être jouée.
+    if (index == -1) return;
+    combat.updateEnemyStats(
+      enemyId,
+      combat.currentState.enemies[index].stats.addStatus(status),
+    );
+  }
+}
+
+/// `mana_flux` : toutes les `threshold` Compétences jouées dans un combat,
+/// `value` de mana pour le tour en cours.
+class ManaFluxPassive extends PassiveStrategy {
+  const ManaFluxPassive();
+
+  @override
+  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
+    // La Maîtrise fait baisser le seuil (`perPoint` négatif) : le borner est
+    // l'affaire de la stratégie qui le lit (spec P-49, §6.2). Une Compétence
+    // sur une, jamais moins.
+    final threshold = passive.threshold < 1 ? 1 : passive.threshold;
+    final count =
+        PassiveCounters.bump(run, passive, scope: CounterScope.combat);
+    if (count < threshold) return;
+
+    PassiveCounters.clear(run, passive);
+    run.grant(StatGain(GainResource.mana, passive.value, GainSource.passive));
   }
 }
 
@@ -154,7 +221,6 @@ class FrenzyPassive extends PassiveStrategy {
 abstract final class PassiveStrategies {
   static const Map<String, PassiveStrategy> byEffectType = {
     'gain_armor': GainArmorPassive(),
-    'spell_armor': SpellArmorPassive(),
     // Paladin (spec P-41, §6.3)
     'fervor': FervorPassive(),
     'blessing': BlessingPassive(),
@@ -162,5 +228,9 @@ abstract final class PassiveStrategies {
     'rage': RagePassive(),
     'bloodthirst': BloodthirstPassive(),
     'frenzy': FrenzyPassive(),
+    // Mage
+    'channeling': ChannelingPassive(),
+    'mage_mark': MageMarkPassive(),
+    'mana_flux': ManaFluxPassive(),
   };
 }

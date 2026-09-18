@@ -175,30 +175,11 @@ void main() {
     // *Rage* (spec P-41, §6.3). Sa formule et son plancher sont couverts par
     // `test/unit/passives_berserker_test.dart`.
 
-    test('spell_armor : sur une Competence seulement', () {
-      run.startNewRun(
-        paladin,
-        passive(RelicTrigger.onCardPlayed, 'spell_armor', 1),
-      );
-
-      TraitSystem.dispatch(
-        run,
-        PassiveEvent(
-          RelicTrigger.onCardPlayed,
-          card: card(CardType.attack, const []),
-        ),
-      );
-      expect(heroStats().armure, 0);
-
-      TraitSystem.dispatch(
-        run,
-        PassiveEvent(
-          RelicTrigger.onCardPlayed,
-          card: card(CardType.skill, const []),
-        ),
-      );
-      expect(heroStats().armure, 1 + 3);
-    });
+    // Le test de `spell_armor` a ete retire avec le passif : la survie du Mage
+    // passe desormais par *Canalisation*, qui la fait payer (spec P-41, §6.3).
+    // Le filtrage par type de carte est couvert par les declencheurs
+    // `onAttackPlayed` / `onSkillPlayed` (`passive_triggers_test.dart`), qui
+    // le font en amont de toute strategie.
   });
 
   group('mana : aucun plafond', () {
