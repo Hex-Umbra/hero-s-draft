@@ -20,8 +20,35 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 | `effectType` | Stratégie | Logique |
 |:---|:---|:---|
 | `gain_armor` | `GainArmorPassive` | Accorde `value` d'armure |
-| `berserker_armor` | `BerserkerArmorPassive` | Accorde `(PV manquants ~/ 10) × value` d'armure, rien si le total est nul |
-| `spell_armor` | `SpellArmorPassive` | Accorde `value` d'armure si la carte jouée est de type `skill` |
+| `fervor` | `FervorPassive` | `value` Puissance pendant `duration`, si l'armure a réellement absorbé |
+| `blessing` | `BlessingPassive` | `(armure survivante ~/ 5) × value` PV |
+| `rage` | `RagePassive` | `value × (1 + PV manquants ~/ 10)` Puissance pour `duration` |
+| `bloodthirst` | `BloodthirstPassive` | Arme le Vol de vie `duration` tours, valeur croissant par quart de PV manquants |
+| `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** |
+| `channeling` | `ChannelingPassive` | `mana non dépensé × value` armure |
+| `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
+| `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat |
+
+**Ce qu'un passif reçoit.** `PassiveEvent(RelicTrigger trigger, {CardInstance? card, String? enemyId,
+int? absorbedDamage, int? survivingArmor})` — toujours `const`-constructible. Les trois charges utiles
+ajoutées par P-41 lot B existent parce qu'un passif ne peut pas les recalculer :
+`absorbedDamage` (ce que l'armure a réellement encaissé), `survivingArmor` (l'armure **capturée avant**
+la remise à zéro de début de tour — le dispatch, lui, n'a pas bougé, sinon tout passif `startOfTurn`
+donnant de l'armure aurait disparu du calcul), et `enemyId`, passé **uniquement** quand la carte vise
+un ennemi unique.
+
+**Ce qu'un passif compte.** Un compteur (« la 1ʳᵉ Attaque du tour », « toutes les N Compétences »)
+est un **statut caché du héros** `<id>_count` — `PassiveCounters` / `CounterScope` — de durée 1 pour
+le tour, 99 pour le combat. C'est l'idiome déjà en place pour les charges de reliques
+(`shuriken_charge`, `pen_nib_charge`, `incense_charge`) : les statuts sont décrémentés à chaque début
+de tour et vidés en fin de combat, donc **la portée vient de la durée** et aucun état nouveau n'est à
+sérialiser.
+
+> [!IMPORTANT]
+> **Un passif choisit son déclencheur par sa donnée, pas par son code.** Les points de dispatch
+> couvrent le type de carte jouée (`onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`), la mort d'un
+> ennemi (`onEnemyKilled`, une fois **par ennemi**) et les dégâts encaissés (`onDamageTaken`). Une
+> stratégie ne re-teste jamais son propre trigger : `dispatch` l'a déjà fait.
 
 Chaque stratégie implémente `PassiveStrategy.resolve(PassiveData passive, PassiveEvent event, RunController run)`
 (`lib/game/systems/passives/passive_strategy.dart`) et lit `passive.value` **déjà augmenté** par
@@ -31,7 +58,15 @@ Chaque stratégie implémente `PassiveStrategy.resolve(PassiveData passive, Pass
 Un `effectType` absent de la table **ne fait rien** — jamais d'exception en plein combat —
 et `referential_integrity_test` refuse qu'un passif livré soit dans ce cas.
 
-**Éligibilité** : chaque passif déclare ses `classes` (absent = toutes) ; le point d'accès unique
-`availablePassivesFor(HeroData, GameDataRegistry)` (`lib/game/systems/passive_availability.dart`)
-est la seule fonction qui les lit, triés par `id`. Ses deux lecteurs : l'écran de sélection de
-classe et le tutoriel, tous deux prenant le premier passif disponible.
+**Éligibilité et rang** : chaque passif déclare ses `classes` (absent = toutes) ; le point d'accès
+unique `availablePassivesFor(HeroData, GameDataRegistry)` (`lib/game/systems/passive_availability.dart`)
+est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. Ses deux lecteurs — l'écran de
+sélection de classe et le tutoriel — prennent le **premier** passif disponible, d'où le rang
+explicite : sans lui l'ordre alphabétique déciderait du passif de départ. L'écran de **choix** arrive
+au lot C de P-41.
+
+> [!NOTE]
+> Un dixième passif se pose en **un seul fichier JSON** s'il réutilise un `effectType` existant ; il
+> lui faut en plus une stratégie et une ligne dans `byEffectType` seulement s'il apporte une formule
+> neuve. Le trigger, toutes les valeurs, le rang d'affichage, la cible de Maîtrise et les six chaînes
+> localisées sont, eux, **toujours** de la donnée pure.

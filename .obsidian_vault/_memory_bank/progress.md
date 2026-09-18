@@ -5,25 +5,26 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-17**
+**Vérifié le 2026-09-18**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 938 au vert | `flutter test` |
-| Fichiers de test | 129 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 1021 au vert | `flutter test` |
+| Fichiers de test | 137 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 242 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 48 620 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
-| Fichiers de données | 73 | `find assets/data -name '*.json' \| wc -l` |
+| Fichiers Dart (`lib/`) | 243 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 49 232 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers de données | 79 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **P-41 lot B, partie 1 — la Puissance orientée par la classe — est fusionné dans `main`** par la
-> PR #40 (2026-09-17, merge `e2cc24b`, `f20c353`..`e9b193d`, 6 commits ; branche
-> `feat/p41-lot-b-puissance` conservée). Toutes les métriques ci-dessus sont mesurées sur `main`.
-> Voir [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende la décision 2
+> **P-41 lot B est implémenté en entier.** La partie 1 (la Puissance) est fusionnée dans `main` par
+> la PR #40 (2026-09-17, merge `e2cc24b`) ; la **partie 2 — l'identité de classe** vit sur la branche
+> `feat/p41-lot-b-identite` (2026-09-18, `74c54cf`..`ed5a8c1`, 16 commits), **pas encore fusionnée** :
+> les métriques ci-dessus sont donc mesurées sur cette branche, pas sur `main`. Voir
+> [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende la décision 2
 > d'[ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
 >
 > **P-49 (passifs partagés) reste fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`).
@@ -119,8 +120,8 @@ amendé par [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puis
 
 | Fonctionnalité | Implémentation | Détails |
 |:---|:---|:---|
-| Passifs data-driven | `assets/data/passives/` → `TraitSystem` | 3 passifs liés à leurs héros par leur propre champ `classes` (absent = toutes), lus par le point d'accès unique `availablePassivesFor()` (`lib/game/systems/passive_availability.dart`) ; ids en `snake_case` — [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) |
-| Répartiteur de passifs | `TraitSystem.dispatch()`, `PassiveStrategies.byEffectType` | Vérifie le `trigger` déclaré, applique la Maîtrise au passif (`PassiveData.withMastery`), puis délègue à la stratégie de l'`effectType` (`gain_armor`, `berserker_armor`, `spell_armor`) — registre sur le modèle d'[ADR-061](../_adr/ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md) |
+| Passifs data-driven | `assets/data/passives/` → `TraitSystem` | **9 passifs, 3 par classe**, liés à leurs héros par leur propre champ `classes` (absent = toutes), lus par le point d'accès unique `availablePassivesFor()` (`lib/game/systems/passive_availability.dart`), trié par `(displayOrder, id)` ; ids en `snake_case` — [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md), [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md). **Seul le premier de chaque classe est atteignable** tant que l'écran de choix (P-41 lot C) n'existe pas — détail : [`_rules/02-2`](../_rules/02-2-systeme-de-heros.md) |
+| Répartiteur de passifs | `TraitSystem.dispatch()`, `PassiveStrategies.byEffectType` | Vérifie le `trigger` déclaré, applique la Maîtrise au passif (`PassiveData.withMastery`, sur `value`, `duration` ou `threshold`), puis délègue à la stratégie de l'`effectType` — 9 entrées, registre sur le modèle d'[ADR-061](../_adr/ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md). Dispatches par type de carte (`onAttackPlayed`/`onSkillPlayed`/`onPowerPlayed`), mort d'ennemi et dégâts encaissés ; compteurs portés par un statut caché — [`_patterns/03-3`](../_patterns/03-3-traitsystem-passifs-de-heros.md) |
 | Reliques à triggers | `RunController.applyRelics(trigger)` | 9 types de triggers (startOfRun → onEnemyKilled) |
 | Reliques à charges | `RunController.applyRelicEffect()` | Croc Kunaï, Shuriken, Plume de Scribe, Encensoir — compteurs visuels via `StatusEffect` |
 
