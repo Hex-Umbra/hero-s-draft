@@ -22,12 +22,18 @@ void main() {
     baseDamage: 10,
   );
 
-  PassiveData passive(String id, {List<String>? classes}) => PassiveData(
+  PassiveData passive(
+    String id, {
+    List<String>? classes,
+    int displayOrder = 0,
+  }) =>
+      PassiveData(
         id: id,
         trigger: RelicTrigger.startOfTurn,
         effectType: 'gain_armor',
         value: 1,
         classes: classes,
+        displayOrder: displayOrder,
       );
 
   GameDataRegistry registryOf(List<PassiveData> passives) => GameDataRegistry(
@@ -76,5 +82,26 @@ void main() {
     final registry = registryOf([passive('zeal'), passive('aegis')]);
     availablePassivesFor(paladin, registry);
     expect(registry.passives.map((p) => p.id), ['zeal', 'aegis']);
+  });
+
+  // Le lot C offrira le choix entre les trois passifs d'une classe ; d'ici la,
+  // l'ecran de selection prend le premier (`class_selection_screen.dart:158`).
+  // Ce rang est donc ce qui decide du passif de depart : il est declare, pas
+  // subi de l'ordre alphabetique.
+  test('le rang d affichage passe avant l id', () {
+    final registry = registryOf([
+      passive('aegis', displayOrder: 3),
+      passive('zeal', displayOrder: 1),
+      passive('mind', displayOrder: 2),
+    ]);
+    expect(idsFor(paladin, registry), ['zeal', 'mind', 'aegis']);
+  });
+
+  test('a rang egal, l id tranche : l ordre reste deterministe', () {
+    final registry = registryOf([
+      passive('zeal', displayOrder: 1),
+      passive('aegis', displayOrder: 1),
+    ]);
+    expect(idsFor(paladin, registry), ['aegis', 'zeal']);
   });
 }

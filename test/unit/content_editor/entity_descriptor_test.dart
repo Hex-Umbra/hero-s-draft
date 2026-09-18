@@ -214,7 +214,16 @@ void main() {
         'rarity',
         'emoji',
       },
-      EntityCategory.passive: {'trigger', 'effectType', 'value', 'mastery'},
+      EntityCategory.passive: {
+        'trigger',
+        'effectType',
+        'value',
+        'duration',
+        'threshold',
+        'draw',
+        'displayOrder',
+        'mastery',
+      },
       // Un evenement n'a qu'une cle de mecanique : le texte de ses choix est
       // imbrique dans `choices`, et le gabarit en montre un exemplaire complet.
       EntityCategory.event: {'choices'},

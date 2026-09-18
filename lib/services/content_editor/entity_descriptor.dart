@@ -265,6 +265,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "trigger": "startOfTurn",
   "effectType": "gain_armor",
   "value": 2,
+  "duration": 1,
+  "threshold": 0,
+  "draw": 0,
+  "displayOrder": 0,
   "mastery": {
     "field": "value",
     "perPoint": 1,
