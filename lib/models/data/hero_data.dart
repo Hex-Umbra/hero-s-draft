@@ -1,4 +1,8 @@
+import 'package:flutter/foundation.dart';
+
 import '../might_target.dart';
+import 'game_data_registry.dart';
+import 'stat_rule.dart';
 
 class HeroData {
   final String id;
@@ -25,6 +29,15 @@ class HeroData {
   final int luck;
   final int mastery;
 
+  /// Le critique de départ de la classe, en pourcentage (spec P-41, §7.3).
+  /// `EntityStats` le porte déjà : la classe pouvait seulement ne pas le dire.
+  final int critChance;
+
+  /// Les règles de stat de la classe : ce qu'elle convertit **au gain**, ce que
+  /// l'orientation de la Puissance ne peut pas faire (spec P-41, §7.1). Vide
+  /// pour le Paladin et le Mage.
+  final List<StatRule> statRules;
+
   /// Ce que la Puissance de la classe renforce (spec P-41, §7.1). Obligatoire
   /// dans `class.json` : la valeur par défaut ne sert qu'aux constructions
   /// écrites en code.
@@ -49,6 +62,8 @@ class HeroData {
     required this.baseDamage,
     this.luck = 0,
     this.mastery = 0,
+    this.critChance = 0,
+    this.statRules = const [],
     this.mightTargets = const {MightTarget.attack},
     this.skills = const [],
     this.displayOrder = 0,
@@ -84,6 +99,8 @@ class HeroData {
       baseDamage: json['baseDamage'] as int,
       luck: json['luck'] as int? ?? 0,
       mastery: json['mastery'] as int? ?? 0,
+      critChance: json['critChance'] as int? ?? 0,
+      statRules: StatRule.parseAll(json['statRules']),
       mightTargets: MightTarget.parseAll(json['mightTargets']),
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -99,5 +116,22 @@ class HeroData {
     final match = RegExp(r'^#([0-9a-fA-F]{6})$').firstMatch(value);
     if (match == null) return null;
     return 0xFF000000 | int.parse(match.group(1)!, radix: 16);
+  }
+
+  /// La classe d'identifiant [id] dans le registre chargé, `null` si le
+  /// registre n'est pas là ou ne la connaît pas — sur le modèle de
+  /// `PassiveData.getById`. C'est par ici qu'une run rechargée retrouve les
+  /// règles de sa classe, plutôt que de les relire d'une sauvegarde.
+  static HeroData? getById(String id) {
+    final registry = GameDataRegistry.instance;
+    if (registry == null) return null;
+    try {
+      return registry.heroes.firstWhere((h) => h.id == id);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('HeroData.getById: no class found for id "$id" ($e)');
+      }
+      return null;
+    }
   }
 }
