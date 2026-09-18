@@ -154,7 +154,6 @@ void main() {
     for (final key in const [
       'maxHp',
       'maxMana',
-      'baseDamage',
       'luck',
       'mastery',
       'critChance',
@@ -244,7 +243,6 @@ void main() {
       EntityCategory.heroClass: {
         'maxHp',
         'maxMana',
-        'baseDamage',
         'luck',
         'mastery',
         'critChance',

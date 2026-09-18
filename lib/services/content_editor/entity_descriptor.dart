@@ -354,7 +354,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       // `ClassIdentity.imageOf` retombe alors sur `classCard`.
       'iconPath': AssetSlot.image('icon.png', isRequired: false),
     },
-    requiredKeys: const {'maxHp', 'maxMana', 'baseDamage', 'mightTargets'},
+    requiredKeys: const {'maxHp', 'maxMana', 'mightTargets'},
     enumListKeys: {'mightTargets': _names(MightTarget.values)},
     hexColorKeys: const {'themeColor'},
     bilingualBases: const ['name', 'description'],
@@ -372,7 +372,6 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
 {
   "maxHp": 100,
   "maxMana": 3,
-  "baseDamage": 5,
   "luck": 0,
   "mastery": 0,
   "critChance": 0,

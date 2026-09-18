@@ -55,7 +55,6 @@ void main() {
     classCard: 'test',
     maxHp: 10,
     maxMana: 3,
-    baseDamage: 0,
   );
 
   final node = MapNode(

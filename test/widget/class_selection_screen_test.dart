@@ -22,7 +22,6 @@ const _heroes = [
     classCard: 'hero_paladin.png',
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
     // Declared first but sorts last: keeps the grid order dependent on
     // displayOrder rather than on declaration order or List.sort stability.
     displayOrder: 3,
@@ -36,7 +35,6 @@ const _heroes = [
     classCard: 'hero_berserker.png',
     maxHp: 80,
     maxMana: 3,
-    baseDamage: 15,
     // Declared second and sorts first (lowest displayOrder).
     displayOrder: 1,
   ),
@@ -49,7 +47,6 @@ const _heroes = [
     classCard: 'hero_mage.png',
     maxHp: 60,
     maxMana: 3,
-    baseDamage: 10,
     // Declared third and sorts in the middle.
     displayOrder: 2,
   ),
@@ -133,6 +130,19 @@ void main() {
     expect(find.text('Select'), findsNWidgets(_heroes.length));
   });
 
+  testWidgets('aucune classe n affiche de degats de base', (
+    WidgetTester tester,
+  ) async {
+    // L'ecran affichait `playerClass.baseDamage` — 5 / 15 / 10 — alors que
+    // toute run demarre a 0 (spec P-41, §8.3). Le champ n'existe plus ; ce
+    // test empeche qu'un chiffre equivalent revienne.
+    await _buildAndReady(tester);
+
+    for (final chiffre in ['5', '15', '10']) {
+      expect(find.text(chiffre), findsNothing);
+    }
+  });
+
   testWidgets(
     'Tapping a hero card navigates to StarterDeckDraftScreen with that hero',
     (WidgetTester tester) async {
@@ -180,7 +190,6 @@ void main() {
         themeColor: 0xFF00A88F,
         maxHp: 70,
         maxMana: 3,
-        baseDamage: 8,
       );
       await _buildAndReady(tester, heroes: const [gambler]);
 
@@ -199,7 +208,6 @@ void main() {
         classCard: 'assets/data/classes/berserker/berserker.png',
         maxHp: 80,
         maxMana: 3,
-        baseDamage: 15,
       );
       await _buildAndReady(tester, heroes: const [berserker]);
 

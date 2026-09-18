@@ -26,7 +26,6 @@ void main() {
     classCard: 'berserker.png',
     maxHp: 80,
     maxMana: 3,
-    baseDamage: 15,
   );
 
   PassiveData rage({int value = 1}) => PassiveData(

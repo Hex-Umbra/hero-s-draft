@@ -20,7 +20,6 @@ void main() {
       classCard: 'paladin.png',
       maxHp: 80,
       maxMana: 3,
-      baseDamage: 5,
       luck: 1,
       mastery: 0,
     );

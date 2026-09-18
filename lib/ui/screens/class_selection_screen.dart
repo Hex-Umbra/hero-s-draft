@@ -9,7 +9,6 @@ import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../widgets/class_identity.dart';
-import '../widgets/sword_icon.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
@@ -336,18 +335,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                           color: Colors.cyanAccent,
                                         ),
                                         '${playerClass.maxMana}',
-                                      ),
-                                      Container(
-                                        width: 1,
-                                        height: widget.isMobile ? 12 : 16,
-                                        color: Colors.white24,
-                                      ),
-                                      _buildStatBadge(
-                                        SwordIcon(
-                                          size: widget.isMobile ? 14 : 16,
-                                          color: Colors.orangeAccent,
-                                        ),
-                                        '${playerClass.baseDamage}',
                                       ),
                                     ],
                                   ),

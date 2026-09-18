@@ -253,10 +253,14 @@ void main() {
     final maxHp = tester.getTopLeft(find.byKey(const Key('editeur-champ-maxHp')));
     final maxMana =
         tester.getTopLeft(find.byKey(const Key('editeur-champ-maxMana')));
-    final luck = tester.getTopLeft(find.byKey(const Key('editeur-champ-luck')));
+    // `baseDamage` parti au lot C (spec P-41, §8.3), le quatrieme nombre du
+    // gabarit de classe — celui qui prouve le passage a la rangee suivante —
+    // est desormais `mastery`, pas `luck`.
+    final mastery =
+        tester.getTopLeft(find.byKey(const Key('editeur-champ-mastery')));
     expect(maxMana.dy, maxHp.dy, reason: 'deux nombres voisins, une rangee');
     expect(maxMana.dx, greaterThan(maxHp.dx));
-    expect(luck.dy, greaterThan(maxHp.dy), reason: 'trois colonnes au plus');
+    expect(mastery.dy, greaterThan(maxHp.dy), reason: 'trois colonnes au plus');
   });
 
   testWidgets('un nombre isole garde sa rangee de propriete', (tester) async {

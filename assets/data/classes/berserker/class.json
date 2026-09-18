@@ -8,7 +8,6 @@
   "themeColor": "#F44336",
   "maxHp": 80,
   "maxMana": 3,
-  "baseDamage": 15,
   "luck": 0,
   "critChance": 10,
   "mightTargets": ["attack"],

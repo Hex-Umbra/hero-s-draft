@@ -51,7 +51,6 @@ void main() {
           classCard: 'paladin.png',
           maxHp: 100,
           maxMana: 3,
-          baseDamage: 5,
           luck: 0,
           mastery: 0,
         );
@@ -77,7 +76,6 @@ void main() {
           classCard: 'berserker.png',
           maxHp: 80,
           maxMana: 3,
-          baseDamage: 6,
           luck: 0,
           mastery: 1,
         );
@@ -133,7 +131,6 @@ void main() {
           classCard: 'paladin.png',
           maxHp: 100,
           maxMana: 3,
-          baseDamage: 5,
           luck: 0,
           mastery: 0,
         );
@@ -260,7 +257,6 @@ void main() {
       classCard: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
       luck: 0,
       mastery: 0,
     );
@@ -294,7 +290,6 @@ void main() {
       classCard: 'berserker.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
     );
 
     test('le passif, puis les reliques de fin de tour', () {

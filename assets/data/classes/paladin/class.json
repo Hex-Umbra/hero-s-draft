@@ -8,7 +8,6 @@
   "themeColor": "#2196F3",
   "maxHp": 100,
   "maxMana": 3,
-  "baseDamage": 5,
   "luck": 0,
   "mastery": 1,
   "mightTargets": ["attack", "skill", "alteration"],

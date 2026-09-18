@@ -119,7 +119,6 @@ void main() {
       classCard: 'berserker.png',
       maxHp: 80,
       maxMana: 3,
-      baseDamage: 15,
       statRules: [armorToMight],
     );
 

@@ -11,7 +11,6 @@ void main() {
         'classCard': 'assets/data/classes/gambler/gambler.png',
         'maxHp': 100,
         'maxMana': 3,
-        'baseDamage': 5,
         'mightTargets': ['attack'],
       };
 

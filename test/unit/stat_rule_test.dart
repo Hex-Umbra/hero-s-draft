@@ -79,7 +79,6 @@ void main() {
           'classCard': 'assets/data/classes/berserker/berserker.png',
           'maxHp': 80,
           'maxMana': 3,
-          'baseDamage': 15,
           'mightTargets': ['attack'],
         };
 

@@ -66,7 +66,6 @@ void main() {
         classCard: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
-        baseDamage: 5,
       );
       expect(hero.mightTargets, {MightTarget.attack});
     });
