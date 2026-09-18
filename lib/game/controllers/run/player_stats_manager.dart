@@ -174,6 +174,20 @@ class PlayerStatsManager {
     );
   }
 
+  /// Retire tout statut portant [id]. Les charges de reliques font aujourd'hui
+  /// ce filtrage en ligne (`charge_might_combat` et ses voisins) ; les
+  /// compteurs de passifs passent par ici.
+  void removeStatus(String id) {
+    final stats = controller.currentState.heroStats;
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: stats.copyWith(
+          statuses: stats.statuses.where((s) => s.id != id).toList(),
+        ),
+      ),
+    );
+  }
+
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
     final relics = ref.read(inventoryProvider).relics;

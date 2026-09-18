@@ -224,11 +224,34 @@ class CombatController extends Notifier<CombatState> {
       // 2. Transmettre au deck que la carte est jouée
       deckController.playCard(card);
 
-      // 3. Déclencher les traits passifs
-      TraitSystem.dispatch(
-        runController,
-        PassiveEvent(RelicTrigger.onCardPlayed, card: card),
+      // 3. Déclencher les traits passifs : l'événement générique, puis celui
+      // du type de la carte — les mêmes que les reliques reçoivent juste
+      // après. Un passif choisit son déclencheur par sa donnée, et n'a pas à
+      // retester le type dans sa stratégie.
+      final event = PassiveEvent(
+        RelicTrigger.onCardPlayed,
+        card: card,
+        enemyId: state.selectedEnemyId,
       );
+      TraitSystem.dispatch(runController, event);
+
+      final typedTrigger = switch (card.data.type) {
+        CardType.attack => RelicTrigger.onAttackPlayed,
+        CardType.skill => RelicTrigger.onSkillPlayed,
+        CardType.power => RelicTrigger.onPowerPlayed,
+        // Une carte Statut ne se joue pas (`EffectResolver.canPlayCard`).
+        CardType.status => null,
+      };
+      if (typedTrigger != null) {
+        TraitSystem.dispatch(
+          runController,
+          PassiveEvent(
+            typedTrigger,
+            card: card,
+            enemyId: state.selectedEnemyId,
+          ),
+        );
+      }
 
       // 4. Déclencher les reliques liées aux cartes jouées
       runController.applyRelics(RelicTrigger.onCardPlayed);

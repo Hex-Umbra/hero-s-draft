@@ -365,7 +365,23 @@ class RunController extends Notifier<RunState> {
 
   /// Subit des dégâts
   void takeDamage(int amount, {bool isCrit = false}) {
+    final armorBefore = state.heroStats.armure;
     _playerStatsManager.takeDamage(amount, isCrit: isCrit);
+
+    // Ce que l'armure a réellement absorbé : de quoi nourrir *Ferveur*, chez
+    // qui encaisser devient une ressource offensive (spec §6.3). Les dégâts
+    // de poison n'arrivent pas ici — ils sont appliqués par
+    // `StatusEffectProcessor`, fonction pure sans controller — et ne
+    // déclenchent donc pas le passif.
+    final absorbed = amount <= 0
+        ? 0
+        : (amount < armorBefore ? amount : armorBefore);
+    if (absorbed > 0) {
+      TraitSystem.dispatch(
+        this,
+        PassiveEvent(RelicTrigger.onDamageTaken, absorbedDamage: absorbed),
+      );
+    }
   }
 
   /// Applique un effet de statut
@@ -373,14 +389,22 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.addStatus(effect);
   }
 
+  /// Retire tout statut portant [id]
+  void removeStatus(String id) {
+    _playerStatsManager.removeStatus(id);
+  }
+
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
     _playerStatsManager.applyRelics(trigger);
   }
 
-  /// Déclenche les reliques d'élimination d'ennemi
+  /// Déclenche les reliques et le passif d'élimination d'ennemi. Appelé une
+  /// fois par ennemi abattu (`CombatController.cleanDeadEnemies`), ce qui fait
+  /// de *Frénésie* une boule de neige (spec §6.3).
   void onEnemyKilled() {
     _playerStatsManager.onEnemyKilled();
+    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.onEnemyKilled));
   }
 
   void applyRelicEffect(RelicData relic) {
@@ -411,6 +435,16 @@ class RunController extends Notifier<RunState> {
   }
 
   void startTurn() {
+    // L'armure que le tour précédent a laissée, avant sa remise à zéro : c'est
+    // la seule valeur que *Bénédiction* peut convertir, et elle n'existe plus
+    // une ligne plus bas (spec §1.1, §6.3).
+    //
+    // Capturée ici plutôt que le dispatch déplacé avant la remise à zéro :
+    // là, tout passif `startOfTurn` qui donne de l'armure la verrait effacée
+    // en silence — et cela vaudrait pour le prochain écrit comme pour
+    // `berserker_armor` hier.
+    final survivingArmor = state.heroStats.armure;
+
     // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
@@ -431,7 +465,10 @@ class RunController extends Notifier<RunState> {
 
 
     // 4. Déclencher les traits passifs
-    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.startOfTurn));
+    TraitSystem.dispatch(
+      this,
+      PassiveEvent(RelicTrigger.startOfTurn, survivingArmor: survivingArmor),
+    );
   }
 
   /// Fin du tour du joueur : le passif, puis les reliques de fin de tour, dans
