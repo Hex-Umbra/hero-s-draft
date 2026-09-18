@@ -71,7 +71,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 |:---:|:---|:---|
 | 🔍 | [Nouveaux ennemis par tier](possible_upgrades/27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) | 27/07/2026 |
 | 🔍 | [Roster tier-1 & mécaniques `onHitEffect`](possible_upgrades/28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md) *(→ P-05)* | 28/07/2026 |
-| 🔍 | [Cadre d'ennemi — modulaire par tier](possible_upgrades/28-07-2026_cadre_ennemi_modulaire_par_tier_Sonnet5.md) · [procédural](possible_upgrades/28-07-2026_cadre_ennemi_procedural_Sonnet5.md) *(→ P-08, deux options concurrentes)* | 28/07/2026 |
+| 🔍 | [Identité visuelle pixel art — canvas, cadres d'ennemi et palette](possible_upgrades/18-09-2026_identite_visuelle_pixel_art_Opus5.md) *(→ P-08, **tranche les deux options de juillet** ; croise P-05, P-12, P-31)* | 18/09/2026 |
+| 🔍 | [Cadre d'ennemi — modulaire par tier](possible_upgrades/28-07-2026_cadre_ennemi_modulaire_par_tier_Sonnet5.md) · [procédural](possible_upgrades/28-07-2026_cadre_ennemi_procedural_Sonnet5.md) *(→ P-08, deux options concurrentes — **sections de rendu remplacées** par le document ci-dessus, lisibles comme historique)* | 28/07/2026 |
 | 🗄️ | [Logs de maths de combat](archives/combat_maths_logs_03_06_2026.md) · [suite](archives/combat_maths_logs_05_06_2026-1.md) | 06/2026 |
 
 ## 4. Difficulté & scaling
