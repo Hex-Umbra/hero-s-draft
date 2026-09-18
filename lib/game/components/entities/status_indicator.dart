@@ -143,7 +143,7 @@ class _StatusIcon extends PositionComponent {
       case 'poison':
         return '🧪';
       case 'might':
-        return '💪';
+        return '⚡';
       case 'weakness':
         return '🥀';
       case 'vulnerable':

@@ -7,7 +7,6 @@ import '../../../../game/controllers/run_controller.dart';
 import '../../../../models/data/model_extensions.dart';
 import '../../../../services/game_data_service.dart';
 import '../../class_identity.dart';
-import '../../sword_icon.dart';
 
 class StatsDialog extends ConsumerWidget {
   const StatsDialog({super.key});
@@ -172,7 +171,11 @@ class StatsDialog extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _buildCompactStatCard(
-                    icon: SwordIcon(size: 16, color: Colors.orangeAccent),
+                    icon: const Icon(
+                      Icons.flash_on,
+                      size: 16,
+                      color: Colors.orangeAccent,
+                    ),
                     title: locale == 'fr' ? 'Puissance' : 'Might',
                     value: '${stats.might}',
                     subtitle: stats.mightTargets.shortLabel(l10n),

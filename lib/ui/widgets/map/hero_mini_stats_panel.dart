@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../game/controllers/run_controller.dart';
-import '../sword_icon.dart';
 import 'dialogs/probabilities_dialog.dart';
 import 'dialogs/stats_dialog.dart';
 
@@ -96,7 +95,11 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           const SizedBox(height: 6),
           // Puissance
           _buildMiniStatRowWidget(
-            icon: SwordIcon(size: 16, color: Colors.orangeAccent),
+            icon: const Icon(
+              Icons.flash_on,
+              size: 16,
+              color: Colors.orangeAccent,
+            ),
             value: '${stats.might} ${locale == 'fr' ? 'Puissance' : 'Might'}',
           ),
           const SizedBox(height: 6),
