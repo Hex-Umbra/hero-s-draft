@@ -42,11 +42,16 @@ class StatusEffectProcessor {
         ),
       );
     }
-    // Un statut né de ce même traitement de début de tour (ici, la Puissance
-    // convertie depuis `armor_regen`) ne doit pas être vieilli par le tic de
-    // ce tour qu'il vient de naître : il vient tout juste d'apparaître
-    // (spec P-41, §7.2). Le tic porte donc uniquement sur les statuts déjà
-    // présents en entrée, avant la conversion de l'armure.
+    // La conversion de `armor_regen` en Puissance temporaire a lieu plus bas,
+    // après ce tic (bloc `armorGain` ci-dessous) : la Puissance qu'elle crée
+    // ne vient donc jamais d'être vieillie le tour même de sa naissance
+    // (spec P-41, §7.2).
+    //
+    // La Puissance issue de `might_regen`, elle, est créée juste au-dessus,
+    // avant ce même tic, et **est** vieillie par lui (3 → 2 tours) : c'est
+    // délibéré, pour préserver le comportement préexistant de `might_regen`,
+    // et non une conséquence du même principe que l'armure. Ne pas aligner
+    // `might_regen` sur `armor_regen` sans rouvrir cette décision.
     updatedStats = updatedStats.tickStatuses();
 
     if (armorGain > 0) {
