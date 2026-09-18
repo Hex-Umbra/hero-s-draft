@@ -1,0 +1,18 @@
+{
+  "id": "precision",
+  "name_fr": "Précision",
+  "name_en": "Precision",
+  "description_fr": "+{amount}% de chance de Critique",
+  "description_en": "+{amount}% Crit Chance",
+  "effect": "stat",
+  "stat": "critChance",
+  "pool": "draft",
+  "displayOrder": 5,
+  "values": {
+    "common": 1,
+    "uncommon": 2,
+    "rare": 3,
+    "epic": 4,
+    "legendary": 5
+  }
+}

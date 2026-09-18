@@ -1,0 +1,13 @@
+{
+  "id": "mirror",
+  "name_fr": "Miroir",
+  "name_en": "Mirror",
+  "description_fr": "Cloner une carte au choix parmi 3 cartes aléatoires de votre deck",
+  "description_en": "Clone a card chosen from 3 random cards in your deck",
+  "shortDescription_fr": "Cloner une carte",
+  "shortDescription_en": "Clone a card",
+  "effect": "cloneCard",
+  "pool": "mythic",
+  "displayOrder": 8,
+  "values": {}
+}

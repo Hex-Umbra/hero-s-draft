@@ -1,0 +1,22 @@
+{
+  "id": "affinity",
+  "name_fr": "Affinité",
+  "name_en": "Affinity",
+  "description_fr": "{passive} : {effect}",
+  "description_en": "{passive}: {effect}",
+  "fallbackDescription_fr": "+{amount} Maîtrise, sans effet sur votre passif",
+  "fallbackDescription_en": "+{amount} Mastery, no effect on your passive",
+  "shortDescription_fr": "+{amount} Maîtrise",
+  "shortDescription_en": "+{amount} Mastery",
+  "effect": "stat",
+  "stat": "mastery",
+  "pool": "draft",
+  "displayOrder": 3,
+  "values": {
+    "common": 1,
+    "uncommon": 2,
+    "rare": 3,
+    "epic": 5,
+    "legendary": 7
+  }
+}

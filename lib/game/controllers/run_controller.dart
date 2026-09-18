@@ -10,6 +10,7 @@ import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
+import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
 import '../systems/trait_system.dart';
 import '../systems/stat_gains.dart';
@@ -330,6 +331,11 @@ class RunController extends Notifier<RunState> {
       critChanceAcc: critChanceAcc,
       critDamageAcc: critDamageAcc,
     );
+  }
+
+  /// Applique une récompense de niveau tirée (spec P-41, §8.1).
+  void applyLevelUpReward(DraftChoice choice) {
+    _playerStatsManager.applyLevelUpReward(choice);
   }
 
   /// Applique un modificateur aux règles de run propres au joueur

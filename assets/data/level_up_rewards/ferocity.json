@@ -1,0 +1,18 @@
+{
+  "id": "ferocity",
+  "name_fr": "Férocité",
+  "name_en": "Ferocity",
+  "description_fr": "+{amount}% de dégâts de Critique",
+  "description_en": "+{amount}% Crit Damage",
+  "effect": "stat",
+  "stat": "critDamage",
+  "pool": "draft",
+  "displayOrder": 6,
+  "values": {
+    "common": 10,
+    "uncommon": 20,
+    "rare": 30,
+    "epic": 40,
+    "legendary": 50
+  }
+}

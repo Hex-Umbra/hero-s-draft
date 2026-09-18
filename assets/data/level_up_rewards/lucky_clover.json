@@ -1,0 +1,14 @@
+{
+  "id": "lucky_clover",
+  "name_fr": "Trèfle à 4 feuilles",
+  "name_en": "4-Leaf Clover",
+  "description_fr": "+{amount} Chance",
+  "description_en": "+{amount} Luck",
+  "effect": "stat",
+  "stat": "luck",
+  "pool": "mythic",
+  "displayOrder": 7,
+  "values": {
+    "mythic": 1
+  }
+}

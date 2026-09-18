@@ -24,11 +24,14 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Huit sources pour sept categories —
-    // la carte en a deux, neutre et de classe, pour un seul descripteur.
+    // puis relever le compte ci-dessous. Neuf sources pour sept categories,
+    // par deux ecarts assumes : la carte en a deux, neutre et de classe, pour
+    // un seul descripteur ; et les recompenses de niveau ont leur source
+    // depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec
+    // place leur edition au lot D (§9.2).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
-    expect(declared, hasLength(8));
+    expect(declared, hasLength(9));
   });
 
   test('chaque descripteur est indexe sous sa propre categorie', () {

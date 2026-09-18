@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/relic_carousel/draft_card_reel.dart';
 import 'package:roguelike_card_game/ui/widgets/draft/draft_choice_card.dart';
@@ -57,11 +60,23 @@ Widget _wrap(ProviderContainer container, Widget child, {String locale = 'fr'}) 
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late GameDataRegistry registry;
+  setUpAll(() async {
+    registry = await loadGameDataRegistry(rootBundle);
+  });
+
   testWidgets('DraftScreen renders 3 draft choices without crashing', (
     WidgetTester tester,
   ) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+    );
     addTearDown(container.dispose);
+    // L'ecran appelle `.requireValue` pendant `initState` : le futur doit etre
+    // resolu avant le premier pump.
+    await container.read(gameDataLoaderProvider.future);
     _setLuck(container, -50);
 
     await tester.pumpWidget(
@@ -83,8 +98,13 @@ void main() {
   testWidgets('DraftScreen shows French labels when locale is fr', (
     WidgetTester tester,
   ) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+    );
     addTearDown(container.dispose);
+    // L'ecran appelle `.requireValue` pendant `initState` : le futur doit etre
+    // resolu avant le premier pump.
+    await container.read(gameDataLoaderProvider.future);
     _setLuck(container, -50);
 
     await tester.pumpWidget(
@@ -106,8 +126,13 @@ void main() {
   testWidgets(
     'DraftScreen completes the draft and applies a stat modifier when a choice is tapped',
     (WidgetTester tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+      );
       addTearDown(container.dispose);
+      // L'ecran appelle `.requireValue` pendant `initState` : le futur doit
+      // etre resolu avant le premier pump.
+      await container.read(gameDataLoaderProvider.future);
       // Very negative luck removes any chance of mythic bonus choices, so
       // the base 3 choices land and become tappable deterministically.
       _setLuck(container, -50);
@@ -156,8 +181,13 @@ void main() {
   testWidgets(
     'DraftScreen reveals mythic bonus choices and only allows selection once resolved',
     (WidgetTester tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+      );
       addTearDown(container.dispose);
+      // L'ecran appelle `.requireValue` pendant `initState` : le futur doit
+      // etre resolu avant le premier pump.
+      await container.read(gameDataLoaderProvider.future);
 
       bool draftCompleted = false;
 
@@ -208,8 +238,13 @@ void main() {
   testWidgets(
     'Le Miroir de montee de niveau ne propose jamais de copier une carte unique',
     (WidgetTester tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+      );
       addTearDown(container.dispose);
+      // L'ecran appelle `.requireValue` pendant `initState` : le futur doit
+      // etre resolu avant le premier pump.
+      await container.read(gameDataLoaderProvider.future);
 
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.addCardToMasterDeck(

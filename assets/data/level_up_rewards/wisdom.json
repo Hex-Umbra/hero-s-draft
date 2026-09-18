@@ -1,0 +1,18 @@
+{
+  "id": "wisdom",
+  "name_fr": "Sagesse",
+  "name_en": "Wisdom",
+  "description_fr": "+{amount} Mana Max",
+  "description_en": "+{amount} Max Mana",
+  "effect": "stat",
+  "stat": "maxMana",
+  "pool": "draft",
+  "displayOrder": 4,
+  "values": {
+    "common": 1,
+    "uncommon": 2,
+    "rare": 2,
+    "epic": 3,
+    "legendary": 4
+  }
+}

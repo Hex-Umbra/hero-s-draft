@@ -1,0 +1,18 @@
+{
+  "id": "vitality",
+  "name_fr": "Vitalité",
+  "name_en": "Vitality",
+  "description_fr": "+{amount} PV Max",
+  "description_en": "+{amount} Max HP",
+  "effect": "stat",
+  "stat": "maxHp",
+  "pool": "draft",
+  "displayOrder": 1,
+  "values": {
+    "common": 5,
+    "uncommon": 8,
+    "rare": 10,
+    "epic": 15,
+    "legendary": 20
+  }
+}

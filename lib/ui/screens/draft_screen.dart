@@ -10,10 +10,12 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
+import '../../models/reward_rarity.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/audio_source.dart';
 import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
+import '../../services/game_data_service.dart';
 import '../widgets/draft/draft_choice_labels.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
@@ -101,6 +103,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   void initState() {
     super.initState();
     _choices = LevelUpRewardService.generateChoices(
+      rewards: ref.read(gameDataLoaderProvider).requireValue.levelUpRewards,
       luck: ref.read(runProvider).heroStats.luck,
       forceLegendary: widget.forceLegendary,
     );
@@ -131,7 +134,23 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final l10n = AppLocalizations.of(context)!;
     // Affinité se décrit par le passif actif (spec P-49, §6.5).
     final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
-    final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
+    // Le décor du rouleau : chaque récompense du catalogue, à sa valeur
+    // `rare`. Une valeur arbitraire et assumée — les libellés écrits à la
+    // main qu'elle remplace ne correspondaient à aucun palier cohérent (spec
+    // P-41, §8.1).
+    final spinPool = [
+      for (final reward
+          in ref.read(gameDataLoaderProvider).requireValue.levelUpRewards)
+        (
+          title: reward.getName(l10n.localeName),
+          description: reward.shortLabel(
+            l10n.localeName,
+            amount: reward.reelAmount,
+          ),
+        ),
+    ];
+    final visibleChoices =
+        _mythicCompleted ? _choices : _choices.take(3).toList();
 
     return Stack(
       children: [
@@ -254,6 +273,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               initialLanded: index >= 3
                                                   ? true
                                                   : _baseCompleted,
+                                              spinPool: spinPool,
                                             ),
                                           ),
                                         ),
@@ -346,6 +366,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                             initialLanded: index >= 3
                                                 ? true
                                                 : _baseCompleted,
+                                            spinPool: spinPool,
                                           ),
                                         ),
                                       ),
@@ -456,6 +477,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                         ),
                                         index: relativeIndex,
                                         onLand: () => _onMythicReelLanded(choice.rarity),
+                                        spinPool: spinPool,
                                       ),
                                     ),
                                   ),
@@ -642,16 +664,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
         return;
       }
 
-      final runController = ref.read(runProvider.notifier);
-      runController.applyHeroStatModifier(
-        maxPvAcc: choice.pvBoost,
-        mightAcc: choice.mightBoost,
-        masteryAcc: choice.masteryBoost,
-        maxManaAcc: choice.manaBoost,
-        luckAcc: choice.luckBoost,
-        critChanceAcc: choice.critChanceBoost,
-        critDamageAcc: choice.critDamageBoost,
-      );
+      ref.read(runProvider.notifier).applyLevelUpReward(choice);
 
       _finishDraft(ref);
     });

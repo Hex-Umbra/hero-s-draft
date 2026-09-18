@@ -310,19 +310,17 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Reward Draft',
     titleFr: 'Le Draft de Récompenses',
     bodyEn:
-        'Each level grants a draft. Three options are rolled from six kinds — '
-        'Vitality, Sharpening, Affinity, Wisdom, Precision, Ferocity — and '
-        'up to two **Mythic** options can appear on top: the Four-Leaf Clover '
-        'and the Mirror.\n\n'
+        'Each level grants a draft. Three options are rolled from '
+        '{rollableCount} kinds — {rollableNames} — and up to {mythicCount} '
+        '**Mythic** options can appear on top: {mythicNames}.\n\n'
         'Rarity decides how much you get. Luck raises your odds on every roll, '
         'which makes the Clover the option that improves all the others.\n\n'
         'Careful with Affinity: it grants **Mastery**, which strengthens what '
         'your passive produces — each passive states what one point adds.',
     bodyFr:
         'Chaque niveau donne droit à un draft. Trois options sont tirées parmi '
-        'six types — Vitalité, Aiguisage, Affinité, Sagesse, Précision, '
-        'Férocité — et jusqu\'à deux options **Mythiques** peuvent s\'y ajouter : '
-        'le Trèfle à 4 feuilles et le Miroir.\n\n'
+        '{rollableCount} types — {rollableNames} — et jusqu\'à {mythicCount} '
+        'options **Mythiques** peuvent s\'y ajouter : {mythicNames}.\n\n'
         'La rareté décide de l\'ampleur du gain. La Chance améliore vos '
         'probabilités à chaque tirage, ce qui fait du Trèfle l\'option qui '
         'améliore toutes les autres.\n\n'

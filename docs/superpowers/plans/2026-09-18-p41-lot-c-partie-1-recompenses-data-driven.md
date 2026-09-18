@@ -29,14 +29,14 @@ Le lot C se livre en **deux parties**, comme le lot B, et pour la même raison :
 - **Le jeu ne change pas.** Aucune valeur, aucun texte joueur, aucune probabilité de tirage ne bouge. Ce qui change est la **provenance** de ces valeurs et de ces textes : du code vers `assets/data/level_up_rewards/`. Toute divergence observée est un défaut de cette partie, jamais un ajustement.
 - **Le rééquilibrage reste à P-16** (spec §8.4). *Sagesse* garde son plateau assumé (1, 2, 2, 3, 4 — `round(1 × 1,5)` et `round(1 × 2,0)` donnent tous deux 2), et il est **recopié tel quel** dans sa donnée. P-41 doit seulement ne pas aggraver.
 - `dart analyze` doit afficher `No issues found!` à la fin de **chaque** tâche.
-- `flutter test` doit être **entièrement** vert à la fin de chaque tâche. Point de départ **mesuré le 2026-09-18 sur `main`** (commit `6605b25`) : **1021 tests**, `dart analyze` propre. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** (1021 + les tests ajoutés − ceux supprimés), **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle.
+- `flutter test` doit être **entièrement** vert à la fin de chaque tâche. Point de départ **mesuré le 2026-09-18 sur `main`** : **1021 tests**, `dart analyze` propre. La mesure d'origine a été prise sur `6605b25` et **re-vérifiée sur `325c31f`** à la passe de correction de ce plan : tous les commits intermédiaires ne touchent que `docs/`, donc le chiffre tient. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** (1021 + les tests ajoutés − ceux supprimés), **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle.
 - **Ne jamais lancer `dart format`** : le dépôt ne l'utilise pas.
 - Créer et modifier les fichiers avec les outils Write / Edit. **Jamais par heredoc bash** pour du contenu : les heredocs de cet environnement mangent les antislashs, et le code Dart et les JSON de ce plan en contiennent (`'Trèfle à 4 feuilles'`, `\n`, `l\'Affinité`).
 - Tout texte joueur d'un JSON porte ses variantes `_fr` **et** `_en` (`CLAUDE.md`). Les huit récompenses portent au minimum `name_fr`, `name_en`, `description_fr`, `description_en`.
 - **Un fichier ajouté à `assets/` doit être déclaré au `pubspec.yaml`** : les déclarations de Flutter ne sont pas récursives, et un répertoire non déclaré se charge en développement puis disparaît du build sans un mot. C'est `dart run tool/sync_assets.dart` qui régénère la section, jamais la main.
 - Les fichiers `lib/l10n/app_localizations.dart`, `app_localizations_en.dart` et `app_localizations_fr.dart` sont générés **et commités** : après toute modification d'un ARB, lancer `flutter gen-l10n` et commiter les trois. Le fichier **gabarit** est `app_en.arb` (`l10n.yaml`) : c'est lui qui porte les blocs `@clé` de métadonnées.
 - Le tutoriel ne référence aucun provider d'état (ADR-081), vérifié par `test/tutorial/tutorial_isolation_test.dart` — qui interdit nommément `GameDataRegistry.instance` dans `lib/tutorial/`. Le registre arrive au tutoriel par `TutorialScreen.data` et `TutorialEngine.data`, déjà en place : **aucune nouvelle voie d'accès**.
-- **L'éditeur de contenu n'apprend pas cette catégorie** : la spec place « Récompenses de niveau : nouvelle catégorie éditable » au **lot D** (§9.2). Ne pas toucher `EntityCategory` ni `kEntityDescriptors` — le compte de catégories de `test/unit/content_editor/entity_descriptor_test.dart` doit rester à sept.
+- **L'éditeur de contenu n'apprend pas cette catégorie** : la spec place « Récompenses de niveau : nouvelle catégorie éditable » au **lot D** (§9.2). Ne pas toucher `EntityCategory` ni `kEntityDescriptors` — le compte de catégories de `test/unit/content_editor/entity_descriptor_test.dart` doit rester à sept. **Une seule ligne de ce fichier bouge**, et ce n'est pas une catégorie : son premier test compte les `EntitySource(` déclarées par `game_data_service.dart` et en exige huit ; la neuvième source, ajoutée à la tâche 3, l'oblige à passer à neuf. Voir la tâche 3, étape 6 bis.
 - Ne pas toucher `assets/data/patch_notes.json` ni le champ `version:` de `pubspec.yaml` : ils appartiennent au skill `patch-notes-writer`.
 - Le code va sur la branche `feat/p41-lot-c-recompenses`, jamais sur `main`. La documentation de cette partie est déjà commitée sur `main`, avant l'exécution. **Pas de worktree** (décision du propriétaire) : la branche est créée dans le checkout principal, même si le skill d'exécution en propose un.
 - Messages de commit en français, forme `type(portee): message`, **sans accents ni apostrophes**, terminés par la ligne `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`.
@@ -83,7 +83,9 @@ Les huit fichiers sont écrits en entier à la tâche 3. Voici la même chose vu
 
 ## Conséquences assumées, à annoncer plutôt qu'à découvrir
 
-1. **Une formulation du tutoriel change, d'un mot.** La liste des deux mythiques était écrite « le Trèfle à 4 feuilles et le Miroir » ; générée depuis les noms du registre, elle devient « Trèfle à 4 feuilles et Miroir ». Les articles français sont genrés et le registre ne porte pas le genre d'un nom : inventer un champ `article` pour deux noms serait plus coûteux que la perte. C'est le seul texte joueur que cette partie modifie.
+1. **Une formulation du tutoriel change, dans les deux langues, et c'est le seul texte joueur que cette partie modifie.** La liste des deux mythiques était écrite « le Trèfle à 4 feuilles et le Miroir » / « the Four-Leaf Clover and the Mirror » ; générée depuis les noms du registre, elle devient « Trèfle à 4 feuilles et Miroir » / « 4-Leaf Clover and Mirror ».
+   - **Les articles partent** parce que le registre ne porte pas le genre d'un nom : inventer un champ `article` pour deux noms serait plus coûteux que la perte.
+   - **Le nom anglais du Trèfle s'aligne sur celui de la carte de draft.** Le tutoriel écrivait « Four-Leaf Clover », l'ARB `draftChoiceClover` dit « 4-Leaf Clover » : deux orthographes pour la même récompense, une divergence antérieure à ce chantier. Passer par un fichier unique force à en choisir une, et c'est **celle de la carte de draft** qui gagne — c'est elle que ces fichiers remplacent, et c'est la surface que le joueur voit à chaque montée de niveau, quand le tutoriel ne se lit qu'une fois.
 2. **Le rouleau de draft montre désormais les valeurs `rare` de chaque récompense** au lieu de quatre chiffres écrits à la main (décision 7). Les cartes défilent en 140 ms et sont floutées : c'est une donnée de décor, pas une information.
 3. **17 clés ARB disparaissent** (`draftChoiceVitality` … `draftChoiceFerocityDesc`). Les clés de rareté (`rarityLegendary` …) **restent** : la rareté n'est pas une récompense, et `RewardRarity` n'est pas de la donnée de contenu.
 4. **Le nombre de fichiers d'entité passe de 77 à 85.** Deux tests le comptent nommément (`entity_id_convention_test.dart`, `real_bundle_load_test.dart`), et c'est leur raison d'être : les mettre à jour est la bonne réaction, les affaiblir ne l'est pas.
@@ -127,8 +129,8 @@ Les huit fichiers sont écrits en entier à la tâche 3. Voici la même chose vu
 Run: `git checkout -- macos/Flutter/GeneratedPluginRegistrant.swift` (fins de ligne seulement), puis `git status --short`
 Expected: **aucune sortie** — l'arbre de travail est propre.
 
-Run: `git log --oneline -5`
-Expected: on y trouve le commit qui ajoute `docs/superpowers/plans/2026-09-18-p41-lot-c-partie-1-recompenses-data-driven.md`, et, avant lui, `6605b25 docs(exploration): brainstorm identite visuelle pixel art` — une passe de correction de ce plan a pu en ajouter un par-dessus. Si l'arbre n'est pas propre, ou si le commit du plan manque, **s'arrêter et le signaler** : ce plan part de cet état.
+Run: `git log --oneline -10`
+Expected: on y trouve `12fbd15 docs(P-41): plans du lot C, en deux parties` — le commit qui ajoute ce plan et celui de la partie 2 —, puis `cd7e627 docs(P-41): le lot C entre dans l index et la feuille de route`, puis la passe de correction de ce plan par-dessus. Plus bas dans la même sortie : `6605b25 docs(exploration): brainstorm identite visuelle pixel art`, le commit sur lequel les 1021 tests ont été mesurés. **Tout ce qui sépare `6605b25` du sommet ne touche que `docs/`** — c'est ce qui autorise à garder 1021 sans le re-mesurer. Si l'arbre n'est pas propre, si le commit du plan manque, ou si un commit intermédiaire touche `lib/` ou `test/` (`git diff --stat 6605b25..HEAD -- lib test` doit être vide), **s'arrêter et le signaler** : ce plan part de cet état.
 
 - [ ] **Step 2: Créer la branche**
 
@@ -148,7 +150,9 @@ Un déplacement d'énumération, sans lecteur nouveau ni comportement changé. I
 **Files:**
 - Create: `lib/models/reward_rarity.dart`
 - Modify: `lib/game/services/level_up_reward_service.dart`, `lib/ui/screens/draft_screen.dart`, `lib/ui/widgets/draft/draft_choice_labels.dart`
-- Modify (tests) : `test/unit/level_up_reward_values_test.dart`, `test/unit/probabilities_test.dart`, `test/unit/draft_choice_labels_test.dart`, `test/widget/draft_screen_test.dart`
+- Modify (tests) : `test/unit/level_up_reward_values_test.dart`, `test/unit/probabilities_test.dart` — **et eux seuls**
+
+> **Deux fichiers, pas quatre.** `test/unit/draft_choice_labels_test.dart` et `test/widget/draft_screen_test.dart` ne nomment **jamais** `RewardRarity` (vérifié : zéro occurrence dans chacun ; le premier construit ses `DraftChoice` sans rareté, le second ne touche qu'à l'écran). Leur ajouter l'import donnerait un `unused_import` et ferait rater le `No issues found!` de l'étape 4.
 
 **Interfaces:**
 - Consumes: rien.
@@ -186,8 +190,9 @@ Run: `dart analyze`
 Expected: des erreurs `Undefined name 'RewardRarity'` dans les fichiers listés ci-dessus.
 
 Ajouter, dans chacun, l'import du nouveau fichier :
-- `lib/ui/screens/draft_screen.dart` et `lib/ui/widgets/draft/draft_choice_labels.dart` : `import '../../models/reward_rarity.dart';` et `import '../../../models/reward_rarity.dart';` respectivement — vérifier la profondeur du chemin relatif dans chaque fichier.
-- les quatre fichiers de test : `import 'package:roguelike_card_game/models/reward_rarity.dart';`
+- `lib/ui/screens/draft_screen.dart` (six lectures de `RewardRarity`) : `import '../../models/reward_rarity.dart';`
+- `lib/ui/widgets/draft/draft_choice_labels.dart` (`rarityToString` en prend une en paramètre) : `import '../../../models/reward_rarity.dart';`
+- les **deux** fichiers de test listés ci-dessus : `import 'package:roguelike_card_game/models/reward_rarity.dart';`
 
 **Ne pas retirer** l'import existant de `level_up_reward_service.dart` dans ces fichiers : ils y lisent encore `DraftChoice`, `LevelUpRewardType` ou `LevelUpRewardService`.
 
@@ -199,7 +204,7 @@ Run: `flutter test` — Expected: `+1021: All tests passed!` (aucun test ajouté
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/models/reward_rarity.dart lib/game/services/level_up_reward_service.dart lib/ui/screens/draft_screen.dart lib/ui/widgets/draft/draft_choice_labels.dart test/unit/level_up_reward_values_test.dart test/unit/probabilities_test.dart test/unit/draft_choice_labels_test.dart test/widget/draft_screen_test.dart
+git add lib/models/reward_rarity.dart lib/game/services/level_up_reward_service.dart lib/ui/screens/draft_screen.dart lib/ui/widgets/draft/draft_choice_labels.dart test/unit/level_up_reward_values_test.dart test/unit/probabilities_test.dart
 git commit -m "refactor(recompenses): RewardRarity devient un modele partage
 
 La donnee des recompenses de niveau doit lire ce palier, et lib/models/data
@@ -292,7 +297,7 @@ void main() {
         'name_fr': 'Miroir',
         'name_en': 'Mirror',
         'description_fr': 'Cloner une carte au choix parmi 3 cartes aléatoires de votre deck',
-        'description_en': 'Clone one card among 3 random cards from your deck',
+        'description_en': 'Clone a card chosen from 3 random cards in your deck',
         'shortDescription_fr': 'Cloner une carte',
         'shortDescription_en': 'Clone a card',
         'effect': 'cloneCard',
@@ -757,14 +762,16 @@ Le catalogue existe et se charge ; rien ne le lit encore. Le test de cette tâch
 **Files:**
 - Create: `assets/data/level_up_rewards/vitality.json`, `sharpening.json`, `affinity.json`, `wisdom.json`, `precision.json`, `ferocity.json`, `lucky_clover.json`, `mirror.json`
 - Modify: `lib/models/data/game_data_registry.dart`, `lib/services/game_data_service.dart`, `pubspec.yaml`
-- Modify (tests) : `test/unit/entity_id_convention_test.dart`, `test/unit/real_bundle_load_test.dart`
+- Modify (tests) : `test/unit/entity_id_convention_test.dart`, `test/unit/real_bundle_load_test.dart`, `test/unit/content_editor/entity_descriptor_test.dart`
 - Test: `test/unit/level_up_rewards_catalog_test.dart` *(nouveau)*
 
 **Interfaces:**
 - Consumes: `LevelUpRewardData.fromJson` (tâche 2).
-- Produces: `GameDataRegistry.levelUpRewards` (`List<LevelUpRewardData>`, `const []` par défaut — un défaut, et non un paramètre requis, pour ne pas casser les 36 fichiers qui construisent un registre de test).
+- Produces: `GameDataRegistry.levelUpRewards` (`List<LevelUpRewardData>`, `const []` par défaut — un défaut, et non un paramètre requis, pour ne pas casser les **34 fichiers de test** qui construisent un registre).
 
 - [ ] **Step 1: Écrire les huit fichiers**
+
+> **Chaque `name` et chaque `description` ci-dessous est recopié mot pour mot de la clé ARB qu'il remplace** — les dix-sept, en deux langues (`app_fr.arb:196-212`, `app_en.arb:443-495`). Ce sont les textes que le joueur lit aujourd'hui, et la contrainte globale de cette partie interdit de les retoucher : « +{amount}% Crit Chance » n'est pas joli, mais c'est ce qui est affiché, et l'améliorer serait un changement de texte joueur non annoncé. Avant de commiter la tâche, les comparer clé par clé aux deux ARB — c'est la vérification la moins chère de cette partie, et une reformulation involontaire y est le défaut le plus facile à introduire. Les seuls textes **sans** clé ARB d'origine sont les quatre `shortDescription` (décision 7). Leurs variantes françaises sont recopiées de la liste écrite en dur du rouleau (`draft_card_reel.dart:45-52`, six entrées en français seulement) ; leurs variantes anglaises sont **écrites ici pour la première fois**, ce rouleau n'ayant jamais été traduit. C'est la seule case du catalogue où la traduction est neuve plutôt que reprise.
 
 Create `assets/data/level_up_rewards/vitality.json`:
 
@@ -872,7 +879,7 @@ Create `assets/data/level_up_rewards/precision.json`:
   "name_fr": "Précision",
   "name_en": "Precision",
   "description_fr": "+{amount}% de chance de Critique",
-  "description_en": "+{amount}% Critical chance",
+  "description_en": "+{amount}% Crit Chance",
   "effect": "stat",
   "stat": "critChance",
   "pool": "draft",
@@ -895,7 +902,7 @@ Create `assets/data/level_up_rewards/ferocity.json`:
   "name_fr": "Férocité",
   "name_en": "Ferocity",
   "description_fr": "+{amount}% de dégâts de Critique",
-  "description_en": "+{amount}% Critical damage",
+  "description_en": "+{amount}% Crit Damage",
   "effect": "stat",
   "stat": "critDamage",
   "pool": "draft",
@@ -918,7 +925,7 @@ Create `assets/data/level_up_rewards/lucky_clover.json`:
 {
   "id": "lucky_clover",
   "name_fr": "Trèfle à 4 feuilles",
-  "name_en": "Four-Leaf Clover",
+  "name_en": "4-Leaf Clover",
   "description_fr": "+{amount} Chance",
   "description_en": "+{amount} Luck",
   "effect": "stat",
@@ -939,7 +946,7 @@ Create `assets/data/level_up_rewards/mirror.json`:
   "name_fr": "Miroir",
   "name_en": "Mirror",
   "description_fr": "Cloner une carte au choix parmi 3 cartes aléatoires de votre deck",
-  "description_en": "Clone one card of your choice among 3 random cards from your deck",
+  "description_en": "Clone a card chosen from 3 random cards in your deck",
   "shortDescription_fr": "Cloner une carte",
   "shortDescription_en": "Clone a card",
   "effect": "cloneCard",
@@ -1142,7 +1149,29 @@ et, dans le `return GameDataRegistry(...)`, après `forgeUpgrades: forgeUpgrades
     levelUpRewards: levelUpRewards,
 ```
 
-Mettre aussi à jour la phrase du doc-comment de `loadGameDataRegistry` : « **Unique declaration des huit sources du jeu** » devient « **des neuf sources du jeu** ».
+Mettre aussi à jour la phrase du doc-comment de `loadGameDataRegistry` (`game_data_service.dart:53`) : « **Unique declaration des huit sources du jeu** » devient « **des neuf sources du jeu** ».
+
+- [ ] **Step 6 bis: Relever le compte de sources du garde-fou de l'éditeur**
+
+Un test compte les `EntitySource(` dans le texte de `game_data_service.dart` et exige **huit** — il rougira dès l'étape précédente.
+
+Run: `flutter test test/unit/content_editor/entity_descriptor_test.dart`
+Expected: FAIL sur `aucune source de chargement n a ete ajoutee sans descripteur` — `Expected: an object with length of <8> Actual: ... length:9`.
+
+Edit `test/unit/content_editor/entity_descriptor_test.dart`, premier test (`:18`) : passer `hasLength(8)` à `hasLength(9)` et corriger le commentaire qui le justifie, autour de `:26` :
+
+```dart
+    // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
+    // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
+    // puis relever le compte ci-dessous. Neuf sources pour sept categories,
+    // par deux ecarts assumes : la carte en a deux, neutre et de classe, pour
+    // un seul descripteur ; et les recompenses de niveau ont leur source
+    // depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec
+    // place leur edition au lot D (§9.2).
+    expect(declared, hasLength(9));
+```
+
+> **C'est le seul endroit de cette partie où l'éditeur de contenu est touché**, et c'est un compteur, pas une catégorie. `EntityCategory` et `kEntityDescriptors` ne bougent pas : le compte de catégories reste à **sept**, et les deux autres tests qui le vérifient (`:166`, `:266`) restent verts. Aucun test n'est ajouté ni supprimé : la prévision de l'étape 9 est inchangée.
 
 - [ ] **Step 7: Lancer le test pour le voir passer**
 
@@ -1185,7 +1214,7 @@ Run: `flutter test` — Expected: `+1044: All tests passed!` (1039 + 5).
 - [ ] **Step 10: Commit**
 
 ```bash
-git add assets/data/level_up_rewards pubspec.yaml lib/models/data/game_data_registry.dart lib/services/game_data_service.dart test/unit/level_up_rewards_catalog_test.dart test/unit/entity_id_convention_test.dart test/unit/real_bundle_load_test.dart
+git add assets/data/level_up_rewards pubspec.yaml lib/models/data/game_data_registry.dart lib/services/game_data_service.dart test/unit/level_up_rewards_catalog_test.dart test/unit/entity_id_convention_test.dart test/unit/real_bundle_load_test.dart test/unit/content_editor/entity_descriptor_test.dart
 git commit -m "feat(recompenses): huit fichiers, une neuvieme source d entites
 
 Les huit recompenses de niveau sont desormais du contenu. Rien ne les lit
@@ -1205,7 +1234,7 @@ Le tirage et les libellés changent **ensemble** et non l'un après l'autre : su
 **Files:**
 - Modify: `lib/game/services/level_up_reward_service.dart`, `lib/ui/widgets/draft/draft_choice_labels.dart`, `lib/ui/screens/draft_screen.dart`, `lib/tutorial/widgets/tutorial_draft_widget.dart`, `lib/l10n/app_en.arb`, `lib/l10n/app_fr.arb`
 - Regenerate: `lib/l10n/app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_fr.dart`
-- Test: `test/unit/level_up_reward_values_test.dart` *(réécrit)*, `test/unit/draft_choice_labels_test.dart` *(réécrit)*
+- Test: `test/unit/level_up_reward_values_test.dart` *(réécrit)*, `test/unit/draft_choice_labels_test.dart` *(réécrit)*, `test/widget/draft_screen_test.dart` *(son harnais gagne le registre — étape 8 bis)*
 
 **Interfaces:**
 - Consumes: `LevelUpRewardData`, `RewardEffect`, `RewardPool`, `RewardStat` (tâche 2) ; `GameDataRegistry.levelUpRewards` (tâche 3).
@@ -1753,7 +1782,7 @@ void main() {
     );
     expect(
       DraftChoiceLabels.getChoiceDescription(en, choice('ferocity', RewardRarity.legendary)),
-      '+50% Critical damage',
+      '+50% Crit Damage',
     );
   });
 
@@ -1787,15 +1816,49 @@ Edit `lib/l10n/app_en.arb` : supprimer les **mêmes 17 clés** et, pour chacune,
 Run: `flutter gen-l10n`
 Expected: aucune erreur ; les trois fichiers générés perdent les 17 getters.
 
-- [ ] **Step 8: Lancer les tests**
+- [ ] **Step 8: Lancer les deux tests réécrits**
 
 Run: `flutter test test/unit/level_up_reward_values_test.dart test/unit/draft_choice_labels_test.dart`
 Expected: `+13: All tests passed!` (7 + 6).
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1048: All tests passed!` (1044 − 4 − 5 + 7 + 6).
 
-Si `test/widget/draft_screen_test.dart` rougit : il construit ses propres `DraftChoice` ou surveille `LevelUpRewardType`. L'adapter à la nouvelle forme — en lui donnant le registre réel par `loadGameDataRegistry(rootBundle)`, comme les deux fichiers ci-dessus — **sans changer ce qu'il vérifie**, et réajuster la prévision en conséquence.
+**Ne pas encore lancer la suite complète** : l'étape suivante répare le seul fichier que cette tâche casse, et la prévision de 1048 ne vaut qu'une fois qu'elle est faite.
+
+- [ ] **Step 8 bis: Donner son registre à `draft_screen_test.dart`**
+
+**Ses cinq tests vont rougir, et il faut s'y attendre plutôt que le découvrir.** Ce fichier ne nomme ni `DraftChoice`, ni `LevelUpRewardType`, ni `RewardRarity` : il monte l'écran, rien de plus. Mais il le monte sur un `ProviderContainer()` **nu**, sans aucun override — or `initState` lit désormais `ref.read(gameDataLoaderProvider).requireValue`, et `requireValue` sur un `FutureProvider` non résolu lève. Les cinq tests tombent ensemble, avec un `StateError`, pas une erreur de compilation.
+
+Edit `test/widget/draft_screen_test.dart` : dans les cinq tests, remplacer `final container = ProviderContainer();` par le registre **réel**, résolu avant le pump. Le fichier devient `async` là où il ne l'était pas ; l'idiome est celui de `test/widget/class_selection_screen_test.dart:88-100`, à copier tel quel :
+
+```dart
+  final container = ProviderContainer(
+    overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+  );
+  addTearDown(container.dispose);
+  // L'ecran appelle `.requireValue` pendant `initState` : le futur doit etre
+  // resolu avant le premier pump.
+  await container.read(gameDataLoaderProvider.future);
+```
+
+avec, en tête de `main()`, le registre chargé une fois :
+
+```dart
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late GameDataRegistry registry;
+  setUpAll(() async {
+    registry = await loadGameDataRegistry(rootBundle);
+  });
+```
+
+> **Le vrai registre, pas un faux vide.** Les autres tests d'écran du dépôt construisent un `GameDataRegistry(...)` à la main, dont `levelUpRewards` vaudrait `const []` : `generateChoices` rendrait alors `const []`, et le `_choices.sublist(0, 3)` de `build` lèverait un `RangeError`. C'est `loadGameDataRegistry(rootBundle)` qu'il faut ici — le fichier vérifie précisément que l'écran tire et affiche de vraies récompenses.
+
+Ce que ce fichier vérifie ne change pas, et **aucun test n'y est ajouté ni supprimé** : la prévision de 1048 tient. Ses deux attentes de texte — `find.text('Trèfle à 4 feuilles')` et `find.text('Miroir')` après l'atterrissage des rouleaux — restent justes : ce sont les `name_fr` de `lucky_clover.json` et de `mirror.json`, recopiés des ARB.
+
+Run: `flutter test test/widget/draft_screen_test.dart` — Expected: `+5: All tests passed!`
+Run: `dart analyze` — Expected: `No issues found!`
+Run: `flutter test` — Expected: `+1048: All tests passed!` (1044 − 4 − 5 + 7 + 6).
 
 - [ ] **Step 9: Commit**
 
@@ -1980,7 +2043,9 @@ void main() {
 }
 ```
 
-> **Si `startNewRun` exige un argument de plus** que la classe (le passif est optionnel : `startNewRun(HeroData chosenClass, [PassiveData? activePassive])`), ne rien changer. Si `runProvider` ou `heroStats.critMultiplier` ne portent pas ces noms exacts, les relire dans `lib/game/controllers/run_controller.dart` et `lib/models/entity_stats.dart` avant d'adapter le test — **jamais** l'inverse.
+> **`startNewRun` prend bien un second argument optionnel** — `startNewRun(HeroData chosenClass, [PassiveData? activePassive])` (`run_controller.dart:253`) : ne rien changer. Si `runProvider` ou `heroStats.critMultiplier` ne portent pas ces noms exacts, les relire dans `lib/game/controllers/run_controller.dart` et `lib/models/entity_stats.dart` avant d'adapter le test — **jamais** l'inverse.
+
+> **Ce fichier devient le 37ᵉ à construire un `HeroData` avec `baseDamage`.** Il y en a exactement 36 sur `main` aujourd'hui, et la **partie 2 les vide tous** en retirant le champ (§8.3). Sa tâche 4 annonce « environ 36 fichiers de test » : c'est le compte d'avant cette partie-ci, et ce plan-là porte la correction. Rien à faire ici — juste ne pas s'étonner que l'analyseur nomme ce fichier là-bas.
 
 - [ ] **Step 2: Lancer le test pour le voir échouer**
 
@@ -2239,7 +2304,7 @@ Edit `lib/ui/screens/draft_screen.dart` : calculer le décor une fois, dans `bui
     ];
 ```
 
-puis passer `spinPool: spinPool,` aux **trois** constructions de `DraftCardReel` (autour des lignes 318, 443, et la troisième si elle existe — `dart analyze` les nommera toutes).
+puis passer `spinPool: spinPool,` aux **trois** constructions de `DraftCardReel`, aux lignes `222`, `316` et `441` de `draft_screen.dart` (relevées sur `main` avant les tâches 4 et 5, qui les décalent de quelques lignes — `dart analyze` les nommera toutes de toute façon).
 
 Ajouter l'import de `reward_rarity.dart` si absent.
 
@@ -2320,7 +2385,7 @@ void main() {
 
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
-      'Four-Leaf Clover and Mirror',
+      '4-Leaf Clover and Mirror',
     );
     expect(
       fillRewardPlaceholders('{rollableCount}', rewards, isFrench: false),
@@ -2454,7 +2519,7 @@ Edit `lib/tutorial/tutorial_data.dart`, l'étape `TutorialStepType.draft` : remp
         'lui apporte.',
 ```
 
-> Les articles disparaissent de la liste des mythiques (« le Trèfle à 4 feuilles et le Miroir » → « Trèfle à 4 feuilles et Miroir ») : le registre ne porte pas le genre d'un nom, et un champ `article` pour deux noms coûterait plus que la perte. C'est la conséquence n° 1 annoncée en tête de plan.
+> Les articles disparaissent de la liste des mythiques, dans les deux langues (« le Trèfle à 4 feuilles et le Miroir » → « Trèfle à 4 feuilles et Miroir » ; « the Four-Leaf Clover and the Mirror » → « 4-Leaf Clover and Mirror »), et le nom anglais du Trèfle s'aligne au passage sur celui de la carte de draft. C'est la conséquence n° 1 annoncée en tête de plan — la seule dérive de texte joueur de cette partie.
 
 - [ ] **Step 5: Remplir au rendu**
 
@@ -2554,8 +2619,9 @@ la donnee, verrouille les 30 combinaisons a valeurs identiques — c est le
 critere d acceptation du §8.1.
 
 Un seul texte joueur bouge : la liste des deux mythiques du tutoriel perd ses
-articles (« Trefle a 4 feuilles et Miroir »), le registre ne portant pas le
-genre d un nom.
+articles dans les deux langues (« Trefle a 4 feuilles et Miroir »), le registre
+ne portant pas le genre d un nom, et le nom anglais du Trefle s aligne sur
+celui de la carte de draft (« 4-Leaf Clover »), qui en portait un autre.
 
 `dart analyze` propre, `flutter test` vert (1063 tests, contre 1021 au depart).
 

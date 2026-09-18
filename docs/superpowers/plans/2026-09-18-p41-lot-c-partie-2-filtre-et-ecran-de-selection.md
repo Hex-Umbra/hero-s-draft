@@ -16,6 +16,7 @@
 
 - **Le jeu change, et c'est le but.** Ce qui change est borné à ceci : *Affinité* n'est plus tirée sans Maîtrise ; l'écran de sélection perd `baseDamage` et gagne les stats de départ non nulles, l'orientation de la Puissance, la règle de stat et le choix du passif. Rien d'autre — aucun chiffre de carte, de relique, d'ennemi, de passif ou de récompense.
 - **Le champ `baseDamage` disparaît de `HeroData` et des trois `class.json`.** Il reste sur `EnemyData`, où il a des lecteurs réels (`combat_controller.dart:155`, `encounter_system.dart:205`, `enemy_instance.dart:20-21`). Ne pas confondre les deux au moment de nettoyer les fixtures.
+- **Les deux chiffres que la spec §8.3 oppose sont toujours vrais, mais ses deux pointeurs ont vieilli.** L'écran affiche bien `playerClass.baseDamage` — 5 / 15 / 10 pour le Paladin, le Berserker et le Mage —, à `class_selection_screen.dart:350` (la spec cite `:345`, le `_buildStatBadge` qui l'enveloppe). Et la run démarre bien à 0 : c'est `run_controller.dart:266`, `might: 0, // Puissance de base à 0` — la spec cite `run_controller.dart:254` et `attaque: 0 // Force de base à 0`, nom et commentaire d'avant que le lot B ne renomme la stat. Le constat tient, la citation est à lire sous son nouveau nom.
 - **Aucun écran ne compare l'identifiant d'une classe** (ADR-090). Les trois textes de l'écran — orientation, règle de stat, stats de départ — sont **générés depuis la donnée**. Un `if (hero.id == 'berserker')` dans ce lot est un défaut, pas un raccourci.
 - `dart analyze` doit afficher `No issues found!` à la fin de **chaque** tâche.
 - `flutter test` doit être **entièrement** vert à la fin de chaque tâche. Point de départ : **à re-mesurer sur `main` après la fusion de la partie 1** (`dart analyze` puis `flutter test`, tâche 0) ; prévision **1063 tests**, contre 1021 avant la partie 1 (mesuré le 2026-09-18 sur `6605b25`). Les totaux annoncés tâche par tâche sont une **prévision arithmétique** à partir du compte réellement mesuré à la tâche 0, **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle.
@@ -51,7 +52,7 @@ La spec tranche la conception ; sept points d'implémentation restaient ouverts.
 2. **La table de tirage effective passe de 6 à 5 types** pour un passif sans Maîtrise. Les neuf passifs livrés au lot B en déclarent tous un : **aucune run réelle n'est concernée aujourd'hui**. Le filtre est livré, testé sur un passif construit sans bloc `mastery`, et attend le premier passif qui n'en déclarera pas. C'est ce que la spec demande (§8.2), pas un mécanisme spéculatif : sans lui, un tel passif rendrait une récompense sur six inerte.
 3. **Le Berserker n'affiche plus « 15 »**, et aucune classe n'affiche de dégâts de base. C'est le but : « L'écran ment au joueur au moment le plus structurant de la run » (§8.3). Rétablir `baseDamage` est explicitement écarté (§11).
 4. **La carte de classe s'allonge.** Elle porte désormais, en plus, une phrase d'orientation, une éventuelle phrase de règle de stat, et un sélecteur de passif. Le `SingleChildScrollView` de la description absorbe le reste ; sur mobile, la carte reste dans son `childAspectRatio` de 0,68. À revoir à l'œil après la tâche 6 — un débordement est un défaut de cette partie.
-5. **Le tutoriel garde son étape de choix de classe telle quelle.** Elle ne propose pas encore les passifs disponibles : la spec assigne ce point au **lot D** (§9.1), avec `tutorial_fixtures.dart:54` qui cesse de supposer un passif unique. Ce lot passe seulement le passif actif au tirage du tutoriel, pour que le filtre y vaille aussi.
+5. **Le tutoriel garde son étape de choix de classe telle quelle.** Elle ne propose pas encore les passifs disponibles : la spec assigne ce point au **lot D** (§9.1), avec `tutorial_fixtures.dart:57` qui cesse de supposer un passif unique. Ce lot passe seulement le passif actif au tirage du tutoriel, pour que le filtre y vaille aussi.
 
 ## Carte des fichiers
 
@@ -705,7 +706,9 @@ Edit `lib/models/data/hero_data.dart` : supprimer les trois lignes `final int ba
 Run: `dart analyze`
 Expected: une erreur `No named parameter with the name 'baseDamage'` par construction de `HeroData`, plus `The getter 'baseDamage' isn't defined for the class 'HeroData'` à `class_selection_screen.dart:350`.
 
-**C'est la liste de travail.** Elle porte sur environ **36 fichiers de test** et un fichier de `lib/`. Pour chacun : supprimer la ligne `baseDamage: N,` du `HeroData(...)`, sans rien changer d'autre. **Ne pas toucher** aux `baseDamage:` des `EnemyData(...)` — les deux se côtoient dans plusieurs fichiers (`test/unit/combat_controller_test.dart`, `test/unit/run_controller_test.dart`, `test/widget/map_screen_test.dart`, `test/unit/game_data_registry_preload_test.dart`, `test/encounter_system_test.dart`). L'analyseur ne signale que les premières : s'il se tait sur une ligne, c'est un ennemi, et elle reste.
+**C'est la liste de travail.** Elle porte sur **37 fichiers de test** et un fichier de `lib/`. Pour chacun : supprimer la ligne `baseDamage: N,` du `HeroData(...)`, sans rien changer d'autre. **Ne pas toucher** aux `baseDamage:` des `EnemyData(...)` — les deux se côtoient dans plusieurs fichiers (`test/unit/combat_controller_test.dart`, `test/unit/run_controller_test.dart`, `test/widget/map_screen_test.dart`, `test/unit/game_data_registry_preload_test.dart`, `test/encounter_system_test.dart`). L'analyseur ne signale que les premières : s'il se tait sur une ligne, c'est un ennemi, et elle reste.
+
+> **37 et non 36** : il y en a exactement 36 sur le `main` d'avant le lot C, et la partie 1 en ajoute un — `test/unit/level_up_reward_apply_test.dart`, dont le Paladin de fixture porte `baseDamage: 5`. Ne pas se fier au chiffre : se fier à l'analyseur, qui les nomme tous.
 
 - [ ] **Step 3: Retirer la clé des trois classes**
 
@@ -720,20 +723,28 @@ Ces fichiers portent `baseDamage` dans une **table JSON de classe**, que l'analy
 - `test/unit/stat_rule_test.dart:82`
 - `test/unit/content_editor/fixtures.dart:43`
 - `test/unit/content_editor/entity_writer_test.dart:168`
-- `test/unit/content_editor/entity_validator_test.dart` — quatre sites (`:377`, `:437`, `:476`, et le `mechanics` de classe autour de `:584` **seulement s'il s'agit d'une classe** ; celui d'un ennemi reste)
-- `test/widget/content_editor_screen_test.dart` — les sites où le JSON décrit une classe (`:85`, `:432`, `:827`, `:1032`, `:1386`, `:1468`, `:1705`)
+- `test/unit/content_editor/entity_validator_test.dart` — **trois** sites de classe : `:377`, `:437`, `:476`
+- `test/widget/content_editor_screen_test.dart` — **six** sites de classe : `:85`, `:432`, `:827`, `:1032`, `:1386`, `:1705`
 
-**Ne pas toucher** à `test/unit/audio/audio_source_models_test.dart:53` : c'est un `EnemyData.fromJson`.
+**Trois sites d'ennemi se cachent dans cette même liste de fichiers, et ils restent** — `baseDamage` est une `requiredKeys` du descripteur d'ennemi, les retirer ferait rougir le validateur :
+
+- `test/unit/content_editor/entity_validator_test.dart:584` — `kEntityDescriptors[EntityCategory.enemy]`, `mechanics: '{"maxHp": 30, "baseDamage": 5, "intents": [...]}'`
+- `test/widget/content_editor_screen_test.dart:1468` — `assets/data/enemies/gobelin/enemy.json`
+- `test/unit/audio/audio_source_models_test.dart:53` — `EnemyData.fromJson`
+
+Le signe qui départage sans se tromper : un JSON de **classe** porte `maxMana` et/ou `mightTargets`, jamais un ennemi.
 
 - [ ] **Step 5: Retirer la clé de l'éditeur de contenu**
 
-Edit `lib/services/content_editor/entity_descriptor.dart`, descripteur `EntityCategory.heroClass` :
+Edit `lib/services/content_editor/entity_descriptor.dart`, descripteur `EntityCategory.heroClass` — `requiredKeys` à la ligne **357** :
 
 ```dart
     requiredKeys: const {'maxHp', 'maxMana', 'mightTargets'},
 ```
 
-et, dans le gabarit, supprimer la ligne `"baseDamage": 5,`. **Ne pas toucher** au descripteur `EntityCategory.enemy`, dont `requiredKeys` garde `baseDamage`.
+et, dans son gabarit, supprimer la ligne `"baseDamage": 5,` (ligne **375**). **Ne pas toucher** au descripteur `EntityCategory.enemy`, qui suit immédiatement et porte les deux mêmes formes aux lignes **389** et **401** : `baseDamage` y reste obligatoire.
+
+> La spec §8.3 cite `entity_descriptor.dart:328` et `:341` : ces numéros datent d'avant les lots A et B, qui ont allongé le fichier. Les deux sites sont bien ceux décrits, aux lignes ci-dessus.
 
 Edit `test/unit/content_editor/entity_descriptor_test.dart` : retirer `'baseDamage'` des deux listes de clés attendues pour `EntityCategory.heroClass` (autour de `:154` et `:244`). Celle de `EntityCategory.enemy` (`:254`) reste.
 
@@ -1457,7 +1468,7 @@ Une fois la PR fusionnée, lancer le skill `patch-notes-writer` (la note `0.5.2`
 
 | Sujet | Où il vit |
 |:---|:---|
-| L'étape de choix de classe du tutoriel propose les passifs disponibles ; `tutorial_fixtures.dart:54` cesse de supposer un passif unique | Lot D, spec §9.1 |
+| L'étape de choix de classe du tutoriel propose les passifs disponibles ; `tutorial_fixtures.dart:57` cesse de supposer un passif unique | Lot D, spec §9.1 |
 | L'étape « Armure » du tutoriel, fausse pour le Berserker depuis la conversion | Lot D, spec §9.1 |
 | Le réglage de Puissance de la console gagne le choix des cibles ; la run affichée expose son orientation, ses règles de stat et son passif actif | Lot D, spec §9.2 |
 | L'éditeur valide `statRules` et `classes` ; la catégorie « récompense de niveau » devient éditable ; la création guidée de classe garantit un passif | Lot D, spec §9.2 |
