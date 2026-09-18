@@ -74,12 +74,15 @@ Future<ProviderContainer> _buildAndReady(
   Locale locale = const Locale('en', ''),
   List<HeroData> heroes = _heroes,
   List<PassiveData> passives = const [],
+  Size physicalSize = const Size(1600, 1200),
 }) async {
   // GridView.builder only lays out visible children. The default test
   // surface (800x600) fits just one row of hero cards at the desktop
   // breakpoint, hiding the 3rd (Mage). Widen the surface so all seeded
-  // heroes are simultaneously visible without needing to scroll.
-  tester.view.physicalSize = const Size(1600, 1200);
+  // heroes are simultaneously visible without needing to scroll — unless a
+  // caller passes its own `physicalSize` (e.g. to exercise the mobile
+  // breakpoint).
+  tester.view.physicalSize = physicalSize;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -471,10 +474,14 @@ void main() {
     testWidgets('le premier du point d acces est selectionne par defaut', (
       WidgetTester tester,
     ) async {
+      // Declares zeal before ward, so declaration order is the reverse of
+      // sorted order (ward's displayOrder 1 < zeal's 2). If the screen ever
+      // read the registry directly instead of going through
+      // availablePassivesFor, this would select zeal instead of ward.
       await _buildAndReady(
         tester,
         heroes: const [paladin],
-        passives: const [ward, zeal],
+        passives: const [zeal, ward],
       );
 
       // La description du passif selectionne est celle qui s'affiche.
@@ -516,6 +523,18 @@ void main() {
       );
 
       expect(find.text('WARD'), findsOneWidget);
+      // Un seul passif : le nom garde exactement l'apparence d'aujourd'hui,
+      // pas de soulignement (qui n'a de sens que quand il y a un choix).
+      final wardStyle = tester.widget<Text>(find.text('WARD')).style;
+      expect(wardStyle?.decoration, isNull);
+
+      // Le tap est inerte : rien a selectionner avec un seul passif.
+      await tester.tap(find.text('WARD'));
+      await tester.pump();
+      expect(find.byType(StarterDeckDraftScreen), findsNothing);
+      expect(find.text('WARD'), findsOneWidget);
+      final wardStyleAfterTap = tester.widget<Text>(find.text('WARD')).style;
+      expect(wardStyleAfterTap?.decoration, isNull);
 
       await tester.tap(find.text('Select'));
       await tester.pump();
@@ -541,5 +560,55 @@ void main() {
       );
       expect(pushed.passive, isNull);
     });
+
+    testWidgets(
+      'trois passifs a largeur mobile ne debordent pas',
+      (WidgetTester tester) async {
+        // Chaque classe livree a exactement trois passifs (spec §8.3) mais
+        // aucun test avant celui-ci n'en montre plus de deux : le risque est
+        // que la rangee de puces, sur la largeur mobile, pousse la carte a
+        // deborder — le meme mode d'echec que la tache 5 a corrige a 3px
+        // pres. Une description longue maximise la pression sur l'espace
+        // vertical restant.
+        const valor = PassiveData(
+          id: 'valor',
+          nameEn: 'Valor',
+          nameFr: 'Vaillance',
+          descriptionFr: 'Gagne 1 Puissance par ennemi vaincu ce combat.',
+          descriptionEn: 'Gain 1 Might per enemy defeated this combat.',
+          classes: ['paladin'],
+          trigger: RelicTrigger.endOfTurn,
+          effectType: 'rage',
+          value: 1,
+          displayOrder: 3,
+        );
+        const longWinded = HeroData(
+          id: 'paladin',
+          nameEn: 'Paladin',
+          nameFr: 'Le Paladin',
+          descriptionEn:
+              'A stalwart defender forged in a hundred sieges, sworn to a '
+              'code older than the kingdom itself, who bears the weight of '
+              'every ally still standing at the end of the battle and every '
+              'one who did not make it home from the last one.',
+          classCard: 'hero_paladin.png',
+          maxHp: 100,
+          maxMana: 3,
+        );
+
+        await _buildAndReady(
+          tester,
+          heroes: const [longWinded],
+          passives: const [ward, zeal, valor],
+          physicalSize: const Size(390, 844),
+        );
+
+        // Une RenderFlex overflow leve pendant le pump ci-dessus ferait deja
+        // echouer ce test : rendre sans erreur EST l'assertion.
+        expect(find.text('WARD'), findsOneWidget);
+        expect(find.text('ZEAL'), findsOneWidget);
+        expect(find.text('VALOR'), findsOneWidget);
+      },
+    );
   });
 }

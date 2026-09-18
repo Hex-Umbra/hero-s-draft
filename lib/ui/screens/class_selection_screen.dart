@@ -298,10 +298,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                               ),
                             ),
                           Padding(
-                            padding: EdgeInsets.all(widget.isMobile ? 8 : 20),
+                            padding: EdgeInsets.all(widget.isMobile ? 5 : 20),
                             child: Column(
                               children: [
-                                SizedBox(height: widget.isMobile ? 3 : 10),
+                                SizedBox(height: widget.isMobile ? 0 : 10),
                                 // Floating hero image
                                 AnimatedBuilder(
                                   animation: _floatAnimation,
@@ -336,7 +336,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                SizedBox(height: widget.isMobile ? 1 : 15),
                                 Text(
                                   playerClass.getName(locale),
                                   style: TextStyle(
@@ -354,12 +354,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 4 : 12),
+                                SizedBox(height: widget.isMobile ? 0 : 12),
                                 // Stats with beautiful icons and display
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 4 : 8,
+                                    vertical: widget.isMobile ? 0 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.04),
@@ -377,7 +377,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 3 : 8),
+                                SizedBox(height: widget.isMobile ? 1 : 8),
                                 // Ce que renforce la Puissance de la classe,
                                 // et ce qu'elle convertit — genere depuis
                                 // `mightTargets` et `statRules`, jamais ecrit
@@ -386,7 +386,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 3 : 6,
+                                    vertical: widget.isMobile ? 0 : 6,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.orangeAccent.withValues(alpha: 0.06),
@@ -426,13 +426,13 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 3 : 8),
+                                SizedBox(height: widget.isMobile ? 1 : 8),
                                 // Passive trait
                                 Container(
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 4 : 8,
+                                    horizontal: widget.isMobile ? 3 : 12,
+                                    vertical: widget.isMobile ? 1 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.cyanAccent.withValues(
@@ -453,8 +453,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     children: [
                                       Wrap(
                                         alignment: WrapAlignment.center,
-                                        spacing: widget.isMobile ? 6 : 10,
-                                        runSpacing: 2,
+                                        spacing: widget.isMobile ? 4 : 10,
+                                        runSpacing: widget.isMobile ? 1 : 2,
                                         children: [
                                           for (var i = 0;
                                               i < passives.length;
@@ -484,7 +484,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                                   ),
                                                   SizedBox(
                                                     width:
-                                                        widget.isMobile ? 3 : 6,
+                                                        widget.isMobile ? 2 : 6,
                                                   ),
                                                   Text(
                                                     passives[i]
@@ -504,10 +504,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                                             : 0.45,
                                                       ),
                                                       letterSpacing: 0.8,
-                                                      decoration: i == index
-                                                          ? TextDecoration
-                                                              .underline
-                                                          : null,
+                                                      decoration:
+                                                          passives.length > 1 &&
+                                                                  i == index
+                                                              ? TextDecoration
+                                                                  .underline
+                                                              : null,
                                                     ),
                                                   ),
                                                 ],
@@ -524,7 +526,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                             ),
                                         ],
                                       ),
-                                      SizedBox(height: widget.isMobile ? 2 : 5),
+                                      SizedBox(height: widget.isMobile ? 0 : 5),
                                       Text(
                                         traitDesc,
                                         style: TextStyle(
@@ -564,7 +566,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 ),
                                 Divider(
                                   color: Colors.white12,
-                                  height: widget.isMobile ? 8 : 25,
+                                  height: widget.isMobile ? 2 : 25,
                                 ),
                                 // Description text
                                 Expanded(
@@ -581,7 +583,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                SizedBox(height: widget.isMobile ? 1 : 15),
                                 // Premium Selection Button
                                 _PremiumSelectionButton(
                                   classColor: classColor,
