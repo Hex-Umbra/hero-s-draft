@@ -24,6 +24,8 @@ class DamageEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
+    int dealt = 0;
+
     if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
       final enemyIndex = combatController.currentState.enemies.indexWhere(
         (e) => e.id == selectedEnemyId,
@@ -39,6 +41,7 @@ class DamageEffectStrategy implements EffectStrategy {
           selectedEnemyId,
           enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
         );
+        dealt += finalDmg;
       }
     } else if (card.data.target == CardTarget.allEnemies) {
       for (var enemy in combatController.currentState.enemies) {
@@ -51,8 +54,24 @@ class DamageEffectStrategy implements EffectStrategy {
           enemy.id,
           enemy.stats.takeDamage(individualDmg, isCrit: isCrit),
         );
+        dealt += individualDmg;
       }
     }
+
+    _payLifesteal(runController, dealt);
+  }
+
+  /// Le soin du Vol de vie, après la résolution des dégâts (spec P-41, §1.2).
+  ///
+  /// Une fois par carte et jamais plus que les dégâts réellement infligés : sur
+  /// une carte qui frappe tout le monde, le total sert de plafond, sinon le
+  /// même statut soignerait autant de fois qu'il y a d'ennemis.
+  void _payLifesteal(RunController runController, int dealt) {
+    if (dealt <= 0) return;
+    final buffs = runController.currentState.heroStats.statuses
+        .where((s) => s.id == 'lifesteal');
+    if (buffs.isEmpty) return;
+    runController.heal(min(buffs.first.value, dealt));
   }
 }
 

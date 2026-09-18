@@ -50,7 +50,7 @@ void main() {
     await _pump(tester);
 
     expect(find.text('Régénération d\'Armure'), findsOneWidget);
-    expect(find.text('Armure du Berserker'), findsOneWidget);
+    expect(find.text('Rage'), findsOneWidget);
     expect(find.text('Armure Magique'), findsOneWidget);
   });
 

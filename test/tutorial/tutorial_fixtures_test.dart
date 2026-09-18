@@ -28,7 +28,7 @@ void main() {
     test('chaque classe a pour passif le premier que lui ouvre le point d acces', () {
       const attendus = {
         'paladin': 'regen_armor',
-        'berserker': 'berserker_armor',
+        'berserker': 'rage',
         'mage': 'spell_armor',
       };
       for (final hero in fixtures.heroes) {

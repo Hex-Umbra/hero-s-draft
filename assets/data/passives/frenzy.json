@@ -1,0 +1,20 @@
+{
+  "id": "frenzy",
+  "name_en": "Frenzy",
+  "name_fr": "Frénésie",
+  "description_en": "Each enemy killed grants 2 Might for the turn and draws 1 card.",
+  "description_fr": "Chaque ennemi abattu donne 2 Puissance pour le tour et fait piocher 1 carte.",
+  "classes": ["berserker"],
+  "trigger": "onEnemyKilled",
+  "effectType": "frenzy",
+  "value": 2,
+  "duration": 1,
+  "draw": 1,
+  "displayOrder": 3,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Might per kill",
+    "description_fr": "+{amount} Puissance par ennemi abattu"
+  }
+}

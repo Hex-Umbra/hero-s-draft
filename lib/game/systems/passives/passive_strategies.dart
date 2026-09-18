@@ -1,7 +1,9 @@
 import '../../../models/data/card_data.dart';
 import '../../../models/data/passive_data.dart';
 import '../../../models/status_effect.dart';
+import '../../controllers/deck_controller.dart';
 import '../../controllers/run_controller.dart';
+import '../../game_constants.dart';
 import '../stat_gains.dart';
 import 'passive_strategy.dart';
 
@@ -23,22 +25,6 @@ class GainArmorPassive extends PassiveStrategy {
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
     run.grant(StatGain(GainResource.armor, passive.value, GainSource.passive));
-  }
-}
-
-/// `berserker_armor` : `value` d'armure par tranche de 10 PV manquants, rien à
-/// pleine vie.
-class BerserkerArmorPassive extends PassiveStrategy {
-  const BerserkerArmorPassive();
-
-  @override
-  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    final stats = run.currentState.heroStats;
-    final tranches = (stats.maxPv - stats.currentPv) ~/ 10;
-    final armorGain = tranches * passive.value;
-    if (armorGain > 0) {
-      run.grant(StatGain(GainResource.armor, armorGain, GainSource.passive));
-    }
   }
 }
 
@@ -96,15 +82,85 @@ class BlessingPassive extends PassiveStrategy {
   }
 }
 
+/// `rage` : `value` de Puissance temporaire, plus `value` par tranche de 10 PV
+/// manquants.
+///
+/// La formule de `berserker_armor`, que ce passif remplace, redirigée vers la
+/// Puissance — avec le plancher qui corrige son défaut de diagnostic
+/// (spec §6.3) : à pleine vie, le passif n'est plus muet.
+class RagePassive extends PassiveStrategy {
+  const RagePassive();
+
+  /// Les PV manquants qu'il faut pour une tranche. Valeur d'équilibrage,
+  /// reprise de `berserker_armor`.
+  static const int _pvPerTranche = 10;
+
+  @override
+  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
+    final stats = run.currentState.heroStats;
+    final tranches = (stats.maxPv - stats.currentPv) ~/ _pvPerTranche;
+    run.addStatus(
+      _temporaryMight(passive.value * (1 + tranches), passive.duration),
+    );
+  }
+}
+
+/// `bloodthirst` : jouer une Attaque arme le Vol de vie pour `duration` tours,
+/// d'autant plus fort que les PV sont bas.
+///
+/// Le passif crée la **source** du statut ; son **hook** de soin vit dans
+/// `DamageEffectStrategy` (spec §1.2). La première Attaque du tour arme, les
+/// suivantes drainent.
+class BloodthirstPassive extends PassiveStrategy {
+  const BloodthirstPassive();
+
+  /// Le pourcentage de PV manquants qui vaut un point de plus. En pourcentage
+  /// et non en PV absolus : les trois classes n'ont pas le même maximum.
+  static const int _percentPerStep = 25;
+
+  @override
+  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
+    final stats = run.currentState.heroStats;
+    final missingPercent =
+        (stats.maxPv - stats.currentPv) * 100 ~/ stats.maxPv;
+    run.applyLifestealBuff(
+      value: passive.value + missingPercent ~/ _percentPerStep,
+      duration: passive.duration,
+    );
+  }
+}
+
+/// `frenzy` : chaque ennemi abattu donne `value` de Puissance temporaire et
+/// fait piocher `draw` cartes.
+///
+/// Déclenché une fois par ennemi (`CombatController.cleanDeadEnemies`) : c'est
+/// ce qui en fait une boule de neige (spec §6.3).
+class FrenzyPassive extends PassiveStrategy {
+  const FrenzyPassive();
+
+  @override
+  void resolve(PassiveData passive, PassiveEvent event, RunController run) {
+    run.addStatus(_temporaryMight(passive.value, passive.duration));
+    if (passive.draw > 0) {
+      run.ref
+          .read(deckProvider.notifier)
+          .drawCards(passive.draw, maxHandSize: GameConstants.maxHandSize);
+    }
+  }
+}
+
 /// La table `effectType` → stratégie. Une table de code, constante, pas un
 /// état : un passif du lot B de P-41 y ajoute une ligne et une classe.
 abstract final class PassiveStrategies {
   static const Map<String, PassiveStrategy> byEffectType = {
     'gain_armor': GainArmorPassive(),
-    'berserker_armor': BerserkerArmorPassive(),
     'spell_armor': SpellArmorPassive(),
     // Paladin (spec P-41, §6.3)
     'fervor': FervorPassive(),
     'blessing': BlessingPassive(),
+    // Berserker
+    'rage': RagePassive(),
+    'bloodthirst': BloodthirstPassive(),
+    'frenzy': FrenzyPassive(),
   };
 }

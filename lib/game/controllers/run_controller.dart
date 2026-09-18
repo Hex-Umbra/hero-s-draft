@@ -489,9 +489,9 @@ class RunController extends Notifier<RunState> {
     return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
   }
 
-  /// Applique un effet de Vol de vie pour une durée donnée
-  void applyLifestealBuff(int duration) {
-    _playerStatsManager.applyLifestealBuff(duration);
+  /// Arme le Vol de vie pour une valeur et une durée données
+  void applyLifestealBuff({required int value, required int duration}) {
+    _playerStatsManager.applyLifestealBuff(value: value, duration: duration);
   }
 
   void setForgeSession(String cardId, List<String> slots) {

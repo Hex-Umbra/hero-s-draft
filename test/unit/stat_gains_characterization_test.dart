@@ -170,25 +170,10 @@ void main() {
       expect(heroStats().armure, 2 + 3);
     });
 
-    test('berserker_armor : la Maitrise compte a chaque tranche (P-49)', () {
-      run.startNewRun(
-        paladin,
-        passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
-      );
-      run.takeDamage(25);
-      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
-      // Avant P-49 : 2 tranches × 1 + 3 = 5.
-      expect(heroStats().armure, 2 * (1 + 3));
-    });
-
-    test('berserker_armor a pleine vie : rien, pas meme la Maitrise', () {
-      run.startNewRun(
-        paladin,
-        passive(RelicTrigger.startOfTurn, 'berserker_armor', 1),
-      );
-      TraitSystem.dispatch(run, const PassiveEvent(RelicTrigger.startOfTurn));
-      expect(heroStats().armure, 0);
-    });
+    // Les deux tests de `berserker_armor` ont ete retires avec le passif : il
+    // ne donne plus d'armure mais de la Puissance temporaire, sous le nom de
+    // *Rage* (spec P-41, §6.3). Sa formule et son plancher sont couverts par
+    // `test/unit/passives_berserker_test.dart`.
 
     test('spell_armor : sur une Competence seulement', () {
       run.startNewRun(

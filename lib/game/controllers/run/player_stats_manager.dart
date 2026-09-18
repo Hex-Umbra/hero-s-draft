@@ -454,8 +454,15 @@ class PlayerStatsManager {
     return true;
   }
 
-  /// Applique un effet de Vol de vie pour une durée donnée
-  void applyLifestealBuff(int duration) {
+  /// Arme le Vol de vie : [value] PV drainés par carte de dégâts résolue,
+  /// pendant [duration] tours.
+  ///
+  /// Le statut ne fait rien par lui-même — c'est `DamageEffectStrategy` qui le
+  /// paie, après la résolution des dégâts. Il était affiché et sans effet
+  /// depuis P-40 (spec P-41, §1.2) ; *Soif de Sang* lui donne son appelant.
+  /// Le statut n'est pas cumulable : deux Attaques dans le tour rafraîchissent
+  /// la durée et gardent la plus forte valeur, elles ne l'additionnent pas.
+  void applyLifestealBuff({required int value, required int duration}) {
     controller.updateState(
       controller.currentState.copyWith(
         heroStats: controller.currentState.heroStats.addStatus(
@@ -463,8 +470,9 @@ class PlayerStatsManager {
             id: 'lifesteal',
             name: 'Vol de Vie',
             type: StatusType.buff,
-            value: 1,
+            value: value,
             duration: duration,
+            isStackable: false,
           ),
         ),
       ),

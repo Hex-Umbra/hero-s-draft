@@ -1,0 +1,19 @@
+{
+  "id": "rage",
+  "name_en": "Rage",
+  "name_fr": "Rage",
+  "description_en": "At the start of your turn, gain 1 Might for the turn, plus 1 per 10 missing HP.",
+  "description_fr": "Au début du tour, gagne 1 Puissance pour le tour, plus 1 par tranche de 10 PV manquants.",
+  "classes": ["berserker"],
+  "trigger": "startOfTurn",
+  "effectType": "rage",
+  "value": 1,
+  "duration": 1,
+  "displayOrder": 1,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Might per tranche",
+    "description_fr": "+{amount} Puissance par tranche"
+  }
+}

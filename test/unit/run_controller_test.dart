@@ -63,7 +63,7 @@ void main() {
     );
 
     test(
-      'Berserker armor passive triggers at start of combat when player has missing HP and resets at end of combat',
+      'a start-of-turn passive triggers at start of combat and its armor resets at end of combat',
       () {
         final container = ProviderContainer();
         final runController = container.read(runProvider.notifier);
@@ -84,18 +84,20 @@ void main() {
 
         // activePassive n'est déduit d'aucun repli codé en dur : on le
         // fournit explicitement, comme le ferait le vrai chargement depuis
-        // assets/data/passives/ via PassiveData.getById.
-        const berserkerArmor = PassiveData(
-          id: 'berserker_armor',
-          nameEn: 'Berserker Armor',
-          nameFr: 'Armure du Berserker',
+        // assets/data/passives/ via PassiveData.getById. `gain_armor` sert
+        // de témoin : ce test mesure le déclenchement au début du combat et
+        // la Maîtrise, pas la formule d'un passif en particulier.
+        const startOfTurnArmor = PassiveData(
+          id: 'test_passive',
+          nameEn: 'Test Passive',
+          nameFr: 'Passif de test',
           trigger: RelicTrigger.startOfTurn,
-          effectType: 'berserker_armor',
+          effectType: 'gain_armor',
           value: 1,
           mastery: PassiveMastery(field: 'value', perPoint: 1),
         );
 
-        runController.startNewRun(berserkerHero, berserkerArmor);
+        runController.startNewRun(berserkerHero, startOfTurnArmor);
 
         // Set missing HP: 80 max HP, set current to 60 (20 missing HP)
         runController.takeDamage(20);
@@ -103,12 +105,11 @@ void main() {
         // Travel to a node to have currentNodeId set
         runController.travelToNode('node_1');
 
-        // At the start of combat, the passive should trigger:
-        // Missing HP = 20, i.e. 2 tranches. Mastery raises the passive's
-        // value first (spec P-49, §6.4): 2 × (1 + 1) = 4 armor.
+        // At the start of combat, the passive should trigger. Mastery raises
+        // the passive's value first (spec P-49, §6.4): 1 + 1 = 2 armor.
         runController.startCombat();
 
-        expect(runController.state.heroStats.armure, 4);
+        expect(runController.state.heroStats.armure, 2);
 
         // When the node is completed, armor should reset to 0
         runController.completeCurrentNode();
@@ -301,13 +302,15 @@ void main() {
       addTearDown(container.dispose);
       final runController = container.read(runProvider.notifier);
 
-      const berserkerArmor = PassiveData(
-        id: 'berserker_armor',
+      // `gain_armor` en temoin : le sujet est l'ordre — le passif, puis les
+      // reliques —, pas la formule du passif.
+      const endOfTurnArmor = PassiveData(
+        id: 'test_passive',
         trigger: RelicTrigger.endOfTurn,
-        effectType: 'berserker_armor',
-        value: 1,
+        effectType: 'gain_armor',
+        value: 3,
       );
-      runController.startNewRun(hero, berserkerArmor);
+      runController.startNewRun(hero, endOfTurnArmor);
       runController.takeDamage(30);
       container.read(inventoryProvider.notifier).addRelic(
             const RelicData(
@@ -322,8 +325,8 @@ void main() {
 
       runController.endTurn();
 
-      // Passif d'abord : 30 PV manquants, 3 d'armure. Les reliques d'abord
-      // auraient soigné avant, et laissé 10 PV manquants, 1 d'armure.
+      // Le passif d'abord, la relique de soin ensuite : l'armure du passif est
+      // là, et les 30 PV manquants ont été soignés de 20.
       expect(runController.state.heroStats.armure, 3);
       expect(runController.state.heroStats.currentPv, 90);
     });
