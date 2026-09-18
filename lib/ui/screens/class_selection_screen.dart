@@ -8,6 +8,7 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
+import '../../models/data/model_extensions.dart';
 import '../widgets/class_identity.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
@@ -158,6 +159,56 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final locale = Localizations.localeOf(context).languageCode;
 
     final classColor = ClassIdentity.colorOf(playerClass);
+
+    // PV et mana toujours : ce sont les deux reperes que le joueur compare
+    // d'une classe a l'autre. Les trois autres seulement si elles disent
+    // quelque chose — « PV max et stats de depart non nulles » (spec §8.3).
+    // Genere depuis la donnee : aucun `hero.id` n'est compare (ADR-090).
+    final statBadges = <({Widget icon, String value})>[
+      (
+        icon: Icon(
+          Icons.favorite,
+          size: widget.isMobile ? 14 : 16,
+          color: Colors.redAccent,
+        ),
+        value: '${playerClass.maxHp}',
+      ),
+      (
+        icon: Icon(
+          Icons.diamond_rounded,
+          size: widget.isMobile ? 14 : 16,
+          color: Colors.cyanAccent,
+        ),
+        value: '${playerClass.maxMana}',
+      ),
+      if (playerClass.mastery > 0)
+        (
+          icon: Icon(
+            Icons.shield_outlined,
+            size: widget.isMobile ? 14 : 16,
+            color: Colors.lightBlueAccent,
+          ),
+          value: '${playerClass.mastery}',
+        ),
+      if (playerClass.critChance > 0)
+        (
+          icon: Icon(
+            Icons.bolt_outlined,
+            size: widget.isMobile ? 14 : 16,
+            color: Colors.redAccent,
+          ),
+          value: '${playerClass.critChance}%',
+        ),
+      if (playerClass.luck > 0)
+        (
+          icon: Icon(
+            Icons.casino_outlined,
+            size: widget.isMobile ? 14 : 16,
+            color: Colors.amberAccent,
+          ),
+          value: '${playerClass.luck}',
+        ),
+    ];
 
     final String traitName = passive?.getName(locale) ?? '—';
     final String traitDesc = passive?.getDescription(locale) ?? '';
@@ -311,35 +362,66 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                       widget.isMobile ? 6 : 10,
                                     ),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: widget.isMobile ? 8 : 14,
+                                    runSpacing: widget.isMobile ? 2 : 4,
                                     children: [
-                                      _buildStatBadge(
-                                        Icon(
-                                          Icons.favorite,
-                                          size: widget.isMobile ? 14 : 16,
-                                          color: Colors.redAccent,
-                                        ),
-                                        '${playerClass.maxHp}',
-                                      ),
-                                      Container(
-                                        width: 1,
-                                        height: widget.isMobile ? 12 : 16,
-                                        color: Colors.white24,
-                                      ),
-                                      _buildStatBadge(
-                                        Icon(
-                                          Icons.diamond_rounded,
-                                          size: widget.isMobile ? 14 : 16,
-                                          color: Colors.cyanAccent,
-                                        ),
-                                        '${playerClass.maxMana}',
-                                      ),
+                                      for (final badge in statBadges)
+                                        _buildStatBadge(badge.icon, badge.value),
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 4 : 15),
+                                SizedBox(height: widget.isMobile ? 3 : 8),
+                                // Ce que renforce la Puissance de la classe,
+                                // et ce qu'elle convertit — genere depuis
+                                // `mightTargets` et `statRules`, jamais ecrit
+                                // classe par classe (spec §8.3, ADR-090).
+                                Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: widget.isMobile ? 4 : 12,
+                                    vertical: widget.isMobile ? 3 : 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orangeAccent.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(
+                                      widget.isMobile ? 6 : 10,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        playerClass.mightTargets.sentence(l10n),
+                                        style: TextStyle(
+                                          fontSize: widget.isMobile ? 9.5 : 10.5,
+                                          color: Colors.orangeAccent.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                          height: 1.25,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      for (final rule in playerClass.statRules) ...[
+                                        SizedBox(height: widget.isMobile ? 2 : 4),
+                                        Text(
+                                          rule.describe(l10n),
+                                          style: TextStyle(
+                                            fontSize: widget.isMobile ? 9.5 : 10.5,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.orangeAccent.withValues(
+                                              alpha: 0.75,
+                                            ),
+                                            height: 1.25,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: widget.isMobile ? 3 : 8),
                                 // Passive trait
                                 Container(
                                   width: double.infinity,

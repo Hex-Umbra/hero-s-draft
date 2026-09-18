@@ -11,6 +11,8 @@ import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
+import 'package:roguelike_card_game/models/might_target.dart';
 
 const _heroes = [
   HeroData(
@@ -296,6 +298,122 @@ void main() {
         find.text('Per Mastery point: +1 Block at end of turn'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('l identite de la classe est generee depuis sa donnee', () {
+    const berserker = HeroData(
+      id: 'berserker',
+      nameEn: 'Berserker',
+      nameFr: 'Le Berserker',
+      classCard: 'hero_berserker.png',
+      maxHp: 80,
+      maxMana: 3,
+      critChance: 10,
+      mightTargets: {MightTarget.attack},
+      statRules: [
+        StatRule(
+          stat: RuleStat.armor,
+          mode: RuleMode.convert,
+          to: RuleTarget.statusMight,
+          duration: 1,
+        ),
+      ],
+    );
+
+    const mage = HeroData(
+      id: 'mage',
+      nameEn: 'Mage',
+      nameFr: 'Le Mage',
+      classCard: 'hero_mage.png',
+      maxHp: 60,
+      maxMana: 3,
+      mightTargets: {MightTarget.skill, MightTarget.alteration},
+    );
+
+    const paladin = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Le Paladin',
+      classCard: 'hero_paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+      mastery: 1,
+      mightTargets: {MightTarget.attack, MightTarget.skill, MightTarget.alteration},
+    );
+
+    testWidgets('ce que renforce la Puissance est ecrit en toutes lettres', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [mage],
+        locale: const Locale('fr', ''),
+      );
+
+      expect(
+        find.text(
+          'Votre Puissance renforce les dégâts de vos Compétences et vos '
+          'altérations.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('la regle de stat est ecrite en clair, et seulement si elle existe', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [berserker],
+        locale: const Locale('fr', ''),
+      );
+      expect(
+        find.text('Son Armure devient de la Puissance pour un tour.'),
+        findsOneWidget,
+      );
+
+      await _buildAndReady(
+        tester,
+        heroes: const [mage],
+        locale: const Locale('fr', ''),
+      );
+      expect(find.textContaining('devient de la Puissance'), findsNothing);
+    });
+
+    testWidgets('seules les stats de depart non nulles sont montrees', (
+      WidgetTester tester,
+    ) async {
+      // Le Paladin : Maitrise 1, pas de critique, pas de chance.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        locale: const Locale('fr', ''),
+      );
+      expect(find.text('1'), findsOneWidget, reason: 'la Maîtrise');
+      expect(find.textContaining('%'), findsNothing, reason: 'aucun critique');
+
+      // Le Mage : ni Maitrise, ni critique, ni chance — PV et mana seuls.
+      await _buildAndReady(
+        tester,
+        heroes: const [mage],
+        locale: const Locale('fr', ''),
+      );
+      expect(find.text('60'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('0'), findsNothing, reason: 'une stat nulle ne se montre pas');
+    });
+
+    testWidgets('le critique de depart du Berserker est montre', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [berserker],
+        locale: const Locale('fr', ''),
+      );
+
+      expect(find.text('10%'), findsOneWidget);
     });
   });
 }
