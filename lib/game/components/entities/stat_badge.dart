@@ -83,7 +83,10 @@ class StatBadge extends PositionComponent
           position: Vector2(0, size.y / 2),
           anchor: Anchor.centerLeft,
           textRenderer: TextPaint(
-            style: const TextStyle(fontSize: 10),
+            style: const TextStyle(
+              color: Color(0xFFFF3B30),
+              fontSize: 10,
+            ),
           ),
         ),
       );
