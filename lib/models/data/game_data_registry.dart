@@ -18,8 +18,9 @@ class GameDataRegistry {
   final List<ForgeUpgradeData> forgeUpgrades;
 
   /// Les récompenses de niveau (spec P-41, §8.1). Défaut vide, et non
-  /// paramètre requis : trente-six fichiers construisent un registre de test
-  /// qui ne draftera jamais.
+  /// paramètre requis : de nombreux registres de test construisent
+  /// `GameDataRegistry` sans le fournir — ces registres-là ne draftent
+  /// simplement jamais.
   final List<LevelUpRewardData> levelUpRewards;
 
   final AudioData audio;

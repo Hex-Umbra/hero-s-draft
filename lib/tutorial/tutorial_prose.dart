@@ -37,14 +37,11 @@ List<String> _namesOf(
   List<LevelUpRewardData> rewards,
   RewardPool pool, {
   required bool isFrench,
-}) {
-  final inPool = rewards.where((r) => r.pool == pool).toList()
-    ..sort((a, b) {
-      final byOrder = a.displayOrder.compareTo(b.displayOrder);
-      return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
-    });
-  return [for (final r in inPool) r.getName(isFrench ? 'fr' : 'en')];
-}
+}) =>
+    [
+      for (final r in LevelUpRewardData.inPool(rewards, pool))
+        r.getName(isFrench ? 'fr' : 'en'),
+    ];
 
 /// Remplit, dans [body], les quatre placeholders que la prose du tutoriel
 /// laisse au catalogue (spec P-41, §8.1) : `{rollableCount}`,

@@ -101,6 +101,18 @@ class LevelUpRewardData {
   /// palier qu'un groupe de tirage n'atteint jamais.
   int amountFor(RewardRarity rarity) => values[rarity] ?? 0;
 
+  /// La valeur affichée sur le rouleau de draft : le palier
+  /// [RewardRarity.rare] quand la récompense le déclare, sinon son palier
+  /// [RewardRarity.mythic].
+  ///
+  /// Une récompense du pool mythique (le Trèfle) ne déclare aucun palier
+  /// `rare` dans sa table [values] : [amountFor] seul y rendrait 0, et le
+  /// rouleau afficherait "+0 Chance". Ce repli lit alors son palier
+  /// `mythic`, et ne tombe à 0 que si ni l'un ni l'autre n'existe (le
+  /// Miroir, dont le gabarit n'interpole pas `{amount}`).
+  int get reelAmount =>
+      values[RewardRarity.rare] ?? values[RewardRarity.mythic] ?? 0;
+
   /// La description affichée sur la carte de draft.
   ///
   /// Un gabarit qui nomme `{passive}` ou `{effect}` a besoin d'un passif actif
@@ -130,6 +142,28 @@ class LevelUpRewardData {
         (isFr ? descriptionFr : descriptionEn);
     return template.replaceAll('{amount}', '$amount');
   }
+
+  /// Les récompenses d'un [pool], triées par `displayOrder` puis par `id` à
+  /// rang égal.
+  ///
+  /// Le tri est porteur : il fixe l'ordre d'apparition des mythiques et
+  /// l'ordre des noms dans la prose du tutoriel — pas celui du tirage, qui
+  /// est uniforme et donc indifférent à l'ordre de la liste (ce qui
+  /// préserve le tirage d'origine, c'est qu'il y ait exactement six
+  /// tirables, verrouillé par un test).
+  ///
+  /// **Deux lecteurs** passent par ici, le tirage (`LevelUpRewardService`)
+  /// et la prose du tutoriel (`tutorial_prose.dart`) : un filtre ajouté à
+  /// l'un doit l'être ici, pour les deux.
+  static List<LevelUpRewardData> inPool(
+    List<LevelUpRewardData> rewards,
+    RewardPool pool,
+  ) =>
+      rewards.where((reward) => reward.pool == pool).toList()
+        ..sort((a, b) {
+          final byOrder = a.displayOrder.compareTo(b.displayOrder);
+          return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+        });
 
   static const List<RewardRarity> _draftRarities = [
     RewardRarity.common,

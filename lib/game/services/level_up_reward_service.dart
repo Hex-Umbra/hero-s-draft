@@ -85,31 +85,16 @@ class LevelUpRewardService {
     return RewardRarity.common;
   }
 
-  /// Les récompenses d'un groupe, dans l'ordre que la donnée déclare.
-  ///
-  /// `displayOrder` puis `id` : l'ancien `rng.nextInt(6)` tirait un **index**
-  /// dans l'ordre des valeurs de l'énumération. Un tirage qui dépendrait de
-  /// l'ordre de lecture des fichiers serait un piège silencieux ; l'`id`
-  /// tranche à rang égal.
-  static List<LevelUpRewardData> _inPool(
-    List<LevelUpRewardData> rewards,
-    RewardPool pool,
-  ) =>
-      rewards.where((reward) => reward.pool == pool).toList()
-        ..sort((a, b) {
-          final byOrder = a.displayOrder.compareTo(b.displayOrder);
-          return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
-        });
-
   static List<DraftChoice> generateChoices({
     required List<LevelUpRewardData> rewards,
     required int luck,
     bool forceLegendary = false,
   }) {
     final rng = Random();
-    final draftable = _inPool(rewards, RewardPool.draft);
-    // Un registre de test sans récompenses : trois emplacements vides valent
-    // mieux qu'une exception au milieu d'une montée de niveau.
+    final draftable = LevelUpRewardData.inPool(rewards, RewardPool.draft);
+    // Un registre sans récompense tirable : aucun choix à générer, liste
+    // vide — pas d'exception au milieu d'une montée de niveau. L'écran de
+    // draft affiche alors un plateau vide plutôt que de planter dessus.
     if (draftable.isEmpty) return const [];
 
     final choices = List.generate(3, (index) {
@@ -135,7 +120,7 @@ class LevelUpRewardService {
     // Un jet indépendant par récompense mythique, dans l'ordre déclaré — c'est
     // exactement ce que faisaient les deux blocs écrits en dur, Trèfle puis
     // Miroir. Une troisième mythique n'est plus qu'un fichier.
-    for (final mythic in _inPool(rewards, RewardPool.mythic)) {
+    for (final mythic in LevelUpRewardData.inPool(rewards, RewardPool.mythic)) {
       final rolled = rollRarity(
         luck,
         isLevelReward: true,

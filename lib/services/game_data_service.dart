@@ -132,8 +132,8 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   ]);
 
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
-  // remontees ensemble. Corriger une faute par cycle de rebuild, sur 71
-  // fichiers, serait invivable.
+  // remontees ensemble. Corriger une faute par cycle de rebuild, fichier par
+  // fichier, serait invivable.
   loader.throwIfFailed();
 
   // L audio est le seul sous-systeme auquel il est interdit de faire echouer

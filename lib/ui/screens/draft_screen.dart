@@ -137,11 +137,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     // Le décor du rouleau : chaque récompense du catalogue, à sa valeur
     // `rare`. Une valeur arbitraire et assumée — les libellés écrits à la
     // main qu'elle remplace ne correspondaient à aucun palier cohérent (spec
-    // P-41, §8.1). Une récompense du pool mythique (le Trèfle) ne déclare
-    // aucun palier `rare` dans sa table `values` : `amountFor(RewardRarity.rare)`
-    // y rendrait 0, et le décor afficherait "+0 Chance". Le repli lit alors
-    // son palier `mythic`, et ne tombe à 0 que si ni l'un ni l'autre
-    // n'existe (le Miroir, dont le gabarit n'interpole pas `{amount}`).
+    // P-41, §8.1).
     final spinPool = [
       for (final reward
           in ref.read(gameDataLoaderProvider).requireValue.levelUpRewards)
@@ -149,13 +145,12 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
           title: reward.getName(l10n.localeName),
           description: reward.shortLabel(
             l10n.localeName,
-            amount: reward.values[RewardRarity.rare] ??
-                reward.values[RewardRarity.mythic] ??
-                0,
+            amount: reward.reelAmount,
           ),
         ),
     ];
-    final visibleChoices = _mythicCompleted ? _choices : _choices.sublist(0, 3);
+    final visibleChoices =
+        _mythicCompleted ? _choices : _choices.take(3).toList();
 
     return Stack(
       children: [
