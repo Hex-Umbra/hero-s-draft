@@ -21,7 +21,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 77 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 85 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -37,6 +37,8 @@ void main() {
     expect(countUnder('assets/data/events/', 4), 5, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 8, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
+    expect(countUnder('assets/data/level_up_rewards/', 4), 8,
+        reason: 'recompenses de niveau');
 
     expect(
       json

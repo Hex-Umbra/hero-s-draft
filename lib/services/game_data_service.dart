@@ -9,6 +9,7 @@ import '../models/data/event_data.dart';
 import '../models/data/passive_data.dart';
 import '../models/data/relic_data.dart';
 import '../models/data/forge_upgrade_data.dart';
+import '../models/data/level_up_reward_data.dart';
 import '../models/data/game_data_registry.dart';
 import '../models/data/audio_data.dart';
 import 'game_data_loader.dart';
@@ -50,7 +51,7 @@ Future<AudioData> loadAudioData(String path) async {
 /// Construit le registre complet : les entites depuis [bundle], l audio
 /// depuis `rootBundle`.
 ///
-/// **Unique declaration des huit sources du jeu.** Le provider de production
+/// **Unique declaration des neuf sources du jeu.** Le provider de production
 /// et le registre des tests du tutoriel passent tous deux par ici : une
 /// seconde declaration serait une seconde verite, et c est exactement ce que
 /// ce chantier supprime.
@@ -103,6 +104,14 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
         inject: (c) => {'id': c[0]}),
   ]);
 
+  // Les recompenses de niveau (spec P-41, §8.1, decision D3). A plat, comme
+  // les reliques : une recompense n appartient a aucune classe. Le repertoire
+  // n injecte donc que l id.
+  final levelUpRewards = await loader.loadAll<LevelUpRewardData>([
+    EntitySource('assets/data/level_up_rewards/*.json', LevelUpRewardData.fromJson,
+        inject: (c) => {'id': c[0]}),
+  ]);
+
   // Les passifs restent a plat, sans injection d appartenance (decision D4) :
   // `PassiveData` n a pas de champ `heroClass`, donc une injection y serait
   // silencieusement jetee par `fromJson` — un no-op qu aucun test ne pourrait
@@ -139,6 +148,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     passives: passives,
     relics: relics,
     forgeUpgrades: forgeUpgrades,
+    levelUpRewards: levelUpRewards,
     audio: audio,
   );
 }

@@ -5,6 +5,7 @@ import 'event_data.dart';
 import 'passive_data.dart';
 import 'relic_data.dart';
 import 'forge_upgrade_data.dart';
+import 'level_up_reward_data.dart';
 import 'audio_data.dart';
 
 class GameDataRegistry {
@@ -15,6 +16,12 @@ class GameDataRegistry {
   final List<PassiveData> passives;
   final List<RelicData> relics;
   final List<ForgeUpgradeData> forgeUpgrades;
+
+  /// Les récompenses de niveau (spec P-41, §8.1). Défaut vide, et non
+  /// paramètre requis : trente-six fichiers construisent un registre de test
+  /// qui ne draftera jamais.
+  final List<LevelUpRewardData> levelUpRewards;
+
   final AudioData audio;
 
   static GameDataRegistry? _instance;
@@ -28,6 +35,7 @@ class GameDataRegistry {
     required this.passives,
     required this.relics,
     required this.forgeUpgrades,
+    this.levelUpRewards = const [],
     this.audio = const AudioData.disabled(),
   }) {
     _instance = this;

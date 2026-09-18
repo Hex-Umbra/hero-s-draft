@@ -1,0 +1,18 @@
+{
+  "id": "sharpening",
+  "name_fr": "Aiguisage",
+  "name_en": "Sharpening",
+  "description_fr": "+{amount} Puissance",
+  "description_en": "+{amount} Might",
+  "effect": "stat",
+  "stat": "might",
+  "pool": "draft",
+  "displayOrder": 2,
+  "values": {
+    "common": 2,
+    "uncommon": 3,
+    "rare": 4,
+    "epic": 6,
+    "legendary": 8
+  }
+}
