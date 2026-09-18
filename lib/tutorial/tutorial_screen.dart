@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/data/card_data.dart';
 import '../models/data/game_data_registry.dart';
 import 'tutorial_engine.dart';
+import 'tutorial_prose.dart';
 import 'tutorial_step.dart';
 import 'tutorial_data.dart';
 import 'widgets/tutorial_welcome_widget.dart';
@@ -143,7 +144,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
             final stepTitle = isFrench
                 ? currentStep.titleFr
                 : currentStep.titleEn;
-            final stepBody = isFrench ? currentStep.bodyFr : currentStep.bodyEn;
+            final stepBody = fillRewardPlaceholders(
+              isFrench ? currentStep.bodyFr : currentStep.bodyEn,
+              widget.data.levelUpRewards,
+              isFrench: isFrench,
+            );
             final isComplete = _isStepActionComplete(_engine);
 
             return Stack(
