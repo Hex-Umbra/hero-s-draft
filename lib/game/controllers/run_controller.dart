@@ -265,6 +265,7 @@ class RunController extends Notifier<RunState> {
         mastery: chosenClass.mastery,
         might: 0, // Puissance de base à 0
         mightTargets: chosenClass.mightTargets,
+        critChance: chosenClass.critChance,
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,

@@ -52,6 +52,13 @@ class TutorialMockState {
         might: 0,
       );
     }
+    // `critChance` est volontairement absent : le tutoriel le force à 0.
+    // Ses démonstrations annoncent les dégâts d'une carte avant de la jouer
+    // (`DamagePipeline` tire le critique au hasard), et un Berserker à
+    // `critChance` > 0 les rendrait faux une fois sur dix. C'est l'unique
+    // exception, explicite et testée, à la fidélité au jeu d'ADR-081
+    // (spec P-41, §9.1) : tout le reste de l'identité de la classe est copié,
+    // orientation de la Puissance et règles de stat comprises.
     return EntityStats(
       maxPv: hero.maxHp,
       currentPv: hero.maxHp,

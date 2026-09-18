@@ -10,7 +10,11 @@
   "maxMana": 3,
   "baseDamage": 15,
   "luck": 0,
+  "critChance": 10,
   "mightTargets": ["attack"],
+  "statRules": [
+    { "stat": "armor", "mode": "convert", "to": "status:might", "duration": 1 }
+  ],
   "displayOrder": 2,
   "skills": [
     "reckless_strike",

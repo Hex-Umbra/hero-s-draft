@@ -10,7 +10,8 @@
   "maxMana": 3,
   "baseDamage": 5,
   "luck": 0,
-  "mightTargets": ["attack"],
+  "mastery": 1,
+  "mightTargets": ["attack", "skill", "alteration"],
   "displayOrder": 1,
   "skills": [
     "holy_shield",
