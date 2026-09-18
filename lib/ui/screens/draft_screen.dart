@@ -10,7 +10,6 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/level_up_reward_data.dart';
 import '../../models/reward_rarity.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/audio_source.dart';
@@ -646,33 +645,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
         return;
       }
 
-      // Pont temporaire : `DraftChoice` ne porte plus les sept accumulateurs,
-      // seulement `data.stat` et `amount` (tache 4). La tache 5 deplace cette
-      // correspondance dans `PlayerStatsManager.applyLevelUpReward` et
-      // remplace tout ce bloc par un simple appel — elle ne doit pas rester
-      // ici au-dela de cette tache.
-      final runController = ref.read(runProvider.notifier);
-      final stat = choice.data.stat;
-      if (stat != null) {
-        switch (stat) {
-          case RewardStat.maxHp:
-            runController.applyHeroStatModifier(maxPvAcc: choice.amount);
-          case RewardStat.might:
-            runController.applyHeroStatModifier(mightAcc: choice.amount);
-          case RewardStat.mastery:
-            runController.applyHeroStatModifier(masteryAcc: choice.amount);
-          case RewardStat.maxMana:
-            runController.applyHeroStatModifier(maxManaAcc: choice.amount);
-          case RewardStat.luck:
-            runController.applyHeroStatModifier(luckAcc: choice.amount);
-          case RewardStat.critChance:
-            runController.applyHeroStatModifier(critChanceAcc: choice.amount);
-          case RewardStat.critDamage:
-            runController.applyHeroStatModifier(
-              critDamageAcc: choice.amount / 100,
-            );
-        }
-      }
+      ref.read(runProvider.notifier).applyLevelUpReward(choice);
 
       _finishDraft(ref);
     });

@@ -2,7 +2,9 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
+import '../../../models/data/level_up_reward_data.dart';
 import '../../systems/stat_gains.dart';
+import '../../services/level_up_reward_service.dart';
 import '../inventory_controller.dart';
 import '../run_controller.dart';
 import '../checkpoint_controller.dart';
@@ -60,6 +62,38 @@ class PlayerStatsManager {
         ),
       ),
     );
+  }
+
+  /// Applique une récompense de niveau tirée (spec P-41, §8.1).
+  ///
+  /// Le `switch` est **exhaustif** sur [RewardStat] : ajouter une stat à
+  /// l'énumération sans l'appliquer ici ne compile plus. C'était précisément
+  /// le trou de la version où `DraftScreen` composait sept accumulateurs à la
+  /// main.
+  void applyLevelUpReward(DraftChoice choice) {
+    final stat = choice.data.stat;
+    // Le Miroir : il ouvre une modale de clonage, il ne monte rien.
+    if (stat == null) return;
+
+    final amount = choice.amount;
+    switch (stat) {
+      case RewardStat.maxHp:
+        applyHeroStatModifier(maxPvAcc: amount);
+      case RewardStat.might:
+        applyHeroStatModifier(mightAcc: amount);
+      case RewardStat.mastery:
+        applyHeroStatModifier(masteryAcc: amount);
+      case RewardStat.maxMana:
+        applyHeroStatModifier(maxManaAcc: amount);
+      case RewardStat.luck:
+        applyHeroStatModifier(luckAcc: amount);
+      case RewardStat.critChance:
+        applyHeroStatModifier(critChanceAcc: amount);
+      case RewardStat.critDamage:
+        // La donnée est en points de pourcentage (décision 5 du plan) : le
+        // joueur lit « +30 % », `critMultiplier` reçoit 0,30.
+        applyHeroStatModifier(critDamageAcc: amount / 100);
+    }
   }
 
   /// Applique un modificateur aux règles de run propres au joueur.
