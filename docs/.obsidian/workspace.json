@@ -25,14 +25,17 @@
             "id": "5ce3a0a02e4732bb",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "Idées améliorations classe et cartes.md",
-                "mode": "source",
-                "source": false
+                "file": "Canvas des idées/MoodBoard.canvas",
+                "viewState": {
+                  "x": 0,
+                  "y": -117.1800000000002,
+                  "zoom": 0
+                }
               },
-              "icon": "lucide-file",
-              "title": "Idées améliorations classe et cartes"
+              "icon": "lucide-layout-dashboard",
+              "title": "MoodBoard"
             }
           }
         ],
@@ -202,10 +205,14 @@
   },
   "active": "5ce3a0a02e4732bb",
   "lastOpenFiles": [
+    "Canvas des idées",
+    "possible_upgrades/upgrade_ideas.md",
+    "Canvas des idées/MoodBoard.canvas",
+    "superpowers/plans/sedzINPS9",
+    "superpowers/plans/sedzYA4vr",
+    "Idées améliorations classe et cartes.md",
     "superpowers/specs/2026-08-07-s2-identite-de-classe-design.md",
     "superpowers/specs/2026-08-07-s2-identite-de-classe-design.md.tmp.8796.28982fb40e67",
-    "possible_upgrades/upgrade_ideas.md",
-    "Idées améliorations classe et cartes.md",
     "superpowers/specs/2026-07-26-difficulty-scaling-acceleration-design.md",
     "superpowers/plans/2026-07-26-difficulty-scaling-acceleration.md",
     "superpowers/specs/2026-07-26-difficulty-scaling-acceleration-design.md.tmp.24124.6d2144b891e1",
