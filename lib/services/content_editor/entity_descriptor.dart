@@ -260,6 +260,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
     vocabularyKeys: const {'effectType'},
+    // `displayOrder: 0` place ce passif avant les trois deja classes a la
+    // main de sa classe. Tant que l'ecran de choix de passif n'existe pas
+    // (lot ulterieur), le premier de l'ordre d'affichage est le passif de
+    // depart du heros : un passif cree depuis ce gabarit sans ajuster cette
+    // valeur devient donc silencieusement le passif de depart.
     template: '''
 {
   "trigger": "startOfTurn",
