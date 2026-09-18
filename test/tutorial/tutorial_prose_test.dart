@@ -21,8 +21,34 @@ void main() {
     expect(
       fillRewardPlaceholders(gabarit, rewards, isFrench: true),
       'Trois options sont tirées parmi six types — Vitalité, Aiguisage, '
-      'Affinité, Sagesse, Précision et Férocité — et jusqu\'à deux options '
+      'Affinité, Sagesse, Précision, Férocité — et jusqu\'à deux options '
       'Mythiques peuvent s\'y ajouter : Trèfle à 4 feuilles et Miroir.',
+    );
+  });
+
+  test('les tirables se joignent par virgules, les mythiques par une conjonction', () async {
+    final rewards = (await loadGameDataRegistry(rootBundle)).levelUpRewards;
+
+    // Le texte d'origine (avant ce chantier) appose les tirables entre
+    // tirets, a virgules pures, et coordonne seulement les mythiques avec
+    // "et"/"and" (git show 95dec39:lib/tutorial/tutorial_data.dart). Les deux
+    // listes ne sont pas la meme forme grammaticale ; ce test empeche de les
+    // refusionner derriere le meme join sans faire rougir la suite.
+    expect(
+      fillRewardPlaceholders('{rollableNames}', rewards, isFrench: true),
+      'Vitalité, Aiguisage, Affinité, Sagesse, Précision, Férocité',
+    );
+    expect(
+      fillRewardPlaceholders('{rollableNames}', rewards, isFrench: false),
+      'Vitality, Sharpening, Affinity, Wisdom, Precision, Ferocity',
+    );
+    expect(
+      fillRewardPlaceholders('{mythicNames}', rewards, isFrench: true),
+      'Trèfle à 4 feuilles et Miroir',
+    );
+    expect(
+      fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
+      '4-Leaf Clover and Mirror',
     );
   });
 

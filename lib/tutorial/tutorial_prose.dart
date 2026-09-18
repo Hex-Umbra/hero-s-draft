@@ -20,7 +20,12 @@ String _count(int n, {required bool isFrench}) {
   return isFrench ? spelled.fr : spelled.en;
 }
 
-/// « A, B et C » — une virgule entre les premiers, « et » avant le dernier.
+/// « A et B » — sert **uniquement** `{mythicNames}`. Le texte d'origine
+/// coordonne les mythiques (« le Trèfle [...] **et** le Miroir »), alors que
+/// la liste des tirables n'est qu'une apposition entre tirets, à virgules
+/// pures : les deux ne sont pas la même forme grammaticale, et
+/// `{rollableNames}` s'écrit avec `.join(', ')` plutôt qu'avec cette
+/// fonction — voir [fillRewardPlaceholders]. Ne pas fusionner les deux.
 String _join(List<String> names, {required bool isFrench}) {
   if (names.isEmpty) return '';
   if (names.length == 1) return names.single;
@@ -59,7 +64,10 @@ String fillRewardPlaceholders(
 
   return body
       .replaceAll('{rollableCount}', _count(rollable.length, isFrench: isFrench))
-      .replaceAll('{rollableNames}', _join(rollable, isFrench: isFrench))
+      // Apposition a virgules pures dans le texte d'origine, pas une
+      // enumeration coordonnee : pas de conjonction ici. Voir _join, reserve
+      // a {mythicNames}.
+      .replaceAll('{rollableNames}', rollable.join(', '))
       .replaceAll('{mythicCount}', _count(mythic.length, isFrench: isFrench))
       .replaceAll('{mythicNames}', _join(mythic, isFrench: isFrench));
 }
