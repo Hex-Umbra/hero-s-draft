@@ -2,18 +2,34 @@
 
 Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `cards/`) :
 
-| Héros | HP | Mana | Attaque | Luck | Maîtrise | Passif | Cartes de signature (`skills`) |
-|:---|:---|:---|:---|:---|:---|:---|:---|
-| **Paladin** | 100 | 3 | 5 | 0 | 0 | `regen_armor` (gain armure fin de tour) | `holy_shield`, `smite` |
-| **Berserker** | 80 | 3 | 15 | 0 | 0 | `berserker_armor` (armure ∝ HP manquants, début tour) | `reckless_strike`, `rage_form` |
-| **Mage** | 60 | 3 | 10 | 0 | 0 | `spell_armor` (armure quand skill jouée) | `magic_missile`, `mana_surge` |
+| Héros | HP | Mana | Attaque | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Cartes de signature (`skills`) |
+|:---|:---|:---|:---|:---|:---|:---|:---|:---|
+| **Paladin** | 100 | 3 | 5 | 0 | **1** | Attaque · Compétence · Altération | `regen_armor` | `holy_shield`, `smite` |
+| **Berserker** | 80 | 3 | 15 | **10** | 0 | Attaque | `rage` | `reckless_strike`, `rage_form` |
+| **Mage** | 60 | 3 | 10 | 0 | 0 | Compétence · Altération | `channeling` | `magic_missile`, `mana_surge` |
+
+> [!IMPORTANT]
+> **Chaque classe oriente sa Puissance** (`HeroData.mightTargets`, obligatoire dans `class.json`) —
+> [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md). Le Paladin est le
+> généraliste ; le Berserker ne frappe qu'en direct ; le Mage frappe par ses Compétences et ses
+> altérations. **Conséquence assumée** : aucune carte de dégâts du jeu n'étant de type Compétence
+> (*Projectile Magique* compris), la Puissance du Mage ne renforce aujourd'hui que l'intensité de
+> ses brûlures, gels, poisons et chocs — jusqu'aux Compétences offensives de P-42.
+
+> [!IMPORTANT]
+> **Le Berserker n'a plus jamais d'armure.** Son `class.json` déclare une `statRules` qui convertit
+> **tout** gain d'armure — carte, rune, passif, relique, statut `armor_regen` — en Puissance pour
+> **un tour**. *Mur de Fer* (10 armure, carte neutre présente dans tous les decks) lui donne donc 10
+> de Puissance pour un tour. La règle vit sur `RunState.statRules`, redérivée de la classe au
+> chargement et jamais sérialisée, et s'applique dans `StatGains.apply(stats, gain, rules)`.
 
 > [!NOTE]
-> **Colonne Maîtrise** : `HeroData.mastery` (clé JSON `mastery`, renommée depuis `armorMastery`
-> par [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)) — aucune
-> classe livrée ne la renseigne aujourd'hui. Le lien classe → passif ne part plus de la classe :
-> chaque passif déclare lui-même ses `classes` éligibles, lues par le point d'accès unique
-> `availablePassivesFor()` (`lib/game/systems/passive_availability.dart`).
+> **Colonnes Crit. et Maîtrise** : `HeroData.critChance` et `HeroData.mastery` (cette dernière
+> renommée depuis `armorMastery` par [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)).
+> Le tutoriel **n'hérite pas** du `critChance` du Berserker, délibérément : ses dégâts doivent rester
+> déterministes. Le lien classe → passif ne part pas de la classe : chaque passif déclare ses
+> `classes` éligibles, lues par le point d'accès unique `availablePassivesFor()`
+> (`lib/game/systems/passive_availability.dart`), qui trie par `(displayOrder, id)`.
 
 > [!WARNING]
 > Le champ `skills` de `class.json` est la liste des **cartes de classe de départ**, résolue
@@ -40,8 +56,23 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 chacun réservé à sa classe par son propre champ `classes`) — détail du mécanisme et de la Maîtrise :
 [`_patterns/03-3`](../_patterns/03-3-traitsystem-passifs-de-heros.md).
 
-| ID | Trigger | EffectType | Valeur | Mécanisme |
-|:---|:---|:---|:---|:---|
-| `regen_armor` | `endOfTurn` | `gain_armor` | 2 | +2 armure (+Maîtrise) à chaque fin de tour |
-| `berserker_armor` | `startOfTurn` | `berserker_armor` | 1 | +1 armure par tranche de 10 HP manquants, ×(1+Maîtrise) |
-| `spell_armor` | `onCardPlayed` | `spell_armor` | 1 | +1 armure quand une carte Skill est jouée (+Maîtrise) |
+**Neuf passifs, trois par classe**, rangés par `displayOrder`. Tant que l'écran de **choix** du
+passif n'existe pas (lot C), le joueur reçoit le premier de sa classe — les six autres sont livrés,
+testés et jouables, mais inatteignables en jeu.
+
+| Rang | ID | Classe | Trigger | EffectType | Valeurs | Mécanisme |
+|:---:|:---|:---|:---|:---|:---|:---|
+| 1 | `regen_armor` | Paladin | `endOfTurn` | `gain_armor` | 2 | +2 armure à chaque fin de tour |
+| 2 | `fervor` | Paladin | `onDamageTaken` | `fervor` | 1, durée 2 | Quand l'armure encaisse des dégâts, +1 Puissance pendant 2 tours |
+| 3 | `blessing` | Paladin | `startOfTurn` | `blessing` | 1 | Chaque tranche de 5 d'**armure survivante** devient 1 PV |
+| 1 | `rage` | Berserker | `startOfTurn` | `rage` | 1, durée 1 | +1 Puissance pour le tour, +1 par tranche de 10 PV manquants |
+| 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
+| 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
+| 1 | `channeling` | Mage | `endOfTurn` | `channeling` | 1 | Chaque Mana non dépensé devient 1 armure |
+| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | 1, durée 2 | La **première** Attaque du tour rend sa cible Vulnérable 2 tours |
+| 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour |
+
+> [!NOTE]
+> Les valeurs ci-dessus sont des **valeurs d'équilibrage, pas de conception** : chaque fichier porte
+> la sienne et les changer ne demande aucun code. La Maîtrise augmente le paramètre que le bloc
+> `mastery` du passif désigne — `value`, `duration` ou `threshold`.

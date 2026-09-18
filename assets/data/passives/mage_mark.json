@@ -1,0 +1,19 @@
+{
+  "id": "mage_mark",
+  "name_en": "Mage's Mark",
+  "name_fr": "Marque du Mage",
+  "description_en": "The first Attack each turn makes its target Vulnerable for 2 turns.",
+  "description_fr": "La première Attaque de chaque tour rend sa cible Vulnérable pendant 2 tours.",
+  "classes": ["mage"],
+  "trigger": "onAttackPlayed",
+  "effectType": "mage_mark",
+  "value": 1,
+  "duration": 2,
+  "displayOrder": 2,
+  "mastery": {
+    "field": "duration",
+    "perPoint": 1,
+    "description_en": "+{amount} turn of Vulnerable",
+    "description_fr": "+{amount} tour de Vulnérable"
+  }
+}

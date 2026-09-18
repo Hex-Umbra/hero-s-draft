@@ -56,6 +56,7 @@ class PlayerStatsManager {
         heroStats: StatGains.apply(
           modifiedStats,
           StatGain(GainResource.might, mightAcc, GainSource.progression),
+          controller.currentState.statRules,
         ),
       ),
     );
@@ -146,7 +147,11 @@ class PlayerStatsManager {
   void grant(StatGain gain) {
     controller.updateState(
       controller.currentState.copyWith(
-        heroStats: StatGains.apply(controller.currentState.heroStats, gain),
+        heroStats: StatGains.apply(
+          controller.currentState.heroStats,
+          gain,
+          controller.currentState.statRules,
+        ),
       ),
     );
   }
@@ -165,6 +170,20 @@ class PlayerStatsManager {
     controller.updateState(
       controller.currentState.copyWith(
         heroStats: controller.currentState.heroStats.addStatus(effect),
+      ),
+    );
+  }
+
+  /// Retire tout statut portant [id]. Les charges de reliques font aujourd'hui
+  /// ce filtrage en ligne (`charge_might_combat` et ses voisins) ; les
+  /// compteurs de passifs passent par ici.
+  void removeStatus(String id) {
+    final stats = controller.currentState.heroStats;
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: stats.copyWith(
+          statuses: stats.statuses.where((s) => s.id != id).toList(),
+        ),
       ),
     );
   }
@@ -435,8 +454,15 @@ class PlayerStatsManager {
     return true;
   }
 
-  /// Applique un effet de Vol de vie pour une durée donnée
-  void applyLifestealBuff(int duration) {
+  /// Arme le Vol de vie : [value] PV drainés par carte de dégâts résolue,
+  /// pendant [duration] tours.
+  ///
+  /// Le statut ne fait rien par lui-même — c'est `DamageEffectStrategy` qui le
+  /// paie, après la résolution des dégâts. Il était affiché et sans effet
+  /// depuis P-40 (spec P-41, §1.2) ; *Soif de Sang* lui donne son appelant.
+  /// Le statut n'est pas cumulable : deux Attaques dans le tour rafraîchissent
+  /// la durée et gardent la plus forte valeur, elles ne l'additionnent pas.
+  void applyLifestealBuff({required int value, required int duration}) {
     controller.updateState(
       controller.currentState.copyWith(
         heroStats: controller.currentState.heroStats.addStatus(
@@ -444,8 +470,9 @@ class PlayerStatsManager {
             id: 'lifesteal',
             name: 'Vol de Vie',
             type: StatusType.buff,
-            value: 1,
+            value: value,
             duration: duration,
+            isStackable: false,
           ),
         ),
       ),

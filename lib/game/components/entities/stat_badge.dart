@@ -6,7 +6,6 @@ import '../../heros_draft_game.dart';
 import '../../game_constants.dart';
 import '../widgets/circle_progress.dart';
 import '../widgets/flame_shield_icon.dart';
-import '../widgets/flame_sword_icon.dart';
 import '../widgets/linear_progress_bar.dart';
 
 enum StatType { hp, armor, attack, mana }
@@ -75,13 +74,20 @@ class StatBadge extends PositionComponent
     if (type == StatType.hp && !isCircle) {
       size = GameConstants.badgeHpSize;
 
-      // 1. Dessine la Puissance : Épée + Valeur
+      // 1. Dessine la Puissance : Éclair + Valeur. L'épée disait l'attaque
+      // physique, ce que la Puissance n'est plus (spec P-41, §7.4) ; l'éclair
+      // est celui du panneau des statuts et des cartes.
       add(
-        FlameSwordIcon(
+        TextComponent(
+          text: '⚡',
           position: Vector2(0, size.y / 2),
-          size: Vector2(10, 10),
-          color: const Color(0xFFFF3B30),
           anchor: Anchor.centerLeft,
+          textRenderer: TextPaint(
+            style: const TextStyle(
+              color: Color(0xFFFF3B30),
+              fontSize: 10,
+            ),
+          ),
         ),
       );
       _attackTextComponent = TextComponent(

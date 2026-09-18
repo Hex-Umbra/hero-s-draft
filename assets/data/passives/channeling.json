@@ -1,0 +1,18 @@
+{
+  "id": "channeling",
+  "name_en": "Channeling",
+  "name_fr": "Canalisation",
+  "description_en": "At the end of your turn, each unspent Mana becomes 1 Block.",
+  "description_fr": "À la fin du tour, chaque point de Mana non dépensé devient 1 point d'Armure.",
+  "classes": ["mage"],
+  "trigger": "endOfTurn",
+  "effectType": "channeling",
+  "value": 1,
+  "displayOrder": 1,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} Block per unspent Mana",
+    "description_fr": "+{amount} Armure par Mana non dépensé"
+  }
+}

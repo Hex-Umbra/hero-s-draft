@@ -21,7 +21,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 71 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 77 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -36,7 +36,7 @@ void main() {
     expect(countUnder('assets/data/relics/', 4), 25, reason: 'reliques');
     expect(countUnder('assets/data/events/', 4), 5, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 8, reason: 'forge');
-    expect(countUnder('assets/data/passives/', 4), 3, reason: 'passifs');
+    expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
 
     expect(
       json
@@ -97,7 +97,7 @@ void main() {
       registry.forgeUpgrades.where((u) => !u.stackable).map((u) => u.id),
       ['enduring'],
     );
-    expect(registry.passives, hasLength(3));
+    expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));
     expect(registry.enemies, hasLength(4));
 

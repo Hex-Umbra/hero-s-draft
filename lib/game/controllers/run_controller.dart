@@ -4,6 +4,7 @@ import '../../models/entity_stats.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/passive_data.dart';
+import '../../models/data/stat_rule.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
@@ -38,6 +39,15 @@ class RunState {
   /// qui est partagé avec les ennemis.
   final int cardsPerTurn;
 
+  /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
+  /// que `cardsPerTurn` : un ennemi n'en a jamais.
+  ///
+  /// **Jamais sérialisées.** Une règle est du contenu : `fromJsonWithReport`
+  /// la relit de la classe, comme il relit déjà le passif actif. Les figer
+  /// dans une sauvegarde ferait survivre à une modification du `class.json`
+  /// une run qui n'en tiendrait pas compte.
+  final List<StatRule> statRules;
+
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
 
@@ -69,6 +79,7 @@ class RunState {
     this.bonusForgeSlots = 0,
     this.pendingDrafts = 0,
     this.cardsPerTurn = 5,
+    this.statRules = const [],
   });
 
   RunState copyWith({
@@ -88,6 +99,7 @@ class RunState {
     int? bonusForgeSlots,
     int? pendingDrafts,
     int? cardsPerTurn,
+    List<StatRule>? statRules,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -109,6 +121,7 @@ class RunState {
       bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
       cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
+      statRules: statRules ?? this.statRules,
     );
   }
 
@@ -181,6 +194,13 @@ class RunState {
       bonusForgeSlots: json['bonusForgeSlots'] as int? ?? 0,
       pendingDrafts: json['pendingDrafts'] as int? ?? 0,
       cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
+      // Relues de la classe, jamais de la sauvegarde. Registre absent ou
+      // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
+      // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas
+      // à masquer.
+      statRules:
+          HeroData.getById(json['heroClassId'] as String)?.statRules ??
+              const [],
     );
 
     return (run, missing);
@@ -245,11 +265,13 @@ class RunController extends Notifier<RunState> {
         mastery: chosenClass.mastery,
         might: 0, // Puissance de base à 0
         mightTargets: chosenClass.mightTargets,
+        critChance: chosenClass.critChance,
         luck: chosenClass.luck,
       ),
       mapNodes: generatedMap,
       currentNodeId: null,
       pendingDrafts: 0,
+      statRules: chosenClass.statRules,
     );
 
     // Réinitialise l'inventaire avec 50 d'or de départ
@@ -343,7 +365,23 @@ class RunController extends Notifier<RunState> {
 
   /// Subit des dégâts
   void takeDamage(int amount, {bool isCrit = false}) {
+    final armorBefore = state.heroStats.armure;
     _playerStatsManager.takeDamage(amount, isCrit: isCrit);
+
+    // Ce que l'armure a réellement absorbé : de quoi nourrir *Ferveur*, chez
+    // qui encaisser devient une ressource offensive (spec §6.3). Les dégâts
+    // de poison n'arrivent pas ici — ils sont appliqués par
+    // `StatusEffectProcessor`, fonction pure sans controller — et ne
+    // déclenchent donc pas le passif.
+    final absorbed = amount <= 0
+        ? 0
+        : (amount < armorBefore ? amount : armorBefore);
+    if (absorbed > 0) {
+      TraitSystem.dispatch(
+        this,
+        PassiveEvent(RelicTrigger.onDamageTaken, absorbedDamage: absorbed),
+      );
+    }
   }
 
   /// Applique un effet de statut
@@ -351,14 +389,22 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.addStatus(effect);
   }
 
+  /// Retire tout statut portant [id]
+  void removeStatus(String id) {
+    _playerStatsManager.removeStatus(id);
+  }
+
   /// Déclenche les effets des reliques pour un trigger donné
   void applyRelics(RelicTrigger trigger) {
     _playerStatsManager.applyRelics(trigger);
   }
 
-  /// Déclenche les reliques d'élimination d'ennemi
+  /// Déclenche les reliques et le passif d'élimination d'ennemi. Appelé une
+  /// fois par ennemi abattu (`CombatController.cleanDeadEnemies`), ce qui fait
+  /// de *Frénésie* une boule de neige (spec §6.3).
   void onEnemyKilled() {
     _playerStatsManager.onEnemyKilled();
+    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.onEnemyKilled));
   }
 
   void applyRelicEffect(RelicData relic) {
@@ -389,6 +435,16 @@ class RunController extends Notifier<RunState> {
   }
 
   void startTurn() {
+    // L'armure que le tour précédent a laissée, avant sa remise à zéro : c'est
+    // la seule valeur que *Bénédiction* peut convertir, et elle n'existe plus
+    // une ligne plus bas (spec §1.1, §6.3).
+    //
+    // Capturée ici plutôt que le dispatch déplacé avant la remise à zéro :
+    // là, tout passif `startOfTurn` qui donne de l'armure la verrait effacée
+    // en silence — et cela vaudrait pour le prochain écrit comme pour
+    // `berserker_armor` hier.
+    final survivingArmor = state.heroStats.armure;
+
     // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
@@ -401,12 +457,18 @@ class RunController extends Notifier<RunState> {
     applyRelics(RelicTrigger.startOfTurn);
 
     // 3. Appliquer les effets de début de tour (ex: Poison, Regen) et décrémenter les statuts via le StatusEffectProcessor
-    final updatedStats = StatusEffectProcessor.processPlayerStatuses(state.heroStats);
+    final updatedStats = StatusEffectProcessor.processPlayerStatuses(
+      state.heroStats,
+      state.statRules,
+    );
     state = state.copyWith(heroStats: updatedStats);
 
 
     // 4. Déclencher les traits passifs
-    TraitSystem.dispatch(this, const PassiveEvent(RelicTrigger.startOfTurn));
+    TraitSystem.dispatch(
+      this,
+      PassiveEvent(RelicTrigger.startOfTurn, survivingArmor: survivingArmor),
+    );
   }
 
   /// Fin du tour du joueur : le passif, puis les reliques de fin de tour, dans
@@ -427,9 +489,9 @@ class RunController extends Notifier<RunState> {
     return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
   }
 
-  /// Applique un effet de Vol de vie pour une durée donnée
-  void applyLifestealBuff(int duration) {
-    _playerStatsManager.applyLifestealBuff(duration);
+  /// Arme le Vol de vie pour une valeur et une durée données
+  void applyLifestealBuff({required int value, required int duration}) {
+    _playerStatsManager.applyLifestealBuff(value: value, duration: duration);
   }
 
   void setForgeSession(String cardId, List<String> slots) {

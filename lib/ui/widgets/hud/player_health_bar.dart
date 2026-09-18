@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../sword_icon.dart';
 
 class PlayerHealthBar extends StatefulWidget {
   final int currentPv;
@@ -125,7 +124,11 @@ class _PlayerHealthBarState extends State<PlayerHealthBar>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SwordIcon(size: iconSize, color: Colors.white),
+                      Icon(
+                        Icons.bolt_rounded,
+                        size: iconSize,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${widget.effectiveMight}',

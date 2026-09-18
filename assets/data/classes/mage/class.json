@@ -10,7 +10,7 @@
   "maxMana": 3,
   "baseDamage": 10,
   "luck": 0,
-  "mightTargets": ["attack"],
+  "mightTargets": ["skill", "alteration"],
   "displayOrder": 3,
   "skills": [
     "magic_missile",

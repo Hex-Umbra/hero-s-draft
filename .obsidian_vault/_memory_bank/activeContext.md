@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-17 | commit: e9b193d -->
+<!-- last-sync: 2026-09-18 | commit: ed5a8c1 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,18 +7,19 @@
 
 ## Focus courant
 
-**P-41 lot B, partie 1 (la Puissance) est implémentée sur la branche `feat/p41-lot-b-puissance`,
-pas encore fusionnée** (2026-09-17, `f20c353`..`e9b193d`, 6 commits, détail en « 3 dernières
-livraisons ») : les trois puissances du lot A fusionnent en une seule, `might`, que chaque classe
-oriente (`HeroData.mightTargets`) — comportement de jeu inchangé, les trois classes ciblent
-`attack`. Voir [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), qui amende
-la décision 2 d'ADR-095.
+**P-41 lot B est implémenté en entier.** La partie 2 — l'identité de classe — est **sur la branche
+`feat/p41-lot-b-identite`, pas encore fusionnée** (2026-09-18, `74c54cf`..`ed5a8c1`, 16 commits,
+détail en « 3 dernières livraisons »). [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)
+est **complété** par ses six décisions d'implémentation, dont la seule de portée architecturale : les
+règles de stat vivent sur `RunState`, redérivées de la classe au chargement et jamais sérialisées.
+La partie 1 reste fusionnée dans `main` par la PR #40 (merge `e2cc24b`).
 
-**P-49 (passifs partagés) est fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`) :
-chaque passif déclare ses classes éligibles et sa Maîtrise, lus par un point d'accès unique et un
-répartiteur de stratégies — voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md),
-qui remplace la D4 d'ADR-086. La note `0.5.2` a été rouverte en place pour l'absorber (`5f168db`),
-**toujours pas taguée**. Les métriques de `main` et de la branche sont dans `progress.md`.
+**P-49 (passifs partagés) reste fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`) :
+chaque passif déclare ses classes éligibles et sa Maîtrise — [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md),
+qui remplace la D4 d'ADR-086. La note `0.5.2`, rouverte en place deux fois, n'est **toujours pas
+taguée**. **Aucune note n'existe encore pour la partie 2** : le propriétaire décide s'il l'écrit
+maintenant ou au lot C — annoncer « trois nouveaux passifs » devance d'un lot l'écran qui permet de
+les choisir. Métriques dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
@@ -57,8 +58,19 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-41 lot B, partie 1 — la Puissance, une seule stat orientée par la classe**
-   (2026-09-17, branche `feat/p41-lot-b-puissance`, **pas encore fusionnée**, 6 commits,
+1. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **branche `feat/p41-lot-b-identite`,
+   non fusionnée**, 16 commits, `74c54cf` → `ed5a8c1`) — **la première livraison de P-41 que le
+   joueur ressent.** Le Paladin renforce tout, le Berserker ses seules Attaques, le Mage ses
+   Compétences et ses altérations. Le Berserker **n'a plus jamais d'armure** : toute source devient
+   une Puissance d'un tour, par une `statRules` de son `class.json` qu'applique
+   `StatGains.apply(stats, gain, rules)`, troisième paramètre désormais obligatoire. Les **neuf
+   passifs** remplacent les trois (`berserker_armor` et `spell_armor` supprimés) ; un passif choisit
+   son déclencheur par sa donnée, compte par un statut caché, et reçoit ce qu'il ne peut recalculer.
+   Stats de départ propres (Maîtrise 1 au Paladin, 10 % de critique au Berserker) ; la Puissance
+   porte un éclair. **1021 tests** (+83), `dart analyze` propre —
+   [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), section « Partie 2 ».
+2. **P-41 lot B, partie 1 — la Puissance, une seule stat orientée par la classe**
+   (2026-09-17, **fusionné dans `main` par la PR #40**, 6 commits,
    `f20c353` → `e9b193d`) — `attackPower`/`skillPower`/`alterationPower` (lot A) fusionnent en une
    seule `might` ; `HeroData.mightTargets` (`class.json`, obligatoire) déclare ce qu'elle renforce,
    copié dans `EntityStats.mightTargets` à la création du héros ; `PowerRules` lit cette copie sans
@@ -70,7 +82,7 @@ Réserves à ne pas perdre de vue :
    version 2, son étape v1→v2 garde `attackPower` en format gelé, désormais ignoré à la lecture.
    938 tests (+15), `dart analyze` propre. Voir
    [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) (amende la décision 2 d'ADR-095).
-2. **P-49 — passifs partagés, éligibilité déclarée par le passif et Maîtrise hybride**
+3. **P-49 — passifs partagés, éligibilité déclarée par le passif et Maîtrise hybride**
    (2026-09-17, **fusionné dans `main` par la PR #39**, 11 commits,
    `a422544` → `4e937fa`) — chaque passif déclare ses classes éligibles (`classes`, absent = toutes)
    et ce qu'un point de Maîtrise lui apporte (`mastery`) ; `availablePassivesFor` devient l'unique
@@ -79,20 +91,9 @@ Réserves à ne pas perdre de vue :
    ADR-061). La Maîtrise d'Armure devient la Maîtrise, sa récompense l'Affinité ; `StatGains` perd
    sa règle spéciale. Changement de jeu assumé : Armure du Berserker devient multiplicative avec la
    Maîtrise. 923 tests (+47), `dart analyze` propre. Voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) (remplace la D4 d'ADR-086).
-3. **P-41 lot A — passage unique des gains, scission des puissances, migration de sauvegarde**
-   (2026-09-16, **fusionné dans `main` par la PR #38**, branche `feat/p41-lot-a` supprimée, 10 commits,
-   `674545c` → `b94c854`) — `StatGains.apply` devient le seul point de passage d'un gain d'armure,
-   de mana ou de puissance, étiqueté par sa source (`GainSource`) ; la Maîtrise d'Armure ne s'ajoute
-   qu'aux gains passifs, comportement préservé et désormais verrouillé par un guard test.
-   `attaque` devient `attackPower`, rejoint par `skillPower` et `alterationPower` (à 0) ; `PowerRules`
-   décide quelle puissance renforce quelle carte — aucun effet visible aujourd'hui. `SaveMigrator`
-   pose la première chaîne de migration du projet ; le jeu écrit désormais sous la clé `run_save`
-   (repli sur `run_save_v1`) et ne détruit plus jamais une sauvegarde écrite par un build plus récent,
-   conservée avec un message à l'accueil. 876 tests (+65), `dart analyze` propre. Voir
-   [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).
-
 > [!NOTE]
-> **Rotations.** Les deux livraisons sorties le 2026-09-17 sont conservées verbatim dans
+> **Rotations.** La livraison sortie le 2026-09-18 (P-41 lot A) est conservée verbatim dans
+> `../_archive/2026-09-18-activeContext-livraisons.md`. Les deux sorties le 2026-09-17 le sont dans
 > `../_archive/2026-09-17-activeContext-livraisons-2.md` (P-40 bloc 2, cartes et forge) et
 > `../_archive/2026-09-17-activeContext-livraisons.md` (éditeur de contenu, habillage). Les
 > rotations précédentes : `../_archive/2026-09-16-activeContext-livraisons.md`,
@@ -107,13 +108,12 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Fusionner `feat/p41-lot-b-puissance`, puis écrire le plan de la partie 2 du lot B de P-41** :
-orientations réelles du Mage et du Paladin, conversion d'armure (`statRules`), les neuf passifs,
-stats de départ ([spec, §7](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)).
-Le tag `v0.5.2` — seul geste déclenchant
-`release.yml` — attend toujours P-42 et la campagne de test manuelle du propriétaire. Le filtre de
-classe des cartes de signature se traite avant ou avec P-42 — sa réserve ci-dessus dit où et
-combien.
+**Trois gestes attendent le propriétaire sur `feat/p41-lot-b-identite`** : la regarder tourner (les
+trois identités ne se vérifient pas par la suite de tests), décider s'il écrit la note de version
+maintenant ou au lot C, et trancher la fusion. Ensuite **P-41 lot C** devient le prochain chantier,
+et son périmètre gagne l'**écran de choix du passif** — sans lui, six des neuf passifs livrés restent
+inatteignables. Le tag `v0.5.2` attend toujours P-42 et la campagne de test manuelle du propriétaire ;
+le filtre de classe des cartes de signature se traite avant ou avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)

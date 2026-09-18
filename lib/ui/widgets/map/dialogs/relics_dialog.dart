@@ -198,6 +198,10 @@ class RelicsDialog extends ConsumerWidget {
         triggerText = locale == 'fr' ? 'Pouvoir Joué' : 'Power Played';
         triggerColor = Colors.pinkAccent;
         break;
+      case RelicTrigger.onDamageTaken:
+        triggerText = locale == 'fr' ? 'Dégâts Subis' : 'Damage Taken';
+        triggerColor = Colors.deepOrangeAccent;
+        break;
     }
 
     Color rarityColor = relic.rarity.color;

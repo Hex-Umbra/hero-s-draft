@@ -59,11 +59,13 @@ void main() {
       expect(mastery.descriptionFr, '+{amount} Armure en fin de tour');
     });
 
+    // `draw` est un parametre de `PassiveData` que la Maitrise ne vise pas :
+    // l'exemple reste donc hors de `PassiveMastery.fields` (spec P-49, §6.2).
     test('un field inconnu est refuse', () {
       expect(
         () => PassiveData.fromJson({
           ...passiveJson(),
-          'mastery': {...masteryJson(), 'field': 'duration'},
+          'mastery': {...masteryJson(), 'field': 'draw'},
         }),
         throwsFormatException,
       );
@@ -152,6 +154,68 @@ void main() {
         'description_fr': 'Seuil -{amount}',
       });
       expect(mastery.describe('fr', 2), 'Seuil -4');
+    });
+  });
+
+  // Les quatre parametres du lot B de P-41 : ce dont les neuf passifs ont
+  // besoin, et rien de plus.
+  group('les parametres du lot B', () {
+    test('absents : une duree de 1, aucun seuil, aucune pioche, rang 0', () {
+      final passive = PassiveData.fromJson(passiveJson());
+      expect(passive.duration, 1);
+      expect(passive.threshold, 0);
+      expect(passive.draw, 0);
+      expect(passive.displayOrder, 0);
+    });
+
+    test('lus quand ils sont declares', () {
+      final passive = PassiveData.fromJson({
+        ...passiveJson(),
+        'duration': 2,
+        'threshold': 3,
+        'draw': 1,
+        'displayOrder': 2,
+      });
+      expect(passive.duration, 2);
+      expect(passive.threshold, 3);
+      expect(passive.draw, 1);
+      expect(passive.displayOrder, 2);
+    });
+
+    test('la Maitrise sait allonger une duree', () {
+      final passive = PassiveData.fromJson({
+        ...passiveJson(),
+        'duration': 2,
+        'mastery': {
+          'field': 'duration',
+          'perPoint': 1,
+          'description_en': '+{amount} turn',
+          'description_fr': '+{amount} tour',
+        },
+      });
+      expect(passive.withMastery(2).duration, 4);
+      expect(passive.withMastery(2).value, passive.value);
+    });
+
+    // `perPoint` negatif : un seuil baisse quand la Maitrise monte. Borner le
+    // resultat est l'affaire de la strategie qui le lit (spec P-49, §6.2).
+    test('la Maitrise sait faire baisser un seuil', () {
+      final passive = PassiveData.fromJson({
+        ...passiveJson(),
+        'threshold': 3,
+        'mastery': {
+          'field': 'threshold',
+          'perPoint': -1,
+          'description_en': '-{amount} Skill to gather',
+          'description_fr': '-{amount} Competence a reunir',
+        },
+      });
+      expect(passive.withMastery(2).threshold, 1);
+      expect(passive.mastery!.describe('fr', 2), '-2 Competence a reunir');
+    });
+
+    test('les trois parametres que la Maitrise peut viser sont declares', () {
+      expect(PassiveMastery.fields, ['value', 'duration', 'threshold']);
     });
   });
 }

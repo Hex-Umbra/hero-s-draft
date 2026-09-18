@@ -11,7 +11,9 @@ import '../../models/data/passive_data.dart';
 /// filtrera les passifs débloqués, elle le fera dans cette fonction, sans
 /// toucher à ses lecteurs. D'ici là, « débloqué » vaut « tous ».
 ///
-/// Triés par `id`, pour ne pas dépendre de l'ordre de lecture des fichiers.
+/// Triés par `displayOrder` puis par `id` : le rang est déclaré par la donnée,
+/// et l'`id` tranche à rang égal — pour ne dépendre ni de l'ordre de lecture
+/// des fichiers ni de l'alphabet (spec P-41, §8.3).
 /// Fonction pure, sans provider : le tutoriel l'appelle comme le jeu (ADR-081).
 List<PassiveData> availablePassivesFor(
   HeroData hero,
@@ -20,5 +22,8 @@ List<PassiveData> availablePassivesFor(
   return registry.passives
       .where((passive) => passive.classes?.contains(hero.id) ?? true)
       .toList()
-    ..sort((a, b) => a.id.compareTo(b.id));
+    ..sort((a, b) {
+      final byOrder = a.displayOrder.compareTo(b.displayOrder);
+      return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+    });
 }

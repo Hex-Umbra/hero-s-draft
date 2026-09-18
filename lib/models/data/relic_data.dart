@@ -12,6 +12,12 @@ enum RelicTrigger {
   onAttackPlayed,
   onSkillPlayed,
   onPowerPlayed,
+
+  /// Le héros vient de subir des dégâts. Posé par le lot B de P-41 (spec §6.4)
+  /// pour le passif *Ferveur* ; aucune relique ne l'emploie. Les `switch` de
+  /// l'énumération étant exhaustifs, le compilateur désigne ses trois lecteurs
+  /// d'affichage.
+  onDamageTaken,
 }
 
 enum RelicRarity { common, uncommon, rare, epic, legendary }

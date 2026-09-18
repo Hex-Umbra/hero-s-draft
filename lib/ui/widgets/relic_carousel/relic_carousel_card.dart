@@ -58,6 +58,10 @@ class RelicCarouselCard extends StatelessWidget {
         triggerText = locale == 'fr' ? 'Pouvoir Joué' : 'Power Played';
         triggerColor = Colors.pinkAccent;
         break;
+      case RelicTrigger.onDamageTaken:
+        triggerText = locale == 'fr' ? 'Dégâts Subis' : 'Damage Taken';
+        triggerColor = Colors.deepOrangeAccent;
+        break;
     }
 
     Color rarityColor = Colors.grey;

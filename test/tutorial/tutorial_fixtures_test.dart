@@ -26,10 +26,12 @@ void main() {
     });
 
     test('chaque classe a pour passif le premier que lui ouvre le point d acces', () {
+      // Le premier passif de chaque classe, par rang d'affichage : celui qui
+      // remplace le passif d'avant la partie 2 du lot B de P-41.
       const attendus = {
         'paladin': 'regen_armor',
-        'berserker': 'berserker_armor',
-        'mage': 'spell_armor',
+        'berserker': 'rage',
+        'mage': 'channeling',
       };
       for (final hero in fixtures.heroes) {
         expect(fixtures.passiveFor(hero).id, attendus[hero.id]);

@@ -1,0 +1,19 @@
+{
+  "id": "bloodthirst",
+  "name_en": "Bloodthirst",
+  "name_fr": "Soif de Sang",
+  "description_en": "Playing an Attack arms Lifesteal for 2 turns: 1 HP per damaging card, plus 1 per quarter of missing HP.",
+  "description_fr": "Jouer une Attaque arme le Vol de Vie pendant 2 tours : 1 PV par carte de dégâts, plus 1 par quart de PV manquants.",
+  "classes": ["berserker"],
+  "trigger": "onAttackPlayed",
+  "effectType": "bloodthirst",
+  "value": 1,
+  "duration": 2,
+  "displayOrder": 2,
+  "mastery": {
+    "field": "value",
+    "perPoint": 1,
+    "description_en": "+{amount} HP drained",
+    "description_fr": "+{amount} PV drainé"
+  }
+}

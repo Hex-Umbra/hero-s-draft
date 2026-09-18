@@ -260,11 +260,20 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
     vocabularyKeys: const {'effectType'},
+    // `displayOrder: 0` place ce passif avant les trois deja classes a la
+    // main de sa classe. Tant que l'ecran de choix de passif n'existe pas
+    // (lot ulterieur), le premier de l'ordre d'affichage est le passif de
+    // depart du heros : un passif cree depuis ce gabarit sans ajuster cette
+    // valeur devient donc silencieusement le passif de depart.
     template: '''
 {
   "trigger": "startOfTurn",
   "effectType": "gain_armor",
   "value": 2,
+  "duration": 1,
+  "threshold": 0,
+  "draw": 0,
+  "displayOrder": 0,
   "mastery": {
     "field": "value",
     "perPoint": 1,
@@ -354,6 +363,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // le premier, et `_registerSignatureCard` remplit le second a chaque carte
     // de classe ecrite. `themeColor` y figure au magenta : une classe dont la
     // couleur n'a pas ete choisie doit se voir.
+    //
+    // `statRules` n'y figure pas non plus, et n'est pas valide : la spec de
+    // P-41 place l'edition des regles de stat au lot D (§9.2), avec la
+    // validation d'une liste de valeurs bornees imbriquee. Seule la vue JSON
+    // brute l'atteint d'ici la. `mightTargets` l'est depuis la partie 1.
     template: '''
 {
   "maxHp": 100,
@@ -361,6 +375,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "baseDamage": 5,
   "luck": 0,
   "mastery": 0,
+  "critChance": 0,
   "mightTargets": ["attack"],
   "displayOrder": 99,
   "themeColor": "#FF00FF"

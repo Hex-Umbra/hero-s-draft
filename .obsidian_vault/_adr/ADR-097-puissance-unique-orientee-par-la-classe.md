@@ -1,8 +1,10 @@
-## 🧮 ADR-097 : La Puissance Unique, Orientée par la Classe (P-41, lot B, partie 1)
+## 🧮 ADR-097 : La Puissance Unique, Orientée par la Classe (P-41, lot B)
 
 ### Statut
-✅ Accepté & Implémenté — branche `feat/p41-lot-b-puissance` (commits `f20c353`..`e9b193d`,
-6 commits), **pas encore fusionnée** — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
+✅ Accepté & Implémenté — **partie 1 fusionnée dans `main` par la PR #40** (2026-09-17, merge
+`e2cc24b`, branche `feat/p41-lot-b-puissance`, 6 commits `f20c353`..`e9b193d`) ; **partie 2
+implémentée** (2026-09-18, branche `feat/p41-lot-b-identite`, 16 commits
+`74c54cf`..`ed5a8c1`, section « Partie 2 » ci-dessous) — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
 (décision 2, scission de `attaque` en trois puissances).
 
 ### Contexte
@@ -84,3 +86,65 @@ d'aujourd'hui. Plan détaillé —
   différencier quand Mage et Paladin s'écarteront réellement d'`attack` (partie 2).
 - ⚠️ **`docs/formation-heros-draft/` (ch08, 11, 13, 15, 16, 17)** montre encore les noms d'API
   d'avant renommage (`attackPower`, etc.) — instantané figé et daté, non corrigé par ce lot.
+
+### Partie 2 — l'orientation devient réelle (2026-09-18)
+
+La partie 1 posait la stat et le mécanisme sans que rien ne s'en serve : les trois classes visaient
+`attack`. La partie 2 déclare les orientations, ajoute la seule règle qui s'applique **au gain**, et
+livre les neuf passifs — [plan](../../docs/superpowers/plans/2026-09-17-p41-lot-b-partie-2-identite-de-classe.md).
+
+**D1 — Les règles de stat vivent sur `RunState`, redérivées de la classe au chargement, jamais
+sérialisées.** Seule décision de portée architecturale de la partie 2. `StatRule`
+(`lib/models/data/stat_rule.dart` : `RuleStat`, `RuleMode`, `RuleTarget`) est lue de `class.json` par
+`HeroData.statRules` ; `RunState.statRules` la porte pour la run, et `fromJsonWithReport` la **relit
+du registre** par `heroClassId` (`HeroData.getById(...)?.statRules ?? const []`) — une règle est du
+**contenu**, la figer dans les sauvegardes empêcherait le JSON de la changer. Précédent suivi :
+`cardsPerTurn`, et la relecture du passif actif déjà faite là. `StatRule` porte une égalité **par
+valeur**, sans quoi les tests de ce chemin passent par identité d'objet sans rien vérifier.
+
+**D2 — `StatGains.apply(stats, gain, rules)` prend les règles en troisième paramètre positionnel
+obligatoire.** Une valeur par défaut laisserait un site de gain oublié échapper aux règles en
+silence — ce qui était arrivé à la Maîtrise d'Armure. Un ennemi reçoit `const []`.
+
+**D3 — *Bénédiction* lit l'armure par une charge utile, pas en déplaçant le dispatch.** `startTurn`
+**capture** l'armure avant la remise à `0` et la passe en `PassiveEvent.survivingArmor` ; déplacer
+le dispatch aurait masqué l'armure de tout passif `startOfTurn` qui en donne.
+
+**D4 — Un passif compte par un statut caché `<id>_count`** (`PassiveCounters`, `CounterScope`) :
+durée 1 pour le tour, 99 pour le combat — l'idiome des charges de reliques. La portée vient de la
+durée, **aucun état nouveau n'est à sérialiser**.
+
+**D5 — `PassiveData.displayOrder`, et `availablePassivesFor` trie par `(displayOrder, id)`.** L'écran
+de choix appartient au lot C : d'ici là le joueur reçoit `passives.first`. Sans rang explicite
+l'ordre alphabétique déciderait, et le Berserker démarrerait sur *Soif de Sang*, le plus intriqué
+des neuf. Le premier de chaque classe remplace le passif d'hier : `regen_armor`, `rage`, `channeling`.
+
+**D6 — Le tutoriel n'hérite pas du `critChance` du Berserker** : `TutorialMockState.baseStatsForHero`
+ne le recopie pas, un tutoriel aux dégâts aléatoires serait une régression. Ses règles viennent des
+mêmes fonctions pures que le jeu — **aucune recopie** dans `lib/tutorial/`
+([ADR-081](ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md)).
+
+**Correctif d'ordre tiré de l'implémentation.** `StatusEffectProcessor.processPlayerStatuses`
+terminait par `tickStatuses()`, qui décrémente **tout** statut, y compris un créé dans le même appel :
+une Puissance convertie en `duration: 1` était annihilée avant usage — la conversion marchait depuis
+une carte, pas depuis le statut `armor_regen`. Le tic passe **avant** le gain d'armure ; poison et
+`might_regen` restent en place, ce dernier délibérément vieilli 3 → 2.
+
+### Preuves dans le code (partie 2)
+- `lib/models/data/stat_rule.dart`, `hero_data.dart` (`statRules`, `critChance`, `getById`).
+- `lib/game/systems/stat_gains.dart` (`apply(..., rules)`, `_convert`).
+- `lib/game/controllers/run_controller.dart` (`RunState.statRules`, capture de `survivingArmor`, dispatches `onEnemyKilled`/`onDamageTaken`) ; `combat/status_effect_processor.dart` (ordre du tic).
+- `lib/game/systems/passives/` : `passive_counters.dart`, `passive_strategy.dart` (`PassiveEvent` enrichi), `passive_strategies.dart` (neuf stratégies).
+- `assets/data/classes/{paladin,berserker,mage}/class.json` ; `assets/data/passives/` — neuf fichiers, `berserker_armor.json` et `spell_armor.json` supprimés.
+
+### Conséquences (partie 2)
+- ✅ **Les trois classes ne jouent plus pareil** : 1021 tests au vert, `dart analyze` propre.
+- ⚠️ **Le Mage ne renforce plus aucun de ses dégâts** : toutes les cartes de dégâts sont de type
+  Attaque, *Projectile Magique* compris. Sa Puissance renforce l'intensité de ses altérations
+  jusqu'à ce que P-42 écrive des Compétences offensives — assumé, confirmé par le propriétaire.
+- ⚠️ **Le Berserker n'a plus jamais d'armure** : toute source devient une Puissance d'un tour.
+  *Mur de Fer* (10 armure, carte neutre) lui donne 10 de Puissance — l'échange voulu, à équilibrer.
+- ⚠️ **Six passifs sur neuf sont inatteignables** tant que l'écran de choix du lot C n'existe pas.
+- ⚠️ **`processEnemyStatuses` porte le même défaut d'ordre**, laissé hors périmètre : Puissance
+  ajoutée en `duration: 1` puis tiquée, donc `might_regen` d'ennemi mort. Branche inatteignable —
+  aucune donnée n'applique `might_regen` à un ennemi.

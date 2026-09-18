@@ -8,10 +8,13 @@ import 'game_data_registry.dart';
 /// qu'elle augmente, et de combien par point.
 @immutable
 class PassiveMastery {
-  /// Les paramètres qu'un point de Maîtrise peut augmenter. Le lot B de P-41
-  /// en ajoute un par paramètre qu'il crée sur [PassiveData] ; l'éditeur de
+  /// Les paramètres qu'un point de Maîtrise peut augmenter ; l'éditeur de
   /// contenu lit cette liste.
-  static const List<String> fields = ['value'];
+  ///
+  /// `draw` n'en est pas : aucun des neuf passifs ne fait piocher une carte de
+  /// plus par point de Maîtrise, et un champ que rien ne vise serait du code
+  /// mort dans `withMastery`.
+  static const List<String> fields = ['value', 'duration', 'threshold'];
 
   /// Le paramètre augmenté, parmi [fields].
   final String field;
@@ -74,8 +77,28 @@ class PassiveData {
   final String descriptionEn;
   final String descriptionFr;
   final RelicTrigger trigger;
-  final String effectType; // ex: 'gain_armor', 'berserker_armor', 'spell_armor'
+  final String effectType; // ex: 'gain_armor', 'rage', 'channeling'
+
+  /// Le chiffre principal du passif : ce que sa stratégie en fait lui
+  /// appartient — des points d'armure, de Puissance, de mana, de PV.
   final int value;
+
+  /// La durée, en tours, du statut que le passif pose. Sans objet pour un
+  /// passif qui n'en pose pas.
+  final int duration;
+
+  /// Le nombre d'occurrences à réunir avant que le passif agisse — le seuil de
+  /// *Flux de Mana*. 0 : aucun seuil, le passif agit à chaque déclenchement.
+  final int threshold;
+
+  /// Les cartes que le passif fait piocher — *Frénésie*.
+  final int draw;
+
+  /// Rang d'affichage parmi les passifs d'une classe. Donnée de présentation,
+  /// comme `HeroData.displayOrder` : l'ordre ne doit pas dépendre de l'ordre du
+  /// catalogue ni de l'alphabet. Le lot C en fera trois choix rangés ; d'ici
+  /// là, le premier est le passif que la classe obtient.
+  final int displayOrder;
 
   /// Les classes qui peuvent prendre ce passif ; `null` : toutes
   /// (spec P-49, §3.2). Seul le point d'accès unique la lit (spec P-49, §4).
@@ -93,6 +116,10 @@ class PassiveData {
     required this.trigger,
     required this.effectType,
     required this.value,
+    this.duration = 1,
+    this.threshold = 0,
+    this.draw = 0,
+    this.displayOrder = 0,
     this.classes,
     this.mastery,
   });
@@ -107,15 +134,19 @@ class PassiveData {
   PassiveData withMastery(int points) {
     final m = mastery;
     if (m == null || points == 0) return this;
+    final delta = m.perPoint * points;
     return switch (m.field) {
-      'value' => _withValue(value + m.perPoint * points),
+      'value' => _copyWith(value: value + delta),
+      'duration' => _copyWith(duration: duration + delta),
+      'threshold' => _copyWith(threshold: threshold + delta),
       // `fromJson` refuse tout autre champ ; un passif construit en code avec
       // un champ inconnu ignore sa Maîtrise plutôt que de lever en combat.
       _ => this,
     };
   }
 
-  PassiveData _withValue(int newValue) => PassiveData(
+  PassiveData _copyWith({int? value, int? duration, int? threshold}) =>
+      PassiveData(
         id: id,
         nameEn: nameEn,
         nameFr: nameFr,
@@ -123,7 +154,11 @@ class PassiveData {
         descriptionFr: descriptionFr,
         trigger: trigger,
         effectType: effectType,
-        value: newValue,
+        value: value ?? this.value,
+        duration: duration ?? this.duration,
+        threshold: threshold ?? this.threshold,
+        draw: draw,
+        displayOrder: displayOrder,
         classes: classes,
         mastery: mastery,
       );
@@ -158,6 +193,10 @@ class PassiveData {
       trigger: RelicTrigger.values.firstWhere((e) => e.name == json['trigger']),
       effectType: json['effectType'] as String,
       value: json['value'] as int,
+      duration: json['duration'] as int? ?? 1,
+      threshold: json['threshold'] as int? ?? 0,
+      draw: json['draw'] as int? ?? 0,
+      displayOrder: json['displayOrder'] as int? ?? 0,
       classes: classesJson?.map((e) => e as String).toList(),
       mastery:
           masteryJson == null ? null : PassiveMastery.fromJson(masteryJson),

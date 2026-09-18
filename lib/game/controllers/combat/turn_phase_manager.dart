@@ -133,6 +133,7 @@ class TurnPhaseManager {
           stats: StatGains.apply(
             enemy.stats,
             StatGain(GainResource.armor, intent.value, GainSource.enemyIntent),
+            const [],
           ),
         );
         controller.updateEnemy(updatedEnemy);

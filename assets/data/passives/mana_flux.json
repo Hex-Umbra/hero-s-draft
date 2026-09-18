@@ -1,0 +1,19 @@
+{
+  "id": "mana_flux",
+  "name_en": "Mana Flux",
+  "name_fr": "Flux de Mana",
+  "description_en": "Every 3 Skills played in a combat, gain 1 Mana for the current turn.",
+  "description_fr": "Toutes les 3 Compétences jouées dans un combat, gagne 1 Mana pour le tour en cours.",
+  "classes": ["mage"],
+  "trigger": "onSkillPlayed",
+  "effectType": "mana_flux",
+  "value": 1,
+  "threshold": 3,
+  "displayOrder": 3,
+  "mastery": {
+    "field": "threshold",
+    "perPoint": -1,
+    "description_en": "-{amount} Skill to gather",
+    "description_fr": "-{amount} Compétence à réunir"
+  }
+}
