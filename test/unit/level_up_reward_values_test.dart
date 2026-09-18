@@ -76,8 +76,29 @@ void main() {
 
   late List<LevelUpRewardData> rewards;
 
+  /// Les valeurs réellement rendues par `generateChoices`, palier par palier —
+  /// échantillonnées une fois pour tout le fichier, sur le même volume que le
+  /// test d'acceptation ci-dessous. Sert aux deux tests qui, avant la revue de
+  /// tâche 4 (tour 1), ne lisaient que la table littérale `_attendu` sans
+  /// jamais appeler le service : ils vérifient désormais le tirage réel.
+  /// Échantillon distinct de celui, local, du test d'acceptation — laissé
+  /// intact, à dessein, par cette correction.
+  late Map<String, Map<RewardRarity, Set<int>>> observedValues;
+
   setUpAll(() async {
     rewards = (await loadGameDataRegistry(rootBundle)).levelUpRewards;
+
+    observedValues = <String, Map<RewardRarity, Set<int>>>{};
+    for (var i = 0; i < 10000; i++) {
+      for (final choix
+          in LevelUpRewardService.generateChoices(rewards: rewards, luck: 0)) {
+        if (choix.data.pool != RewardPool.draft) continue;
+        observedValues
+            .putIfAbsent(choix.data.id, () => {})
+            .putIfAbsent(choix.rarity, () => {})
+            .add(choix.amount);
+      }
+    }
   });
 
   group('Valeurs de récompense par palier de rareté', () {
@@ -139,7 +160,9 @@ void main() {
 
     test('chaque récompense progresse strictement avec la rareté', () {
       // L'invariant que le bug violait : un légendaire donnait moins qu'un
-      // épique, et exactement autant qu'un commun.
+      // épique, et exactement autant qu'un commun. Vérifié sur les valeurs
+      // réellement rendues par le tirage (`observedValues`), pas sur la seule
+      // table littérale `_attendu` (revue de tâche 4, tour 1).
       const ordre = [
         RewardRarity.common,
         RewardRarity.uncommon,
@@ -148,18 +171,18 @@ void main() {
         RewardRarity.legendary,
       ];
 
-      for (final entree in _attendu.entries) {
+      for (final id in _attendu.keys) {
         // Sagesse a un plateau assumé entre peu commun et rare.
-        final strict = entree.key != 'wisdom';
+        final strict = id != 'wisdom';
 
         for (var i = 1; i < ordre.length; i++) {
-          final precedent = entree.value[ordre[i - 1]]!;
-          final courant = entree.value[ordre[i]]!;
+          final precedent = observedValues[id]![ordre[i - 1]]!.single;
+          final courant = observedValues[id]![ordre[i]]!.single;
           expect(
             courant,
             strict ? greaterThan(precedent) : greaterThanOrEqualTo(precedent),
             reason:
-                '${entree.key} : ${ordre[i].name} ($courant) ne devrait pas '
+                '$id : ${ordre[i].name} ($courant) ne devrait pas '
                 'être sous ${ordre[i - 1].name} ($precedent)',
           );
         }
@@ -184,15 +207,19 @@ void main() {
 
     test('l\'Affinité légendaire vaut plus que l\'épique', () {
       // Non-régression directe du défaut trouvé : la cascade de `if` sans
-      // palier légendaire renvoyait 1, soit la valeur d'un commun.
-      final affinity = _attendu['affinity']!;
+      // palier légendaire renvoyait 1, soit la valeur d'un commun. Vérifié
+      // sur les valeurs réellement rendues par le tirage (`observedValues`),
+      // pas sur la seule table littérale `_attendu` (revue de tâche 4, tour
+      // 1) : c'est le tirage qu'un `if` incomplet aurait fait régresser, pas
+      // la table qui le décrit.
+      final affinity = observedValues['affinity']!;
       expect(
-        affinity[RewardRarity.legendary],
-        greaterThan(affinity[RewardRarity.epic]!),
+        affinity[RewardRarity.legendary]!.single,
+        greaterThan(affinity[RewardRarity.epic]!.single),
       );
       expect(
-        affinity[RewardRarity.legendary],
-        isNot(affinity[RewardRarity.common]),
+        affinity[RewardRarity.legendary]!.single,
+        isNot(affinity[RewardRarity.common]!.single),
       );
     });
   });
