@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/level_up_reward_service.dart';
 import 'package:roguelike_card_game/models/data/level_up_reward_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/reward_rarity.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -76,6 +78,23 @@ void main() {
 
   late List<LevelUpRewardData> rewards;
 
+  // Fixture passive with mastery block, so Affinity is eligible for drawing
+  // (required by task 1 filter: Affinity requires an active passive with mastery).
+  final activePassive = PassiveData(
+    id: 'ward',
+    nameEn: 'Ward',
+    nameFr: 'Garde',
+    trigger: RelicTrigger.endOfTurn,
+    effectType: 'gain_armor',
+    value: 2,
+    mastery: const PassiveMastery(
+      field: 'value',
+      perPoint: 1,
+      descriptionEn: '+{amount} Block at end of turn',
+      descriptionFr: '+{amount} Armure en fin de tour',
+    ),
+  );
+
   /// Les valeurs réellement rendues par `generateChoices`, palier par palier —
   /// échantillonnées une fois pour tout le fichier, sur le même volume que le
   /// test d'acceptation ci-dessous. Sert aux deux tests qui, avant la revue de
@@ -90,8 +109,11 @@ void main() {
 
     observedValues = <String, Map<RewardRarity, Set<int>>>{};
     for (var i = 0; i < 10000; i++) {
-      for (final choix
-          in LevelUpRewardService.generateChoices(rewards: rewards, luck: 0)) {
+      for (final choix in LevelUpRewardService.generateChoices(
+        rewards: rewards,
+        luck: 0,
+        activePassive: activePassive,
+      )) {
         if (choix.data.pool != RewardPool.draft) continue;
         observedValues
             .putIfAbsent(choix.data.id, () => {})
@@ -110,8 +132,11 @@ void main() {
       final observe = <String, Map<RewardRarity, Set<int>>>{};
 
       for (var i = 0; i < 10000; i++) {
-        for (final choix
-            in LevelUpRewardService.generateChoices(rewards: rewards, luck: 0)) {
+        for (final choix in LevelUpRewardService.generateChoices(
+          rewards: rewards,
+          luck: 0,
+          activePassive: activePassive,
+        )) {
           if (choix.data.pool != RewardPool.draft) continue;
           observe
               .putIfAbsent(choix.data.id, () => {})
@@ -150,8 +175,11 @@ void main() {
       // En donnée, une récompense mal rangée le briserait en silence.
       final tirees = <String>{};
       for (var i = 0; i < 2000; i++) {
-        for (final choix
-            in LevelUpRewardService.generateChoices(rewards: rewards, luck: 0)) {
+        for (final choix in LevelUpRewardService.generateChoices(
+          rewards: rewards,
+          luck: 0,
+          activePassive: activePassive,
+        )) {
           if (choix.data.pool == RewardPool.draft) tirees.add(choix.data.id);
         }
       }
