@@ -72,6 +72,22 @@ class StatRule {
         duration: json['duration'] as int? ?? 1,
       );
 
+  // Egalite par valeur : `RunState.fromJsonWithReport` reconstruit ces regles
+  // depuis le registre plutot que de les deserialiser (decision 1 du plan),
+  // et une comparaison par identite laisserait passer une reconstruction
+  // structurellement fausse sans qu'aucun test ne le voie.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StatRule &&
+          other.stat == stat &&
+          other.mode == mode &&
+          other.to == to &&
+          other.duration == duration);
+
+  @override
+  int get hashCode => Object.hash(stat, mode, to, duration);
+
   /// Lit la clé `statRules` d'une classe. Absente : aucune règle — c'est le
   /// cas du Paladin et du Mage.
   static List<StatRule> parseAll(Object? json) {

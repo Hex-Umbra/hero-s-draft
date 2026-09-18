@@ -117,5 +117,29 @@ void main() {
         reason: 'l orientation, elle, est fidele',
       );
     });
+
+    // Decision 1 du plan : `statRules` n'est jamais serialise, et
+    // `fromJsonWithReport` le relit de la classe via le vrai registre. Ce
+    // test couvre ce demi-chemin de chargement, non teste ailleurs : sans
+    // lui, une reconstruction cassee (par exemple qui retournerait toujours
+    // une liste vide) passerait inapercue, puisqu'un Berserker qui reprend sa
+    // run retrouverait alors silencieusement son armure pour le reste de la
+    // run.
+    test('fromJsonWithReport relit les regles de stat de la classe', () {
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(hero('berserker'));
+
+      final json = run.currentState.toJson();
+      final (rebuilt, missing) = RunState.fromJsonWithReport(json);
+
+      expect(missing, isEmpty);
+      expect(rebuilt.statRules, hasLength(1));
+      expect(rebuilt.statRules.single.to, RuleTarget.statusMight);
+      expect(
+        rebuilt.statRules,
+        hero('berserker').statRules,
+        reason: 'egalite par valeur, pas par identite d instance',
+      );
+    });
   });
 }
