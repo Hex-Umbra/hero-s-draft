@@ -10,6 +10,7 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
+import '../../models/reward_rarity.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/audio_source.dart';
 import '../../services/audio/game_moment.dart';

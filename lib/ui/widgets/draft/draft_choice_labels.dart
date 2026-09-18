@@ -1,6 +1,7 @@
 import '../../../game/services/level_up_reward_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/data/passive_data.dart';
+import '../../../models/reward_rarity.dart';
 
 /// Dérive les libellés localisés d'un [DraftChoice] (titre, description et
 /// rareté) tel que généré par [LevelUpRewardService.generateChoices].

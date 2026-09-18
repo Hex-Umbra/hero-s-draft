@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/level_up_reward_service.dart';
+import 'package:roguelike_card_game/models/reward_rarity.dart';
 
 /// Samples [LevelUpRewardService.rollRarity] (the real production code,
 /// not a copy of its formula) [sampleCount] times and returns the observed

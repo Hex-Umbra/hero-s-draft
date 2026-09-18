@@ -1,6 +1,6 @@
 import 'dart:math';
 
-enum RewardRarity { common, uncommon, rare, epic, legendary, mythic }
+import '../../models/reward_rarity.dart';
 
 /// Stable technical identifier for each level-up reward choice, used both to
 /// resolve localized display strings and to apply the choice's effect.
