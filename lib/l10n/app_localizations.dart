@@ -686,6 +686,18 @@ abstract class AppLocalizations {
   /// **'Your Might strengthens {targets}.'**
   String mightTargetsSentence(String targets);
 
+  /// No description provided for @statRuleConvertArmorToMight.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{Their Armor becomes Might for one turn.} other{Their Armor becomes Might for {duration} turns.}}'**
+  String statRuleConvertArmorToMight(int duration);
+
+  /// No description provided for @statRuleConvertManaToMight.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}'**
+  String statRuleConvertManaToMight(int duration);
+
   /// No description provided for @tooltipManaTitle.
   ///
   /// In en, this message translates to:

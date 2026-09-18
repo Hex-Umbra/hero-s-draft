@@ -3,6 +3,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'card_data.dart';
 import 'relic_data.dart';
+import 'stat_rule.dart';
 import '../enemy_intent.dart';
 import '../might_target.dart';
 
@@ -148,4 +149,19 @@ extension MightTargetsLabels on Set<MightTarget> {
   /// règle d'ADR-090.
   String sentence(AppLocalizations l10n) =>
       l10n.mightTargetsSentence(longLabel(l10n));
+}
+
+extension StatRuleLabel on StatRule {
+  /// La règle en clair : « Son Armure devient de la Puissance pour un tour. »
+  ///
+  /// Générée à partir de la règle, jamais écrite classe par classe
+  /// (spec P-41, §8.3). Le `switch` est **exhaustif** sur le triplet
+  /// (ressource, mode, cible) : ajouter une valeur à l'une des trois
+  /// énumérations sans son libellé ne compile plus.
+  String describe(AppLocalizations l10n) => switch ((stat, mode, to)) {
+        (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleConvertArmorToMight(duration),
+        (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleConvertManaToMight(duration),
+      };
 }

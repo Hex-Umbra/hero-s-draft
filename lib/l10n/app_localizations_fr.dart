@@ -334,6 +334,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String statRuleConvertArmorToMight(int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'Son Armure devient de la Puissance pour $duration tours.',
+      one: 'Son Armure devient de la Puissance pour un tour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statRuleConvertManaToMight(int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'Son Mana devient de la Puissance pour $duration tours.',
+      one: 'Son Mana devient de la Puissance pour un tour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tooltipManaTitle => 'Mana';
 
   @override

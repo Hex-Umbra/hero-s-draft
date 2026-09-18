@@ -166,6 +166,18 @@
       "targets": { "type": "String" }
     }
   },
+  "statRuleConvertArmorToMight": "{duration, plural, =1{Their Armor becomes Might for one turn.} other{Their Armor becomes Might for {duration} turns.}}",
+  "@statRuleConvertArmorToMight": {
+    "placeholders": {
+      "duration": { "type": "int" }
+    }
+  },
+  "statRuleConvertManaToMight": "{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}",
+  "@statRuleConvertManaToMight": {
+    "placeholders": {
+      "duration": { "type": "int" }
+    }
+  },
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",

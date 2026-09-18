@@ -104,6 +104,8 @@
   "mightTargetAlterationLong": "vos altérations",
   "listJoinAnd": "et",
   "mightTargetsSentence": "Votre Puissance renforce {targets}.",
+  "statRuleConvertArmorToMight": "{duration, plural, =1{Son Armure devient de la Puissance pour un tour.} other{Son Armure devient de la Puissance pour {duration} tours.}}",
+  "statRuleConvertManaToMight": "{duration, plural, =1{Son Mana devient de la Puissance pour un tour.} other{Son Mana devient de la Puissance pour {duration} tours.}}",
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Ressource d'énergie utilisée pour jouer des cartes chaque tour.",
   "cardTypeAttack": "Attaque",
