@@ -67,6 +67,16 @@ class MageMarkPassive extends PassiveStrategy {
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
     final enemyId = event.enemyId;
     if (enemyId == null) return;
+
+    final combat = run.ref.read(combatProvider.notifier);
+    final index =
+        combat.currentState.enemies.indexWhere((e) => e.id == enemyId);
+    // La cible peut être morte de la carte qui vient d'être jouée, ou d'une
+    // sélection restée en place au-delà de sa mort : dans les deux cas, la
+    // marque ne peut pas s'appliquer, et le compteur ne doit donc pas être
+    // consommé sur rien (finding 3 de la revue finale).
+    if (index == -1) return;
+
     if (PassiveCounters.bump(run, passive, scope: CounterScope.turn) > 1) {
       return;
     }
@@ -78,11 +88,6 @@ class MageMarkPassive extends PassiveStrategy {
     );
     if (status == null) return;
 
-    final combat = run.ref.read(combatProvider.notifier);
-    final index =
-        combat.currentState.enemies.indexWhere((e) => e.id == enemyId);
-    // La cible peut être morte de la carte qui vient d'être jouée.
-    if (index == -1) return;
     combat.updateEnemyStats(
       enemyId,
       combat.currentState.enemies[index].stats.addStatus(status),

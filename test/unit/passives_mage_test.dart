@@ -115,14 +115,15 @@ void main() {
     return statuses.isEmpty ? 0 : statuses.first.value;
   }
 
-  CardInstance card(CardType type) => CardInstance(
+  CardInstance card(CardType type, {CardTarget target = CardTarget.singleEnemy}) =>
+      CardInstance(
         data: CardData(
           id: 'test_card',
           cost: 0,
           type: type,
           category: CardCategory.global,
           rarity: CardRarity.common,
-          target: CardTarget.singleEnemy,
+          target: target,
           effects: const [CardEffect(type: 'damage', value: 1)],
         ),
       );
@@ -229,6 +230,64 @@ void main() {
           reason: 'la cible visee par la carte est marquee');
       expect(isVulnerable(enemyA.id), isFalse,
           reason: 'un ennemi non vise ne doit jamais etre marque');
+    });
+
+    // Finding 2 de la revue finale : `PassiveEvent.enemyId` documente
+    // n'etre renseigne que pour une carte a cible unique. Une Attaque a
+    // portee de groupe ne doit marquer personne, meme si une selection
+    // residuelle (d'une carte precedente) pointe encore vers un ennemi.
+    test('une Attaque a portee de groupe ne marque personne', () {
+      run.startNewRun(mage, mageMark());
+      final enemyA = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 40, armure: 0, might: 0),
+      );
+      final enemyB = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 40, armure: 0, might: 0),
+      );
+      combat.state = CombatState(
+        enemies: [enemyA, enemyB],
+        selectedEnemyId: enemyA.id, // selection residuelle
+        turnPhase: TurnPhase.player,
+      );
+
+      combat.applyPlayerCardPlay(
+        card(CardType.attack, target: CardTarget.allEnemies),
+      );
+
+      bool isVulnerable(String enemyId) => combat.currentState.enemies
+          .firstWhere((e) => e.id == enemyId)
+          .stats
+          .statuses
+          .any((s) => s.id == 'vulnerable');
+
+      expect(isVulnerable(enemyA.id), isFalse,
+          reason: 'la selection residuelle ne doit pas etre lue');
+      expect(isVulnerable(enemyB.id), isFalse);
+    });
+
+    // Finding 3 de la revue finale : si la cible visee n'existe plus dans le
+    // combat au moment ou le passif se resout, la marque ne peut pas
+    // s'appliquer — et le compteur du tour ne doit donc pas etre consomme.
+    test('une cible absente ne consomme pas le compteur du tour', () {
+      run.startNewRun(mage, mageMark());
+      seedEnemy();
+      final realEnemyId = combat.currentState.enemies.single.id;
+
+      // Simule une selection perimee : l'ennemi vise n'est plus dans le
+      // combat quand la Marque se resout.
+      combat.state = combat.state.copyWith(selectedEnemyId: 'ghost_enemy_id');
+      combat.applyPlayerCardPlay(card(CardType.attack));
+      expect(vulnerableOnEnemy(), 0, reason: 'rien a marquer, cible absente');
+
+      // Avant le correctif, le compteur du tour aurait deja ete consomme par
+      // l'attaque precedente : cette deuxieme Attaque, sur une cible bien
+      // presente, ne marquerait alors rien.
+      combat.state = combat.state.copyWith(selectedEnemyId: realEnemyId);
+      combat.applyPlayerCardPlay(card(CardType.attack));
+      expect(vulnerableOnEnemy(), 1,
+          reason: 'le compteur du tour est encore disponible');
     });
   });
 

@@ -228,10 +228,17 @@ class CombatController extends Notifier<CombatState> {
       // du type de la carte — les mêmes que les reliques reçoivent juste
       // après. Un passif choisit son déclencheur par sa donnée, et n'a pas à
       // retester le type dans sa stratégie.
+      // `enemyId` n'est renseigne que pour une carte qui vise un seul ennemi
+      // (contrat de `PassiveEvent.enemyId`) : une carte a portee de groupe
+      // laisserait sinon une selection residuelle marquer un seul ennemi.
+      final singleTargetEnemyId = card.data.target == CardTarget.singleEnemy
+          ? state.selectedEnemyId
+          : null;
+
       final event = PassiveEvent(
         RelicTrigger.onCardPlayed,
         card: card,
-        enemyId: state.selectedEnemyId,
+        enemyId: singleTargetEnemyId,
       );
       TraitSystem.dispatch(runController, event);
 
@@ -248,7 +255,7 @@ class CombatController extends Notifier<CombatState> {
           PassiveEvent(
             typedTrigger,
             card: card,
-            enemyId: state.selectedEnemyId,
+            enemyId: singleTargetEnemyId,
           ),
         );
       }
