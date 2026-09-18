@@ -106,6 +106,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       rewards: ref.read(gameDataLoaderProvider).requireValue.levelUpRewards,
       luck: ref.read(runProvider).heroStats.luck,
       forceLegendary: widget.forceLegendary,
+      activePassive: ref.read(runProvider).activePassive,
     );
     _alertController = AnimationController(
       vsync: this,
