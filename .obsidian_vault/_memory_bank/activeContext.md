@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-18 | commit: ed5a8c1 -->
+<!-- last-sync: 2026-09-18 | commit: 5086272 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,19 +7,17 @@
 
 ## Focus courant
 
-**P-41 lot B est implémenté en entier.** La partie 2 — l'identité de classe — est **sur la branche
-`feat/p41-lot-b-identite`, pas encore fusionnée** (2026-09-18, `74c54cf`..`ed5a8c1`, 16 commits,
-détail en « 3 dernières livraisons »). [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)
+**P-41 lot B est fusionné dans `main` en entier** : la partie 2 — l'identité de classe — l'a rejoint
+par la **PR #41** (2026-09-18, merge `5086272`, `74c54cf`..`83e65b9`, 18 commits, détail plus bas),
+après la partie 1 par la PR #40 (merge `e2cc24b`). [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)
 est **complété** par ses six décisions d'implémentation, dont la seule de portée architecturale : les
 règles de stat vivent sur `RunState`, redérivées de la classe au chargement et jamais sérialisées.
-La partie 1 reste fusionnée dans `main` par la PR #40 (merge `e2cc24b`).
 
 **P-49 (passifs partagés) reste fusionné dans `main`** par la PR #39 (2026-09-17, merge `56be78d`) :
 chaque passif déclare ses classes éligibles et sa Maîtrise — [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md),
-qui remplace la D4 d'ADR-086. La note `0.5.2`, rouverte en place deux fois, n'est **toujours pas
-taguée**. **Aucune note n'existe encore pour la partie 2** : le propriétaire décide s'il l'écrit
-maintenant ou au lot C — annoncer « trois nouveaux passifs » devance d'un lot l'écran qui permet de
-les choisir. Métriques dans `progress.md`.
+qui remplace la D4 d'ADR-086. La note `0.5.2` a été **rouverte en place une troisième fois** pour
+cette partie 2 (`83e65b9`) : le propriétaire a tranché, elle est écrite maintenant et annonce l'écran
+de choix des passifs pour plus tard. **Toujours pas taguée.** Métriques dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
@@ -58,8 +56,8 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **branche `feat/p41-lot-b-identite`,
-   non fusionnée**, 16 commits, `74c54cf` → `ed5a8c1`) — **la première livraison de P-41 que le
+1. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **fusionné dans `main` par la
+   PR #41**, merge `5086272`, 18 commits, `74c54cf` → `83e65b9`) — **la première livraison de P-41 que le
    joueur ressent.** Le Paladin renforce tout, le Berserker ses seules Attaques, le Mage ses
    Compétences et ses altérations. Le Berserker **n'a plus jamais d'armure** : toute source devient
    une Puissance d'un tour, par une `statRules` de son `class.json` qu'applique
@@ -108,12 +106,14 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**Trois gestes attendent le propriétaire sur `feat/p41-lot-b-identite`** : la regarder tourner (les
-trois identités ne se vérifient pas par la suite de tests), décider s'il écrit la note de version
-maintenant ou au lot C, et trancher la fusion. Ensuite **P-41 lot C** devient le prochain chantier,
-et son périmètre gagne l'**écran de choix du passif** — sans lui, six des neuf passifs livrés restent
-inatteignables. Le tag `v0.5.2` attend toujours P-42 et la campagne de test manuelle du propriétaire ;
-le filtre de classe des cartes de signature se traite avant ou avec P-42.
+**P-41 lot C est le prochain chantier**, encore ni spécifié ni planifié. Son périmètre a gagné
+l'**écran de choix du passif** : sans lui, six des neuf passifs livrés par le lot B restent
+inatteignables, l'écran de sélection ne proposant que `passives.first` — et la note `0.5.2` a
+désormais promis cet écran au joueur. Le reste du lot : récompenses de niveau data-driven
+(indépendantes, parallélisables) et filtre d'*Affinité*. Il reste au propriétaire à **regarder
+tourner le lot B** — les trois identités de classe ne se vérifient pas par la suite de tests. Le tag
+`v0.5.2` attend cette campagne manuelle et P-42 ; le filtre de classe des cartes de signature se
+traite avant ou avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)
