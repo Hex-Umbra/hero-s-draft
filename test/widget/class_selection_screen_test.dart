@@ -1149,6 +1149,45 @@ void main() {
       expect(find.text('Passives: Ward'), findsNothing);
     });
 
+    testWidgets('l etiquette Passifs est sous le passif montre', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      expect(
+        tester.getCenter(find.text('Passives')).dy,
+        greaterThan(tester.getCenter(find.text('Ward')).dy),
+        reason:
+            "l'etiquette doit fermer le bloc, pas l'ouvrir : le passif "
+            'montre vient en premier',
+      );
+    });
+
+    testWidgets('l etiquette Passifs domine le texte du passif', (
+      WidgetTester tester,
+    ) async {
+      // Demande explicite du proprietaire : l'etiquette est l'appel au
+      // depliage, elle doit se voir. Une relation plutot qu'un nombre —
+      // ce qui compte est qu'elle reste nettement plus grande que le nom
+      // du passif, pas qu'elle vaille exactement 23.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      final double etiquette =
+          tester.widget<Text>(find.text('Passives')).style!.fontSize!;
+      final double nomDuPassif =
+          tester.widget<Text>(find.text('Ward')).style!.fontSize!;
+
+      expect(etiquette, greaterThan(nomDuPassif * 1.5));
+    });
+
     testWidgets('repliee, toucher le passif montre deplie la carte', (
       WidgetTester tester,
     ) async {

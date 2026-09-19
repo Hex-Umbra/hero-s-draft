@@ -4,10 +4,11 @@ import '../../models/data/passive_data.dart';
 
 /// Le bloc dépliant des passifs, au bas d'une carte de classe.
 ///
-/// Replié, il nomme le passif avec lequel la run partirait — le joueur n'a
-/// pas à déplier pour le savoir. Déplié, il liste tous les passifs
-/// disponibles pour la classe (point d'accès unique de P-49), chacun avec sa
-/// description entière et ce qu'un point de Maîtrise lui apporte.
+/// Replié, il montre en entier le passif avec lequel la run partirait — nom,
+/// effet et ce qu'un point de Maîtrise lui apporte — pour que le joueur
+/// compare les trois classes sans rien ouvrir. Déplier ajoute les autres
+/// passifs disponibles pour la classe (point d'accès unique de P-49). Dans
+/// les deux cas, l'étiquette « Passifs » ferme le bloc.
 ///
 /// Il ne décide pas de son propre dépliage : c'est la carte qui le lui dit,
 /// parce qu'une seule carte à la fois peut être ouverte.
@@ -47,17 +48,28 @@ class ClassPassiveList extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Repliée, la carte montre quand même le passif retenu en entier :
+        // le joueur sait avec quoi il partirait sans avoir à déplier.
+        // Déplier n'ajoute que les autres.
+        if (isExpanded)
+          for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
+        else
+          _buildOption(selectedIndex, l10n),
+        // L'étiquette ferme le bloc, elle ne l'ouvre pas : le passif retenu
+        // est ce que le joueur vient lire, l'étiquette est l'invitation à
+        // en voir davantage.
+        const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
               child: Text(
-                // L'étiquette ne nomme pas le passif : la tuile juste en
-                // dessous le fait déjà, repliée comme dépliée.
+                // Elle ne nomme pas le passif : la tuile au-dessus le fait
+                // déjà, repliée comme dépliée.
                 l10n.passivesLabel,
                 style: TextStyle(
-                  fontSize: isMobile ? 10.5 : 11.5,
+                  fontSize: _labelFontSize,
                   color: Colors.cyanAccent.withValues(alpha: 0.8),
                   letterSpacing: 0.5,
                 ),
@@ -66,21 +78,21 @@ class ClassPassiveList extends StatelessWidget {
             ),
             Icon(
               isExpanded ? Icons.expand_less : Icons.expand_more,
-              size: isMobile ? 16 : 18,
+              // Le chevron suit la taille du texte : c'est la même
+              // affordance, les désaccorder la casserait en deux.
+              size: _labelFontSize + 4,
               color: Colors.cyanAccent.withValues(alpha: 0.8),
             ),
           ],
         ),
-        // Repliée, la carte montre quand même le passif retenu en entier :
-        // le joueur sait avec quoi il partirait sans avoir à déplier.
-        // Déplier n'ajoute que les autres.
-        if (isExpanded)
-          for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
-        else
-          _buildOption(selectedIndex, l10n),
       ],
     );
   }
+
+  /// La taille de l'étiquette « Passifs », doublée par rapport au reste du
+  /// bloc (demande du propriétaire) : c'est elle qui appelle au dépliage, et
+  /// elle se lisait comme une légende de bas de page.
+  double get _labelFontSize => isMobile ? 21 : 23;
 
   Widget _buildOption(int i, AppLocalizations l10n) {
     final passive = passives[i];
