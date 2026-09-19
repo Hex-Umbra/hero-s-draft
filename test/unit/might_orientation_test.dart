@@ -105,7 +105,6 @@ void main() {
       classCard: 'mage.png',
       maxHp: 60,
       maxMana: 3,
-      baseDamage: 0,
       mightTargets: {MightTarget.skill, MightTarget.alteration},
     );
     final slime = EnemyData(

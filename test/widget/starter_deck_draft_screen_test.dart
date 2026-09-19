@@ -173,7 +173,6 @@ void main() {
     classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
     luck: 0,
     mastery: 0,
     skills: ['holy_shield'],
@@ -300,7 +299,6 @@ void main() {
       themeColor: 0xFF00A88F,
       maxHp: 70,
       maxMana: 3,
-      baseDamage: 8,
     );
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1.0;

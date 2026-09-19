@@ -22,7 +22,6 @@ void main() {
     classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
   );
 
   /// Un passif observable : deux points d'armure, quel que soit l'événement.

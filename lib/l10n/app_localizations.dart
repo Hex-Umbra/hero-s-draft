@@ -320,11 +320,17 @@ abstract class AppLocalizations {
   /// **'Mastery: {effect}'**
   String passiveMasteryCurrent(String effect);
 
-  /// No description provided for @passiveMasteryPerPoint.
+  /// Mastery effect of a passive, with the starting Mastery of the class. A class at 0 can still earn Mastery mid-run, so the effect stays visible.
   ///
   /// In en, this message translates to:
-  /// **'Per Mastery point: {effect}'**
-  String passiveMasteryPerPoint(String effect);
+  /// **'{mastery, plural, =0{Mastery 0 at start: {effect}} other{Mastery {mastery}: {effect}}}'**
+  String passiveMasteryAtStart(int mastery, String effect);
+
+  /// No description provided for @passivesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Passives'**
+  String get passivesLabel;
 
   /// No description provided for @relicInventory.
   ///
@@ -655,6 +661,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alterations'**
   String get mightTargetAlterationShort;
+
+  /// No description provided for @mightTargetAttackLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your Attack damage'**
+  String get mightTargetAttackLong;
+
+  /// No description provided for @mightTargetSkillLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your Skill damage'**
+  String get mightTargetSkillLong;
+
+  /// No description provided for @mightTargetAlterationLong.
+  ///
+  /// In en, this message translates to:
+  /// **'your alterations'**
+  String get mightTargetAlterationLong;
+
+  /// Joins the last two items of an enumeration: A, B and C.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get listJoinAnd;
+
+  /// No description provided for @mightTargetsSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Might strengthens {targets}.'**
+  String mightTargetsSentence(String targets);
+
+  /// No description provided for @statRuleConvertArmorToMight.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{Their Armor becomes Might for one turn.} other{Their Armor becomes Might for {duration} turns.}}'**
+  String statRuleConvertArmorToMight(int duration);
+
+  /// No description provided for @statRuleConvertManaToMight.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}'**
+  String statRuleConvertManaToMight(int duration);
 
   /// No description provided for @tooltipManaTitle.
   ///

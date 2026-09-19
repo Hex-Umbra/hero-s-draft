@@ -40,7 +40,6 @@ HeroData fixtureHero(String id) => HeroData.fromJson({
       'classCard': 'assets/data/classes/$id/$id.png',
       'maxHp': 80,
       'maxMana': 3,
-      'baseDamage': 5,
       'mightTargets': ['attack'],
     });
 

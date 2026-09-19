@@ -165,7 +165,6 @@ void main() {
         'classCard': 'assets/data/classes/$id/$id.png',
         'maxHp': 100,
         'maxMana': 3,
-        'baseDamage': 5,
         'skills': skills,
       }),
     );

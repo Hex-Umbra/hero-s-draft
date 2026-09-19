@@ -70,12 +70,15 @@
       "effect": { "type": "String" }
     }
   },
-  "passiveMasteryPerPoint": "Per Mastery point: {effect}",
-  "@passiveMasteryPerPoint": {
+  "passiveMasteryAtStart": "{mastery, plural, =0{Mastery 0 at start: {effect}} other{Mastery {mastery}: {effect}}}",
+  "@passiveMasteryAtStart": {
+    "description": "Mastery effect of a passive, with the starting Mastery of the class. A class at 0 can still earn Mastery mid-run, so the effect stays visible.",
     "placeholders": {
+      "mastery": { "type": "int" },
       "effect": { "type": "String" }
     }
   },
+  "passivesLabel": "Passives",
   "relicInventory": "Relic Inventory",
   "emptyInventory": "Your inventory is empty",
   "luckPercentageTitle": "Rarity Loot Rates",
@@ -153,6 +156,31 @@
   "mightTargetAttackShort": "Attacks",
   "mightTargetSkillShort": "Skills",
   "mightTargetAlterationShort": "Alterations",
+  "mightTargetAttackLong": "your Attack damage",
+  "mightTargetSkillLong": "your Skill damage",
+  "mightTargetAlterationLong": "your alterations",
+  "listJoinAnd": "and",
+  "@listJoinAnd": {
+    "description": "Joins the last two items of an enumeration: A, B and C."
+  },
+  "mightTargetsSentence": "Your Might strengthens {targets}.",
+  "@mightTargetsSentence": {
+    "placeholders": {
+      "targets": { "type": "String" }
+    }
+  },
+  "statRuleConvertArmorToMight": "{duration, plural, =1{Their Armor becomes Might for one turn.} other{Their Armor becomes Might for {duration} turns.}}",
+  "@statRuleConvertArmorToMight": {
+    "placeholders": {
+      "duration": { "type": "int" }
+    }
+  },
+  "statRuleConvertManaToMight": "{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}",
+  "@statRuleConvertManaToMight": {
+    "placeholders": {
+      "duration": { "type": "int" }
+    }
+  },
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",

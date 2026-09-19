@@ -17,7 +17,6 @@ void main() {
       classCard: 'hero_paladin.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
     );
 
     final controller = container.read(runProvider.notifier);

@@ -10,6 +10,7 @@
   "shortDescription_en": "+{amount} Mastery",
   "effect": "stat",
   "stat": "mastery",
+  "requires": "passiveMastery",
   "pool": "draft",
   "displayOrder": 3,
   "values": {

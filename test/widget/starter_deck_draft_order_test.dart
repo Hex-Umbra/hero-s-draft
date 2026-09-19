@@ -84,7 +84,6 @@ const _mockHero = HeroData(
   classCard: 'paladin.png',
   maxHp: 100,
   maxMana: 3,
-  baseDamage: 5,
 );
 
 final _mockRegistry = GameDataRegistry(

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../models/data/level_up_reward_data.dart';
+import '../../models/data/passive_data.dart';
 import '../../models/reward_rarity.dart';
 
 /// Une récompense tirée : ce qu'elle est, à quel palier, et pour combien.
@@ -89,9 +90,15 @@ class LevelUpRewardService {
     required List<LevelUpRewardData> rewards,
     required int luck,
     bool forceLegendary = false,
+    PassiveData? activePassive,
   }) {
     final rng = Random();
-    final draftable = LevelUpRewardData.inPool(rewards, RewardPool.draft);
+    // Le filtre s'applique à la table des trois emplacements comme aux
+    // mythiques : une exigence est une propriété de la récompense, pas du
+    // groupe de tirage (spec P-41, §8.2).
+    final eligible =
+        rewards.where((reward) => reward.isAvailableWith(activePassive)).toList();
+    final draftable = LevelUpRewardData.inPool(eligible, RewardPool.draft);
     // Un registre sans récompense tirable : aucun choix à générer, liste
     // vide — pas d'exception au milieu d'une montée de niveau. L'écran de
     // draft affiche alors un plateau vide plutôt que de planter dessus.
@@ -120,7 +127,7 @@ class LevelUpRewardService {
     // Un jet indépendant par récompense mythique, dans l'ordre déclaré — c'est
     // exactement ce que faisaient les deux blocs écrits en dur, Trèfle puis
     // Miroir. Une troisième mythique n'est plus qu'un fichier.
-    for (final mythic in LevelUpRewardData.inPool(rewards, RewardPool.mythic)) {
+    for (final mythic in LevelUpRewardData.inPool(eligible, RewardPool.mythic)) {
       final rolled = rollRarity(
         luck,
         isLevelReward: true,

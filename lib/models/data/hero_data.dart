@@ -25,7 +25,6 @@ class HeroData {
 
   final int maxHp;
   final int maxMana;
-  final int baseDamage;
   final int luck;
   final int mastery;
 
@@ -59,7 +58,6 @@ class HeroData {
     this.themeColor,
     required this.maxHp,
     required this.maxMana,
-    required this.baseDamage,
     this.luck = 0,
     this.mastery = 0,
     this.critChance = 0,
@@ -96,7 +94,6 @@ class HeroData {
       themeColor: _parseHexColor(json['themeColor']),
       maxHp: json['maxHp'] as int,
       maxMana: json['maxMana'] as int,
-      baseDamage: json['baseDamage'] as int,
       luck: json['luck'] as int? ?? 0,
       mastery: json['mastery'] as int? ?? 0,
       critChance: json['critChance'] as int? ?? 0,

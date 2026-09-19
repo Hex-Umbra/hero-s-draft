@@ -15,7 +15,6 @@ void main() {
     classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
   );
 
   late ProviderContainer container;
@@ -77,7 +76,6 @@ void main() {
       classCard: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
       mastery: 3,
     );
     const regen = PassiveData(

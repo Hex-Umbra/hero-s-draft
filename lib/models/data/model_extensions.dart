@@ -3,6 +3,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'card_data.dart';
 import 'relic_data.dart';
+import 'stat_rule.dart';
 import '../enemy_intent.dart';
 import '../might_target.dart';
 
@@ -123,4 +124,44 @@ extension MightTargetsLabels on Set<MightTarget> {
               MightTarget.alteration => l10n.mightTargetAlterationShort,
             },
       ].join(' · ');
+
+  /// Ce que renforce la Puissance, en toutes lettres et dans l'ordre de
+  /// [MightTarget] : « les dégâts de vos Compétences et vos altérations »
+  /// (spec P-41, §7.4). Deux cibles jointes par « et », trois par une virgule
+  /// puis « et ».
+  String longLabel(AppLocalizations l10n) {
+    final parts = [
+      for (final target in MightTarget.values)
+        if (contains(target))
+          switch (target) {
+            MightTarget.attack => l10n.mightTargetAttackLong,
+            MightTarget.skill => l10n.mightTargetSkillLong,
+            MightTarget.alteration => l10n.mightTargetAlterationLong,
+          },
+    ];
+    if (parts.length < 2) return parts.join();
+    final debut = parts.sublist(0, parts.length - 1).join(', ');
+    return '$debut ${l10n.listJoinAnd} ${parts.last}';
+  }
+
+  /// La phrase que lit le joueur à la sélection de classe (spec P-41, §8.3).
+  /// Générée depuis l'orientation, jamais écrite classe par classe : c'est la
+  /// règle d'ADR-090.
+  String sentence(AppLocalizations l10n) =>
+      l10n.mightTargetsSentence(longLabel(l10n));
+}
+
+extension StatRuleLabel on StatRule {
+  /// La règle en clair : « Son Armure devient de la Puissance pour un tour. »
+  ///
+  /// Générée à partir de la règle, jamais écrite classe par classe
+  /// (spec P-41, §8.3). Le `switch` est **exhaustif** sur le triplet
+  /// (ressource, mode, cible) : ajouter une valeur à l'une des trois
+  /// énumérations sans son libellé ne compile plus.
+  String describe(AppLocalizations l10n) => switch ((stat, mode, to)) {
+        (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleConvertArmorToMight(duration),
+        (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleConvertManaToMight(duration),
+      };
 }

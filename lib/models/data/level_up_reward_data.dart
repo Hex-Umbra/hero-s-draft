@@ -28,6 +28,17 @@ enum RewardPool {
   mythic,
 }
 
+/// Ce qu'une récompense exige de la run pour être tirée (spec P-41, §8.2).
+///
+/// Un mécanisme, et non une propriété d'*Affinité* : le §8.2 prévoyait neuf
+/// récompenses conditionnées par le passif actif, et la méta-progression (P-13)
+/// en branchera d'autres derrière le même point (spec §10).
+enum RewardRequirement {
+  /// Le passif actif doit déclarer un bloc `mastery` : sans lui, un point de
+  /// Maîtrise n'augmente rien (spec P-49, §3.3).
+  passiveMastery,
+}
+
 /// Une récompense de niveau, telle que son fichier la déclare
 /// (spec P-41, §8.1, décision D3).
 ///
@@ -77,6 +88,10 @@ class LevelUpRewardData {
   /// lecture des fichiers ni de l'alphabet.
   final int displayOrder;
 
+  /// Ce que la run doit présenter pour que cette récompense soit tirable ;
+  /// `null` : rien.
+  final RewardRequirement? requires;
+
   const LevelUpRewardData({
     required this.id,
     required this.nameFr,
@@ -92,6 +107,7 @@ class LevelUpRewardData {
     required this.pool,
     this.values = const {},
     this.displayOrder = 0,
+    this.requires,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -142,6 +158,14 @@ class LevelUpRewardData {
         (isFr ? descriptionFr : descriptionEn);
     return template.replaceAll('{amount}', '$amount');
   }
+
+  /// Cette récompense peut-elle être tirée dans une run dont le passif actif
+  /// est [passive] ? Un passif absent ne déclare aucune Maîtrise : la
+  /// récompense serait tout aussi inerte (décision 2 du plan).
+  bool isAvailableWith(PassiveData? passive) => switch (requires) {
+        null => true,
+        RewardRequirement.passiveMastery => passive?.mastery != null,
+      };
 
   /// Les récompenses d'un [pool], triées par `displayOrder` puis par `id` à
   /// rang égal.
@@ -280,6 +304,9 @@ class LevelUpRewardData {
       pool: pool,
       values: values,
       displayOrder: json['displayOrder'] as int? ?? 0,
+      requires: json['requires'] == null
+          ? null
+          : _readEnum(json['requires'], RewardRequirement.values, '$id : requires'),
     );
   }
 }

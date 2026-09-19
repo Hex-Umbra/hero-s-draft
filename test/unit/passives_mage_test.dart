@@ -25,7 +25,6 @@ void main() {
     classCard: 'mage.png',
     maxHp: 60,
     maxMana: 3,
-    baseDamage: 10,
   );
 
   const master = HeroData(
@@ -33,7 +32,6 @@ void main() {
     classCard: 'mage.png',
     maxHp: 60,
     maxMana: 3,
-    baseDamage: 10,
     mastery: 2,
   );
 
@@ -348,7 +346,6 @@ void main() {
         classCard: 'mage.png',
         maxHp: 60,
         maxMana: 3,
-        baseDamage: 10,
         mastery: 9,
       );
       run.startNewRun(veryMasterful, manaFlux(threshold: 3));

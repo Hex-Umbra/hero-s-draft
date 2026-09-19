@@ -52,7 +52,8 @@ class TutorialFixtures {
       .toList();
 
   /// Le passif de la classe au tutoriel : le premier que lui ouvre le point
-  /// d'accès unique, comme à l'écran de sélection (spec P-49, §4.2).
+  /// d'accès unique — le choix par défaut de l'écran de sélection (spec
+  /// P-49, §4.2), qui lui laisse au joueur la main pour en retenir un autre.
   PassiveData passiveFor(HeroData hero) =>
       availablePassivesFor(hero, registry).first;
 

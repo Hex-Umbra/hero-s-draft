@@ -42,7 +42,6 @@ void main() {
           'classCard': 'assets/data/classes/mage/mage.png',
           'maxHp': 60,
           'maxMana': 3,
-          'baseDamage': 10,
           'mightTargets': ['skill', 'alteration'],
         };
 
@@ -66,7 +65,6 @@ void main() {
         classCard: 'paladin.png',
         maxHp: 100,
         maxMana: 3,
-        baseDamage: 5,
       );
       expect(hero.mightTargets, {MightTarget.attack});
     });

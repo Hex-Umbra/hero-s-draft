@@ -16,16 +16,18 @@ void main() {
 
   String normalized(File file) => file.path.replaceAll(r'\', '/');
 
-  test('l epee ne sert plus qu a l ecran de selection de classe', () {
-    final users = <String>[];
-    for (final file in dartFilesOf('lib')) {
-      final path = normalized(file);
-      if (path.endsWith('lib/ui/widgets/sword_icon.dart')) continue;
-      if (file.readAsStringSync().contains('SwordIcon(')) users.add(path);
-    }
+  test('l epee n a plus aucun usage', () {
+    // `baseDamage` est parti au lot C (spec §8.3), et avec lui le dernier
+    // badge qui montrait une epee pour une stat de puissance.
+    expect(File('lib/ui/widgets/sword_icon.dart').existsSync(), isFalse);
 
-    // `baseDamage`, et donc cette derniere epee, partent au lot C (spec §8.3).
-    expect(users, ['lib/ui/screens/class_selection_screen.dart']);
+    for (final file in dartFilesOf('lib')) {
+      expect(
+        file.readAsStringSync().contains('SwordIcon'),
+        isFalse,
+        reason: normalized(file),
+      );
+    }
   });
 
   test('FlameSwordIcon n existe plus', () {

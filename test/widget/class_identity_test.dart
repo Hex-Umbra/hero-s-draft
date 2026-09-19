@@ -12,7 +12,6 @@ void main() {
     themeColor: 0xFF00A88F, // aucune des trois couleurs en dur
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
   );
 
   test('la couleur vient de la donnee', () {
@@ -25,7 +24,6 @@ void main() {
       classCard: 'assets/data/classes/plain/plain.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
     );
     expect(ClassIdentity.colorOf(plain), Colors.blue);
   });
@@ -76,7 +74,6 @@ void main() {
       iconPath: 'assets/data/classes/gambler/icon.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
     );
     expect(ClassIdentity.imageOf(withIcon),
         'assets/data/classes/gambler/icon.png');
@@ -94,7 +91,6 @@ void main() {
       iconPath: 'assets/data/classes/gambler/icon.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
     );
 
     Future<Image> pumpAvatar(WidgetTester tester, HeroData hero) async {
@@ -148,7 +144,6 @@ void main() {
         classCard: 'assets/data/classes/gambler/gambler.png',
         maxHp: 100,
         maxMana: 3,
-        baseDamage: 5,
       );
       final image = await pumpAvatar(tester, noIcon);
 

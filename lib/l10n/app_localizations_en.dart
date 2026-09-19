@@ -132,9 +132,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String passiveMasteryPerPoint(String effect) {
-    return 'Per Mastery point: $effect';
+  String passiveMasteryAtStart(int mastery, String effect) {
+    String _temp0 = intl.Intl.pluralLogic(
+      mastery,
+      locale: localeName,
+      other: 'Mastery $mastery: $effect',
+      zero: 'Mastery 0 at start: $effect',
+    );
+    return '$_temp0';
   }
+
+  @override
+  String get passivesLabel => 'Passives';
 
   @override
   String get relicInventory => 'Relic Inventory';
@@ -313,6 +322,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mightTargetAlterationShort => 'Alterations';
+
+  @override
+  String get mightTargetAttackLong => 'your Attack damage';
+
+  @override
+  String get mightTargetSkillLong => 'your Skill damage';
+
+  @override
+  String get mightTargetAlterationLong => 'your alterations';
+
+  @override
+  String get listJoinAnd => 'and';
+
+  @override
+  String mightTargetsSentence(String targets) {
+    return 'Your Might strengthens $targets.';
+  }
+
+  @override
+  String statRuleConvertArmorToMight(int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'Their Armor becomes Might for $duration turns.',
+      one: 'Their Armor becomes Might for one turn.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statRuleConvertManaToMight(int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'Their Mana becomes Might for $duration turns.',
+      one: 'Their Mana becomes Might for one turn.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get tooltipManaTitle => 'Mana';

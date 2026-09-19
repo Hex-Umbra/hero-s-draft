@@ -53,7 +53,6 @@ void main() {
       classCard: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
       luck: 0,
       mastery: 0,
     );
@@ -633,7 +632,6 @@ void main() {
       classCard: 'paladin.png',
       maxHp: 100,
       maxMana: 3,
-      baseDamage: 5,
       luck: 0,
       mastery: 0,
     );

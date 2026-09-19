@@ -44,7 +44,6 @@ void main() {
       classCard: 'test',
       maxHp: 10,
       maxMana: 3,
-      baseDamage: 0,
     );
 
     final container = ProviderContainer();
@@ -111,7 +110,6 @@ void main() {
       classCard: 'test',
       maxHp: 10,
       maxMana: 3,
-      baseDamage: 0,
     );
 
     final container = ProviderContainer();
@@ -159,7 +157,6 @@ void main() {
       classCard: 'test',
       maxHp: 10,
       maxMana: 3,
-      baseDamage: 0,
     );
 
     final container = ProviderContainer();
@@ -207,7 +204,6 @@ void main() {
         classCard: 'test',
         maxHp: 10,
         maxMana: 3,
-        baseDamage: 0,
       );
 
       final container = ProviderContainer();
@@ -275,7 +271,6 @@ void main() {
         classCard: 'test',
         maxHp: 10,
         maxMana: 3,
-        baseDamage: 0,
       );
 
       final container = ProviderContainer();

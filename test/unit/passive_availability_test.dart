@@ -12,14 +12,12 @@ void main() {
     classCard: 'paladin.png',
     maxHp: 100,
     maxMana: 3,
-    baseDamage: 5,
   );
   const mage = HeroData(
     id: 'mage',
     classCard: 'mage.png',
     maxHp: 60,
     maxMana: 3,
-    baseDamage: 10,
   );
 
   PassiveData passive(

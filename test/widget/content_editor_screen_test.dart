@@ -82,7 +82,7 @@ void main() {
         '{"id":"$id","name_fr":"$id","name_en":"$id",'
         '"description_fr":".","description_en":".",'
         '"classCard":"assets/data/classes/$id/$id.png",'
-        '"themeColor":"$color","maxHp":100,"maxMana":3,"baseDamage":5}',
+        '"themeColor":"$color","maxHp":100,"maxMana":3}',
       );
     }
   }
@@ -429,7 +429,7 @@ void main() {
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
       '"description_fr":".","description_en":".",'
       '"classCard":"assets/data/classes/mage/mage.png",'
-      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3,"baseDamage":5}',
+      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3}',
     );
 
     await tester.pumpWidget(harness(projectRoot: root));
@@ -824,7 +824,7 @@ void main() {
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
       '"description_fr":".","description_en":".",'
       '"classCard":"assets/data/classes/mage/mage.png",'
-      '"maxHp":100,"maxMana":3,"baseDamage":5}',
+      '"maxHp":100,"maxMana":3}',
     );
 
     await tester.pumpWidget(harness(projectRoot: root));
@@ -1029,7 +1029,7 @@ void main() {
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
       '"description_fr":".","description_en":".",'
       '"classCard":"assets/data/classes/mage/mage.png",'
-      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3,"baseDamage":5}',
+      '"themeColor":"#9C27B0","maxHp":100,"maxMana":3}',
     );
 
     final fs = _CountingFileSystem();
@@ -1383,7 +1383,6 @@ void main() {
           // s'il montre une valeur que le gabarit n'a pas.
           'maxHp': 120,
           'maxMana': 3,
-          'baseDamage': 5,
           'displayOrder': 99,
           'iconPath': 'assets/data/classes/gambler/icon.png',
         }),
@@ -1702,7 +1701,6 @@ void main() {
           'classCard': 'assets/data/classes/mage/mage.png',
           'maxHp': 100,
           'maxMana': 3,
-          'baseDamage': 5,
           'mightTargets': ['attack'],
           'displayOrder': 1,
           'themeColor': '#9C27B0',

@@ -374,7 +374,6 @@ void main() {
       final mechanics = <String, dynamic>{
         'maxHp': 90,
         'maxMana': 3,
-        'baseDamage': 4,
         'mightTargets': ['attack'],
       };
       if (hex != null) mechanics['themeColor'] = hex;
@@ -434,7 +433,7 @@ void main() {
             'description_fr': 'Manipule les probabilites.',
             'description_en': 'Plays the odds.',
           },
-          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5, '
+          mechanics: '{"maxHp": 100, "maxMana": 3, '
               '"mightTargets": ["attack"], "skills": $skillsJson}',
           isModification: true,
         );
@@ -473,7 +472,7 @@ void main() {
             'description_fr': 'Rien.',
             'description_en': 'Nothing.',
           },
-          mechanics: '{"maxHp": 100, "maxMana": 3, "baseDamage": 5, '
+          mechanics: '{"maxHp": 100, "maxMana": 3, '
               '"mightTargets": ["attack"]}',
         ),
       );

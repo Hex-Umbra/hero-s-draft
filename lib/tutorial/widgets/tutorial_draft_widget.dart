@@ -41,6 +41,7 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
     _choices = LevelUpRewardService.generateChoices(
       rewards: widget.engine.data.levelUpRewards,
       luck: 0,
+      activePassive: widget.engine.mockState.activePassive,
     );
   }
 
