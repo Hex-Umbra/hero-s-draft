@@ -426,10 +426,9 @@ Future<void> _pomper(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 500));
 }
 
-/// Deplie les passifs de la carte qui porte `nomDeClasse`.
+/// Amene la souris sur la carte qui porte `nomDeClasse`, sans cliquer.
 ///
-/// En desktop, c'est le survol qui ouvre : la souris entre sur la carte et y
-/// reste. Le pointeur cree ici est rendu a la fin du test.
+/// Le survol ne deplie plus rien : ce helper ne sert qu'a le prouver.
 Future<TestGesture> _survoler(
   WidgetTester tester,
   String nomDeClasse,
@@ -442,7 +441,7 @@ Future<TestGesture> _survoler(
   return souris;
 }
 
-/// Deplie les passifs d'une carte en mobile, ou le survol n'existe pas.
+/// Bascule le depliage des passifs d'une carte, sur les deux plateformes.
 Future<void> _appuyerSurLaCarte(
   WidgetTester tester,
   String nomDeClasse,
@@ -596,7 +595,7 @@ void main() {
     ) async {
       await _buildAndReady(tester, passives: const [ward, aegis]);
 
-      await _survoler(tester, 'Paladin');
+      await _appuyerSurLaCarte(tester, 'Paladin');
       // Egide (aegis) ne restreint aucune classe, Garde (ward) ne s'ouvre
       // qu'au paladin : lui seul se voit proposer les deux.
       expect(find.text('Ward'), findsOneWidget);
@@ -608,7 +607,7 @@ void main() {
     ) async {
       await _buildAndReady(tester, passives: const [ward, aegis]);
 
-      await _survoler(tester, 'Berserker');
+      await _appuyerSurLaCarte(tester, 'Berserker');
       expect(find.text('Ward'), findsNothing);
       expect(find.text('Aegis'), findsOneWidget);
     });
@@ -986,7 +985,7 @@ void main() {
         // plus : c'est le pire cas de la rangee desktop depuis que le
         // depliage la fait grandir, et `IntrinsicHeight` doit savoir
         // mesurer ce contenu-la aussi.
-        await _survoler(tester, 'Le Paladin');
+        await _appuyerSurLaCarte(tester, 'Le Paladin');
         expect(find.text('Ferveur'), findsOneWidget);
         expect(
           tester.takeException(),
@@ -1105,7 +1104,7 @@ void main() {
       expect(find.text('Gain 2 Block at end of turn.'), findsNothing);
     });
 
-    testWidgets('survoler la carte deplie les passifs disponibles', (
+    testWidgets('cliquer la carte deplie les passifs disponibles', (
       WidgetTester tester,
     ) async {
       await _buildAndReady(
@@ -1114,7 +1113,7 @@ void main() {
         passives: const [ward, zeal],
       );
 
-      await _survoler(tester, 'Paladin');
+      await _appuyerSurLaCarte(tester, 'Paladin');
 
       // Deplie, l'etiquette n'a plus a nommer le passif retenu : la coche
       // le dit dans la liste.
@@ -1126,24 +1125,23 @@ void main() {
       expect(find.text('Gain 1 Might at the start of the turn.'), findsOneWidget);
     });
 
-    testWidgets('quitter la carte la replie', (WidgetTester tester) async {
+    testWidgets('recliquer la carte la replie', (WidgetTester tester) async {
       await _buildAndReady(
         tester,
         heroes: const [paladin],
         passives: const [ward, zeal],
       );
 
-      final souris = await _survoler(tester, 'Paladin');
+      await _appuyerSurLaCarte(tester, 'Paladin');
       expect(find.text('Zeal'), findsOneWidget);
 
-      await souris.moveTo(Offset.zero);
-      await _pomper(tester);
+      await _appuyerSurLaCarte(tester, 'Paladin');
 
       expect(find.text('Zeal'), findsNothing);
       expect(find.text('Passives: Ward'), findsOneWidget);
     });
 
-    testWidgets('survoler une autre carte referme la premiere', (
+    testWidgets('ouvrir une autre carte referme la premiere', (
       WidgetTester tester,
     ) async {
       await _buildAndReady(
@@ -1152,34 +1150,33 @@ void main() {
         passives: const [ward, zeal, fury],
       );
 
-      final souris = await _survoler(tester, 'Paladin');
+      await _appuyerSurLaCarte(tester, 'Paladin');
       expect(find.text('Zeal'), findsOneWidget);
       expect(find.text('Fury'), findsNothing);
 
-      await souris.moveTo(tester.getCenter(find.text('Berserker')));
-      await _pomper(tester);
+      await _appuyerSurLaCarte(tester, 'Berserker');
 
-      // Une seule carte ouverte a la fois : la souris ne peut en survoler
-      // qu'une, et l'etat suit le survol.
+      // Une seule carte ouverte a la fois : l'accordeon vaut aussi bien en
+      // desktop qu'en mobile, puisque le geste y est le meme.
       expect(find.text('Zeal'), findsNothing);
       expect(find.text('Fury'), findsOneWidget);
     });
 
-    testWidgets('en desktop, le clic sur la carte ne deplie rien', (
-      WidgetTester tester,
-    ) async {
-      // Le survol suffit en desktop. Un clic qui refermerait ce que le
-      // survol vient d'ouvrir serait incomprehensible.
+    testWidgets('le survol seul ne deplie rien', (WidgetTester tester) async {
+      // Le depliage a ete au survol un temps (2026-09-19) : chaque passage
+      // de souris remesurait la rangee desktop entiere. C'est le clic qui
+      // deplie desormais, sur les deux plateformes, et ce test empeche le
+      // survol de le reprendre.
       await _buildAndReady(
         tester,
         heroes: const [paladin],
         passives: const [ward, zeal],
       );
 
-      await tester.tap(find.text('Paladin'));
-      await _pomper(tester);
+      await _survoler(tester, 'Paladin');
 
       expect(find.text('Zeal'), findsNothing);
+      expect(find.text('Passives: Ward'), findsOneWidget);
     });
 
     testWidgets('en mobile, l appui sur la carte deplie les passifs', (

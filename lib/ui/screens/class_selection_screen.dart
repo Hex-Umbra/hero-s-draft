@@ -26,11 +26,11 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
   /// L'identifiant de la classe dont les passifs sont dépliés, s'il y en a
   /// une.
   ///
-  /// Une seule carte à la fois : en desktop c'est mécanique (la souris ne
-  /// survole qu'une carte), en mobile c'est la règle de l'accordéon. L'état
-  /// vit donc ici, au-dessus des cartes, et pas dans chacune — deux cartes
-  /// ouvertes ne peuvent pas se produire. Un identifiant plutôt qu'un rang :
-  /// l'ordre d'affichage est une donnée (`displayOrder`) qui peut changer.
+  /// Une seule carte à la fois, sur les deux plateformes : ouvrir l'une
+  /// referme l'autre. L'état vit donc ici, au-dessus des cartes, et pas dans
+  /// chacune — deux cartes ouvertes ne peuvent pas se produire. Un
+  /// identifiant plutôt qu'un rang : l'ordre d'affichage est une donnée
+  /// (`displayOrder`) qui peut changer.
   String? _classeDepliee;
 
   void _depliee(String id, bool ouverte) {
@@ -164,22 +164,17 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
   // plutot que la largeur d'ecran.
   /// Une carte, branchée sur l'accordéon de l'écran.
   ///
-  /// En desktop, c'est le survol qui déplie : le `MouseRegion` de la carte
-  /// existe déjà pour son halo. En mobile, où le survol n'existe pas,
-  /// l'appui prend le relais — et le clic ne fait rien en desktop, où il
-  /// refermerait ce que le survol vient d'ouvrir.
+  /// Le même geste sur les deux plateformes : le clic, ou l'appui, bascule
+  /// le dépliage. Le survol l'a fait un temps (2026-09-19) et ne le fait
+  /// plus — il remesurait la rangée desktop entière à chaque passage de
+  /// souris, y compris quand on ne faisait que traverser l'écran.
   Widget _buildCard(HeroData playerClass, {required bool isMobile}) {
     return _InteractiveClassCard(
       playerClass: playerClass,
       ref: ref,
       isMobile: isMobile,
       isExpanded: _classeDepliee == playerClass.id,
-      onHover: isMobile
-          ? null
-          : (ouverte) => _depliee(playerClass.id, ouverte),
-      onTap: isMobile
-          ? () => _depliee(playerClass.id, _classeDepliee != playerClass.id)
-          : null,
+      onTap: () => _depliee(playerClass.id, _classeDepliee != playerClass.id),
     );
   }
 
@@ -240,19 +235,15 @@ class _InteractiveClassCard extends StatefulWidget {
   /// carte : une seule à la fois peut l'être.
   final bool isExpanded;
 
-  /// Renseigné en desktop seulement : le survol y ouvre et ferme.
-  final ValueChanged<bool>? onHover;
-
-  /// Renseigné en mobile seulement : l'appui y bascule le dépliage.
-  final VoidCallback? onTap;
+  /// Bascule le dépliage des passifs. Même geste sur les deux plateformes.
+  final VoidCallback onTap;
 
   const _InteractiveClassCard({
     required this.playerClass,
     required this.ref,
     required this.isMobile,
     required this.isExpanded,
-    this.onHover,
-    this.onTap,
+    required this.onTap,
   });
 
   @override
@@ -331,7 +322,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   }
 
   void _onPointerExit() {
-    widget.onHover?.call(false);
     setState(() {
       _isHovered = false;
       _tiltX = 0.0;
@@ -341,7 +331,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   }
 
   void _onPointerEnter() {
-    widget.onHover?.call(true);
     setState(() {
       _isHovered = true;
     });
@@ -414,11 +403,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     return MouseRegion(
           onEnter: (_) => _onPointerEnter(),
           onExit: (_) => _onPointerExit(),
-          // Le geste de dépliage en mobile. `widget.onTap` n'est renseigné
-          // que là : en desktop le survol suffit, et un clic qui refermerait
-          // ce que le survol vient d'ouvrir n'aurait aucun sens. Le bouton
-          // et les lignes de passif ont leurs propres gestes, qui gagnent
-          // sur celui-ci.
+          // Le geste de dépliage, identique en desktop et en mobile. Le
+          // bouton et les lignes de passif ont leurs propres gestes, qui
+          // gagnent sur celui-ci.
           child: GestureDetector(
             onTap: widget.onTap,
             child: Listener(
