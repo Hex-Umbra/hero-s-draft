@@ -207,7 +207,16 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
             return IntrinsicHeight(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                // `start`, et non `stretch` : la rangee prend bien la
+                // hauteur de sa carte la plus haute, mais elle n'y etire pas
+                // les autres. Deplier une carte ne doit changer QUE cette
+                // carte — avec `stretch`, ouvrir le Paladin faisait passer
+                // le Berserker de 396 a 519px et le laissait avec du vide en
+                // bas. Contrepartie assumee : au repos les bas ne sont plus
+                // alignes, puisque les classes n'ont pas toutes le meme
+                // nombre de lignes generees (le Berserker porte une regle de
+                // stat que les deux autres n'ont pas).
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var i = 0; i < row.length; i++) ...[
                     if (i > 0) const SizedBox(width: _kDesktopSpacing),

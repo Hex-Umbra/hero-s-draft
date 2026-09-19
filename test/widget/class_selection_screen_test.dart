@@ -1162,6 +1162,42 @@ void main() {
       expect(find.text('Fury'), findsOneWidget);
     });
 
+    testWidgets('deplier une carte ne change pas la hauteur des autres', (
+      WidgetTester tester,
+    ) async {
+      // La rangee desktop est enveloppee dans `IntrinsicHeight` : elle prend
+      // la hauteur de sa carte la plus haute. Tant qu'elle etirait aussi ses
+      // cartes (`CrossAxisAlignment.stretch`), deplier l'une allongeait les
+      // deux autres, qui se retrouvaient avec du vide en bas. Seule la carte
+      // qu'on ouvre doit changer de hauteur.
+      //
+      // Premier garde-fou de *geometrie* de cet ecran : tous les autres ne
+      // verifient que l'absence d'exception ou la presence d'un texte, ce
+      // qui n'aurait jamais attrape ce defaut-la.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin, berserker],
+        passives: const [ward, zeal, fury],
+      );
+
+      Finder carteDe(String nom) => find
+          .ancestor(of: find.text(nom), matching: find.byType(GestureDetector))
+          .first;
+
+      final double berserkerAvant = tester.getSize(carteDe('Berserker')).height;
+
+      await _appuyerSurLaCarte(tester, 'Paladin');
+
+      expect(find.text('Zeal'), findsOneWidget);
+      expect(
+        tester.getSize(carteDe('Berserker')).height,
+        berserkerAvant,
+        reason:
+            'la carte du Berserker a change de hauteur alors que le joueur '
+            'a ouvert celle du Paladin',
+      );
+    });
+
     testWidgets('le survol seul ne deplie rien', (WidgetTester tester) async {
       // Le depliage a ete au survol un temps (2026-09-19) : chaque passage
       // de souris remesurait la rangee desktop entiere. C'est le clic qui
