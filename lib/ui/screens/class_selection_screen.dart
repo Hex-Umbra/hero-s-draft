@@ -16,14 +16,19 @@ import '../widgets/page_header.dart';
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
 
-  // Hauteur fixe de la carte a largeur mobile (<600px), mesuree sur le
-  // contenu reel le plus haut (les trois passifs du Paladin, sa description,
-  // et la StatRule du Berserker) a la largeur la plus etroite prise en
-  // charge (360px), marge de securite incluse. `mainAxisExtent` decouple la
-  // hauteur de la largeur de viewport — contrairement a `childAspectRatio`,
-  // qui derive la hauteur de la largeur de carte et ne peut donc pas servir
-  // a la fois 360px et 599px sans deborder l'un ou gacher l'autre (defaut 2
-  // du 2026-09-18, correction round 2).
+  // Hauteur fixe de la carte a largeur mobile (<600px). `mainAxisExtent`
+  // decouple la hauteur de la largeur de viewport — contrairement a
+  // `childAspectRatio`, qui derive la hauteur de la largeur de carte et ne
+  // peut donc pas servir a la fois 320px et 599px sans deborder l'un ou
+  // gacher l'autre (defaut 2 du 2026-09-18, round 2).
+  //
+  // Round 3 : remesuree avec `Flexible` restaure autour du nom de passif
+  // (round 2 l'avait retire a tort). Le contenu fixe (tout sauf la
+  // description, qui vit dans un `Expanded` et peut se retasser sans jamais
+  // deborder) tient dans une hauteur mesuree jusqu'a 220px de large — bien
+  // sous les 320px les plus etroits pris en charge — avec au moins 100px de
+  // marge restante pour la description a chaque largeur. Voir le rapport
+  // (round 3) pour la table de mesure complete.
   static const double _kMobileCardHeight = 660;
 
   @override
@@ -506,30 +511,51 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                                     width:
                                                         widget.isMobile ? 2 : 6,
                                                   ),
-                                                  Text(
-                                                    passives[i]
-                                                        .getName(locale)
-                                                        .toUpperCase(),
-                                                    style: TextStyle(
-                                                      fontSize: widget.isMobile
-                                                          ? 10
-                                                          : 11,
-                                                      fontWeight: i == index
-                                                          ? FontWeight.bold
-                                                          : FontWeight.normal,
-                                                      color: Colors.cyanAccent
-                                                          .withValues(
-                                                        alpha: i == index
-                                                            ? 1.0
-                                                            : 0.45,
+                                                  // `Flexible` (jamais
+                                                  // `Expanded`) : a la
+                                                  // largeur la plus etroite
+                                                  // de la plage (320px), le
+                                                  // nom le plus long du jeu
+                                                  // ne tient plus sur une
+                                                  // ligne et doit pouvoir
+                                                  // enjamber la suivante au
+                                                  // lieu de deborder a droite
+                                                  // (defaut 2, round 3 du
+                                                  // 2026-09-18 : le retrait
+                                                  // du round 2 supposait a
+                                                  // tort qu'aucune largeur de
+                                                  // la plage ne forcerait de
+                                                  // retour a la ligne).
+                                                  Flexible(
+                                                    child: Text(
+                                                      passives[i]
+                                                          .getName(locale)
+                                                          .toUpperCase(),
+                                                      style: TextStyle(
+                                                        fontSize:
+                                                            widget.isMobile
+                                                                ? 10
+                                                                : 11,
+                                                        fontWeight: i == index
+                                                            ? FontWeight.bold
+                                                            : FontWeight
+                                                                .normal,
+                                                        color: Colors
+                                                            .cyanAccent
+                                                            .withValues(
+                                                          alpha: i == index
+                                                              ? 1.0
+                                                              : 0.45,
+                                                        ),
+                                                        letterSpacing: 0.8,
+                                                        decoration:
+                                                            passives.length >
+                                                                        1 &&
+                                                                    i == index
+                                                                ? TextDecoration
+                                                                    .underline
+                                                                : null,
                                                       ),
-                                                      letterSpacing: 0.8,
-                                                      decoration:
-                                                          passives.length > 1 &&
-                                                                  i == index
-                                                              ? TextDecoration
-                                                                  .underline
-                                                              : null,
                                                     ),
                                                   ),
                                                 ],

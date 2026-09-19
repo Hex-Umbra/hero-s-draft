@@ -621,14 +621,40 @@ void main() {
       displayOrder: 3,
     );
 
-    // 360 (le plus etroit courant), 390 (le point deja couvert par la tache
-    // 6), 480, 550 (mesure du rapport visuel, 212/255px de debordement) et
-    // 599 (juste sous la bascule `isMobile`) : la grille mobile est desormais
-    // a une seule colonne et hauteur fixe (`SliverGridDelegateWithFixedCross
-    // AxisCount`, round 2 du 2026-09-18) — la largeur de carte varie donc
-    // avec la largeur d'ecran (340px a 360, 579px a 599) mais sa hauteur ne
-    // depend plus d'elle, ce que ce test verifie : aucune largeur de la plage
-    // ne doit deborder ni casser un mot en plein milieu.
+    // Passif synthetique, jamais joue : sert uniquement a stresser le
+    // retour a la ligne du nom, independamment de la police qui le rend
+    // (round 3). L'environnement de test ne charge pas la police reelle du
+    // jeu (aucun `flutter_test_config.dart` ne le fait dans ce depot), donc
+    // une largeur de texte mesuree en test ne majore pas fiablement sa
+    // largeur reelle — c'est exactement ce qui a laisse passer le round 2 :
+    // « RÉGÉNÉRATION D'ARMURE » y mesurait 226.8px, bien en-dessous de la
+    // largeur disponible a 320-599px, alors que l'app reelle a deborde de
+    // 38px a 350px avec ce meme nom. Ce nom-ci est volontairement plus long
+    // que le plus long nom reel du jeu, pour rester plus large que l'espace
+    // disponible meme si la police de test le sous-estime — sa bonne prise
+    // en charge (retour a la ligne, jamais de RenderFlex overflow) demontre
+    // que `Flexible` fonctionne, plutot que de demontrer qu'un nom precis
+    // tient dans une police precise.
+    const stressWrapTest = PassiveData(
+      id: 'stress_wrap_test',
+      nameEn: 'Blessing Of Miraculous And Continuous Regeneration',
+      nameFr: 'Bénédiction De Régénération Miraculeuse Et Continuelle',
+      classes: ['paladin'],
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 1,
+      displayOrder: 4,
+    );
+
+    // 320 (le plus etroit reellement rencontre — iPhone SE et equivalents ;
+    // absent du round 2, ce qui a laisse passer un debordement reel a
+    // 350px), 360, 390, 480, 550 (mesure du rapport visuel, 212/255px de
+    // debordement) et 599 (juste sous la bascule `isMobile`) : la grille
+    // mobile est a une seule colonne et hauteur fixe
+    // (`SliverGridDelegateWithFixedCrossAxisCount`, round 2) — la largeur de
+    // carte varie avec la largeur d'ecran (300px a 320, 579px a 599) mais sa
+    // hauteur ne depend plus d'elle. Ce test verifie qu'aucune largeur de la
+    // plage ne deborde.
     //
     // La hauteur de viewport (1600) est volontairement genereuse : avec une
     // seule colonne, le Paladin et le Berserker s'empilent au lieu de se
@@ -636,15 +662,11 @@ void main() {
     // visible — il faut donc assez de hauteur pour que les deux cartes
     // soient realisees dans le meme pump, sans avoir a faire defiler l'ecran
     // de test.
-    const largeurs = [360.0, 390.0, 480.0, 550.0, 599.0];
+    const largeurs = [320.0, 360.0, 390.0, 480.0, 550.0, 599.0];
     for (final largeur in largeurs) {
       testWidgets(
-        'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas, '
-        'ni ne cassent un mot',
+        'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas',
         (WidgetTester tester) async {
-          // Une RenderFlex overflow levee pendant le pump ci-dessous ferait
-          // deja echouer ce test : rendre sans erreur EST une premiere
-          // assertion.
           await _buildAndReady(
             tester,
             heroes: const [paladinReel, berserkerReel],
@@ -652,6 +674,7 @@ void main() {
               regenArmor,
               fervor,
               blessing,
+              stressWrapTest,
               rage,
               bloodthirst,
               frenzy,
@@ -664,29 +687,50 @@ void main() {
           expect(find.text('Le Berserker'), findsOneWidget);
           expect(find.text('RÉGÉNÉRATION D\'ARMURE'), findsOneWidget);
           expect(find.text('RAGE'), findsOneWidget);
-
-          // Garde-fou contre les mots coupes en plein milieu (« Le Berse /
-          // rker », « RÉGÉNÉRAT / ION D'ARMURE ») : ce mode de panne ne leve
-          // aucune RenderFlex overflow (le texte se redimensionne pour
-          // tenir), donc seule une assertion structurelle le detecte. Plutot
-          // que d'essayer de reproduire l'algorithme de cesure de mots pour
-          // verifier le nombre de lignes, on verifie la propriete qui rend la
-          // coupure impossible : une carte assez large pour que le mot le
-          // plus long du jeu (« RÉGÉNÉRATION D'ARMURE », 22 caracteres) ait
-          // la place de se couper seulement entre les mots. 300px est la
-          // largeur qui, empiriquement, loge ce nom en une seule ligne a la
-          // taille de police mobile (10px) avec la puce icone ; en dessous,
-          // un mot long recommencerait a se rompre en son milieu comme avant
-          // ce correctif.
-          final cardWidth = tester
-              .getSize(find.byType(AnimatedContainer).first)
-              .width;
+          // Le nom-stress se retrouve entier dans l'arbre (pas coupe, pas
+          // tronque) : `Text` ne segmente jamais sa propre chaine, donc son
+          // seul moyen de tenir sur un `Flexible` trop etroit est d'occuper
+          // plusieurs lignes — le retrouver ici prouve que le rendu a eu
+          // lieu (par opposition a une exception qui aurait empeche le pump
+          // d'aller a son terme).
           expect(
-            cardWidth,
-            greaterThanOrEqualTo(300),
+            find.text(stressWrapTest.nameFr.toUpperCase()),
+            findsOneWidget,
+          );
+
+          // Garde-fou direct contre le debordement horizontal du nom de
+          // passif (round 3 du 2026-09-18) : le round 2 avait retire le
+          // `Flexible` qui enveloppe ce nom en estimant, a partir d'une
+          // largeur de texte mesuree dans l'environnement de test, qu'aucune
+          // largeur de la plage n'en avait besoin — l'app reelle a deborde
+          // de 38px a 350px, une largeur que ce meme calcul jugeait sure.
+          // L'environnement de test n'utilise pas la police reelle (aucun
+          // `flutter_test_config.dart` ne la charge ici) : « RÉGÉNÉRATION
+          // D'ARMURE » y mesure 226.8px, bien en-dessous de la largeur
+          // disponible a 320-599px, quand la police reelle a deborde de 38px
+          // au meme nom a 350px — un seuil recalibre sur cette mesure serait
+          // retombe dans le meme piege. `stressWrapTest` le contourne : son
+          // nom est volontairement plus long que le plus long nom reel du
+          // jeu, pour rester plus large que l'espace disponible meme sous-
+          // estime par la police de test, et forcer reellement le retour a
+          // la ligne dans cet environnement — la aussi. L'assertion qui
+          // compte est donc qu'aucune exception de rendu (donc aucune
+          // RenderFlex overflowed, le mode de panne reel constate a 350px)
+          // ne survient malgre ce nom volontairement trop long. Si
+          // `Flexible` disparaissait de nouveau, ce nom redeviendrait un
+          // `Text` non contraint largement plus large que l'espace
+          // disponible a chaque largeur de la plage, et cette assertion
+          // echouerait — ce que `cardWidth >= 300` du round 2 ne faisait
+          // pas (330px, la largeur reelle a 350px, passait ce seuil sans
+          // proteger le nom), et ce qu'un simple `tester.takeException()`
+          // sur le seul contenu reel du jeu n'aurait pas fait non plus, pour
+          // la meme raison de police.
+          expect(
+            tester.takeException(),
+            isNull,
             reason:
-                'une carte plus etroite que 300px expose de nouveau les '
-                'noms de passif a se casser en plein mot',
+                'un debordement horizontal du nom de passif indique que '
+                'Flexible a disparu autour de son Text',
           );
         },
       );
