@@ -42,7 +42,6 @@ class ClassPassiveList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final selected = passives[selectedIndex];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -54,11 +53,9 @@ class ClassPassiveList extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                // Déplié, la coche dit déjà lequel est retenu : répéter son
-                // nom dans l'étiquette serait redondant.
-                isExpanded
-                    ? l10n.passivesLabel
-                    : l10n.passivesSelected(selected.getName(locale)),
+                // L'étiquette ne nomme pas le passif : la tuile juste en
+                // dessous le fait déjà, repliée comme dépliée.
+                l10n.passivesLabel,
                 style: TextStyle(
                   fontSize: isMobile ? 10.5 : 11.5,
                   color: Colors.cyanAccent.withValues(alpha: 0.8),
@@ -74,8 +71,13 @@ class ClassPassiveList extends StatelessWidget {
             ),
           ],
         ),
+        // Repliée, la carte montre quand même le passif retenu en entier :
+        // le joueur sait avec quoi il partirait sans avoir à déplier.
+        // Déplier n'ajoute que les autres.
         if (isExpanded)
-          for (var i = 0; i < passives.length; i++) _buildOption(i, l10n),
+          for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
+        else
+          _buildOption(selectedIndex, l10n),
       ],
     );
   }
@@ -88,7 +90,11 @@ class ClassPassiveList extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: InkWell(
-        onTap: () => onSelect(i),
+        // Repliée, la tuile est un affichage et non un choix — le seul
+        // passif montré est déjà le retenu. Sans geste à elle, le tap
+        // traverse jusqu'à la carte, qui se déplie : taper le passif
+        // qu'on voit fait donc apparaître les autres.
+        onTap: isExpanded ? () => onSelect(i) : null,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           // La ligne entière porte le geste, et jamais moins que la cible

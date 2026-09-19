@@ -332,12 +332,6 @@ abstract class AppLocalizations {
   /// **'Passives'**
   String get passivesLabel;
 
-  /// Collapsed label of a class card's passive list: names the passive the run would start with.
-  ///
-  /// In en, this message translates to:
-  /// **'Passives: {passive}'**
-  String passivesSelected(String passive);
-
   /// No description provided for @relicInventory.
   ///
   /// In en, this message translates to:

@@ -39,7 +39,6 @@
   "passiveMasteryCurrent": "Maîtrise : {effect}",
   "passiveMasteryAtStart": "{mastery, plural, =0{Maîtrise 0 au départ : {effect}} other{Maîtrise {mastery} : {effect}}}",
   "passivesLabel": "Passifs",
-  "passivesSelected": "Passifs : {passive}",
   "relicInventory": "Inventaire des Reliques",
   "emptyInventory": "Votre inventaire est vide",
   "luckPercentageTitle": "Taux d'obtention des Raretés",

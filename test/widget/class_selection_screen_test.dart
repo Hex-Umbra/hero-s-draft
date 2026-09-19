@@ -441,6 +441,22 @@ Future<TestGesture> _survoler(
   return souris;
 }
 
+/// La carte entiere de la classe qui porte `nomDeClasse`.
+///
+/// Depuis que la carte repliee montre le passif retenu, un nom de passif
+/// peut apparaitre sur plusieurs cartes a la fois : chercher dans tout
+/// l'ecran ne dit plus quelle carte le porte.
+Finder _carteDe(String nomDeClasse) => find
+    .ancestor(
+      of: find.text(nomDeClasse),
+      matching: find.byType(GestureDetector),
+    )
+    .first;
+
+/// Cherche `cible` a l'interieur de la seule carte de `nomDeClasse`.
+Finder _dansLaCarte(String nomDeClasse, Finder cible) =>
+    find.descendant(of: _carteDe(nomDeClasse), matching: cible);
+
 /// Bascule le depliage des passifs d'une carte, sur les deux plateformes.
 Future<void> _appuyerSurLaCarte(
   WidgetTester tester,
@@ -598,8 +614,8 @@ void main() {
       await _appuyerSurLaCarte(tester, 'Paladin');
       // Egide (aegis) ne restreint aucune classe, Garde (ward) ne s'ouvre
       // qu'au paladin : lui seul se voit proposer les deux.
-      expect(find.text('Ward'), findsOneWidget);
-      expect(find.text('Aegis'), findsOneWidget);
+      expect(_dansLaCarte('Paladin', find.text('Ward')), findsOneWidget);
+      expect(_dansLaCarte('Paladin', find.text('Aegis')), findsOneWidget);
     });
 
     testWidgets('une classe que le passif ne declare pas ne le propose pas', (
@@ -608,8 +624,8 @@ void main() {
       await _buildAndReady(tester, passives: const [ward, aegis]);
 
       await _appuyerSurLaCarte(tester, 'Berserker');
-      expect(find.text('Ward'), findsNothing);
-      expect(find.text('Aegis'), findsOneWidget);
+      expect(_dansLaCarte('Berserker', find.text('Ward')), findsNothing);
+      expect(_dansLaCarte('Berserker', find.text('Aegis')), findsOneWidget);
     });
   });
 
@@ -830,11 +846,8 @@ void main() {
 
       expect(find.text('Le Paladin'), findsOneWidget);
       expect(find.text('Le Berserker'), findsOneWidget);
-      // Repliee, la carte ne nomme que le passif retenu.
-      expect(
-        find.text("Passifs : Régénération d'Armure"),
-        findsOneWidget,
-      );
+      // Repliee, la carte ne montre que le passif retenu.
+      expect(find.text("Régénération d'Armure"), findsOneWidget);
       expect(find.text('Ferveur'), findsNothing);
 
       expect(
@@ -1068,6 +1081,21 @@ void main() {
       value: 1,
       displayOrder: 1,
     );
+    // Second passif du berserker : sans lui, sa carte montrerait la meme
+    // tuile unique repliee et depliee, et rien ne distinguerait les deux
+    // etats.
+    const wrath = PassiveData(
+      id: 'wrath',
+      nameEn: 'Wrath',
+      nameFr: 'Courroux',
+      descriptionFr: 'Gagne 2 Puissance quand vous perdez des PV.',
+      descriptionEn: 'Gain 2 Might when you lose HP.',
+      classes: ['berserker'],
+      trigger: RelicTrigger.onDamageTaken,
+      effectType: 'rage',
+      value: 2,
+      displayOrder: 2,
+    );
 
     const paladin = HeroData(
       id: 'paladin',
@@ -1088,7 +1116,7 @@ void main() {
       displayOrder: 2,
     );
 
-    testWidgets('repliee, la carte nomme le passif retenu et lui seul', (
+    testWidgets('repliee, la carte montre le passif retenu en entier', (
       WidgetTester tester,
     ) async {
       await _buildAndReady(
@@ -1097,11 +1125,46 @@ void main() {
         passives: const [ward, zeal],
       );
 
-      // Le joueur sait avec quoi il partirait sans avoir a deplier.
-      expect(find.text('Passives: Ward'), findsOneWidget);
-      // Mais rien de plus : ni les autres passifs, ni les descriptions.
+      // Le joueur voit avec quoi il partirait — nom et effet — sans avoir
+      // a deplier quoi que ce soit.
+      expect(find.text('Ward'), findsOneWidget);
+      expect(find.text('Gain 2 Block at end of turn.'), findsOneWidget);
+      // Mais lui seul : les autres passifs attendent le depliage.
       expect(find.text('Zeal'), findsNothing);
-      expect(find.text('Gain 2 Block at end of turn.'), findsNothing);
+      expect(find.text('Gain 1 Might at the start of the turn.'), findsNothing);
+    });
+
+    testWidgets('repliee, l etiquette ne repete pas le nom du passif', (
+      WidgetTester tester,
+    ) async {
+      // La tuile juste en dessous nomme deja le passif : une etiquette
+      // « Passifs : Ward » repeterait le nom deux fois en deux lignes.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      expect(find.text('Passives'), findsOneWidget);
+      expect(find.text('Passives: Ward'), findsNothing);
+    });
+
+    testWidgets('repliee, toucher le passif montre deplie la carte', (
+      WidgetTester tester,
+    ) async {
+      // Repliee, la tuile est un affichage, pas un choix : le seul passif
+      // montre est deja le retenu. Le geste doit donc traverser jusqu'a la
+      // carte plutot que de ne rien faire.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      await tester.tap(find.text('Ward'));
+      await _pomper(tester);
+
+      expect(find.text('Zeal'), findsOneWidget);
     });
 
     testWidgets('cliquer la carte deplie les passifs disponibles', (
@@ -1138,7 +1201,7 @@ void main() {
       await _appuyerSurLaCarte(tester, 'Paladin');
 
       expect(find.text('Zeal'), findsNothing);
-      expect(find.text('Passives: Ward'), findsOneWidget);
+      expect(find.text('Ward'), findsOneWidget);
     });
 
     testWidgets('ouvrir une autre carte referme la premiere', (
@@ -1147,19 +1210,22 @@ void main() {
       await _buildAndReady(
         tester,
         heroes: const [paladin, berserker],
-        passives: const [ward, zeal, fury],
+        passives: const [ward, zeal, fury, wrath],
       );
 
       await _appuyerSurLaCarte(tester, 'Paladin');
       expect(find.text('Zeal'), findsOneWidget);
-      expect(find.text('Fury'), findsNothing);
+      expect(find.text('Wrath'), findsNothing);
 
       await _appuyerSurLaCarte(tester, 'Berserker');
 
       // Une seule carte ouverte a la fois : l'accordeon vaut aussi bien en
-      // desktop qu'en mobile, puisque le geste y est le meme.
+      // desktop qu'en mobile, puisque le geste y est le meme. Seuls les
+      // passifs *non retenus* disparaissent : Ward et Fury restent, ce
+      // sont les choix affiches par leur carte repliee.
       expect(find.text('Zeal'), findsNothing);
-      expect(find.text('Fury'), findsOneWidget);
+      expect(find.text('Wrath'), findsOneWidget);
+      expect(find.text('Ward'), findsOneWidget);
     });
 
     testWidgets('deplier une carte ne change pas la hauteur des autres', (
@@ -1180,17 +1246,15 @@ void main() {
         passives: const [ward, zeal, fury],
       );
 
-      Finder carteDe(String nom) => find
-          .ancestor(of: find.text(nom), matching: find.byType(GestureDetector))
-          .first;
-
-      final double berserkerAvant = tester.getSize(carteDe('Berserker')).height;
+      final double berserkerAvant = tester
+          .getSize(_carteDe('Berserker'))
+          .height;
 
       await _appuyerSurLaCarte(tester, 'Paladin');
 
       expect(find.text('Zeal'), findsOneWidget);
       expect(
-        tester.getSize(carteDe('Berserker')).height,
+        tester.getSize(_carteDe('Berserker')).height,
         berserkerAvant,
         reason:
             'la carte du Berserker a change de hauteur alors que le joueur '
@@ -1212,7 +1276,7 @@ void main() {
       await _survoler(tester, 'Paladin');
 
       expect(find.text('Zeal'), findsNothing);
-      expect(find.text('Passives: Ward'), findsOneWidget);
+      expect(find.text('Ward'), findsOneWidget);
     });
 
     testWidgets('en mobile, l appui sur la carte deplie les passifs', (
@@ -1332,7 +1396,10 @@ void main() {
       await _pomper(tester);
       await _appuyerSurLaCarte(tester, 'Paladin');
 
-      expect(find.text('Passives: Zeal'), findsOneWidget);
+      // Repliee, la carte montre desormais Zeal — et lui seul.
+      expect(find.text('Zeal'), findsOneWidget);
+      expect(find.text('Gain 1 Might at the start of the turn.'), findsOneWidget);
+      expect(find.text('Ward'), findsNothing);
     });
 
     testWidgets('sans deplier, l ecran pousse le premier du point d acces', (
@@ -1348,7 +1415,8 @@ void main() {
         passives: const [zeal, ward],
       );
 
-      expect(find.text('Passives: Ward'), findsOneWidget);
+      expect(find.text('Ward'), findsOneWidget);
+      expect(find.text('Zeal'), findsNothing);
 
       await tester.tap(find.text('Select'));
       await _pomper(tester);

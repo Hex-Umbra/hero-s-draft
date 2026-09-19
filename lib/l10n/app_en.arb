@@ -79,13 +79,6 @@
     }
   },
   "passivesLabel": "Passives",
-  "passivesSelected": "Passives: {passive}",
-  "@passivesSelected": {
-    "description": "Collapsed label of a class card's passive list: names the passive the run would start with.",
-    "placeholders": {
-      "passive": { "type": "String" }
-    }
-  },
   "relicInventory": "Relic Inventory",
   "emptyInventory": "Your inventory is empty",
   "luckPercentageTitle": "Rarity Loot Rates",
