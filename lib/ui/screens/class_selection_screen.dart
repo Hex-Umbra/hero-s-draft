@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/systems/passive_availability.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/data/passive_data.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
@@ -16,20 +17,27 @@ import '../widgets/page_header.dart';
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
 
-  // Hauteur fixe de la carte a largeur mobile (<600px). `mainAxisExtent`
-  // decouple la hauteur de la largeur de viewport — contrairement a
-  // `childAspectRatio`, qui derive la hauteur de la largeur de carte et ne
-  // peut donc pas servir a la fois 320px et 599px sans deborder l'un ou
-  // gacher l'autre (defaut 2 du 2026-09-18, round 2).
+  // Hauteur de cellule desktop (>=600px). Le desktop reste une grille — la
+  // comparaison cote a cote entre classes est le point de cette mise en page
+  // — mais sa hauteur ne se deduit plus de la largeur de carte
+  // (`childAspectRatio`), qui produisait un motif en dents de scie :
+  // `SliverGridDelegateWithMaxCrossAxisExtent` fait bondir son nombre de
+  // colonnes par paliers quand le viewport grandit, donc la largeur de
+  // carte — et la hauteur qu'un `childAspectRatio` fixe en deduisait —
+  // n'est pas monotone (defaut 1, 2026-09-19).
   //
-  // Round 3 : remesuree avec `Flexible` restaure autour du nom de passif
-  // (round 2 l'avait retire a tort). Le contenu fixe (tout sauf la
-  // description, qui vit dans un `Expanded` et peut se retasser sans jamais
-  // deborder) tient dans une hauteur mesuree jusqu'a 220px de large — bien
-  // sous les 320px les plus etroits pris en charge — avec au moins 100px de
-  // marge restante pour la description a chaque largeur. Voir le rapport
-  // (round 3) pour la table de mesure complete.
-  static const double _kMobileCardHeight = 660;
+  // Mesuree au point le plus etroit de chaque palier de colonnes (600px ->
+  // 2 colonnes -> carte 270px ; 1000px -> 3 colonnes -> 307px ; 1400px -> 4
+  // colonnes -> 325px), avec la donnee reelle du Paladin et du Berserker
+  // (3 passifs chacun, le pire des deux). Le pire point mesure est le
+  // Berserker a 270px de large (600px de viewport) : 709px du haut de la
+  // carte au bas reel du bouton "Sélectionner" (confirme par une
+  // recherche binaire sur `_kDesktopCardHeight` : 700 deborde de 9px, 750
+  // n'y deborde plus). `750` ajoute ~41px (~5.8%) de marge de securite,
+  // du meme ordre que celle prise pour la hauteur mobile fixe (round 2/3
+  // de la meme regression). Voir le rapport final pour la table de mesure
+  // complete (600/800/1000/1270/1400/1600px).
+  static const double _kDesktopCardHeight = 750;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,36 +71,46 @@ class ClassSelectionScreen extends ConsumerWidget {
       ),
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 10 : 20),
-        child: GridView.builder(
-          // Mobile : une seule colonne, hauteur fixe (`mainAxisExtent`)
-          // decouplee de la largeur de viewport — trois phrases generees et
-          // un selecteur a trois passifs ne tiennent pas dans les ~200px de
-          // deux colonnes sans casser un mot en plein milieu, et une seule
-          // childAspectRatio ne peut pas servir 360px et 599px a la fois
-          // (round 2 du defaut 2, spec 2026-09-18). Desktop : inchange,
-          // toujours une grille a colonnes derivees de la largeur.
-          gridDelegate: isMobile
-              ? const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1,
-                  mainAxisExtent: _kMobileCardHeight,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                )
-              : const SliverGridDelegateWithMaxCrossAxisExtent(
+        // Mobile : liste a une colonne, chaque carte se dimensionne a son
+        // propre contenu (`ListView.separated`). Une grille a hauteur
+        // deduite de la largeur (`childAspectRatio`, ou meme une hauteur
+        // fixe partagee) couple deux axes qui n'ont aucune raison de l'etre
+        // — trois phrases generees et un selecteur a plusieurs passifs
+        // n'ont pas tous besoin de la meme hauteur a chaque largeur d'ecran
+        // — et un ecran court laissait le bouton "Selectionner" hors-champ
+        // (defaut 2, 2026-09-19). Une liste rend l'overflow vertical
+        // structurellement impossible : l'ecran defile, la carte ne
+        // deborde jamais. Desktop : grille conservee (comparer les classes
+        // cote a cote est le point de cette mise en page), mais sa hauteur
+        // de cellule est desormais une mesure du pire contenu reel au point
+        // le plus etroit du motif en dents de scie de
+        // `SliverGridDelegateWithMaxCrossAxisExtent`, plus une marge — pas
+        // une valeur deduite de la largeur (defaut 1, 2026-09-19).
+        child: isMobile
+            ? ListView.separated(
+                itemCount: classes.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
+                itemBuilder: (context, index) => _InteractiveClassCard(
+                  playerClass: classes[index],
+                  ref: ref,
+                  isMobile: isMobile,
+                ),
+              )
+            : GridView.builder(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 400,
-                  childAspectRatio: 0.75,
+                  mainAxisExtent: _kDesktopCardHeight,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
                 ),
-          itemCount: classes.length,
-          itemBuilder: (context, index) {
-            return _InteractiveClassCard(
-              playerClass: classes[index],
-              ref: ref,
-              isMobile: isMobile,
-            );
-          },
-        ),
+                itemCount: classes.length,
+                itemBuilder: (context, index) => _InteractiveClassCard(
+                  playerClass: classes[index],
+                  ref: ref,
+                  isMobile: isMobile,
+                ),
+              ),
       ),
     );
   }
@@ -325,6 +343,15 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                           Padding(
                             padding: EdgeInsets.all(widget.isMobile ? 5 : 20),
                             child: Column(
+                              // `min` : la carte se dimensionne a son propre
+                              // contenu. Necessaire en mobile, ou la carte
+                              // vit desormais dans un `ListView` a hauteur
+                              // non bornee (`max`, la valeur par defaut,
+                              // y leverait une erreur de layout) ; sans
+                              // consequence en desktop, ou la grille donne
+                              // toujours une contrainte de hauteur fixe
+                              // (defaut 1 et 2, 2026-09-19).
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(height: widget.isMobile ? 8 : 10),
                                 // Floating hero image
@@ -476,101 +503,14 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Wrap(
-                                        alignment: WrapAlignment.center,
-                                        spacing: widget.isMobile ? 8 : 10,
-                                        runSpacing: widget.isMobile ? 3 : 2,
-                                        children: [
-                                          for (var i = 0;
-                                              i < passives.length;
-                                              i++)
-                                            GestureDetector(
-                                              onTap: passives.length == 1
-                                                  ? null
-                                                  : () => setState(
-                                                        () => _passiveIndex =
-                                                            i,
-                                                      ),
-                                              child: Row(
-                                                mainAxisSize:
-                                                    MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.shield,
-                                                    size: widget.isMobile
-                                                        ? 12
-                                                        : 16,
-                                                    color: Colors.cyanAccent
-                                                        .withValues(
-                                                      alpha: i == index
-                                                          ? 1.0
-                                                          : 0.35,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width:
-                                                        widget.isMobile ? 2 : 6,
-                                                  ),
-                                                  // `Flexible` (jamais
-                                                  // `Expanded`) : a la
-                                                  // largeur la plus etroite
-                                                  // de la plage (320px), le
-                                                  // nom le plus long du jeu
-                                                  // ne tient plus sur une
-                                                  // ligne et doit pouvoir
-                                                  // enjamber la suivante au
-                                                  // lieu de deborder a droite
-                                                  // (defaut 2, round 3 du
-                                                  // 2026-09-18 : le retrait
-                                                  // du round 2 supposait a
-                                                  // tort qu'aucune largeur de
-                                                  // la plage ne forcerait de
-                                                  // retour a la ligne).
-                                                  Flexible(
-                                                    child: Text(
-                                                      passives[i]
-                                                          .getName(locale)
-                                                          .toUpperCase(),
-                                                      style: TextStyle(
-                                                        fontSize:
-                                                            widget.isMobile
-                                                                ? 10
-                                                                : 11,
-                                                        fontWeight: i == index
-                                                            ? FontWeight.bold
-                                                            : FontWeight
-                                                                .normal,
-                                                        color: Colors
-                                                            .cyanAccent
-                                                            .withValues(
-                                                          alpha: i == index
-                                                              ? 1.0
-                                                              : 0.45,
-                                                        ),
-                                                        letterSpacing: 0.8,
-                                                        decoration:
-                                                            passives.length >
-                                                                        1 &&
-                                                                    i == index
-                                                                ? TextDecoration
-                                                                    .underline
-                                                                : null,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          if (passives.isEmpty)
-                                            Text(
-                                              '—',
-                                              style: TextStyle(
-                                                fontSize:
-                                                    widget.isMobile ? 10 : 11,
-                                                color: Colors.cyanAccent,
-                                              ),
-                                            ),
-                                        ],
+                                      _PassiveSelector(
+                                        passives: passives,
+                                        selectedIndex: index,
+                                        isMobile: widget.isMobile,
+                                        locale: locale,
+                                        onSelect: (i) => setState(
+                                          () => _passiveIndex = i,
+                                        ),
                                       ),
                                       const SizedBox(height: 5),
                                       Text(
@@ -612,20 +552,23 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   color: Colors.white12,
                                   height: widget.isMobile ? 16 : 25,
                                 ),
-                                // Description text
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: Text(
-                                      playerClass.getDescription(locale),
-                                      style: TextStyle(
-                                        fontSize: widget.isMobile ? 11.5 : 13,
-                                        color: Colors.white70,
-                                        fontStyle: FontStyle.italic,
-                                        height: 1.3,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                // Description text. Plain child, pas
+                                // `Expanded`/`SingleChildScrollView` : la
+                                // carte se dimensionne desormais a son
+                                // contenu des deux cotes (`ListView` mobile
+                                // non borne, `mainAxisExtent` desktop mesure
+                                // pour l'accueillir) — rien ne reste a
+                                // faire tenir de force dans un espace fixe
+                                // (defaut 1 et 2, 2026-09-19).
+                                Text(
+                                  playerClass.getDescription(locale),
+                                  style: TextStyle(
+                                    fontSize: widget.isMobile ? 11.5 : 13,
+                                    color: Colors.white70,
+                                    fontStyle: FontStyle.italic,
+                                    height: 1.3,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                                 SizedBox(height: widget.isMobile ? 10 : 15),
                                 // Premium Selection Button
@@ -681,6 +624,111 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Le selecteur de passif de la carte de classe : une puce par passif
+/// disponible (point d'acces unique de P-49), tapable pour changer le choix
+/// retenu.
+///
+/// Extrait de `_InteractiveClassCardState.build()` (defaut 3, 2026-09-19) :
+/// c'est la seule facon d'atteindre six des neuf passifs livres — un choix
+/// non trivial que la carte n'exposait qu'a travers une rangee de 14-19px de
+/// haut, sans `HitTestBehavior.opaque` ni marge de frappe, contre les 48px
+/// recommandes par Material. `behavior: HitTestBehavior.opaque` fait
+/// reagir toute la puce (icone + texte + l'espace mort entre eux), et le
+/// `Padding` vertical lui redonne une hauteur de frappe raisonnable.
+class _PassiveSelector extends StatelessWidget {
+  final List<PassiveData> passives;
+  final int selectedIndex;
+  final bool isMobile;
+  final String locale;
+  final ValueChanged<int> onSelect;
+
+  // Les trois valeurs d'opacite que chaque puce module selon la selection,
+  // nommees une seule fois plutot que repetees a chaque site d'usage.
+  static const double _kSelectedAlpha = 1.0;
+  static const double _kUnselectedIconAlpha = 0.35;
+  static const double _kUnselectedTextAlpha = 0.45;
+
+  const _PassiveSelector({
+    required this.passives,
+    required this.selectedIndex,
+    required this.isMobile,
+    required this.locale,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (passives.isEmpty) {
+      return Text(
+        '—',
+        style: TextStyle(
+          fontSize: isMobile ? 10 : 11,
+          color: Colors.cyanAccent,
+        ),
+      );
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: isMobile ? 8 : 10,
+      runSpacing: isMobile ? 3 : 2,
+      children: [
+        for (var i = 0; i < passives.length; i++) _buildChip(i),
+      ],
+    );
+  }
+
+  Widget _buildChip(int i) {
+    final bool selected = i == selectedIndex;
+    return GestureDetector(
+      // `deferToChild` (le defaut) ne reagit qu'aux enfants qui peignent
+      // reellement quelque chose ; la puce contenait un `SizedBox` de 2px
+      // entre l'icone et le texte qui ne peint rien, donc une bande morte
+      // au milieu de la puce. `opaque` fait reagir toute sa zone.
+      behavior: HitTestBehavior.opaque,
+      onTap: passives.length == 1 ? null : () => onSelect(i),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.shield,
+              size: isMobile ? 12 : 16,
+              color: Colors.cyanAccent.withValues(
+                alpha: selected ? _kSelectedAlpha : _kUnselectedIconAlpha,
+              ),
+            ),
+            SizedBox(width: isMobile ? 2 : 6),
+            // `Flexible` (jamais `Expanded`) : a la largeur la plus etroite
+            // de la plage mobile (320px), le nom le plus long du jeu ne
+            // tient plus sur une ligne et doit pouvoir enjamber la suivante
+            // au lieu de deborder a droite (defaut 2, round 3 du
+            // 2026-09-18 : le retrait du round 2 supposait a tort qu'aucune
+            // largeur de la plage ne forcerait de retour a la ligne).
+            Flexible(
+              child: Text(
+                passives[i].getName(locale).toUpperCase(),
+                style: TextStyle(
+                  fontSize: isMobile ? 10 : 11,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  color: Colors.cyanAccent.withValues(
+                    alpha: selected ? _kSelectedAlpha : _kUnselectedTextAlpha,
+                  ),
+                  letterSpacing: 0.8,
+                  decoration: passives.length > 1 && selected
+                      ? TextDecoration.underline
+                      : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
