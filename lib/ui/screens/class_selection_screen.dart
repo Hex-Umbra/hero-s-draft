@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/systems/passive_availability.dart';
 import '../../models/data/hero_data.dart';
-import '../../models/data/passive_data.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
@@ -11,12 +10,33 @@ import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../../models/data/model_extensions.dart';
 import '../widgets/class_identity.dart';
-import '../widgets/passive_choice_dialog.dart';
+import '../widgets/class_passive_list.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
-class ClassSelectionScreen extends ConsumerWidget {
+class ClassSelectionScreen extends ConsumerStatefulWidget {
   const ClassSelectionScreen({super.key});
+
+  @override
+  ConsumerState<ClassSelectionScreen> createState() =>
+      _ClassSelectionScreenState();
+}
+
+class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
+  /// L'identifiant de la classe dont les passifs sont dépliés, s'il y en a
+  /// une.
+  ///
+  /// Une seule carte à la fois : en desktop c'est mécanique (la souris ne
+  /// survole qu'une carte), en mobile c'est la règle de l'accordéon. L'état
+  /// vit donc ici, au-dessus des cartes, et pas dans chacune — deux cartes
+  /// ouvertes ne peuvent pas se produire. Un identifiant plutôt qu'un rang :
+  /// l'ordre d'affichage est une donnée (`displayOrder`) qui peut changer.
+  String? _classeDepliee;
+
+  void _depliee(String id, bool ouverte) {
+    if (ouverte == (_classeDepliee == id)) return;
+    setState(() => _classeDepliee = ouverte ? id : null);
+  }
 
   // Largeur de carte visee et espacement desktop — memes valeurs
   // numeriques que l'ancien `SliverGridDelegateWithMaxCrossAxisExtent
@@ -33,7 +53,7 @@ class ClassSelectionScreen extends ConsumerWidget {
   static const double _kDesktopSpacing = 20;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     ref.read(musicConductorProvider).onScene(MusicScene.menu);
 
     // Les données sont déjà chargées par le SplashScreen
@@ -82,13 +102,12 @@ class ClassSelectionScreen extends ConsumerWidget {
                 itemCount: classes.length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 10),
-                itemBuilder: (context, index) => _InteractiveClassCard(
-                  playerClass: classes[index],
-                  ref: ref,
-                  isMobile: isMobile,
+                itemBuilder: (context, index) => _buildCard(
+                  classes[index],
+                  isMobile: true,
                 ),
               )
-            : _buildDesktopGrid(ref, classes),
+            : _buildDesktopGrid(classes),
       ),
     );
   }
@@ -143,7 +162,28 @@ class ClassSelectionScreen extends ConsumerWidget {
   // ce qui ne l'est plus, deliberement, c'est la largeur de carte au-dela
   // du point ou le nombre de classes livrees devient le facteur limitant
   // plutot que la largeur d'ecran.
-  Widget _buildDesktopGrid(WidgetRef ref, List<HeroData> classes) {
+  /// Une carte, branchée sur l'accordéon de l'écran.
+  ///
+  /// En desktop, c'est le survol qui déplie : le `MouseRegion` de la carte
+  /// existe déjà pour son halo. En mobile, où le survol n'existe pas,
+  /// l'appui prend le relais — et le clic ne fait rien en desktop, où il
+  /// refermerait ce que le survol vient d'ouvrir.
+  Widget _buildCard(HeroData playerClass, {required bool isMobile}) {
+    return _InteractiveClassCard(
+      playerClass: playerClass,
+      ref: ref,
+      isMobile: isMobile,
+      isExpanded: _classeDepliee == playerClass.id,
+      onHover: isMobile
+          ? null
+          : (ouverte) => _depliee(playerClass.id, ouverte),
+      onTap: isMobile
+          ? () => _depliee(playerClass.id, _classeDepliee != playerClass.id)
+          : null,
+    );
+  }
+
+  Widget _buildDesktopGrid(List<HeroData> classes) {
     if (classes.isEmpty) return const SizedBox.shrink();
 
     return LayoutBuilder(
@@ -178,11 +218,7 @@ class ClassSelectionScreen extends ConsumerWidget {
                     if (i > 0) const SizedBox(width: _kDesktopSpacing),
                     SizedBox(
                       width: cardWidth,
-                      child: _InteractiveClassCard(
-                        playerClass: row[i],
-                        ref: ref,
-                        isMobile: false,
-                      ),
+                      child: _buildCard(row[i], isMobile: false),
                     ),
                   ],
                 ],
@@ -200,10 +236,23 @@ class _InteractiveClassCard extends StatefulWidget {
   final WidgetRef ref;
   final bool isMobile;
 
+  /// Les passifs de cette carte sont-ils dépliés ? L'écran le décide, pas la
+  /// carte : une seule à la fois peut l'être.
+  final bool isExpanded;
+
+  /// Renseigné en desktop seulement : le survol y ouvre et ferme.
+  final ValueChanged<bool>? onHover;
+
+  /// Renseigné en mobile seulement : l'appui y bascule le dépliage.
+  final VoidCallback? onTap;
+
   const _InteractiveClassCard({
     required this.playerClass,
     required this.ref,
     required this.isMobile,
+    required this.isExpanded,
+    this.onHover,
+    this.onTap,
   });
 
   @override
@@ -237,40 +286,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     return Size.zero;
   }
 
-  /// Fait choisir son passif au joueur, puis enchaîne sur le draft de départ.
-  ///
-  /// Les passifs proposés sont ceux du point d'accès unique de P-49
-  /// (spec §5.1, P5), et le panneau s'ouvre sur le premier. Renoncer au
-  /// panneau ne lance rien : le joueur revient à son choix de classe.
-  ///
-  /// Sans passif disponible, le panneau n'aurait rien à montrer — l'écran
-  /// enchaîne alors directement, avec `null` comme avant ce lot.
-  Future<void> _choisirPuisPartir(
-    HeroData playerClass,
-    List<PassiveData> passives,
-  ) async {
-    final navigator = Navigator.of(context);
-    PassiveData? passive;
-
-    if (passives.isNotEmpty) {
-      passive = await PassiveChoiceDialog.show(
-        context,
-        playerClass: playerClass,
-        passives: passives,
-      );
-      if (passive == null) return;
-    }
-
-    if (!mounted) return;
-    navigator.push(
-      MaterialPageRoute(
-        builder: (context) => StarterDeckDraftScreen(
-          playerClass: playerClass,
-          passive: passive,
-        ),
-      ),
-    );
-  }
+  /// Le passif retenu, par son rang dans `availablePassivesFor` — le point
+  /// d'accès unique de P-49 (spec §5.1, P5). Le premier par défaut, et le
+  /// choix du joueur ensuite (spec §8.3).
+  int _passiveIndex = 0;
 
   // For float/breath animation of icon
   late final AnimationController _floatController;
@@ -312,6 +331,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   }
 
   void _onPointerExit() {
+    widget.onHover?.call(false);
     setState(() {
       _isHovered = false;
       _tiltX = 0.0;
@@ -321,6 +341,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   }
 
   void _onPointerEnter() {
+    widget.onHover?.call(true);
     setState(() {
       _isHovered = true;
     });
@@ -331,6 +352,9 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
     final passives = availablePassivesFor(playerClass, gameData);
+    // Le rang peut sortir de la liste si la donnée change sous l'écran : on
+    // retombe sur le premier plutôt que de lever.
+    final index = _passiveIndex < passives.length ? _passiveIndex : 0;
     final locale = Localizations.localeOf(context).languageCode;
 
     final classColor = ClassIdentity.colorOf(playerClass);
@@ -390,7 +414,14 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     return MouseRegion(
           onEnter: (_) => _onPointerEnter(),
           onExit: (_) => _onPointerExit(),
-          child: Listener(
+          // Le geste de dépliage en mobile. `widget.onTap` n'est renseigné
+          // que là : en desktop le survol suffit, et un clic qui refermerait
+          // ce que le survol vient d'ouvrir n'aurait aucun sens. Le bouton
+          // et les lignes de passif ont leurs propres gestes, qui gagnent
+          // sur celui-ci.
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: Listener(
             onPointerMove: (e) => _onPointerMove(e),
             onPointerHover: (e) => _onPointerMove(e),
             child: TweenAnimationBuilder<double>(
@@ -627,9 +658,35 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 _PremiumSelectionButton(
                                   classColor: classColor,
                                   isMobile: widget.isMobile,
-                                  onPressed: () =>
-                                      _choisirPuisPartir(playerClass, passives),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            StarterDeckDraftScreen(
+                                              playerClass: playerClass,
+                                              passive: passives.isEmpty
+                                                  ? null
+                                                  : passives[index],
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 ),
+                                if (passives.isNotEmpty) ...[
+                                  SizedBox(height: widget.isMobile ? 6 : 8),
+                                  ClassPassiveList(
+                                    passives: passives,
+                                    selectedIndex: index,
+                                    classMastery: playerClass.mastery,
+                                    isExpanded: widget.isExpanded,
+                                    isMobile: widget.isMobile,
+                                    locale: locale,
+                                    classColor: classColor,
+                                    onSelect: (i) => setState(
+                                      () => _passiveIndex = i,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -639,6 +696,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                   ),
                 );
               },
+            ),
             ),
           ),
         );

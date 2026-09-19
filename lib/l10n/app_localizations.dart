@@ -326,17 +326,17 @@ abstract class AppLocalizations {
   /// **'{mastery, plural, =0{Mastery 0 at start: {effect}} other{Mastery {mastery}: {effect}}}'**
   String passiveMasteryAtStart(int mastery, String effect);
 
-  /// No description provided for @passiveChoiceTitle.
+  /// No description provided for @passivesLabel.
   ///
   /// In en, this message translates to:
-  /// **'Choose your passive'**
-  String get passiveChoiceTitle;
+  /// **'Passives'**
+  String get passivesLabel;
 
-  /// No description provided for @passiveChoiceConfirm.
+  /// Collapsed label of a class card's passive list: names the passive the run would start with.
   ///
   /// In en, this message translates to:
-  /// **'Confirm'**
-  String get passiveChoiceConfirm;
+  /// **'Passives: {passive}'**
+  String passivesSelected(String passive);
 
   /// No description provided for @relicInventory.
   ///

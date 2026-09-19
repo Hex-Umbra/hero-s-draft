@@ -143,10 +143,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get passiveChoiceTitle => 'Choose your passive';
+  String get passivesLabel => 'Passives';
 
   @override
-  String get passiveChoiceConfirm => 'Confirm';
+  String passivesSelected(String passive) {
+    return 'Passives: $passive';
+  }
 
   @override
   String get relicInventory => 'Relic Inventory';
