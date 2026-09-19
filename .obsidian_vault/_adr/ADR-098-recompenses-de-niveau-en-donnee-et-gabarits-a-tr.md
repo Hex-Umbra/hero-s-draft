@@ -7,8 +7,9 @@
 
 Complète [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md) et
 [ADR-086](ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md) : la neuvième
-source d'entités suit leur règle sans l'amender. Sera étendu par la **partie 2** du lot C,
-qui ajoute un champ `requires` au modèle créé ici.
+source d'entités suit leur règle sans l'amender. **Étendu par
+[ADR-099](ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)** (lot C, partie 2),
+qui ajoute le champ `requires` au modèle créé ici.
 
 ### Contexte
 

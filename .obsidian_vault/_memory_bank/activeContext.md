@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-18 | commit: 152fbcc -->
+<!-- last-sync: 2026-09-20 | commit: c29487e -->
 
 # 🧠 Contexte Actuel
 
@@ -7,27 +7,22 @@
 
 ## Focus courant
 
-**P-41 lot C, partie 1 est fusionnée dans `main`** par la **PR #42** (2026-09-18, merge `152fbcc`,
-`face77b`..`9a2f375`, 11 commits, détail plus bas) : les huit récompenses de montée de niveau
-quittent le code pour `assets/data/level_up_rewards/`, **à valeurs, textes et probabilités
-identiques** — [ADR-098](../_adr/ADR-098-recompenses-de-niveau-en-donnee-et-gabarits-a-tr.md).
-Le lot B reste fusionné en entier (PR #40 puis #41), et P-49 par la PR #39.
+**Le lot C de P-41 est clos, et avec lui les lots A, B et C : seul le lot D reste.** Sa **partie 2**
+est fusionnée dans `main` par la **PR #43** (2026-09-20, merge `2f850c4`, `2d167fa`..`0db8d4e`,
+20 commits de code, détail plus bas) : **le joueur choisit son passif à la sélection de classe**, et
+les neuf passifs livrés par le lot B deviennent atteignables — c'est le verrou que le lot C avait à
+lever. `baseDamage` quitte l'écran et le modèle de héros ; *Affinité* n'est plus tirée quand le
+passif actif ne déclare aucune Maîtrise —
+[ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md).
 
-La note `0.5.2` a été **rouverte en place une quatrième fois** pour cette partie 1, même numéro,
-une seule entrée en Technique — c'est la seule livraison de P-41 que le joueur ne ressent pas.
-**Toujours pas taguée.** Métriques dans `progress.md`.
+La note `0.5.2` a été **rouverte en place une cinquième fois** pour cette partie 2, même numéro :
+quatre entrées neuves — dont une section Corrections — et, **pour la première fois, une entrée
+existante réécrite**, celle qui annonçait cet écran comme à venir. La note n'étant **ni taguée ni
+publiée** (dernière release `v0.5.1`), aucun joueur n'avait lu la phrase corrigée.
+Métriques dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
-- **Les trois décisions du propriétaire du 2026-09-15 sont intégrées à `main`** par la PR #37 :
-  changements visibles ajoutés à la note `0.5.1` (`2d19d42`), cartes abîmées par l'ancienne fusion
-  de légendaires réparées au chargement (`71d97cb`), corpus `docs/formation-heros-draft/` figé en
-  instantané daté (`69fef58`). Plus aucune branche de P-40 n'est en attente.
-- **Un dossier de classe `gambler` vide**, laissé par une écriture de l'éditeur, faisait rougir deux
-  tests sur `main`. Supprimé le 2026-09-15 ; `entity_writer.dart` tient ce cas pour « sans conséquence ».
-- **Les changements visibles de P-30 ont rejoint la note `0.5.1`** (`d8d9319`, décision du
-  propriétaire le 2026-09-14) : bouton « Quitter », retours arrière, fin du badge « NEW »,
-  illustration de classe. Rien sur le menu de debug ni l'éditeur, absents des builds publiés.
 - **⚠️ Les lots 1-2 de P-48 cassent toujours les sauvegardes antérieures à leurs ids de passifs en
   `snake_case`** (commit `7da5db2`). P-41 lot A a posé une chaîne de migration (`SaveMigrator`) et
   changé de clé de stockage (`run_save`, repli sur `run_save_v1`), mais sa seule étape migre
@@ -46,7 +41,6 @@ Réserves à ne pas perdre de vue :
   bloc 2 a fait à ces deux mêmes lignes, c'est y substituer `CardRarity.isAcquirable` au
   `rarity != unique` en ligne — la condition de classe n'y est jamais entrée, et le seul commit sur
   le sujet reste `39ac887`, qui documente le défaut sans le corriger.
-- **La modification d'entité par l'éditeur** est testée (`47f6731`, `25b2945`), sans passe dédiée consignée.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
@@ -54,7 +48,25 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-41 lot C, partie 1 — les récompenses de niveau deviennent de la donnée** (2026-09-18,
+1. **P-41 lot C, partie 2 — le choix du passif, et le conditionnement des récompenses**
+   (2026-09-20, **fusionné dans `main` par la PR #43**, merge `2f850c4`, 20 commits de code,
+   `2d167fa` → `0db8d4e`, branche `feat/p41-lot-c-selection`) — **l'écran de sélection de classe
+   cesse de mentir deux fois.** Le joueur y **choisit son passif** : la carte déplie *tous* ceux
+   que `availablePassivesFor()` rend — jamais un `take(3)`, trois étant un compte et non une règle
+   que P-13 fera varier — et le retenu part avec la run. Six des neuf passifs du lot B étaient
+   jusque-là livrés, testés et inatteignables. `baseDamage` (5 / 15 / 10) quitte `HeroData`, les
+   trois `class.json` et `sword_icon.dart` : aucune run ne le reprenait, toutes démarrant à
+   `might: 0`. La carte montre à la place les PV et le mana **toujours**, `mastery`, `critChance`
+   et `luck` **seulement si > 0**, plus l'orientation de la Puissance et la règle de stat en clair
+   — trois textes **générés depuis la donnée**, sur des `switch` exhaustifs dans
+   `model_extensions.dart`, aucun `hero.id` comparé (ADR-090) ; premier **pluriel ICU** des ARB du
+   projet. *Affinité* n'est plus tirée quand le passif actif ne déclare pas de `mastery` : un champ
+   `requires` sur `LevelUpRewardData`, **le mécanisme et non la récompense**, qui lit
+   `RunState.activePassive` et non le point d'accès de P-49. La carte se dimensionne désormais à
+   son contenu — une colonne sur mobile, rangées intrinsèques en desktop. **1135 tests** (+70),
+   `dart analyze` propre —
+   [ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md).
+2. **P-41 lot C, partie 1 — les récompenses de niveau deviennent de la donnée** (2026-09-18,
    **fusionné dans `main` par la PR #42**, merge `152fbcc`, 11 commits, `face77b` → `9a2f375`) —
    **le jeu ne change pas** : seule la provenance des valeurs change. Les huit récompenses — six
    tirables, deux mythiques, séparées par un champ `pool` — vivent sous
@@ -69,7 +81,7 @@ Réserves à ne pas perdre de vue :
    intact. **Un seul texte joueur bouge** : la liste des mythiques du tutoriel perd ses articles.
    **1065 tests** (+44), `dart analyze` propre —
    [ADR-098](../_adr/ADR-098-recompenses-de-niveau-en-donnee-et-gabarits-a-tr.md).
-2. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **fusionné dans `main` par la
+3. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **fusionné dans `main` par la
    PR #41**, merge `5086272`, 18 commits, `74c54cf` → `83e65b9`) — **la première livraison de P-41 que le
    joueur ressent.** Le Paladin renforce tout, le Berserker ses seules Attaques, le Mage ses
    Compétences et ses altérations. Le Berserker **n'a plus jamais d'armure** : toute source devient
@@ -80,36 +92,24 @@ Réserves à ne pas perdre de vue :
    Stats de départ propres (Maîtrise 1 au Paladin, 10 % de critique au Berserker) ; la Puissance
    porte un éclair. **1021 tests** (+83), `dart analyze` propre —
    [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), section « Partie 2 ».
-3. **P-41 lot B, partie 1 — la Puissance, une seule stat orientée par la classe**
-   (2026-09-17, **fusionné dans `main` par la PR #40**, 6 commits,
-   `f20c353` → `e9b193d`) — `attackPower`/`skillPower`/`alterationPower` (lot A) fusionnent en une
-   seule `might` ; `HeroData.mightTargets` (`class.json`, obligatoire) déclare ce qu'elle renforce,
-   copié dans `EntityStats.mightTargets` à la création du héros ; `PowerRules` lit cette copie sans
-   changer la forme de ses huit appels. Le statut `strength` devient `might` (`gain_might`,
-   `charge_might_turn`, `charge_might_combat`), `applyAttackBuff` (code mort) supprimé. Tous les
-   textes joueur disent Puissance/Might ; le sous-titre de la fiche de stats liste ce qu'elle
-   renforce (`Set<MightTarget>.shortLabel`). **Comportement de jeu inchangé** : les trois classes
-   ciblent `attack`. **Aucune migration de sauvegarde** (spec §7.5) : `SaveMigrator` reste en
-   version 2, son étape v1→v2 garde `attackPower` en format gelé, désormais ignoré à la lecture.
-   938 tests (+15), `dart analyze` propre. Voir
-   [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) (amende la décision 2 d'ADR-095).
 > [!NOTE]
-> **Rotations.** Sorties le 2026-09-18 : `../_archive/2026-09-18-activeContext-livraisons-2.md`
-> (P-49) et `../_archive/2026-09-18-activeContext-livraisons.md` (P-41 lot A). Sorties le
-> 2026-09-17 : `../_archive/2026-09-17-activeContext-livraisons-2.md` (P-40 bloc 2, cartes et forge)
-> et `../_archive/2026-09-17-activeContext-livraisons.md` (éditeur de contenu, habillage). Les neuf
-> rotations précédentes portent le même nom, daté du 2026-09-16 au 2026-08-20, dans `../_archive/`.
+> **Rotations.** Sortie le 2026-09-20 : `../_archive/2026-09-20-activeContext-livraisons.md`
+> (P-41 lot B partie 1), avec quatre réserves closes. Sorties le 2026-09-18 :
+> `../_archive/2026-09-18-activeContext-livraisons-2.md` (P-49) et
+> `../_archive/2026-09-18-activeContext-livraisons.md` (P-41 lot A). Les onze rotations précédentes
+> portent le même nom, daté du 2026-09-17 au 2026-08-20, dans `../_archive/`.
 
 ## Prochaine étape
 
-**P-41 lot C, partie 2** est le prochain chantier, [plan](../../docs/superpowers/plans/2026-09-18-p41-lot-c-partie-2-filtre-et-ecran-de-selection.md)
-écrit et en attente : filtre d'*Affinité* quand le passif actif ne déclare pas de Maîtrise, retrait
-de `baseDamage`, et l'**écran de choix du passif** — sans lui, six des neuf passifs du lot B restent
-inatteignables, l'écran de sélection ne proposant que `passives.first`, et la note `0.5.2` a promis
-cet écran au joueur. Il étend le modèle créé par la partie 1 d'un champ `requires`.
+**P-41 lot D** est le dernier lot du chantier, et n'a pas encore de plan : mise à jour fonctionnelle
+du tutoriel et de la console de debug. Deux reports nommés par le lot C l'attendent — l'étape de
+choix de classe du tutoriel, qui suppose toujours un passif unique
+(`tutorial_fixtures.dart:58`, spec §9.1), et `statRules` que l'éditeur de contenu ne valide pas
+(spec §9.2).
 
-Il reste au propriétaire à **regarder tourner le lot B** — les trois identités de classe ne se
-vérifient pas par la suite de tests. Le tag `v0.5.2` attend cette campagne manuelle et P-42 ; le
+Il reste au propriétaire à **regarder tourner les lots B et C** — les trois identités de classe et
+le nouvel écran de sélection ne se vérifient pas par la suite de tests, et la carte de classe a été
+recalibrée à l'œil, mobile et desktop. Le tag `v0.5.2` attend cette campagne manuelle et P-42 ; le
 filtre de classe des cartes de signature se traite avant ou avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de

@@ -60,10 +60,14 @@ et `referential_integrity_test` refuse qu'un passif livré soit dans ce cas.
 
 **Éligibilité et rang** : chaque passif déclare ses `classes` (absent = toutes) ; le point d'accès
 unique `availablePassivesFor(HeroData, GameDataRegistry)` (`lib/game/systems/passive_availability.dart`)
-est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. Ses deux lecteurs — l'écran de
-sélection de classe et le tutoriel — prennent le **premier** passif disponible, d'où le rang
-explicite : sans lui l'ordre alphabétique déciderait du passif de départ. L'écran de **choix** arrive
-au lot C de P-41.
+est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. Ses deux lecteurs ne le
+consomment plus de la même façon depuis le **lot C partie 2** de P-41 : l'écran de sélection de
+classe affiche **toute** la liste et laisse le joueur choisir — jamais un `take(3)`, le compte de
+trois étant celui d'aujourd'hui et non une règle —, tandis que le **tutoriel** prend encore le
+premier (`tutorial_fixtures.dart:58`), son étape de choix de classe étant reportée au **lot D**. Le
+rang reste explicite : c'est lui qui fixe l'ordre d'affichage et le choix par défaut, là où l'ordre
+alphabétique déciderait sinon
+([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).
 
 > [!NOTE]
 > Un dixième passif se pose en **un seul fichier JSON** s'il réutilise un `effectType` existant ; il

@@ -56,9 +56,11 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 chacun réservé à sa classe par son propre champ `classes`) — détail du mécanisme et de la Maîtrise :
 [`_patterns/03-3`](../_patterns/03-3-traitsystem-passifs-de-heros.md).
 
-**Neuf passifs, trois par classe**, rangés par `displayOrder`. Tant que l'écran de **choix** du
-passif n'existe pas (lot C), le joueur reçoit le premier de sa classe — les six autres sont livrés,
-testés et jouables, mais inatteignables en jeu.
+**Neuf passifs, trois par classe**, rangés par `displayOrder`. Depuis le **lot C partie 2** de P-41,
+le joueur **choisit le sien à l'écran de sélection de classe** : la carte déplie tous les passifs que
+`availablePassivesFor()` rend pour la classe, et celui qu'il retient part avec la run. Le
+`displayOrder` ne décide donc plus du passif de départ — il décide de l'ordre d'affichage et du
+choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).
 
 | Rang | ID | Classe | Trigger | EffectType | Valeurs | Mécanisme |
 |:---:|:---|:---|:---|:---|:---|:---|

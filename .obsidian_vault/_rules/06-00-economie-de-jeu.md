@@ -48,6 +48,15 @@ Le **Miroir** ne monte aucune stat : `stat` absent, il ouvre une modale de clona
 Ces six-là portent `pool: draft` : les **trois emplacements** du draft les tirent uniformément,
 chacun à une rareté jetée séparément, et ne sortent **jamais** en mythique.
 
+**Une récompense peut se retirer du tirage**, depuis le lot C partie 2 : le champ `requires`
+(`RewardRequirement`) est un prédicat lu par `generateChoices` avant le tirage, et non une
+propriété d'une récompense en particulier. Seule l'**Affinité** le déclare aujourd'hui
+(`passiveMastery`) : elle n'est pas proposée si le passif actif ne déclare pas de bloc `mastery`,
+ni s'il n'y a **pas de passif du tout** — dans les deux cas la récompense serait inerte. La table
+effective tombe alors de six à cinq types. **Les neuf passifs livrés déclarent tous une Maîtrise :
+aucune run réelle n'est concernée à ce jour**, le filtre attend le premier passif qui n'en
+déclarera pas ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).
+
 Deux récompenses portent `pool: mythic` : elles n'ont pas de courbe, sortent à ce seul palier et
 sont ajoutées aux trois par un **jet indépendant chacune** (0,5 %, plus `luck × 0,15`) — le
 **Trèfle à 4 feuilles** (`luck: 1`) et le **Miroir** (`effect: cloneCard`, clone d'une carte). Une
