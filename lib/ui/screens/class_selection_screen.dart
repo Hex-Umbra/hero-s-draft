@@ -16,6 +16,16 @@ import '../widgets/page_header.dart';
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
 
+  // Hauteur fixe de la carte a largeur mobile (<600px), mesuree sur le
+  // contenu reel le plus haut (les trois passifs du Paladin, sa description,
+  // et la StatRule du Berserker) a la largeur la plus etroite prise en
+  // charge (360px), marge de securite incluse. `mainAxisExtent` decouple la
+  // hauteur de la largeur de viewport — contrairement a `childAspectRatio`,
+  // qui derive la hauteur de la largeur de carte et ne peut donc pas servir
+  // a la fois 360px et 599px sans deborder l'un ou gacher l'autre (defaut 2
+  // du 2026-09-18, correction round 2).
+  static const double _kMobileCardHeight = 660;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.read(musicConductorProvider).onScene(MusicScene.menu);
@@ -49,16 +59,26 @@ class ClassSelectionScreen extends ConsumerWidget {
       body: Padding(
         padding: EdgeInsets.all(isMobile ? 10 : 20),
         child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: isMobile
-                ? 200
-                : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
-            childAspectRatio: isMobile
-                ? 0.24
-                : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
-            crossAxisSpacing: isMobile ? 10 : 20,
-            mainAxisSpacing: isMobile ? 10 : 20,
-          ),
+          // Mobile : une seule colonne, hauteur fixe (`mainAxisExtent`)
+          // decouplee de la largeur de viewport — trois phrases generees et
+          // un selecteur a trois passifs ne tiennent pas dans les ~200px de
+          // deux colonnes sans casser un mot en plein milieu, et une seule
+          // childAspectRatio ne peut pas servir 360px et 599px a la fois
+          // (round 2 du defaut 2, spec 2026-09-18). Desktop : inchange,
+          // toujours une grille a colonnes derivees de la largeur.
+          gridDelegate: isMobile
+              ? const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 1,
+                  mainAxisExtent: _kMobileCardHeight,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                )
+              : const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 400,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                ),
           itemCount: classes.length,
           itemBuilder: (context, index) {
             return _InteractiveClassCard(
@@ -301,7 +321,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                             padding: EdgeInsets.all(widget.isMobile ? 5 : 20),
                             child: Column(
                               children: [
-                                SizedBox(height: widget.isMobile ? 2 : 10),
+                                SizedBox(height: widget.isMobile ? 8 : 10),
                                 // Floating hero image
                                 AnimatedBuilder(
                                   animation: _floatAnimation,
@@ -336,7 +356,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 1 : 15),
+                                SizedBox(height: widget.isMobile ? 10 : 15),
                                 Text(
                                   playerClass.getName(locale),
                                   style: TextStyle(
@@ -354,12 +374,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 2 : 12),
+                                SizedBox(height: widget.isMobile ? 8 : 12),
                                 // Stats with beautiful icons and display
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 2 : 8,
+                                    vertical: widget.isMobile ? 6 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.04),
@@ -377,7 +397,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 1 : 8),
+                                SizedBox(height: widget.isMobile ? 6 : 8),
                                 // Ce que renforce la Puissance de la classe,
                                 // et ce qu'elle convertit — genere depuis
                                 // `mightTargets` et `statRules`, jamais ecrit
@@ -386,7 +406,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 2 : 6,
+                                    vertical: widget.isMobile ? 5 : 6,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.orangeAccent.withValues(alpha: 0.06),
@@ -431,8 +451,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 Container(
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: widget.isMobile ? 3 : 12,
-                                    vertical: widget.isMobile ? 2 : 8,
+                                    horizontal: widget.isMobile ? 8 : 12,
+                                    vertical: widget.isMobile ? 6 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.cyanAccent.withValues(
@@ -453,8 +473,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     children: [
                                       Wrap(
                                         alignment: WrapAlignment.center,
-                                        spacing: widget.isMobile ? 4 : 10,
-                                        runSpacing: widget.isMobile ? 1 : 2,
+                                        spacing: widget.isMobile ? 8 : 10,
+                                        runSpacing: widget.isMobile ? 3 : 2,
                                         children: [
                                           for (var i = 0;
                                               i < passives.length;
@@ -486,45 +506,30 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                                     width:
                                                         widget.isMobile ? 2 : 6,
                                                   ),
-                                                  // `Flexible` (jamais
-                                                  // `Expanded`) : le nom
-                                                  // enjambe une seconde ligne
-                                                  // quand la donnee reelle
-                                                  // (ex. « REGENERATION
-                                                  // D'ARMURE ») ne tient pas
-                                                  // sur la largeur mobile,
-                                                  // sans deborder ni couper
-                                                  // le texte (defaut 2).
-                                                  Flexible(
-                                                    child: Text(
-                                                      passives[i]
-                                                          .getName(locale)
-                                                          .toUpperCase(),
-                                                      style: TextStyle(
-                                                        fontSize:
-                                                            widget.isMobile
-                                                                ? 10
-                                                                : 11,
-                                                        fontWeight: i == index
-                                                            ? FontWeight.bold
-                                                            : FontWeight
-                                                                .normal,
-                                                        color: Colors
-                                                            .cyanAccent
-                                                            .withValues(
-                                                          alpha: i == index
-                                                              ? 1.0
-                                                              : 0.45,
-                                                        ),
-                                                        letterSpacing: 0.8,
-                                                        decoration:
-                                                            passives.length >
-                                                                        1 &&
-                                                                    i == index
-                                                                ? TextDecoration
-                                                                    .underline
-                                                                : null,
+                                                  Text(
+                                                    passives[i]
+                                                        .getName(locale)
+                                                        .toUpperCase(),
+                                                    style: TextStyle(
+                                                      fontSize: widget.isMobile
+                                                          ? 10
+                                                          : 11,
+                                                      fontWeight: i == index
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                      color: Colors.cyanAccent
+                                                          .withValues(
+                                                        alpha: i == index
+                                                            ? 1.0
+                                                            : 0.45,
                                                       ),
+                                                      letterSpacing: 0.8,
+                                                      decoration:
+                                                          passives.length > 1 &&
+                                                                  i == index
+                                                              ? TextDecoration
+                                                                  .underline
+                                                              : null,
                                                     ),
                                                   ),
                                                 ],
@@ -541,7 +546,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                             ),
                                         ],
                                       ),
-                                      SizedBox(height: widget.isMobile ? 2 : 5),
+                                      const SizedBox(height: 5),
                                       Text(
                                         traitDesc,
                                         style: TextStyle(
@@ -556,9 +561,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                         textAlign: TextAlign.center,
                                       ),
                                       if (masteryPerPoint != null) ...[
-                                        SizedBox(
-                                          height: widget.isMobile ? 1 : 3,
-                                        ),
+                                        const SizedBox(height: 3),
                                         Text(
                                           l10n.passiveMasteryPerPoint(
                                             masteryPerPoint,
@@ -581,7 +584,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 ),
                                 Divider(
                                   color: Colors.white12,
-                                  height: widget.isMobile ? 6 : 25,
+                                  height: widget.isMobile ? 16 : 25,
                                 ),
                                 // Description text
                                 Expanded(
@@ -598,7 +601,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 1 : 15),
+                                SizedBox(height: widget.isMobile ? 10 : 15),
                                 // Premium Selection Button
                                 _PremiumSelectionButton(
                                   classColor: classColor,

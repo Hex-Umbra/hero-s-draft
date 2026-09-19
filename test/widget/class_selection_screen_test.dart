@@ -623,17 +623,28 @@ void main() {
 
     // 360 (le plus etroit courant), 390 (le point deja couvert par la tache
     // 6), 480, 550 (mesure du rapport visuel, 212/255px de debordement) et
-    // 599 (juste sous la bascule `isMobile`) : la largeur seule fait varier
-    // le nombre de colonnes de la grille (`maxCrossAxisExtent: 200`), donc la
-    // largeur de chaque carte et, via `childAspectRatio`, sa hauteur — 390 et
-    // 550 ne se comportent pas pareil.
+    // 599 (juste sous la bascule `isMobile`) : la grille mobile est desormais
+    // a une seule colonne et hauteur fixe (`SliverGridDelegateWithFixedCross
+    // AxisCount`, round 2 du 2026-09-18) — la largeur de carte varie donc
+    // avec la largeur d'ecran (340px a 360, 579px a 599) mais sa hauteur ne
+    // depend plus d'elle, ce que ce test verifie : aucune largeur de la plage
+    // ne doit deborder ni casser un mot en plein milieu.
+    //
+    // La hauteur de viewport (1600) est volontairement genereuse : avec une
+    // seule colonne, le Paladin et le Berserker s'empilent au lieu de se
+    // partager une rangee, et `GridView.builder` ne construit que ce qui est
+    // visible — il faut donc assez de hauteur pour que les deux cartes
+    // soient realisees dans le meme pump, sans avoir a faire defiler l'ecran
+    // de test.
     const largeurs = [360.0, 390.0, 480.0, 550.0, 599.0];
     for (final largeur in largeurs) {
       testWidgets(
-        'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas',
+        'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas, '
+        'ni ne cassent un mot',
         (WidgetTester tester) async {
           // Une RenderFlex overflow levee pendant le pump ci-dessous ferait
-          // deja echouer ce test : rendre sans erreur EST l'assertion.
+          // deja echouer ce test : rendre sans erreur EST une premiere
+          // assertion.
           await _buildAndReady(
             tester,
             heroes: const [paladinReel, berserkerReel],
@@ -646,13 +657,37 @@ void main() {
               frenzy,
             ],
             locale: const Locale('fr', ''),
-            physicalSize: Size(largeur, 900),
+            physicalSize: Size(largeur, 1600),
           );
 
           expect(find.text('Le Paladin'), findsOneWidget);
           expect(find.text('Le Berserker'), findsOneWidget);
           expect(find.text('RÉGÉNÉRATION D\'ARMURE'), findsOneWidget);
           expect(find.text('RAGE'), findsOneWidget);
+
+          // Garde-fou contre les mots coupes en plein milieu (« Le Berse /
+          // rker », « RÉGÉNÉRAT / ION D'ARMURE ») : ce mode de panne ne leve
+          // aucune RenderFlex overflow (le texte se redimensionne pour
+          // tenir), donc seule une assertion structurelle le detecte. Plutot
+          // que d'essayer de reproduire l'algorithme de cesure de mots pour
+          // verifier le nombre de lignes, on verifie la propriete qui rend la
+          // coupure impossible : une carte assez large pour que le mot le
+          // plus long du jeu (« RÉGÉNÉRATION D'ARMURE », 22 caracteres) ait
+          // la place de se couper seulement entre les mots. 300px est la
+          // largeur qui, empiriquement, loge ce nom en une seule ligne a la
+          // taille de police mobile (10px) avec la puce icone ; en dessous,
+          // un mot long recommencerait a se rompre en son milieu comme avant
+          // ce correctif.
+          final cardWidth = tester
+              .getSize(find.byType(AnimatedContainer).first)
+              .width;
+          expect(
+            cardWidth,
+            greaterThanOrEqualTo(300),
+            reason:
+                'une carte plus etroite que 300px expose de nouveau les '
+                'noms de passif a se casser en plein mot',
+          );
         },
       );
     }
