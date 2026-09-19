@@ -23,19 +23,27 @@ class ClassSelectionScreen extends ConsumerStatefulWidget {
 }
 
 class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
-  /// L'identifiant de la classe dont les passifs sont dépliés, s'il y en a
-  /// une.
+  /// Les identifiants des classes dont les passifs sont dépliés.
   ///
-  /// Une seule carte à la fois, sur les deux plateformes : ouvrir l'une
-  /// referme l'autre. L'état vit donc ici, au-dessus des cartes, et pas dans
-  /// chacune — deux cartes ouvertes ne peuvent pas se produire. Un
-  /// identifiant plutôt qu'un rang : l'ordre d'affichage est une donnée
-  /// (`displayOrder`) qui peut changer.
-  String? _classeDepliee;
+  /// Autant de cartes ouvertes que le joueur veut : comparer deux classes
+  /// demande de voir leurs passifs côte à côte, et un accordéon l'en
+  /// empêcherait. Des identifiants plutôt que des rangs : l'ordre
+  /// d'affichage est une donnée (`displayOrder`) qui peut changer.
+  ///
+  /// L'état vit ici plutôt que dans chaque carte parce que la carte est
+  /// reconstruite à chaque changement de largeur, et que l'écran est le seul
+  /// endroit d'où l'on peut décrire ce qui est ouvert.
+  final Set<String> _classesDepliees = <String>{};
 
   void _depliee(String id, bool ouverte) {
-    if (ouverte == (_classeDepliee == id)) return;
-    setState(() => _classeDepliee = ouverte ? id : null);
+    if (ouverte == _classesDepliees.contains(id)) return;
+    setState(() {
+      if (ouverte) {
+        _classesDepliees.add(id);
+      } else {
+        _classesDepliees.remove(id);
+      }
+    });
   }
 
   // Largeur de carte visee et espacement desktop — memes valeurs
@@ -162,7 +170,7 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
   // ce qui ne l'est plus, deliberement, c'est la largeur de carte au-dela
   // du point ou le nombre de classes livrees devient le facteur limitant
   // plutot que la largeur d'ecran.
-  /// Une carte, branchée sur l'accordéon de l'écran.
+  /// Une carte, branchée sur l'état de dépliage de l'écran.
   ///
   /// Le même geste sur les deux plateformes : le clic, ou l'appui, bascule
   /// le dépliage. Le survol l'a fait un temps (2026-09-19) et ne le fait
@@ -173,8 +181,11 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       playerClass: playerClass,
       ref: ref,
       isMobile: isMobile,
-      isExpanded: _classeDepliee == playerClass.id,
-      onTap: () => _depliee(playerClass.id, _classeDepliee != playerClass.id),
+      isExpanded: _classesDepliees.contains(playerClass.id),
+      onTap: () => _depliee(
+        playerClass.id,
+        !_classesDepliees.contains(playerClass.id),
+      ),
     );
   }
 

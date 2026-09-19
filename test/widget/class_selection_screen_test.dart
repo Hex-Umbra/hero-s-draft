@@ -856,10 +856,11 @@ void main() {
         reason: 'la carte repliee deborde a ${largeur.toInt()}px',
       );
 
-      // Depliee, elle porte quatre noms, quatre descriptions et trois
-      // lignes de Maitrise : c'est son pire cas, et c'est donc la qu'on
-      // mesure.
+      // Depliees, les deux cartes portent sept noms, sept descriptions et
+      // six lignes de Maitrise : c'est le pire cas de la plage mobile
+      // depuis que plusieurs cartes peuvent rester ouvertes.
       await _appuyerSurLaCarte(tester, 'Le Paladin');
+      await _appuyerSurLaCarte(tester, 'Le Berserker');
 
       // Le nom-stress se retrouve entier dans l'arbre (pas coupe, pas
       // tronque) : `Text` ne segmente jamais sa propre chaine, donc son
@@ -994,18 +995,20 @@ void main() {
               'la plus haute via IntrinsicHeight, voir _buildDesktopGrid)',
         );
 
-        // Depliee au survol, la carte du Paladin porte trois passifs de
-        // plus : c'est le pire cas de la rangee desktop depuis que le
-        // depliage la fait grandir, et `IntrinsicHeight` doit savoir
-        // mesurer ce contenu-la aussi.
+        // Plusieurs cartes peuvent etre depliees a la fois : le pire cas
+        // de la rangee desktop n'est donc plus une carte ouverte mais
+        // toutes celles qui ont des passifs, et `IntrinsicHeight` doit
+        // savoir mesurer ce contenu-la.
         await _appuyerSurLaCarte(tester, 'Le Paladin');
+        await _appuyerSurLaCarte(tester, 'Le Berserker');
         expect(find.text('Ferveur'), findsOneWidget);
+        expect(find.text('Soif de Sang'), findsOneWidget);
         expect(
           tester.takeException(),
           isNull,
           reason:
-              'a ${largeur.toInt()}px, la rangee deborde une fois la carte '
-              'du Paladin depliee',
+              'a ${largeur.toInt()}px, la rangee deborde une fois le '
+              'Paladin et le Berserker deplies ensemble',
         );
       }
 
@@ -1243,9 +1246,11 @@ void main() {
       expect(find.text('Ward'), findsOneWidget);
     });
 
-    testWidgets('ouvrir une autre carte referme la premiere', (
+    testWidgets('ouvrir une autre carte laisse la premiere ouverte', (
       WidgetTester tester,
     ) async {
+      // Pas d'accordeon : comparer deux classes demande de voir leurs
+      // passifs cote a cote, donc ouvrir l'une ne referme pas l'autre.
       await _buildAndReady(
         tester,
         heroes: const [paladin, berserker],
@@ -1258,13 +1263,13 @@ void main() {
 
       await _appuyerSurLaCarte(tester, 'Berserker');
 
-      // Une seule carte ouverte a la fois : l'accordeon vaut aussi bien en
-      // desktop qu'en mobile, puisque le geste y est le meme. Seuls les
-      // passifs *non retenus* disparaissent : Ward et Fury restent, ce
-      // sont les choix affiches par leur carte repliee.
+      expect(find.text('Zeal'), findsOneWidget);
+      expect(find.text('Wrath'), findsOneWidget);
+
+      // Et chacune se referme pour son propre compte.
+      await _appuyerSurLaCarte(tester, 'Paladin');
       expect(find.text('Zeal'), findsNothing);
       expect(find.text('Wrath'), findsOneWidget);
-      expect(find.text('Ward'), findsOneWidget);
     });
 
     testWidgets('deplier une carte ne change pas la hauteur des autres', (
@@ -1339,13 +1344,13 @@ void main() {
       expect(find.text('Zeal'), findsNothing);
     });
 
-    testWidgets('en mobile, appuyer sur une autre carte referme la premiere', (
+    testWidgets('en mobile aussi, deux cartes peuvent rester ouvertes', (
       WidgetTester tester,
     ) async {
       await _buildAndReady(
         tester,
         heroes: const [paladin, berserker],
-        passives: const [ward, zeal, fury],
+        passives: const [ward, zeal, fury, wrath],
         physicalSize: const Size(390, 1600),
       );
 
@@ -1353,8 +1358,8 @@ void main() {
       expect(find.text('Zeal'), findsOneWidget);
 
       await _appuyerSurLaCarte(tester, 'Berserker');
-      expect(find.text('Zeal'), findsNothing);
-      expect(find.text('Fury'), findsOneWidget);
+      expect(find.text('Zeal'), findsOneWidget);
+      expect(find.text('Wrath'), findsOneWidget);
     });
 
     testWidgets('toucher un passif y deplace la coche sans replier la carte', (
