@@ -17,21 +17,17 @@ import '../widgets/page_header.dart';
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
 
-  // Largeur de carte visee et espacement desktop — les memes valeurs que
-  // l'ancien `SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent:
-  // 400, crossAxisSpacing: 20)`, pour ne pas changer la densite visuelle
-  // deja validee (voir les captures du rapport). Round 3 (2026-09-19) :
-  // il n'y a plus de constante de HAUTEUR. Le nombre de colonnes reste
-  // calcule a partir de la largeur (`ceil(largeur dispo / 420)`, motif en
-  // dents de scie inclus — une carte peut toujours tomber a 267px comme
-  // avant), mais chaque *rangee* se dimensionne desormais a son propre
-  // contenu via `IntrinsicHeight` au lieu de partager une hauteur fixe
-  // devinee pour le pire cas. Une carte plus etroite ne fait plus
-  // deborder personne, elle rend juste sa rangee plus haute — c'est la
-  // grille elle-meme qui absorbe la variation, plus une constante que
-  // quelqu'un doit remesurer a la main. Cela vaut a toute echelle de
-  // texte (defaut ou `textScaler` agrandi) sans les deux constantes que
-  // les rounds 1 et 2 avaient du calculer pour chacune separement.
+  // Largeur de carte visee et espacement desktop — memes valeurs
+  // numeriques que l'ancien `SliverGridDelegateWithMaxCrossAxisExtent
+  // (maxCrossAxisExtent: 400, crossAxisSpacing: 20)`. Round 3
+  // (2026-09-19) : il n'y a plus de constante de HAUTEUR — chaque
+  // *rangee* se dimensionne a son propre contenu via `IntrinsicHeight` au
+  // lieu de partager une hauteur fixe devinee pour le pire cas. Round 4
+  // (2026-09-19) : `_kDesktopCardTargetWidth` plafonne aussi la largeur de
+  // carte (une rangee a peu de colonnes, forcee par le nombre reel de
+  // classes, ne doit pas etirer chaque carte bien au-dela de la largeur
+  // pour laquelle sa mise en page a ete pensee) — voir `_buildDesktopGrid`
+  // pour le detail et pourquoi l'ancien delegate n'avait pas ce probleme.
   static const double _kDesktopCardTargetWidth = 400;
   static const double _kDesktopSpacing = 20;
 
@@ -118,18 +114,34 @@ class ClassSelectionScreen extends ConsumerWidget {
   // (verifie directement). `_InteractiveClassCardState` n'en a plus : son
   // `LayoutBuilder` (qui ne servait qu'a lire la taille de la carte pour
   // l'effet de tilt et le halo de survol) est remplace par `_cardSize`, qui
-  // lit la taille reellement rendue via une `GlobalKey` — meme mecanisme
-  // que le repli mobile du round 2, etendu pour servir aussi ce chemin.
+  // lit la taille reellement rendue via une `GlobalKey`.
   //
-  // Nombre de colonnes et largeur de carte : meme formule que l'ancien
+  // Nombre de colonnes : meme formule que l'ancien
   // `SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400,
-  // crossAxisSpacing: 20)` — `ceil(largeurDisponible / 420)` colonnes,
-  // largeur de carte = largeur disponible partagee entre elles. La densite
-  // visuelle (deja validee par le passage visuel humain) ne change pas ;
-  // ce qui change est que le motif en dents de scie qu'elle produit
-  // (une carte a 267px juste apres un palier de colonnes) ne peut plus
-  // faire deborder personne, puisque la hauteur suit desormais le contenu
-  // rangee par rangee plutot qu'une constante partagee par toute la grille.
+  // crossAxisSpacing: 20)` — `ceil(largeurDisponible / 420)` colonnes. Mais
+  // `columns` est ensuite **plafonne au nombre de classes** (`clamp(1,
+  // classes.length)`), ce que l'ancien delegate ne faisait jamais : une
+  // grille `SliverGrid` accepte des cellules vides (3 classes dans une
+  // grille a 4 ou 5 colonnes laisse simplement des cases vides a droite).
+  // Une rangee construite a la main n'a pas cette option — sans plafond,
+  // `columns` resterait a 4-6 alors qu'il n'y a que 3 classes, et
+  // `classes.sublist` produirait des rangees de 1 carte, chacune large de
+  // toute la largeur disponible.
+  //
+  // Consequence du plafond, verifiee visuellement (round 4, 2026-09-19) :
+  // avec 2-3 classes seulement, `columns` plafonne a 2-3 bien avant que la
+  // formule en ait besoin, et diviser toute la largeur disponible entre si
+  // peu de colonnes donnerait des cartes bien plus larges que
+  // `_kDesktopCardTargetWidth` (mesure : 3 cartes de ~627px a 1395px de
+  // large, alors que la cible est 400px). `cardWidth` est donc **plafonnee
+  // a `_kDesktopCardTargetWidth`** — une carte n'est jamais plus large que
+  // la largeur pour laquelle sa mise en page a ete pensee — et la rangee
+  // est **centree** (`MainAxisAlignment.center`) pour ne pas coller les
+  // cartes plafonnees au bord gauche d'un ecran large. La densite (nombre
+  // de colonnes par palier de largeur) reste celle de l'ancien delegate ;
+  // ce qui ne l'est plus, deliberement, c'est la largeur de carte au-dela
+  // du point ou le nombre de classes livrees devient le facteur limitant
+  // plutot que la largeur d'ecran.
   Widget _buildDesktopGrid(WidgetRef ref, List<HeroData> classes) {
     if (classes.isEmpty) return const SizedBox.shrink();
 
@@ -139,8 +151,11 @@ class ClassSelectionScreen extends ConsumerWidget {
         final int columns = (availableWidth / (_kDesktopCardTargetWidth + _kDesktopSpacing))
             .ceil()
             .clamp(1, classes.length);
-        final double cardWidth =
+        final double computedCardWidth =
             (availableWidth - (columns - 1) * _kDesktopSpacing) / columns;
+        final double cardWidth = computedCardWidth < _kDesktopCardTargetWidth
+            ? computedCardWidth
+            : _kDesktopCardTargetWidth;
 
         final rows = <List<HeroData>>[
           for (var i = 0; i < classes.length; i += columns)
@@ -155,6 +170,7 @@ class ClassSelectionScreen extends ConsumerWidget {
             final row = rows[rowIndex];
             return IntrinsicHeight(
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (var i = 0; i < row.length; i++) ...[

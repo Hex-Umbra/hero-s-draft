@@ -101,6 +101,44 @@ const _berserkerReel = HeroData(
   displayOrder: 2,
 );
 
+// Donnee reelle du Mage (assets/data/classes/mage/class.json), et une
+// quatrieme classe synthetique jamais jouee — utilisees uniquement par le
+// groupe de largeurs desktop, pas par le groupe mobile ni par
+// `_heroes`/`_buildAndReady`. `_buildDesktopGrid` (round 4, 2026-09-19)
+// plafonne son nombre de colonnes au nombre de classes reellement
+// affichees (une rangee construite a la main ne peut pas laisser de
+// cellules vides comme le faisait l'ancien `SliverGrid`) : avec seulement
+// 2 classes, ce plafond aurait empeche les paliers a 3 et 4 colonnes
+// d'etre jamais atteints, quelle que soit la largeur d'ecran testee — 4
+// classes sont necessaires pour que le palier le plus large teste ici
+// (1400px -> 4 colonnes) ne soit pas lui-meme plafonne en dessous de ce
+// que la formule demande.
+const _mageReel = HeroData(
+  id: 'mage',
+  nameEn: 'Mage',
+  nameFr: 'Le Mage',
+  descriptionEn: 'Alteration Oriented',
+  descriptionFr: 'Orienté Altération',
+  classCard: 'hero_mage.png',
+  maxHp: 60,
+  maxMana: 3,
+  mightTargets: {MightTarget.skill, MightTarget.alteration},
+  displayOrder: 3,
+);
+const _stressColumnFiller = HeroData(
+  id: 'stress_column_filler',
+  nameEn: 'Column Filler',
+  nameFr: 'Classe De Remplissage',
+  descriptionEn: 'Never shipped: exists only to reach the 3- and 4-column '
+      'tiers in tests.',
+  descriptionFr: 'Jamais livree : sert uniquement a atteindre les paliers '
+      'a 3 et 4 colonnes dans les tests.',
+  classCard: 'hero_paladin.png',
+  maxHp: 50,
+  maxMana: 3,
+  displayOrder: 4,
+);
+
 // `mastery` sur les six : les neuf passifs livres dans
 // assets/data/passives/*.json en portent tous un, et
 // class_selection_screen.dart rend un `Text` supplementaire (plus un
@@ -217,8 +255,9 @@ const _bloodthirst = PassiveData(
 );
 // La plus longue des six en francais une fois passee dans
 // `passiveMasteryPerPoint` ("Par point de Maîtrise : +1 Puissance par
-// ennemi abattu") — c'est elle qui pilote le pire cas de largeur/hauteur
-// du bloc Maitrise dans la mesure de `_kDesktopCardHeight`.
+// ennemi abattu") — c'est elle qui pousse le plus la hauteur du bloc
+// Maitrise, et donc la hauteur de la rangee qui la contient (mesuree pour
+// de vrai par `IntrinsicHeight`, voir `_buildDesktopGrid`).
 const _frenzy = PassiveData(
   id: 'frenzy',
   nameEn: 'Frenzy',
@@ -266,10 +305,13 @@ const _frenzy = PassiveData(
 // de ligne. La police de secours (Ahem-like) a une boite de ligne a 1.0em ;
 // une police reelle avoisine plutot 1.17em. Plusieurs `Text` de cette carte
 // n'ont pas de `height:` explicite, donc l'environnement de test
-// *sous-estime* leur hauteur de ligne — c'est desormais le seul ecart entre
-// la marge mesuree ici (voir `_kDesktopCardHeight`) et la marge reelle dans
-// l'app : un test qui passe avec quelques pixels de marge pourrait deborder
-// reellement d'autant plus de lignes de texte que la carte en compte.
+// *sous-estime* leur hauteur de ligne. Round 1-2 en faisaient une marge a
+// calculer (l'ecart entre la hauteur mesuree en test et une constante de
+// hauteur fixe) ; depuis le round 3, la carte se dimensionne a son propre
+// contenu des deux cotes (mobile et desktop), donc cet ecart ne peut plus
+// causer de debordement — au pire, une carte reelle serait tout
+// simplement un peu plus haute que ce que `flutter test` mesure, jamais
+// tronquee ni en overflow.
 //
 // L'axe reellement non modelise est ailleurs : la mise a l'echelle de texte
 // du systeme (`MediaQuery.textScaler`), qu'aucun test de ce fichier ne
@@ -843,18 +885,34 @@ void main() {
       // la plus etroite au *plancher* de chaque palier de colonnes, pas a
       // n'importe quelle largeur qui s'y trouve : pour `n` colonnes, le
       // plancher est le premier viewport ou `ceil((viewport-40)/420) == n`.
+      // `_buildDesktopGrid` (round 3) reprend cette meme formule pour le
+      // nombre de colonnes, puis (round 4) la plafonne au nombre de
+      // classes affichees et plafonne la largeur de carte a
+      // `_kDesktopCardTargetWidth` (400) — avec seulement 2 classes
+      // (Paladin, Berserker), ce plafond aurait fixe `columns` a 2 pour
+      // toutes les largeurs testees ici, rendant les paliers a 3 et 4
+      // colonnes inatteignables quelle que soit la largeur d'ecran. Ce
+      // groupe utilise donc 4 classes (`_paladinReel`, `_berserkerReel`,
+      // `_mageReel`, `_stressColumnFiller` — voir leur commentaire), pour
+      // que le palier le plus large teste ici (4 colonnes) ne soit pas
+      // lui-meme plafonne en dessous de ce que la formule demande.
+      //
       // 600 (le plancher desktop lui-meme) -> 2 colonnes -> carte 270px ;
       // **881 -> 3 colonnes -> carte 267px**, plus etroite que 600px alors
       // que 1000px (dans le meme palier a 3 colonnes, mais pas a son
       // plancher) ne donne que 307px ; **1301 -> 4 colonnes -> carte
-      // 300px**, meme relation avec 1400px (325px). 1000 et 1400 seuls
-      // (round 1) echantillonnaient a l'interieur des paliers, jamais a
-      // leur plancher — d'ou une carte mesuree plus large, donc moins
-      // exigeante, que la pire reellement atteignable. Donnee reelle du
-      // Paladin et du Berserker, 3 passifs chacun, `mastery` inclus (voir
-      // le commentaire de `_kDesktopCardHeight` : les neuf passifs livres
-      // en portent tous un, l'omettre sous-mesure la carte d'un bloc de
-      // texte entier).
+      // 300px**, meme relation avec 1400px (325px) — nombres inchanges par
+      // rapport au round 3, verifies de nouveau apres le plafond de
+      // largeur : aucun ne depasse 400px, donc le plafond ne joue a
+      // aucune de ces 5 largeurs (il ne joue que sur des largeurs plus
+      // larges que le nombre de classes ne peut plus remplir, hors de la
+      // plage testee ici). Donnee reelle du Paladin et du Berserker, 3
+      // passifs chacun, `mastery` inclus (voir le commentaire de
+      // `_buildDesktopGrid` : les neuf passifs livres en portent tous un,
+      // l'omettre sous-mesure la carte d'un bloc de texte entier) — le
+      // Mage et la classe de remplissage n'ont pas de passif disponible,
+      // ils ne sont la que pour peser sur le nombre de colonnes, pas sur
+      // le pire cas de contenu.
       const largeurs = [600.0, 881.0, 1000.0, 1301.0, 1400.0];
 
       Future<void> pumpAndExpectNoOverflow(
@@ -864,7 +922,12 @@ void main() {
       }) async {
         await _buildAndReady(
           tester,
-          heroes: const [_paladinReel, _berserkerReel],
+          heroes: const [
+            _paladinReel,
+            _berserkerReel,
+            _mageReel,
+            _stressColumnFiller,
+          ],
           passives: const [
             _regenArmor,
             _fervor,
@@ -884,9 +947,9 @@ void main() {
           tester.takeException(),
           isNull,
           reason:
-              'a ${largeur.toInt()}px, la carte desktop la plus etroite '
-              'du palier de colonnes ne doit plus deborder '
-              '(_kDesktopCardHeight mesure, pas deduit de la largeur)',
+              'a ${largeur.toInt()}px, aucune rangee de la grille desktop '
+              'ne doit deborder (chaque rangee se dimensionne a sa carte '
+              'la plus haute via IntrinsicHeight, voir _buildDesktopGrid)',
         );
       }
 
@@ -902,14 +965,15 @@ void main() {
           'a ${largeur.toInt()}px avec textScaler 1.3, ils ne debordent pas '
           'non plus (defaut 4)',
           (WidgetTester tester) async {
-            // Contrairement au mobile (ListView, structurellement immunise
-            // des l'instant ou le contenu tient dans sa largeur), le
-            // chemin desktop porte une constante fixe
-            // (`_kDesktopCardHeight`) : elle doit couvrir explicitement la
-            // mise a l'echelle systeme, pas seulement l'echelle par
-            // defaut. Voir le commentaire de `_kDesktopCardHeight` pour les
-            // deux planchers mesures (760 a l'echelle par defaut, 952 a
-            // 1.3x) et le cout assume pour les couvrir tous les deux.
+            // Depuis le round 3, le desktop est structurellement immunise
+            // au meme titre que le mobile (`ListView`) : chaque rangee se
+            // dimensionne a son contenu reel via `IntrinsicHeight`, il n'y
+            // a plus de constante de hauteur a mettre a l'echelle. Ce test
+            // ne garde donc plus une arithmetique (un plancher mesure a
+            // depasser), mais une propriete structurelle — le garder
+            // continue de couvrir la combinaison reelle (mise a l'echelle
+            // systeme + grille desktop) plutot que de la supposer depuis
+            // le seul test mobile.
             await pumpAndExpectNoOverflow(
               tester,
               largeur: largeur,
