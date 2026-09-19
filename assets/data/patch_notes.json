@@ -12,9 +12,10 @@
           "Le Berserker ne garde plus jamais son Armure : chaque point qu'il aurait gagné devient un point de Puissance pour un tour. Jouer Mur de Fer lui donne donc 10 de Puissance le temps d'un tour, au lieu de 10 d'Armure.",
           "Chaque classe dispose désormais de trois passifs au lieu d'un : Régénération d'Armure, Ferveur et Bénédiction pour le Paladin ; Rage, Soif de Sang et Frénésie pour le Berserker ; Canalisation, Marque du Mage et Flux de Mana pour le Mage.",
           "Armure du Berserker et Armure Magique laissent leur place à Rage et à Canalisation.",
-          "Chaque classe démarre pour l'instant avec le premier de ses trois passifs : l'écran qui vous laissera prendre l'un des trois arrive dans une prochaine version.",
+          "Vous choisissez désormais votre passif au moment de choisir votre classe : la carte de chaque classe déplie les passifs qu'elle peut prendre, et celui que vous retenez est celui avec lequel la run démarre.",
           "Les classes n'ont plus les mêmes statistiques de départ : le Paladin commence avec 1 point de Maîtrise, et le Berserker avec 10 % de chances de coup critique.",
-          "La Puissance est désormais représentée par un éclair, à la place de l'épée."
+          "La Puissance est désormais représentée par un éclair, à la place de l'épée.",
+          "L'écran de sélection montre enfin ce qui sépare vraiment les trois classes : leurs PV et leur mana de départ, leurs statistiques non nulles, ce que leur Puissance renforce, et la règle propre à la classe — celle qui transforme l'Armure du Berserker en Puissance, par exemple. Les dégâts de base qu'il affichait — 5, 15 et 10 — disparaissent : aucune run ne les reprenait, toute partie démarrant à 0 de Puissance."
         ]
       },
       {
@@ -36,7 +37,16 @@
         "emoji": "⚖️",
         "entries": [
           "Armure du Berserker : la Maîtrise s'applique désormais à chaque tranche de 10 PV manquants, au lieu d'une seule fois. Avec 2 points de Maîtrise et 40 PV manquants, vous gagnez 12 points d'Armure au lieu de 6.",
-          "La Puissance du Mage ne renforce plus ses Attaques : elle renforce l'intensité de ses brûlures, gels, poisons et chocs. Ses cartes d'attaque infligent donc leurs dégâts de base."
+          "La Puissance du Mage ne renforce plus ses Attaques : elle renforce l'intensité de ses brûlures, gels, poisons et chocs. Ses cartes d'attaque infligent donc leurs dégâts de base.",
+          "Affinité n'est plus proposée à la montée de niveau quand votre passif ne tire rien de la Maîtrise : la récompense serait sans effet. Les neuf passifs actuels en tirent tous quelque chose, vos tirages ne changent donc pas encore."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Sur mobile, les classes s'affichent l'une sous l'autre, en pleine largeur : leurs cartes ne sont plus comprimées sur deux colonnes, et leur contenu ne déborde plus.",
+          "Les boutons d'une fenêtre de dialogue ne sortent plus de leur panneau sur un écran étroit ou lorsque le texte du système est agrandi : ils passent à la ligne au lieu de déborder."
         ]
       },
       {
