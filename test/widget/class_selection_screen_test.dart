@@ -101,6 +101,13 @@ const _berserkerReel = HeroData(
   displayOrder: 2,
 );
 
+// `mastery` sur les six : les neuf passifs livres dans
+// assets/data/passives/*.json en portent tous un, et
+// class_selection_screen.dart rend un `Text` supplementaire (plus un
+// espaceur de 3px) des que `passive.mastery != null` — un bloc que ces
+// fixtures omettaient jusqu'au defaut 1 (round 2, 2026-09-19), ce qui
+// sous-mesurait la hauteur de carte reelle d'un bloc de texte entier.
+// Chaque `mastery` ci-dessous est copie mot pour mot de son JSON reel.
 const _regenArmor = PassiveData(
   id: 'regen_armor',
   nameEn: 'Armor Regeneration',
@@ -113,6 +120,12 @@ const _regenArmor = PassiveData(
   effectType: 'gain_armor',
   value: 2,
   displayOrder: 1,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} Block at end of turn',
+    descriptionFr: '+{amount} Armure en fin de tour',
+  ),
 );
 const _fervor = PassiveData(
   id: 'fervor',
@@ -127,6 +140,12 @@ const _fervor = PassiveData(
   effectType: 'fervor',
   value: 1,
   displayOrder: 2,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} Might absorbed',
+    descriptionFr: '+{amount} Puissance par absorption',
+  ),
 );
 const _blessing = PassiveData(
   id: 'blessing',
@@ -143,6 +162,12 @@ const _blessing = PassiveData(
   effectType: 'blessing',
   value: 1,
   displayOrder: 3,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} HP per tranche',
+    descriptionFr: '+{amount} PV par tranche',
+  ),
 );
 const _rage = PassiveData(
   id: 'rage',
@@ -160,6 +185,12 @@ const _rage = PassiveData(
   value: 1,
   duration: 1,
   displayOrder: 1,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} Might per tranche',
+    descriptionFr: '+{amount} Puissance par tranche',
+  ),
 );
 const _bloodthirst = PassiveData(
   id: 'bloodthirst',
@@ -177,7 +208,17 @@ const _bloodthirst = PassiveData(
   value: 1,
   duration: 2,
   displayOrder: 2,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} HP drained',
+    descriptionFr: '+{amount} PV drainé',
+  ),
 );
+// La plus longue des six en francais une fois passee dans
+// `passiveMasteryPerPoint` ("Par point de Maîtrise : +1 Puissance par
+// ennemi abattu") — c'est elle qui pilote le pire cas de largeur/hauteur
+// du bloc Maitrise dans la mesure de `_kDesktopCardHeight`.
 const _frenzy = PassiveData(
   id: 'frenzy',
   nameEn: 'Frenzy',
@@ -194,6 +235,12 @@ const _frenzy = PassiveData(
   duration: 1,
   draw: 1,
   displayOrder: 3,
+  mastery: PassiveMastery(
+    field: 'value',
+    perPoint: 1,
+    descriptionEn: '+{amount} Might per kill',
+    descriptionFr: '+{amount} Puissance par ennemi abattu',
+  ),
 );
 
 // Passif synthetique, jamais joue : sert uniquement a stresser le retour a
@@ -213,6 +260,16 @@ const _frenzy = PassiveData(
 // egal, l'environnement de test est le cas *conservateur* (plus large), pas
 // celui qui sous-estime : charger de vraies polices rendrait ces tests
 // moins stricts, pas plus.
+//
+// Asymetrie a garder en tete : cette conclusion vaut pour l'avance des
+// glyphes, donc pour le retour a la ligne (largeur) — pas pour la hauteur
+// de ligne. La police de secours (Ahem-like) a une boite de ligne a 1.0em ;
+// une police reelle avoisine plutot 1.17em. Plusieurs `Text` de cette carte
+// n'ont pas de `height:` explicite, donc l'environnement de test
+// *sous-estime* leur hauteur de ligne — c'est desormais le seul ecart entre
+// la marge mesuree ici (voir `_kDesktopCardHeight`) et la marge reelle dans
+// l'app : un test qui passe avec quelques pixels de marge pourrait deborder
+// reellement d'autant plus de lignes de texte que la carte en compte.
 //
 // L'axe reellement non modelise est ailleurs : la mise a l'echelle de texte
 // du systeme (`MediaQuery.textScaler`), qu'aucun test de ce fichier ne
@@ -782,41 +839,81 @@ void main() {
     'la carte tient a chaque largeur desktop, pas seulement a 1600 (defaut 1)',
     () {
       // Le motif en dents de scie de `SliverGridDelegateWithMaxCrossAxisExtent`
-      // (maxCrossAxisExtent: 400) fait tomber la carte la plus etroite juste
-      // apres chaque palier de colonnes : 600px -> 2 colonnes -> carte
-      // 270px ; 1000px -> 3 colonnes -> 307px ; 1400px -> 4 colonnes ->
-      // 325px. Tous les widget tests d'avant ce lot tournaient a 1600×1200 —
-      // l'un des points les plus favorables — donc aucun ne couvrait ces
-      // minima. Donnee reelle du Paladin et du Berserker, 3 passifs chacun.
-      const largeurs = [600.0, 1000.0, 1400.0];
+      // (maxCrossAxisExtent: 400, crossAxisSpacing: 20) fait tomber la carte
+      // la plus etroite au *plancher* de chaque palier de colonnes, pas a
+      // n'importe quelle largeur qui s'y trouve : pour `n` colonnes, le
+      // plancher est le premier viewport ou `ceil((viewport-40)/420) == n`.
+      // 600 (le plancher desktop lui-meme) -> 2 colonnes -> carte 270px ;
+      // **881 -> 3 colonnes -> carte 267px**, plus etroite que 600px alors
+      // que 1000px (dans le meme palier a 3 colonnes, mais pas a son
+      // plancher) ne donne que 307px ; **1301 -> 4 colonnes -> carte
+      // 300px**, meme relation avec 1400px (325px). 1000 et 1400 seuls
+      // (round 1) echantillonnaient a l'interieur des paliers, jamais a
+      // leur plancher — d'ou une carte mesuree plus large, donc moins
+      // exigeante, que la pire reellement atteignable. Donnee reelle du
+      // Paladin et du Berserker, 3 passifs chacun, `mastery` inclus (voir
+      // le commentaire de `_kDesktopCardHeight` : les neuf passifs livres
+      // en portent tous un, l'omettre sous-mesure la carte d'un bloc de
+      // texte entier).
+      const largeurs = [600.0, 881.0, 1000.0, 1301.0, 1400.0];
+
+      Future<void> pumpAndExpectNoOverflow(
+        WidgetTester tester, {
+        required double largeur,
+        TextScaler? textScaler,
+      }) async {
+        await _buildAndReady(
+          tester,
+          heroes: const [_paladinReel, _berserkerReel],
+          passives: const [
+            _regenArmor,
+            _fervor,
+            _blessing,
+            _rage,
+            _bloodthirst,
+            _frenzy,
+          ],
+          locale: const Locale('fr', ''),
+          physicalSize: Size(largeur, 1200),
+          textScaler: textScaler,
+        );
+
+        expect(find.text('Le Paladin'), findsOneWidget);
+        expect(find.text('Le Berserker'), findsOneWidget);
+        expect(
+          tester.takeException(),
+          isNull,
+          reason:
+              'a ${largeur.toInt()}px, la carte desktop la plus etroite '
+              'du palier de colonnes ne doit plus deborder '
+              '(_kDesktopCardHeight mesure, pas deduit de la largeur)',
+        );
+      }
+
       for (final largeur in largeurs) {
         testWidgets(
           'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas',
           (WidgetTester tester) async {
-            await _buildAndReady(
-              tester,
-              heroes: const [_paladinReel, _berserkerReel],
-              passives: const [
-                _regenArmor,
-                _fervor,
-                _blessing,
-                _rage,
-                _bloodthirst,
-                _frenzy,
-              ],
-              locale: const Locale('fr', ''),
-              physicalSize: Size(largeur, 1200),
-            );
+            await pumpAndExpectNoOverflow(tester, largeur: largeur);
+          },
+        );
 
-            expect(find.text('Le Paladin'), findsOneWidget);
-            expect(find.text('Le Berserker'), findsOneWidget);
-            expect(
-              tester.takeException(),
-              isNull,
-              reason:
-                  'a ${largeur.toInt()}px, la carte desktop la plus etroite '
-                  'du palier de colonnes ne doit plus deborder '
-                  '(_kDesktopCardHeight mesure, pas deduit de la largeur)',
+        testWidgets(
+          'a ${largeur.toInt()}px avec textScaler 1.3, ils ne debordent pas '
+          'non plus (defaut 4)',
+          (WidgetTester tester) async {
+            // Contrairement au mobile (ListView, structurellement immunise
+            // des l'instant ou le contenu tient dans sa largeur), le
+            // chemin desktop porte une constante fixe
+            // (`_kDesktopCardHeight`) : elle doit couvrir explicitement la
+            // mise a l'echelle systeme, pas seulement l'echelle par
+            // defaut. Voir le commentaire de `_kDesktopCardHeight` pour les
+            // deux planchers mesures (760 a l'echelle par defaut, 952 a
+            // 1.3x) et le cout assume pour les couvrir tous les deux.
+            await pumpAndExpectNoOverflow(
+              tester,
+              largeur: largeur,
+              textScaler: const TextScaler.linear(1.3),
             );
           },
         );

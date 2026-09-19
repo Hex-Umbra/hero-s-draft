@@ -26,18 +26,60 @@ class ClassSelectionScreen extends ConsumerWidget {
   // carte — et la hauteur qu'un `childAspectRatio` fixe en deduisait —
   // n'est pas monotone (defaut 1, 2026-09-19).
   //
-  // Mesuree au point le plus etroit de chaque palier de colonnes (600px ->
-  // 2 colonnes -> carte 270px ; 1000px -> 3 colonnes -> 307px ; 1400px -> 4
-  // colonnes -> 325px), avec la donnee reelle du Paladin et du Berserker
-  // (3 passifs chacun, le pire des deux). Le pire point mesure est le
-  // Berserker a 270px de large (600px de viewport) : 709px du haut de la
-  // carte au bas reel du bouton "Sélectionner" (confirme par une
-  // recherche binaire sur `_kDesktopCardHeight` : 700 deborde de 9px, 750
-  // n'y deborde plus). `750` ajoute ~41px (~5.8%) de marge de securite,
-  // du meme ordre que celle prise pour la hauteur mobile fixe (round 2/3
-  // de la meme regression). Voir le rapport final pour la table de mesure
-  // complete (600/800/1000/1270/1400/1600px).
-  static const double _kDesktopCardHeight = 750;
+  // Mesuree aux planchers reels de chaque palier de colonnes — pas aux
+  // largeurs d'ecran rondes que le round 1 avait echantillonnees par erreur
+  // (1000/1400, qui tombent *dans* les paliers 3 et 4 colonnes, pas a leur
+  // plancher). Pour `maxCrossAxisExtent: 400, crossAxisSpacing: 20`, le
+  // plancher du palier a `n` colonnes est le premier viewport ou
+  // `ceil((viewport-40)/420) == n` : 600px (le plancher desktop lui-meme,
+  // sous `isMobile`) -> 2 colonnes -> carte 270px ; **881px -> 3 colonnes
+  // -> carte 267px** (plus etroite que 600px) ; 1000px -> 3 colonnes ->
+  // carte 307px ; **1301px -> 4 colonnes -> carte 300px** ; 1400px -> 4
+  // colonnes -> carte 325px. La largeur de carte remonte vers 400px a
+  // mesure que le nombre de colonnes croit (`400*(n-1)/n`), donc rien de
+  // pire n'existe au-dela de ces 5 points — l'inquietude round-1 sur les
+  // tres larges viewports (ultrawide) est sans objet.
+  //
+  // Les six fixtures de passifs reelles portent desormais leur `mastery`
+  // (les neuf passifs livres en portent tous un ; les fixtures du round 1
+  // n'en avaient aucun, donc elles omettaient tout un bloc de texte —
+  // "Par point de Maîtrise : ..." plus un espaceur de 3px — que la carte
+  // reelle rend des que `passive.mastery != null`). Remesuree avec ce bloc
+  // present, aux 5 largeurs ci-dessus, sur le Paladin et le Berserker (3
+  // passifs chacun) :
+  //
+  // | largeur | carte | pire hauteur de contenu (Berserker) |
+  // |---:|---:|---:|
+  // | 600  | 270.0 | 725.5 |
+  // | 881  | 267.0 | 725.5 |
+  // | 1000 | 306.7 | 663.5 |
+  // | 1301 | 300.3 | 663.5 |
+  // | 1400 | 325.0 | 617.5 |
+  //
+  // Pire point : 725.5px (600px et 881px, a egalite). Recherche binaire sur
+  // `_kDesktopCardHeight` : 758 deborde de 2px, 760 n'y deborde plus —
+  // plancher reel **760**, pas les 709px du round 1 (fixtures sans
+  // `mastery`, donc sous-mesurees d'un bloc de texte entier).
+  //
+  // A `TextScaler.linear(1.3)` (defaut 4, la mise a l'echelle systeme —
+  // seul axe ou l'app reelle peut rendre plus grand que son `fontSize`
+  // nominal), la meme mesure aux 5 largeurs donne un pire point de 930.0px
+  // (Paladin, 600/881px). Recherche binaire : 950 deborde de 2px, 952 n'y
+  // deborde plus — plancher reel a 1.3x : **952**.
+  //
+  // `_kDesktopCardHeight = 1000` : au-dessus des DEUX planchers (760 a
+  // l'echelle par defaut, 952 a 1.3x), avec ~48px (~5%) de marge sur le
+  // plus haut des deux. Cout assume et signale au proprietaire du lot
+  // (voir le rapport, section "textScaler sur desktop") : a l'echelle par
+  // defaut, ce choix laisse ~240px d'espace vide en bas de chaque carte
+  // desktop (1000 - 760) pour rester correct a 1.3x — nettement plus que
+  // la marge de ~5-6% prise partout ailleurs dans ce lot. Le choix inverse
+  // (ne couvrir que 760, laisser deborder a 1.3x) aurait laisse un
+  // utilisateur avec un texte systeme agrandi face a un `RenderFlex
+  // overflowed` sur desktop ; celui-ci a ete prefere, mais reste un
+  // arbitrage de contenu/densite qui merite une decision explicite du
+  // proprietaire plutot qu'un choix silencieux.
+  static const double _kDesktopCardHeight = 1000;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -137,6 +179,26 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   double _tiltX = 0.0;
   double _tiltY = 0.0;
   Offset? _mousePosition;
+
+  // Ancre le conteneur rendu de la carte : sur le chemin mobile
+  // (`ListView`, hauteur non bornee), `constraints.maxHeight` vaut
+  // `Infinity` — sans repli, le tilt et le halo de survol degeneraient (Y
+  // fige a une valeur constante, halo colle au bord haut). Sans
+  // consequence en pratique (survol a la souris sous 600px seulement), mais
+  // c'est une regression introduite par le passage au `ListView` ; `_resolvedCardSize`
+  // retombe sur la taille reellement rendue au frame precedent.
+  final GlobalKey _cardKey = GlobalKey();
+
+  Size _resolvedCardSize(BoxConstraints constraints) {
+    if (constraints.hasBoundedHeight) {
+      return Size(constraints.maxWidth, constraints.maxHeight);
+    }
+    final renderBox = _cardKey.currentContext?.findRenderObject();
+    if (renderBox is RenderBox && renderBox.hasSize) {
+      return renderBox.size;
+    }
+    return Size(constraints.maxWidth, constraints.maxHeight);
+  }
 
   /// Le passif retenu, par son rang dans `availablePassivesFor` — le point
   /// d'accès unique de P-49 (spec §5.1, P5). Le premier par défaut, et le
@@ -266,7 +328,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final cardSize = _resolvedCardSize(constraints);
 
         return MouseRegion(
           onEnter: (_) => _onPointerEnter(),
@@ -292,6 +354,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                     ..rotateY(-currentTiltX),
                   alignment: Alignment.center,
                   child: AnimatedContainer(
+                    key: _cardKey,
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2A2A3D),
