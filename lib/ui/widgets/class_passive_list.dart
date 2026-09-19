@@ -155,34 +155,52 @@ class ClassPassiveList extends StatelessWidget {
   /// lisible du bloc sans redevenir un titre.
   double get _labelFontSize => isMobile ? 14 : 15.5;
 
+  /// Le fond d'une tuile, selon qu'elle est retenue et survolée.
+  ///
+  /// Le survol éclaircit d'un cran, sans jamais atteindre l'intensité du
+  /// passif retenu : survoler une ligne ne doit pas donner à croire qu'elle
+  /// est déjà choisie.
+  Color _fond({required bool selected, required bool hovered}) {
+    if (selected) {
+      return classColor.withValues(alpha: hovered ? 0.2 : 0.12);
+    }
+    return hovered
+        ? classColor.withValues(alpha: 0.07)
+        : Colors.white.withValues(alpha: 0.03);
+  }
+
+  /// La bordure d'une tuile, même règle.
+  Color _bordure({required bool selected, required bool hovered}) {
+    if (selected) return classColor;
+    return hovered ? classColor.withValues(alpha: 0.55) : Colors.white24;
+  }
+
   Widget _buildOption(int i, AppLocalizations l10n) {
     final passive = passives[i];
     final bool selected = i == selectedIndex;
     final mastery = passive.mastery;
 
-    return InkWell(
+    return _PassiveTile(
         // Repliée, la tuile est un affichage et non un choix — le seul
         // passif montré est déjà le retenu. Sans geste à elle, le tap
         // traverse jusqu'à la carte, qui se déplie : taper le passif
-        // qu'on voit fait donc apparaître les autres.
+        // qu'on voit fait donc apparaître les autres. Le survol suit la
+        // même règle : rien ne s'allume sous une ligne qui ne répond pas.
         onTap: isExpanded ? () => onSelect(i) : null,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
+        builder: (context, hovered) => Container(
           // La ligne entière porte le geste, et jamais moins que la cible
           // tactile de Material : l'ancienne puce du sélecteur, haute d'une
           // trentaine de pixels, ne la tenait pas.
           constraints: const BoxConstraints(minHeight: 48),
           padding: EdgeInsets.all(isMobile ? 6 : 8),
           decoration: BoxDecoration(
-            color: selected
-                ? classColor.withValues(alpha: 0.12)
-                : Colors.white.withValues(alpha: 0.03),
+            color: _fond(selected: selected, hovered: hovered),
             borderRadius: BorderRadius.circular(8),
-            // Largeur constante, seule la couleur change : une bordure qui
-            // s'épaissit à la sélection remesurerait la ligne à chaque tap,
-            // et la rangée desktop entière avec elle.
+            // Largeur constante, seules les couleurs changent : une bordure
+            // qui s'épaissit à la sélection ou au survol remesurerait la
+            // ligne, et la rangée desktop entière avec elle.
             border: Border.all(
-              color: selected ? classColor : Colors.white24,
+              color: _bordure(selected: selected, hovered: hovered),
               width: 1.5,
             ),
           ),
@@ -245,6 +263,45 @@ class ClassPassiveList extends StatelessWidget {
             ],
           ),
         ),
+    );
+  }
+}
+
+/// Une tuile de passif, qui sait si la souris est dessus.
+///
+/// L'état de survol vit ici plutôt que dans `ClassPassiveList` pour qu'une
+/// ligne survolée ne reconstruise qu'elle-même, et non les trois.
+///
+/// Sans `onTap`, la tuile n'installe aucun `MouseRegion` : elle ne s'allume
+/// pas, et le geste traverse jusqu'à la carte — c'est le cas de la carte
+/// repliée, où le seul passif montré est déjà celui qui est retenu.
+class _PassiveTile extends StatefulWidget {
+  final VoidCallback? onTap;
+  final Widget Function(BuildContext context, bool hovered) builder;
+
+  const _PassiveTile({required this.onTap, required this.builder});
+
+  @override
+  State<_PassiveTile> createState() => _PassiveTileState();
+}
+
+class _PassiveTileState extends State<_PassiveTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.onTap == null) {
+      return widget.builder(context, false);
+    }
+
+    // `InkWell` plutôt qu'un `MouseRegion` à la main : il porte déjà le
+    // curseur, le geste et `onHover`, et reste le type par lequel les
+    // tests désignent une ligne.
+    return InkWell(
+      onTap: widget.onTap,
+      onHover: (survole) => setState(() => _hovered = survole),
+      borderRadius: BorderRadius.circular(8),
+      child: widget.builder(context, _hovered),
     );
   }
 }

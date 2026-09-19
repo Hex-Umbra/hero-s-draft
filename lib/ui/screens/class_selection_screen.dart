@@ -472,7 +472,16 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                         color: classColor.withValues(
                           alpha: _isHovered ? 1.0 : 0.7,
                         ),
-                        width: _isHovered ? 3.0 : 2.0,
+                        // Largeur constante : une bordure qui s'epaissit
+                        // au survol retrecit la largeur utile de la carte
+                        // et remet en page tout son contenu — mesure : 2px
+                        // de moins sur chaque ligne de passif des que la
+                        // souris entre sur la carte. La valeur au repos est
+                        // conservee plutot que celle au survol, pour ne pas
+                        // alourdir les trois cartes en permanence ; le
+                        // survol se lit a l'opacite de la bordure et a son
+                        // halo, tous deux deja renforces juste au-dessus.
+                        width: 2.0,
                       ),
                       boxShadow: [
                         BoxShadow(

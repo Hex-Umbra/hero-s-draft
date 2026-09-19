@@ -484,6 +484,13 @@ Finder _tuileDe(String nomDePassif) => find
     .ancestor(of: find.text(nomDePassif), matching: find.byType(Container))
     .first;
 
+/// La couleur de fond de la tuile du passif nomme.
+Color? _fondDe(WidgetTester tester, String nomDePassif) {
+  final decoration =
+      tester.widget<Container>(_tuileDe(nomDePassif)).decoration;
+  return (decoration as BoxDecoration?)?.color;
+}
+
 /// Bascule le depliage des passifs d'une carte, sur les deux plateformes.
 Future<void> _appuyerSurLaCarte(
   WidgetTester tester,
@@ -1284,6 +1291,65 @@ void main() {
             'bouton -> tuile vaut $sousLeBouton, tuile -> badge vaut '
             '$sousLaTuile',
       );
+    });
+
+    testWidgets('survoler un passif proposable le met en evidence', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+      await _appuyerSurLaCarte(tester, 'Paladin');
+
+      final Color? avant = _fondDe(tester, 'Zeal');
+      await _survoler(tester, 'Zeal');
+
+      expect(
+        _fondDe(tester, 'Zeal'),
+        isNot(avant),
+        reason: 'rien ne signale au joueur que la ligne repond au clic',
+      );
+    });
+
+    testWidgets('survoler un passif ne change pas sa geometrie', (
+      WidgetTester tester,
+    ) async {
+      // Le piege deja rencontre sur la bordure de la carte : une mise en
+      // evidence qui epaissit un trait remesure la ligne, et la rangee
+      // entiere avec elle. Seules les couleurs ont le droit de changer.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+      await _appuyerSurLaCarte(tester, 'Paladin');
+
+      final Size avant = tester.getSize(_tuileDe('Zeal'));
+      final double carteAvant = tester.getSize(_carteDe('Paladin')).height;
+
+      await _survoler(tester, 'Zeal');
+
+      expect(tester.getSize(_tuileDe('Zeal')), avant);
+      expect(tester.getSize(_carteDe('Paladin')).height, carteAvant);
+    });
+
+    testWidgets('repliee, la tuile ne reagit pas au survol', (
+      WidgetTester tester,
+    ) async {
+      // Repliee, elle n'est pas un choix : le geste appartient a la carte,
+      // et lui promettre une reponse serait mentir.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      final Color? avant = _fondDe(tester, 'Ward');
+      await _survoler(tester, 'Ward');
+
+      expect(_fondDe(tester, 'Ward'), avant);
     });
 
     testWidgets('le depliage est progressif, pas instantane', (
