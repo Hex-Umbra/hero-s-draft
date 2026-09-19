@@ -131,16 +131,18 @@ class GameDialog extends StatelessWidget {
                   // Actions
                   if (actions != null && actions!.isNotEmpty) ...[
                     AppSpacing.heightMd,
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: actions!
-                          .map(
-                            (a) => Padding(
-                              padding: const EdgeInsets.only(left: AppSpacing.sm),
-                              child: a,
-                            ),
-                          )
-                          .toList(),
+                    // `Wrap` plutot que `Row` : deux boutons ne tiennent pas
+                    // toujours cote a cote — sur un telephone de 320px, ou
+                    // des que le texte du systeme est mis a l'echelle, une
+                    // `Row` les faisait deborder (mesure : 33px a 320px).
+                    // Avec la place, la disposition est identique a
+                    // l'ancienne ; sans elle, les boutons s'empilent au lieu
+                    // de sortir du panneau.
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: actions!,
                     ),
                   ],
                 ],

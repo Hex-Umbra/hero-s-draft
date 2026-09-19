@@ -320,11 +320,23 @@ abstract class AppLocalizations {
   /// **'Mastery: {effect}'**
   String passiveMasteryCurrent(String effect);
 
-  /// No description provided for @passiveMasteryPerPoint.
+  /// Mastery effect of a passive, with the starting Mastery of the class. A class at 0 can still earn Mastery mid-run, so the effect stays visible.
   ///
   /// In en, this message translates to:
-  /// **'Per Mastery point: {effect}'**
-  String passiveMasteryPerPoint(String effect);
+  /// **'{mastery, plural, =0{Mastery 0 at start: {effect}} other{Mastery {mastery}: {effect}}}'**
+  String passiveMasteryAtStart(int mastery, String effect);
+
+  /// No description provided for @passiveChoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your passive'**
+  String get passiveChoiceTitle;
+
+  /// No description provided for @passiveChoiceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get passiveChoiceConfirm;
 
   /// No description provided for @relicInventory.
   ///

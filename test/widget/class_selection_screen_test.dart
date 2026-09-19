@@ -11,6 +11,7 @@ import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
+import 'package:roguelike_card_game/ui/widgets/passive_choice_dialog.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
 
@@ -140,11 +141,10 @@ const _stressColumnFiller = HeroData(
 );
 
 // `mastery` sur les six : les neuf passifs livres dans
-// assets/data/passives/*.json en portent tous un, et
-// class_selection_screen.dart rend un `Text` supplementaire (plus un
-// espaceur de 3px) des que `passive.mastery != null` — un bloc que ces
-// fixtures omettaient jusqu'au defaut 1 (round 2, 2026-09-19), ce qui
-// sous-mesurait la hauteur de carte reelle d'un bloc de texte entier.
+// assets/data/passives/*.json en portent tous un, et le panneau de choix
+// rend une ligne de plus des que `passive.mastery != null` — un bloc que
+// ces fixtures omettaient jusqu'au defaut 1 (round 2, 2026-09-19), ce qui
+// sous-mesurait d'un bloc de texte entier ce que le panneau doit loger.
 // Chaque `mastery` ci-dessous est copie mot pour mot de son JSON reel.
 const _regenArmor = PassiveData(
   id: 'regen_armor',
@@ -254,10 +254,9 @@ const _bloodthirst = PassiveData(
   ),
 );
 // La plus longue des six en francais une fois passee dans
-// `passiveMasteryPerPoint` ("Par point de Maîtrise : +1 Puissance par
-// ennemi abattu") — c'est elle qui pousse le plus la hauteur du bloc
-// Maitrise, et donc la hauteur de la rangee qui la contient (mesuree pour
-// de vrai par `IntrinsicHeight`, voir `_buildDesktopGrid`).
+// `passiveMasteryAtStart` ("Maîtrise 0 au départ : +1 Puissance par ennemi
+// abattu") — c'est elle qui pousse le plus la hauteur de la ligne de
+// Maitrise dans le panneau de choix.
 const _frenzy = PassiveData(
   id: 'frenzy',
   nameEn: 'Frenzy',
@@ -416,6 +415,30 @@ Future<ProviderContainer> _buildAndReady(
   return container;
 }
 
+/// Laisse passer une transition sans attendre que l'ecran se stabilise.
+///
+/// `pumpAndSettle` ne converge jamais ici : chaque carte de classe porte une
+/// animation de flottement qui tourne en boucle, si bien qu'il n'existe pas
+/// de frame ou plus rien ne bouge. 500ms couvrent largement l'ouverture du
+/// panneau (250ms) comme la transition de route.
+Future<void> _pomper(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
+/// Ouvre le panneau de choix du passif depuis la carte de rang `carte`.
+///
+/// Le bouton de la carte n'enchaine plus directement sur le draft : il ouvre
+/// le panneau, qui porte desormais le choix du passif.
+Future<void> _ouvrirLePanneau(
+  WidgetTester tester, {
+  int carte = 0,
+  String bouton = 'Select',
+}) async {
+  await tester.tap(find.text(bouton).at(carte));
+  await _pomper(tester);
+}
+
 void main() {
   testWidgets('ClassSelectionScreen renders all seeded hero options', (
     WidgetTester tester,
@@ -556,48 +579,31 @@ void main() {
       value: 1,
     );
 
-    testWidgets('seule la classe que le passif declare le montre', (
+    // `_heroes` trie par `displayOrder` : berserker (1), mage (2), paladin
+    // (3). L'index est donc celui du rendu, pas celui de la declaration.
+    const berserkerCarte = 0;
+    const paladinCarte = 2;
+
+    testWidgets('seule la classe que le passif declare le propose', (
       WidgetTester tester,
     ) async {
-      await _buildAndReady(tester, passives: const [ward]);
-      expect(find.text('WARD'), findsOneWidget);
+      await _buildAndReady(tester, passives: const [ward, aegis]);
+
+      await _ouvrirLePanneau(tester, carte: paladinCarte);
+      // Egide (aegis) ne restreint aucune classe, Garde (ward) ne s'ouvre
+      // qu'au paladin : lui seul se voit proposer les deux.
+      expect(find.text('Ward'), findsOneWidget);
+      expect(find.text('Aegis'), findsOneWidget);
     });
 
-    testWidgets(
-      'un passif ouvert a toutes les classes est montre sur chacune',
-      (WidgetTester tester) async {
-        await _buildAndReady(tester, passives: const [ward, aegis]);
-        // Egide (aegis) ne restreint aucune classe : elle apparait sur les
-        // trois cartes. Garde (ward) ne s'ouvre qu'au paladin, qui a donc
-        // deux passifs proposes ; les deux autres classes n'en ont qu'un.
-        expect(find.text('AEGIS'), findsNWidgets(3));
-        expect(find.text('WARD'), findsOneWidget);
-      },
-    );
-
-    testWidgets('le passif dit ce qu un point de Maitrise lui apporte', (
+    testWidgets('une classe que le passif ne declare pas ne le propose pas', (
       WidgetTester tester,
     ) async {
-      const regen = PassiveData(
-        id: 'regen_armor',
-        nameEn: 'Armor Regeneration',
-        nameFr: "Régénération d'Armure",
-        classes: ['paladin'],
-        trigger: RelicTrigger.endOfTurn,
-        effectType: 'gain_armor',
-        value: 2,
-        mastery: PassiveMastery(
-          field: 'value',
-          perPoint: 1,
-          descriptionEn: '+{amount} Block at end of turn',
-          descriptionFr: '+{amount} Armure en fin de tour',
-        ),
-      );
-      await _buildAndReady(tester, passives: const [regen]);
-      expect(
-        find.text('Per Mastery point: +1 Block at end of turn'),
-        findsOneWidget,
-      );
+      await _buildAndReady(tester, passives: const [ward, aegis]);
+
+      await _ouvrirLePanneau(tester, carte: berserkerCarte);
+      expect(find.text('Ward'), findsNothing);
+      expect(find.text('Aegis'), findsOneWidget);
     });
   });
 
@@ -818,32 +824,46 @@ void main() {
 
       expect(find.text('Le Paladin'), findsOneWidget);
       expect(find.text('Le Berserker'), findsOneWidget);
-      expect(find.text('RÉGÉNÉRATION D\'ARMURE'), findsOneWidget);
-      expect(find.text('RAGE'), findsOneWidget);
+      // La carte ne porte plus aucun texte de passif : il a suivi le choix
+      // dans le panneau, ouvert juste apres.
+      expect(find.text("Régénération d'Armure"), findsNothing);
+
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'la carte de classe deborde a ${largeur.toInt()}px',
+      );
+
+      // Le panneau porte desormais ce que la carte portait : quatre noms,
+      // quatre descriptions et trois lignes de Maitrise. C'est lui qui doit
+      // tenir sur la largeur mobile, et c'est donc la qu'on mesure.
+      await _ouvrirLePanneau(tester, bouton: 'Sélectionner');
+
       // Le nom-stress se retrouve entier dans l'arbre (pas coupe, pas
       // tronque) : `Text` ne segmente jamais sa propre chaine, donc son
-      // seul moyen de tenir sur un `Flexible` trop etroit est d'occuper
+      // seul moyen de tenir dans un espace trop etroit est d'occuper
       // plusieurs lignes — le retrouver ici prouve que le rendu a eu lieu
       // (par opposition a une exception qui aurait empeche le pump d'aller
       // a son terme).
-      expect(find.text(_stressWrapTest.nameFr.toUpperCase()), findsOneWidget);
+      expect(find.text(_stressWrapTest.nameFr), findsOneWidget);
+      expect(find.text("Régénération d'Armure"), findsOneWidget);
 
       // Garde-fou direct contre le debordement horizontal du nom de passif
       // (round 3 du 2026-09-18, confirme par le defaut 4 du 2026-09-19) :
-      // ce garde-fou ne repose sur aucune largeur de texte mesuree dans
+      // il ne repose sur aucune largeur de texte mesuree dans
       // l'environnement de test (voir le commentaire au-dessus de
-      // `_stressWrapTest`) — il repose sur la structure (`Flexible` autour
-      // du `Text`), qui rend le retour a la ligne possible quelle que soit
-      // la police ou l'echelle qui rend le nom. `_stressWrapTest` est
-      // construit pour deborder de l'espace disponible a chaque largeur de
-      // la plage, meme dans la police de test : si `Flexible` disparaissait
-      // de nouveau, cette assertion echouerait.
+      // `_stressWrapTest`) — il repose sur la structure (`Expanded` autour
+      // de la colonne de texte), qui rend le retour a la ligne possible
+      // quelle que soit la police ou l'echelle qui rend le nom.
+      // `_stressWrapTest` est construit pour deborder de l'espace
+      // disponible a chaque largeur de la plage, meme dans la police de
+      // test.
       expect(
         tester.takeException(),
         isNull,
         reason:
-            'un debordement horizontal du nom de passif indique que '
-            'Flexible a disparu autour de son Text',
+            'un debordement horizontal du nom de passif indique que la '
+            'colonne de texte du panneau n est plus contrainte',
       );
     }
 
@@ -1020,7 +1040,25 @@ void main() {
       maxMana: 3,
     );
 
-    testWidgets('tous les passifs disponibles sont proposes', (
+    testWidgets('la carte ne porte plus le passif', (
+      WidgetTester tester,
+    ) async {
+      // Le choix est parti dans le panneau : la carte ne garde que
+      // l'identite de la classe. Ni le nom du passif, ni sa description, ni
+      // sa Maitrise n'y figurent plus.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      expect(find.text('Ward'), findsNothing);
+      expect(find.text('WARD'), findsNothing);
+      expect(find.text('Gain 2 Block at end of turn.'), findsNothing);
+      expect(find.textContaining('Mastery'), findsNothing);
+    });
+
+    testWidgets('le bouton de la carte ouvre le panneau, il ne navigue pas', (
       WidgetTester tester,
     ) async {
       await _buildAndReady(
@@ -1029,63 +1067,36 @@ void main() {
         passives: const [ward, zeal],
       );
 
-      expect(find.text('WARD'), findsOneWidget);
-      expect(find.text('ZEAL'), findsOneWidget);
+      await _ouvrirLePanneau(tester);
+
+      expect(find.byType(PassiveChoiceDialog), findsOneWidget);
+      expect(find.byType(StarterDeckDraftScreen), findsNothing);
+      expect(find.text('Ward'), findsOneWidget);
+      expect(find.text('Zeal'), findsOneWidget);
     });
 
-    testWidgets(
-      'le passif selectionne parmi plusieurs est souligne, les autres non',
-      (WidgetTester tester) async {
-        // Le test existant ('un seul passif disponible...') ne prouve que
-        // l'absence de soulignement quand il n'y a rien a choisir — il ne
-        // pinne pas la moitie utile de la regle (round 3 du 2026-09-18) :
-        // que le passif *retenu*, parmi plusieurs, est bien souligne.
-        await _buildAndReady(
-          tester,
-          heroes: const [paladin],
-          passives: const [ward, zeal],
-        );
-
-        // ward (displayOrder 1) est le choix par defaut.
-        final wardStyle = tester.widget<Text>(find.text('WARD')).style;
-        expect(
-          wardStyle?.decoration,
-          TextDecoration.underline,
-          reason: 'le passif retenu par defaut doit etre souligne',
-        );
-        final zealStyle = tester.widget<Text>(find.text('ZEAL')).style;
-        expect(zealStyle?.decoration, isNull);
-
-        await tester.tap(find.text('ZEAL'));
-        await tester.pump();
-
-        final zealStyleAfter = tester.widget<Text>(find.text('ZEAL')).style;
-        expect(
-          zealStyleAfter?.decoration,
-          TextDecoration.underline,
-          reason: 'le soulignement suit le nouveau choix',
-        );
-        final wardStyleAfter = tester.widget<Text>(find.text('WARD')).style;
-        expect(wardStyleAfter?.decoration, isNull);
-      },
-    );
-
-    testWidgets('le premier du point d acces est selectionne par defaut', (
+    testWidgets('valider sans rien toucher pousse le premier du point d acces', (
       WidgetTester tester,
     ) async {
-      // Declares zeal before ward, so declaration order is the reverse of
-      // sorted order (ward's displayOrder 1 < zeal's 2). If the screen ever
-      // read the registry directly instead of going through
-      // availablePassivesFor, this would select zeal instead of ward.
+      // Declare zeal avant ward : l'ordre de declaration est l'inverse de
+      // l'ordre trie (displayOrder 1 pour ward, 2 pour zeal). Si l'ecran
+      // lisait le registre au lieu de passer par `availablePassivesFor`,
+      // c'est zeal qui serait pousse.
       await _buildAndReady(
         tester,
         heroes: const [paladin],
         passives: const [zeal, ward],
       );
 
-      // La description du passif selectionne est celle qui s'affiche.
-      expect(find.text('Gain 2 Block at end of turn.'), findsOneWidget);
-      expect(find.text('Gain 1 Might at the start of the turn.'), findsNothing);
+      await _ouvrirLePanneau(tester);
+      await tester.tap(find.text('Confirm'));
+      await _pomper(tester);
+
+      final pushed = tester.widget<StarterDeckDraftScreen>(
+        find.byType(StarterDeckDraftScreen),
+      );
+      expect(pushed.passive?.id, 'ward');
+      expect(pushed.playerClass.id, 'paladin');
     });
 
     testWidgets('choisir un autre passif change ce que l ecran pousse', (
@@ -1097,14 +1108,11 @@ void main() {
         passives: const [ward, zeal],
       );
 
-      await tester.tap(find.text('ZEAL'));
-      await tester.pump();
-
-      expect(find.text('Gain 1 Might at the start of the turn.'), findsOneWidget);
-
-      await tester.tap(find.text('Select'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await _ouvrirLePanneau(tester);
+      await tester.tap(find.text('Zeal'));
+      await _pomper(tester);
+      await tester.tap(find.text('Confirm'));
+      await _pomper(tester);
 
       final pushed = tester.widget<StarterDeckDraftScreen>(
         find.byType(StarterDeckDraftScreen),
@@ -1112,32 +1120,45 @@ void main() {
       expect(pushed.passive?.id, 'zeal');
     });
 
-    testWidgets('un seul passif disponible : aucun selecteur, et il est pousse', (
+    testWidgets('annuler le panneau laisse le joueur sur l ecran', (
       WidgetTester tester,
     ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      await _ouvrirLePanneau(tester);
+      await tester.tap(find.text('Zeal'));
+      await _pomper(tester);
+      await tester.tap(find.text('Cancel'));
+      await _pomper(tester);
+
+      // Renoncer ne lance rien, meme apres avoir touche un autre passif.
+      expect(find.byType(StarterDeckDraftScreen), findsNothing);
+      expect(find.byType(PassiveChoiceDialog), findsNothing);
+      expect(find.byType(ClassSelectionScreen), findsOneWidget);
+    });
+
+    testWidgets('un seul passif disponible : le panneau le presente quand meme', (
+      WidgetTester tester,
+    ) async {
+      // Le panneau est devenu le seul endroit ou le passif est decrit :
+      // l'escamoter parce qu'il n'y a rien a comparer cacherait au joueur
+      // ce avec quoi il part.
       await _buildAndReady(
         tester,
         heroes: const [paladin],
         passives: const [ward],
       );
 
-      expect(find.text('WARD'), findsOneWidget);
-      // Un seul passif : le nom garde exactement l'apparence d'aujourd'hui,
-      // pas de soulignement (qui n'a de sens que quand il y a un choix).
-      final wardStyle = tester.widget<Text>(find.text('WARD')).style;
-      expect(wardStyle?.decoration, isNull);
+      await _ouvrirLePanneau(tester);
+      expect(find.text('Ward'), findsOneWidget);
+      expect(find.text('Gain 2 Block at end of turn.'), findsOneWidget);
 
-      // Le tap est inerte : rien a selectionner avec un seul passif.
-      await tester.tap(find.text('WARD'));
-      await tester.pump();
-      expect(find.byType(StarterDeckDraftScreen), findsNothing);
-      expect(find.text('WARD'), findsOneWidget);
-      final wardStyleAfterTap = tester.widget<Text>(find.text('WARD')).style;
-      expect(wardStyleAfterTap?.decoration, isNull);
-
-      await tester.tap(find.text('Select'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Confirm'));
+      await _pomper(tester);
 
       final pushed = tester.widget<StarterDeckDraftScreen>(
         find.byType(StarterDeckDraftScreen),
@@ -1145,15 +1166,17 @@ void main() {
       expect(pushed.passive?.id, 'ward');
     });
 
-    testWidgets('aucun passif disponible : l ecran reste utilisable', (
+    testWidgets('aucun passif disponible : aucun panneau, l ecran enchaine', (
       WidgetTester tester,
     ) async {
+      // Sans passif a proposer, le panneau n'aurait rien a montrer : le
+      // bouton retrouve son enchainement direct.
       await _buildAndReady(tester, heroes: const [paladin]);
 
       await tester.tap(find.text('Select'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await _pomper(tester);
 
+      expect(find.byType(PassiveChoiceDialog), findsNothing);
       final pushed = tester.widget<StarterDeckDraftScreen>(
         find.byType(StarterDeckDraftScreen),
       );
@@ -1161,14 +1184,13 @@ void main() {
     });
 
     testWidgets(
-      'trois passifs a largeur mobile ne debordent pas',
+      'trois passifs a largeur mobile : le panneau tient',
       (WidgetTester tester) async {
-        // Chaque classe livree a exactement trois passifs (spec §8.3) mais
-        // aucun test avant celui-ci n'en montre plus de deux : le risque est
-        // que la rangee de puces, sur la largeur mobile, pousse la carte a
-        // deborder — le meme mode d'echec que la tache 5 a corrige a 3px
-        // pres. Une description longue maximise la pression sur l'espace
-        // vertical restant.
+        // Chaque classe livree a exactement trois passifs (spec §8.3). Le
+        // risque de debordement a quitte la carte avec les puces : c'est
+        // maintenant le panneau, qui porte trois descriptions entieres et
+        // trois lignes de Maitrise, qui doit tenir sur la largeur mobile la
+        // plus courante.
         const valor = PassiveData(
           id: 'valor',
           nameEn: 'Valor',
@@ -1202,11 +1224,13 @@ void main() {
           physicalSize: const Size(390, 844),
         );
 
-        // Une RenderFlex overflow leve pendant le pump ci-dessus ferait deja
-        // echouer ce test : rendre sans erreur EST l'assertion.
-        expect(find.text('WARD'), findsOneWidget);
-        expect(find.text('ZEAL'), findsOneWidget);
-        expect(find.text('VALOR'), findsOneWidget);
+        await _ouvrirLePanneau(tester);
+
+        // Une RenderFlex overflow levee pendant les pumps ci-dessus ferait
+        // deja echouer ce test : rendre sans erreur EST l'assertion.
+        expect(find.text('Ward'), findsOneWidget);
+        expect(find.text('Zeal'), findsOneWidget);
+        expect(find.text('Valor'), findsOneWidget);
       },
     );
 
@@ -1239,11 +1263,10 @@ void main() {
         await tester.pump();
 
         await tester.tap(button);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 500));
+        await _pomper(tester);
 
         expect(
-          find.byType(StarterDeckDraftScreen),
+          find.byType(PassiveChoiceDialog),
           findsOneWidget,
           reason:
               'le bouton doit rester reellement tapable une fois amene a '

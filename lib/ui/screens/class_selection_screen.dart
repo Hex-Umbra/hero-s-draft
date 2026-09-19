@@ -11,6 +11,7 @@ import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
 import '../../models/data/model_extensions.dart';
 import '../widgets/class_identity.dart';
+import '../widgets/passive_choice_dialog.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
@@ -236,10 +237,40 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     return Size.zero;
   }
 
-  /// Le passif retenu, par son rang dans `availablePassivesFor` — le point
-  /// d'accès unique de P-49 (spec §5.1, P5). Le premier par défaut, et le
-  /// choix du joueur ensuite (spec §8.3).
-  int _passiveIndex = 0;
+  /// Fait choisir son passif au joueur, puis enchaîne sur le draft de départ.
+  ///
+  /// Les passifs proposés sont ceux du point d'accès unique de P-49
+  /// (spec §5.1, P5), et le panneau s'ouvre sur le premier. Renoncer au
+  /// panneau ne lance rien : le joueur revient à son choix de classe.
+  ///
+  /// Sans passif disponible, le panneau n'aurait rien à montrer — l'écran
+  /// enchaîne alors directement, avec `null` comme avant ce lot.
+  Future<void> _choisirPuisPartir(
+    HeroData playerClass,
+    List<PassiveData> passives,
+  ) async {
+    final navigator = Navigator.of(context);
+    PassiveData? passive;
+
+    if (passives.isNotEmpty) {
+      passive = await PassiveChoiceDialog.show(
+        context,
+        playerClass: playerClass,
+        passives: passives,
+      );
+      if (passive == null) return;
+    }
+
+    if (!mounted) return;
+    navigator.push(
+      MaterialPageRoute(
+        builder: (context) => StarterDeckDraftScreen(
+          playerClass: playerClass,
+          passive: passive,
+        ),
+      ),
+    );
+  }
 
   // For float/breath animation of icon
   late final AnimationController _floatController;
@@ -300,10 +331,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
     final passives = availablePassivesFor(playerClass, gameData);
-    // Le rang peut sortir de la liste si la donnée change sous l'écran : on
-    // retombe sur le premier plutôt que de lever.
-    final index = _passiveIndex < passives.length ? _passiveIndex : 0;
-    final passive = passives.isEmpty ? null : passives[index];
     final locale = Localizations.localeOf(context).languageCode;
 
     final classColor = ClassIdentity.colorOf(playerClass);
@@ -358,9 +385,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
         ),
     ];
 
-    final String traitDesc = passive?.getDescription(locale) ?? '';
-    // Ce qu'un point de Maîtrise apporte au passif (spec P-49, §6.5).
-    final String? masteryPerPoint = passive?.mastery?.describe(locale, 1);
     final l10n = AppLocalizations.of(context)!;
 
     return MouseRegion(
@@ -576,76 +600,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 1 : 8),
-                                // Passive trait
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: widget.isMobile ? 8 : 12,
-                                    vertical: widget.isMobile ? 6 : 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.cyanAccent.withValues(
-                                      alpha: 0.06,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      widget.isMobile ? 6 : 10,
-                                    ),
-                                    border: Border.all(
-                                      color: Colors.cyanAccent.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _PassiveSelector(
-                                        passives: passives,
-                                        selectedIndex: index,
-                                        isMobile: widget.isMobile,
-                                        locale: locale,
-                                        onSelect: (i) => setState(
-                                          () => _passiveIndex = i,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        traitDesc,
-                                        style: TextStyle(
-                                          fontSize: widget.isMobile
-                                              ? 9.5
-                                              : 10.5,
-                                          color: Colors.cyanAccent.withValues(
-                                            alpha: 0.85,
-                                          ),
-                                          height: 1.25,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      if (masteryPerPoint != null) ...[
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          l10n.passiveMasteryPerPoint(
-                                            masteryPerPoint,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: widget.isMobile
-                                                ? 9
-                                                : 10,
-                                            fontStyle: FontStyle.italic,
-                                            color: Colors.cyanAccent.withValues(
-                                              alpha: 0.7,
-                                            ),
-                                            height: 1.2,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
                                 Divider(
                                   color: Colors.white12,
                                   height: widget.isMobile ? 16 : 25,
@@ -673,17 +627,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 _PremiumSelectionButton(
                                   classColor: classColor,
                                   isMobile: widget.isMobile,
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            StarterDeckDraftScreen(
-                                              playerClass: playerClass,
-                                              passive: passive,
-                                            ),
-                                      ),
-                                    );
-                                  },
+                                  onPressed: () =>
+                                      _choisirPuisPartir(playerClass, passives),
                                 ),
                               ],
                             ),
@@ -720,111 +665,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Le selecteur de passif de la carte de classe : une puce par passif
-/// disponible (point d'acces unique de P-49), tapable pour changer le choix
-/// retenu.
-///
-/// Extrait de `_InteractiveClassCardState.build()` (defaut 3, 2026-09-19) :
-/// c'est la seule facon d'atteindre six des neuf passifs livres — un choix
-/// non trivial que la carte n'exposait qu'a travers une rangee de 14-19px de
-/// haut, sans `HitTestBehavior.opaque` ni marge de frappe, contre les 48px
-/// recommandes par Material. `behavior: HitTestBehavior.opaque` fait
-/// reagir toute la puce (icone + texte + l'espace mort entre eux), et le
-/// `Padding` vertical lui redonne une hauteur de frappe raisonnable.
-class _PassiveSelector extends StatelessWidget {
-  final List<PassiveData> passives;
-  final int selectedIndex;
-  final bool isMobile;
-  final String locale;
-  final ValueChanged<int> onSelect;
-
-  // Les trois valeurs d'opacite que chaque puce module selon la selection,
-  // nommees une seule fois plutot que repetees a chaque site d'usage.
-  static const double _kSelectedAlpha = 1.0;
-  static const double _kUnselectedIconAlpha = 0.35;
-  static const double _kUnselectedTextAlpha = 0.45;
-
-  const _PassiveSelector({
-    required this.passives,
-    required this.selectedIndex,
-    required this.isMobile,
-    required this.locale,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (passives.isEmpty) {
-      return Text(
-        '—',
-        style: TextStyle(
-          fontSize: isMobile ? 10 : 11,
-          color: Colors.cyanAccent,
-        ),
-      );
-    }
-
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: isMobile ? 8 : 10,
-      runSpacing: isMobile ? 3 : 2,
-      children: [
-        for (var i = 0; i < passives.length; i++) _buildChip(i),
-      ],
-    );
-  }
-
-  Widget _buildChip(int i) {
-    final bool selected = i == selectedIndex;
-    return GestureDetector(
-      // `deferToChild` (le defaut) ne reagit qu'aux enfants qui peignent
-      // reellement quelque chose ; la puce contenait un `SizedBox` de 2px
-      // entre l'icone et le texte qui ne peint rien, donc une bande morte
-      // au milieu de la puce. `opaque` fait reagir toute sa zone.
-      behavior: HitTestBehavior.opaque,
-      onTap: passives.length == 1 ? null : () => onSelect(i),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.shield,
-              size: isMobile ? 12 : 16,
-              color: Colors.cyanAccent.withValues(
-                alpha: selected ? _kSelectedAlpha : _kUnselectedIconAlpha,
-              ),
-            ),
-            SizedBox(width: isMobile ? 2 : 6),
-            // `Flexible` (jamais `Expanded`) : a la largeur la plus etroite
-            // de la plage mobile (320px), le nom le plus long du jeu ne
-            // tient plus sur une ligne et doit pouvoir enjamber la suivante
-            // au lieu de deborder a droite (defaut 2, round 3 du
-            // 2026-09-18 : le retrait du round 2 supposait a tort qu'aucune
-            // largeur de la plage ne forcerait de retour a la ligne).
-            Flexible(
-              child: Text(
-                passives[i].getName(locale).toUpperCase(),
-                style: TextStyle(
-                  fontSize: isMobile ? 10 : 11,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  color: Colors.cyanAccent.withValues(
-                    alpha: selected ? _kSelectedAlpha : _kUnselectedTextAlpha,
-                  ),
-                  letterSpacing: 0.8,
-                  decoration: passives.length > 1 && selected
-                      ? TextDecoration.underline
-                      : null,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

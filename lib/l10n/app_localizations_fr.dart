@@ -132,9 +132,21 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String passiveMasteryPerPoint(String effect) {
-    return 'Par point de Maîtrise : $effect';
+  String passiveMasteryAtStart(int mastery, String effect) {
+    String _temp0 = intl.Intl.pluralLogic(
+      mastery,
+      locale: localeName,
+      other: 'Maîtrise $mastery : $effect',
+      zero: 'Maîtrise 0 au départ : $effect',
+    );
+    return '$_temp0';
   }
+
+  @override
+  String get passiveChoiceTitle => 'Choisissez votre passif';
+
+  @override
+  String get passiveChoiceConfirm => 'Valider';
 
   @override
   String get relicInventory => 'Inventaire des Reliques';

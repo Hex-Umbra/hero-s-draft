@@ -70,12 +70,16 @@
       "effect": { "type": "String" }
     }
   },
-  "passiveMasteryPerPoint": "Per Mastery point: {effect}",
-  "@passiveMasteryPerPoint": {
+  "passiveMasteryAtStart": "{mastery, plural, =0{Mastery 0 at start: {effect}} other{Mastery {mastery}: {effect}}}",
+  "@passiveMasteryAtStart": {
+    "description": "Mastery effect of a passive, with the starting Mastery of the class. A class at 0 can still earn Mastery mid-run, so the effect stays visible.",
     "placeholders": {
+      "mastery": { "type": "int" },
       "effect": { "type": "String" }
     }
   },
+  "passiveChoiceTitle": "Choose your passive",
+  "passiveChoiceConfirm": "Confirm",
   "relicInventory": "Relic Inventory",
   "emptyInventory": "Your inventory is empty",
   "luckPercentageTitle": "Rarity Loot Rates",
