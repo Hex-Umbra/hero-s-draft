@@ -54,7 +54,7 @@ class ClassSelectionScreen extends ConsumerWidget {
                 ? 200
                 : 400, // Divise par deux sur mobile pour afficher 2 colonnes réduites
             childAspectRatio: isMobile
-                ? 0.68
+                ? 0.24
                 : 0.75, // Plus haute sur mobile pour donner plus d'espace vertical
             crossAxisSpacing: isMobile ? 10 : 20,
             mainAxisSpacing: isMobile ? 10 : 20,
@@ -301,7 +301,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                             padding: EdgeInsets.all(widget.isMobile ? 5 : 20),
                             child: Column(
                               children: [
-                                SizedBox(height: widget.isMobile ? 0 : 10),
+                                SizedBox(height: widget.isMobile ? 2 : 10),
                                 // Floating hero image
                                 AnimatedBuilder(
                                   animation: _floatAnimation,
@@ -354,12 +354,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: widget.isMobile ? 0 : 12),
+                                SizedBox(height: widget.isMobile ? 2 : 12),
                                 // Stats with beautiful icons and display
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 0 : 8,
+                                    vertical: widget.isMobile ? 2 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.04),
@@ -386,7 +386,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 4 : 12,
-                                    vertical: widget.isMobile ? 0 : 6,
+                                    vertical: widget.isMobile ? 2 : 6,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.orangeAccent.withValues(alpha: 0.06),
@@ -432,7 +432,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   width: double.infinity,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: widget.isMobile ? 3 : 12,
-                                    vertical: widget.isMobile ? 1 : 8,
+                                    vertical: widget.isMobile ? 2 : 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.cyanAccent.withValues(
@@ -486,30 +486,45 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                                     width:
                                                         widget.isMobile ? 2 : 6,
                                                   ),
-                                                  Text(
-                                                    passives[i]
-                                                        .getName(locale)
-                                                        .toUpperCase(),
-                                                    style: TextStyle(
-                                                      fontSize: widget.isMobile
-                                                          ? 10
-                                                          : 11,
-                                                      fontWeight: i == index
-                                                          ? FontWeight.bold
-                                                          : FontWeight.normal,
-                                                      color: Colors.cyanAccent
-                                                          .withValues(
-                                                        alpha: i == index
-                                                            ? 1.0
-                                                            : 0.45,
+                                                  // `Flexible` (jamais
+                                                  // `Expanded`) : le nom
+                                                  // enjambe une seconde ligne
+                                                  // quand la donnee reelle
+                                                  // (ex. « REGENERATION
+                                                  // D'ARMURE ») ne tient pas
+                                                  // sur la largeur mobile,
+                                                  // sans deborder ni couper
+                                                  // le texte (defaut 2).
+                                                  Flexible(
+                                                    child: Text(
+                                                      passives[i]
+                                                          .getName(locale)
+                                                          .toUpperCase(),
+                                                      style: TextStyle(
+                                                        fontSize:
+                                                            widget.isMobile
+                                                                ? 10
+                                                                : 11,
+                                                        fontWeight: i == index
+                                                            ? FontWeight.bold
+                                                            : FontWeight
+                                                                .normal,
+                                                        color: Colors
+                                                            .cyanAccent
+                                                            .withValues(
+                                                          alpha: i == index
+                                                              ? 1.0
+                                                              : 0.45,
+                                                        ),
+                                                        letterSpacing: 0.8,
+                                                        decoration:
+                                                            passives.length >
+                                                                        1 &&
+                                                                    i == index
+                                                                ? TextDecoration
+                                                                    .underline
+                                                                : null,
                                                       ),
-                                                      letterSpacing: 0.8,
-                                                      decoration:
-                                                          passives.length > 1 &&
-                                                                  i == index
-                                                              ? TextDecoration
-                                                                  .underline
-                                                              : null,
                                                     ),
                                                   ),
                                                 ],
@@ -526,7 +541,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                             ),
                                         ],
                                       ),
-                                      SizedBox(height: widget.isMobile ? 0 : 5),
+                                      SizedBox(height: widget.isMobile ? 2 : 5),
                                       Text(
                                         traitDesc,
                                         style: TextStyle(
@@ -566,7 +581,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 ),
                                 Divider(
                                   color: Colors.white12,
-                                  height: widget.isMobile ? 2 : 25,
+                                  height: widget.isMobile ? 6 : 25,
                                 ),
                                 // Description text
                                 Expanded(
@@ -619,6 +634,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   Widget _buildStatBadge(Widget iconWidget, String value) {
     final bool isMobile = widget.isMobile;
     return Row(
+      // Ces badges vivent dans un `Wrap` (tache 5) : un `Row` a sa taille par
+      // defaut (`MainAxisSize.max`) y revendique toute la largeur restante,
+      // ce qui force chaque badge suivant sur sa propre ligne. `min` laisse
+      // le badge se limiter a son contenu, pour que le `Wrap` les aligne
+      // vraiment cote a cote (defaut 1 du 2026-09-18).
+      mainAxisSize: MainAxisSize.min,
       children: [
         iconWidget,
         SizedBox(width: isMobile ? 2 : 4),

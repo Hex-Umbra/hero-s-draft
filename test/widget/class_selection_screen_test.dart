@@ -423,6 +423,241 @@ void main() {
     });
   });
 
+  group('les badges de stats restent sur une seule ligne (defaut 1)', () {
+    const heavy = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Le Paladin',
+      classCard: 'hero_paladin.png',
+      maxHp: 77,
+      maxMana: 4,
+      mastery: 2,
+      critChance: 15,
+      luck: 6,
+    );
+
+    testWidgets(
+      'cinq stats non nulles partagent la meme ligne, pas une par ligne',
+      (WidgetTester tester) async {
+        // `_buildStatBadge` rendait un `Row` a `MainAxisSize.max`, ce qui
+        // etait sans consequence tant que les badges etaient les enfants
+        // directs d'un `Row`. La tache 5 les a deplaces dans un `Wrap`, ou un
+        // enfant a largeur maximale revendique toute la largeur disponible et
+        // force chaque badge suivant sur sa propre ligne. Comparer le `dy` de
+        // deux badges est le seul moyen honnete de detecter cette
+        // regression : un test qui ne verifie que la presence du texte passe
+        // dans les deux cas, avant comme apres la regression.
+        await _buildAndReady(tester, heroes: const [heavy]);
+
+        final hp = tester.getTopLeft(find.text('77'));
+        final mana = tester.getTopLeft(find.text('4'));
+        final mastery = tester.getTopLeft(find.text('2'));
+        final crit = tester.getTopLeft(find.text('15%'));
+        final luck = tester.getTopLeft(find.text('6'));
+
+        expect(
+          mana.dy,
+          hp.dy,
+          reason: 'le mana devrait partager la ligne des PV',
+        );
+        expect(
+          mastery.dy,
+          hp.dy,
+          reason: 'la Maitrise devrait partager la ligne des PV',
+        );
+        expect(
+          crit.dy,
+          hp.dy,
+          reason: 'le critique devrait partager la ligne des PV',
+        );
+        expect(
+          luck.dy,
+          hp.dy,
+          reason: 'la chance devrait partager la ligne des PV',
+        );
+      },
+    );
+  });
+
+  group('la carte tient a chaque largeur mobile, pas seulement a 390 (defaut 2)', () {
+    // Donnee reelle des deux class.json les plus charges, pour mesurer sans
+    // fabriquer un pire cas artificiel : le Paladin (Maitrise, orientation a
+    // trois cibles) et le Berserker (critique, une StatRule, et un nom qui
+    // enjambe deux lignes en francais a largeur mobile).
+    const paladinReel = HeroData(
+      id: 'paladin',
+      nameEn: 'Paladin',
+      nameFr: 'Le Paladin',
+      descriptionEn: 'Survival Oriented',
+      descriptionFr: 'Orienté Survie',
+      classCard: 'hero_paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+      mastery: 1,
+      mightTargets: {
+        MightTarget.attack,
+        MightTarget.skill,
+        MightTarget.alteration,
+      },
+      displayOrder: 1,
+    );
+    const berserkerReel = HeroData(
+      id: 'berserker',
+      nameEn: 'Berserker',
+      nameFr: 'Le Berserker',
+      descriptionEn: 'Damage Oriented',
+      descriptionFr: 'Orienté Dégâts',
+      classCard: 'hero_berserker.png',
+      maxHp: 80,
+      maxMana: 3,
+      critChance: 10,
+      mightTargets: {MightTarget.attack},
+      statRules: [
+        StatRule(
+          stat: RuleStat.armor,
+          mode: RuleMode.convert,
+          to: RuleTarget.statusMight,
+          duration: 1,
+        ),
+      ],
+      displayOrder: 2,
+    );
+
+    // Les trois passifs reels de chaque classe (assets/data/passives/), avec
+    // leurs descriptions completes — le pire cas de longueur de texte que le
+    // jeu livre vraiment, sans en inventer un plus long.
+    const regenArmor = PassiveData(
+      id: 'regen_armor',
+      nameEn: 'Armor Regeneration',
+      nameFr: "Régénération d'Armure",
+      descriptionEn: 'Gain 2 Block automatically at the end of each turn.',
+      descriptionFr:
+          'Gagne 2 points d\'Armure automatiquement à la fin de chaque tour.',
+      classes: ['paladin'],
+      trigger: RelicTrigger.endOfTurn,
+      effectType: 'gain_armor',
+      value: 2,
+      displayOrder: 1,
+    );
+    const fervor = PassiveData(
+      id: 'fervor',
+      nameEn: 'Fervor',
+      nameFr: 'Ferveur',
+      descriptionEn: 'When your Block absorbs damage, gain 1 Might for 2 turns.',
+      descriptionFr:
+          'Quand votre Armure encaisse des dégâts, gagne 1 Puissance pendant '
+          '2 tours.',
+      classes: ['paladin'],
+      trigger: RelicTrigger.onDamageTaken,
+      effectType: 'fervor',
+      value: 1,
+      displayOrder: 2,
+    );
+    const blessing = PassiveData(
+      id: 'blessing',
+      nameEn: 'Blessing',
+      nameFr: 'Bénédiction',
+      descriptionEn:
+          'At the start of your turn, every 5 points of surviving Block '
+          'becomes 1 HP.',
+      descriptionFr:
+          "Au début du tour, chaque tranche de 5 points d'Armure survivante "
+          'devient 1 PV.',
+      classes: ['paladin'],
+      trigger: RelicTrigger.startOfTurn,
+      effectType: 'blessing',
+      value: 1,
+      displayOrder: 3,
+    );
+    const rage = PassiveData(
+      id: 'rage',
+      nameEn: 'Rage',
+      nameFr: 'Rage',
+      descriptionEn:
+          'At the start of your turn, gain 1 Might for the turn, plus 1 per '
+          '10 missing HP.',
+      descriptionFr:
+          'Au début du tour, gagne 1 Puissance pour le tour, plus 1 par '
+          'tranche de 10 PV manquants.',
+      classes: ['berserker'],
+      trigger: RelicTrigger.startOfTurn,
+      effectType: 'rage',
+      value: 1,
+      duration: 1,
+      displayOrder: 1,
+    );
+    const bloodthirst = PassiveData(
+      id: 'bloodthirst',
+      nameEn: 'Bloodthirst',
+      nameFr: 'Soif de Sang',
+      descriptionEn:
+          'Playing an Attack arms Lifesteal for 2 turns: 1 HP per damaging '
+          'card, plus 1 per quarter of missing HP.',
+      descriptionFr:
+          'Jouer une Attaque arme le Vol de Vie pendant 2 tours : 1 PV par '
+          'carte de dégâts, plus 1 par quart de PV manquants.',
+      classes: ['berserker'],
+      trigger: RelicTrigger.onAttackPlayed,
+      effectType: 'bloodthirst',
+      value: 1,
+      duration: 2,
+      displayOrder: 2,
+    );
+    const frenzy = PassiveData(
+      id: 'frenzy',
+      nameEn: 'Frenzy',
+      nameFr: 'Frénésie',
+      descriptionEn:
+          'Each enemy killed grants 2 Might for the turn and draws 1 card.',
+      descriptionFr:
+          'Chaque ennemi abattu donne 2 Puissance pour le tour et fait '
+          'piocher 1 carte.',
+      classes: ['berserker'],
+      trigger: RelicTrigger.onEnemyKilled,
+      effectType: 'frenzy',
+      value: 2,
+      duration: 1,
+      draw: 1,
+      displayOrder: 3,
+    );
+
+    // 360 (le plus etroit courant), 390 (le point deja couvert par la tache
+    // 6), 480, 550 (mesure du rapport visuel, 212/255px de debordement) et
+    // 599 (juste sous la bascule `isMobile`) : la largeur seule fait varier
+    // le nombre de colonnes de la grille (`maxCrossAxisExtent: 200`), donc la
+    // largeur de chaque carte et, via `childAspectRatio`, sa hauteur — 390 et
+    // 550 ne se comportent pas pareil.
+    const largeurs = [360.0, 390.0, 480.0, 550.0, 599.0];
+    for (final largeur in largeurs) {
+      testWidgets(
+        'a ${largeur.toInt()}px, Paladin et Berserker ne debordent pas',
+        (WidgetTester tester) async {
+          // Une RenderFlex overflow levee pendant le pump ci-dessous ferait
+          // deja echouer ce test : rendre sans erreur EST l'assertion.
+          await _buildAndReady(
+            tester,
+            heroes: const [paladinReel, berserkerReel],
+            passives: const [
+              regenArmor,
+              fervor,
+              blessing,
+              rage,
+              bloodthirst,
+              frenzy,
+            ],
+            locale: const Locale('fr', ''),
+            physicalSize: Size(largeur, 900),
+          );
+
+          expect(find.text('Le Paladin'), findsOneWidget);
+          expect(find.text('Le Berserker'), findsOneWidget);
+          expect(find.text('RÉGÉNÉRATION D\'ARMURE'), findsOneWidget);
+          expect(find.text('RAGE'), findsOneWidget);
+        },
+      );
+    }
+  });
+
   group('le joueur choisit son passif', () {
     const ward = PassiveData(
       id: 'ward',
