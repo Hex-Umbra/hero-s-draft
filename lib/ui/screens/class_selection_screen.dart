@@ -693,8 +693,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     );
                                   },
                                 ),
-                                if (passives.isNotEmpty) ...[
-                                  SizedBox(height: widget.isMobile ? 6 : 8),
+                                if (passives.isNotEmpty)
+                                  // Aucun espacement ajouté ici : le bloc
+                                  // des passifs tient les siens, pour que
+                                  // l'écart sous le bouton vaille celui qui
+                                  // précède le badge.
                                   ClassPassiveList(
                                     passives: passives,
                                     selectedIndex: index,
@@ -707,7 +710,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                       () => _passiveIndex = i,
                                     ),
                                   ),
-                                ],
                               ],
                             ),
                           ),

@@ -48,6 +48,11 @@ class ClassPassiveList extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // L'écart sous le bouton, posé ici et non par la carte : le bloc
+        // tient tous ses espacements, faute de quoi ils divergent. Ils
+        // valaient 8px décidés par la carte plus 4px de padding sur la
+        // tuile, contre 6px avant le badge — 12 contre 6, mesuré.
+        SizedBox(height: _gap),
         // Repliée, la carte montre quand même le passif retenu en entier :
         // le joueur sait avec quoi il partirait sans avoir à déplier.
         // Déplier n'ajoute que les autres.
@@ -65,7 +70,10 @@ class ClassPassiveList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (isExpanded)
-                for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
+                for (var i = 0; i < passives.length; i++) ...[
+                  if (i > 0) SizedBox(height: _gap),
+                  _buildOption(i, l10n),
+                ]
               else
                 _buildOption(selectedIndex, l10n),
             ],
@@ -74,7 +82,7 @@ class ClassPassiveList extends StatelessWidget {
         // L'étiquette ferme le bloc, elle ne l'ouvre pas : le passif retenu
         // est ce que le joueur vient lire, l'étiquette est l'invitation à
         // en voir davantage.
-        const SizedBox(height: 6),
+        SizedBox(height: _gap),
         // Un badge, et non du texte nu : posée à même le fond, l'étiquette
         // flottait sans appartenir à rien. La pastille reprend la forme des
         // badges de stats du haut de la carte et la teinte de la classe —
@@ -135,6 +143,11 @@ class ClassPassiveList extends StatelessWidget {
     );
   }
 
+  /// L'écart entre chaque élément du bloc : sous le bouton, entre deux
+  /// tuiles, et avant le badge. Une seule valeur, pour que les trois
+  /// espaces se vaillent.
+  double get _gap => isMobile ? 6 : 8;
+
   /// La taille de l'étiquette « Passifs ».
   ///
   /// Doublée par rapport au reste du bloc, puis réduite d'un tiers (deux
@@ -147,9 +160,7 @@ class ClassPassiveList extends StatelessWidget {
     final bool selected = i == selectedIndex;
     final mastery = passive.mastery;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: InkWell(
+    return InkWell(
         // Repliée, la tuile est un affichage et non un choix — le seul
         // passif montré est déjà le retenu. Sans geste à elle, le tap
         // traverse jusqu'à la carte, qui se déplie : taper le passif
@@ -234,7 +245,6 @@ class ClassPassiveList extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

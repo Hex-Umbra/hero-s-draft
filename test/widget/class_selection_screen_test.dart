@@ -457,6 +457,33 @@ Finder _carteDe(String nomDeClasse) => find
 Finder _dansLaCarte(String nomDeClasse, Finder cible) =>
     find.descendant(of: _carteDe(nomDeClasse), matching: cible);
 
+/// Le bouton « Selectionner ».
+///
+/// Il occupe toute la largeur utile de la carte, ce qui en fait la
+/// reference la plus sure pour juger un centrage ou un espacement : nul
+/// besoin de deviner les marges de la carte.
+///
+/// `find.ancestor(...).first` remonte a l'ancetre le PLUS PROCHE. Composer
+/// avec `find.descendant` inverserait cet ordre — le premier descendant de
+/// la carte est le plus exterieur — et rendrait ces trois reperes faux, ce
+/// qui se voit a des ecarts negatifs.
+Finder _leBouton() => find
+    .ancestor(
+      of: find.text('Select'),
+      matching: find.byType(AnimatedContainer),
+    )
+    .first;
+
+/// La pastille « Passifs » au bas de la carte.
+Finder _leBadge() => find
+    .ancestor(of: find.text('Passives'), matching: find.byType(Container))
+    .first;
+
+/// La tuile entiere du passif nomme, bordure comprise.
+Finder _tuileDe(String nomDePassif) => find
+    .ancestor(of: find.text(nomDePassif), matching: find.byType(Container))
+    .first;
+
 /// Bascule le depliage des passifs d'une carte, sur les deux plateformes.
 Future<void> _appuyerSurLaCarte(
   WidgetTester tester,
@@ -1208,6 +1235,54 @@ void main() {
       expect(
         tester.widget<Text>(find.text('Passives')).style!.color,
         ClassIdentity.colorOf(paladin),
+      );
+    });
+
+    testWidgets('le badge Passifs est centre dans la carte', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      // Le bouton occupe toute la largeur utile de la carte : son centre
+      // EST le centre de la carte, sans avoir a deviner ses marges.
+      final double centreDeLaCarte = tester.getCenter(_leBouton()).dx;
+
+      expect(
+        tester.getCenter(_leBadge()).dx,
+        moreOrLessEquals(centreDeLaCarte, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('les espaces autour du badge sont egaux', (
+      WidgetTester tester,
+    ) async {
+      // Le bloc des passifs empilait trois espacements decides chacun dans
+      // son coin — 8px pose par la carte, 4px de padding sur la tuile, 6px
+      // avant le badge — ce qui donnait 12px au-dessus de la tuile contre
+      // 6px au-dessus du badge. Un seul ecart, partout.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      final double sousLeBouton =
+          tester.getRect(_tuileDe('Ward')).top -
+          tester.getRect(_leBouton()).bottom;
+      final double sousLaTuile =
+          tester.getRect(_leBadge()).top -
+          tester.getRect(_tuileDe('Ward')).bottom;
+
+      expect(
+        sousLaTuile,
+        moreOrLessEquals(sousLeBouton, epsilon: 0.5),
+        reason:
+            'bouton -> tuile vaut $sousLeBouton, tuile -> badge vaut '
+            '$sousLaTuile',
       );
     });
 
