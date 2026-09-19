@@ -17,69 +17,23 @@ import '../widgets/page_header.dart';
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({super.key});
 
-  // Hauteur de cellule desktop (>=600px). Le desktop reste une grille — la
-  // comparaison cote a cote entre classes est le point de cette mise en page
-  // — mais sa hauteur ne se deduit plus de la largeur de carte
-  // (`childAspectRatio`), qui produisait un motif en dents de scie :
-  // `SliverGridDelegateWithMaxCrossAxisExtent` fait bondir son nombre de
-  // colonnes par paliers quand le viewport grandit, donc la largeur de
-  // carte — et la hauteur qu'un `childAspectRatio` fixe en deduisait —
-  // n'est pas monotone (defaut 1, 2026-09-19).
-  //
-  // Mesuree aux planchers reels de chaque palier de colonnes — pas aux
-  // largeurs d'ecran rondes que le round 1 avait echantillonnees par erreur
-  // (1000/1400, qui tombent *dans* les paliers 3 et 4 colonnes, pas a leur
-  // plancher). Pour `maxCrossAxisExtent: 400, crossAxisSpacing: 20`, le
-  // plancher du palier a `n` colonnes est le premier viewport ou
-  // `ceil((viewport-40)/420) == n` : 600px (le plancher desktop lui-meme,
-  // sous `isMobile`) -> 2 colonnes -> carte 270px ; **881px -> 3 colonnes
-  // -> carte 267px** (plus etroite que 600px) ; 1000px -> 3 colonnes ->
-  // carte 307px ; **1301px -> 4 colonnes -> carte 300px** ; 1400px -> 4
-  // colonnes -> carte 325px. La largeur de carte remonte vers 400px a
-  // mesure que le nombre de colonnes croit (`400*(n-1)/n`), donc rien de
-  // pire n'existe au-dela de ces 5 points — l'inquietude round-1 sur les
-  // tres larges viewports (ultrawide) est sans objet.
-  //
-  // Les six fixtures de passifs reelles portent desormais leur `mastery`
-  // (les neuf passifs livres en portent tous un ; les fixtures du round 1
-  // n'en avaient aucun, donc elles omettaient tout un bloc de texte —
-  // "Par point de Maîtrise : ..." plus un espaceur de 3px — que la carte
-  // reelle rend des que `passive.mastery != null`). Remesuree avec ce bloc
-  // present, aux 5 largeurs ci-dessus, sur le Paladin et le Berserker (3
-  // passifs chacun) :
-  //
-  // | largeur | carte | pire hauteur de contenu (Berserker) |
-  // |---:|---:|---:|
-  // | 600  | 270.0 | 725.5 |
-  // | 881  | 267.0 | 725.5 |
-  // | 1000 | 306.7 | 663.5 |
-  // | 1301 | 300.3 | 663.5 |
-  // | 1400 | 325.0 | 617.5 |
-  //
-  // Pire point : 725.5px (600px et 881px, a egalite). Recherche binaire sur
-  // `_kDesktopCardHeight` : 758 deborde de 2px, 760 n'y deborde plus —
-  // plancher reel **760**, pas les 709px du round 1 (fixtures sans
-  // `mastery`, donc sous-mesurees d'un bloc de texte entier).
-  //
-  // A `TextScaler.linear(1.3)` (defaut 4, la mise a l'echelle systeme —
-  // seul axe ou l'app reelle peut rendre plus grand que son `fontSize`
-  // nominal), la meme mesure aux 5 largeurs donne un pire point de 930.0px
-  // (Paladin, 600/881px). Recherche binaire : 950 deborde de 2px, 952 n'y
-  // deborde plus — plancher reel a 1.3x : **952**.
-  //
-  // `_kDesktopCardHeight = 1000` : au-dessus des DEUX planchers (760 a
-  // l'echelle par defaut, 952 a 1.3x), avec ~48px (~5%) de marge sur le
-  // plus haut des deux. Cout assume et signale au proprietaire du lot
-  // (voir le rapport, section "textScaler sur desktop") : a l'echelle par
-  // defaut, ce choix laisse ~240px d'espace vide en bas de chaque carte
-  // desktop (1000 - 760) pour rester correct a 1.3x — nettement plus que
-  // la marge de ~5-6% prise partout ailleurs dans ce lot. Le choix inverse
-  // (ne couvrir que 760, laisser deborder a 1.3x) aurait laisse un
-  // utilisateur avec un texte systeme agrandi face a un `RenderFlex
-  // overflowed` sur desktop ; celui-ci a ete prefere, mais reste un
-  // arbitrage de contenu/densite qui merite une decision explicite du
-  // proprietaire plutot qu'un choix silencieux.
-  static const double _kDesktopCardHeight = 1000;
+  // Largeur de carte visee et espacement desktop — les memes valeurs que
+  // l'ancien `SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent:
+  // 400, crossAxisSpacing: 20)`, pour ne pas changer la densite visuelle
+  // deja validee (voir les captures du rapport). Round 3 (2026-09-19) :
+  // il n'y a plus de constante de HAUTEUR. Le nombre de colonnes reste
+  // calcule a partir de la largeur (`ceil(largeur dispo / 420)`, motif en
+  // dents de scie inclus — une carte peut toujours tomber a 267px comme
+  // avant), mais chaque *rangee* se dimensionne desormais a son propre
+  // contenu via `IntrinsicHeight` au lieu de partager une hauteur fixe
+  // devinee pour le pire cas. Une carte plus etroite ne fait plus
+  // deborder personne, elle rend juste sa rangee plus haute — c'est la
+  // grille elle-meme qui absorbe la variation, plus une constante que
+  // quelqu'un doit remesurer a la main. Cela vaut a toute echelle de
+  // texte (defaut ou `textScaler` agrandi) sans les deux constantes que
+  // les rounds 1 et 2 avaient du calculer pour chacune separement.
+  static const double _kDesktopCardTargetWidth = 400;
+  static const double _kDesktopSpacing = 20;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -123,11 +77,9 @@ class ClassSelectionScreen extends ConsumerWidget {
         // (defaut 2, 2026-09-19). Une liste rend l'overflow vertical
         // structurellement impossible : l'ecran defile, la carte ne
         // deborde jamais. Desktop : grille conservee (comparer les classes
-        // cote a cote est le point de cette mise en page), mais sa hauteur
-        // de cellule est desormais une mesure du pire contenu reel au point
-        // le plus etroit du motif en dents de scie de
-        // `SliverGridDelegateWithMaxCrossAxisExtent`, plus une marge — pas
-        // une valeur deduite de la largeur (defaut 1, 2026-09-19).
+        // cote a cote est le point de cette mise en page), mais chaque
+        // rangee se dimensionne desormais elle aussi a son propre contenu
+        // — voir `_buildDesktopGrid` (defaut 1, round 3, 2026-09-19).
         child: isMobile
             ? ListView.separated(
                 itemCount: classes.length,
@@ -139,21 +91,89 @@ class ClassSelectionScreen extends ConsumerWidget {
                   isMobile: isMobile,
                 ),
               )
-            : GridView.builder(
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 400,
-                  mainAxisExtent: _kDesktopCardHeight,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                ),
-                itemCount: classes.length,
-                itemBuilder: (context, index) => _InteractiveClassCard(
-                  playerClass: classes[index],
-                  ref: ref,
-                  isMobile: isMobile,
-                ),
-              ),
+            : _buildDesktopGrid(ref, classes),
       ),
+    );
+  }
+
+  // Grille desktop : la comparaison cote a cote entre classes est le point
+  // de cette mise en page (ruling explicite), donc une grille est
+  // conservee plutot qu'une liste. Mais `GridView`/`SliverGrid` imposent la
+  // geometrie (donc la hauteur) de chaque cellule *avant* que ses enfants
+  // ne soient mis en page — ils ne peuvent structurellement pas laisser le
+  // contenu decider de sa propre hauteur, d'ou la constante qu'il fallait
+  // remesurer a chaque round (750 -> 1000 -> ...). Ici, la grille est
+  // reconstruite a la main comme une pile de rangees (`ListView.separated`
+  // de rangees, exactement comme la liste mobile juste au-dessus), chaque
+  // rangee enveloppee dans `IntrinsicHeight` : elle se dimensionne a la
+  // plus haute carte qu'elle contient, mesuree pour de vrai a chaque
+  // frame plutot que devinee une fois pour toutes. Aucune carte ne peut
+  // plus deborder (la rangee est toujours aussi haute qu'il le faut), et
+  // aucune carte ne gaspille plus d'espace que ce que son propre contenu
+  // demande (pas de marge de securite a calculer).
+  //
+  // `IntrinsicHeight` doit pouvoir traverser tout l'arbre de la carte pour
+  // mesurer sa hauteur naturelle — un `LayoutBuilder` sur ce chemin leve
+  // "LayoutBuilder does not support returning intrinsic dimensions"
+  // (verifie directement). `_InteractiveClassCardState` n'en a plus : son
+  // `LayoutBuilder` (qui ne servait qu'a lire la taille de la carte pour
+  // l'effet de tilt et le halo de survol) est remplace par `_cardSize`, qui
+  // lit la taille reellement rendue via une `GlobalKey` — meme mecanisme
+  // que le repli mobile du round 2, etendu pour servir aussi ce chemin.
+  //
+  // Nombre de colonnes et largeur de carte : meme formule que l'ancien
+  // `SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400,
+  // crossAxisSpacing: 20)` — `ceil(largeurDisponible / 420)` colonnes,
+  // largeur de carte = largeur disponible partagee entre elles. La densite
+  // visuelle (deja validee par le passage visuel humain) ne change pas ;
+  // ce qui change est que le motif en dents de scie qu'elle produit
+  // (une carte a 267px juste apres un palier de colonnes) ne peut plus
+  // faire deborder personne, puisque la hauteur suit desormais le contenu
+  // rangee par rangee plutot qu'une constante partagee par toute la grille.
+  Widget _buildDesktopGrid(WidgetRef ref, List<HeroData> classes) {
+    if (classes.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double availableWidth = constraints.maxWidth;
+        final int columns = (availableWidth / (_kDesktopCardTargetWidth + _kDesktopSpacing))
+            .ceil()
+            .clamp(1, classes.length);
+        final double cardWidth =
+            (availableWidth - (columns - 1) * _kDesktopSpacing) / columns;
+
+        final rows = <List<HeroData>>[
+          for (var i = 0; i < classes.length; i += columns)
+            classes.sublist(i, (i + columns).clamp(0, classes.length)),
+        ];
+
+        return ListView.separated(
+          itemCount: rows.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: _kDesktopSpacing),
+          itemBuilder: (context, rowIndex) {
+            final row = rows[rowIndex];
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < row.length; i++) ...[
+                    if (i > 0) const SizedBox(width: _kDesktopSpacing),
+                    SizedBox(
+                      width: cardWidth,
+                      child: _InteractiveClassCard(
+                        playerClass: row[i],
+                        ref: ref,
+                        isMobile: false,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -180,24 +200,24 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
   double _tiltY = 0.0;
   Offset? _mousePosition;
 
-  // Ancre le conteneur rendu de la carte : sur le chemin mobile
-  // (`ListView`, hauteur non bornee), `constraints.maxHeight` vaut
-  // `Infinity` — sans repli, le tilt et le halo de survol degeneraient (Y
-  // fige a une valeur constante, halo colle au bord haut). Sans
-  // consequence en pratique (survol a la souris sous 600px seulement), mais
-  // c'est une regression introduite par le passage au `ListView` ; `_resolvedCardSize`
-  // retombe sur la taille reellement rendue au frame precedent.
+  // Ancre le conteneur rendu de la carte, pour le tilt et le halo de
+  // survol. Round 3 (2026-09-19) a retire le `LayoutBuilder` qui donnait
+  // autrefois `cardSize` : `IntrinsicHeight` (desktop) ne peut pas
+  // traverser un `LayoutBuilder` ("LayoutBuilder does not support
+  // returning intrinsic dimensions", verifie par un sondage direct) et la
+  // carte doit desormais se dimensionner a son contenu sur les deux
+  // chemins. `_cardSize` retombe sur la taille reellement rendue au frame
+  // precedent — le mobile (`ListView`, hauteur non bornee) en avait deja
+  // besoin depuis le round 2 ; le desktop (auparavant toujours borne par
+  // le delegate de grille) en depend maintenant aussi.
   final GlobalKey _cardKey = GlobalKey();
 
-  Size _resolvedCardSize(BoxConstraints constraints) {
-    if (constraints.hasBoundedHeight) {
-      return Size(constraints.maxWidth, constraints.maxHeight);
-    }
+  Size get _cardSize {
     final renderBox = _cardKey.currentContext?.findRenderObject();
     if (renderBox is RenderBox && renderBox.hasSize) {
       return renderBox.size;
     }
-    return Size(constraints.maxWidth, constraints.maxHeight);
+    return Size.zero;
   }
 
   /// Le passif retenu, par son rang dans `availablePassivesFor` — le point
@@ -228,7 +248,8 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     super.dispose();
   }
 
-  void _onPointerMove(PointerEvent event, Size cardSize) {
+  void _onPointerMove(PointerEvent event) {
+    final cardSize = _cardSize;
     if (cardSize.width == 0 || cardSize.height == 0) return;
 
     // Relative position from center (-0.5 to 0.5)
@@ -326,16 +347,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final String? masteryPerPoint = passive?.mastery?.describe(locale, 1);
     final l10n = AppLocalizations.of(context)!;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardSize = _resolvedCardSize(constraints);
-
-        return MouseRegion(
+    return MouseRegion(
           onEnter: (_) => _onPointerEnter(),
           onExit: (_) => _onPointerExit(),
           child: Listener(
-            onPointerMove: (e) => _onPointerMove(e, cardSize),
-            onPointerHover: (e) => _onPointerMove(e, cardSize),
+            onPointerMove: (e) => _onPointerMove(e),
+            onPointerHover: (e) => _onPointerMove(e),
             child: TweenAnimationBuilder<double>(
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOut,
@@ -386,10 +403,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   decoration: BoxDecoration(
                                     gradient: RadialGradient(
                                       center: Alignment(
-                                        (_mousePosition!.dx / cardSize.width) *
+                                        (_mousePosition!.dx / _cardSize.width) *
                                                 2 -
                                             1,
-                                        (_mousePosition!.dy / cardSize.height) *
+                                        (_mousePosition!.dy / _cardSize.height) *
                                                 2 -
                                             1,
                                       ),
@@ -411,9 +428,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                               // vit desormais dans un `ListView` a hauteur
                               // non bornee (`max`, la valeur par defaut,
                               // y leverait une erreur de layout) ; sans
-                              // consequence en desktop, ou la grille donne
-                              // toujours une contrainte de hauteur fixe
-                              // (defaut 1 et 2, 2026-09-19).
+                              // consequence en desktop, ou chaque rangee de
+                              // la grille donne toujours une contrainte de
+                              // hauteur bornee (tendue, calculee par
+                              // `IntrinsicHeight` a partir du contenu reel
+                              // de la rangee) (defaut 1 et 2, 2026-09-19).
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(height: widget.isMobile ? 8 : 10),
@@ -618,11 +637,11 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                 // Description text. Plain child, pas
                                 // `Expanded`/`SingleChildScrollView` : la
                                 // carte se dimensionne desormais a son
-                                // contenu des deux cotes (`ListView` mobile
-                                // non borne, `mainAxisExtent` desktop mesure
-                                // pour l'accueillir) — rien ne reste a
+                                // contenu des deux cotes — `ListView`
+                                // mobile non borne, `IntrinsicHeight` par
+                                // rangee en desktop — rien ne reste a
                                 // faire tenir de force dans un espace fixe
-                                // (defaut 1 et 2, 2026-09-19).
+                                // ou devine (defaut 1 et 2, 2026-09-19).
                                 Text(
                                   playerClass.getDescription(locale),
                                   style: TextStyle(
@@ -662,8 +681,6 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildStatBadge(Widget iconWidget, String value) {
