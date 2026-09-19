@@ -128,21 +128,28 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
   // contenu decider de sa propre hauteur, d'ou la constante qu'il fallait
   // remesurer a chaque round (750 -> 1000 -> ...). Ici, la grille est
   // reconstruite a la main comme une pile de rangees (`ListView.separated`
-  // de rangees, exactement comme la liste mobile juste au-dessus), chaque
-  // rangee enveloppee dans `IntrinsicHeight` : elle se dimensionne a la
-  // plus haute carte qu'elle contient, mesuree pour de vrai a chaque
-  // frame plutot que devinee une fois pour toutes. Aucune carte ne peut
-  // plus deborder (la rangee est toujours aussi haute qu'il le faut), et
-  // aucune carte ne gaspille plus d'espace que ce que son propre contenu
-  // demande (pas de marge de securite a calculer).
+  // de rangees, exactement comme la liste mobile juste au-dessus). Chaque
+  // rangee vit donc dans un `ListView` : sa hauteur disponible est
+  // illimitee, et un `Row` y prend naturellement la hauteur de son plus
+  // grand enfant, mesuree apres la mise en page et non devinee. Aucune
+  // carte ne peut deborder, et aucune ne gaspille plus d'espace que ce que
+  // son propre contenu demande.
   //
-  // `IntrinsicHeight` doit pouvoir traverser tout l'arbre de la carte pour
-  // mesurer sa hauteur naturelle — un `LayoutBuilder` sur ce chemin leve
-  // "LayoutBuilder does not support returning intrinsic dimensions"
-  // (verifie directement). `_InteractiveClassCardState` n'en a plus : son
-  // `LayoutBuilder` (qui ne servait qu'a lire la taille de la carte pour
-  // l'effet de tilt et le halo de survol) est remplace par `_cardSize`, qui
-  // lit la taille reellement rendue via une `GlobalKey`.
+  // La rangee a porte un `IntrinsicHeight` jusqu'au 2026-09-19, le temps
+  // que `CrossAxisAlignment.stretch` ait besoin d'une hauteur definie a
+  // laquelle etirer les cartes. Deux raisons l'ont fait disparaitre avec
+  // `stretch` : il n'avait plus d'utilite, et il repondait la hauteur
+  // *cible* du contenu plutot que celle en cours de rendu — pendant le
+  // repli anime d'une carte, la rangee retrecissait d'un coup alors que la
+  // carte retrecissait progressivement, d'ou un debordement vertical de
+  // 68px le temps de l'animation.
+  //
+  // Reste de cette epoque, et toujours vrai : `_InteractiveClassCardState`
+  // n'a pas de `LayoutBuilder` sur le chemin de la mesure — il leverait
+  // "LayoutBuilder does not support returning intrinsic dimensions" des que
+  // quelque chose interrogerait de nouveau les dimensions intrinseques de
+  // la carte. La taille de la carte se lit via `_cardSize`, qui interroge
+  // le rendu reel par une `GlobalKey`.
   //
   // Nombre de colonnes : meme formule que l'ancien
   // `SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400,
@@ -215,8 +222,16 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
               const SizedBox(height: _kDesktopSpacing),
           itemBuilder: (context, rowIndex) {
             final row = rows[rowIndex];
-            return IntrinsicHeight(
-              child: Row(
+            // Plus d'`IntrinsicHeight` : la rangee vit dans un `ListView`,
+            // donc sa hauteur disponible est illimitee et un `Row` y prend
+            // deja la hauteur de son plus grand enfant, mesuree apres coup.
+            // `IntrinsicHeight` ne servait qu'a donner une hauteur definie
+            // a `CrossAxisAlignment.stretch`, qui n'est plus la — et il
+            // repondait la hauteur *cible* du contenu, pas celle en cours
+            // de rendu : pendant le repli, la rangee retrecissait d'un coup
+            // alors que la carte retrecissait progressivement, d'ou un
+            // debordement vertical de 68px le temps de l'animation.
+            return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 // `start`, et non `stretch` : la rangee prend bien la
                 // hauteur de sa carte la plus haute, mais elle n'y etire pas
@@ -237,7 +252,6 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
                     ),
                   ],
                 ],
-              ),
             );
           },
         );

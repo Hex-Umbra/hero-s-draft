@@ -51,48 +51,96 @@ class ClassPassiveList extends StatelessWidget {
         // Repliée, la carte montre quand même le passif retenu en entier :
         // le joueur sait avec quoi il partirait sans avoir à déplier.
         // Déplier n'ajoute que les autres.
-        if (isExpanded)
-          for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
-        else
-          _buildOption(selectedIndex, l10n),
+        //
+        // `AnimatedSize` fait grandir la carte au lieu de la faire sauter :
+        // sans lui, l'écran a l'air de s'être reconstruit plutôt que la
+        // carte de s'être ouverte. Il ne mesure que ce bloc-ci, pas la
+        // carte entière, donc rien d'autre n'est animé au passage.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isExpanded)
+                for (var i = 0; i < passives.length; i++) _buildOption(i, l10n)
+              else
+                _buildOption(selectedIndex, l10n),
+            ],
+          ),
+        ),
         // L'étiquette ferme le bloc, elle ne l'ouvre pas : le passif retenu
         // est ce que le joueur vient lire, l'étiquette est l'invitation à
         // en voir davantage.
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                // Elle ne nomme pas le passif : la tuile au-dessus le fait
-                // déjà, repliée comme dépliée.
-                l10n.passivesLabel,
-                style: TextStyle(
-                  fontSize: _labelFontSize,
-                  color: Colors.cyanAccent.withValues(alpha: 0.8),
-                  letterSpacing: 0.5,
-                ),
-                textAlign: TextAlign.center,
+        const SizedBox(height: 6),
+        // Un badge, et non du texte nu : posée à même le fond, l'étiquette
+        // flottait sans appartenir à rien. La pastille reprend la forme des
+        // badges de stats du haut de la carte et la teinte de la classe —
+        // c'était le seul élément de la carte à rester cyan quelle que soit
+        // la classe, ce qui suffisait à le détacher du reste.
+        Center(
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 10 : 12,
+              vertical: isMobile ? 4 : 5,
+            ),
+            decoration: BoxDecoration(
+              color: classColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: classColor.withValues(alpha: 0.45),
+                width: 1,
               ),
             ),
-            Icon(
-              isExpanded ? Icons.expand_less : Icons.expand_more,
-              // Le chevron suit la taille du texte : c'est la même
-              // affordance, les désaccorder la casserait en deux.
-              size: _labelFontSize + 4,
-              color: Colors.cyanAccent.withValues(alpha: 0.8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    // Elle ne nomme pas le passif : la tuile au-dessus le
+                    // fait déjà, repliée comme dépliée.
+                    l10n.passivesLabel,
+                    style: TextStyle(
+                      fontSize: _labelFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: classColor,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(width: isMobile ? 3 : 4),
+                // Une seule icône qui pivote, plutôt que deux glyphes
+                // échangés : le chevron accompagne le dépliage au lieu de
+                // sauter d'un état à l'autre.
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    Icons.expand_more,
+                    // Le chevron suit la taille du texte : c'est la même
+                    // affordance, les désaccorder la casserait en deux.
+                    size: _labelFontSize + 3,
+                    color: classColor,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
   }
 
-  /// La taille de l'étiquette « Passifs », doublée par rapport au reste du
-  /// bloc (demande du propriétaire) : c'est elle qui appelle au dépliage, et
-  /// elle se lisait comme une légende de bas de page.
-  double get _labelFontSize => isMobile ? 21 : 23;
+  /// La taille de l'étiquette « Passifs ».
+  ///
+  /// Doublée par rapport au reste du bloc, puis réduite d'un tiers (deux
+  /// demandes successives du propriétaire) : elle reste l'élément le plus
+  /// lisible du bloc sans redevenir un titre.
+  double get _labelFontSize => isMobile ? 14 : 15.5;
 
   Widget _buildOption(int i, AppLocalizations l10n) {
     final passive = passives[i];

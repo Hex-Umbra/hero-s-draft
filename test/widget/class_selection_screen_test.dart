@@ -1170,13 +1170,13 @@ void main() {
       );
     });
 
-    testWidgets('l etiquette Passifs domine le texte du passif', (
+    testWidgets('l etiquette Passifs reste au dessus du texte du passif', (
       WidgetTester tester,
     ) async {
-      // Demande explicite du proprietaire : l'etiquette est l'appel au
-      // depliage, elle doit se voir. Une relation plutot qu'un nombre —
-      // ce qui compte est qu'elle reste nettement plus grande que le nom
-      // du passif, pas qu'elle vaille exactement 23.
+      // Elle a ete doublee, puis reduite d'un tiers : elle doit rester
+      // l'element le plus lisible du bloc sans redevenir un titre. Une
+      // relation plutot qu'un nombre — ce qui compte est l'ordre, pas la
+      // valeur exacte, qu'un ajustement futur rendrait fausse pour rien.
       await _buildAndReady(
         tester,
         heroes: const [paladin],
@@ -1188,7 +1188,57 @@ void main() {
       final double nomDuPassif =
           tester.widget<Text>(find.text('Ward')).style!.fontSize!;
 
-      expect(etiquette, greaterThan(nomDuPassif * 1.5));
+      expect(etiquette, greaterThan(nomDuPassif));
+      expect(etiquette, lessThan(nomDuPassif * 1.5));
+    });
+
+    testWidgets('l etiquette porte la couleur de sa classe', (
+      WidgetTester tester,
+    ) async {
+      // Le badge etait cyan sur les trois cartes — le seul element a ne pas
+      // suivre l'identite de la classe, ce qui le detachait du reste. La
+      // couleur est lue dans la donnee, jamais deduite de l'identifiant
+      // (ADR-090).
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      expect(
+        tester.widget<Text>(find.text('Passives')).style!.color,
+        ClassIdentity.colorOf(paladin),
+      );
+    });
+
+    testWidgets('le depliage est progressif, pas instantane', (
+      WidgetTester tester,
+    ) async {
+      // Une carte qui saute d'un coup a sa taille depliee donne
+      // l'impression que l'ecran s'est reconstruit, pas que la carte s'est
+      // ouverte. La hauteur doit passer par des valeurs intermediaires.
+      await _buildAndReady(
+        tester,
+        heroes: const [paladin],
+        passives: const [ward, zeal],
+      );
+
+      final double repliee = tester.getSize(_carteDe('Paladin')).height;
+
+      await tester.tap(find.text('Paladin'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 40));
+      final double pendant = tester.getSize(_carteDe('Paladin')).height;
+
+      await tester.pump(const Duration(milliseconds: 600));
+      final double depliee = tester.getSize(_carteDe('Paladin')).height;
+
+      expect(depliee, greaterThan(repliee));
+      expect(
+        pendant,
+        lessThan(depliee),
+        reason: 'la carte a atteint sa taille finale des la premiere frame',
+      );
     });
 
     testWidgets('repliee, toucher le passif montre deplie la carte', (
