@@ -53,11 +53,32 @@ poignée « DEBUG » au bord gauche ouvre un panneau.
 | Carte | `map_screen.dart` — `DebugDrawer(inCombat: false)` | Héros, Run, Deck, Reliques |
 | Combat | `game_screen.dart` — `DebugDrawer(inCombat: true)`, masqué à la mort ou pendant le draft | Combat **seul**, sans barre d'onglets |
 
-Contenu des onglets : **Héros** — PV/mana max, attaque, chance, critique, niveau, XP, « Gagner un
-niveau » ; **Run** — or, acte (sans régénérer la carte), niveau, drafts en attente, cartes par
+Contenu des onglets : **Héros** — PV/mana max, Puissance **et ses cibles**, chance, critique,
+niveau, XP, « Gagner un niveau », plus l'**identité de la run en lecture seule** (voir 18.3 bis) ;
+**Run** — or, acte (sans régénérer la carte), niveau, drafts en attente, cartes par
 tour, forges bonus, « Acte suivant » ; **Deck** — piocher 1, défausser la main, ajouter/retirer
 une carte ; **Reliques** — ajouter/retirer ; **Combat** — PV/mana/armure du héros, soin et mana
 complets, PV par ennemi ou « 0 PV », tous les ennemis à 0, gagner/perdre, sauter la phase ennemie.
+
+### 18.3 bis. L'identité de la run dans l'onglet Héros
+
+Trois lectures et un réglage, posés par
+[ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md) (D6) :
+
+- **Réglable** — les cibles de la Puissance, une puce par valeur de `MightTarget`, **générée** et
+  non écrite à la main. **La dernière ne peut pas être retirée** : `HeroData.fromJson` refuse une
+  liste vide comme une faute de donnée, et un outil de debug ne doit pas produire un état que la
+  couche de données refuse de relire. Pour une Puissance qui ne renforce rien, le réglage prévu
+  est le champ « Puissance » à 0.
+- **En lecture seule** — la classe, ses règles de stat, son passif actif. Ils viennent du
+  `class.json` et du choix de passif ; les écraser produirait une run qu'aucune sauvegarde ne
+  saurait relire, `RunState.statRules` étant relu de la classe et non sérialisé.
+
+> [!NOTE]
+> **Les règles de stat s'affichent dans le vocabulaire du fichier**, pas dans la phrase du joueur :
+> `armor convert status:might, 1 tour(s)` par `StatRule.toString()`. Le développeur édite la
+> donnée, il doit la lire telle qu'il l'écrira. `StatRuleLabel.describe` reste la phrase du joueur
+> (écran de sélection, tutoriel), et passe par les ARB — **aucun libellé du tiroir n'y passe**.
 
 ### 18.4. Exclusion du build release
 
