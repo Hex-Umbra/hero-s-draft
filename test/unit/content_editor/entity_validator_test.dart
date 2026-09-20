@@ -800,4 +800,57 @@ void main() {
       );
     });
   });
+
+  group('pendingIds — ce que la meme transaction va ecrire', () {
+    /// Un passif qui vise une classe, valide ou pendante selon le registre.
+    EntityDraft passifVisant(String classeId) {
+      Directory('$root/assets/data/passives').createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+      final template = jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template['classes'] = [classeId];
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'parieur',
+        bilingual: const {
+          'name_fr': 'Pari',
+          'name_en': 'Wager',
+          'description_fr': 'x',
+          'description_en': 'x',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('un passif qui vise une classe inconnue est refuse', () {
+      final validator = EntityValidator(
+        fs: fs,
+        rootPath: root,
+        registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+      );
+
+      final faults = validator.validate(passifVisant('parieur'));
+
+      expect(faults.where((f) => f.field == 'classes'), hasLength(1));
+    });
+
+    test('la meme classe, annoncee pendante, passe', () {
+      // Le trou que `_signatureCards` decrit depuis P-30 : la classe que la
+      // recette vient d'ecrire n'est pas dans le registre charge au
+      // demarrage, et un controle par reference refuserait la sortie meme de
+      // l'outil.
+      final validator = EntityValidator(
+        fs: fs,
+        rootPath: root,
+        registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+        pendingIds: const {
+          EntityCategory.heroClass: {'parieur'},
+        },
+      );
+
+      final faults = validator.validate(passifVisant('parieur'));
+
+      expect(faults.where((f) => f.field == 'classes'), isEmpty,
+          reason: faults.join(' ; '));
+    });
+  });
 }

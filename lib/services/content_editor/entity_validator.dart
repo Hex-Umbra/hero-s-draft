@@ -38,6 +38,7 @@ class EntityValidator {
     required this.rootPath,
     this.registry,
     this.imports = const [],
+    this.pendingIds = const {},
   });
 
   final ContentFileSystem fs;
@@ -50,6 +51,16 @@ class EntityValidator {
   /// Les fichiers choisis, en attente d'« Écrire » : un son importe est
   /// declare pour cette validation, comme il le sera a l'ecriture.
   final List<PendingImport> imports;
+
+  /// Les identifiants que **la même transaction** va écrire, et que le
+  /// registre chargé au démarrage ne connaît donc pas encore.
+  ///
+  /// Une recette de classe écrit la classe, puis un passif qui la nomme : au
+  /// moment où ce passif est jugé, la classe n'existe ni dans le registre ni
+  /// sur le disque. `_signatureCards` contournait le problème en n'étant pas
+  /// un contrôle par référence (voir sa documentation) ; le passif, lui, en
+  /// est un. C'est ce seam, nommé.
+  final Map<EntityCategory, Set<String>> pendingIds;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
   static final RegExp _hexColorPattern = RegExp(r'^#[0-9a-fA-F]{6}$');
@@ -125,7 +136,15 @@ class EntityValidator {
       // Le controle disque ne voit qu'un chemin. Le registre voit tous ceux
       // d'une categorie — dont le cas d'une carte neutre homonyme d'une carte
       // de classe, que le chargeur rejette comme un doublon.
-      if (_idsOf(draft.descriptor.category)?.contains(draft.id) ?? false) {
+      //
+      // `_registryIdsOf`, et non `_idsOf` : cette derniere unit les
+      // identifiants en attente, et une recette de classe annonce son propre
+      // identifiant comme pendant pour que le passif qui la nomme ne soit pas
+      // refuse (famille 6). L'unicite, elle, ne doit jamais se comparer a
+      // elle-meme — sans quoi la classe qu'une recette s'apprete a ecrire se
+      // trouverait deja « portee par une entite de cette categorie ».
+      if (_registryIdsOf(draft.descriptor.category)?.contains(draft.id) ??
+          false) {
         faults.add(
           ValidationFault(
             'l\'identifiant "${draft.id}" est déjà porté par une entité de '
@@ -534,6 +553,13 @@ class EntityValidator {
   }
 
   Set<String>? _idsOf(EntityCategory category) {
+    final known = _registryIdsOf(category);
+    final pending = pendingIds[category];
+    if (known == null) return pending == null || pending.isEmpty ? null : pending;
+    return pending == null ? known : {...known, ...pending};
+  }
+
+  Set<String>? _registryIdsOf(EntityCategory category) {
     final r = registry;
     if (r == null) return null;
     switch (category) {

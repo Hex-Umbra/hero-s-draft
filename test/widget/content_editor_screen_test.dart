@@ -11,6 +11,7 @@ import 'package:roguelike_card_game/services/content_editor/content_editor_provi
 import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
+import 'package:roguelike_card_game/services/content_editor/placeholder_filler.dart';
 import 'package:roguelike_card_game/ui/screens/content_editor_screen.dart';
 import 'package:roguelike_card_game/ui/theme/app_colors.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
@@ -37,6 +38,11 @@ void main() {
     sandbox = Directory.systemTemp.createTempSync('editor_screen_');
     root = IoContentFileSystem.toSlashes(sandbox.path);
     Directory('$root/assets/data/relics').createSync(recursive: true);
+    // Une classe creee ecrit desormais son passif de depart dans la meme
+    // transaction (tache 2) : le dossier plat doit deja exister, comme celui
+    // des reliques ci-dessus — l'ecrivain ne cree que les dossiers de classe
+    // et d'ennemi, jamais ceux d'une categorie a plat.
+    Directory('$root/assets/data/passives').createSync(recursive: true);
     File('$root/pubspec.yaml').writeAsStringSync('name: sandbox\n');
   });
 
@@ -492,7 +498,10 @@ void main() {
     await tester.pump();
 
     expect(inIssue(find.textContaining('minuscules')), findsOneWidget);
-    expect(Directory('$root/assets/data').listSync(), hasLength(1));
+    // `relics` et `passives` : les deux dossiers a plat que le setUp
+    // preseme, le second depuis que la recette de classe ecrit un passif de
+    // depart (tache 2) — aucun n'a bouge, rien d'autre n'est apparu.
+    expect(Directory('$root/assets/data').listSync(), hasLength(2));
   });
 
   testWidgets('un brouillon fautif est aussi refuse par Ecrire, sans rien ecrire',
@@ -632,6 +641,42 @@ void main() {
     );
     // L'emplacement de l'icone, garde par defaut, est ecrit.
     expect(classJson['iconPath'], 'assets/data/classes/gambler/icon.png');
+  });
+
+  testWidgets('creer une classe ecrit aussi son passif de depart',
+      (tester) async {
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Classe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    // Sans une seule carte de signature : le passif est garanti par la
+    // recette elle-meme, pas par ce que l'auteur pense a saisir.
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
+    await tester.tap(find.text('Écrire'));
+    await tester.pumpAndSettle();
+
+    // Une classe sans passif disponible afficherait un choix vide a l'ecran
+    // de selection, et ferait rougir `referential_integrity_test` apres coup
+    // (spec P-41, §9.2).
+    final passif = File('$root/assets/data/passives/gambler.json');
+    expect(passif.existsSync(), isTrue);
+
+    final json = jsonDecode(passif.readAsStringSync()) as Map<String, dynamic>;
+    expect(json['id'], 'gambler');
+    // Il ne vise que la classe creee : sans `classes`, il serait ouvert a
+    // toutes et polluerait le pool des trois livrees (spec P-49, §3.2).
+    expect(json['classes'], ['gambler']);
+    // Sa prose est voyante, jamais inventee.
+    expect(json['name_fr'], startsWith(kProsePlaceholderPrefix));
+
+    // Et la classe est ecrite avant lui, sans quoi la reference serait
+    // pendante sur le disque.
+    expect(
+      File('$root/assets/data/classes/gambler/class.json').existsSync(),
+      isTrue,
+    );
   });
 
   testWidgets(
