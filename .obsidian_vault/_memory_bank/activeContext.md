@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-20 | commit: c29487e -->
+<!-- last-sync: 2026-09-20 | commit: 54c28dd -->
 
 # 🧠 Contexte Actuel
 
@@ -7,19 +7,14 @@
 
 ## Focus courant
 
-**Le lot C de P-41 est clos, et avec lui les lots A, B et C : seul le lot D reste.** Sa **partie 2**
-est fusionnée dans `main` par la **PR #43** (2026-09-20, merge `2f850c4`, `2d167fa`..`0db8d4e`,
-20 commits de code, détail plus bas) : **le joueur choisit son passif à la sélection de classe**, et
-les neuf passifs livrés par le lot B deviennent atteignables — c'est le verrou que le lot C avait à
-lever. `baseDamage` quitte l'écran et le modèle de héros ; *Affinité* n'est plus tirée quand le
-passif actif ne déclare aucune Maîtrise —
-[ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md).
-
-La note `0.5.2` a été **rouverte en place une cinquième fois** pour cette partie 2, même numéro :
-quatre entrées neuves — dont une section Corrections — et, **pour la première fois, une entrée
-existante réécrite**, celle qui annonçait cet écran comme à venir. La note n'étant **ni taguée ni
-publiée** (dernière release `v0.5.1`), aucun joueur n'avait lu la phrase corrigée.
-Métriques dans `progress.md`.
+**Le lot D de P-41 est engagé : sa partie 1 est fusionnée dans `main` par la PR #44** (2026-09-20,
+merge `54c28dd`, `30d48dc`..`639a222`, 9 commits, détail plus bas) — **le tutoriel enseigne enfin la
+classe qu'on y choisit** : le passif s'y choisit, dans le widget même de l'écran de sélection ;
+l'étape « Armure & Dégâts » fait passer son gain de démonstration par les `statRules` de la classe ;
+l'étape « Jouer des cartes » annonce le gain réel. **Aucun mécanisme nouveau, donc aucun ADR** :
+la livraison applique ADR-081, ADR-090 et ADR-097. La note `0.5.2` a été **rouverte en place une
+sixième fois**, même numéro, pour deux entrées neuves et aucune réécriture ; toujours **ni taguée
+ni publiée** (dernière release `v0.5.1`). Métriques dans `progress.md`.
 
 Réserves à ne pas perdre de vue :
 
@@ -48,7 +43,24 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **P-41 lot C, partie 2 — le choix du passif, et le conditionnement des récompenses**
+1. **P-41 lot D, partie 1 — le tutoriel enseigne la classe qu'on a choisie**
+   (2026-09-20, **fusionné dans `main` par la PR #44**, merge `54c28dd`, 9 commits,
+   `30d48dc` → `639a222`, branche `feat/p41-lot-d-tutoriel`) — **le tutoriel cesse d'enseigner
+   une règle que la classe choisie ne suit pas.** Trois étapes arrêtaient chacune de court-circuiter
+   un point de passage qui existait déjà : l'étape 02 déplie les passifs que `availablePassivesFor`
+   ouvre à la classe — dans le **`ClassPassiveList` de l'écran de sélection**, le widget de
+   production et non une seconde implémentation (spec §1.4) — et retaper la classe déjà choisie
+   replie sa carte au lieu de reposer son passif. L'étape « Armure & Dégâts » fait passer son gain
+   de démonstration par `StatGains.apply` et les `statRules` de la classe au lieu d'écrire 4 Armure
+   en dur : elle se joue **en deux temps** (le gain, puis le coup), son panneau droit part de 0, son
+   titre est **généré** depuis la règle qui vise l'Armure (`shortTitle`, deux clés ARB neuves) et la
+   règle est écrite en clair sous les panneaux par `StatRuleLabel.describe`. L'étape « Jouer des
+   cartes » **mesure le gain réel** de part et d'autre de `playCard` au lieu de lire la valeur
+   imprimée sur la carte. Les deux acquis que le lot B avait livrés sans les verrouiller —
+   `critChance` forcé à 0, conversion d'armure appliquée par `playCard` — passent sous test.
+   **Aucun mécanisme nouveau, donc aucun ADR** : la livraison applique ADR-081, ADR-090 et
+   ADR-097. **1159 tests** (+24), `dart analyze` propre.
+2. **P-41 lot C, partie 2 — le choix du passif, et le conditionnement des récompenses**
    (2026-09-20, **fusionné dans `main` par la PR #43**, merge `2f850c4`, 20 commits de code,
    `2d167fa` → `0db8d4e`, branche `feat/p41-lot-c-selection`) — **l'écran de sélection de classe
    cesse de mentir deux fois.** Le joueur y **choisit son passif** : la carte déplie *tous* ceux
@@ -66,7 +78,7 @@ Réserves à ne pas perdre de vue :
    son contenu — une colonne sur mobile, rangées intrinsèques en desktop. **1135 tests** (+70),
    `dart analyze` propre —
    [ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md).
-2. **P-41 lot C, partie 1 — les récompenses de niveau deviennent de la donnée** (2026-09-18,
+3. **P-41 lot C, partie 1 — les récompenses de niveau deviennent de la donnée** (2026-09-18,
    **fusionné dans `main` par la PR #42**, merge `152fbcc`, 11 commits, `face77b` → `9a2f375`) —
    **le jeu ne change pas** : seule la provenance des valeurs change. Les huit récompenses — six
    tirables, deux mythiques, séparées par un champ `pool` — vivent sous
@@ -81,35 +93,26 @@ Réserves à ne pas perdre de vue :
    intact. **Un seul texte joueur bouge** : la liste des mythiques du tutoriel perd ses articles.
    **1065 tests** (+44), `dart analyze` propre —
    [ADR-098](../_adr/ADR-098-recompenses-de-niveau-en-donnee-et-gabarits-a-tr.md).
-3. **P-41 lot B, partie 2 — l'identité de classe** (2026-09-18, **fusionné dans `main` par la
-   PR #41**, merge `5086272`, 18 commits, `74c54cf` → `83e65b9`) — **la première livraison de P-41 que le
-   joueur ressent.** Le Paladin renforce tout, le Berserker ses seules Attaques, le Mage ses
-   Compétences et ses altérations. Le Berserker **n'a plus jamais d'armure** : toute source devient
-   une Puissance d'un tour, par une `statRules` de son `class.json` qu'applique
-   `StatGains.apply(stats, gain, rules)`, troisième paramètre désormais obligatoire. Les **neuf
-   passifs** remplacent les trois (`berserker_armor` et `spell_armor` supprimés) ; un passif choisit
-   son déclencheur par sa donnée, compte par un statut caché, et reçoit ce qu'il ne peut recalculer.
-   Stats de départ propres (Maîtrise 1 au Paladin, 10 % de critique au Berserker) ; la Puissance
-   porte un éclair. **1021 tests** (+83), `dart analyze` propre —
-   [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), section « Partie 2 ».
 > [!NOTE]
-> **Rotations.** Sortie le 2026-09-20 : `../_archive/2026-09-20-activeContext-livraisons.md`
-> (P-41 lot B partie 1), avec quatre réserves closes. Sorties le 2026-09-18 :
+> **Rotations.** Sorties le 2026-09-20 : `../_archive/2026-09-20-activeContext-livraisons-2.md`
+> (P-41 lot B partie 2) et `../_archive/2026-09-20-activeContext-livraisons.md` (P-41 lot B
+> partie 1, avec quatre réserves closes). Sorties le 2026-09-18 :
 > `../_archive/2026-09-18-activeContext-livraisons-2.md` (P-49) et
 > `../_archive/2026-09-18-activeContext-livraisons.md` (P-41 lot A). Les onze rotations précédentes
 > portent le même nom, daté du 2026-09-17 au 2026-08-20, dans `../_archive/`.
 
 ## Prochaine étape
 
-**P-41 lot D** est le dernier lot du chantier, et n'a pas encore de plan : mise à jour fonctionnelle
-du tutoriel et de la console de debug. Deux reports nommés par le lot C l'attendent — l'étape de
-choix de classe du tutoriel, qui suppose toujours un passif unique
-(`tutorial_fixtures.dart:58`, spec §9.1), et `statRules` que l'éditeur de contenu ne valide pas
-(spec §9.2).
+**P-41 lot D, partie 2 — la console de debug** (spec §9.2) est tout ce qui reste du chantier :
+`statRules` validé par l'éditeur (`"mode": "convrt"` passe encore), création guidée de classe
+garantissant un passif disponible, récompenses de niveau en 8ᵉ catégorie éditable, et cibles de la
+Puissance réglables depuis le menu de debug. Son
+[plan](../../docs/superpowers/plans/2026-09-20-p41-lot-d-partie-2-console-de-debug.md) est écrit et
+non exécuté ; il ne partage aucun fichier de `lib/` avec la partie 1.
 
-Il reste au propriétaire à **regarder tourner les lots B et C** — les trois identités de classe et
-le nouvel écran de sélection ne se vérifient pas par la suite de tests, et la carte de classe a été
-recalibrée à l'œil, mobile et desktop. Le tag `v0.5.2` attend cette campagne manuelle et P-42 ; le
+Il reste au propriétaire à **regarder tourner les lots B, C et D** — les trois identités de classe,
+le nouvel écran de sélection et le tutoriel ne se vérifient pas par la suite de tests, et les cartes
+de classe ont été recalibrées à l'œil. Le tag `v0.5.2` attend cette campagne manuelle et P-42 ; le
 filtre de classe des cartes de signature se traite avant ou avec P-42.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
