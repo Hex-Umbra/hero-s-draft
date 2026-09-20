@@ -92,10 +92,12 @@ void main() {
     expect(find.text('70/80'), findsNWidgets(2));
     // Genere depuis la regle : le titre annonce ce que l'Armure devient.
     expect(find.text('ARMURE → PUISSANCE'), findsOneWidget);
-    // Les deux badges d'Armure (gauche ET droit) sont a 0 : le gauche n'en a
-    // jamais eu, le droit n'en a rien conserve. Compter exactement 2 est ce
-    // qui distingue ce cas : si le Berserker gardait son Armure, le badge
-    // droit afficherait 4 et ce compte tomberait a 1.
+    // Instant post-coup : les degats (10) depassent toujours l'Armure
+    // gagnee (4), donc EntityStats.takeDamage ramene le badge droit a 0
+    // comme le gauche, que la classe convertisse ou non. Ce compte de 2
+    // verifie la forme des deux panneaux, pas la conversion : ce qui la
+    // prouve ici, ce sont '70/80' (le Berserker afficherait 74/80 s'il
+    // gardait son Armure), le badge '4' de Puissance et Icons.bolt_rounded.
     expect(find.text('0'), findsNWidgets(2));
     // La Puissance temporaire produite est montree, avec sa valeur.
     expect(find.text('4'), findsOneWidget);
