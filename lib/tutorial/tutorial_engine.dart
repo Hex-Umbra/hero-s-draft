@@ -129,7 +129,12 @@ class TutorialEngine extends ChangeNotifier {
 
   void chooseHero(HeroData hero) {
     mockState.chosenHero = hero;
-    mockState.activePassive = fixtures.passiveFor(hero);
+    // Le premier du point d'accès, comme à l'écran de sélection : un choix
+    // par défaut, pas une fatalité — `choosePassive` le remplace. La liste
+    // est vide si aucun passif ne vise la classe, ce qu'aucune des trois
+    // classes livrées ne présente.
+    final passives = fixtures.passivesFor(hero);
+    mockState.activePassive = passives.isEmpty ? null : passives.first;
     mockState.heroStats = mockState.baseStatsForHero();
     // Régression : revenir choisir une autre classe après avoir drafté un
     // deck laissait `masterDeck` intact. `_isStepActionComplete` ne lit que
@@ -138,6 +143,16 @@ class TutorialEngine extends ChangeNotifier {
     // l'écran de draft, remonté à neuf par la `PageView`, affichait 0/5 pour
     // la nouvelle.
     mockState.masterDeck = [];
+    notifyListeners();
+  }
+
+  /// Retient [passive] parmi ceux que la classe choisie ouvre.
+  ///
+  /// Le deck n'est pas remis à zéro, contrairement à `chooseHero` : changer
+  /// de passif ne change pas les cartes de classe, et l'étape 03 reste
+  /// franchie.
+  void choosePassive(PassiveData passive) {
+    mockState.activePassive = passive;
     notifyListeners();
   }
 

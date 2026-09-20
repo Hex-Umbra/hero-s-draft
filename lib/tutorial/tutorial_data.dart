@@ -14,14 +14,19 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Choose Your Class',
     titleFr: 'Choisissez votre classe',
     bodyEn:
-        'Every run starts here. The three classes differ by their health pool '
-        'and — above all — by their passive, which decides how they earn Armor. '
-        'Pick one: the rest of this tutorial will use it.',
+        'Every run starts here. The three classes differ by their health pool, '
+        'by what their Might strengthens, and — above all — by the passive you '
+        'pick for them: each class offers several, and the passive decides how '
+        'you earn Armor.\n\n'
+        'Choose a class, then tap a passive to keep it. The rest of this '
+        'tutorial will use both.',
     bodyFr:
         'Toute partie commence ici. Les trois classes se distinguent par leurs '
-        'points de vie et surtout par leur passif, qui décide de la façon dont '
-        'elles gagnent de l\'Armure. Choisissez-en une : la suite de ce '
-        'tutoriel s\'y adaptera.',
+        'points de vie, par ce que renforce leur Puissance, et surtout par le '
+        'passif que vous leur choisissez : chaque classe en propose plusieurs, '
+        'et c\'est lui qui décide de la façon dont vous gagnez de l\'Armure.\n\n'
+        'Choisissez une classe, puis touchez un passif pour le retenir. La '
+        'suite de ce tutoriel s\'appuiera sur les deux.',
     type: TutorialStepType.classChoice,
   ),
   TutorialStep(

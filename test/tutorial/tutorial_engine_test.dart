@@ -207,6 +207,60 @@ void main() {
     });
   });
 
+  group('Le choix du passif', () {
+    test('choisir une classe retient son premier passif', () {
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      engine.chooseHero(mage);
+
+      expect(
+        engine.mockState.activePassive?.id,
+        engine.fixtures.passivesFor(mage).first.id,
+      );
+    });
+
+    test('choisir un passif remplace le choix par defaut', () {
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      engine.chooseHero(mage);
+      final autre = engine.fixtures.passivesFor(mage).last;
+      // Le pool en contient bien plus d'un : sinon le test ne prouve rien.
+      expect(autre.id, isNot(engine.mockState.activePassive?.id));
+
+      engine.choosePassive(autre);
+
+      expect(engine.mockState.activePassive?.id, autre.id);
+    });
+
+    test('changer de classe repose le passif par defaut de la nouvelle', () {
+      // Regression a eviter : le passif est de la tranche persistante, comme
+      // la classe. Sans remise a zero, un Mage garderait le passif d'un
+      // Berserker, qui n'est pas dans son pool.
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      final berserker =
+          engine.fixtures.heroes.firstWhere((h) => h.id == 'berserker');
+
+      engine.chooseHero(mage);
+      engine.choosePassive(engine.fixtures.passivesFor(mage).last);
+      engine.chooseHero(berserker);
+
+      expect(
+        engine.mockState.activePassive?.id,
+        engine.fixtures.passivesFor(berserker).first.id,
+      );
+    });
+
+    test('le passif choisi survit aux changements d etape', () {
+      final paladin = engine.fixtures.heroes.first;
+      engine.chooseHero(paladin);
+      final autre = engine.fixtures.passivesFor(paladin).last;
+      engine.choosePassive(autre);
+
+      engine.nextStep();
+      engine.nextStep();
+
+      expect(engine.mockState.activePassive?.id, autre.id);
+    });
+  });
+
   // Couverture perdue par le remplacement verbatim de l'étape 1 : ces trois
   // comportements (le `switch` de resetMockState, mergeCards, le level-up de
   // gainXp) étaient exercés par l'ancien fichier de test et ne le sont plus

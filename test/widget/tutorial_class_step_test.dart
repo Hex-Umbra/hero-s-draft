@@ -46,12 +46,55 @@ void main() {
     expect(find.text('60 PV'), findsOneWidget);
   });
 
-  testWidgets('le passif de chaque classe est affiché depuis assets/data/passives/', (tester) async {
-    await _pump(tester);
+  testWidgets('chaque carte montre son passif par defaut, repliee', (tester) async {
+    final engine = await _pump(tester);
 
-    expect(find.text('Régénération d\'Armure'), findsOneWidget);
-    expect(find.text('Rage'), findsOneWidget);
-    expect(find.text('Canalisation'), findsOneWidget);
+    // Repliee, la carte montre quand meme le passif avec lequel la run
+    // partirait : le joueur compare les trois classes sans rien ouvrir
+    // (meme regle que l'ecran de selection, `class_passive_list.dart:56`).
+    for (final hero in engine.fixtures.heroes) {
+      expect(
+        find.text(engine.fixtures.passivesFor(hero).first.getName('fr')),
+        findsOneWidget,
+        reason: hero.id,
+      );
+    }
+
+    // Et seulement celui-la : les autres n'apparaissent qu'une fois la
+    // classe choisie.
+    for (final hero in engine.fixtures.heroes) {
+      for (final passif in engine.fixtures.passivesFor(hero).skip(1)) {
+        expect(find.text(passif.getName('fr')), findsNothing, reason: passif.id);
+      }
+    }
+  });
+
+  testWidgets('choisir une classe deplie ses passifs', (tester) async {
+    final engine = await _pump(tester);
+
+    await tester.tap(find.text('Le Mage'));
+    await tester.pumpAndSettle();
+
+    final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+    for (final passif in engine.fixtures.passivesFor(mage)) {
+      expect(find.text(passif.getName('fr')), findsOneWidget, reason: passif.id);
+    }
+  });
+
+  testWidgets('toucher un passif deplie le retient', (tester) async {
+    final engine = await _pump(tester);
+
+    await tester.tap(find.text('Le Mage'));
+    await tester.pumpAndSettle();
+
+    final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+    final autre = engine.fixtures.passivesFor(mage).last;
+    expect(autre.id, isNot(engine.mockState.activePassive?.id));
+
+    await tester.tap(find.text(autre.getName('fr')));
+    await tester.pumpAndSettle();
+
+    expect(engine.mockState.activePassive?.id, autre.id);
   });
 
   testWidgets('choisir une classe l\'écrit dans la tranche persistante', (tester) async {

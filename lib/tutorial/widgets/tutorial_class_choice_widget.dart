@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../../models/data/hero_data.dart';
+import '../../ui/widgets/class_identity.dart';
+import '../../ui/widgets/class_passive_list.dart';
 import '../tutorial_engine.dart';
 
-/// Étape 02 — choix de classe.
+/// Étape 02 — choix de classe, **et de son passif**.
 ///
-/// Les trois héros, leurs points de vie et leur passif viennent de
-/// `assets/data/classes/<id>/class.json` et `assets/data/passives/` :
-/// aucune valeur n'est écrite ici.
+/// Les trois héros, leurs points de vie et les passifs qu'ils ouvrent
+/// viennent de `assets/data/classes/<id>/class.json` et
+/// `assets/data/passives/`, par le point d'accès unique de P-49 : aucune
+/// valeur n'est écrite ici, et aucun identifiant de classe n'est comparé
+/// (ADR-090).
+///
+/// Le bloc des passifs est **celui de l'écran de sélection**
+/// (`ClassPassiveList`), et non une seconde implémentation : c'est le remède
+/// que demande le §1.4 de la spec. Repliée, chaque carte montre le passif
+/// avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
+/// sont cliquables.
 class TutorialClassChoiceWidget extends StatefulWidget {
   final TutorialEngine engine;
 
@@ -31,7 +41,9 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
       child: Column(
         children: [
           Text(
-            isFrench ? 'Choisissez votre classe' : 'Choose your class',
+            isFrench
+                ? 'Choisissez votre classe, puis son passif'
+                : 'Choose your class, then its passive',
             style: const TextStyle(
               color: Colors.amber,
               fontWeight: FontWeight.bold,
@@ -45,6 +57,7 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
               physics: const BouncingScrollPhysics(),
               child: Wrap(
                 alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.start,
                 spacing: 12,
                 runSpacing: 12,
                 children: heroes
@@ -59,7 +72,13 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
   }
 
   Widget _buildHeroCard(HeroData hero, String locale, bool isSelected) {
-    final passive = widget.engine.fixtures.passiveFor(hero);
+    final passives = widget.engine.fixtures.passivesFor(hero);
+    final activeId = widget.engine.mockState.activePassive?.id;
+    // Le rang du passif retenu dans *cette* liste. Une carte non choisie
+    // montre donc toujours son propre premier passif, jamais celui d'une
+    // autre classe : `indexWhere` rend -1, ramené à 0.
+    final rank = isSelected ? passives.indexWhere((p) => p.id == activeId) : -1;
+    final selectedIndex = rank < 0 ? 0 : rank;
 
     return InkWell(
       onTap: () {
@@ -106,25 +125,25 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
               style: const TextStyle(color: Colors.cyanAccent, fontSize: 12),
             ),
             const Divider(color: Colors.white12, height: 18),
-            Text(
-              passive.getName(locale),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+            if (passives.isNotEmpty)
+              ClassPassiveList(
+                passives: passives,
+                selectedIndex: selectedIndex,
+                classMastery: hero.mastery,
+                // Seule la classe choisie est dépliée : une seule carte à la
+                // fois, comme à l'écran de sélection.
+                isExpanded: isSelected,
+                // La carte du tutoriel fait 190 px : c'est la mise en page
+                // compacte qu'il lui faut, quelle que soit la taille de
+                // l'écran.
+                isMobile: true,
+                locale: locale,
+                classColor: ClassIdentity.colorOf(hero),
+                onSelect: (i) {
+                  widget.engine.choosePassive(passives[i]);
+                  setState(() {});
+                },
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              passive.getDescription(locale),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 11,
-                height: 1.3,
-              ),
-            ),
           ],
         ),
       ),
