@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 
@@ -38,6 +39,20 @@ void main() {
     kEntityDescriptors.forEach((key, descriptor) {
       expect(descriptor.category, key);
     });
+  });
+
+  test('le descripteur de classe borne statRules au vocabulaire du moteur', () {
+    final classe = kEntityDescriptors[EntityCategory.heroClass]!;
+
+    // Les trois cles imbriquees, et leurs valeurs lues sur `StatRule` : un
+    // vocabulaire recopie ici divergerait du parseur au premier ajout.
+    expect(classe.enumKeys['statRules[].stat'], StatRule.statNames);
+    expect(classe.enumKeys['statRules[].mode'], StatRule.modeNames);
+    expect(classe.enumKeys['statRules[].to'], StatRule.targetNames);
+
+    // Le gabarit porte la cle, vide : une regle toute faite ferait naitre
+    // toute classe creee en convertisseuse d'armure.
+    expect(classe.decodeTemplate()['statRules'], isEmpty);
   });
 
   group('pathOf', () {
@@ -247,6 +262,7 @@ void main() {
         'mastery',
         'critChance',
         'mightTargets',
+        'statRules',
         'displayOrder',
         'themeColor',
       },

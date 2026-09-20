@@ -9,6 +9,7 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
 
@@ -356,6 +357,16 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     },
     requiredKeys: const {'maxHp', 'maxMana', 'mightTargets'},
     enumListKeys: {'mightTargets': _names(MightTarget.values)},
+    // Les trois vocabulaires d'une règle de stat, **lus sur le parseur** :
+    // `to` s'écrit `status:might` et non `statusMight`, et seul `StatRule`
+    // connaît la correspondance. Sans ces trois lignes, l'éditeur laissait
+    // écrire `"mode": "convrt"` — exactement le cas pour lequel il existe
+    // (spec P-41, §9.2).
+    enumKeys: {
+      'statRules[].stat': StatRule.statNames,
+      'statRules[].mode': StatRule.modeNames,
+      'statRules[].to': StatRule.targetNames,
+    },
     hexColorKeys: const {'themeColor'},
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
@@ -364,10 +375,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // de classe ecrite. `themeColor` y figure au magenta : une classe dont la
     // couleur n'a pas ete choisie doit se voir.
     //
-    // `statRules` n'y figure pas non plus, et n'est pas valide : la spec de
-    // P-41 place l'edition des regles de stat au lot D (§9.2), avec la
-    // validation d'une liste de valeurs bornees imbriquee. Seule la vue JSON
-    // brute l'atteint d'ici la. `mightTargets` l'est depuis la partie 1.
+    // `statRules` y figure **vide**, et non garni : une regle toute faite
+    // ferait naitre convertisseuse d'armure toute classe creee depuis la
+    // console. Vide, la cle est visible dans le formulaire, et la validation
+    // ci-dessus s'applique des qu'une regle y est ajoutee.
     template: '''
 {
   "maxHp": 100,
@@ -376,6 +387,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "mastery": 0,
   "critChance": 0,
   "mightTargets": ["attack"],
+  "statRules": [],
   "displayOrder": 99,
   "themeColor": "#FF00FF"
 }''',

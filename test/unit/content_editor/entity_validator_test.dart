@@ -729,4 +729,75 @@ void main() {
           'image absente : assets/data/classes/barde/icon.png');
     });
   });
+
+  group('les regles de stat d une classe', () {
+    /// Un brouillon de classe dont seules les `statRules` varient.
+    EntityDraft classeAvecRegles(String statRules) {
+      Directory('$root/assets/data/classes').createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      final template =
+          jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template['statRules'] = jsonDecode(statRules);
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'parieur',
+        bilingual: const {
+          'name_fr': 'Le Parieur',
+          'name_en': 'Gambler',
+          'description_fr': 'Manipule les probabilites.',
+          'description_en': 'Plays the odds.',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('la regle du Berserker passe', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "status:might", "duration": 1}]',
+      ));
+      // Seules des fautes de ressource peuvent rester (l'image de classe
+      // n'existe pas dans le bac a sable) : aucune sur les regles.
+      expect(
+        faults.where((f) => f.field?.startsWith('statRules') ?? false),
+        isEmpty,
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('un mode mal orthographie est refuse', () {
+      // Le cas exact que le §9.2 de la spec nomme : « convrt ».
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convrt", "to": "status:might"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].mode'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('une ressource inconnue est refusee', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "puissance", "mode": "convert", "to": "status:might"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].stat'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('une cible inconnue est refusee', () {
+      // `statusMight` est le **nom Dart** de la valeur ; le fichier ecrit
+      // `status:might`. Confondre les deux est l'erreur la plus probable.
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "statusMight"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].to'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+  });
 }
