@@ -10,14 +10,26 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md` — lire le **§9.2** en entier, puis le §7.1 pour le vocabulaire de `statRules`, le §5.2 pour ce que la validation d'une liste de références protège, le §8.1 pour les récompenses de niveau, et le §10 pour ce que P-13 branchera derrière. La spec de P-30 lot 2 (`2026-09-06-menu-debug-lot-2-editeur-de-contenu-design.md`) porte la conception de l'éditeur.
 
+**Passe de correction :** relu le **2026-09-20 sur `a270de4`**, chaque chemin, chaque numéro de ligne et chaque symbole vérifiés par commande contre le code de `main`, et la base de tests re-mesurée par un `flutter test` complet. Ce qui a changé : les deux numéros de ligne des comptes d'`entity_descriptor_test` (16 et 34, non 17 et 33), le chemin complet de `debug_hero_tab.dart` et la plage réelle de son champ « Puissance », le compte de `loadAll` dans la documentation de l'énumération, la dépendance de la tâche 3 au renommage de la tâche 2, l'identifiant de classe de la vérification manuelle, et les totaux de tests des tâches 2 à 5. La lecture « la liste de références est déjà livrée par P-49 » a été re-vérifiée et tient.
+
 **Dépend de :** les lots A, B et C de P-41 et le chantier frère P-49, **tous fusionnés dans `main`** (PR #38, #39, #40, #41, #42, #43). Rien d'autre. La partie 1 du lot D — le tutoriel, spec §9.1, [plan](2026-09-20-p41-lot-d-partie-1-tutoriel.md) — est **indépendante** de celle-ci : le tableau « Pourquoi deux plans pour le lot D » de ce plan-là en donne les raisons. Les deux peuvent s'exécuter dans n'importe quel ordre, ou en parallèle. **Seul point de contact :** `lib/models/data/stat_rule.dart`, que cette partie enrichit de quatre membres et que la partie 1 se contente de lire. En cas de branches concurrentes, la fusion est un ajout pur, sans conflit de ligne.
 
 ## Global Constraints
 
 - **Le jeu ne change pas du tout.** Aucune valeur, aucun texte joueur, aucun fichier d'`assets/data/` livré n'est modifié. Ce lot ne touche que de l'outillage : l'éditeur de contenu et le menu de debug, ce dernier n'étant monté qu'en `kDebugMode` **et** dans une run de debug (`DebugActions._allowed`, `debug_actions.dart:31-32`). Une modification d'un fichier de contenu observée pendant l'exécution est un défaut de ce lot.
 - **Aucun vocabulaire du moteur n'est recopié dans un descripteur.** `kEntityDescriptors` lit les énumérations Dart réelles (`_names(CardType.values)`) ou une table exposée par le modèle (`PassiveMastery.fields`). `statRules` suit la même règle : ses trois vocabulaires sortent de `StatRule`, qui est déjà le seul endroit à les connaître (`stat_rule.dart:43-54`). **Écrire `['armor', 'mana']` dans `entity_descriptor.dart` est un défaut**, pas un raccourci : la liste et le parseur divergeraient au premier ajout.
-- **`dart analyze` doit afficher `No issues found!`** à la fin de **chaque** tâche. La tâche 3 fait **volontairement** rougir l'analyseur d'abord : `EntityValidator._idsOf` est un `switch` exhaustif sur `EntityCategory`, et ajouter une valeur sans son `case` ne compile plus. C'est le filet, pas un accident.
-- **`flutter test` doit être entièrement vert à la fin de chaque tâche.** Point de départ **mesuré le 2026-09-20 sur `6bc3705`** : **1135 tests**, `dart analyze` propre. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** à partir de ce chiffre, **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle. **Si la partie 1 du lot D a été fusionnée entre-temps**, la base est 1157 : décaler toutes les prévisions de +22.
+- **`dart analyze` doit afficher `No issues found!`** à la fin de **chaque** tâche. La tâche 3 fait **volontairement** rougir l'analyseur d'abord : le `switch` exhaustif sur `EntityCategory` du validateur — `EntityValidator._registryIdsOf`, que la tâche 2 a extrait de `_idsOf` sous ce nom — ne compile plus dès qu'une valeur arrive sans son `case`. C'est le filet, pas un accident.
+- **`flutter test` doit être entièrement vert à la fin de chaque tâche.** Point de départ **re-mesuré le 2026-09-20 sur `a270de4`** (`main`, après la fusion de la PR #43) : **1135 tests**, `dart analyze` propre. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** à partir de ce chiffre, **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle. **Si la partie 1 du lot D a été fusionnée entre-temps**, la base est 1156 : décaler toutes les prévisions de +21. Le détail, à vérifier tâche par tâche :
+
+  | Tâche | Δ | Détail | Total |
+  |:---|---:|:---|---:|
+  | — | — | base mesurée | 1135 |
+  | 1 | +7 | `stat_rule_vocabulary_test` 2 (nouveau fichier) ; `entity_descriptor_test` 1 ajout ; `entity_validator_test` 4 ajouts | 1142 |
+  | 2 | +5 | `entity_validator_test` 2 ajouts ; `class_recipe_test` 3 pour 1 (+2) ; `content_editor_screen_test` 1 ajout | 1147 |
+  | 3 | +4 | `entity_descriptor_test` 1 ajout (`pathOf`) ; `entity_validator_test` 2 ajouts ; **+1 engendré** par `shipped_entities_round_trip_test`, qui produit un test par descripteur (`for (final descriptor in kEntityDescriptors.values)`, ligne 71) | 1151 |
+  | 4 | +3 | `debug_drawer_test` 3 ajouts | 1154 |
+
+  Deux modifications ne changent **aucun** compte, et c'est voulu : le test « les sept types sont des boutons » est **renommé** en « les huit types » (tâche 3), et les deux comptes d'`entity_descriptor_test` sont **relevés**, non dédoublés.
 - **Ne jamais lancer `dart format`** : le dépôt ne l'utilise pas.
 - Créer et modifier les fichiers avec les outils Write / Edit. **Jamais par heredoc bash** pour du contenu : les heredocs de cet environnement mangent les antislashs, et le code Dart et les gabarits JSON de ce plan en contiennent.
 - Tout texte joueur d'un JSON porte ses variantes `_fr` **et** `_en` (`CLAUDE.md`). Les gabarits de descripteur écrits ici en portent, à la charge de `bilingualBases`.
@@ -32,7 +44,7 @@
 
 Le §9.2 a été écrit avant P-49 ; l'un de ses quatre points de l'éditeur est tombé en chemin. Le vérifier au passage, ne pas le réécrire.
 
-| Ce que le §9.2 demande | État sur `6bc3705` |
+| Ce que le §9.2 demande | État sur `a270de4` |
 |:---|:---|
 | « **Passifs** : le descripteur […] valide `classes` comme une **liste de références vers des classes existantes**. […] la liste de références est **une extension à écrire** » | ✅ **Écrite par P-49.** `EntityDescriptor.referenceListKeys` existe (`entity_descriptor.dart:105-108`), le descripteur du passif la déclare (`:257-259`, `'classes': EntityCategory.heroClass`), `EntityValidator._references` l'implémente (`entity_validator.dart:339-368`) — liste vide refusée comprise —, et `FieldKind.referenceList` lui donne son widget (`field_kind.dart:36-38`). **Rien à faire** |
 | « **Classes** : `statRules` est validé — `stat` et `mode` bornés aux vocabulaires du moteur, `to` à une cible valide » | ❌ **À faire** — tâche 1. Le descripteur le dit lui-même : « `statRules` n'y figure pas non plus, et n'est pas validé : la spec de P-41 place l'édition des règles de stat au lot D (§9.2) […] Seule la vue JSON brute l'atteint d'ici là » (`entity_descriptor.dart:367-370`) |
@@ -42,8 +54,14 @@ Le §9.2 a été écrit avant P-49 ; l'un de ses quatre points de l'éditeur est
 
 ## Deux citations de la spec ont vieilli
 
-1. **« Le compte des catégories déclarées change (`test/unit/content_editor/entity_descriptor_test.dart:30`). »** La ligne 30 n'est plus celle-là. Le compte des **catégories** est à la **ligne 17** (`expect(EntityCategory.values, hasLength(7))`) ; la ligne 33 (`hasLength(9)`) compte les **sources de chargement**, et **ne change pas** : la neuvième source, celle des récompenses, existe depuis le lot C. Le test le dit d'ailleurs lui-même, en toutes lettres : « les récompenses de niveau ont leur source depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec place leur édition au lot D (§9.2) ». C'est donc **7 → 8 catégories, et 9 sources inchangées**.
-2. **« le réglage de Puissance, renommé mécaniquement à la partie 1 du lot B (`debug_hero_tab.dart:40-43`) »** — le champ est bien là, aux lignes **38-45** du fichier d'aujourd'hui (`label: 'Puissance'`, `s.copyWith(might: v)`). Le constat tient, le numéro a glissé de deux lignes.
+1. **« Le compte des catégories déclarées change (`test/unit/content_editor/entity_descriptor_test.dart:30`). »** La ligne 30 est une ligne de **commentaire**, au milieu du second test. Les deux comptes du fichier, relus sur `a270de4` :
+   - **ligne 16** — `expect(EntityCategory.values, hasLength(7))` : le compte des **catégories**. C'est celui-là qui change, **7 → 8** (tâche 3, step 1a).
+   - **ligne 34** — `expect(declared, hasLength(9))` : le compte des **`EntitySource` déclarées**. Il **ne change pas** — la neuvième source, celle des récompenses, existe depuis le lot C. Le test le dit lui-même : « les récompenses de niveau ont leur source depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec place leur édition au lot D (§9.2) ». Ce commentaire devient faux et est réécrit au step 1b, **sans toucher au nombre**.
+
+   Relever le 9 serait le contresens exact : c'est **le descripteur** qui manquait, pas la source. Et le vérifier avant d'écrire : `grep -c 'EntitySource(' lib/services/game_data_service.dart` rend **9**, `grep -c 'loadAll' …` rend **8** — un appel à `loadAll` par catégorie, la carte étant la seule à y passer deux sources.
+2. **« le réglage de Puissance, renommé mécaniquement à la partie 1 du lot B (`debug_hero_tab.dart:40-43`) »** — deux imprécisions, la seconde plus gênante que la première :
+   - **Le chemin manque.** La spec ne donne que le nom de fichier ; il vit sous **`lib/ui/widgets/debug/tabs/debug_hero_tab.dart`**. C'est le seul de ce nom dans le dépôt (`git ls-files | grep debug_hero_tab`), mais toutes les tâches de ce plan le citent en entier.
+   - **Le `DebugNumberField` entier va de la ligne 38 à la ligne 45** (`label: 'Puissance'` en 39, `s.copyWith(might: v)` en 43). Les lignes 40-43 de la spec tombent bien *dedans*, mais pas sur son ouverture : viser 38-45 pour insérer quoi que ce soit au-dessus ou en dessous du champ. Le voisin utile est le champ « Chance », lignes **46-53**.
 
 ## Décisions prises à la rédaction du plan
 
@@ -86,6 +104,20 @@ La spec tranche la conception ; six points d'implémentation restaient ouverts. 
 | `test/widget/content_editor_screen_test.dart` | Créer une classe écrit aussi son passif | 2 |
 | `test/widget/debug_drawer_test.dart` | Ce que l'onglet Héros montre et règle | 4 |
 
+## Toute la surface de texte que ce lot touche
+
+**Aucune clé ARB, aucun texte joueur, aucun fichier d'`assets/data/`.** Ce lot n'écrit que de l'outillage, et les trois formes de texte qu'il ajoute suivent chacune la convention déjà en place dans son fichier :
+
+| Où | Ce qui change | La convention suivie |
+|:---|:---|:---|
+| `entity_descriptor.dart` | le `label` de la 8ᵉ catégorie : **« Récompense de niveau »** | Les sept `label` existants sont du **français seul**, avec accents : `'Carte'`, `'Relique'`, `'Passif'`, `'Événement'`, `'Amélioration de forge'`, `'Classe'`, `'Ennemi'`. L'éditeur de contenu n'est pas localisé, et ce lot ne le localise pas |
+| `entity_descriptor.dart` | les messages de faute de validation des trois clés de `statRules` | Français, comme les fautes voisines d'`entity_validator.dart` |
+| `debug_hero_tab.dart` | les libellés du bloc d'identité et des puces | **Français sans accents, en dur** — `'Chance de critique (%)'`, `'Puissance'` : aucun libellé du menu de debug ne passe par `AppLocalizations`, et la décision 6 dit pourquoi ce lot n'en fait pas le premier |
+| `class_recipe.dart` | la prose du passif de départ | **Non écrite** : `fillPlaceholders` produit `[À REMPLIR] <id>` dans les deux langues, à partir des `bilingualBases` du descripteur du passif. Le lot n'invente aucun texte |
+| gabarit `level_up_rewards` | `"statRules": []` côté classe, et le gabarit de récompense | **Aucune prose** dans les deux gabarits : les paires `name_fr`/`name_en` et `description_fr`/`description_en` viennent de `bilingualBases`, comme pour les sept autres catégories. `shipped_entities_round_trip_test` le vérifie sur les fichiers livrés |
+
+Si une tâche se trouve à écrire une chaîne anglaise ou une clé ARB, c'est le signe qu'elle a dérivé hors du périmètre : s'arrêter et le signaler.
+
 ---
 
 ### Task 0: La branche, depuis la documentation déjà commitée
@@ -108,7 +140,7 @@ Run: `ls assets/data/level_up_rewards/`
 Expected: huit fichiers. Sinon, **s'arrêter et le signaler** : la tâche 3 leur écrit un descripteur.
 
 Run: `git grep -n "referenceListKeys" -- lib`
-Expected: quatre occurrences au moins — la déclaration du descripteur, celle du passif, le validateur et `field_kind.dart`. Si la mécanique manque, la lecture « déjà livré » ci-dessus est fausse : le signaler avant de continuer.
+Expected: **huit occurrences dans cinq fichiers** — `entity_descriptor.dart` (3 : le champ, sa doc, la déclaration `'classes'` du passif), `entity_validator.dart` (1 : `_references`), `field_kind.dart` (1), `content_editor_screen.dart` (2) et `document_form.dart` (1). C'est la mécanique que le §9.2 croit rester à écrire et que P-49 a livrée. Si elle manque, la lecture « déjà livré » ci-dessus est fausse : le signaler avant de continuer, **sans rien réécrire au hasard**.
 
 - [ ] **Step 2: Créer la branche**
 
@@ -117,7 +149,7 @@ Run: `git switch -c feat/p41-lot-d-console` — depuis `main`, dans le checkout 
 - [ ] **Step 3: Mesurer la base — et noter le chiffre**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+N: All tests passed!`, **prévision N = 1135** (mesuré le 2026-09-20 sur `6bc3705`), ou **1157** si la partie 1 du lot D a été fusionnée entre-temps.
+Run: `flutter test` — Expected: `+N: All tests passed!`, **prévision N = 1135** (re-mesuré le 2026-09-20 sur `a270de4`), ou **1156** si la partie 1 du lot D a été fusionnée entre-temps.
 
 **Noter N.** Toutes les prévisions de ce plan sont écrites à partir de 1135 ; si N diffère, décaler chaque prévision du même écart plutôt que de la recalculer.
 
@@ -752,13 +784,15 @@ Expected: **PASS**, dont « chaque classe a au moins un passif disponible ». Ce
 
 - [ ] **Step 8: Créer une classe à la main, dans l'application**
 
-Run: `flutter run -d windows`, ouvrir l'éditeur de contenu, créer une classe `parieur` avec une carte de signature, puis « Écrire ».
-Expected : quatre fichiers écrits — `assets/data/classes/parieur/class.json`, `assets/data/passives/parieur.json`, `assets/data/classes/parieur/cards/<id>.json`, plus l'icône si elle a été déposée. **Puis annuler** : `git checkout -- assets/ pubspec.yaml && git clean -fd assets/data/classes/parieur assets/data/passives/parieur.json`. Vérifier par `git status --short` qu'il ne reste rien.
+Run: `flutter run -d windows`, ouvrir l'éditeur de contenu, créer une classe `gambler` avec une carte de signature, puis « Écrire ».
+Expected : quatre fichiers écrits — `assets/data/classes/gambler/class.json`, `assets/data/passives/gambler.json`, `assets/data/classes/gambler/cards/<id>.json`, plus l'icône si elle a été déposée. **Puis annuler** : `git checkout -- assets/ pubspec.yaml && git clean -fd assets/data/classes/gambler assets/data/passives/gambler.json`. Vérifier par `git status --short` qu'il ne reste rien.
+
+`gambler` et non `parieur` : c'est l'identifiant que porte déjà le `recipe()` de `class_recipe_test.dart` (ligne 13) et que saisit le test d'écran, donc le seul que les chemins attendus de cette étape et ceux des tests partagent. Les fixtures de `entity_validator_test.dart` gardent leur propre `parieur` — elles ne passent pas par la recette et n'ont aucun chemin en commun avec elle.
 
 - [ ] **Step 9: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1148: All tests passed!`
+Run: `flutter test` — Expected: `+1147: All tests passed!`
 
 - [ ] **Step 10: Commit**
 
@@ -788,7 +822,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Test: `test/unit/content_editor/entity_descriptor_test.dart`, `test/unit/content_editor/entity_validator_test.dart`
 
 **Interfaces:**
-- Consumes: `LevelUpRewardData.fromJson`, `RewardEffect` / `RewardStat` / `RewardPool` / `RewardRequirement` / `RewardRarity`, `GameDataRegistry.levelUpRewards`.
+- Consumes: `LevelUpRewardData.fromJson`, `RewardEffect` / `RewardStat` / `RewardPool` / `RewardRequirement` / `RewardRarity`, `GameDataRegistry.levelUpRewards`, et **`EntityValidator._registryIdsOf`** — le `switch` exhaustif sur `EntityCategory` que la **tâche 2** a extrait de `_idsOf` sous ce nom. C'est à lui que le step 4 ajoute son `case` ; il s'appelle encore `_idsOf` si la tâche 2 n'est pas passée.
 - Produces: `EntityCategory.levelUpReward` et son `EntityDescriptor`. Rien d'autre : le catalogue, les valeurs connues, le formulaire inféré, l'écrivain et le test d'aller-retour sont tous pilotés par la table.
 
 - [ ] **Step 1: Écrire les tests qui échouent**
@@ -903,10 +937,11 @@ import '../../models/data/level_up_reward_data.dart';
 **b)** **Remplacer** l'énumération et sa documentation (lignes 15-18) :
 
 ```dart
-/// Les huit categories d'entites editables. Elles sont en regard exact des
-/// neuf appels a `loadAll` de `loadGameDataRegistry`, a un ecart assume pres :
-/// la carte a deux sources, neutre et de classe, pour un seul descripteur.
-/// L'audio n'en est pas une, c'est un document de configuration.
+/// Les huit categories d'entites editables, en regard exact des huit appels a
+/// `loadAll` de `loadGameDataRegistry` : un par categorie, sans ecart. Les
+/// **sources** sont neuf, la carte en ayant deux — neutre et de classe — pour
+/// un seul descripteur. L'audio n'en est pas une, c'est un document de
+/// configuration.
 enum EntityCategory {
   card,
   relic,
@@ -1015,7 +1050,7 @@ Expected : l'arbre montre les huit récompenses ; charger `affinity` en modifica
 - [ ] **Step 8: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1152: All tests passed!`
+Run: `flutter test` — Expected: `+1151: All tests passed!`
 
 - [ ] **Step 9: Commit**
 
@@ -1236,7 +1271,7 @@ import '../../../../models/might_target.dart';
 import '../../../theme/app_spacing.dart';
 ```
 
-**b)** Lire aussi la run entière, en tête de `build` :
+**b)** Lire aussi la run entière : **remplacer la ligne 18**, `final stats = ref.watch(runProvider).heroStats;`, par les deux lignes suivantes — un seul `watch`, comme aujourd'hui :
 
 ```dart
     final run = ref.watch(runProvider);
@@ -1342,7 +1377,7 @@ Expected : les trois puces, `attack` cochée seule ; décocher `attack` ne fait 
 - [ ] **Step 7: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1155: All tests passed!`
+Run: `flutter test` — Expected: `+1154: All tests passed!`
 
 - [ ] **Step 8: Commit**
 
@@ -1377,7 +1412,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1155: All tests passed!`
+Run: `flutter test` — Expected: `+1154: All tests passed!`
 
 - [ ] **Step 2: Aucun vocabulaire n'a été recopié**
 
@@ -1444,7 +1479,7 @@ ecrite par P-49 (referenceListKeys).
 Aucun fichier de contenu n est modifie, et le jeu ne change pas : ce lot
 n est que de l outillage.
 
-`dart analyze` propre, `flutter test` vert (1155 tests, contre 1135 au depart).
+`dart analyze` propre, `flutter test` vert (1154 tests, contre 1135 au depart).
 
 **Cette PR clot P-41.**
 

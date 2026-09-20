@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md` — lire le **§9.1** en entier, puis le §1.4 (« Le tutoriel est une seconde implémentation du jeu »), le §7.1 pour `statRules` et la conversion d'armure du Berserker, le §7.3 pour son `critChance`, et le §5.1 pour le point d'accès unique aux passifs. ADR-081 (`.obsidian_vault/_adr/`) porte l'isolation du tutoriel vis-à-vis de l'état.
 
+**Passe de correction :** relu le **2026-09-20 sur `a270de4`**, chaque chemin, chaque numéro de ligne et chaque symbole vérifiés par commande contre le code de `main`, et la base de tests re-mesurée par un `flutter test` complet. Ce qui a changé : le partage du point « passifs » entre ce qui est déjà livré et ce qui reste (tableau ci-dessous), les citations vieillies de la spec, quatre plages de lignes des tâches 1 et 3 — dont deux qui auraient supprimé du code voisin —, le filtre de la règle qui titre le panneau d'Armure, l'import de `stat_rule.dart` qu'il exige, et les totaux de tests des tâches 2 à 5.
+
 **Dépend de :** les lots A, B et C de P-41 et le chantier frère P-49, **tous fusionnés dans `main`** (PR #38, #39, #40, #41, #42, #43). Rien d'autre. La partie 2 du lot D — la console de debug, spec §9.2, [plan](2026-09-20-p41-lot-d-partie-2-console-de-debug.md) — est **indépendante** de celle-ci : voir « Pourquoi deux plans pour le lot D » ci-dessous.
 
 ## Pourquoi deux plans pour le lot D
@@ -33,7 +35,18 @@ Le §9 de la spec réunit deux sujets qui ne partagent **aucun fichier de `lib/`
 - **Le tutoriel ne recopie aucune règle** (ADR-081, vérifié par `test/tutorial/tutorial_isolation_test.dart`). Toute règle qu'il applique vient d'une fonction pure du jeu : `StatGains.apply` (`lib/game/systems/stat_gains.dart`), `PowerRules`, `EntityStats.takeDamage`, `availablePassivesFor` (`lib/game/systems/passive_availability.dart`). **Écrire `if (hero.id == 'berserker')` dans ce lot est un défaut, pas un raccourci** (ADR-090) — et la tentation est maximale ici.
 - **Une seule exception à la fidélité, et elle est explicite** : `critChance` est forcé à 0 dans `TutorialMockState.baseStatsForHero` (`tutorial_engine.dart:55-72`). Le lot B l'a écrite et commentée ; la tâche 1 la met sous test, ce que le §9.1 exige (« une exception explicite **et testée** »). Ne pas la retirer, ne pas l'étendre.
 - **`dart analyze` doit afficher `No issues found!`** à la fin de **chaque** tâche.
-- **`flutter test` doit être entièrement vert à la fin de chaque tâche.** Point de départ **mesuré le 2026-09-20 sur `6bc3705`** : **1135 tests**, `dart analyze` propre. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** à partir de ce chiffre, **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle.
+- **`flutter test` doit être entièrement vert à la fin de chaque tâche.** Point de départ **re-mesuré le 2026-09-20 sur `a270de4`** (`main`, après la fusion de la PR #43) : **1135 tests**, `dart analyze` propre. Les totaux annoncés tâche par tâche sont une **prévision arithmétique** à partir de ce chiffre, **non un rejeu** : un écart signale un test oublié ou dupliqué, à comprendre avant de continuer — jamais un nombre à réajuster à l'aveugle. Le détail, à vérifier tâche par tâche :
+
+  | Tâche | Δ | Détail | Total |
+  |:---|---:|:---|---:|
+  | — | — | base mesurée | 1135 |
+  | 1 | +5 | `tutorial_engine_test` : 5 ajouts | 1140 |
+  | 2 | +7 | `tutorial_fixtures_test` 2 pour 1 (+1) ; `tutorial_engine_test` 4 ajouts ; `tutorial_class_step_test` 3 pour 1 (+2) | 1147 |
+  | 3 | +7 | `tutorial_engine_test` 3 ajouts ; `tutorial_armor_step_test` 4 (nouveau fichier) | 1154 |
+  | 4 | +2 | `tutorial_play_card_step_test` 2 (nouveau fichier) | 1156 |
+
+  Les quatre migrations de `setHeroArmor` vers `gainArmorForDemo` de la tâche 3 ne changent **aucun** compte : ce sont des appels réécrits dans des tests existants.
+- **Tous les numéros de ligne de ce plan sont mesurés sur `a270de4`, avant la première tâche.** Trois fichiers sont édités par plusieurs tâches — `tutorial_engine.dart`, `tutorial_engine_test.dart` et `tutorial_data.dart` — et **grossissent en route** : à la tâche 3, ce qui était ligne 295 ne l'est plus. Chaque plage de ce plan est donc **doublée de son texte d'ancrage** ; c'est l'ancre qui fait foi, le numéro n'est qu'une aide à la navigation. Repérer par le contenu, jamais par le seul numéro, dès qu'une tâche antérieure a touché le fichier. Les tâches le signalent là où le décalage est certain.
 - **Ne jamais lancer `dart format`** : le dépôt ne l'utilise pas (120 des 185 fichiers de `lib/` en seraient modifiés).
 - Créer et modifier les fichiers avec les outils Write / Edit. **Jamais par heredoc bash** pour du contenu : les heredocs de cet environnement mangent les antislashs, et le code Dart et les ARB de ce plan en contiennent (`l\'Armure`, `\n`, `{duration, plural, ...}`).
 - Tout texte joueur d'un JSON porte ses variantes `_fr` **et** `_en` (`CLAUDE.md`). Ce lot n'écrit aucun JSON de contenu, mais il écrit des ARB et de la prose de `tutorial_data.dart`, qui suivent la même règle sous une autre forme (`bodyFr`/`bodyEn`).
@@ -48,26 +61,36 @@ Le §9 de la spec réunit deux sujets qui ne partagent **aucun fichier de `lib/`
 
 Le §9.1 a été écrit avant les lots B et C ; trois de ses cinq points sont tombés en chemin. Les vérifier au passage, ne pas les réécrire.
 
-| Ce que le §9.1 demande | État sur `6bc3705` |
+| Ce que le §9.1 demande | État sur `a270de4` |
 |:---|:---|
 | « Les règles viennent de la fonction pure du lot A […] aucune recopie de `statRules`, de la maîtrise ou de l'orientation de la Puissance dans `lib/tutorial/` » | ✅ **Fait au lot B.** `TutorialEngine.playCard` appelle `StatGains.apply(..., mockState.chosenHero?.statRules ?? const [])` (`tutorial_engine.dart:363-370`) et `heroStats.damageBonusFor(card.data.type)` (`:355`) ; `baseStatsForHero` copie `mightTargets`, `mastery` et `luck` de la classe (`:62-72`). **Non testé** — c'est l'objet de la tâche 1 |
 | « Le tutoriel **force** [`critChance`] à 0. C'est une exception explicite **et testée** » | ⚠️ **Explicite, pas testée.** Le commentaire est à `tutorial_engine.dart:55-61`, l'omission du champ à `:62-72`. Aucun test ne la tient : tâche 1 |
 | « Les récompenses enseignées lisent le registre de la partie 1 du lot C » | ✅ **Fait au lot C.** `tutorial_draft_widget.dart:41-45` tire par `LevelUpRewardService.generateChoices(rewards: widget.engine.data.levelUpRewards, ...)`, et `tutorial_prose.dart` remplit la prose de l'étape draft depuis le registre (`tutorial_prose_test.dart`) |
-| « L'étape de choix de classe propose les passifs disponibles […] `tutorial_fixtures.dart:54` cesse de supposer un passif unique » | ❌ **À faire** — tâche 2. `TutorialFixtures.passiveFor` rend `availablePassivesFor(hero, registry).first` (`tutorial_fixtures.dart:57-58`) et `chooseHero` l'écrit sans recours (`tutorial_engine.dart:132`) |
+| « L'étape de choix de classe propose les passifs disponibles, **lus par le point d'accès de P-49** » | ✅ **Fait au lot B, côté lecture.** `TutorialFixtures.passiveFor` passe déjà par `availablePassivesFor(hero, registry)` (`tutorial_fixtures.dart:57-58`), et son commentaire dit déjà que le premier n'est qu'« le choix par défaut […] qui laisse au joueur la main pour en retenir un autre ». Le tutoriel ne **suppose** donc plus un passif unique : il en **impose** un. Rien à réécrire de ce côté |
+| « […] `tutorial_fixtures.dart:54` cesse de supposer un passif unique » — c'est-à-dire, à la lettre de la contrainte : **le joueur choisit** | ❌ **À faire** — tâche 2. Ce qui manque n'est pas la lecture mais le **choix** : `passiveFor` jette la liste après son `.first`, `chooseHero` écrit le résultat sans recours (`tutorial_engine.dart:132`), et aucun écran ne montre les autres. La tâche 2 ne corrige donc pas une lecture fautive — elle ouvre un choix là où il n'y en avait aucun |
 | « L'étape « Armure » […] le tutoriel n'enseigne jamais une règle que la classe choisie ne suit pas » | ❌ **À faire** — tâche 3 |
+
+## Deux citations de la spec ont vieilli
+
+Relues ligne à ligne sur `a270de4`. Ne pas les chercher là où le §9.1 les place : les deux pointent aujourd'hui sur autre chose.
+
+1. **« `tutorial_fixtures.dart:54` cesse de supposer un passif unique »** — la ligne 54 est la première ligne du **commentaire** de `passiveFor` ; le code est aux lignes **57-58**. Et il lit déjà le point d'accès de P-49 (tableau ci-dessus).
+2. **« Le tutoriel compte aujourd'hui sur `critChance: 0` pour être déterministe (`tutorial_engine.dart:327`) »** — la ligne 327 est aujourd'hui `void resetHeroStatsForDemo(int desiredPv)`, qui n'a rien à voir. L'exception vit aux lignes **55-61** (son commentaire) et **62-72** (l'omission du champ dans `baseStatsForHero`) ; `playCard` s'y adosse à la ligne **337**.
+
+Les numéros exacts sont ceux que ce plan cite partout ailleurs ; aucune tâche ne suit ceux de la spec.
 
 ## La prémisse du §9.1 sur l'étape « Armure » a vieilli — ce qui reste vrai
 
 > « L'étape « Armure » **se valide** aujourd'hui sur l'armure gagnée pendant l'étape. Pour une classe qui convertit l'armure, elle **ne peut plus être franchie** telle quelle. »
 
-**Ni l'un ni l'autre n'est vrai sur `6bc3705`**, et il faut le savoir avant de chercher un blocage qui n'existe pas :
+**Ni l'un ni l'autre n'est vrai sur `a270de4`**, et il faut le savoir avant de chercher un blocage qui n'existe pas :
 
 1. **L'étape « Armure & Dégâts » (`TutorialStepType.armorDamage`) n'a aucune condition de franchissement.** Elle tombe dans le `default: return true` de `_isStepActionComplete` (`tutorial_screen.dart:83-84`). Le drapeau `armorGainedThisStep` garde **une autre** étape, « Jouer des cartes & finir le tour » (`tutorial_screen.dart:67-71`) — ce que dit d'ailleurs la documentation du drapeau lui-même (`tutorial_engine.dart:303-309`).
 2. **Même cette étape-là n'est pas bloquée pour un Berserker.** `playCard` arme le drapeau sur `if (scaled > 0)` (`tutorial_engine.dart:371`), c'est-à-dire sur la **valeur imprimée de la carte**, avant toute conversion. Le lot B l'a écrit ainsi ; rien à corriger.
 
 **Ce qui reste, et qui est le vrai sujet de ce lot**, c'est la phrase qui suit dans la spec : *« le tutoriel n'enseigne jamais une règle que la classe choisie ne suit pas »*. Or il l'enseigne à deux endroits :
 
-- `TutorialArmorWidget` fixe l'Armure par `engine.setHeroArmor(4)` (`tutorial_armor_widget.dart:90`), qui écrit `armure: 4` **en court-circuitant `StatGains.apply`**. Le panneau intitulé « AVEC ARMURE », posé au-dessus du passif du joueur et calé sur ses PV max réels, montre donc un Berserker tenant 4 Armure — ce qui ne lui arrive jamais, sa classe convertissant chaque point gagné en Puissance temporaire d'un tour (`assets/data/classes/berserker/class.json`, `statRules`).
+- `TutorialArmorWidget` fixe l'Armure par `engine.setHeroArmor(_rightStartArmor)` (`tutorial_armor_widget.dart:90` ; la constante vaut 4, ligne 17), qui écrit `armure: 4` **en court-circuitant `StatGains.apply`**. Le panneau intitulé « AVEC ARMURE », posé au-dessus du passif du joueur et calé sur ses PV max réels, montre donc un Berserker tenant 4 Armure — ce qui ne lui arrive jamais, sa classe convertissant chaque point gagné en Puissance temporaire d'un tour (`assets/data/classes/berserker/class.json`, `statRules`).
 - `TutorialPlayCardWidget` annonce « +5 🛡️ » en texte flottant sur la valeur imprimée de la carte (`tutorial_play_card_widget.dart:340-343`), tandis que le badge d'Armure juste en dessous reste à 0 (`:411`). **La spec ne mentionne pas ce point** : il est ajouté au périmètre sur décision du propriétaire du 2026-09-20 (tâche 4) — corriger un mensonge et en laisser un autre deux étapes plus tôt n'aurait pas de sens.
 
 ## Décisions prises à la rédaction du plan
@@ -77,7 +100,7 @@ La spec pose la contrainte, pas la solution. Sept points d'implémentation sont 
 | # | Question | Décision | Pourquoi |
 |:---|:---|:---|:---|
 | **1** | Par où la règle de la classe entre-t-elle dans l'étape « Armure » ? | **Par la simulation *et* par une phrase générée.** Le gain de démonstration passe par `StatGains.apply` avec les `statRules` de la classe ; le titre du panneau droit est généré depuis la règle ; une phrase générée par `StatRuleLabel.describe` la nomme sous les panneaux | **Tranché avec le propriétaire le 2026-09-20.** La phrase seule laisserait le panneau montrer un Berserker tenant 4 Armure ; la simulation seule laisserait le joueur deviner pourquoi les deux panneaux perdent 10 PV. Les deux ensemble sont la seule version où ce que le panneau montre est ce qui lui arriverait |
-| **2** | La démonstration devient-elle un seul temps ou deux ? | **Deux temps** : à 200 ms le **gain** (le panneau droit montre ce qu'il a obtenu), à 900 ms le **coup** sur les deux panneaux | Un panneau qui affiche « 0 🛡️ ⚡4 » sans qu'on ait vu le gain arriver est illisible. Et cela supprime le problème d'état initial : les deux panneaux démarrent désormais à 0 Armure, donc plus rien n'est écrit en dur avant que la règle n'ait parlé. La version d'aujourd'hui préremplissait `_rightArmor = 4` dans un champ (`tutorial_armor_widget.dart:28`) |
+| **2** | La démonstration devient-elle un seul temps ou deux ? | **Deux temps** : à 200 ms le **gain** (le panneau droit montre ce qu'il a obtenu), à 900 ms le **coup** sur les deux panneaux | Un panneau qui affiche « 0 🛡️ ⚡4 » sans qu'on ait vu le gain arriver est illisible. Et cela supprime le problème d'état initial : les deux panneaux démarrent désormais à 0 Armure, donc plus rien n'est écrit en dur avant que la règle n'ait parlé. La version d'aujourd'hui préremplissait ce champ à l'initialisation — `int _rightArmor = _rightStartArmor;` (`tutorial_armor_widget.dart:28`), donc 4 |
 | **3** | Où vit le titre court du panneau droit ? | Dans `lib/models/data/model_extensions.dart`, `StatRuleLabel.shortTitle`, sur le **même `switch` exhaustif** sur `(stat, mode, to)` que `describe` | C'est déjà là que vit la phrase longue (lot C, partie 2, décision 3). Deux fichiers pour deux formes du même libellé seraient deux endroits à tenir, et le `switch` exhaustif fait rougir l'analyseur si une valeur d'énumération arrive sans son libellé |
 | **4** | La phrase de la règle est à la troisième personne (« **Son** Armure devient… ») ; le tutoriel tutoie. Faut-il une seconde variante ? | **Non.** La phrase est rendue **sous le nom de la classe**, dans un encadré de la même forme que celui du passif déjà présent (`tutorial_armor_widget.dart:279-330`) : « Le Berserker » / « Son Armure devient de la Puissance pour un tour. » | La troisième personne est alors juste, et `describe` reste une seule chaîne ARB pour ses deux lecteurs. Une variante tutoyante doublerait deux clés ARB par règle, pour un gain nul |
 | **5** | Le tutoriel borne-t-il le choix à trois passifs ? Les cartes non choisies montrent-elles les leurs ? | **Aucune borne** — tous ceux que rend `availablePassivesFor` —, et **chaque carte montre son passif retenu replié**, seule la carte choisie étant dépliée | C'est exactement le comportement de l'écran de sélection (lot C, décision 6, et `class_passive_list.dart:56-58`), donc la fidélité coûte ici moins cher que l'écart. Replié, le joueur compare les trois classes sans rien ouvrir ; déplié, il choisit. Trois est le compte d'aujourd'hui, pas une règle : P-13 le fera varier |
@@ -111,6 +134,24 @@ La spec pose la contrainte, pas la solution. Sept points d'implémentation sont 
 | `test/widget/tutorial_armor_step_test.dart` *(nouveau)* | Ce que la démonstration montre, par classe | 3 |
 | `test/widget/tutorial_play_card_step_test.dart` *(nouveau)* | Le texte flottant d'un gain converti | 4 |
 
+## Toute la surface de texte que ce lot touche
+
+Relevé exhaustif, à contre-vérifier après la tâche 4. **Aucun JSON d'`assets/data/` n'est touché** : ce lot n'ajoute donc aucune paire `_fr`/`_en` de contenu, et la règle de `CLAUDE.md` s'y applique sous ses deux autres formes — `bodyEn`/`bodyFr` pour la prose d'étape, une clé par ARB pour les libellés générés.
+
+| Où | Ce qui change | Tâche |
+|:---|:---|:---|
+| `lib/l10n/app_en.arb` | **2 clés neuves** : `statRuleArmorToMightTitle`, `statRuleManaToMightTitle`, **avec** leur bloc `@` de description (fichier gabarit) | 3 |
+| `lib/l10n/app_fr.arb` | les **mêmes 2 clés**, **sans** bloc `@` | 3 |
+| `lib/l10n/app_localizations{,_en,_fr}.dart` | régénérés par `flutter gen-l10n` et **commités** | 3 |
+| `lib/tutorial/tutorial_data.dart` | **2 paires** `bodyEn`/`bodyFr` réécrites : étape `classChoice` (lignes 16-24) et `armorDamage` (lignes 174-193). Les `titleEn`/`titleFr` des deux étapes **ne changent pas** | 2, 3 |
+| `tutorial_class_choice_widget.dart` | 1 paire en ligne neuve : « Choisissez votre classe, puis son passif » / « Choose your class, then its passive » | 2 |
+| `tutorial_armor_widget.dart` | 2 paires en ligne neuves (« +N Puissance » / « +N Might », « +N Armure » / « +N Armor »). « AVEC ARMURE » / « WITH ARMOR » **survit**, en repli quand la classe n'a pas de règle sur l'Armure | 3 |
+| `tutorial_play_card_widget.dart` | **rien à traduire** : le texte flottant est `'+N ⚡'` ou `'+N 🛡️'`, chiffre et glyphe, identiques dans les deux langues | 4 |
+
+Les paires en ligne (`isFrench ? … : …`) sont la convention **existante** de `lib/tutorial/` : les trois widgets touchés en portent déjà. Ne pas les migrer vers l'ARB au passage — ce serait un autre chantier, et il n'est pas demandé.
+
+Aucune clé ARB n'est **supprimée** ni renommée : `statRuleConvertArmorToMight` et `statRuleConvertManaToMight`, écrites au lot C, gardent leurs deux lecteurs (l'écran de sélection, et désormais l'étape « Armure »).
+
 ---
 
 ### Task 0: La branche, depuis la documentation déjà commitée
@@ -142,7 +183,7 @@ Run: `git switch -c feat/p41-lot-d-tutoriel` — depuis `main`, dans le checkout
 - [ ] **Step 3: Mesurer la base — et noter le chiffre**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+N: All tests passed!`, **prévision N = 1135** (mesuré le 2026-09-20 sur `6bc3705`).
+Run: `flutter test` — Expected: `+N: All tests passed!`, **prévision N = 1135** (re-mesuré le 2026-09-20 sur `a270de4`).
 
 **Noter N.** Toutes les prévisions de ce plan sont écrites à partir de 1135 ; si N diffère, décaler chaque prévision du même écart plutôt que de la recalculer.
 
@@ -161,7 +202,9 @@ Run: `flutter test` — Expected: `+N: All tests passed!`, **prévision N = 1135
 
 - [ ] **Step 1: Écrire les tests**
 
-Ajouter ce groupe à `test/tutorial/tutorial_engine_test.dart`, **juste après** le groupe `'L\'absorption d\'armure suit EntityStats.takeDamage'` (il se termine ligne 122) :
+Ajouter ce groupe à `test/tutorial/tutorial_engine_test.dart`, **juste après** le groupe `'L\'absorption d\'armure suit EntityStats.takeDamage'`, qui se termine sur sa `});` de la ligne **116**.
+
+**Pas ligne 122 :** les lignes 118-122 sont le commentaire d'intention du groupe *suivant* (`'resetMockState, mergeCards et gainXp restent couverts'`, ligne 123). S'insérer entre les deux séparerait ce commentaire du groupe qu'il explique. Insérer donc entre la ligne 116 et la ligne 118.
 
 ```dart
   // L'identite de la classe traverse le tutoriel sans y etre recopiee
@@ -683,7 +726,7 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
 
 - [ ] **Step 6: La prose de l'étape 02 dit ce que l'étape fait**
 
-Dans `lib/tutorial/tutorial_data.dart`, **remplacer** les corps de l'étape `TutorialStepType.classChoice` (lignes 16-24) par :
+Dans `lib/tutorial/tutorial_data.dart`, **remplacer** les `bodyEn`/`bodyFr` de l'étape dont le `type:` est `TutorialStepType.classChoice` (lignes 16-24 ; premier passage dans ce fichier, aucun décalage). Ne toucher ni aux deux `title`, ni à la ligne `type:` :
 
 ```dart
     bodyEn:
@@ -715,7 +758,7 @@ Expected: les trois cartes tiennent dans le panneau d'illustration ; la carte ch
 - [ ] **Step 9: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1148: All tests passed!`
+Run: `flutter test` — Expected: `+1147: All tests passed!`
 
 - [ ] **Step 10: Commit**
 
@@ -751,7 +794,9 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 Dans `test/tutorial/tutorial_engine_test.dart` :
 
-**a)** Remplacer les quatre appels à `setHeroArmor` par `gainArmorForDemo`, sans toucher aux assertions — ligne 108 (`engine.setHeroArmor(4)`), ligne 393, ligne 486 (`engine.setHeroArmor(7)`) et ligne 502. Sans classe choisie, `statRules` est vide et le comportement est identique.
+**a)** Remplacer les quatre appels à `setHeroArmor` par `gainArmorForDemo`, sans toucher aux assertions. Sans classe choisie, `statRules` est vide et le comportement est identique.
+
+**Les repérer par `git grep -n "setHeroArmor" -- test`, pas par numéro de ligne :** les tâches 1 et 2 ont ajouté une centaine et demie de lignes à ce fichier, et les trois derniers appels ont glissé d'autant. Sur `a270de4` ils étaient aux lignes 108 (`setHeroArmor(4)`), 393 (`(4)`), 486 (`(7)`) et 502 (`(4)`) ; seul le premier est encore à sa place. Le `grep` doit rendre **exactement quatre** lignes — s'il en rend plus, un appel a été ajouté en route et il faut comprendre lequel.
 
 **b)** Ajouter ce groupe **après** le groupe `'Le choix du passif'` de la tâche 2 :
 
@@ -907,7 +952,7 @@ Expected: **ÉCHEC** de compilation — `The method 'gainArmorForDemo' isn't def
 
 - [ ] **Step 4: Les deux titres courts en ARB**
 
-Dans `lib/l10n/app_en.arb`, ajouter **juste après** le bloc `statRuleConvertManaToMight` et ses métadonnées :
+Dans `lib/l10n/app_en.arb`, ajouter **juste après** le bloc `statRuleConvertManaToMight` et ses métadonnées, qui se ferment **ligne 183** (la clé est ligne 178, son bloc `@` 179-183 ; la clé suivante, `tooltipManaTitle`, est ligne 184) :
 
 ```json
   "statRuleArmorToMightTitle": "ARMOR → MIGHT",
@@ -920,7 +965,7 @@ Dans `lib/l10n/app_en.arb`, ajouter **juste après** le bloc `statRuleConvertMan
   },
 ```
 
-Dans `lib/l10n/app_fr.arb`, aux mêmes emplacements (sans bloc `@`, le gabarit est `app_en.arb`) :
+Dans `lib/l10n/app_fr.arb`, **juste après la ligne 109** (`statRuleConvertManaToMight`, avant `tooltipManaTitle` ligne 110) — **sans bloc `@`** : le gabarit est `app_en.arb` (`l10n.yaml`, `template-arb-file`), et aucune des deux clés voisines n'en porte dans ce fichier.
 
 ```json
   "statRuleArmorToMightTitle": "ARMURE → PUISSANCE",
@@ -953,7 +998,7 @@ Dans `lib/models/data/model_extensions.dart`, ajouter cette méthode à l'extens
 
 Dans `lib/tutorial/tutorial_engine.dart` :
 
-**a)** **Remplacer** `setHeroArmor` (lignes 295-299) par :
+**a)** **Remplacer** `setHeroArmor` — ses cinq lignes, de `void setHeroArmor(int value) {` à sa `}`. Lignes 295-299 **sur `a270de4`**, décalées d'une dizaine de lignes par le `choosePassive` que la tâche 2 a inséré plus haut dans le même fichier : la repérer par sa signature, pas par son numéro. La remplacer par :
 
 ```dart
   /// Accorde [amount] points d'Armure de démonstration, **sous les règles de
@@ -978,7 +1023,9 @@ Dans `lib/tutorial/tutorial_engine.dart` :
   }
 ```
 
-**b)** Dans `resetHeroStatsForDemo` (lignes 327-334), ajouter `statuses` et compléter la documentation :
+**b)** **Remplacer** `resetHeroStatsForDemo` **et sa documentation**, d'un seul bloc : du `/// Remet \`heroStats\` à un socle neutre pour une démonstration de dégâts :` jusqu'à la `}` du corps — **lignes 317-334 sur `a270de4`**, elles aussi décalées par la tâche 2.
+
+Remplacer les deux ensemble, et non insérer le nouveau commentaire au-dessus de l'ancien : celui d'aujourd'hui nomme `setHeroArmor` dans sa quatrième ligne (« Contrairement à `setHeroArmor`/`applyDamageToHero`… »), et le laisser en place ferait rougir la vérification de la **tâche 5, step 3** (`git grep -n "setHeroArmor" -- lib/tutorial`).
 
 ```dart
   /// Remet `heroStats` à un socle neutre pour une démonstration de dégâts :
@@ -1018,12 +1065,17 @@ Dans `lib/tutorial/widgets/tutorial_armor_widget.dart` :
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
 import '../../models/data/model_extensions.dart';
+import '../../models/data/stat_rule.dart';
 import '../tutorial_engine.dart';
 ```
 
 (l'import existant de `../tutorial_engine.dart` est conservé, pas dupliqué.)
 
-**b)** **Remplacer** le bloc de champs et de constantes (lignes 13-37, de `// Point d'Armure de départ` jusqu'à `double _rightDamageY = 0.0;`) par :
+`stat_rule.dart` est nécessaire **en plus** de `model_extensions.dart` : celui-ci *importe* `stat_rule.dart` sans le réexporter, et le point **e)** nomme `RuleStat.armor`.
+
+**b)** **Remplacer** le bloc de champs et de constantes, **lignes 13 à 35** — de `// Point d'Armure de départ` jusqu'à `double _rightDamageY = 0.0;` inclus.
+
+**Ne pas aller jusqu'à 37 :** la ligne 36 est vide et la ligne 37 ouvre le commentaire du getter `_maxHp`, qui reste tel quel.
 
 ```dart
   // Le gain d'Armure de démonstration, et le coup qu'il encaisse : deux
@@ -1061,7 +1113,9 @@ import '../tutorial_engine.dart';
   double _rightDamageY = 0.0;
 ```
 
-**c)** **Remplacer** `_resetDemoBaseline` et `_runSimulation` (lignes 39 à 122, de `/// Remet \`heroStats\`` jusqu'à la fermeture de `_runSimulation`) par :
+**c)** **Remplacer** `_resetDemoBaseline` et `_runSimulation`, **lignes 44 à 119** — du `/// Remet \`heroStats\` à un socle neutre` de la ligne 44 jusqu'à la `}` de `_runSimulation`, ligne 119.
+
+**Ni 39, ni 122 :** les lignes 39 à 42 sont la fin du commentaire de `_maxHp` et son getter, qui restent ; les lignes 121-122 ouvrent `build`. Ce bloc emporte en revanche **tous** les commentaires qui nomment encore `setHeroArmor` dans ce fichier (lignes 46, 76, 79) — c'est ce qui rend la vérification de la tâche 5, step 3, muette.
 
 ```dart
   /// Remet `heroStats` à un socle neutre avant un scénario de démonstration :
@@ -1168,18 +1222,30 @@ import '../tutorial_engine.dart';
     // Les règles de la classe choisie. Vide pour le Paladin et le Mage : le
     // panneau droit garde alors son titre et son badge d'Armure d'origine.
     final rules = widget.engine.mockState.chosenHero?.statRules ?? const [];
+    // Celles qui visent l'**Armure**, et elles seules, titrent le panneau :
+    // c'est l'Armure qu'il démontre. Une classe qui convertirait son Mana
+    // suivrait bien une règle, mais pas à cette étape — titrer le panneau
+    // « MANA → PUISSANCE » lui enseignerait ici une règle qu'elle ne suit
+    // pas, ce que la contrainte du §9.1 interdit précisément. Aucune classe
+    // livrée n'est dans ce cas, et c'est bien pour ça qu'il faut le filtre :
+    // le titre ne doit pas dépendre du fait qu'il n'y en ait qu'une.
+    final armorRules =
+        rules.where((r) => r.stat == RuleStat.armor).toList();
 ```
+
+(`firstOrNull` n'est **pas** disponible : `package:collection` n'est pas une dépendance du projet et aucun fichier de `lib/` ne l'utilise. D'où la liste.)
 
 **e)** Remplacer le `Text` du titre du panneau droit (aujourd'hui `isFrench ? 'AVEC ARMURE' : 'WITH ARMOR'`) par :
 
 ```dart
                               Text(
                                 // Généré depuis la règle quand la classe en
-                                // déclare une : « ARMURE → PUISSANCE ».
-                                // Jamais écrit classe par classe (ADR-090).
-                                rules.isEmpty
+                                // déclare une **sur l'Armure** :
+                                // « ARMURE → PUISSANCE ». Jamais écrit classe
+                                // par classe (ADR-090).
+                                armorRules.isEmpty
                                     ? (isFrench ? 'AVEC ARMURE' : 'WITH ARMOR')
-                                    : rules.first.shortTitle(l10n),
+                                    : armorRules.first.shortTitle(l10n),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.blueAccent,
@@ -1355,11 +1421,13 @@ import '../tutorial_engine.dart';
                 ],
 ```
 
-**j)** Retirer la constante `_rightStartArmor` de tout commentaire qui la nomme encore, et mettre à jour le commentaire de `_maxHp` s'il évoque `setHeroArmor` (lignes 46-51 d'origine). Vérifier par `git grep -n "setHeroArmor\|_rightStartArmor" -- lib` : **aucune sortie attendue**.
+**j)** Vérifier par `git grep -n "setHeroArmor\|_rightStartArmor" -- lib` : **aucune sortie attendue**.
+
+Rien ne devrait rester à faire ici : les cinq mentions de `setHeroArmor` de ce fichier (lignes 46, 76, 79, 81, 90) et les deux de `_rightStartArmor` (17, 28) tombent toutes dans les blocs que **b)** et **c)** remplacent, et les deux du moteur dans ceux de l'étape 6. Le commentaire de `_maxHp` (lignes 37-41), lui, ne nomme ni l'un ni l'autre et **reste inchangé** — celui qui nommait `setHeroArmor` à la ligne 46 était celui de `_resetDemoBaseline`, emporté par **c)**. Si le `git grep` rend quoi que ce soit, c'est qu'une des deux plages a été coupée trop court.
 
 - [ ] **Step 8: La prose de l'étape dit ce que la démonstration montre**
 
-Dans `lib/tutorial/tutorial_data.dart`, **remplacer** les corps de l'étape `TutorialStepType.armorDamage` (lignes 174-193) par :
+Dans `lib/tutorial/tutorial_data.dart`, **remplacer** les `bodyEn`/`bodyFr` de l'étape dont le `type:` est `TutorialStepType.armorDamage` — lignes 174-193 **sur `a270de4`**, décalées de quelques lignes par la prose de l'étape 02 réécrite à la tâche 2, plus haut dans le même fichier. Repérer par le `titleFr: 'Armure & Dégâts'` qui les précède, et ne toucher ni aux deux `title`, ni à la ligne `type:` :
 
 ```dart
     bodyEn:
@@ -1406,7 +1474,7 @@ Expected :
 - [ ] **Step 11: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1155: All tests passed!`
+Run: `flutter test` — Expected: `+1154: All tests passed!`
 
 - [ ] **Step 12: Commit**
 
@@ -1600,7 +1668,7 @@ Expected: **PASS**, 2 tests.
 - [ ] **Step 5: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1157: All tests passed!`
+Run: `flutter test` — Expected: `+1156: All tests passed!`
 
 - [ ] **Step 6: Commit**
 
@@ -1631,7 +1699,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: La suite complète**
 
 Run: `dart analyze` — Expected: `No issues found!`
-Run: `flutter test` — Expected: `+1157: All tests passed!`
+Run: `flutter test` — Expected: `+1156: All tests passed!`
 
 - [ ] **Step 2: Le tutoriel ne recopie toujours aucune règle**
 
@@ -1705,7 +1773,7 @@ drapeau armorGainedThisStep — qui garde une autre etape — se lit sur la vale
 imprimee de la carte, avant conversion. Rien n etait bloque ; c est la fidelite
 pedagogique qui l etait.
 
-`dart analyze` propre, `flutter test` vert (1157 tests, contre 1135 au depart).
+`dart analyze` propre, `flutter test` vert (1156 tests, contre 1135 au depart).
 
 Reste au lot D : la console de debug (spec §9.2), independante de cette partie.
 
