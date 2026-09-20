@@ -7,12 +7,15 @@ import '../../models/enemy_instance.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
 
-/// Valeur d'effet réelle (dégâts ou armure) utilisée pour le texte flottant
-/// déclenché par le chemin tap-puis-tap ; applique le multiplicateur de
-/// rareté, comme `TutorialEngine.playCard`.
-int _effectValue(CardInstance card, String type) {
+/// Dégâts réels d'une carte, utilisés pour le texte flottant déclenché par le
+/// chemin tap-puis-tap ; applique le multiplicateur de rareté, comme
+/// `TutorialEngine.playCard`.
+///
+/// Il n'existe pas d'équivalent pour l'armure : ce qu'un gain d'armure
+/// devient dépend de la classe, et seul le moteur le sait (spec P-41, §9.1).
+int _damageValue(CardInstance card) {
   for (final effect in card.data.effects) {
-    if (effect.type == type) {
+    if (effect.type == 'damage') {
       return (effect.value * card.rarityMultiplier).round();
     }
   }
@@ -165,7 +168,7 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
               }
 
               if (_selectedCard!.data.type == CardType.attack) {
-                final damage = _effectValue(_selectedCard!, 'damage');
+                final damage = _damageValue(_selectedCard!);
                 final success = widget.engine.playCard(_selectedCard!);
                 if (success) {
                   _triggerFloatingText('-$damage HP', Colors.redAccent);
@@ -337,10 +340,23 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
           }
 
           if (_selectedCard!.data.type == CardType.skill) {
-            final armor = _effectValue(_selectedCard!, 'armor');
+            // Le gain **réel**, mesuré de part et d'autre de `playCard` : une
+            // classe qui convertit son Armure ne garde aucun point, et
+            // annoncer la valeur imprimée sur la carte serait lui enseigner
+            // une règle qu'elle ne suit pas (spec P-41, §9.1). C'est
+            // `StatGains.apply` qui a décidé, pas ce widget.
+            final avant = widget.engine.mockState.heroStats;
             final success = widget.engine.playCard(_selectedCard!);
             if (success) {
-              _triggerFloatingText('+$armor 🛡️', Colors.blueAccent);
+              final apres = widget.engine.mockState.heroStats;
+              final armure = apres.armure - avant.armure;
+              final puissance = apres.effectiveMight - avant.effectiveMight;
+
+              if (puissance > 0) {
+                _triggerFloatingText('+$puissance ⚡', Colors.amber);
+              } else {
+                _triggerFloatingText('+$armure 🛡️', Colors.blueAccent);
+              }
               setState(() {
                 _selectedCard = null;
               });
