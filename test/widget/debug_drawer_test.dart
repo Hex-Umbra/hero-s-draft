@@ -9,10 +9,13 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/might_target.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
 import 'package:roguelike_card_game/ui/widgets/debug/debug_drawer.dart';
 
@@ -27,6 +30,29 @@ const _paladin = HeroData(
   maxMana: 3,
   luck: 0,
   mastery: 0,
+);
+
+const _berserker = HeroData(
+  id: 'berserker',
+  nameEn: 'Berserker',
+  nameFr: 'Berserker',
+  descriptionEn: 'Damage oriented',
+  descriptionFr: 'Oriente degats',
+  classCard: 'berserker.png',
+  maxHp: 80,
+  maxMana: 3,
+  luck: 0,
+  mastery: 0,
+  critChance: 10,
+  mightTargets: {MightTarget.attack},
+  statRules: [
+    StatRule(
+      stat: RuleStat.armor,
+      mode: RuleMode.convert,
+      to: RuleTarget.statusMight,
+      duration: 1,
+    ),
+  ],
 );
 
 const _strike = CardData(
@@ -52,6 +78,17 @@ const _talisman = RelicData(
   value: 2,
   rarity: RelicRarity.common,
   emoji: '🛡️',
+);
+
+const _rage = PassiveData(
+  id: 'rage',
+  nameEn: 'Rage',
+  nameFr: 'Rage',
+  descriptionEn: 'x',
+  descriptionFr: 'x',
+  trigger: RelicTrigger.startOfTurn,
+  effectType: 'gain_armor',
+  value: 2,
 );
 
 final _goblinData = EnemyData(
@@ -85,10 +122,14 @@ void _populateRegistry() {
   );
 }
 
-ProviderContainer _debugRunContainer({List<EnemyInstance> enemies = const []}) {
+ProviderContainer _debugRunContainer({
+  List<EnemyInstance> enemies = const [],
+  HeroData hero = _paladin,
+  PassiveData? activePassive,
+}) {
   final container = ProviderContainer();
   container.read(debugRunProvider.notifier).requestDebugRun();
-  container.read(runProvider.notifier).startNewRun(_paladin);
+  container.read(runProvider.notifier).startNewRun(hero, activePassive);
   container
       .read(combatProvider.notifier)
       .updateState(CombatState(enemies: enemies));
@@ -249,5 +290,91 @@ void main() {
     expect(container.read(combatProvider).enemies.length, 1);
     expect(find.text('Gagner le combat'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('l onglet Heros expose l orientation de la Puissance', (tester) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(hero: _berserker);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: false));
+    await _openDrawer(tester);
+    await tester.tap(find.text('Heros'));
+    await tester.pumpAndSettle();
+
+    // Une puce par cible de `MightTarget`, generee : jamais une liste ecrite
+    // a la main.
+    for (final cible in MightTarget.values) {
+      await _scrollTo(tester, find.text(cible.name));
+      expect(find.text(cible.name), findsOneWidget, reason: cible.name);
+    }
+  });
+
+  testWidgets('l onglet Heros expose les regles de stat et le passif', (tester) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(
+      hero: _berserker,
+      activePassive: _rage,
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: false));
+    await _openDrawer(tester);
+    await tester.tap(find.text('Heros'));
+    await tester.pumpAndSettle();
+
+    // La regle, dans le vocabulaire du fichier : c'est la donnee que le
+    // developpeur edite, pas la phrase du joueur.
+    final regle = _berserker.statRules.first.toString();
+    await _scrollTo(tester, find.text(regle));
+    expect(find.text(regle), findsOneWidget);
+
+    await _scrollTo(tester, find.text('Passif actif : rage'));
+    expect(find.text('Passif actif : rage'), findsOneWidget);
+  });
+
+  testWidgets('la derniere cible de Puissance ne peut pas etre retiree', (tester) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer(hero: _berserker);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: false));
+    await _openDrawer(tester);
+    await tester.tap(find.text('Heros'));
+    await tester.pumpAndSettle();
+
+    // Le Berserker n'a que `attack` : la decocher laisserait une run dont la
+    // Puissance ne renforce rien, etat que `HeroData.fromJson` refuse de
+    // relire (`might_target.dart:20-25`).
+    await _scrollTo(tester, find.text(MightTarget.attack.name));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.ancestor(
+        of: find.text(MightTarget.attack.name),
+        matching: find.byType(FilterChip),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(runProvider).heroStats.mightTargets,
+      {MightTarget.attack},
+    );
+
+    // En revanche, en ajouter une marche.
+    await _scrollTo(tester, find.text(MightTarget.skill.name));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.ancestor(
+        of: find.text(MightTarget.skill.name),
+        matching: find.byType(FilterChip),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(runProvider).heroStats.mightTargets,
+      {MightTarget.attack, MightTarget.skill},
+    );
   });
 }

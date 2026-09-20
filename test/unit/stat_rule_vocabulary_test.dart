@@ -32,4 +32,30 @@ void main() {
       expect(noms.toSet(), hasLength(noms.length));
     }
   });
+
+  // toString() est le vocabulaire du menu de debug : un test qui ne
+  // verifierait que le rendu du widget (find.text(rule.toString())) passerait
+  // encore si toString() rendait le nom d'enum Dart (statusMight) plutot que
+  // le vocabulaire du fichier (status:might) — cette assertion fixe la chaine
+  // rendue elle-meme.
+  test('toString rend le vocabulaire du fichier, pas les noms d enum', () {
+    expect(
+      const StatRule(
+        stat: RuleStat.armor,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+        duration: 1,
+      ).toString(),
+      'armor convert status:might, 1 tour(s)',
+    );
+    expect(
+      const StatRule(
+        stat: RuleStat.mana,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+        duration: 3,
+      ).toString(),
+      'mana convert status:might, 3 tour(s)',
+    );
+  });
 }
