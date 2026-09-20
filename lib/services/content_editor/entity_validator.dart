@@ -52,14 +52,14 @@ class EntityValidator {
   /// declare pour cette validation, comme il le sera a l'ecriture.
   final List<PendingImport> imports;
 
-  /// Les identifiants que **la même transaction** va écrire, et que le
-  /// registre chargé au démarrage ne connaît donc pas encore.
+  /// Les identifiants que **la meme transaction** va ecrire, et que le
+  /// registre charge au demarrage ne connait donc pas encore.
   ///
-  /// Une recette de classe écrit la classe, puis un passif qui la nomme : au
-  /// moment où ce passif est jugé, la classe n'existe ni dans le registre ni
-  /// sur le disque. `_signatureCards` contournait le problème en n'étant pas
-  /// un contrôle par référence (voir sa documentation) ; le passif, lui, en
-  /// est un. C'est ce seam, nommé.
+  /// Une recette de classe ecrit la classe, puis un passif qui la nomme : au
+  /// moment ou ce passif est juge, la classe n'existe ni dans le registre ni
+  /// sur le disque. `_signatureCards` contournait le probleme en n'etant pas
+  /// un controle par reference (voir sa documentation) ; le passif, lui, en
+  /// est un. C'est ce seam, nomme.
   final Map<EntityCategory, Set<String>> pendingIds;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
@@ -552,13 +552,22 @@ class EntityValidator {
     return const [];
   }
 
+  /// L'ensemble pris en compte pour une reference (famille 6) : le registre
+  /// charge au demarrage, augmente des identifiants pendants de la meme
+  /// transaction. `null` des que le registre est indisponible — une
+  /// reference ne doit jamais se juger sur les seuls pendants, qui ne
+  /// couvrent qu'une partie de la categorie.
   Set<String>? _idsOf(EntityCategory category) {
     final known = _registryIdsOf(category);
+    if (known == null) return null;
     final pending = pendingIds[category];
-    if (known == null) return pending == null || pending.isEmpty ? null : pending;
     return pending == null ? known : {...known, ...pending};
   }
 
+  /// L'ensemble du seul registre, sans les identifiants pendants. C'est celui
+  /// que l'unicite (famille 1) doit lire : un brouillon ne doit jamais se
+  /// comparer a son propre identifiant, annonce comme pendant pour que la
+  /// reference qui le nomme ne soit pas refusee.
   Set<String>? _registryIdsOf(EntityCategory category) {
     final r = registry;
     if (r == null) return null;

@@ -46,24 +46,24 @@ class ClassRecipe {
 
   final List<SignatureCardInput> signatureCards;
 
-  /// L'identifiant du passif de départ que la recette écrit.
+  /// L'identifiant du passif de depart que la recette ecrit.
   ///
-  /// **Dérivé de l'identifiant de la classe**, comme le chemin de son icône :
+  /// **Derive de l'identifiant de la classe**, comme le chemin de son icone :
   /// il ne se saisit pas. Une classe sans aucun passif disponible afficherait
-  /// un choix vide à la sélection et ferait rougir
-  /// `referential_integrity_test` (spec P-41, §9.2) ; la garantir revient à
-  /// écrire ce passif dans la même transaction. L'auteur le renomme ensuite
-  /// comme n'importe quelle entité, et sa prose `[À REMPLIR]` le lui
+  /// un choix vide a la selection et ferait rougir
+  /// `referential_integrity_test` (spec P-41, §9.2) ; la garantir revient a
+  /// ecrire ce passif dans la meme transaction. L'auteur le renomme ensuite
+  /// comme n'importe quelle entite, et sa prose `[A REMPLIR]` le lui
   /// rappellera.
   String get starterPassiveId => id;
 
-  /// Les brouillons, **dans l'ordre d'écriture**.
+  /// Les brouillons, **dans l'ordre d'ecriture**.
   ///
-  /// La classe d'abord : `_registerSignatureCard` lève `StateError` si une
-  /// carte de classe est écrite avant le `class.json` qui doit la déclarer,
-  /// et le passif de départ la **nomme**, donc elle doit exister avant lui.
-  /// Son `skills` reste absent : l'écrivain l'alimente carte par carte, si
-  /// bien que chaque état intermédiaire respecte la bijection exigée par
+  /// La classe d'abord : `_registerSignatureCard` leve `StateError` si une
+  /// carte de classe est ecrite avant le `class.json` qui doit la declarer,
+  /// et le passif de depart la **nomme**, donc elle doit exister avant lui.
+  /// Son `skills` reste absent : l'ecrivain l'alimente carte par carte, si
+  /// bien que chaque etat intermediaire respecte la bijection exigee par
   /// `EntityValidator._signatureCards`.
   List<EntityDraft> toDrafts() {
     final classDescriptor = kEntityDescriptors[EntityCategory.heroClass]!;
@@ -83,7 +83,7 @@ class ClassRecipe {
         EntityDraft(
           descriptor: passiveDescriptor,
           id: starterPassiveId,
-          // Aucune prose saisie : `fillPlaceholders` écrit `[À REMPLIR]`,
+          // Aucune prose saisie : `fillPlaceholders` ecrit `[A REMPLIR]`,
           // volontairement voyant. Inventer un nom ferait passer un squelette
           // pour un choix.
           bilingual: const {},
@@ -103,12 +103,12 @@ class ClassRecipe {
     ];
   }
 
-  /// Le corps du passif de départ : le gabarit de la catégorie, plus la seule
-  /// clé que la recette impose — `classes`.
+  /// Le corps du passif de depart : le gabarit de la categorie, plus la seule
+  /// cle que la recette impose — `classes`.
   ///
-  /// Sans elle, le passif serait ouvert à **toutes** les classes (spec P-49,
-  /// §3.2) et viendrait polluer le pool des trois livrées. C'est la même
-  /// doctrine que `iconPath` : ce que le geste impose, la recette l'écrit.
+  /// Sans elle, le passif serait ouvert a **toutes** les classes (spec P-49,
+  /// §3.2) et viendrait polluer le pool des trois livrees. C'est la meme
+  /// doctrine que `iconPath` : ce que le geste impose, la recette l'ecrit.
   String get _starterPassiveMechanics {
     final decoded = jsonDecode(
       kEntityDescriptors[EntityCategory.passive]!.template,
@@ -127,10 +127,10 @@ class ClassRecipe {
   /// premiere sans faute affichee, sans message. A appeler **avant** la
   /// validation par brouillon, dans `_write`.
   ///
-  /// Le passif de départ n'y figure pas : son identifiant est celui de la
-  /// classe, que `EntityValidator._identity` juge déjà, et il ne peut donc ni
-  /// être vide ni faire doublon avec une carte de signature — qui vit dans un
-  /// autre répertoire.
+  /// Le passif de depart n'y figure pas : son identifiant est celui de la
+  /// classe, que `EntityValidator._identity` juge deja, et il ne peut donc ni
+  /// etre vide ni faire doublon avec une carte de signature — qui vit dans un
+  /// autre repertoire.
   List<ValidationFault> faults() {
     final seen = <String>{};
     final duplicates = <String>{};

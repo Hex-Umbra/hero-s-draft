@@ -501,7 +501,7 @@ void main() {
 
     expect(inIssue(find.textContaining('minuscules')), findsOneWidget);
     // `relics` et `passives` : les deux dossiers a plat que le setUp
-    // preseme, le second depuis que la recette de classe ecrit un passif de
+    // pre-seme, le second depuis que la recette de classe ecrit un passif de
     // depart (tache 2) — aucun n'a bouge, rien d'autre n'est apparu.
     expect(Directory('$root/assets/data').listSync(), hasLength(2));
   });

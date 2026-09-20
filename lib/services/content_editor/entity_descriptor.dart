@@ -387,6 +387,9 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // leve sur une rarete inconnue, via `construct`. Assume, et c'est la
     // categorie ou `fromJson` fait le plus de travail — comme
     // `forgeUpgrade`.
+    //
+    // Une recompense mythique, ou une recompense `cloneCard`, se termine
+    // depuis la vue JSON brute : le gabarit ne montre que le cas courant.
     template: '''
 {
   "effect": "stat",
@@ -415,10 +418,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     },
     requiredKeys: const {'maxHp', 'maxMana', 'mightTargets'},
     enumListKeys: {'mightTargets': _names(MightTarget.values)},
-    // Les trois vocabulaires d'une règle de stat, **lus sur le parseur** :
-    // `to` s'écrit `status:might` et non `statusMight`, et seul `StatRule`
-    // connaît la correspondance. Sans ces trois lignes, l'éditeur laissait
-    // écrire `"mode": "convrt"` — exactement le cas pour lequel il existe
+    // Les trois vocabulaires d'une regle de stat, **lus sur le parseur** :
+    // `to` s'ecrit `status:might` et non `statusMight`, et seul `StatRule`
+    // connait la correspondance. Sans ces trois lignes, l'editeur laissait
+    // ecrire `"mode": "convrt"` — exactement le cas pour lequel il existe
     // (spec P-41, §9.2).
     enumKeys: {
       'statRules[].stat': StatRule.statNames,

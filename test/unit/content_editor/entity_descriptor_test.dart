@@ -217,7 +217,12 @@ void main() {
   // - `heroClass` et `category`, imposes par le repertoire ;
   // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
   //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
-  //   qui suit la table le verifie.
+  //   qui suit la table le verifie ;
+  // - `requires`, `fallbackDescription` et `shortDescription` d'une
+  //   recompense de niveau : `requires` et les deux paires de prose sont des
+  //   cles optionnelles du modele, ecartees du gabarit a dessein pour qu'une
+  //   creation ne parte pas avec une exigence ou une prose que personne n'a
+  //   demandee ; atteintes par la vue JSON brute.
   test('chaque gabarit porte exactement les cles attendues', () {
     const expected = <EntityCategory, Set<String>>{
       EntityCategory.card: {
@@ -261,6 +266,13 @@ void main() {
         'weight',
         'emoji',
       },
+      EntityCategory.levelUpReward: {
+        'effect',
+        'stat',
+        'pool',
+        'displayOrder',
+        'values',
+      },
       EntityCategory.heroClass: {
         'maxHp',
         'maxMana',
@@ -280,13 +292,6 @@ void main() {
         'critChance',
         'gold',
         'intents',
-      },
-      EntityCategory.levelUpReward: {
-        'effect',
-        'stat',
-        'pool',
-        'displayOrder',
-        'values',
       },
     };
 

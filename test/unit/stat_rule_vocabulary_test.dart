@@ -22,14 +22,23 @@ void main() {
     }
   });
 
-  test('les trois listes sont non vides et sans doublon', () {
+  // Le vrai trou : `StatRuleLabel.describe` force, par un switch exhaustif, a
+  // visiter `model_extensions.dart` des qu'un `RuleStat` (ou `RuleMode`, ou
+  // `RuleTarget`) gagne une valeur — mais rien ne force a l'ajouter aussi a
+  // `_stats` (ou `_modes`, ou `_targets`) dans `stat_rule.dart`, et
+  // `_nameOf`, sans `orElse` (`stat_rule.dart:68`), leve alors `StateError`
+  // au clic, dans le menu de debug. Une liste plus courte que son
+  // enumeration le dit ici, a l'execution des tests plutot qu'au clic.
+  test('chaque valeur d enum porte un nom de vocabulaire fichier', () {
+    expect(StatRule.statNames, hasLength(RuleStat.values.length));
+    expect(StatRule.modeNames, hasLength(RuleMode.values.length));
+    expect(StatRule.targetNames, hasLength(RuleTarget.values.length));
     for (final noms in [
       StatRule.statNames,
       StatRule.modeNames,
       StatRule.targetNames,
     ]) {
       expect(noms, isNotEmpty);
-      expect(noms.toSet(), hasLength(noms.length));
     }
   });
 
