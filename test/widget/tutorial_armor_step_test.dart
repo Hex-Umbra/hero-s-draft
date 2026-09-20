@@ -35,17 +35,34 @@ Future<TutorialEngine> _pump(WidgetTester tester, String heroId) async {
   return engine;
 }
 
-/// Presse « Voir la différence » et laisse passer les deux temps de la
-/// démonstration : le gain (200 ms) puis le coup (900 ms). Le dernier pump
-/// va au-delà des 2200 ms du nettoyage des textes flottants : un timer
-/// encore en attente à la fin du test ferait échouer l'assertion
-/// `!timersPending` de `flutter_test`, qui tourne sous `FakeAsync`.
-Future<void> _simuler(WidgetTester tester) async {
+/// Presse « Voir la différence » et laisse passer le temps 1 (le gain,
+/// 200 ms), sans laisser le temps 2 (le coup, 900 ms) se déclencher.
+///
+/// C'est le seul instant où l'écran distingue une classe qui convertit d'une
+/// classe qui garde : après le coup, `_demoDamage` (10) dépasse toujours
+/// `_demoArmorGain` (4), donc `EntityStats.takeDamage` ramène l'Armure du
+/// panneau droit à 0 **dans les deux cas** — converti ou non. Un test qui
+/// n'observe qu'après le coup ne peut donc jamais faire la différence.
+Future<void> _declencherLeGain(WidgetTester tester) async {
   await tester.tap(find.textContaining('Voir la différence'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 250));
+}
+
+/// Laisse passer le temps 2 (le coup) puis le nettoyage des textes
+/// flottants, à partir de l'état laissé par [_declencherLeGain]. Le dernier
+/// pump va au-delà des 2200 ms du nettoyage : un timer encore en attente à
+/// la fin du test ferait échouer l'assertion `!timersPending` de
+/// `flutter_test`, qui tourne sous `FakeAsync`.
+Future<void> _laisserPasserLeCoup(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 750));
   await tester.pump(const Duration(milliseconds: 1300));
+}
+
+/// La démonstration complète : le gain, puis le coup.
+Future<void> _simuler(WidgetTester tester) async {
+  await _declencherLeGain(tester);
+  await _laisserPasserLeCoup(tester);
 }
 
 void main() {
@@ -82,6 +99,41 @@ void main() {
     expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
   });
 
+  testWidgets(
+    'au temps du gain, une classe sans regle affiche l Armure gagnee, pas de Puissance',
+    (tester) async {
+      await _pump(tester, 'paladin');
+
+      await _declencherLeGain(tester);
+
+      // Le geste discriminant (decision de plan n2) : entre le gain (200 ms)
+      // et le coup (900 ms), une classe qui ne convertit pas garde l'Armure
+      // gagnee telle quelle, et aucune Puissance n'apparait.
+      expect(find.text('4'), findsOneWidget); // le badge d'Armure du panneau droit
+      expect(find.byIcon(Icons.bolt_rounded), findsNothing);
+
+      await _laisserPasserLeCoup(tester); // draine les timers restants
+    },
+  );
+
+  testWidgets(
+    'au temps du gain, une classe qui convertit affiche la Puissance, pas l Armure',
+    (tester) async {
+      await _pump(tester, 'berserker');
+
+      await _declencherLeGain(tester);
+
+      // Meme instant que le test Paladin ci-dessus : ce contraste ne tient
+      // que si le gain passe reellement par StatGains.apply et les statRules
+      // de la classe (ADR-081) — jamais par une ecriture directe de l'Armure.
+      expect(find.text('0'), findsWidgets); // le badge d'Armure du panneau droit, converti
+      expect(find.text('4'), findsOneWidget); // le badge de Puissance
+      expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
+
+      await _laisserPasserLeCoup(tester); // draine les timers restants
+    },
+  );
+
   testWidgets('la regle de la classe est ecrite sous les panneaux', (tester) async {
     await _pump(tester, 'berserker');
 
@@ -102,9 +154,11 @@ void main() {
     await _simuler(tester);
 
     // +4, jamais +8 : `resetHeroStatsForDemo` efface les statuts entre deux
-    // passages, sans quoi `addStatus` les empilerait.
+    // passages, sans quoi `addStatus` les empilerait. C'est le garde reel :
+    // `_rightMightGain` (widget) est un delta borne a un seul appel de
+    // `gainArmorForDemo`, donc toujours 0 ou 4 par construction, jamais 8,
+    // que la classe empile ou non — le badge affiche ne peut donc jamais
+    // trahir un empilement. Seul l'etat du moteur le peut.
     expect(engine.mockState.heroStats.effectiveMight, 4);
-    // Le badge affiche : jamais un 8 empile sur l'ecran non plus.
-    expect(find.text('8'), findsNothing);
   });
 }
