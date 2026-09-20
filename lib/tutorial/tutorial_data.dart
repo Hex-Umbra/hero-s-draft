@@ -182,9 +182,12 @@ const List<TutorialStep> kTutorialSteps = [
         '**Armor always resets to 0 at the start of your turn** — every class, '
         'no exception — and again at the end of a combat. It is a one-turn '
         'expense, never a stock you build up.\n\n'
-        'What your class changes is *how you earn it*: that is your passive. '
-        'Mastery, a permanent stat, strengthens what your passive produces — '
-        'each passive states what one point adds.',
+        'Your class decides two things. *How you earn it*: that is your '
+        'passive — Mastery, a permanent stat, strengthens what your passive '
+        'produces, and each passive states what one point adds. And *what '
+        'becomes of it*: most classes keep it for the turn, some turn it into '
+        'something else at once.\n\n'
+        'The demonstration below applies the rule of the class you picked.',
     bodyFr:
         'L\'Armure absorbe les dégâts avant vos PV. Ce qui dépasse une fois '
         'l\'Armure épuisée entame votre santé.\n\n'
@@ -192,10 +195,13 @@ const List<TutorialStep> kTutorialSteps = [
         'classes confondues, sans exception — et de nouveau à la fin d\'un '
         'combat. C\'est une dépense pour un tour, jamais un stock qu\'on '
         'accumule.\n\n'
-        'Ce que votre classe change, c\'est la *façon d\'en gagner* : c\'est '
-        'votre passif. La Maîtrise, statistique permanente, renforce ce que '
-        'produit votre passif — chaque passif indique ce qu\'un point lui '
-        'apporte.',
+        'Votre classe décide de deux choses. La *façon d\'en gagner* : c\'est '
+        'votre passif — la Maîtrise, statistique permanente, renforce ce que '
+        'produit votre passif, et chaque passif indique ce qu\'un point lui '
+        'apporte. Et *ce qu\'elle devient* : la plupart des classes la gardent '
+        'pour le tour, certaines la transforment aussitôt en autre chose.\n\n'
+        'La démonstration ci-dessous applique la règle de la classe que vous '
+        'avez choisie.',
     type: TutorialStepType.armorDamage,
   ),
   TutorialStep(

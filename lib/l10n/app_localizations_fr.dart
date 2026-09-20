@@ -365,6 +365,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get statRuleArmorToMightTitle => 'ARMURE → PUISSANCE';
+
+  @override
+  String get statRuleManaToMightTitle => 'MANA → PUISSANCE';
+
+  @override
   String get tooltipManaTitle => 'Mana';
 
   @override

@@ -181,6 +181,14 @@
       "duration": { "type": "int" }
     }
   },
+  "statRuleArmorToMightTitle": "ARMOR → MIGHT",
+  "@statRuleArmorToMightTitle": {
+    "description": "Short title of the tutorial demo panel for a class that converts its Armor into temporary Might. Upper case, like the panel titles beside it."
+  },
+  "statRuleManaToMightTitle": "MANA → MIGHT",
+  "@statRuleManaToMightTitle": {
+    "description": "Short title of the tutorial demo panel for a class that converts its Mana into temporary Might."
+  },
   "tooltipManaTitle": "Mana",
   "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",

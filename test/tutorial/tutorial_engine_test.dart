@@ -106,7 +106,7 @@ void main() {
     });
 
     test('avec armure, l\'armure encaisse en premier', () {
-      engine.setHeroArmor(4);
+      engine.gainArmorForDemo(4);
       final before = engine.mockState.heroStats.currentPv;
 
       engine.applyDamageToHero(10);
@@ -258,6 +258,43 @@ void main() {
       engine.nextStep();
 
       expect(engine.mockState.activePassive?.id, autre.id);
+    });
+  });
+
+  group('Le gain de demonstration passe par les regles de la classe', () {
+    test('sans classe choisie, le gain reste de l armure', () {
+      engine.gainArmorForDemo(4);
+      expect(engine.mockState.heroStats.armure, 4);
+      expect(engine.mockState.heroStats.statuses, isEmpty);
+    });
+
+    test('une classe qui convertit convertit aussi le gain de demonstration', () {
+      final berserker =
+          engine.fixtures.heroes.firstWhere((h) => h.id == 'berserker');
+      engine.chooseHero(berserker);
+
+      engine.gainArmorForDemo(4);
+
+      // Le meme verdict que `playCard` : c'est le meme appel a StatGains.
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.mockState.heroStats.effectiveMight, 4);
+    });
+
+    test('resetHeroStatsForDemo efface les statuts', () {
+      // Regression : `addStatus` empile (`entity_stats.dart:134`). Sans ce
+      // nettoyage, presser deux fois « Voir la difference » afficherait +4
+      // puis +8 Puissance a un Berserker.
+      final berserker =
+          engine.fixtures.heroes.firstWhere((h) => h.id == 'berserker');
+      engine.chooseHero(berserker);
+      engine.gainArmorForDemo(4);
+      expect(engine.mockState.heroStats.statuses, isNotEmpty);
+
+      engine.resetHeroStatsForDemo(engine.mockState.heroStats.maxPv);
+
+      expect(engine.mockState.heroStats.statuses, isEmpty);
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.mockState.heroStats.effectiveMight, 0);
     });
   });
 
@@ -536,7 +573,7 @@ void main() {
 
   group('Réarmement des drapeaux d\'étape par prepareStep', () {
     test('armorGainedThisStep est réarmé par prepareStep', () {
-      engine.setHeroArmor(4);
+      engine.gainArmorForDemo(4);
       expect(engine.armorGainedThisStep, isTrue);
       engine.prepareStep(engine.currentStepIndex);
       expect(engine.armorGainedThisStep, isFalse);
@@ -629,7 +666,7 @@ void main() {
 
     test('le nouveau tour remet l\'armure à zéro et le mana au max', () {
       engine.seedEnemy();
-      engine.setHeroArmor(7);
+      engine.gainArmorForDemo(7);
       engine.setMana(0);
 
       engine.endTurn();
@@ -645,7 +682,7 @@ void main() {
       // Régression : la complétion lisait `heroStats.armure`, que `endTurn`
       // remet à 0 — le joueur restait bloqué sur l'étape.
       engine.seedEnemy();
-      engine.setHeroArmor(4);
+      engine.gainArmorForDemo(4);
       expect(engine.armorGainedThisStep, isTrue);
 
       engine.setMana(0);

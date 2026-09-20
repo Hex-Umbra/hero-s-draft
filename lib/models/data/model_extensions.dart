@@ -164,4 +164,17 @@ extension StatRuleLabel on StatRule {
         (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) =>
           l10n.statRuleConvertManaToMight(duration),
       };
+
+  /// Le titre court du panneau de démonstration du tutoriel : ce que la
+  /// ressource devient, en majuscules comme les titres voisins.
+  ///
+  /// Même `switch` **exhaustif** sur le triplet (ressource, mode, cible) que
+  /// [describe] : ajouter une valeur à l'une des trois énumérations sans son
+  /// libellé ne compile plus.
+  String shortTitle(AppLocalizations l10n) => switch ((stat, mode, to)) {
+        (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleArmorToMightTitle,
+        (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleManaToMightTitle,
+      };
 }
