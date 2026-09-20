@@ -59,6 +59,8 @@ void main() {
     expect(find.text('94/100'), findsOneWidget);
     // Et le panneau sans armure perd les 10.
     expect(find.text('90/100'), findsOneWidget);
+    // Sans regle sur l'Armure, le panneau garde son titre d'origine.
+    expect(find.text('AVEC ARMURE'), findsOneWidget);
     // Aucun encadre de regle : la classe n'en declare aucune.
     expect(find.text('Le Paladin'), findsNothing);
   });
@@ -71,8 +73,12 @@ void main() {
 
     // 80 PV, 0 Armure conservee : les deux panneaux perdent les 10 degats.
     expect(find.text('70/80'), findsNWidgets(2));
+    // Genere depuis la regle : le titre annonce ce que l'Armure devient.
+    expect(find.text('ARMURE → PUISSANCE'), findsOneWidget);
+    // Le badge d'Armure du panneau droit reste a 0 : rien n'est conserve.
+    expect(find.text('0'), findsWidgets);
     // La Puissance temporaire produite est montree, avec sa valeur.
-    expect(find.text('4'), findsWidgets);
+    expect(find.text('4'), findsOneWidget);
     expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
   });
 
@@ -98,5 +104,7 @@ void main() {
     // +4, jamais +8 : `resetHeroStatsForDemo` efface les statuts entre deux
     // passages, sans quoi `addStatus` les empilerait.
     expect(engine.mockState.heroStats.effectiveMight, 4);
+    // Le badge affiche : jamais un 8 empile sur l'ecran non plus.
+    expect(find.text('8'), findsNothing);
   });
 }
