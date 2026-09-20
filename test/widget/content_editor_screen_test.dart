@@ -123,13 +123,13 @@ void main() {
     expect(find.text('Écrire'), findsNothing);
   });
 
-  testWidgets('les sept types sont des boutons, visibles d emblee',
+  testWidgets('les huit types sont des boutons, visibles d emblee',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
 
     for (final label in const [
       'Carte', 'Relique', 'Événement', 'Passif',
-      'Amélioration de forge', 'Classe', 'Ennemi',
+      'Amélioration de forge', 'Récompense de niveau', 'Classe', 'Ennemi',
     ]) {
       expect(find.text(label), findsOneWidget, reason: 'type manquant : $label');
     }
@@ -147,7 +147,7 @@ void main() {
 
     expect(find.text('Créer'), findsOneWidget);
     expect(find.text('Modifier'), findsOneWidget);
-    // Les sept types restent la : rien ne se replie vers le haut.
+    // Les huit types restent la : rien ne se replie vers le haut.
     expect(find.text('Ennemi'), findsOneWidget);
   });
 
@@ -351,7 +351,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(checkOn('Neutre'), findsOneWidget);
       expect(checkOn('mage'), findsNothing);
-      await tester.tap(find.byKey(const Key('editeur-proprietaire-mage')));
+      final mageOwner = find.byKey(const Key('editeur-proprietaire-mage'));
+      await tester.ensureVisible(mageOwner);
+      await tester.tap(mageOwner);
       await tester.pumpAndSettle();
       expect(checkOn('mage'), findsOneWidget);
       expect(checkOn('Neutre'), findsNothing);
@@ -878,7 +880,9 @@ void main() {
     await tester.tap(find.text('Créer'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('editeur-proprietaire-mage')));
+    final mageOwner = find.byKey(const Key('editeur-proprietaire-mage'));
+    await tester.ensureVisible(mageOwner);
+    await tester.tap(mageOwner);
     await tester.enterText(find.byKey(const Key('editeur-id')), 'eclair');
     await tester.tap(find.text('Écrire'));
     await tester.pumpAndSettle();
@@ -1412,7 +1416,7 @@ void main() {
         (tester) async {
       // Le geste reel : on choisit d'abord Modifier, on change ensuite de
       // type. Rien ne doit se figer — c'est l'invariant meme de l'arbre : les
-      // sept types restent la, quel que soit le mode. Avant l'arbre, un bug
+      // huit types restent la, quel que soit le mode. Avant l'arbre, un bug
       // gelait la liste deroulante des lors qu'on avait bascule sur Modifier,
       // rendant toute entite hors de la categorie par defaut inatteignable.
       Directory('$root/assets/data/classes/gambler/cards')

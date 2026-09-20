@@ -7,16 +7,28 @@ import '../../models/data/enemy_data.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/data/level_up_reward_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
 
-/// Les sept categories d'entites editables. Elles sont en regard exact des
-/// sept appels a `loadAll` de `loadGameDataRegistry` — l'audio n'en est pas
-/// une, c'est un document de configuration.
-enum EntityCategory { card, relic, event, passive, forgeUpgrade, heroClass, enemy }
+/// Les huit categories d'entites editables, en regard exact des huit appels a
+/// `loadAll` de `loadGameDataRegistry` : un par categorie, sans ecart. Les
+/// **sources** sont neuf, la carte en ayant deux — neutre et de classe — pour
+/// un seul descripteur. L'audio n'en est pas une, c'est un document de
+/// configuration.
+enum EntityCategory {
+  card,
+  relic,
+  event,
+  passive,
+  forgeUpgrade,
+  levelUpReward,
+  heroClass,
+  enemy,
+}
 
 /// Ce qu'est une ressource : un son declare dans `audio.json`, ou une image
 /// dont le nom est impose par l'identifiant.
@@ -185,8 +197,10 @@ class EntityDescriptor {
 List<String> _names(List<Enum> values) =>
     values.map((e) => e.name).toList(growable: false);
 
-/// **La declaration des categories editables.** A tenir en regard des sept
-/// sources de `loadGameDataRegistry` ; un test verifie qu'aucune ne manque.
+/// **La declaration des categories editables.** A tenir en regard des neuf
+/// sources de `loadGameDataRegistry` pour les huit categories — la carte en a
+/// deux, neutre et de classe, pour un seul descripteur ; un test verifie
+/// qu'aucune ne manque.
 final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   EntityCategory.card: EntityDescriptor(
     category: EntityCategory.card,
@@ -342,6 +356,50 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "valueMultiplier": 1,
   "weight": 10,
   "emoji": "🔮"
+}''',
+  ),
+  EntityCategory.levelUpReward: EntityDescriptor(
+    category: EntityCategory.levelUpReward,
+    label: 'Récompense de niveau',
+    directory: 'level_up_rewards',
+    // `LevelUpRewardData.fromJson` leve deja sur `effect`, `pool` et sur un
+    // palier manquant. Ces deux cles sont celles sans lesquelles le fichier
+    // n'a aucun sens, et que la famille 3 nomme avant que `fromJson` ne leve.
+    requiredKeys: const {'effect', 'pool'},
+    enumKeys: {
+      'effect': _names(RewardEffect.values),
+      'stat': _names(RewardStat.values),
+      'pool': _names(RewardPool.values),
+      'requires': _names(RewardRequirement.values),
+    },
+    // `name` et `description` seulement : `fallbackDescription` et
+    // `shortDescription` sont **optionnels et par paires**, ce que
+    // `_readOptionalPair` verifie deja au chargement. Les declarer ici les
+    // rendrait obligatoires sur les six recompenses qui n'en portent pas.
+    bilingualBases: const ['name', 'description'],
+    construct: LevelUpRewardData.fromJson,
+    // La table des paliers : les cinq du tirage. Une recompense mythique n'en
+    // porte qu'un, `mythic` — le gabarit montre le cas courant, et `fromJson`
+    // dit lequel manque (`level_up_reward_data.dart:277-286`).
+    //
+    // Les cles d'une **table** ne sont bornees par aucune des familles du
+    // validateur, qui ne savent viser qu'une valeur : c'est `_readValues` qui
+    // leve sur une rarete inconnue, via `construct`. Assume, et c'est la
+    // categorie ou `fromJson` fait le plus de travail — comme
+    // `forgeUpgrade`.
+    template: '''
+{
+  "effect": "stat",
+  "stat": "maxHp",
+  "pool": "draft",
+  "displayOrder": 99,
+  "values": {
+    "common": 1,
+    "uncommon": 2,
+    "rare": 3,
+    "epic": 5,
+    "legendary": 7
+  }
 }''',
   ),
   EntityCategory.heroClass: EntityDescriptor(

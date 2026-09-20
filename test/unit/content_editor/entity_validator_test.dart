@@ -853,4 +853,40 @@ void main() {
           reason: faults.join(' ; '));
     });
   });
+
+  group('les recompenses de niveau', () {
+    EntityDraft recompense(Map<String, dynamic> surcharge) {
+      Directory('$root/assets/data/level_up_rewards')
+          .createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.levelUpReward]!;
+      final template = jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template.addAll(surcharge);
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'endurance',
+        bilingual: const {
+          'name_fr': 'Endurance',
+          'name_en': 'Endurance',
+          'description_fr': '+{amount} PV max',
+          'description_en': '+{amount} max HP',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('le gabarit passe', () {
+      final faults = validatorWith().validate(recompense(const {}));
+      expect(faults, isEmpty, reason: faults.join(' ; '));
+    });
+
+    test('une stat inconnue est refusee', () {
+      // `RewardStat` n'a pas de valeur `armure` : `fromJson` leve, et la
+      // famille des enumerations le dit avant lui, en nommant le champ.
+      final faults = validatorWith().validate(
+        recompense(const {'stat': 'armure'}),
+      );
+      expect(faults.where((f) => f.field == 'stat'), hasLength(1),
+          reason: faults.join(' ; '));
+    });
+  });
 }

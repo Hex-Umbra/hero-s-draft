@@ -14,7 +14,7 @@ void main() {
     // fichier, a cent lignes l'un de l'autre ; elle ne dit donc rien de
     // `loadGameDataRegistry`, dont c'est le test suivant qui s'occupe.
     expect(kEntityDescriptors.keys.toSet(), EntityCategory.values.toSet());
-    expect(EntityCategory.values, hasLength(7));
+    expect(EntityCategory.values, hasLength(8));
   });
 
   test('aucune source de chargement n a ete ajoutee sans descripteur', () {
@@ -25,11 +25,10 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Neuf sources pour sept categories,
-    // par deux ecarts assumes : la carte en a deux, neutre et de classe, pour
-    // un seul descripteur ; et les recompenses de niveau ont leur source
-    // depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec
-    // place leur edition au lot D (§9.2).
+    // puis relever le compte ci-dessous. Neuf sources pour **huit**
+    // categories, par un seul ecart assume : la carte en a deux, neutre et de
+    // classe, pour un seul descripteur. Les recompenses de niveau ont recu le
+    // leur au lot D (spec §9.2).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
     expect(declared, hasLength(9));
@@ -89,6 +88,13 @@ void main() {
       expect(
         kEntityDescriptors[EntityCategory.enemy]!.pathOf('troll'),
         'assets/data/enemies/troll/enemy.json',
+      );
+    });
+
+    test('une recompense de niveau va dans level_up_rewards/', () {
+      expect(
+        kEntityDescriptors[EntityCategory.levelUpReward]!.pathOf('affinity'),
+        'assets/data/level_up_rewards/affinity.json',
       );
     });
   });
@@ -180,7 +186,7 @@ void main() {
     }
   });
 
-  // **Gabarit superset-du-modele, pour les sept categories.**
+  // **Gabarit superset-du-modele, pour les huit categories.**
   //
   // En creation, le formulaire est infere du gabarit : un champ par cle du
   // gabarit, plus les `assetKeys` et les `referenceKeys` qu'il ne porte pas
@@ -275,12 +281,19 @@ void main() {
         'gold',
         'intents',
       },
+      EntityCategory.levelUpReward: {
+        'effect',
+        'stat',
+        'pool',
+        'displayOrder',
+        'values',
+      },
     };
 
     expect(
       expected.keys.toSet(),
       EntityCategory.values.toSet(),
-      reason: 'la table doit couvrir les sept categories',
+      reason: 'la table doit couvrir les huit categories',
     );
 
     expected.forEach((category, keys) {

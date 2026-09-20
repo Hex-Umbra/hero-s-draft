@@ -9,8 +9,8 @@ import 'package:roguelike_card_game/ui/widgets/content_editor/editor_toolbar.dar
 import 'contrast.dart';
 
 void main() {
-  Future<void> pump(WidgetTester tester, Widget child) {
-    tester.view.physicalSize = const Size(1400, 800);
+  Future<void> pump(WidgetTester tester, Widget child, {double width = 1400}) {
+    tester.view.physicalSize = Size(width, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     return tester.pumpWidget(MaterialApp(
@@ -20,11 +20,11 @@ void main() {
   }
 
   const labels = [
-    'Carte', 'Relique', 'Événement', 'Passif',
-    'Amélioration de forge', 'Classe', 'Ennemi',
+    'Carte', 'Relique', 'Événement', 'Passif', 'Amélioration de forge',
+    'Récompense de niveau', 'Classe', 'Ennemi',
   ];
 
-  testWidgets('les sept types sont des onglets qui rappellent leur type',
+  testWidgets('les huit types sont des onglets qui rappellent leur type',
       (tester) async {
     final picked = <EntityCategory>[];
     await pump(tester, EditorToolbar(selected: null, onSelected: picked.add));
@@ -64,6 +64,11 @@ void main() {
 
   testWidgets('le controle d action se tient au bout de la barre',
       (tester) async {
+    // Assez large pour que les huit onglets tiennent sur une seule ligne du
+    // `Wrap` : sans quoi "Ennemi" replierait sur une deuxieme ligne, et la
+    // comparaison d'abscisses ci-dessous deviendrait vraie pour n'importe
+    // quelle position d' "action", meme si `trailing` cessait d'etre le
+    // dernier de la barre.
     await pump(
       tester,
       EditorToolbar(
@@ -71,6 +76,14 @@ void main() {
         onSelected: (_) {},
         trailing: const Text('action'),
       ),
+      width: 1800,
+    );
+    // Garde : prouve que la ligne n'a pas replie avant de comparer les
+    // abscisses.
+    expect(
+      tester.getTopLeft(find.text('Ennemi')).dy,
+      tester.getTopLeft(find.text('Carte')).dy,
+      reason: 'les huit onglets doivent tenir sur une seule ligne ici',
     );
     expect(
       tester.getTopLeft(find.text('action')).dx,

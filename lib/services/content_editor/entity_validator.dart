@@ -573,6 +573,8 @@ class EntityValidator {
         return r.passives.map((e) => e.id).toSet();
       case EntityCategory.forgeUpgrade:
         return r.forgeUpgrades.map((e) => e.id).toSet();
+      case EntityCategory.levelUpReward:
+        return r.levelUpRewards.map((e) => e.id).toSet();
       case EntityCategory.heroClass:
         return r.heroes.map((e) => e.id).toSet();
       case EntityCategory.enemy:
