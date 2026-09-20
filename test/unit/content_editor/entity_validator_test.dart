@@ -729,4 +729,164 @@ void main() {
           'image absente : assets/data/classes/barde/icon.png');
     });
   });
+
+  group('les regles de stat d une classe', () {
+    /// Un brouillon de classe dont seules les `statRules` varient.
+    EntityDraft classeAvecRegles(String statRules) {
+      Directory('$root/assets/data/classes').createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
+      final template =
+          jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template['statRules'] = jsonDecode(statRules);
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'parieur',
+        bilingual: const {
+          'name_fr': 'Le Parieur',
+          'name_en': 'Gambler',
+          'description_fr': 'Manipule les probabilites.',
+          'description_en': 'Plays the odds.',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('la regle du Berserker passe', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "status:might", "duration": 1}]',
+      ));
+      // Seules des fautes de ressource peuvent rester (l'image de classe
+      // n'existe pas dans le bac a sable) : aucune sur les regles.
+      expect(
+        faults.where((f) => f.field?.startsWith('statRules') ?? false),
+        isEmpty,
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('un mode mal orthographie est refuse', () {
+      // Le cas exact que le §9.2 de la spec nomme : « convrt ».
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convrt", "to": "status:might"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].mode'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('une ressource inconnue est refusee', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "puissance", "mode": "convert", "to": "status:might"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].stat'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+
+    test('une cible inconnue est refusee', () {
+      // `statusMight` est le **nom Dart** de la valeur ; le fichier ecrit
+      // `status:might`. Confondre les deux est l'erreur la plus probable.
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "statusMight"}]',
+      ));
+      expect(
+        faults.where((f) => f.field == 'statRules[0].to'),
+        hasLength(1),
+        reason: faults.join(' ; '),
+      );
+    });
+  });
+
+  group('pendingIds — ce que la meme transaction va ecrire', () {
+    /// Un passif qui vise une classe, valide ou pendante selon le registre.
+    EntityDraft passifVisant(String classeId) {
+      Directory('$root/assets/data/passives').createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.passive]!;
+      final template = jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template['classes'] = [classeId];
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'parieur',
+        bilingual: const {
+          'name_fr': 'Pari',
+          'name_en': 'Wager',
+          'description_fr': 'x',
+          'description_en': 'x',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('un passif qui vise une classe inconnue est refuse', () {
+      final validator = EntityValidator(
+        fs: fs,
+        rootPath: root,
+        registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+      );
+
+      final faults = validator.validate(passifVisant('parieur'));
+
+      expect(faults.where((f) => f.field == 'classes'), hasLength(1));
+    });
+
+    test('la meme classe, annoncee pendante, passe', () {
+      // Le trou que `_signatureCards` decrit depuis P-30 : la classe que la
+      // recette vient d'ecrire n'est pas dans le registre charge au
+      // demarrage, et un controle par reference refuserait la sortie meme de
+      // l'outil.
+      final validator = EntityValidator(
+        fs: fs,
+        rootPath: root,
+        registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+        pendingIds: const {
+          EntityCategory.heroClass: {'parieur'},
+        },
+      );
+
+      final faults = validator.validate(passifVisant('parieur'));
+
+      expect(faults.where((f) => f.field == 'classes'), isEmpty,
+          reason: faults.join(' ; '));
+    });
+  });
+
+  group('les recompenses de niveau', () {
+    EntityDraft recompense(Map<String, dynamic> surcharge) {
+      Directory('$root/assets/data/level_up_rewards')
+          .createSync(recursive: true);
+      final descriptor = kEntityDescriptors[EntityCategory.levelUpReward]!;
+      final template = jsonDecode(descriptor.template) as Map<String, dynamic>;
+      template.addAll(surcharge);
+      return EntityDraft(
+        descriptor: descriptor,
+        id: 'endurance',
+        bilingual: const {
+          'name_fr': 'Endurance',
+          'name_en': 'Endurance',
+          'description_fr': '+{amount} PV max',
+          'description_en': '+{amount} max HP',
+        },
+        mechanics: jsonEncode(template),
+      );
+    }
+
+    test('le gabarit passe', () {
+      final faults = validatorWith().validate(recompense(const {}));
+      expect(faults, isEmpty, reason: faults.join(' ; '));
+    });
+
+    test('une stat inconnue est refusee', () {
+      // `RewardStat` n'a pas de valeur `armure` : `fromJson` leve, et la
+      // famille des enumerations le dit avant lui, en nommant le champ.
+      final faults = validatorWith().validate(
+        recompense(const {'stat': 'armure'}),
+      );
+      expect(faults.where((f) => f.field == 'stat'), hasLength(1),
+          reason: faults.join(' ; '));
+    });
+  });
 }

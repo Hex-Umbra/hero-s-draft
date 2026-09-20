@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/services/content_editor/content_file_system.
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_writer.dart';
+import 'package:roguelike_card_game/services/content_editor/placeholder_filler.dart';
 
 void main() {
   ClassRecipe recipe({int cards = 2}) => ClassRecipe(
@@ -24,16 +25,43 @@ void main() {
         ],
       );
 
-  test('la classe vient en premier, ses cartes ensuite', () {
+  test('la classe, puis son passif, puis ses cartes', () {
     final drafts = recipe().toDrafts();
 
-    expect(drafts, hasLength(3));
+    expect(drafts, hasLength(4));
     expect(drafts.first.descriptor.category, EntityCategory.heroClass);
     expect(drafts.first.path, 'assets/data/classes/gambler/class.json');
+    // Le passif nomme la classe : elle doit exister avant lui, comme les
+    // cartes de signature.
+    expect(drafts[1].descriptor.category, EntityCategory.passive);
+    expect(drafts[1].path, 'assets/data/passives/gambler.json');
     // L'inverse leverait StateError : `_registerSignatureCard` exige que le
     // class.json existe avant qu'une de ses cartes ne soit ecrite.
-    expect(drafts[1].path, 'assets/data/classes/gambler/cards/pari_1.json');
-    expect(drafts[2].path, 'assets/data/classes/gambler/cards/pari_2.json');
+    expect(drafts[2].path, 'assets/data/classes/gambler/cards/pari_1.json');
+    expect(drafts[3].path, 'assets/data/classes/gambler/cards/pari_2.json');
+  });
+
+  test('le passif de depart ne vise que la classe creee', () {
+    final passif = recipe().toDrafts()[1];
+    final mechanics = jsonDecode(passif.mechanics) as Map<String, dynamic>;
+
+    // Sans `classes`, le passif serait ouvert a **toutes** les classes et
+    // polluerait le pool des trois livrees (spec P-49, §3.2).
+    expect(mechanics['classes'], ['gambler']);
+    // La mecanique vient du gabarit de passif : un squelette jouable, que
+    // l'auteur edite ensuite.
+    expect(mechanics['trigger'], 'startOfTurn');
+    expect(mechanics['effectType'], 'gain_armor');
+  });
+
+  test('la prose du passif est voyante, jamais inventee', () {
+    final passif = recipe().toDrafts()[1];
+
+    // `fillPlaceholders` ecrit `[A REMPLIR] <id>` : un nom oublie doit se
+    // lire comme tel dans le jeu, pas passer pour un choix.
+    expect(passif.bilingual['name_fr'], contains('gambler'));
+    expect(passif.bilingual['name_fr'], startsWith(kProsePlaceholderPrefix));
+    expect(passif.bilingual['description_en'], startsWith(kProsePlaceholderPrefix));
   });
 
   test('la classe ne declare aucun skills : l ecrivain le remplit', () {
@@ -78,14 +106,17 @@ void main() {
   });
 
   test('chaque carte appartient a la classe et porte une prose non vide', () {
-    final card = recipe().toDrafts()[1];
+    final card = recipe().toDrafts()[2];
     expect(card.heroClass, 'gambler');
     expect(card.bilingual['name_fr'], isNotEmpty);
     expect(card.bilingual['name_en'], isNotEmpty);
   });
 
-  test('une classe sans carte de signature ne produit qu un brouillon', () {
-    expect(recipe(cards: 0).toDrafts(), hasLength(1));
+  test('une classe sans carte de signature ne produit que sa classe et son '
+      'passif', () {
+    // Le passif de depart n'est pas une carte de signature : il est ecrit
+    // meme quand `signatureCards` est vide.
+    expect(recipe(cards: 0).toDrafts(), hasLength(2));
   });
 
   group('faults', () {
@@ -174,6 +205,10 @@ void main() {
           .copySync('$root/assets/placeholders/images/placeholder_entity.png');
       File('assets/placeholders/images/placeholder_icon.png')
           .copySync('$root/assets/placeholders/images/placeholder_icon.png');
+      // La recette ecrit maintenant aussi un passif de depart (tache 2) :
+      // `assets/data/passives` doit exister, l'ecrivain ne cree jamais le
+      // dossier d'une categorie a plat.
+      Directory('$root/assets/data/passives').createSync(recursive: true);
     });
 
     tearDown(() => sandbox.deleteSync(recursive: true));
@@ -185,10 +220,11 @@ void main() {
       final report = await EntityWriter(fs: fs, rootPath: root).writeAll(drafts);
       // `written` compte chaque ecriture physique, pas chaque brouillon :
       // `_registerSignatureCard` reecrit `class.json` a chaque carte de
-      // signature. Pour 1 classe + 2 cartes, la sequence est deterministe et
-      // verifiee par trace : class.json, cards/pari_1.json, class.json,
-      // cards/pari_2.json, class.json — jamais 3, jamais 4, jamais 6.
-      expect(report.written, hasLength(5));
+      // signature. Pour 1 classe + 1 passif + 2 cartes, la sequence est
+      // deterministe et verifiee par trace : class.json,
+      // passives/gambler.json, cards/pari_1.json, class.json,
+      // cards/pari_2.json, class.json — jamais 5, jamais 4, jamais 7.
+      expect(report.written, hasLength(6));
 
       // L'invariant final : skills == le contenu de cards/.
       final classJson = jsonDecode(

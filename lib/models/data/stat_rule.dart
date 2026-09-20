@@ -53,6 +53,21 @@ class StatRule {
     'status:might': RuleTarget.statusMight,
   };
 
+  /// Le vocabulaire que le fichier de classe écrit, exposé pour l'éditeur de
+  /// contenu — précédent : `PassiveMastery.fields` (spec P-49, §3.3).
+  ///
+  /// Ces listes ne sont **pas** `_names(RuleStat.values)` et compagnie :
+  /// `RuleTarget.statusMight` s'écrit `"status:might"` dans le fichier, et le
+  /// nom Dart n'y a jamais cours. Le seul endroit qui connaisse la
+  /// correspondance est ce parseur ; la recopier dans un descripteur ferait
+  /// diverger les deux au premier ajout (spec P-41, §9.2).
+  static List<String> get statNames => _stats.keys.toList(growable: false);
+  static List<String> get modeNames => _modes.keys.toList(growable: false);
+  static List<String> get targetNames => _targets.keys.toList(growable: false);
+
+  static String _nameOf<T>(T value, Map<String, T> by) =>
+      by.entries.firstWhere((entry) => entry.value == value).key;
+
   static T _read<T>(Map<String, dynamic> json, String key, Map<String, T> by) {
     final value = json[key];
     final parsed = value is String ? by[value] : null;
@@ -87,6 +102,16 @@ class StatRule {
 
   @override
   int get hashCode => Object.hash(stat, mode, to, duration);
+
+  /// La règle dans le vocabulaire du **fichier de classe** :
+  /// `armor convert status:might, 1 tour(s)`.
+  ///
+  /// C'est la forme qu'un développeur lit au menu de debug — la donnée qu'il
+  /// édite. La phrase du joueur, elle, est `StatRuleLabel.describe`
+  /// (`model_extensions.dart`), et passe par les ARB.
+  @override
+  String toString() => '${_nameOf(stat, _stats)} ${_nameOf(mode, _modes)} '
+      '${_nameOf(to, _targets)}, $duration tour(s)';
 
   /// Lit la clé `statRules` d'une classe. Absente : aucune règle — c'est le
   /// cas du Paladin et du Mage.

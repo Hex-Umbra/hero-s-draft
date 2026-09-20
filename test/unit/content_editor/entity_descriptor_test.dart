@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 
@@ -13,7 +14,7 @@ void main() {
     // fichier, a cent lignes l'un de l'autre ; elle ne dit donc rien de
     // `loadGameDataRegistry`, dont c'est le test suivant qui s'occupe.
     expect(kEntityDescriptors.keys.toSet(), EntityCategory.values.toSet());
-    expect(EntityCategory.values, hasLength(7));
+    expect(EntityCategory.values, hasLength(8));
   });
 
   test('aucune source de chargement n a ete ajoutee sans descripteur', () {
@@ -24,11 +25,10 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Neuf sources pour sept categories,
-    // par deux ecarts assumes : la carte en a deux, neutre et de classe, pour
-    // un seul descripteur ; et les recompenses de niveau ont leur source
-    // depuis P-41 lot C partie 1, mais pas encore de descripteur — la spec
-    // place leur edition au lot D (§9.2).
+    // puis relever le compte ci-dessous. Neuf sources pour **huit**
+    // categories, par un seul ecart assume : la carte en a deux, neutre et de
+    // classe, pour un seul descripteur. Les recompenses de niveau ont recu le
+    // leur au lot D (spec §9.2).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
     expect(declared, hasLength(9));
@@ -38,6 +38,20 @@ void main() {
     kEntityDescriptors.forEach((key, descriptor) {
       expect(descriptor.category, key);
     });
+  });
+
+  test('le descripteur de classe borne statRules au vocabulaire du moteur', () {
+    final classe = kEntityDescriptors[EntityCategory.heroClass]!;
+
+    // Les trois cles imbriquees, et leurs valeurs lues sur `StatRule` : un
+    // vocabulaire recopie ici divergerait du parseur au premier ajout.
+    expect(classe.enumKeys['statRules[].stat'], StatRule.statNames);
+    expect(classe.enumKeys['statRules[].mode'], StatRule.modeNames);
+    expect(classe.enumKeys['statRules[].to'], StatRule.targetNames);
+
+    // Le gabarit porte la cle, vide : une regle toute faite ferait naitre
+    // toute classe creee en convertisseuse d'armure.
+    expect(classe.decodeTemplate()['statRules'], isEmpty);
   });
 
   group('pathOf', () {
@@ -74,6 +88,13 @@ void main() {
       expect(
         kEntityDescriptors[EntityCategory.enemy]!.pathOf('troll'),
         'assets/data/enemies/troll/enemy.json',
+      );
+    });
+
+    test('une recompense de niveau va dans level_up_rewards/', () {
+      expect(
+        kEntityDescriptors[EntityCategory.levelUpReward]!.pathOf('affinity'),
+        'assets/data/level_up_rewards/affinity.json',
       );
     });
   });
@@ -165,7 +186,7 @@ void main() {
     }
   });
 
-  // **Gabarit superset-du-modele, pour les sept categories.**
+  // **Gabarit superset-du-modele, pour les huit categories.**
   //
   // En creation, le formulaire est infere du gabarit : un champ par cle du
   // gabarit, plus les `assetKeys` et les `referenceKeys` qu'il ne porte pas
@@ -196,7 +217,12 @@ void main() {
   // - `heroClass` et `category`, imposes par le repertoire ;
   // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
   //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
-  //   qui suit la table le verifie.
+  //   qui suit la table le verifie ;
+  // - `requires`, `fallbackDescription` et `shortDescription` d'une
+  //   recompense de niveau : `requires` et les deux paires de prose sont des
+  //   cles optionnelles du modele, ecartees du gabarit a dessein pour qu'une
+  //   creation ne parte pas avec une exigence ou une prose que personne n'a
+  //   demandee ; atteintes par la vue JSON brute.
   test('chaque gabarit porte exactement les cles attendues', () {
     const expected = <EntityCategory, Set<String>>{
       EntityCategory.card: {
@@ -240,6 +266,13 @@ void main() {
         'weight',
         'emoji',
       },
+      EntityCategory.levelUpReward: {
+        'effect',
+        'stat',
+        'pool',
+        'displayOrder',
+        'values',
+      },
       EntityCategory.heroClass: {
         'maxHp',
         'maxMana',
@@ -247,6 +280,7 @@ void main() {
         'mastery',
         'critChance',
         'mightTargets',
+        'statRules',
         'displayOrder',
         'themeColor',
       },
@@ -264,7 +298,7 @@ void main() {
     expect(
       expected.keys.toSet(),
       EntityCategory.values.toSet(),
-      reason: 'la table doit couvrir les sept categories',
+      reason: 'la table doit couvrir les huit categories',
     );
 
     expected.forEach((category, keys) {

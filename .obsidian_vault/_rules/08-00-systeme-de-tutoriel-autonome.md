@@ -40,7 +40,9 @@ en production. Les modèles portés sont ceux du jeu, pas des POJOs : `CardInsta
 
 `TutorialMockState` se scinde en deux tranches. La **persistante** — `chosenHero`,
 `activePassive`, `masterDeck` — n'est écrite que par les étapes 02 et 03 et survit à tout le
-reste du parcours. La **scratch** — main, ennemi, armure et mana du tour, XP de démonstration,
+reste du parcours. `chooseHero` pose le premier passif de la classe comme défaut, `choosePassive`
+le remplace ; seul un **changement** de classe repose le défaut, un retap sur la classe déjà
+choisie ne le fait plus. La **scratch** — main, ennemi, armure et mana du tour, XP de démonstration,
 drapeaux d'interaction — est réinitialisée par `prepareStep(index)` à chaque changement
 d'étape.
 
@@ -56,9 +58,13 @@ sur l'étape 01.
 (entre parenthèses) :
 
 1. **Accueil** : logo animé, résumé du jeu.
-2. **Choix de classe** *(une classe choisie)* : les 3 héros avec leurs vraies valeurs
-   (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et le passif lu sous `assets/data/passives/`.
-   Trois cartes simples, pas le carrousel de `ClassSelectionScreen`. Écrit la tranche
+2. **Choix de classe, et de son passif** *(une classe choisie)* : les 3 héros avec leurs vraies
+   valeurs (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et **tous** les passifs que
+   `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/`. Le bloc dépliant est
+   le `ClassPassiveList` de `ClassSelectionScreen` — le widget de production, pas une seconde
+   implémentation : c'est le remède que demande le §1.4 de la spec de P-41. Repliée, chaque carte
+   montre le passif avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
+   sont cliquables, une seule à la fois. Trois cartes simples, pas le carrousel. Écrit la tranche
    persistante.
 3. **Draft du deck de départ** *(5 cartes choisies)* : les 17 cartes globales de
    `registry.cards` (mêmes critères que `StarterDeckDraftScreen`) ; les cartes de la classe
@@ -75,10 +81,20 @@ sur l'étape 01.
    (Attaque/Compétence/Pouvoir), cartes rendues par `UiCard.fromInstance`.
 8. **Jouer des cartes & finir le tour** *(dégât porté et armure gagnée)* : glisser-déposer sur
    la cible, cycle de tour complet (pioche, défausse, double confirmation si mana restant,
-   armure remise à 0).
+   armure remise à 0). Le texte flottant d'une Compétence **mesure le gain réel** de part et
+   d'autre de `playCard` (`armure` et `effectiveMight` avant/après) au lieu de lire la valeur
+   imprimée sur la carte : une classe qui convertit son Armure y lit sa Puissance. Le `else if`
+   y est délibéré — sans branche qui matche, l'étape ne dit rien plutôt que d'annoncer zéro.
 9. **Armure & Dégâts** : l'armure retombe toujours à 0 en début de tour, quelle que soit la
-   classe ; démo comparative avec/sans armure ; le passif choisi à l'étape 02 et la Maîtrise
-   d'Armure sont montrés avec leurs vraies valeurs.
+   classe ; le passif choisi à l'étape 02 et la Maîtrise sont montrés avec leurs vraies valeurs.
+   La démo comparative se joue **en deux temps** — le gain de 4 Armure, puis le coup de 10 —
+   parce que c'est le gain que la classe modifie. Il passe par `TutorialEngine.gainArmorForDemo`,
+   donc par `StatGains.apply` et les `statRules` de la classe, jamais par une écriture directe :
+   le panneau droit part de **0 Armure** comme le gauche, et ce qu'il affiche après le gain est
+   ce que la classe en a fait. Le titre du panneau est **généré** depuis la règle qui vise
+   l'Armure (`StatRule.shortTitle` → « ARMURE → PUISSANCE »), jamais écrit classe par classe
+   (ADR-090), et la règle elle-même est écrite en clair sous les deux panneaux par
+   `StatRuleLabel.describe` — la même phrase qu'à l'écran de sélection.
 10. **Effets Élémentaires** : galerie animée Poison, Brûlure, Gel, Électrocution, avec leurs
     règles exactes (valeur de Poison qui ne baisse jamais, Brûlure en début de tour, etc.).
 11. **Intentions Ennemies** : lues dans le panneau `EnemyIntentsPanel` réel, en bas à droite —

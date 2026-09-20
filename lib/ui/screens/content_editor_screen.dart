@@ -323,6 +323,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       rootPath: root,
       registry: GameDataRegistry.instance,
       imports: imports,
+      // La classe que la recette va ecrire n'est ni dans le registre charge
+      // au demarrage ni sur le disque : sans cette annonce, son propre passif
+      // de depart serait refuse pour reference pendante.
+      pendingIds: recipe == null
+          ? const {}
+          : {
+              EntityCategory.heroClass: {recipe.id},
+            },
     );
 
     final faults = <ValidationFault>[
@@ -337,8 +345,25 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     var cardRank = 0;
     for (final draft in drafts) {
       final draftFaults = validator.validate(draft);
-      if (recipe == null || draft.descriptor.category != EntityCategory.card) {
+      if (recipe == null || draft.descriptor.category == EntityCategory.heroClass) {
         faults.addAll(draftFaults);
+        continue;
+      }
+      // Ni le passif de depart ni une carte de signature ne portent d'import :
+      // `EntityValidator` juge chaque import en attente contre chaque
+      // brouillon quand meme, sans quoi une faute d'import de la classe
+      // (fichier introuvable, extension refusee...) serait repetee pour
+      // chacun. Le brouillon de la classe la rapporte deja — la porte
+      // d'« Écrire » ne s'en trouve pas changee.
+      final relevant = [
+        for (final fault in draftFaults)
+          if (fault.field == null || !importKeys.contains(fault.field)) fault,
+      ];
+      if (draft.descriptor.category != EntityCategory.card) {
+        // Le passif de depart : ses fautes rejoignent le bandeau general,
+        // comme celles de la classe — il n'a pas de panneau qui lui soit
+        // propre.
+        faults.addAll(relevant);
         continue;
       }
       // Une carte de signature n'a pas de rangee a elle dans le formulaire :
@@ -347,14 +372,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       // panneau des cartes de signature, ancre sous `skills`, qui affiche
       // `faults['skills']` ; le rang de la carte dit laquelle est en cause.
       cardRank++;
-      for (final fault in draftFaults) {
-        // `EntityValidator` juge chaque import en attente contre chaque
-        // brouillon, carte comprise : sans ce filtre, une faute d'import de
-        // la classe (fichier introuvable, extension refusee...) serait
-        // repetee pour chaque carte de signature. Le brouillon de la classe
-        // la rapporte deja — la porte d'« Écrire » ne s'en trouve pas
-        // changee.
-        if (fault.field != null && importKeys.contains(fault.field)) continue;
+      for (final fault in relevant) {
         faults.add(ValidationFault(
           'carte $cardRank : ${fault.message}',
           field: 'skills',
@@ -914,11 +932,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       return "Changer l'identifiant désigne un autre fichier : il faut le "
           "recharger avant d'écrire";
     }
-    if (_isClassRecipe && _cardCountValue > 0) {
-      final cards =
-          _cardCountValue == 1 ? 'sa carte' : 'ses $_cardCountValue cartes';
+    if (_isClassRecipe) {
+      final cards = _cardCountValue == 0
+          ? ''
+          : _cardCountValue == 1
+              ? ' et sa carte'
+              : ' et ses $_cardCountValue cartes';
       return 'Valider vérifie sans écrire · Écrire valide, puis écrit la '
-          'classe et $cards';
+          'classe, son passif de départ$cards';
     }
     return 'Valider vérifie sans écrire · Écrire valide, puis écrit le fichier';
   }

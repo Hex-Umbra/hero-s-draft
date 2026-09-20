@@ -15,7 +15,8 @@
           "Vous choisissez désormais votre passif au moment de choisir votre classe : la carte de chaque classe déplie les passifs qu'elle peut prendre, et celui que vous retenez est celui avec lequel la run démarre.",
           "Les classes n'ont plus les mêmes statistiques de départ : le Paladin commence avec 1 point de Maîtrise, et le Berserker avec 10 % de chances de coup critique.",
           "La Puissance est désormais représentée par un éclair, à la place de l'épée.",
-          "L'écran de sélection montre enfin ce qui sépare vraiment les trois classes : leurs PV et leur mana de départ, leurs statistiques non nulles, ce que leur Puissance renforce, et la règle propre à la classe — celle qui transforme l'Armure du Berserker en Puissance, par exemple. Les dégâts de base qu'il affichait — 5, 15 et 10 — disparaissent : aucune run ne les reprenait, toute partie démarrant à 0 de Puissance."
+          "L'écran de sélection montre enfin ce qui sépare vraiment les trois classes : leurs PV et leur mana de départ, leurs statistiques non nulles, ce que leur Puissance renforce, et la règle propre à la classe — celle qui transforme l'Armure du Berserker en Puissance, par exemple. Les dégâts de base qu'il affichait — 5, 15 et 10 — disparaissent : aucune run ne les reprenait, toute partie démarrant à 0 de Puissance.",
+          "Le tutoriel vous laisse désormais choisir le passif de votre classe : sa carte déplie les trois passifs qu'elle ouvre, exactement comme à l'écran de sélection, et le tutoriel continue avec celui que vous retenez."
         ]
       },
       {
@@ -29,7 +30,8 @@
           "La récompense Forge d'Acier devient Affinité, avec les mêmes valeurs : sa carte indique ce que la Maîtrise obtenue apporte à votre passif actuel.",
           "La fiche des statistiques affiche l'effet de votre Maîtrise sur votre passif, et l'écran de sélection de classe indique ce qu'un point de Maîtrise apporte au passif de chaque classe.",
         "La Force et l'Attaque de votre héros deviennent la Puissance : un seul mot, sur les cartes, les reliques, les événements, les statuts et le tutoriel. Vos dégâts ne changent pas.",
-        "La fiche des statistiques indique ce que votre Puissance renforce."
+        "La fiche des statistiques indique ce que votre Puissance renforce.",
+          "Le tutoriel n'enseigne plus une règle que votre classe ne suit pas : l'étape « Armure & Dégâts » montre d'abord ce que votre classe fait du gain, puis le coup qu'il encaisse — un Berserker y voit ses 4 points d'Armure devenir 4 de Puissance, sous un panneau titré « ARMURE → PUISSANCE » et la règle de sa classe écrite en clair — et l'étape « Jouer des cartes » annonce le gain réellement obtenu au lieu de la valeur imprimée sur la carte."
         ]
       },
       {

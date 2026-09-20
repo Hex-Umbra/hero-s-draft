@@ -38,6 +38,7 @@ class EntityValidator {
     required this.rootPath,
     this.registry,
     this.imports = const [],
+    this.pendingIds = const {},
   });
 
   final ContentFileSystem fs;
@@ -50,6 +51,16 @@ class EntityValidator {
   /// Les fichiers choisis, en attente d'« Écrire » : un son importe est
   /// declare pour cette validation, comme il le sera a l'ecriture.
   final List<PendingImport> imports;
+
+  /// Les identifiants que **la meme transaction** va ecrire, et que le
+  /// registre charge au demarrage ne connait donc pas encore.
+  ///
+  /// Une recette de classe ecrit la classe, puis un passif qui la nomme : au
+  /// moment ou ce passif est juge, la classe n'existe ni dans le registre ni
+  /// sur le disque. `_signatureCards` contournait le probleme en n'etant pas
+  /// un controle par reference (voir sa documentation) ; le passif, lui, en
+  /// est un. C'est ce seam, nomme.
+  final Map<EntityCategory, Set<String>> pendingIds;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
   static final RegExp _hexColorPattern = RegExp(r'^#[0-9a-fA-F]{6}$');
@@ -125,7 +136,15 @@ class EntityValidator {
       // Le controle disque ne voit qu'un chemin. Le registre voit tous ceux
       // d'une categorie — dont le cas d'une carte neutre homonyme d'une carte
       // de classe, que le chargeur rejette comme un doublon.
-      if (_idsOf(draft.descriptor.category)?.contains(draft.id) ?? false) {
+      //
+      // `_registryIdsOf`, et non `_idsOf` : cette derniere unit les
+      // identifiants en attente, et une recette de classe annonce son propre
+      // identifiant comme pendant pour que le passif qui la nomme ne soit pas
+      // refuse (famille 6). L'unicite, elle, ne doit jamais se comparer a
+      // elle-meme — sans quoi la classe qu'une recette s'apprete a ecrire se
+      // trouverait deja « portee par une entite de cette categorie ».
+      if (_registryIdsOf(draft.descriptor.category)?.contains(draft.id) ??
+          false) {
         faults.add(
           ValidationFault(
             'l\'identifiant "${draft.id}" est déjà porté par une entité de '
@@ -533,7 +552,23 @@ class EntityValidator {
     return const [];
   }
 
+  /// L'ensemble pris en compte pour une reference (famille 6) : le registre
+  /// charge au demarrage, augmente des identifiants pendants de la meme
+  /// transaction. `null` des que le registre est indisponible — une
+  /// reference ne doit jamais se juger sur les seuls pendants, qui ne
+  /// couvrent qu'une partie de la categorie.
   Set<String>? _idsOf(EntityCategory category) {
+    final known = _registryIdsOf(category);
+    if (known == null) return null;
+    final pending = pendingIds[category];
+    return pending == null ? known : {...known, ...pending};
+  }
+
+  /// L'ensemble du seul registre, sans les identifiants pendants. C'est celui
+  /// que l'unicite (famille 1) doit lire : un brouillon ne doit jamais se
+  /// comparer a son propre identifiant, annonce comme pendant pour que la
+  /// reference qui le nomme ne soit pas refusee.
+  Set<String>? _registryIdsOf(EntityCategory category) {
     final r = registry;
     if (r == null) return null;
     switch (category) {
@@ -547,6 +582,8 @@ class EntityValidator {
         return r.passives.map((e) => e.id).toSet();
       case EntityCategory.forgeUpgrade:
         return r.forgeUpgrades.map((e) => e.id).toSet();
+      case EntityCategory.levelUpReward:
+        return r.levelUpRewards.map((e) => e.id).toSet();
       case EntityCategory.heroClass:
         return r.heroes.map((e) => e.id).toSet();
       case EntityCategory.enemy:
