@@ -29,6 +29,12 @@ class TutorialClassChoiceWidget extends StatefulWidget {
 }
 
 class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
+  // Vaut pour la carte choisie seulement : une carte non choisie est
+  // toujours repliee, quel que soit ce booleen (`isExpanded: isSelected &&
+  // _deplie`). Une seule carte a la fois peut donc etre depliee, sans qu'il
+  // faille savoir laquelle ici.
+  bool _deplie = false;
+
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
@@ -82,12 +88,17 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
 
     return InkWell(
       onTap: () {
-        // Une carte deja choisie ne reinitialise pas son passif : sans cette
-        // garde, retaper la carte (le nom, les PV, le badge « Passifs »...)
-        // rappelait `chooseHero`, qui reecrit `activePassive` sur le premier
-        // passif de la classe et perd le choix du joueur.
-        if (!isSelected) widget.engine.chooseHero(hero);
-        setState(() {});
+        if (isSelected) {
+          // Retaper la carte deja choisie (le nom, les PV, le badge
+          // « Passifs »...) ne doit jamais rappeler `chooseHero`, qui
+          // reecrit `activePassive` sur le premier passif de la classe et
+          // perd le choix du joueur. Le tap replie ou deplie a la place —
+          // le geste que le badge « Passifs » promet par son chevron.
+          setState(() => _deplie = !_deplie);
+        } else {
+          widget.engine.chooseHero(hero);
+          setState(() => _deplie = true);
+        }
       },
       borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
@@ -134,9 +145,12 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
                 passives: passives,
                 selectedIndex: selectedIndex,
                 classMastery: hero.mastery,
-                // Seule la classe choisie est dépliée : une seule carte à la
-                // fois, comme à l'écran de sélection.
-                isExpanded: isSelected,
+                // Seule la classe choisie peut être dépliée, et seulement
+                // si le joueur ne l'a pas repliée depuis : une seule carte
+                // à la fois, comme à l'écran de sélection, mais ici le
+                // dépliage se retape (`_deplie`) puisqu'un retap sur la
+                // carte choisie ne peut plus rappeler `chooseHero`.
+                isExpanded: isSelected && _deplie,
                 // La carte du tutoriel fait 190 px : c'est la mise en page
                 // compacte qu'il lui faut, quelle que soit la taille de
                 // l'écran.

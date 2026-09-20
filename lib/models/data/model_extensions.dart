@@ -171,6 +171,13 @@ extension StatRuleLabel on StatRule {
   /// Même `switch` **exhaustif** sur le triplet (ressource, mode, cible) que
   /// [describe] : ajouter une valeur à l'une des trois énumérations sans son
   /// libellé ne compile plus.
+  ///
+  /// Seule la branche Armure est atteignable depuis l'unique appelant
+  /// (`tutorial_armor_widget.dart`, sur `armorRules.first`, une liste déjà
+  /// filtrée à `RuleStat.armor`) — pas aujourd'hui, et pas non plus le jour
+  /// où une classe convertissant le Mana sera livrée, puisque ce filtre
+  /// reste correct. La branche Mana existe quand même : le switch est
+  /// exhaustif sur le triplet, pas seulement sur ce que ce panneau affiche.
   String shortTitle(AppLocalizations l10n) => switch ((stat, mode, to)) {
         (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) =>
           l10n.statRuleArmorToMightTitle,

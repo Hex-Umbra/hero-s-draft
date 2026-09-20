@@ -92,8 +92,11 @@ void main() {
     expect(find.text('70/80'), findsNWidgets(2));
     // Genere depuis la regle : le titre annonce ce que l'Armure devient.
     expect(find.text('ARMURE → PUISSANCE'), findsOneWidget);
-    // Le badge d'Armure du panneau droit reste a 0 : rien n'est conserve.
-    expect(find.text('0'), findsWidgets);
+    // Les deux badges d'Armure (gauche ET droit) sont a 0 : le gauche n'en a
+    // jamais eu, le droit n'en a rien conserve. Compter exactement 2 est ce
+    // qui distingue ce cas : si le Berserker gardait son Armure, le badge
+    // droit afficherait 4 et ce compte tomberait a 1.
+    expect(find.text('0'), findsNWidgets(2));
     // La Puissance temporaire produite est montree, avec sa valeur.
     expect(find.text('4'), findsOneWidget);
     expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
@@ -126,7 +129,10 @@ void main() {
       // Meme instant que le test Paladin ci-dessus : ce contraste ne tient
       // que si le gain passe reellement par StatGains.apply et les statRules
       // de la classe (ADR-081) — jamais par une ecriture directe de l'Armure.
-      expect(find.text('0'), findsWidgets); // le badge d'Armure du panneau droit, converti
+      // Les deux badges d'Armure affichent 0 (gauche : jamais gagnee ;
+      // droit : convertie a l'instant) — si la conversion ne se produisait
+      // pas, le badge droit afficherait 4 et ce compte tomberait a 1.
+      expect(find.text('0'), findsNWidgets(2));
       expect(find.text('4'), findsOneWidget); // le badge de Puissance
       expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
 

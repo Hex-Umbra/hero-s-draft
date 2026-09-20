@@ -7,9 +7,17 @@ import '../../models/enemy_instance.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
 
-/// Dégâts réels d'une carte, utilisés pour le texte flottant déclenché par le
-/// chemin tap-puis-tap ; applique le multiplicateur de rareté, comme
-/// `TutorialEngine.playCard`.
+/// Valeur imprimée sur la carte, multipliée par la rareté — utilisée pour le
+/// texte flottant déclenché par le chemin tap-puis-tap.
+///
+/// Ce n'est **pas** le résultat du pipeline de dégâts : contrairement à
+/// `TutorialEngine.playCard` (`tutorial_engine.dart:387-395`), elle
+/// n'ajoute pas `damageBonusFor` et ne passe pas par
+/// `DamagePipeline.calculate`. Elle ne coïncide avec les dégâts réels qu'à
+/// cette étape précise, et seulement parce que trois conditions y sont
+/// réunies : la Puissance vaut 0 à cet instant, `critChance` y est forcé à
+/// 0, et le slime de démonstration est semé à `armure: 0`. Que l'une de ces
+/// conditions cesse d'être vraie, et cette valeur cesse d'être correcte.
 ///
 /// Il n'existe pas d'équivalent pour l'armure : ce qu'un gain d'armure
 /// devient dépend de la classe, et seul le moteur le sait (spec P-41, §9.1).
@@ -352,9 +360,15 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
               final armure = apres.armure - avant.armure;
               final puissance = apres.effectiveMight - avant.effectiveMight;
 
+              // `else if`, jamais `else` : une future règle convertissant
+              // l'Armure vers une cible qui n'est ni l'Armure ni la
+              // Puissance (`RuleTarget` n'a qu'une valeur aujourd'hui)
+              // laisserait `armure` et `puissance` tous deux à 0, et un
+              // `else` annoncerait alors un gain de zéro. Sans branche qui
+              // matche, l'étape ne dit simplement rien.
               if (puissance > 0) {
                 _triggerFloatingText('+$puissance ⚡', Colors.amber);
-              } else {
+              } else if (armure > 0) {
                 _triggerFloatingText('+$armure 🛡️', Colors.blueAccent);
               }
               setState(() {
