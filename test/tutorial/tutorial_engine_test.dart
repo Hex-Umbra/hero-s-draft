@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_engine.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_fixtures.dart';
 
@@ -112,6 +113,97 @@ void main() {
 
       expect(engine.mockState.heroStats.armure, 0);
       expect(engine.mockState.heroStats.currentPv, before - 6);
+    });
+  });
+
+  // L'identite de la classe traverse le tutoriel sans y etre recopiee
+  // (ADR-081, spec P-41 §9.1). Le lot B a ecrit ce comportement ; ce groupe
+  // le verrouille. Il doit passer du premier coup : un rouge ici est une
+  // regression du lot B, pas une etape de ce lot.
+  group('L identite de la classe traverse le tutoriel', () {
+    HeroData heroDit(String id) =>
+        engine.fixtures.heroes.firstWhere((h) => h.id == id);
+
+    test('le tutoriel force critChance a 0, y compris pour le Berserker', () {
+      final berserker = heroDit('berserker');
+      // La classe en declare bien un : sans cela le test ne prouverait rien.
+      expect(berserker.critChance, greaterThan(0));
+
+      engine.chooseHero(berserker);
+
+      // L'unique exception, explicite et testee, a la fidelite au jeu : une
+      // demonstration qui annonce les degats d'une carte avant de la jouer ne
+      // peut pas les voir varier une fois sur dix (spec §9.1).
+      expect(engine.mockState.heroStats.critChance, 0);
+    });
+
+    test('tout le reste de l identite est copie, jamais recopie', () {
+      for (final hero in engine.fixtures.heroes) {
+        engine.chooseHero(hero);
+        final stats = engine.mockState.heroStats;
+
+        expect(stats.maxPv, hero.maxHp, reason: hero.id);
+        expect(stats.maxMana, hero.maxMana, reason: hero.id);
+        expect(stats.mightTargets, hero.mightTargets, reason: hero.id);
+        expect(stats.mastery, hero.mastery, reason: hero.id);
+        expect(stats.luck, hero.luck, reason: hero.id);
+      }
+    });
+
+    test('une classe qui convertit son armure la convertit aussi ici', () {
+      final berserker = heroDit('berserker');
+      // La classe declare bien une regle : sinon le test ne prouve rien.
+      expect(berserker.statRules, isNotEmpty);
+
+      engine.chooseHero(berserker);
+      engine.seedHand([TutorialFixtureIds.defend]);
+      final valeur = engine.fixtures
+          .card(TutorialFixtureIds.defend)
+          .effects
+          .firstWhere((e) => e.type == 'armor')
+          .value;
+
+      engine.playCard(engine.mockState.hand.first);
+
+      // Aucune Armure conservee, et la Puissance temporaire a sa place :
+      // c'est `StatGains.apply` qui le decide, pas le tutoriel.
+      expect(engine.mockState.heroStats.armure, 0);
+      final buff = engine.mockState.heroStats.statuses
+          .firstWhere((s) => s.id == 'might');
+      expect(buff.value, valeur);
+      expect(buff.duration, berserker.statRules.first.duration);
+    });
+
+    test('une classe sans regle de stat garde son armure', () {
+      final paladin = heroDit('paladin');
+      expect(paladin.statRules, isEmpty);
+
+      engine.chooseHero(paladin);
+      engine.seedHand([TutorialFixtureIds.defend]);
+      final valeur = engine.fixtures
+          .card(TutorialFixtureIds.defend)
+          .effects
+          .firstWhere((e) => e.type == 'armor')
+          .value;
+
+      engine.playCard(engine.mockState.hand.first);
+
+      expect(engine.mockState.heroStats.armure, valeur);
+      expect(engine.mockState.heroStats.statuses, isEmpty);
+    });
+
+    test('un gain converti verrouille quand meme l etape', () {
+      // `armorGainedThisStep` garde l'etape « Jouer des cartes » : il se lit
+      // sur la valeur imprimee de la carte, avant conversion. Sans cela, le
+      // parcours Berserker serait bloque sur cette etape.
+      engine.chooseHero(heroDit('berserker'));
+      engine.seedHand([TutorialFixtureIds.defend]);
+      expect(engine.armorGainedThisStep, isFalse);
+
+      engine.playCard(engine.mockState.hand.first);
+
+      expect(engine.mockState.heroStats.armure, 0);
+      expect(engine.armorGainedThisStep, isTrue);
     });
   });
 
