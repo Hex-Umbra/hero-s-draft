@@ -14,14 +14,19 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Choose Your Class',
     titleFr: 'Choisissez votre classe',
     bodyEn:
-        'Every run starts here. The three classes differ by their health pool '
-        'and — above all — by their passive, which decides how they earn Armor. '
-        'Pick one: the rest of this tutorial will use it.',
+        'Every run starts here. The three classes differ by their health pool, '
+        'by what their Might strengthens, and — above all — by the passive you '
+        'pick for them: each class offers several, and the passive decides how '
+        'you earn Armor.\n\n'
+        'Choose a class, then tap a passive to keep it. The rest of this '
+        'tutorial will use both.',
     bodyFr:
         'Toute partie commence ici. Les trois classes se distinguent par leurs '
-        'points de vie et surtout par leur passif, qui décide de la façon dont '
-        'elles gagnent de l\'Armure. Choisissez-en une : la suite de ce '
-        'tutoriel s\'y adaptera.',
+        'points de vie, par ce que renforce leur Puissance, et surtout par le '
+        'passif que vous leur choisissez : chaque classe en propose plusieurs, '
+        'et c\'est lui qui décide de la façon dont vous gagnez de l\'Armure.\n\n'
+        'Choisissez une classe, puis touchez un passif pour le retenir. La '
+        'suite de ce tutoriel s\'appuiera sur les deux.',
     type: TutorialStepType.classChoice,
   ),
   TutorialStep(
@@ -177,9 +182,12 @@ const List<TutorialStep> kTutorialSteps = [
         '**Armor always resets to 0 at the start of your turn** — every class, '
         'no exception — and again at the end of a combat. It is a one-turn '
         'expense, never a stock you build up.\n\n'
-        'What your class changes is *how you earn it*: that is your passive. '
-        'Mastery, a permanent stat, strengthens what your passive produces — '
-        'each passive states what one point adds.',
+        'Your class decides two things. *How you earn it*: that is your '
+        'passive — Mastery, a permanent stat, strengthens what your passive '
+        'produces, and each passive states what one point adds. And *what '
+        'becomes of it*: most classes keep it for the turn, some turn it into '
+        'something else at once.\n\n'
+        'The demonstration below applies the rule of the class you picked.',
     bodyFr:
         'L\'Armure absorbe les dégâts avant vos PV. Ce qui dépasse une fois '
         'l\'Armure épuisée entame votre santé.\n\n'
@@ -187,10 +195,13 @@ const List<TutorialStep> kTutorialSteps = [
         'classes confondues, sans exception — et de nouveau à la fin d\'un '
         'combat. C\'est une dépense pour un tour, jamais un stock qu\'on '
         'accumule.\n\n'
-        'Ce que votre classe change, c\'est la *façon d\'en gagner* : c\'est '
-        'votre passif. La Maîtrise, statistique permanente, renforce ce que '
-        'produit votre passif — chaque passif indique ce qu\'un point lui '
-        'apporte.',
+        'Votre classe décide de deux choses. La *façon d\'en gagner* : c\'est '
+        'votre passif — la Maîtrise, statistique permanente, renforce ce que '
+        'produit votre passif, et chaque passif indique ce qu\'un point lui '
+        'apporte. Et *ce qu\'elle devient* : la plupart des classes la gardent '
+        'pour le tour, certaines la transforment aussitôt en autre chose.\n\n'
+        'La démonstration ci-dessous applique la règle de la classe que vous '
+        'avez choisie.',
     type: TutorialStepType.armorDamage,
   ),
   TutorialStep(

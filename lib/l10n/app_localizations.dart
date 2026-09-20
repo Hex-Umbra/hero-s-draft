@@ -704,6 +704,18 @@ abstract class AppLocalizations {
   /// **'{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}'**
   String statRuleConvertManaToMight(int duration);
 
+  /// Short title of the tutorial demo panel for a class that converts its Armor into temporary Might. Upper case, like the panel titles beside it.
+  ///
+  /// In en, this message translates to:
+  /// **'ARMOR → MIGHT'**
+  String get statRuleArmorToMightTitle;
+
+  /// Short title of the tutorial demo panel for a class that converts its Mana into temporary Might.
+  ///
+  /// In en, this message translates to:
+  /// **'MANA → MIGHT'**
+  String get statRuleManaToMightTitle;
+
   /// No description provided for @tooltipManaTitle.
   ///
   /// In en, this message translates to:

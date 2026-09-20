@@ -51,11 +51,13 @@ class TutorialFixtures {
       .map((id) => registry.heroes.firstWhere((h) => h.id == id))
       .toList();
 
-  /// Le passif de la classe au tutoriel : le premier que lui ouvre le point
-  /// d'accès unique — le choix par défaut de l'écran de sélection (spec
-  /// P-49, §4.2), qui lui laisse au joueur la main pour en retenir un autre.
-  PassiveData passiveFor(HeroData hero) =>
-      availablePassivesFor(hero, registry).first;
+  /// Les passifs que la classe peut prendre au tutoriel : ceux que rend le
+  /// point d'accès unique de P-49, dans son ordre, **sans troncature**
+  /// (spec P-41, §8.3). Le premier est le choix par défaut, comme à l'écran
+  /// de sélection ; le joueur garde la main pour en retenir un autre
+  /// (spec §9.1).
+  List<PassiveData> passivesFor(HeroData hero) =>
+      availablePassivesFor(hero, registry);
 
   /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
   List<CardData> get starterPool => registry.cards

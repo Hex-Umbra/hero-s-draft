@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
@@ -25,16 +26,32 @@ void main() {
       expect(fixtures.heroes.map((h) => h.id), ['paladin', 'berserker', 'mage']);
     });
 
-    test('chaque classe a pour passif le premier que lui ouvre le point d acces', () {
-      // Le premier passif de chaque classe, par rang d'affichage : celui qui
-      // remplace le passif d'avant la partie 2 du lot B de P-41.
+    test('chaque classe ouvre les passifs que le point d acces lui rend', () {
+      // Le tutoriel ne filtre ni ne tronque : il rend ce que rend le point
+      // d'acces unique de P-49, dans son ordre (spec P-41, §8.3 — « pas de
+      // take(3) »). Trois par classe aujourd'hui ; P-13 fera varier ce
+      // nombre, et ce test suivra sans etre reecrit.
+      for (final hero in fixtures.heroes) {
+        expect(
+          fixtures.passivesFor(hero),
+          availablePassivesFor(hero, data),
+          reason: hero.id,
+        );
+        expect(fixtures.passivesFor(hero), isNotEmpty, reason: hero.id);
+      }
+    });
+
+    test('le premier passif de chaque classe est son choix par defaut', () {
+      // Le premier par rang d'affichage : celui avec lequel la carte de
+      // classe s'affiche repliee, et celui que `chooseHero` retient tant que
+      // le joueur n'en designe pas un autre.
       const attendus = {
         'paladin': 'regen_armor',
         'berserker': 'rage',
         'mage': 'channeling',
       };
       for (final hero in fixtures.heroes) {
-        expect(fixtures.passiveFor(hero).id, attendus[hero.id]);
+        expect(fixtures.passivesFor(hero).first.id, attendus[hero.id]);
       }
     });
 

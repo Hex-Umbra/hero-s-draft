@@ -129,7 +129,12 @@ class TutorialEngine extends ChangeNotifier {
 
   void chooseHero(HeroData hero) {
     mockState.chosenHero = hero;
-    mockState.activePassive = fixtures.passiveFor(hero);
+    // Le premier du point d'accès, comme à l'écran de sélection : un choix
+    // par défaut, pas une fatalité — `choosePassive` le remplace. La liste
+    // est vide si aucun passif ne vise la classe, ce qu'aucune des trois
+    // classes livrées ne présente.
+    final passives = fixtures.passivesFor(hero);
+    mockState.activePassive = passives.isEmpty ? null : passives.first;
     mockState.heroStats = mockState.baseStatsForHero();
     // Régression : revenir choisir une autre classe après avoir drafté un
     // deck laissait `masterDeck` intact. `_isStepActionComplete` ne lit que
@@ -138,6 +143,16 @@ class TutorialEngine extends ChangeNotifier {
     // l'écran de draft, remonté à neuf par la `PageView`, affichait 0/5 pour
     // la nouvelle.
     mockState.masterDeck = [];
+    notifyListeners();
+  }
+
+  /// Retient [passive] parmi ceux que la classe choisie ouvre.
+  ///
+  /// Le deck n'est pas remis à zéro, contrairement à `chooseHero` : changer
+  /// de passif ne change pas les cartes de classe, et l'étape 03 reste
+  /// franchie.
+  void choosePassive(PassiveData passive) {
+    mockState.activePassive = passive;
     notifyListeners();
   }
 
@@ -292,9 +307,24 @@ class TutorialEngine extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setHeroArmor(int value) {
-    mockState.heroStats = mockState.heroStats.copyWith(armure: value);
-    if (value > 0) _armorGainedThisStep = true;
+  /// Accorde [amount] points d'Armure de démonstration, **sous les règles de
+  /// la classe choisie** — le même appel que `playCard` (ADR-081, spec P-41
+  /// §9.1). Une classe qui convertit son Armure la convertit donc aussi dans
+  /// une démonstration.
+  ///
+  /// Il n'existe volontairement **aucun** point d'entrée qui écrive `armure:`
+  /// sans passer par ici : c'est par là que l'étape « Armure » en était venue
+  /// à montrer 4 Armure à un Berserker qui n'en garde jamais.
+  void gainArmorForDemo(int amount) {
+    mockState.heroStats = StatGains.apply(
+      mockState.heroStats,
+      StatGain(GainResource.armor, amount, GainSource.card),
+      mockState.chosenHero?.statRules ?? const [],
+    );
+    // Sur le gain **annoncé**, et non sur l'armure conservée : même règle
+    // qu'à `playCard`, faute de quoi une classe qui convertit resterait
+    // bloquée à l'étape « Jouer des cartes ».
+    if (amount > 0) _armorGainedThisStep = true;
     notifyListeners();
   }
 
@@ -315,20 +345,27 @@ class TutorialEngine extends ChangeNotifier {
   }
 
   /// Remet `heroStats` à un socle neutre pour une démonstration de dégâts :
-  /// Armure à 0, PV courants au plus petit de [desiredPv] et du `maxPv` réel
-  /// du héros choisi.
+  /// Armure à 0, statuts vidés, PV courants au plus petit de [desiredPv] et
+  /// du `maxPv` réel du héros choisi.
   ///
-  /// Contrairement à `setHeroArmor`/`applyDamageToHero`, qui ne peuvent
-  /// qu'appauvrir l'état, ce point d'entrée peut remonter les PV courants :
-  /// nécessaire aux démonstrations qui rejouent un même scénario plusieurs
-  /// fois sur le `heroStats` partagé du moteur. Le plafond réel du héros est
-  /// toujours respecté — jamais de PV courants supérieurs au maximum, même
-  /// si [desiredPv] le dépasse (ex. le Mage, `maxPv: 60`).
+  /// Contrairement à `gainArmorForDemo`/`applyDamageToHero`, qui ne peuvent
+  /// qu'appauvrir l'état ou lui ajouter un gain, ce point d'entrée peut
+  /// remonter les PV courants : nécessaire aux démonstrations qui rejouent un
+  /// même scénario plusieurs fois sur le `heroStats` partagé du moteur. Le
+  /// plafond réel du héros est toujours respecté — jamais de PV courants
+  /// supérieurs au maximum, même si [desiredPv] le dépasse (ex. le Mage,
+  /// `maxPv: 60`).
+  ///
+  /// Les **statuts** sont vidés pour la même raison : la conversion d'armure
+  /// d'une classe en pose un (`might`), et `addStatus` empile
+  /// (`entity_stats.dart:134`). Sans ce nettoyage, rejouer la démonstration
+  /// afficherait +4 puis +8 Puissance.
   void resetHeroStatsForDemo(int desiredPv) {
     final stats = mockState.heroStats;
     mockState.heroStats = stats.copyWith(
       currentPv: desiredPv < stats.maxPv ? desiredPv : stats.maxPv,
       armure: 0,
+      statuses: [],
     );
     notifyListeners();
   }
