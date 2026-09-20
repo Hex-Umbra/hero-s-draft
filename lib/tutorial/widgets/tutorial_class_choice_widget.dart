@@ -82,7 +82,11 @@ class _TutorialClassChoiceWidgetState extends State<TutorialClassChoiceWidget> {
 
     return InkWell(
       onTap: () {
-        widget.engine.chooseHero(hero);
+        // Une carte deja choisie ne reinitialise pas son passif : sans cette
+        // garde, retaper la carte (le nom, les PV, le badge « Passifs »...)
+        // rappelait `chooseHero`, qui reecrit `activePassive` sur le premier
+        // passif de la classe et perd le choix du joueur.
+        if (!isSelected) widget.engine.chooseHero(hero);
         setState(() {});
       },
       borderRadius: BorderRadius.circular(14),

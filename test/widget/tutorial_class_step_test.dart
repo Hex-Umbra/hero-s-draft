@@ -97,6 +97,30 @@ void main() {
     expect(engine.mockState.activePassive?.id, autre.id);
   });
 
+  testWidgets('retaper une classe deja choisie ne reinitialise pas son passif', (tester) async {
+    // Regression : la carte entiere portait un seul InkWell dont le onTap
+    // rappelait chooseHero sans condition. Retaper le nom d'une carte deja
+    // choisie (un geste plausible en comparant les classes) reinitialisait
+    // donc silencieusement le passif retenu sur le premier de la classe.
+    final engine = await _pump(tester);
+
+    await tester.tap(find.text('Le Mage'));
+    await tester.pumpAndSettle();
+
+    final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+    final autre = engine.fixtures.passivesFor(mage).last;
+    expect(autre.id, isNot(engine.mockState.activePassive?.id));
+
+    await tester.tap(find.text(autre.getName('fr')));
+    await tester.pumpAndSettle();
+    expect(engine.mockState.activePassive?.id, autre.id);
+
+    await tester.tap(find.text('Le Mage'));
+    await tester.pumpAndSettle();
+
+    expect(engine.mockState.activePassive?.id, autre.id);
+  });
+
   testWidgets('choisir une classe l\'écrit dans la tranche persistante', (tester) async {
     final engine = await _pump(tester);
     expect(engine.mockState.chosenHero, isNull);
