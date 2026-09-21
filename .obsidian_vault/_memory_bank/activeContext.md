@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-20 | commit: d27edc9 -->
+<!-- last-sync: 2026-09-21 | commit: d2794d2 -->
 
 # 🧠 Contexte Actuel
 
@@ -15,8 +15,8 @@ créée** — [ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur
 **La note `0.5.2` n'a pas été rouverte** : ni entrée joueur, ni entrée Technique, jugé le
 2026-09-20 — tout est sous `kDebugMode`, et `stat_rule.dart`, seul modèle livré touché, n'y gagne
 que des lectures. **Première livraison du projet à entrer dans `main` sans aucune entrée de patch
-note.** La note reste ni taguée ni publiée (dernière release `v0.5.1`), rouverte six fois et pas
-une septième. Métriques dans `progress.md`.
+note.** Rouverte six fois et pas une septième, la note a été **taguée et publiée le 2026-09-21**
+— première publication depuis `v0.5.1`, détail dans `progress.md`, où vivent aussi les métriques.
 
 Réserves à ne pas perdre de vue :
 
@@ -107,13 +107,13 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**P-41 n'a plus de lot ouvert.** Ce qui reste n'est pas du code : il reste au propriétaire à
-**regarder tourner les lots B, C et D** — les trois identités de classe, le nouvel écran de
-sélection et le tutoriel ne se vérifient pas par la suite de tests, et les cartes de classe ont été
-recalibrées à l'œil. Le tag `v0.5.2` attend cette campagne manuelle et P-42. Deux choses à trancher
-avant le chantier suivant, tenues dans `docs/ROADMAP.md` : le **filtre de classe des cartes de
-signature** (avant ou avec P-42), et la **Maîtrise dans l'onglet Héros du menu de debug**, laissée
-hors du lot D partie 2 alors qu'elle pilote tout P-49 — question ouverte en ROADMAP §4.
+**P-41 n'a plus de lot ouvert, et sa livraison est entre les mains des joueurs** : campagne de test
+manuelle du propriétaire faite, tag posé et publication verte le 2026-09-21. **Le chantier suivant
+est P-42** — pools de cartes par classe —, qui n'a pas encore de spec : il s'ouvre par un
+brainstorm. Deux choses à trancher avant lui, tenues dans `docs/ROADMAP.md` : le **filtre de classe
+des cartes de signature** (avant ou avec P-42), et la **Maîtrise dans l'onglet Héros du menu de
+debug**, laissée hors du lot D partie 2 alors qu'elle pilote tout P-49 — question ouverte en
+ROADMAP §4.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
 P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)
