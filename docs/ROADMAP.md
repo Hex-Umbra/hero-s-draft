@@ -446,6 +446,12 @@ de rareté des récompenses. P-41 hérite des paliers existants sans en inventer
 cartes à écrire, équilibrer, localiser en deux langues et playtester. Le code y est trivial (trois
 prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement de plusieurs sessions.
 
+**Sa condition préalable est levée** (2026-09-21, ADR-101) : le filtre de classe des pools d'offre
+existe, et P-42 peut donner à ses cartes n'importe quelle rareté sans qu'aucune fuie d'une classe à
+l'autre. Une conséquence à garder en tête au moment d'écrire ces cartes : **dès qu'une signature
+cesse d'être `unique`, elle devient achetable en boutique et tirable au bonus de boss** — par sa
+propre classe seulement, mais quand même. C'est le prédicat qui le décide, plus la rareté.
+
 ---
 
 ## 5. Tier C — Équilibrage *(≈ 9 jours + playtests)*
@@ -620,10 +626,14 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
     (mesuré le 2026-09-15) — à consolider ;
   - sur une fenêtre très basse, la barre d'actions fixe peut écraser le formulaire (seuil non mesuré) ;
   - « aller au champ » reste inerte pour une faute dont le champ n'a pas d'ancre montée.
-- **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
-  [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
-  avec **P-42**, qui multipliera ces cartes. Depuis le 2026-09-15, les deux pools lisent
-  `CardRarity.isAcquirable` : c'est là que le filtre de classe viendra se joindre.
+- ~~**Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de
+  boss~~ — ✅ **fait le 2026-09-21**, commit `3727f09`,
+  [ADR-101](../.obsidian_vault/_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md).
+  `CardData.isOfferableTo` porte le prédicat, la boutique et le bonus de boss `doubleXp` l'appellent ;
+  le draft de départ reste délibérément dehors, gardé par un test. **Livré sans note de version** :
+  le défaut était **latent**, les six cartes de classe étant toutes `unique` et donc déjà exclues
+  par `CardRarity.isAcquirable` — rien n'avait jamais fuité. **C'était la condition préalable à
+  P-42, elle est levée.**
 - **Une écriture de l'éditeur peut laisser un dossier de classe vide**, qui fait rougir la suite :
   `hero_display_order_test` lit `class.json` dans chaque dossier sans garde. Constaté le 2026-09-15
   sur un dossier `gambler` vide, supprimé depuis ; `entity_writer.dart` affirme au contraire un tel

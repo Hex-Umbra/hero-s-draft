@@ -9,18 +9,22 @@
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 1179 au vert | `flutter test` |
-| Fichiers de test | 149 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 1187 au vert | `flutter test` |
+| Fichiers de test | 150 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
 | Fichiers Dart (`lib/`) | 246 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 50 547 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Lignes de code (`lib/`) | 50 561 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 87 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **Métriques ci-dessus mesurées sur `main`.** **Le chantier P-41 y est fusionné en entier —
+> **Métriques ci-dessus mesurées sur `fix/filtre-cartes-de-classe`** (commit `3727f09`, en avance
+> d'un commit sur `main`) : le **filtre de classe sur les pools d'offre**, livré le 2026-09-21
+> ([ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) — **sans
+> note de version**, le défaut corrigé étant latent. **Le chantier P-41 est fusionné dans `main` en
+> entier —
 > ses quatre lots, A à D.** Dernier entré : **le lot D partie 2** — la console rattrape l'identité
 > de classe — par la PR #45 (2026-09-20, merge `d27edc9`, 5 commits,
 > [ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md)) ;
@@ -34,7 +38,7 @@
 >
 > **Note de version `0.5.2` rouverte en place six fois**, même numéro à chaque fois — P-49
 > (`5f168db`), lot B parties 1 (`2da3c23`) et 2 (`83e65b9`), lot C parties 1 (`bc533b7`) et 2
-> (`c29487e`), puis lot D partie 1 le 2026-09-20 (PR #44). **Pas encore taguée** (`docs/ROADMAP.md` §4).
+> (`c29487e`), puis lot D partie 1 le 2026-09-20 (PR #44). **Taguée et publiée le 2026-09-21** — détail en §4.
 > **Le lot D partie 2 ne l'a pas rouverte une septième fois** : aucune entrée, Technique comprise
 > — motif en §4.
 
@@ -99,11 +103,12 @@ amendé par [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puis
 | Foil Unique Progressif | `PolychromaticBorder`, `UiCard` | Bordure polychromatique au survol, nombre de couleurs croissant avec les upgrades |
 | Rareté Dynamique | `EffectResolver.resolveCard()` | Progression par rareté (common → legendary), rareté `unique` fixée à ×1.0 |
 | Catalogue de cartes | `assets/data/cards/`, `assets/data/classes/<id>/cards/` | 23 cartes, un fichier par carte : 17 globales (communes) + 6 de classe (unique) |
+| Éligibilité d'une carte proposée | `CardData.isOfferableTo` | **Prédicat unique** appelé par la boutique et le bonus de boss `doubleXp` : ni statut, ni `unique`, ni carte d'une autre classe. Ne teste que `heroClass`, jamais `category` — le chargeur injecte les deux du même chemin (ADR-101) |
 | Effets et exhaust | `EffectResolver`, `CardEffect`, `CardInstance.exhaustsOnPlay` | damage/heal/armor/draw/gain_mana/apply_status ; Power, et `isExhaust` sans rune `enduring` à quelque tier que ce soit → pile d'épuisement |
 | Moteur de pioche | `DeckNotifier._drawInto`, `.drawCards`, `.startCombat`, `deckRandomProvider` | Remélange à sec (défausse → pioche uniquement si pioche vide), arrêt net à `GameConstants.maxHandSize` (10), aléatoire injectable pour les tests de séquence, `DeckState.reshuffleCount` observable |
 | Règle de tour joueur | `TurnPhaseManager.startPlayerCombat()`/`.startPlayerTurn()` | Moitié joueur du cycle, symétrique de `startEnemyTurn`/`endEnemyTurn` ; tour 1 et tour N+1 sur le même chemin ; nombre de cartes piochées piloté par `RunState.cardsPerTurn` (défaut 5) |
 | Forge et Fusion | `DeckNotifier.addForgeUpgrade()`, `ForgeUpgradeDialog`, `ForgeFusionScreen` | Upgrades pilotées par `assets/data/forge_upgrades/`, un fichier par amélioration, cumulables sauf déclarées `stackable: false` ; capacité `CardData.forgeCapacityAt`, fixe à 5 pour une carte de classe |
-| Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp |
+| Draft (départ, post-combat) et suppression | `DraftScreen`, `StarterDeckDraftScreen`, `DeckNotifier.removeCardById()` | 3 choix post-victoire, 5 cartes globales au départ, oubli au feu de camp. **Le draft de départ n'emploie pas `isOfferableTo`** : il reste sur `category == global`, les signatures y étant déjà ajoutées d'office par `getHeroCards` (ADR-101 D3) |
 
 ### ⚔️ Combat
 
