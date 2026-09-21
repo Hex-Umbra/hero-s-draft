@@ -185,9 +185,9 @@ class RewardController extends Notifier<RewardState> {
 
     CardData? rolledBonusCard;
     if (currentNode.bossRewardType == BossRewardType.doubleXp) {
-      final validCards = allCards
-          .where((c) => c.type != CardType.status && c.rarity.isAcquirable)
-          .toList();
+      final heroClassId = ref.read(runProvider).heroClassId;
+      final validCards =
+          allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
       if (validCards.isNotEmpty) {
         rolledBonusCard = validCards[Random().nextInt(validCards.length)];
       }

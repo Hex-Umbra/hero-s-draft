@@ -281,6 +281,71 @@ void main() {
       );
     });
 
+    test('le bonus de boss d un mage ne tire jamais la signature d une autre classe', () {
+      const mageHero = HeroData(
+        id: 'mage',
+        nameEn: 'Mage',
+        nameFr: 'Mage',
+        classCard: 'mage.png',
+        maxHp: 80,
+        maxMana: 4,
+        luck: 0,
+        mastery: 0,
+      );
+      runController.startNewRun(mageHero);
+
+      const mixedCards = [
+        ...allCards,
+        CardData(
+          id: 'signature_mage',
+          cost: 2,
+          type: CardType.attack,
+          category: CardCategory.characterSpecific,
+          heroClass: 'mage',
+          rarity: CardRarity.rare,
+          target: CardTarget.singleEnemy,
+          effects: [],
+        ),
+        CardData(
+          id: 'signature_paladin',
+          cost: 2,
+          type: CardType.attack,
+          category: CardCategory.characterSpecific,
+          heroClass: 'paladin',
+          rarity: CardRarity.rare,
+          target: CardTarget.singleEnemy,
+          effects: [],
+        ),
+        CardData(
+          id: 'signature_berserker',
+          cost: 2,
+          type: CardType.attack,
+          category: CardCategory.characterSpecific,
+          heroClass: 'berserker',
+          rarity: CardRarity.rare,
+          target: CardTarget.singleEnemy,
+          effects: [],
+        ),
+      ];
+
+      final rolled = <String>{};
+      for (var i = 0; i < 200; i++) {
+        rewardController.handleVictory(
+          defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
+          currentNode: makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.doubleXp),
+          allRelics: allRelics,
+          allCards: mixedCards,
+          luck: 0,
+          act: 1,
+        );
+        rolled.add(rewardController.state.rolledBonusCard!.id);
+      }
+
+      expect(rolled, isNot(contains('signature_paladin')));
+      expect(rolled, isNot(contains('signature_berserker')));
+      expect(rolled, contains('signature_mage'));
+    });
+
     test('handleVictory rolls a bonus card excluding status/unique cards, only for a doubleXp boss node', () {
       for (var i = 0; i < 30; i++) {
         rewardController.handleVictory(

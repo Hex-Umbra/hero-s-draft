@@ -288,6 +288,74 @@ void main() {
     container.dispose();
   });
 
+  testWidgets(
+    'le draft de depart n offre que des cartes globales, jamais une signature de classe',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Le pool porte deux cartes de signature : celle du paladin qui joue, et
+      // celle d'une autre classe. Aucune des deux ne doit apparaitre au draft —
+      // celle du paladin est deja ajoutee d'office par getHeroCards, l'offrir
+      // ici la rendrait prenable deux fois.
+      final registry = GameDataRegistry(
+        enemies: const [],
+        heroes: [mockHero],
+        cards: [
+          ...mockCards,
+          const CardData(
+            id: 'fireball',
+            nameEn: 'Fireball',
+            nameFr: 'Boule de Feu',
+            cost: 2,
+            type: CardType.attack,
+            category: CardCategory.characterSpecific,
+            heroClass: 'mage',
+            rarity: CardRarity.rare,
+            target: CardTarget.singleEnemy,
+            effects: [],
+          ),
+        ],
+        events: const [],
+        passives: [mockPassive],
+        relics: const [],
+        forgeUpgrades: const [],
+      );
+
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+            locale: const Locale('fr', ''),
+            home: StarterDeckDraftScreen(
+              playerClass: mockHero,
+              passive: mockPassive,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(UiCard), findsNWidgets(10));
+      expect(find.text('BOUCLIER SACRÉ'), findsNothing);
+      expect(find.text('BOULE DE FEU'), findsNothing);
+    },
+  );
+
   testWidgets('the draft is tinted with the themeColor of the class data', (
     WidgetTester tester,
   ) async {

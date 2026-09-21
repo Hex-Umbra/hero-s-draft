@@ -348,5 +348,61 @@ void main() {
 
       expect(rolled, {'steadfast:1'});
     });
+
+    group('filtre de classe sur le pool de boutique', () {
+      const mageHero = HeroData(
+        id: 'mage',
+        nameEn: 'Mage',
+        nameFr: 'Mage',
+        classCard: 'mage.png',
+        maxHp: 80,
+        maxMana: 4,
+        luck: 0,
+        mastery: 0,
+      );
+
+      CardData signature(String heroClassId) => CardData(
+            id: 'signature_$heroClassId',
+            cost: 2,
+            type: CardType.attack,
+            category: CardCategory.characterSpecific,
+            heroClass: heroClassId,
+            rarity: CardRarity.rare,
+            target: CardTarget.singleEnemy,
+            effects: const [],
+          );
+
+      final mixedPool = [
+        ...testCardPool,
+        signature('mage'),
+        signature('paladin'),
+        signature('berserker'),
+      ];
+
+      test('la boutique d un mage ne propose jamais la signature d une autre classe', () {
+        runController.startNewRun(mageHero);
+
+        final offered = <String>{};
+        for (var i = 0; i < 200; i++) {
+          shopController.initializeShop(mixedPool, 0);
+          offered.addAll(shopController.state.cardsForSale.map((c) => c.data.id));
+        }
+
+        expect(offered, isNot(contains('signature_paladin')));
+        expect(offered, isNot(contains('signature_berserker')));
+      });
+
+      test('la boutique d un mage propose bien sa propre signature', () {
+        runController.startNewRun(mageHero);
+
+        final offered = <String>{};
+        for (var i = 0; i < 200; i++) {
+          shopController.initializeShop(mixedPool, 0);
+          offered.addAll(shopController.state.cardsForSale.map((c) => c.data.id));
+        }
+
+        expect(offered, contains('signature_mage'));
+      });
+    });
   });
 }
