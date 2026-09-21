@@ -43,11 +43,8 @@ class ShopController extends Notifier<ShopState> {
   }
 
   List<CardData> _getEligibleCards(List<CardData> allCards) {
-    return allCards
-        .where((c) =>
-            c.type != CardType.status &&
-            c.rarity.isAcquirable)
-        .toList();
+    final heroClassId = ref.read(runProvider).heroClassId;
+    return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
   }
 
   /// Helper pour obtenir les upgrades éligibles selon le pool de rareté et le type de carte

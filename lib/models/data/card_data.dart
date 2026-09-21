@@ -121,6 +121,23 @@ class CardData implements AudioSource {
   String getDescription(String locale) =>
       locale == 'fr' ? descriptionFr : descriptionEn;
 
+  /// Cette carte peut-elle être proposée au héros de classe [heroClassId] par
+  /// un pool d'offre — boutique, bonus de boss ?
+  ///
+  /// Une carte de signature n'appartient qu'à sa classe : sans ce filtre, un
+  /// mage pouvait acheter une carte de paladin. Seul `heroClass` est testé, et
+  /// jamais `category` : le chargeur injecte les deux depuis le même chemin de
+  /// fichier, ils ne peuvent pas diverger, et les tester tous les deux ferait
+  /// croire à deux conditions distinctes.
+  ///
+  /// Ne régit pas le draft de départ, qui reste sur `category == global` : les
+  /// cartes de signature y sont ajoutées d'office par `getHeroCards`, les
+  /// offrir en plus les rendrait prenables deux fois.
+  bool isOfferableTo(String heroClassId) =>
+      type != CardType.status &&
+      rarity.isAcquirable &&
+      (heroClass == null || heroClass == heroClassId);
+
   /// Nombre de runes de forge qu'une carte de ce modèle porte à [rarity].
   int forgeCapacityAt(CardRarity rarity) =>
       baseMaxForgeUpgrades + rarity.forgeSlotBonus;

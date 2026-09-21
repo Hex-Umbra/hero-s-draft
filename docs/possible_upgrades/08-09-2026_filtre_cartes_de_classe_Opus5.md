@@ -12,8 +12,8 @@
 | Pool | Source | Filtre actuel | Verdict |
 |:---|:---|:---|:---|
 | Deck de départ | `starter_deck_draft_screen.dart:54-58` + `:93` | `category == global`, plus les `skills` de la classe | ✅ correct par construction |
-| Boutique | `shop_controller.dart:44-50` | `type != status && rarity != unique` | ❌ **aucun filtre de classe** |
-| Bonus de boss (`doubleXp`) | `reward_controller.dart:189-191` | `type != status && rarity != unique` | ❌ **aucun filtre de classe** |
+| Boutique | `shop_controller.dart:47-49` | `type != status && rarity.isAcquirable` | ❌ **aucun filtre de classe** |
+| Bonus de boss (`doubleXp`) | `reward_controller.dart:189` | `type != status && rarity.isAcquirable` | ❌ **aucun filtre de classe** |
 | Draft de boss (`cards`) | `reward_controller.dart:170-186` → `boss_card_draft_screen.dart:56` | tiré du `masterDeck` du joueur | ✅ ne peut pas fuiter |
 | Repos et Forge | `rest_card_selection_screen.dart:71`, `forge_fusion_screen.dart:135-142` | tirés du `masterDeck` | ✅ ne peuvent pas fuiter |
 
@@ -31,11 +31,16 @@ Le balayage est complet : **deux pools seulement** sont concernés. Tous les aut
 Le prédicat d'éligibilité est **recopié à l'identique** aux deux endroits fautifs :
 
 ```dart
-// shop_controller.dart:44-50
-c.type != CardType.status && c.rarity != CardRarity.unique
-// reward_controller.dart:189-191
-c.type != CardType.status && c.rarity != CardRarity.unique
+// shop_controller.dart:47-49
+c.type != CardType.status && c.rarity.isAcquirable
+// reward_controller.dart:189
+c.type != CardType.status && c.rarity.isAcquirable
 ```
+
+> **Relu le 21/09/2026.** Le document citait ici `c.rarity != CardRarity.unique` :
+> c'était l'état du code au 08/09. P-40 bloc 2 a depuis nommé cette règle
+> `CardRarity.isAcquirable` (`card_data.dart:44`). Le défaut et sa cause sont
+> inchangés — seule la forme du prédicat recopié a bougé.
 
 Il n'existe aucun endroit où la règle d'éligibilité d'une carte *pourrait* être écrite une seule fois. C'est la cause directe du défaut : ajouter la condition de classe demande aujourd'hui de penser à deux fichiers, et rien ne le rappellera au troisième pool créé.
 
@@ -46,9 +51,9 @@ Un prédicat unique porté par `CardData`, que tous les pools d'offre appellent 
 ```dart
 /// Une carte est proposable à ce héros si elle n'est ni un statut ni une
 /// carte unique, et si elle n'appartient à personne d'autre.
-bool estProposableA(String heroClassId) =>
+bool isOfferableTo(String heroClassId) =>
     type != CardType.status &&
-    rarity != CardRarity.unique &&
+    rarity.isAcquirable &&
     (heroClass == null || heroClass == heroClassId);
 ```
 

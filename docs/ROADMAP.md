@@ -335,7 +335,7 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. **Rouverte en place le 2026-09-17 pour P-49** (`5f168db`), puis **le même jour pour la partie 1 du lot B de P-41** (`2da3c23`, la Puissance), puis **le 2026-09-18 pour sa partie 2** (`83e65b9`, l'identité des trois classes et les neuf passifs), puis **le même jour pour la partie 1 du lot C** (les récompenses de niveau en donnée, une entrée en Technique), puis **le 2026-09-20 pour sa partie 2** (`c29487e`, le choix du passif à la sélection de classe — quatre entrées neuves et, **pour la première fois, une entrée existante réécrite** : elle annonçait cet écran comme à venir), puis **le même jour pour la partie 1 du lot D** (PR #44, le tutoriel qui enseigne la classe choisie — deux entrées neuves, **aucune réécriture**), même numéro à chaque fois. **La partie 2 du lot D ne l'a pas rouverte une septième fois** (PR #45, 2026-09-20) : jugée sans entrée joueur **ni entrée Technique**, tous ses points d'entrée étant élagués du build release par `kDebugMode` et son seul modèle livré touché (`stat_rule.dart`) n'y gagnant que des lectures — la comparaison avec l'entrée Technique du lot C ne tient pas, celle-là décrivant des fichiers d'`assets/data/` réellement embarqués. Le tag `v0.5.2` attend donc les cartes de P-42.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. **Rouverte en place le 2026-09-17 pour P-49** (`5f168db`), puis **le même jour pour la partie 1 du lot B de P-41** (`2da3c23`, la Puissance), puis **le 2026-09-18 pour sa partie 2** (`83e65b9`, l'identité des trois classes et les neuf passifs), puis **le même jour pour la partie 1 du lot C** (les récompenses de niveau en donnée, une entrée en Technique), puis **le 2026-09-20 pour sa partie 2** (`c29487e`, le choix du passif à la sélection de classe — quatre entrées neuves et, **pour la première fois, une entrée existante réécrite** : elle annonçait cet écran comme à venir), puis **le même jour pour la partie 1 du lot D** (PR #44, le tutoriel qui enseigne la classe choisie — deux entrées neuves, **aucune réécriture**), même numéro à chaque fois. **La partie 2 du lot D ne l'a pas rouverte une septième fois** (PR #45, 2026-09-20) : jugée sans entrée joueur **ni entrée Technique**, tous ses points d'entrée étant élagués du build release par `kDebugMode` et son seul modèle livré touché (`stat_rule.dart`) n'y gagnant que des lectures — la comparaison avec l'entrée Technique du lot C ne tient pas, celle-là décrivant des fichiers d'`assets/data/` réellement embarqués. **Publiée le 2026-09-21** : le propriétaire a tranché de ne pas attendre les cartes de P-42 et a tagué `v0.5.2` sur `d27edc9` au terme de sa campagne de test manuelle — neuf jobs verts, release en pré-release. **P-42 ira donc au numéro suivant**, qui reste à décider.
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
@@ -360,7 +360,8 @@ sauvegardes antérieures** que le passage des ids en `snake_case` (`7da5db2`) en
 `schemaVersion` étant inchangés. Le lot 3 est invisible et ne casse aucune sauvegarde.
 **Publication** : différée le 2026-09-05 dans l'attente des cartes de **P-42**, puis tranchée
 autrement — voir « La note `0.5.1` n'attend plus P-42 », plus haut dans cette section. Poser le tag
-reste le seul geste déclenchant `release.yml`, et il suppose `main` poussé.
+reste le seul geste déclenchant `release.yml`, et il suppose `main` poussé. **Vérifié une
+deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 
 ---
 
@@ -444,6 +445,12 @@ de rareté des récompenses. P-41 hérite des paliers existants sans en inventer
 **Réserve honnête sur P-42** : c'est le chantier le plus lourd en **contenu** du dépôt — ~25-30
 cartes à écrire, équilibrer, localiser en deux langues et playtester. Le code y est trivial (trois
 prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement de plusieurs sessions.
+
+**Sa condition préalable est levée** (2026-09-21, ADR-101) : le filtre de classe des pools d'offre
+existe, et P-42 peut donner à ses cartes n'importe quelle rareté sans qu'aucune fuie d'une classe à
+l'autre. Une conséquence à garder en tête au moment d'écrire ces cartes : **dès qu'une signature
+cesse d'être `unique`, elle devient achetable en boutique et tirable au bonus de boss** — par sa
+propre classe seulement, mais quand même. C'est le prédicat qui le décide, plus la rareté.
 
 ---
 
@@ -619,10 +626,14 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
     (mesuré le 2026-09-15) — à consolider ;
   - sur une fenêtre très basse, la barre d'actions fixe peut écraser le formulaire (seuil non mesuré) ;
   - « aller au champ » reste inerte pour une faute dont le champ n'a pas d'ancre montée.
-- **Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de boss —
-  [analyse](possible_upgrades/08-09-2026_filtre_cartes_de_classe_Opus5.md). À traiter avant ou
-  avec **P-42**, qui multipliera ces cartes. Depuis le 2026-09-15, les deux pools lisent
-  `CardRarity.isAcquirable` : c'est là que le filtre de classe viendra se joindre.
+- ~~**Les cartes de signature ne sont pas filtrées par classe** en boutique ni sur le bonus de
+  boss~~ — ✅ **fait le 2026-09-21**, commit `3727f09`,
+  [ADR-101](../.obsidian_vault/_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md).
+  `CardData.isOfferableTo` porte le prédicat, la boutique et le bonus de boss `doubleXp` l'appellent ;
+  le draft de départ reste délibérément dehors, gardé par un test. **Livré sans note de version** :
+  le défaut était **latent**, les six cartes de classe étant toutes `unique` et donc déjà exclues
+  par `CardRarity.isAcquirable` — rien n'avait jamais fuité. **C'était la condition préalable à
+  P-42, elle est levée.**
 - **Une écriture de l'éditeur peut laisser un dossier de classe vide**, qui fait rougir la suite :
   `hero_display_order_test` lit `class.json` dans chaque dossier sans garde. Constaté le 2026-09-15
   sur un dossier `gambler` vide, supprimé depuis ; `entity_writer.dart` affirme au contraire un tel

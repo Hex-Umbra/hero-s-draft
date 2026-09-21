@@ -1,7 +1,7 @@
 # 🎯 Contexte Produit & Règles Métier — Index
 
 > [!IMPORTANT]
-> **Plafond : 120 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
+> **Plafond : 240 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
 **Vérifié le 2026-09-17** — 27 fiches, en bijection avec `../_rules/`, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
 
