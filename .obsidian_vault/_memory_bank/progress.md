@@ -1,7 +1,7 @@
 # 📊 État du Projet & Progrès
 
 > [!IMPORTANT]
-> **Plafond : 300 lignes.** Ce fichier décrit **ce qui est construit**, jamais ce qui reste à faire — voir `docs/ROADMAP.md`.
+> **Plafond : 600 lignes.** Ce fichier décrit **ce qui est construit**, jamais ce qui reste à faire — voir `docs/ROADMAP.md`.
 
 ## Métriques
 

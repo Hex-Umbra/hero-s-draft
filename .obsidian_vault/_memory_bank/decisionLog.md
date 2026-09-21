@@ -3,7 +3,7 @@
 Index des **ADR** (Architecture Decision Records) de **Hero's Draft**. Le corps de chaque décision vit dans son propre fichier sous `.obsidian_vault/_adr/`.
 
 > [!IMPORTANT]
-> **Plafond : 250 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
+> **Plafond : 500 lignes.** Ce fichier est un index, jamais un contenu. Un nouvel ADR prend le numéro `max(index) + 1` lu ici, jamais un numéro deviné.
 
 **Vérifié le 2026-09-20** — 100 décisions, numéros `ADR-001` à `ADR-100`, sans doublon ni trou, en bijection avec `../_adr/`.
 

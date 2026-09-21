@@ -13,14 +13,14 @@ Tu maintiens la documentation développeur de **Hero's Draft**. Tu traduis ce qu
 
 | Fichier | Plafond | Contenu |
 |:---|---:|:---|
-| `.obsidian_vault/_memory_bank/activeContext.md` | 120 l. | Focus courant, 3 dernières livraisons, prochaine étape |
-| `.obsidian_vault/_memory_bank/progress.md` | 300 l. | État du construit, métriques datées, 10 dernières releases |
-| `.obsidian_vault/_memory_bank/productContext.md` | 120 l. | **Index** des fiches de règles métier (tableau seul) |
-| `.obsidian_vault/_memory_bank/systemPatterns.md` | 150 l. | **Index** des fiches d'architecture (tableau seul) |
-| `.obsidian_vault/_memory_bank/decisionLog.md` | 250 l. | **Index** des ADR (tableau seul) |
-| `.obsidian_vault/_adr/ADR-0XX-<slug>.md` | 150 l. | Une fiche par décision |
-| `.obsidian_vault/_rules/<slug>.md` | 150 l. | Une fiche par système de jeu |
-| `.obsidian_vault/_patterns/<slug>.md` | 150 l. | Une fiche par domaine d'architecture |
+| `.obsidian_vault/_memory_bank/activeContext.md` | 240 l. | Focus courant, 3 dernières livraisons, prochaine étape |
+| `.obsidian_vault/_memory_bank/progress.md` | 600 l. | État du construit, métriques datées, 10 dernières releases |
+| `.obsidian_vault/_memory_bank/productContext.md` | 240 l. | **Index** des fiches de règles métier (tableau seul) |
+| `.obsidian_vault/_memory_bank/systemPatterns.md` | 300 l. | **Index** des fiches d'architecture (tableau seul) |
+| `.obsidian_vault/_memory_bank/decisionLog.md` | 500 l. | **Index** des ADR (tableau seul) |
+| `.obsidian_vault/_adr/ADR-0XX-<slug>.md` | 300 l. | Une fiche par décision |
+| `.obsidian_vault/_rules/<slug>.md` | 300 l. | Une fiche par système de jeu |
+| `.obsidian_vault/_patterns/<slug>.md` | 300 l. | Une fiche par domaine d'architecture |
 | `docs/ROADMAP.md` | — | Le reste à faire, priorisé |
 
 **Un seul mécanisme, appliqué trois fois : index + fiches adressables.** Les trois
@@ -53,6 +53,13 @@ Tout bloc de métriques porte `**Vérifié le YYYY-MM-DD**`.
 Ne jamais reprendre un chiffre depuis un document — même depuis ce vault. Les chiffres se re-mesurent.
 
 ## Garantie 2 — Plafonds durs
+
+> **Arbitrage du propriétaire, 2026-09-21 : tous les plafonds ont doublé.** `activeContext`
+> 120 → 240, `progress` 300 → 600, `productContext` 120 → 240, `systemPatterns` 150 → 300,
+> `decisionLog` 250 → 500, et chaque fiche de `_adr/`, `_rules/`, `_patterns/` 150 → 300.
+> Motif : `activeContext` et `ADR-097` étaient arrivés *à* leur plafond, sans marge. Ce qui ne
+> change pas : la FIFO à 3 livraisons, les 10 releases de `progress`, et la règle d'archiver
+> plutôt que d'empiler — un plafond plus haut n'est pas une autorisation de laisser grossir.
 
 En fin de passe, mesurer les index **et** les fiches :
 
@@ -136,10 +143,10 @@ aussi les règles de jeu et les patterns d'architecture.
 1. **Une fiche par système de jeu** sous `_rules/`, **une fiche par domaine
    d'architecture** sous `_patterns/`. Une règle nouvelle crée ou modifie *une* fiche.
 2. **Ne jamais réinjecter le contenu d'une fiche dans son index.** `productContext.md`
-   et `systemPatterns.md` sont des tableaux de liens plafonnés à 120 et 150 lignes ; y écrire
+   et `systemPatterns.md` sont des tableaux de liens plafonnés à 240 et 300 lignes ; y écrire
    une règle plutôt que dans sa fiche orphelinise les fiches et reconstitue le
    monolithe que cette architecture a démonté.
-3. **Toute fiche dépassant 150 lignes est redécoupée au niveau `###`**, et l'index mis
+3. **Toute fiche dépassant 300 lignes est redécoupée au niveau `###`**, et l'index mis
    à jour dans la même passe. On redécoupe, on ne condense pas.
 4. Nommage `<slug-kebab>.md`, préfixé du numéro de section qu'il porte dans l'index
    (`03-13-persistance-de-run.md`), pour que le tri alphabétique soit le tri de l'index.
@@ -168,7 +175,7 @@ documentaire. Un seul schéma vivant, un seul propriétaire.
 À **exécuter**, pas à cocher de mémoire :
 
 - [ ] `wc -l .obsidian_vault/_memory_bank/*.md` → tous sous leur plafond
-- [ ] `wc -l .obsidian_vault/_adr/*.md .obsidian_vault/_patterns/*.md .obsidian_vault/_rules/*.md | sort -rn | head -5` → la plus grande fiche sous 150 l.
+- [ ] `wc -l .obsidian_vault/_adr/*.md .obsidian_vault/_patterns/*.md .obsidian_vault/_rules/*.md | sort -rn | head -5` → la plus grande fiche sous 300 l.
 - [ ] Bijection index ↔ fiches pour les trois paires (`decisionLog`/`_adr`, `productContext`/`_rules`, `systemPatterns`/`_patterns`)
 - [ ] Chaque chemin cité existe : extraire les chemins et les tester avec `test -e`
       — **extraire les deux formes** : les chemins entre backticks *et* les cibles de
