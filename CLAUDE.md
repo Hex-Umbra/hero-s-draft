@@ -56,7 +56,7 @@ The codebase strictly separates three layers — never mix them:
 
 - **Showcase site** — `site/` — a static site served from the VPS root, with no build step and no npm dependency. `site/_site/versions.json` is its source of truth; `site/_site/js/model.js` holds the pure logic and is tested with `node --test` run from `site/`. Deployed by `.github/workflows/site.yml`, never by hand. No link to the game code.
 
-- **Tooling** — `tool/` — a single script, `sync_assets.dart`, which regenerates `pubspec.yaml`'s `assets:` section from the real contents of `assets/`. Flutter's asset declarations are not recursive at any level, so every class and enemy folder needs its own line; an undeclared folder loads in development and silently vanishes from a build. `--check` exits 1 if the section has drifted. Covered by `test/unit/sync_assets_test.dart`.
+- **Tooling** — `tool/` — two scripts. `sync_assets.dart` regenerates `pubspec.yaml`'s `assets:` section from the real contents of `assets/`. Flutter's asset declarations are not recursive at any level, so every class and enemy folder needs its own line; an undeclared folder loads in development and silently vanishes from a build. `--check` exits 1 if the section has drifted. Covered by `test/unit/sync_assets_test.dart`. `simulations/d26_economy_sim.dart` is the deck-economy simulation behind the brainstorm v3 decisions (report: `docs/possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md`): it reads `assets/data/` at launch, runs 8-10 minutes, and must be re-run before changing any value it measured. Not a test, not declared in `pubspec.yaml`, must stay `dart analyze` clean.
 
 - **Tutorial system** — `lib/tutorial/` (with `widgets/`) — onboarding/tutorial engine, separate from the main game loop.
 
