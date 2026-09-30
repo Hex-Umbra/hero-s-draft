@@ -48,7 +48,7 @@ pie title Répartition de l'effort restant estimé (~91 jours)
 > 2026-08-07) et ne l'incluent pas. Le solde net n'est pas calculable en l'état : P-41 était chiffré
 > (5-7 j), chiffrage **caduc** depuis sa re-vérification du 2026-09-16, qui a doublé son périmètre et
 > l'a découpé en quatre lots à chiffrer chacun dans son plan, plus un chantier frère, P-49 ; P-40 était chiffré aussi (1-1,5 j à l'origine ; **clos le 2026-09-15**, bloc 2 fusionné dans `main` le
-> 2026-09-15 par la PR #37), mais **P-42, P-43 et P-44 attendent leur spec**, tandis que P-18
+> 2026-09-15 par la PR #37), mais **P-42, P-43 et P-44 attendent leur spec** *(redécoupés le 2026-10-01 : ils se livrent par vagues, une spec par lot — §4)*, tandis que P-18
 > et P-20 sortent du Tier C par redistribution. Recalculer l'ensemble à la prochaine passe de
 > re-priorisation, pas avant — un total partiellement mis à jour serait plus trompeur que celui-ci.
 
@@ -70,9 +70,10 @@ graph TD
     P40["P-40 Nettoyage héros & cartes ✅ clos"] -.annule un tiers de.-> P26[P-26 Lot d'hygiène]
     P41[P-41 Identité de classe] -.son lot A précède.-> P49[P-49 Passifs partagés]
     P49 -.précède le lot B de.-> P41
-    P41 --> P42[P-42 Pools par classe]
-    P42 --> P43[P-43 Économie de deck]
-    P42 --> P44[P-44 Profondeur de cartes]
+    P41 --> P43[P-43 Économie unifiée]
+    P43 --> P42[P-42 Catalogue par lots de passif]
+    P43 --> P44["P-44 Profondeur — lot 1, livré avec la tranche 1 de P-42"]
+    P05 -.lots 2 à 4 de P-44.-> P44
     P49 -.pose le point d'accès aux passifs.-> P13
     P41 -.pose la chaîne de migration.-> P13
 ```
@@ -257,9 +258,9 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
 | **P-41** | **Identité de classe** — Puissance orientée par la classe, `statRules`, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** — ✅ **livré en entier, fusionné dans `main` le 2026-09-20 (PR #45 pour le dernier)** *(voir §4)* · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée les 2026-09-16 et 2026-09-17 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
 | **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · ✅ **Fusionné dans `main` le 2026-09-17 (PR #39)** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | *non chiffré* | ★★★☆☆ | 🔥🔥 |
-| **P-42** | **Pools de cartes par classe** — séparation `unique`/`heroClass`, ~25-30 cartes | *à chiffrer en spec* | ★★★★☆ | 🔥🔥🔥 |
-| **P-43** | **Économie de deck** — récompense de carte, limite de taille, rééquilibrage fusion | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥 |
-| **P-44** | **Profondeur de cartes** — coût 3, `scaleWith`, génération, cible `none`, malédictions | *à chiffrer en spec* | ★★★★☆ | 🔥🔥 |
+| **P-43** | **Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4** · **premier chantier du programme** *(redécoupé le 2026-10-01, voir §4)* · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | *une spec par lot* | ★★★★☆ | 🔥🔥🔥 |
+| **P-42** | **Catalogue par lots de passif** — un lot de cartes par passif, rangé sous `cards/<passif>/`, et les évolutions de signature · **trois tranches**, après P-43 *(redécoupé le 2026-10-01, voir §4)* · même brainstorm, même fichier d'orchestration | *une spec par tranche* | ★★★★☆ | 🔥🔥🔥 |
+| **P-44** | **Profondeur de cartes** — **quatre lots** : 1 (`scaleWith`, multi-coups, statuts proportionnels, coûts combinés, runes de pipeline) **livré avec la tranche 1 de P-42** ; 2 (malédictions, étourdissement, épines), 3 (mots-clés, production de cartes) et 4 (effets interactifs, cible `none`) **après le programme, derrière P-05** *(redécoupé le 2026-10-01, voir §4)* | *lot 1 : avec P-42 ; lots 2-4 : à chiffrer* | ★★★★☆ | 🔥🔥 |
 | ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
@@ -335,7 +336,7 @@ travail de relecture.
 **ni `heroClass` ni `category`** : le répertoire les injecte, et les déclarer fait échouer le
 chargement. Chaque nouveau dossier impose un `dart run tool/sync_assets.dart`.
 
-**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. **Rouverte en place le 2026-09-17 pour P-49** (`5f168db`), puis **le même jour pour la partie 1 du lot B de P-41** (`2da3c23`, la Puissance), puis **le 2026-09-18 pour sa partie 2** (`83e65b9`, l'identité des trois classes et les neuf passifs), puis **le même jour pour la partie 1 du lot C** (les récompenses de niveau en donnée, une entrée en Technique), puis **le 2026-09-20 pour sa partie 2** (`c29487e`, le choix du passif à la sélection de classe — quatre entrées neuves et, **pour la première fois, une entrée existante réécrite** : elle annonçait cet écran comme à venir), puis **le même jour pour la partie 1 du lot D** (PR #44, le tutoriel qui enseigne la classe choisie — deux entrées neuves, **aucune réécriture**), même numéro à chaque fois. **La partie 2 du lot D ne l'a pas rouverte une septième fois** (PR #45, 2026-09-20) : jugée sans entrée joueur **ni entrée Technique**, tous ses points d'entrée étant élagués du build release par `kDebugMode` et son seul modèle livré touché (`stat_rule.dart`) n'y gagnant que des lectures — la comparaison avec l'entrée Technique du lot C ne tient pas, celle-là décrivant des fichiers d'`assets/data/` réellement embarqués. **Publiée le 2026-09-21** : le propriétaire a tranché de ne pas attendre les cartes de P-42 et a tagué `v0.5.2` sur `d27edc9` au terme de sa campagne de test manuelle — neuf jobs verts, release en pré-release. **P-42 ira donc au numéro suivant**, qui reste à décider.
+**La note `0.5.1` n'attend plus P-42.** Tranché le 2026-09-05 : les cartes de P-42 devaient rejoindre l'entrée `0.5.1`, rouverte en place. **Décision remplacée le 2026-09-16** par le propriétaire : `0.5.1` est publiée telle quelle (tag `v0.5.1`), et **P-42 comme tout ce qui suit iront en `0.5.2`**. **Fait, même jour** : la note `0.5.2` a finalement été rédigée pour P-41 lot A (`fbec30d`), pas encore taguée. **Tranché le 2026-09-16 par le propriétaire : pas de nouveau numéro, P-42 rejoint `0.5.2`**, rouverte en place par `patch-notes-writer`. **Rouverte en place le 2026-09-17 pour P-49** (`5f168db`), puis **le même jour pour la partie 1 du lot B de P-41** (`2da3c23`, la Puissance), puis **le 2026-09-18 pour sa partie 2** (`83e65b9`, l'identité des trois classes et les neuf passifs), puis **le même jour pour la partie 1 du lot C** (les récompenses de niveau en donnée, une entrée en Technique), puis **le 2026-09-20 pour sa partie 2** (`c29487e`, le choix du passif à la sélection de classe — quatre entrées neuves et, **pour la première fois, une entrée existante réécrite** : elle annonçait cet écran comme à venir), puis **le même jour pour la partie 1 du lot D** (PR #44, le tutoriel qui enseigne la classe choisie — deux entrées neuves, **aucune réécriture**), même numéro à chaque fois. **La partie 2 du lot D ne l'a pas rouverte une septième fois** (PR #45, 2026-09-20) : jugée sans entrée joueur **ni entrée Technique**, tous ses points d'entrée étant élagués du build release par `kDebugMode` et son seul modèle livré touché (`stat_rule.dart`) n'y gagnant que des lectures — la comparaison avec l'entrée Technique du lot C ne tient pas, celle-là décrivant des fichiers d'`assets/data/` réellement embarqués. **Publiée le 2026-09-21** : le propriétaire a tranché de ne pas attendre les cartes de P-42 et a tagué `v0.5.2` sur `d27edc9` au terme de sa campagne de test manuelle — neuf jobs verts, release en pré-release. **P-42 ira donc au numéro suivant**, qui reste à décider. *(Décidé le 2026-10-01 : le programme P-43 → P-42 → P-44 lot 1 se livre par vagues, **une version par vague** — la table des versions est dans le [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), §1, et nulle part ailleurs.)*
 
 **Conséquence pour P-41.** Sa spec est la seule non implémentée à contenir des **instructions
 d'édition de données** ; elle a été rebasée le 2026-09-05. Un champ ajouté à une classe
@@ -368,22 +369,40 @@ deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 ### P-40 à P-44 — Programme « Identité de classe & catalogue »
 
 > [!IMPORTANT]
-> **Un seul programme en cinq lots, à ne pas ré-ordonner.** Il naît du diagnostic du 05/08
+> **Un seul programme, redécoupé le 2026-10-01.** Il naît du diagnostic du 05/08
 > ([état des lieux](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md),
 > [brainstorm](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md)), dont le constat
 > central est que *les trois classes ne se distinguent que par les PV et un passif, et que toute
-> « progression » de carte est l'inflation numérique de l'une des 17 communes*. Seul **P-41** est
-> conçu à ce jour avec **P-49**, chantier frère né de la re-vérification du 2026-09-16 (spec écrite le
-> même jour) ; les trois suivants attendent leur spec.
+> « progression » de carte est l'inflation numérique de l'une des 17 communes*. **P-40, P-41 et
+> P-49 sont livrés.** Les trois chantiers restants ont été reconçus par le
+> [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) — ses
+> décisions acquises, D1 à D69, sa [revue](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
+> en quatre passes et sa [simulation](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md).
+> **L'ordre est désormais P-43 → P-42 → P-44, et il ne se ré-ordonne pas** : l'économie décide
+> combien de runes une carte porte et à quel rythme les doublons arrivent, donc combien de cartes
+> un lot peut contenir — écrire le catalogue avant, c'est le réécrire (brainstorm §11, D64).
+>
+> **Le programme se livre par vagues** — une vague par version du jeu, une session par vague
+> ([ADR-102](../.obsidian_vault/_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md)). **Le
+> déroulé fait foi dans le
+> [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** :
+> les vagues, leurs versions, leur journal d'avancement. Cette section n'en garde qu'une ligne par
+> chantier — aucun fait n'est écrit aux deux endroits.
 
 | Lot | ID | Dépend de |
 |:---|:---|:---|
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
 | *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (passage unique des gains) |
 | S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
-| S3 — Pools de cartes | **P-42** | **P-41** |
-| S4 — Économie de deck | **P-43** | P-42 |
-| S5 — Profondeur de cartes | **P-44** | P-42 |
+| S3 — Économie unifiée *(cinq lots, E0 → E4)* | **P-43** | **P-41** (livré) |
+| S4 — Catalogue par lots de passif *(trois tranches)* | **P-42** | **P-43**, son lot E4 |
+| S5 — Profondeur de cartes *(quatre lots)* | **P-44** | Lot 1 : livré avec la tranche 1 de **P-42** · lots 2 à 4 : **P-05**, après le programme |
+
+**Périmètre des vagues, et ce qui reste dehors** *(2026-10-01)*. Les vagues couvrent ce que le
+brainstorm v3 a conçu : P-43 en entier, P-42 en entier, P-44 lot 1. **Restent pour après** : les
+lots 2 à 4 de P-44 — qui devront trois cartes à des lots déjà livrés, les épines de Rempart, la
+carte `retain` de Voile et la production de cartes de Carnage — et **P-16**, qui calibrera sur les
+neuf lots (§5).
 
 **Pourquoi P-41 d'abord, et pas P-42.** Ce n'est pas une préférence, c'est une contrainte : une
 seule ligne de `statRules` décide si `iron_wall` et `defend_basic` restent ou non dans le pool du
@@ -433,7 +452,7 @@ Deux autres suites de la revue finale portaient sur la compatibilité des sauveg
 
 | Chantier existant | Effet |
 |:---|:---|
-| **P-18** | Sa moitié « restrictions par classe » devient une conséquence de **P-42** |
+| **P-18** | Sa moitié « restrictions par classe » devient une conséquence de **P-42** ; ses deux autres points — limite de 15 cartes, coût de merge +1 mana — sont **annulés le 2026-10-01** par le brainstorm v3 (D2 : plus de plafond de deck ; D3 : la fusion donne la rune, sans surcoût) |
 | **P-20** | « Scaling de `mastery` par classe » est absorbé par **P-41** (stats de départ différenciées) |
 | **P-26** | Son tiers « `SkillData` bilingue » est **annulé** par P-40, qui supprime le modèle. ⚠️ Ne pas ouvrir P-26 avant P-40, sous peine de localiser en deux langues un modèle destiné à la suppression |
 | **P-13** | P-49 pose le point d'accès unique aux passifs et P-41 la chaîne de migration, que la méta-progression alimentera — **ni l'un ni l'autre n'en dépend**. Liste tenue en section P-13. *(Le seam `passiveSlots` que cette ligne annonçait n'a jamais existé dans le code.)* |
@@ -445,12 +464,16 @@ de rareté des récompenses. P-41 hérite des paliers existants sans en inventer
 **Réserve honnête sur P-42** : c'est le chantier le plus lourd en **contenu** du dépôt — ~25-30
 cartes à écrire, équilibrer, localiser en deux langues et playtester. Le code y est trivial (trois
 prédicats de filtrage), le design ne l'est pas. À assumer comme un engagement de plusieurs sessions.
+*(Périmètre revu le 2026-10-01 : neuf lots, un par passif, en trois tranches — le volume est en
+brainstorm v3, §7.4.)*
 
 **Sa condition préalable est levée** (2026-09-21, ADR-101) : le filtre de classe des pools d'offre
 existe, et P-42 peut donner à ses cartes n'importe quelle rareté sans qu'aucune fuie d'une classe à
 l'autre. Une conséquence à garder en tête au moment d'écrire ces cartes : **dès qu'une signature
 cesse d'être `unique`, elle devient achetable en boutique et tirable au bonus de boss** — par sa
 propre classe seulement, mais quand même. C'est le prédicat qui le décide, plus la rareté.
+*(Depuis le 2026-10-01 la question change de forme : les signatures cessent d'être des cartes —
+brainstorm v3, D49, lot E4 de P-43.)*
 
 ---
 
@@ -462,13 +485,20 @@ propre classe seulement, mais quand même. C'est le prédicat qui le décide, pl
 |:---|:---|:---:|:---:|:---:|
 | **P-16** | **Refonte globale des probabilités & récompenses** (le mana n'est plus une ressource rare) | **2-3 j** | ★★★★☆ | 🔥🔥🔥 |
 | **P-17** | **Problèmes d'équilibrage documentés** — ⚠️ **3 constats sur 5**, aucun re-mesuré *(2 sont faux, voir ci-dessous)* | *à re-chiffrer* | ★★★☆☆ | 🔥🔥 |
-| **P-18** | **Contraintes de deckbuilding** : limite de 15 cartes + coût de merge +1 mana + restrictions par classe — ⚠️ **entièrement redistribué** sur P-42 et P-43 *(voir §4)* | — | — | — |
+| **P-18** | **Contraintes de deckbuilding** : limite de 15 cartes + coût de merge +1 mana + restrictions par classe — ⚠️ **entièrement redistribué** sur P-42 et P-43 *(voir §4)* ; **ses deux points portés par P-43 sont annulés le 2026-10-01** (brainstorm v3, D2 et D3) | — | — | — |
 | **P-19** | **Intentions ennemies cachées** en late game | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-20** | **Scaling de `mastery` par classe** — ⚠️ **absorbé par P-41** *(voir §4)* | — | — | — |
 
 ### P-16 — Le sujet le plus important de ce tier
 Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une carte) rendent le mana quasi illimité, alors que c'est la ressource la plus importante du jeu. Cumulé avec la récompense de mana au Level Up disponible jusqu'en légendaire, le joueur perd toute sensation de contrainte. Le chantier consiste à revoir **l'ensemble** des tables de probabilité et le poids des récompenses par rareté — donc à re-calibrer plusieurs systèmes en même temps, d'où ★★★★☆ malgré un code trivial.
 **Interaction connue** : P-02 change la difficulté ressentie via le remélange à sec. ✅ **Levée le 2026-08-06** — P-02 est livré et son playtest validé, la base ne bougera donc plus sous P-16. Calibrer sur l'état actuel, pas sur les chiffres antérieurs au 2026-08-06.
+
+**Son constat d'origine est traité en amont par P-43** *(2026-10-01)* : `eco` et `quick` deviennent rares et à niveau unique, et la récompense de mana passe en mythique (brainstorm v3, D11, D27, D48). **P-16 s'ouvre donc après la dernière vague du programme**, sur la mesure des neuf lots, et hérite de cinq constats que la simulation de l'économie de deck a posés — chiffres et méthode dans son [rapport](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md), §5 et §7.2, jamais recopiés ici :
+- **les reliques de mana**, qui deviennent la source principale de mana hors courbe ;
+- **un puits d'or à créer** : dans le modèle, l'or déborde et ne contraint rien ;
+- **la survie après l'acte 5**, que le modèle ne tient pas — à mesurer en jeu avant de calibrer ;
+- **la boucle XP / niveau ennemi**, qui fait diverger tout palier constant : la table d'XP par acte se recale à chaque changement de budget ennemi (D58, D67) ;
+- **l'échange 3 → 1 et l'événement de fusion** (D29, D56), dont la forme et les coûts restent ouverts (brainstorm §13, Q4 et Q18).
 ### P-17 — Trois constats, pas cinq
 
 > [!WARNING]
@@ -497,7 +527,9 @@ Les runes de forge `eco` et `quick` (regain de mana / pioche à la lecture d'une
 >
 > - **P-18** se scinde : « restrictions par classe » devient une conséquence de **P-42** (les pools
 >   de classe *sont* la restriction) ; « limite de 15 cartes » et « coût de merge +1 mana » relèvent
->   de **P-43**, qui traite l'économie de deck d'un bloc.
+>   de **P-43**, qui traite l'économie de deck d'un bloc. **Ces deux points sont annulés le
+>   2026-10-01** : le brainstorm v3 retire tout plafond de deck (D2 — la seule limite est la main)
+>   et fait de la fusion la source des runes, sans surcoût de mana (D3). Ne rouvrir ni l'un ni l'autre.
 > - **P-20** est absorbé par **P-41**, dont les stats de départ différenciées (`armorMastery` pour
 >   le Paladin, `critChance` pour le Berserker) sont exactement ce que ce chantier demandait.
 
@@ -750,6 +782,9 @@ L'ordre compte : P-06 crée `vfx_tokens.dart` dont P-07 dépend ; le prototype d
 Donne une fin à une run, archive les résultats, puis recalibre l'économie **une fois** que P-02 et le nouveau contenu ont stabilisé la base. Intercaler **P-26 et P-25** (1,1 j de dette à faible risque ; la violation bilingue de `SkillData` qu'y comptait ce paragraphe est close depuis le 2026-09-04, P-40 ayant supprimé le modèle) selon l'humeur — c'est le couple qui remplace l'ancienne recommandation « P-23 et P-25 », P-23 ayant été rétrogradé après re-vérification.
 
 **Au-delà** : P-14 (Variantes d'Élite) et P-13 (méta-progression) sont les deux gros morceaux suivants ; P-12 (Biomes) est prêt côté code mais attend 15 illustrations — c'est le seul chantier qu'il est rationnel de lancer *maintenant* côté art, en parallèle de tout le reste.
+
+### Le programme en cours — P-43 → P-42 → P-44 lot 1, par vagues *(depuis le 2026-10-01)*
+Le programme « Identité de classe & catalogue » (§4) passe devant les jalons 2 et 3. Il se livre **par vagues, une par version du jeu** ([ADR-102](../.obsidian_vault/_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md)), et **son séquencement n'est pas tenu ici** : les vagues, leurs versions et leur journal sont dans le [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md). **P-16, prévu au jalon 3, attend sa dernière vague** : il calibrera sur les neuf lots de cartes, pas avant. Les jalons 2 et 3 restent ouverts ; ils n'ouvrent pas les mêmes fichiers que le programme, hormis P-05, dont dépendent les lots 2 à 4 de P-44.
 
 ### Plus tard, avant la `1.0.0` — sans identifiant ni place dans la file
 
