@@ -5,7 +5,7 @@
 
 ## Métriques
 
-**Vérifié le 2026-09-21**
+**Vérifié le 2026-10-01**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
@@ -20,8 +20,12 @@
 | Fichiers suivis sous `site/` | 16 | `git ls-files site/ \| wc -l` |
 
 > [!NOTE]
-> **Métriques ci-dessus mesurées sur `fix/filtre-cartes-de-classe`** (commit `3727f09`, en avance
-> d'un commit sur `main`) : le **filtre de classe sur les pools d'offre**, livré le 2026-09-21
+> **Métriques ci-dessus mesurées sur `main`** (commit `a850968`), **identiques à celles du
+> 2026-09-21** : aucun fichier de `lib/`, `test/` ni `assets/` n'a changé depuis
+> (`git diff 3727f09..HEAD -- lib test assets` est vide). Seuls des documents et un outil hors
+> build sont entrés — le dossier du programme P-43 → P-42 → P-44 lot 1, voir `activeContext.md`
+> et [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md). Dernière livraison
+> de code : le **filtre de classe sur les pools d'offre**, livré le 2026-09-21
 > ([ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) — **sans
 > note de version**, le défaut corrigé étant latent. **Le chantier P-41 est fusionné dans `main` en
 > entier —
@@ -244,6 +248,11 @@ dépôt ne la reproduit ni ne garde ce seuil** — une régression de démarrage
 
 Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md),
 [`_patterns/19-00`](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) et [`_patterns/19-5`](../_patterns/19-5-editeur-de-contenu-interface.md).
+
+**Hors build** — `tool/simulations/d26_economy_sim.dart`, entré dans `main` le 2026-10-01 : la
+simulation de l'économie de deck, qui a mesuré les valeurs retenues par le brainstorm v3. Ni test,
+ni asset ; à relancer avant de changer une valeur qu'elle a mesurée, et dans tout lot qui touche
+les données qu'elle lit — [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md).
 
 ## 2. Dette métier assumée
 

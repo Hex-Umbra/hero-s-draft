@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-09-21 | commit: 3727f09 -->
+<!-- last-sync: 2026-10-01 | commit: a850968 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,23 +7,27 @@
 
 ## Focus courant
 
-**P-41 est terminé en entier**, ses quatre lots A à D fermés. Sa partie 2 du lot D — la console —
-est fusionnée dans `main` par la **PR #45** (2026-09-20, merge `d27edc9`, `70fea1d`..`6c1a8dd`,
-5 commits, détail plus bas) : **l'outillage rattrape la donnée que les trois premiers lots avaient
-créée** — [ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md).
+**Le programme P-43 → P-42 → P-44 lot 1 est conçu, et il se livre par vagues.** Les trois chantiers
+qui restaient du programme « Identité de classe & catalogue » ont été reconçus par le
+[brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)
+(22/09 → 01/10), relu en quatre passes et adossé à une simulation de l'économie de deck.
+**L'ordre s'est inversé** : l'économie de deck (P-43) précède le catalogue (P-42), parce qu'elle
+décide combien de runes une carte porte et à quel rythme les doublons arrivent — donc combien de
+cartes un lot peut contenir.
 
-**La note `0.5.2` n'a pas été rouverte** : ni entrée joueur, ni entrée Technique, jugé le
-2026-09-20 — tout est sous `kDebugMode`, et `stat_rule.dart`, seul modèle livré touché, n'y gagne
-que des lectures. **Première livraison du projet à entrer dans `main` sans aucune entrée de patch
-note.** Rouverte six fois et pas une septième, la note a été **taguée et publiée le 2026-09-21**
-— première publication depuis `v0.5.1`, détail dans `progress.md`, où vivent aussi les métriques.
+**La méthode a changé** — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md) :
+une vague par version du jeu, une session par vague, un orchestrateur qui délègue la spec, le plan
+et l'implémentation à des agents, fait vérifier chaque document par un agent qui ne l'a pas écrit,
+et arbitre seul les questions de spec. **Le propriétaire garde le test manuel, la PR, le tag et la
+fusion** ; une vague s'arrête sur sa branche et ne pousse rien.
 
-**La condition préalable à P-42 est levée depuis** : le filtre de classe sur les pools d'offre est
-livré le 2026-09-21 ([ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)),
-**et lui non plus n'a pas de note de version** — deuxième livraison du projet dans ce cas, pour un
-motif inverse : le défaut corrigé était **latent**, les six cartes de classe livrées étant toutes
-`unique` et donc déjà exclues des deux pools par `CardRarity.isAcquirable`. Rien n'avait jamais
-fuité ; la correction est la fondation, pas le correctif.
+**Deux documents font foi, et ne se recopient pas** : le
+[fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
+pour le *déroulé* — vagues, versions, journal d'avancement, fiches de vague — et le brainstorm v3
+pour les *décisions de conception*. `docs/ROADMAP.md` garde une ligne par chantier et y renvoie.
+
+**Aucun code n'a changé depuis le 2026-09-21** : `git diff 3727f09..HEAD -- lib test assets` est
+vide. Seuls des documents et un outil hors build, la simulation, sont entrés dans `main`.
 
 Réserves à ne pas perdre de vue :
 
@@ -33,9 +37,13 @@ Réserves à ne pas perdre de vue :
   `attaque` → `attackPower` : l'id de passif n'y est pas touché, et une partie d'avant `7da5db2` perd
   toujours son passif de classe au chargement, signalé par un `MissingSaveItem`. La note de version
   reste le seul canal qui prévienne *avant*.
-- **La note `0.5.1` est close et publiée** (décision du 2026-09-16). La version que visent P-42 et la
-  suite est tenue dans `docs/ROADMAP.md` ; le numéro publié se lit dans `pubspec.yaml` et la 1ʳᵉ
-  entrée de `assets/data/patch_notes.json`, jamais ici.
+- **La version publiée se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
+  `assets/data/patch_notes.json`, jamais ici.** Les versions que visent les vagues sont dans le
+  fichier d'orchestration, §1, et nulle part ailleurs.
+- **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Le
+  2026-10-01, `gh` n'a pas joint l'API GitHub depuis la session : la CI des pushs de ce jour n'a
+  pas pu être constatée. Si cela se reproduit à une porte d'entrée, c'est le propriétaire qui
+  confirme, et le journal le note.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
@@ -43,7 +51,29 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Le filtre de classe sur les pools d'offre — un prédicat, deux appels, un piège gardé**
+1. **Le dossier du programme — brainstorm v3, revue, simulation, méthode par vagues**
+   (2026-09-22 → 2026-10-01, directement sur `main`, `3cd743f` → `a850968`, **documentation et
+   outillage seulement**) — **le programme a désormais une conception entière et un déroulé.** Le
+   brainstorm v3 remplace celui du 05/08 : ses décisions acquises, D1 à D69, refondent l'économie
+   de deck — la fusion devient le moteur de progression et donne la rune, le feu de camp affûte, une
+   carte se trouve après chaque combat, les signatures quittent le deck pour devenir des
+   compétences de classe, chaque passif reçoit son lot de cartes. Sa
+   [revue](../../docs/possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
+   l'a vérifié contre le code puis relu quatre fois après chaque vague de décisions ; la dernière
+   passe n'a trouvé aucune contradiction, et ses deux constats de fond sont venus de la lecture des
+   chemins de code, pas du document. **Un outil entre dans le dépôt** :
+   `tool/simulations/d26_economy_sim.dart`, qui a mesuré les valeurs d'économie retenues et
+   contredit six prémisses du brainstorm — dont celle d'un deck qui gonfle : la fusion en est le
+   puits ([rapport](../../docs/possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md),
+   [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md)). **La ROADMAP est
+   redécoupée** : P-43 « Économie unifiée » passe premier, P-42 devient le catalogue par lots de
+   passif, P-44 compte quatre lots dont le premier se livre avec P-42 ; P-18 perd ses deux derniers
+   points, P-16 hérite de cinq constats de la simulation. **Trois fiches de règles rattrapent le
+   code** au passage — `might` au lieu de `strength`, `eco` qui rend du mana à la pose, une boucle
+   qui ne promet plus de carte après un combat normal. **Aucun effet joueur, aucune note de
+   version.** **1187 tests**, inchangés, `dart analyze` propre —
+   [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md).
+2. **Le filtre de classe sur les pools d'offre — un prédicat, deux appels, un piège gardé**
    (2026-09-21, branche `fix/filtre-cartes-de-classe`, commit `3727f09`) — **la règle « une classe
    ne se voit proposer que ses propres cartes de signature » cesse de n'avoir aucun domicile.** Le
    prédicat d'éligibilité était recopié mot pour mot en boutique et au bonus de boss `doubleXp`, et
@@ -60,7 +90,7 @@ Réserves à ne pas perdre de vue :
    observable**, et la prémisse du brainstorm du 08/09 (« un paladin peut acheter une carte de
    mage ») était déjà fausse quand elle a été écrite. **1187 tests** (+8), `dart analyze` propre —
    [ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md).
-2. **P-41 lot D, partie 2 — la console rattrape l'identité de classe** (2026-09-20, **fusionné
+3. **P-41 lot D, partie 2 — la console rattrape l'identité de classe** (2026-09-20, **fusionné
    dans `main` par la PR #45**, merge `d27edc9`, 5 commits, `70fea1d` → `6c1a8dd`, branche
    `feat/p41-lot-d-console`) — **l'outil qui écrit la donnée apprend enfin ce que trois lots y ont
    mis.** L'éditeur laissait passer `"mode": "convrt"` : les trois clés de `statRules` sont
@@ -77,25 +107,9 @@ Réserves à ne pas perdre de vue :
    vide) et affiche classe, règles de stat et passif actif en lecture seule, **dans le vocabulaire
    du fichier**. **Aucun effet joueur.** **1179 tests** (+20), `dart analyze` propre —
    [ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md).
-3. **P-41 lot D, partie 1 — le tutoriel enseigne la classe qu'on a choisie**
-   (2026-09-20, **fusionné dans `main` par la PR #44**, merge `54c28dd`, 9 commits,
-   `30d48dc` → `639a222`, branche `feat/p41-lot-d-tutoriel`) — **le tutoriel cesse d'enseigner
-   une règle que la classe choisie ne suit pas.** Trois étapes arrêtaient chacune de court-circuiter
-   un point de passage qui existait déjà : l'étape 02 déplie les passifs que `availablePassivesFor`
-   ouvre à la classe — dans le **`ClassPassiveList` de l'écran de sélection**, le widget de
-   production et non une seconde implémentation (spec §1.4) — et retaper la classe déjà choisie
-   replie sa carte au lieu de reposer son passif. L'étape « Armure & Dégâts » fait passer son gain
-   de démonstration par `StatGains.apply` et les `statRules` de la classe au lieu d'écrire 4 Armure
-   en dur : elle se joue **en deux temps** (le gain, puis le coup), son panneau droit part de 0, son
-   titre est **généré** depuis la règle qui vise l'Armure (`shortTitle`, deux clés ARB neuves) et la
-   règle est écrite en clair sous les panneaux par `StatRuleLabel.describe`. L'étape « Jouer des
-   cartes » **mesure le gain réel** de part et d'autre de `playCard` au lieu de lire la valeur
-   imprimée sur la carte. Les deux acquis que le lot B avait livrés sans les verrouiller —
-   `critChance` forcé à 0, conversion d'armure appliquée par `playCard` — passent sous test.
-   **Aucun mécanisme nouveau, donc aucun ADR** : la livraison applique ADR-081, ADR-090 et
-   ADR-097. **1159 tests** (+24), `dart analyze` propre.
 > [!NOTE]
-> **Rotations.** Sortie le 2026-09-21, dans `../_archive/` : `2026-09-21-activeContext-livraisons.md`
+> **Rotations.** Sortie le 2026-10-01, dans `../_archive/` : `2026-10-01-activeContext-livraisons.md`
+> (P-41 lot D partie 1). Sortie le 2026-09-21 : `2026-09-21-activeContext-livraisons.md`
 > (P-41 lot C partie 2). Sorties le 2026-09-20 : `2026-09-20-activeContext-livraisons-3.md`
 > (P-41 lot C partie 1), `2026-09-20-activeContext-livraisons-2.md` (lot B partie 2) et
 > `2026-09-20-activeContext-livraisons.md` (lot B partie 1, avec quatre réserves closes). Sorties
@@ -105,16 +119,17 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**P-41 n'a plus de lot ouvert, et sa livraison est entre les mains des joueurs** : campagne de test
-manuelle du propriétaire faite, tag posé et publication verte le 2026-09-21. **Le chantier suivant
-est P-42** — pools de cartes par classe —, qui n'a pas encore de spec : il s'ouvre par un
-brainstorm. **Le filtre de classe des cartes de signature, qui le précédait, est fait**
-([ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) : P-42 peut
-donner à ses cartes n'importe quelle rareté sans qu'aucune fuie d'une classe à l'autre. Reste une
-seule chose à trancher avant lui, tenue dans `docs/ROADMAP.md` : la **Maîtrise dans l'onglet Héros
-du menu de debug**, laissée hors du lot D partie 2 alors qu'elle pilote tout P-49 — question ouverte
-en ROADMAP §4.
+**La vague 1 du fichier d'orchestration** : les deux premiers lots de P-43 — les garde-fous de
+Puissance, puis le moteur de runes en donnée, sans changement de boucle. Elle se lance dans une
+session neuve, par le prompt unique de son §0. **Sa porte d'entrée n'attend aucun tag** : la
+vague 0 — la méthode et la ROADMAP — est faite, par cette passe. À la sortie de la vague, c'est le
+propriétaire qui teste, ouvre la PR, pose le tag et fusionne ; la vague 2 n'ouvre qu'une fois la
+CI/CD verte.
+
+Une question reste tenue dans `docs/ROADMAP.md` §4, hors programme : la **Maîtrise dans l'onglet
+Héros du menu de debug**, laissée hors du lot D partie 2 de P-41 alors qu'elle pilote tout P-49.
 
 Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
-P-08, P-05. **P-07 doit lire [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md)
-D6 avant de toucher aux animations.**
+P-08, P-05 — dont dépendent les lots 2 à 4 de P-44, après le programme. **P-07 doit lire
+[ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
+aux animations.**
