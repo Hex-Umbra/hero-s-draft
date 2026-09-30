@@ -1,5 +1,8 @@
 # Brainstorm — Évolution du Roster de Héros & du Catalogue de Cartes
 
+> [!WARNING]
+> **Remplacé le 22/09/2026** par [`possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md`](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), qui intègre les décisions du propriétaire du 22/09 : trouvaille de carte, fusion = forge, lots par passif. Ce document reste lisible comme historique ; ne pas en faire la base d'une spec.
+
 **Date** : 05/08/2026
 **Prérequis de lecture** : `05-08-2026_etat_des_lieux_heros_et_cartes_Opus5.md` (même dossier). Ce document n'en répète pas les constats — il en tire les conséquences.
 **Statut** : Brainstorm. Concepts, formes mécaniques et recommandations de séquencement. Pas de stats chiffrées d'équilibrage — celles-ci relèveraient d'une spec.
