@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-09-17
+**Dernière mise à jour** : 2026-09-30
 
 ---
 
@@ -37,7 +37,11 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | | Document | Date |
 |:---:|:---|:---|
 | 📊 | [État des lieux — roster de héros & catalogue de cartes](analysis_reports/05082026_etat_des_lieux_heros_et_cartes_Opus5.md) | 05/08/2026 |
-| 🔍 | [Brainstorm — évolution du roster & du catalogue](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md) | 05/08/2026 |
+| 🔍 | [Brainstorm v3 — héros, cartes et économie de deck, après les décisions du 22/09](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) — **base des specs de P-42, P-43 et P-44** ; remplace le brainstorm du 05/08 ; 68 décisions acquises au 30/09, chantier E découpé en cinq lots (§11), quatre passes de cohérence | 22/09/2026 |
+| 🔍 | [Revue du brainstorm v3 — cohérence, vérification contre le code, passage en spec](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md) — 35 références vérifiées, corrections à apporter, idées du game designer ; **verdict : le chantier « Économie unifiée » est prêt pour spec après corrections, les évolutions de signature et le catalogue ne le sont pas** ; §11 : seconde passe du 30/09 après D36-D49, tout appliqué (D50-D55) ; §12 : troisième passe après D56-D64, propagation propre, tout appliqué (D65-D67) ; §13 : quatrième passe après D65-D67 en session neuve, propagation propre, tout appliqué (D68) | 29/09/2026 |
+| 🔍 | [Simulation D26 — l'économie de deck du brainstorm v3, sur 15 actes](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md) — 2 700 runs, 16 leviers ; ses contradictions et valeurs sont arbitrées en D56-D64 du brainstorm ; §7 : relance à k = 2 après D59, aucune conclusion ne bouge (D67) | 30/09/2026 |
+| 🔍 | [Orchestration — P-43, P-42 et P-44 : cohérence des lots et prompts de session](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) — la chaîne E0 → E4 → tranche 1 + P-44 lot 1 → tranches 2-3 → P-44 lots 2-4 → P-16 ; matrice décision → lot, transitions, ce que le script de simulation impose ; huit points à trancher ; **un prompt par session neuve** (session 0, E0 à E4, C1) et les gabarits des autres phases | 01/10/2026 |
+| 🔍 | [Brainstorm — évolution du roster & du catalogue](analysis_reports/05082026_brainstorm_heros_et_cartes_Opus5.md) *(remplacé par la v3 ; historique)* | 05/08/2026 |
 | 🔍 | [Idées améliorations classe et cartes](Idées%20améliorations%20classe%20et%20cartes.md) *(notes du propriétaire)* | 05/08/2026 |
 | 📐 | [S2 — Identité de classe *(P-41)*](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md) | 07/08/2026 |
 | 📐 | [Réorganisation des données — un fichier par entité *(P-48)*](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | 04/09/2026 |
@@ -156,6 +160,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
+| 🔍 | [Revue du répertoire `possible_upgrades/` — état réel au 11/09, croisements, fraîcheur de la roadmap et de l'index, lots proposés](possible_upgrades/10-09-2026_revue_brainstorms_aout_et_lots.md) — 24 documents croisés avec la ROADMAP, l'index et le code ; regroupements P-49 à P-52 proposés | 10/09/2026 |
 | 📐🔨 | [Refonte de la documentation](superpowers/specs/2026-08-03-documentation-overhaul-design.md) · [plan](superpowers/plans/2026-08-03-documentation-overhaul.md) | 03/08/2026 |
 | 📐 | [Mise à jour du README](superpowers/specs/2026-05-18-readme-update-design.md) | 18/05/2026 |
 | ⚠️🗄️ | [Backlog & roadmap du 22/07](archives/backlog_and_roadmap_report_22072026.md) — **remplacé par [`ROADMAP.md`](ROADMAP.md)** | 22/07/2026 |
