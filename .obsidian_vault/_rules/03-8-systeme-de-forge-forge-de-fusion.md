@@ -19,8 +19,8 @@ La Forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes d
   - La session n'est effacée (via `clearForgeSession()`) qu'après validation d'une amélioration ou lors du départ définitif du camp de repos (`RestScreen`).
 - **Filtrage Intelligent par Type de Carte** : Les améliorations proposées sont filtrées en amont selon le type de carte pour éviter les tirages aberrants ou inutiles :
   - *skill* (Compétence) : Exclut toutes les options offensives de dégâts physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
-  - *power* (Pouvoir) : Autorise uniquement les améliorations utilitaires (`eco` pour la réduction de coût mana, `quick` pour piocher une carte, et `enduring` pour retirer l'effet d'épuisement).
-  - *attack* (Attaque) : Conserve l'accès au pool complet de toutes les améliorations (stats physiques, élémentaires, pioche, réduction de coût, enduring).
+  - *power* (Pouvoir) : Autorise uniquement les améliorations utilitaires (`eco` : rend du mana **à la pose** de la carte, 1 par niveau de la rune — ce n'est pas une réduction de coût ; `quick` : pioche à la pose, 1 carte par niveau ; et `enduring` pour retirer l'effet d'épuisement).
+  - *attack* (Attaque) : Conserve l'accès au pool complet de toutes les améliorations (stats physiques, élémentaires, pioche, regain de mana, enduring).
 - **Sélection Pondérée par Rareté** : Les tirages d'options s'appuient sur un tirage pondéré par poids configuré dans le JSON (`weightCommon`, `weightUncommon`, `weightRare`) selon la rareté de la carte. Les Tiers des upgrades suivent la distribution de probabilité : Tier I (80%), Tier II (15%), Tier III (5%).
 - **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût en or augmente exponentiellement par slot :
   $$\text{Coût} = \text{round}(20 \times 1.25^n)$$

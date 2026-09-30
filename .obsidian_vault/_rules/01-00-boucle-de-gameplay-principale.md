@@ -11,10 +11,10 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        ├─► [Continuer] (si sauvegarde existante) ──────────────────────┐
        │                                                                │
        ▼                                                                │
-[Sélection de Classe (HeroSelectionScreen)]                             │
-  Paladin (100 HP, 3 Mana, 5 Atk, passif: regen_armor)
-  Berserker (80 HP, 3 Mana, 15 Atk, passif: berserker_armor)
-  Mage (60 HP, 3 Mana, 10 Atk, passif: spell_armor)
+[Sélection de Classe (ClassSelectionScreen)] — un passif choisi parmi trois │
+  Paladin (100 PV, 3 Mana, Maîtrise 1 — Puissance sur tout)
+  Berserker (80 PV, 3 Mana, Critique 10 — Puissance sur les Attaques, armure convertie en Puissance)
+  Mage (60 PV, 3 Mana — Puissance sur les Compétences et les altérations)
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
@@ -29,7 +29,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
   └─► [Combat (GameScreen)]
         │
         ▼
-      [Draft de Récompense (DraftScreen)] (Choix de carte de combat normal)
+      [Récompenses de combat] (XP et or ; aucune carte hors boss — le boss donne la récompense de son type : cartes, XP ou relique)
         │
         ▼
       [Évaluation Auto-Merge (3→1)] (Fusion 3× identiques → 1× de rareté supérieure)

@@ -7,9 +7,9 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | Statut (`id`) | Type | Empilable | Effet Mécanique | Tick |
 |:---|:---:|:---:|:---|:---|
 | `poison` | Debuff | Oui | Inflige dégâts directs = valeur au début du tour | Durée -1 chaque tour |
-| `strength` | Buff | Oui | Ajoute sa valeur à `effectiveAttackPower` pour les dégâts physiques | Durée -1 chaque tour |
+| `might` | Buff | Oui | La **Puissance** : ajoute sa valeur à `effectiveMight`, que la classe oriente par `mightTargets` — Attaques, Compétences, altérations ([ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)) | Durée -1 chaque tour |
 | `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
-| `strength_regen` | Buff | Oui | Ajoute sa valeur au statut `strength` au début du tour | Durée -1 chaque tour |
+| `might_regen` | Buff | Oui | Ajoute sa valeur au statut `might` au début du tour | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
 | `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
 | `freeze` | Debuff | Oui | Réduit les dégâts de la prochaine attaque de l'ennemi de **50%** (calculé dans l'intention affichée). Ne se dissipe plus en début de tour mais après la résolution de son action d'attaque. | Durée décrémentée après l'action d'attaque |
