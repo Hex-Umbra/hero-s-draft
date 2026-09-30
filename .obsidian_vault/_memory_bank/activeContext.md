@@ -41,9 +41,9 @@ Réserves à ne pas perdre de vue :
   `assets/data/patch_notes.json`, jamais ici.** Les versions que visent les vagues sont dans le
   fichier d'orchestration, §1, et nulle part ailleurs.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Le
-  2026-10-01, `gh` n'a pas joint l'API GitHub depuis la session : la CI des pushs de ce jour n'a
-  pas pu être constatée. Si cela se reproduit à une porte d'entrée, c'est le propriétaire qui
-  confirme, et le journal le note.
+  2026-10-01, `gh` a échoué une fois à joindre l'API GitHub depuis la session, puis a répondu.
+  Si cela se reproduit à une porte d'entrée, c'est le propriétaire qui confirme, et le journal
+  le note — la porte ne suppose jamais.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
