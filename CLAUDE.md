@@ -103,6 +103,7 @@ One question, one place. Never duplicate a fact across two of these — link ins
 | What is built, and the project metrics | `_memory_bank/progress.md` — every figure carries the date it was measured |
 | What is being worked on right now | `_memory_bank/activeContext.md` — current focus plus the last three deliveries, nothing older |
 | What is left to do | `docs/ROADMAP.md` — **the single planning source** |
+| The programme in progress, wave by wave | `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` — authoritative for *how and when* the P-43 → P-42 → P-44-lot-1 programme is delivered: waves, versions, progress journal. Its design decisions live in the brainstorm v3 it cites; `docs/ROADMAP.md` links to it rather than repeating it (ADR-102) |
 | What is designed but not built | `docs/superpowers/specs/` and `docs/superpowers/plans/` |
 | What is explored but not decided | `docs/possible_upgrades/` |
 | What the player sees | `assets/data/patch_notes.json` |
