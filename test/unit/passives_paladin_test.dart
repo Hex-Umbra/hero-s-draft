@@ -97,10 +97,26 @@ void main() {
 
       expect(temporaryMight(), 1);
       expect(stats().might, 0, reason: 'jamais de Puissance permanente');
-      expect(
-        stats().statuses.singleWhere((s) => s.id == 'might').duration,
-        2,
-      );
+      final gained = stats().statuses.singleWhere((s) => s.id == 'might');
+      expect(gained.duration, 2);
+      expect(gained.sourceId, 'passive:fervor');
+    });
+
+    // La meme source rejouee s'additionne (D36) : d'un tour ennemi a
+    // l'autre, Ferveur rejoint son entree encore active et prend sa duree.
+    test('d un tour a l autre, Ferveur rejoint son entree', () {
+      run.startNewRun(paladin, fervor());
+      setHero(armure: 10);
+      run.takeDamage(2);
+
+      run.startTurn(); // le tic : l'entree passe a 1 tour
+      setHero(armure: 10);
+      run.takeDamage(2);
+
+      final gained = stats().statuses.where((s) => s.id == 'might').toList();
+      expect(gained, hasLength(1));
+      expect(gained.single.value, 1 + 1);
+      expect(gained.single.duration, 2);
     });
 
     test('des degats qui vont droit aux PV ne donnent rien', () {

@@ -30,9 +30,13 @@ void main() {
   final armorRule = StatusSource.rule('armor');
 
   group('StatusSource', () {
-    test('les formes de la carte et de la regle', () {
+    test('les six formes', () {
       expect(StatusSource.card('demon_form'), 'card:demon_form');
       expect(StatusSource.rule('armor'), 'rule:armor');
+      expect(StatusSource.passive('rage'), 'passive:rage');
+      expect(StatusSource.relic('shuriken'), 'relic:shuriken');
+      expect(StatusSource.status('might_regen'), 'status:might_regen');
+      expect(StatusSource.enemy('orc'), 'enemy:orc');
     });
   });
 

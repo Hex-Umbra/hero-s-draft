@@ -259,6 +259,7 @@ class PlayerStatsManager {
               type: StatusType.buff,
               value: relic.value,
               duration: 99, // 99 tours (durée du combat)
+              sourceId: StatusSource.relic(relic.id),
             ),
           );
         }
@@ -354,6 +355,7 @@ class PlayerStatsManager {
               type: StatusType.buff,
               value: relic.value,
               duration: 99,
+              sourceId: StatusSource.relic(relic.id),
             ),
           );
         } else {
@@ -388,6 +390,7 @@ class PlayerStatsManager {
               type: StatusType.buff,
               value: relic.value,
               duration: 1,
+              sourceId: StatusSource.relic(relic.id),
             ),
           );
         } else {

@@ -147,6 +147,9 @@ class TurnPhaseManager {
               type: StatusType.buff,
               value: intent.value,
               duration: 99,
+              // L'id de la donnée, jamais l'uuid de l'instance (spec P-43
+              // E0, A2).
+              sourceId: StatusSource.enemy(enemy.data.id),
             ),
           ),
         );

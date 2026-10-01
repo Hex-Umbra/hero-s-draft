@@ -86,8 +86,9 @@ void main() {
     expect(played, isTrue);
   }
 
-  RelicData relic(String effectType, int value) => RelicData(
-        id: 'test_relic',
+  RelicData relic(String effectType, int value, {String id = 'test_relic'}) =>
+      RelicData(
+        id: id,
         trigger: RelicTrigger.startOfTurn,
         effectType: effectType,
         value: value,
@@ -209,6 +210,119 @@ void main() {
 
       run.applyHeroStatModifier(mightAcc: -4);
       expect(heroStats().might, 0);
+    });
+  });
+
+  // P-43 E0 (spec, §4.3) : chaque poseur de Puissance la pose a son nom. Les
+  // valeurs et les durees ne changent pas.
+  group('la Puissance des reliques et d Eveil porte sa source', () {
+    setUp(() => run.startNewRun(paladin));
+
+    test('relique gain_might hors debut de run', () {
+      run.applyRelicEffect(relic('gain_might', 2));
+
+      final gained = heroStats().statuses.singleWhere((s) => s.id == 'might');
+      expect(gained.sourceId, 'relic:test_relic');
+      expect((gained.value, gained.duration), (2, 99));
+    });
+
+    test('Shuriken : une entree pour le combat, ses charges une entree', () {
+      final shuriken = relic('charge_might_combat', 1, id: 'shuriken');
+      run.applyRelicEffect(shuriken);
+      run.applyRelicEffect(shuriken);
+
+      final charges =
+          heroStats().statuses.where((s) => s.id == 'shuriken_charge');
+      expect(charges, hasLength(1));
+      expect(charges.single.value, 2);
+
+      // Le seuil de trois atteint deux fois : la meme source s'additionne.
+      for (var i = 0; i < 4; i++) {
+        run.applyRelicEffect(shuriken);
+      }
+
+      final gained = heroStats().statuses.where((s) => s.id == 'might').toList();
+      expect(gained, hasLength(1));
+      expect(gained.single.sourceId, 'relic:shuriken');
+      expect((gained.single.value, gained.single.duration), (1 + 1, 99));
+    });
+
+    test('Plume de scribe : une entree pour le tour, ses charges une entree', () {
+      final penNib = relic('charge_might_turn', 3, id: 'pen_nib');
+      for (var i = 0; i < 4; i++) {
+        run.applyRelicEffect(penNib);
+      }
+
+      final charges =
+          heroStats().statuses.where((s) => s.id == 'pen_nib_charge');
+      expect(charges, hasLength(1));
+      expect(charges.single.value, 4);
+
+      run.applyRelicEffect(penNib); // la cinquieme carte
+
+      final gained = heroStats().statuses.singleWhere((s) => s.id == 'might');
+      expect(gained.sourceId, 'relic:pen_nib');
+      expect((gained.value, gained.duration), (3, 1));
+    });
+
+    test('Eveil de Puissance du heros : 1, 2, 3, 3, sous sa source', () {
+      const eveil = StatusEffect(
+        id: 'might_regen',
+        name: 'Eveil de Puissance',
+        type: StatusType.buff,
+        value: 1,
+        duration: 3,
+      );
+      var stats = EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0)
+          .addStatus(eveil);
+
+      final releves = <int>[];
+      for (var tour = 0; tour < 4; tour++) {
+        stats = StatusEffectProcessor.processPlayerStatuses(stats, const []);
+        releves.add(stats.effectiveMight);
+      }
+
+      // Seule, elle s'accumule comme avant : la meme source a chaque tour.
+      expect(releves, [1, 2, 3, 3]);
+      expect(
+        stats.statuses.singleWhere((s) => s.id == 'might').sourceId,
+        'status:might_regen',
+      );
+    });
+
+    // La branche ennemie, que rien ne pose aujourd'hui (aucun might_regen sous
+    // assets/data/) : la Puissance d'Eveil devient une entree a part, que le
+    // tic final du meme appel retire.
+    test('Eveil de Puissance d un ennemi : ne rejoint plus l intention Buff', () {
+      final orc = EntityStats(
+        maxPv: 50,
+        currentPv: 50,
+        armure: 0,
+        might: 0,
+        statuses: [
+          StatusEffect(
+            id: 'might',
+            name: 'Puissance',
+            type: StatusType.buff,
+            value: 2,
+            duration: 99,
+            sourceId: StatusSource.enemy('orc'),
+          ),
+          const StatusEffect(
+            id: 'might_regen',
+            name: 'Eveil de Puissance',
+            type: StatusType.buff,
+            value: 1,
+            duration: 3,
+          ),
+        ],
+      );
+
+      final after = StatusEffectProcessor.processEnemyStatuses(orc);
+
+      // 2, et non 3 comme avant P-43 E0.
+      expect(after.effectiveMight, 2);
+      expect(after.statuses.where((s) => s.id == 'might'), hasLength(1));
     });
   });
 }

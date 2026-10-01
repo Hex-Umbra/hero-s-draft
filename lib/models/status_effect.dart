@@ -14,6 +14,20 @@ abstract final class StatusSource {
   /// Une règle de classe, par la ressource qu'elle convertit, dans le
   /// vocabulaire du fichier (`StatRule.statName`) : `rule:armor`.
   static String rule(String resource) => 'rule:$resource';
+
+  /// Un passif, par son id : `passive:rage`.
+  static String passive(String passiveId) => 'passive:$passiveId';
+
+  /// Une relique, par son id : `relic:pen_nib`.
+  static String relic(String relicId) => 'relic:$relicId';
+
+  /// Un statut qui en pose un autre, par l'id du statut qui pose :
+  /// `status:might_regen`.
+  static String status(String statusId) => 'status:$statusId';
+
+  /// Un ennemi, par l'id de sa donnée, jamais celui de l'instance :
+  /// `enemy:orc`.
+  static String enemy(String enemyId) => 'enemy:$enemyId';
 }
 
 class StatusEffect {
