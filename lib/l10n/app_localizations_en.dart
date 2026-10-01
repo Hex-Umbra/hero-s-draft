@@ -363,6 +363,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String statRuleRatioArmor(int percent, int amount, int converted) {
+    return 'Rate: $percent%, rounded up — $amount Armor → $converted Might.';
+  }
+
+  @override
+  String statRuleRatioMana(int percent, int amount, int converted) {
+    return 'Rate: $percent%, rounded up — $amount Mana → $converted Might.';
+  }
+
+  @override
   String get statRuleArmorToMightTitle => 'ARMOR → MIGHT';
 
   @override
