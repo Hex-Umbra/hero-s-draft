@@ -185,8 +185,10 @@ class _TutorialArmorWidgetState extends State<TutorialArmorWidget> {
           // au passif et au bouton (Paladin, Mage). L'encadré de règle
           // ci-dessous, lui, a besoin de sa propre place : sans cette marge,
           // il pousserait les panneaux hors du cadre (`RenderFlex overflow`)
-          // pour toute classe qui en déclare une.
-          height: rules.isEmpty ? 380 : 480,
+          // pour toute classe qui en déclare une — davantage encore quand la
+          // règle écrit son taux en seconde phrase, son ratio différant de 1
+          // (spec P-43 E0, §5.3).
+          height: rules.isEmpty ? 380 : 510,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(

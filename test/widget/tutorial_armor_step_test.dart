@@ -97,10 +97,11 @@ void main() {
     // comme le gauche, que la classe convertisse ou non. Ce compte de 2
     // verifie la forme des deux panneaux, pas la conversion : ce qui la
     // prouve ici, ce sont '70/80' (le Berserker afficherait 74/80 s'il
-    // gardait son Armure), le badge '4' de Puissance et Icons.bolt_rounded.
+    // gardait son Armure), le badge '2' de Puissance et Icons.bolt_rounded.
     expect(find.text('0'), findsNWidgets(2));
-    // La Puissance temporaire produite est montree, avec sa valeur.
-    expect(find.text('4'), findsOneWidget);
+    // La Puissance temporaire produite est montree, avec sa valeur : 4 Armure
+    // au taux de la classe, 50 %.
+    expect(find.text('2'), findsOneWidget);
     expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
   });
 
@@ -135,7 +136,7 @@ void main() {
       // droit : convertie a l'instant) — si la conversion ne se produisait
       // pas, le badge droit afficherait 4 et ce compte tomberait a 1.
       expect(find.text('0'), findsNWidgets(2));
-      expect(find.text('4'), findsOneWidget); // le badge de Puissance
+      expect(find.text('2'), findsOneWidget); // le badge de Puissance, a 50 %
       expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
 
       await _laisserPasserLeCoup(tester); // draine les timers restants
@@ -149,8 +150,13 @@ void main() {
     // (ADR-090). Le nom de la classe la coiffe, ce qui rend juste la
     // troisieme personne de la phrase.
     expect(find.text('Le Berserker'), findsOneWidget);
+    // Deux phrases : la regle, puis son taux (spec P-43 E0, §5.1). L'encadre
+    // les tient sans deborder — un debordement ferait echouer le test.
     expect(
-      find.text('Son Armure devient de la Puissance pour un tour.'),
+      find.text(
+        'Son Armure devient de la Puissance pour un tour. '
+        "Taux : 50%, arrondi à l'entier supérieur — 6 Armure → 3 Puissance.",
+      ),
       findsOneWidget,
     );
   });
@@ -161,12 +167,12 @@ void main() {
     await _simuler(tester);
     await _simuler(tester);
 
-    // +4, jamais +8 : `resetHeroStatsForDemo` efface les statuts entre deux
+    // +2, jamais +4 : `resetHeroStatsForDemo` efface les statuts entre deux
     // passages, sans quoi `addStatus` les empilerait. C'est le garde reel :
     // `_rightMightGain` (widget) est un delta borne a un seul appel de
-    // `gainArmorForDemo`, donc toujours 0 ou 4 par construction, jamais 8,
+    // `gainArmorForDemo`, donc toujours 0 ou 2 par construction, jamais 4,
     // que la classe empile ou non — le badge affiche ne peut donc jamais
     // trahir un empilement. Seul l'etat du moteur le peut.
-    expect(engine.mockState.heroStats.effectiveMight, 4);
+    expect(engine.mockState.heroStats.effectiveMight, 2);
   });
 }

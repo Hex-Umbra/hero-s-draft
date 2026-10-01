@@ -52,6 +52,8 @@ void main() {
       expect(rule.mode, RuleMode.convert);
       expect(rule.to, RuleTarget.statusMight);
       expect(rule.duration, 1);
+      // D37 : la moitie de son armure, arrondie au superieur.
+      expect(rule.ratio, 0.5);
     });
 
     test('le Paladin et le Mage n en declarent aucune', () {

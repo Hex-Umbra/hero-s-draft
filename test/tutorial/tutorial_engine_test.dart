@@ -165,12 +165,14 @@ void main() {
 
       engine.playCard(engine.mockState.hand.first);
 
-      // Aucune Armure conservee, et la Puissance temporaire a sa place :
-      // c'est `StatGains.apply` qui le decide, pas le tutoriel.
+      // Aucune Armure conservee, et la Puissance temporaire a sa place, au
+      // taux de la classe : 5 Armure a 50 %, arrondi au superieur, font 3.
+      // C'est `StatGains.apply` qui le decide, pas le tutoriel.
       expect(engine.mockState.heroStats.armure, 0);
       final buff = engine.mockState.heroStats.statuses
           .firstWhere((s) => s.id == 'might');
-      expect(buff.value, valeur);
+      expect(valeur, 5);
+      expect(buff.value, 3);
       expect(buff.duration, berserker.statRules.first.duration);
     });
 
@@ -275,15 +277,16 @@ void main() {
 
       engine.gainArmorForDemo(4);
 
-      // Le meme verdict que `playCard` : c'est le meme appel a StatGains.
+      // Le meme verdict que `playCard` : c'est le meme appel a StatGains —
+      // 4 Armure au taux de la classe, 50 % : 2 Puissance.
       expect(engine.mockState.heroStats.armure, 0);
-      expect(engine.mockState.heroStats.effectiveMight, 4);
+      expect(engine.mockState.heroStats.effectiveMight, 2);
     });
 
     test('resetHeroStatsForDemo efface les statuts', () {
       // Regression : `addStatus` empile (`entity_stats.dart:134`). Sans ce
-      // nettoyage, presser deux fois « Voir la difference » afficherait +4
-      // puis +8 Puissance a un Berserker.
+      // nettoyage, presser deux fois « Voir la difference » afficherait +2
+      // puis +4 Puissance a un Berserker.
       final berserker =
           engine.fixtures.heroes.firstWhere((h) => h.id == 'berserker');
       engine.chooseHero(berserker);

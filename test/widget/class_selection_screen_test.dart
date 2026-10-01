@@ -97,6 +97,7 @@ const _berserkerReel = HeroData(
       mode: RuleMode.convert,
       to: RuleTarget.statusMight,
       duration: 1,
+      ratio: 0.5,
     ),
   ],
   displayOrder: 2,

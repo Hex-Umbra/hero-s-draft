@@ -120,7 +120,9 @@ void main() {
     // mensonge que cette tache corrige.
     expect(engine.mockState.heroStats.armure, 0);
     expect(find.text('+$valeur 🛡️'), findsNothing);
-    expect(find.text('+$valeur ⚡'), findsOneWidget);
+    // 5 Armure au taux de la classe, 50 % arrondi au superieur : 3 Puissance.
+    expect(valeur, 5);
+    expect(find.text('+3 ⚡'), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 900));
   });
