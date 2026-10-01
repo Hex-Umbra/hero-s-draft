@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-10-01 | commit: a850968 -->
+<!-- last-sync: 2026-10-01 | commit: 25c36ba -->
 
 # 🧠 Contexte Actuel
 
@@ -10,7 +10,7 @@
 **Le programme P-43 → P-42 → P-44 lot 1 est conçu, et il se livre par vagues.** Les trois chantiers
 qui restaient du programme « Identité de classe & catalogue » ont été reconçus par le
 [brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)
-(22/09 → 01/10), relu en quatre passes et adossé à une simulation de l'économie de deck.
+(22/09 → 01/10), relu en six passes et adossé à une simulation de l'économie de deck.
 **L'ordre s'est inversé** : l'économie de deck (P-43) précède le catalogue (P-42), parce qu'elle
 décide combien de runes une carte porte et à quel rythme les doublons arrivent — donc combien de
 cartes un lot peut contenir.
@@ -18,8 +18,16 @@ cartes un lot peut contenir.
 **La méthode a changé** — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md) :
 une vague par version du jeu, une session par vague, un orchestrateur qui délègue la spec, le plan
 et l'implémentation à des agents, fait vérifier chaque document par un agent qui ne l'a pas écrit,
-et arbitre seul les questions de spec. **Le propriétaire garde le test manuel, la PR, le tag et la
-fusion** ; une vague s'arrête sur sa branche et ne pousse rien.
+et arbitre seul les questions de spec. **Le propriétaire garde le test manuel, la PR, la fusion et
+le tag** ; une vague s'arrête sur sa branche et ne pousse rien. Relue avant la première vague, la
+méthode est amendée par
+[ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md) : la fusion
+précède le tag, un plan ne reprend aucun geste de livraison du plan modèle, une vague interrompue
+se retrouve par sa branche, la simulation se compare à une sortie de référence suivie par git —
+en deux temps, le réalignement seul puis chaque changement voulu —, chaque vague laisse un compte
+rendu écrit et une section dans le suivi du chantier, sous `docs/suivi_vagues_chantier/` — ce
+qu'elle apporte au jeu et pourquoi, sans technique, selon le modèle du répertoire —, et une
+session de clôture ferme le chantier après le dernier tag.
 
 **Deux documents font foi, et ne se recopient pas** : le
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
@@ -38,8 +46,8 @@ Réserves à ne pas perdre de vue :
   toujours son passif de classe au chargement, signalé par un `MissingSaveItem`. La note de version
   reste le seul canal qui prévienne *avant*.
 - **La version publiée se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
-  `assets/data/patch_notes.json`, jamais ici.** Les versions que visent les vagues sont dans le
-  fichier d'orchestration, §1, et nulle part ailleurs.
+  `assets/data/patch_notes.json`, jamais ici.** Les versions que visent les vagues font foi dans
+  le fichier d'orchestration, §1 ; la décision qui les fixe et le suivi du chantier les rappellent.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Le
   2026-10-01, `gh` a échoué une fois à joindre l'API GitHub depuis la session, puis a répondu.
   Si cela se reproduit à une porte d'entrée, c'est le propriétaire qui confirme, et le journal
@@ -52,14 +60,15 @@ Réserves à ne pas perdre de vue :
 ## 3 dernières livraisons
 
 1. **Le dossier du programme — brainstorm v3, revue, simulation, méthode par vagues**
-   (2026-09-22 → 2026-10-01, directement sur `main`, `3cd743f` → `a850968`, **documentation et
-   outillage seulement**) — **le programme a désormais une conception entière et un déroulé.** Le
-   brainstorm v3 remplace celui du 05/08 : ses décisions acquises, D1 à D69, refondent l'économie
+   (2026-09-22 → 2026-10-01, directement sur `main`, depuis `3cd743f` — les deux dernières passes
+   de revue entrent par le commit qui suit `25c36ba` —, **documentation et outillage seulement**)
+   — **le programme a désormais une conception entière et un déroulé.** Le
+   brainstorm v3 remplace celui du 05/08 : ses décisions acquises, D1 à D75, refondent l'économie
    de deck — la fusion devient le moteur de progression et donne la rune, le feu de camp affûte, une
    carte se trouve après chaque combat, les signatures quittent le deck pour devenir des
    compétences de classe, chaque passif reçoit son lot de cartes. Sa
    [revue](../../docs/possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
-   l'a vérifié contre le code puis relu quatre fois après chaque vague de décisions ; la dernière
+   l'a vérifié contre le code puis relu quatre fois après chaque vague de décisions ; la quatrième
    passe n'a trouvé aucune contradiction, et ses deux constats de fond sont venus de la lecture des
    chemins de code, pas du document. **Un outil entre dans le dépôt** :
    `tool/simulations/d26_economy_sim.dart`, qui a mesuré les valeurs d'économie retenues et
@@ -71,8 +80,15 @@ Réserves à ne pas perdre de vue :
    points, P-16 hérite de cinq constats de la simulation. **Trois fiches de règles rattrapent le
    code** au passage — `might` au lieu de `strength`, `eco` qui rend du mana à la pose, une boucle
    qui ne promet plus de carte après un combat normal. **Aucun effet joueur, aucune note de
-   version.** **1187 tests**, inchangés, `dart analyze` propre —
-   [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md).
+   version.** **Une cinquième passe, le même jour, a relu le fichier d'orchestration lui-même**
+   avant de lancer la première vague : le fond tenait, le mode d'emploi a été corrigé. **Une
+   sixième a rejoué le fichier corrigé** — la porte d'entrée de la vague 1 passe, la simulation
+   relancée rend sa référence à l'identique — et trouvé une prémisse que le code dément : le
+   plafond de niveau d'une rune ne tient pas par la seule fusion de cartes, il se pose aux quatre
+   endroits qui écrivent un niveau.
+   **1187 tests**, inchangés, `dart analyze` propre (**vérifié le 2026-10-01**) —
+   [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
+   [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md).
 2. **Le filtre de classe sur les pools d'offre — un prédicat, deux appels, un piège gardé**
    (2026-09-21, branche `fix/filtre-cartes-de-classe`, commit `3727f09`) — **la règle « une classe
    ne se voit proposer que ses propres cartes de signature » cesse de n'avoir aucun domicile.** Le
@@ -122,9 +138,10 @@ Réserves à ne pas perdre de vue :
 **La vague 1 du fichier d'orchestration** : les deux premiers lots de P-43 — les garde-fous de
 Puissance, puis le moteur de runes en donnée, sans changement de boucle. Elle se lance dans une
 session neuve, par le prompt unique de son §0. **Sa porte d'entrée n'attend aucun tag** : la
-vague 0 — la méthode et la ROADMAP — est faite, par cette passe. À la sortie de la vague, c'est le
-propriétaire qui teste, ouvre la PR, pose le tag et fusionne ; la vague 2 n'ouvre qu'une fois la
-CI/CD verte.
+vague 0 — la méthode et la ROADMAP — est faite. La porte exige en revanche un arbre propre, un
+`main` poussé et le run CI de son commit de tête vert. À la
+sortie de la vague, c'est le propriétaire qui teste, ouvre la PR, fusionne et pose le tag ; la
+vague 2 n'ouvre qu'une fois la CI/CD verte.
 
 Une question reste tenue dans `docs/ROADMAP.md` §4, hors programme : la **Maîtrise dans l'onglet
 Héros du menu de debug**, laissée hors du lot D partie 2 de P-41 alors qu'elle pilote tout P-49.

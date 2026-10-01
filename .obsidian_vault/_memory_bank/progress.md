@@ -252,7 +252,8 @@ Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declar
 **Hors build** — `tool/simulations/d26_economy_sim.dart`, entré dans `main` le 2026-10-01 : la
 simulation de l'économie de deck, qui a mesuré les valeurs retenues par le brainstorm v3. Ni test,
 ni asset ; à relancer avant de changer une valeur qu'elle a mesurée, et dans tout lot qui touche
-les données qu'elle lit — [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md).
+les données qu'elle lit. Sa sortie complète est suivie à côté d'elle, `d26_reference_output.md` :
+c'est à elle qu'une relance se compare — [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md).
 
 ## 2. Dette métier assumée
 

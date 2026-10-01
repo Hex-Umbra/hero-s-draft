@@ -376,14 +376,15 @@ deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 > « progression » de carte est l'inflation numérique de l'une des 17 communes*. **P-40, P-41 et
 > P-49 sont livrés.** Les trois chantiers restants ont été reconçus par le
 > [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) — ses
-> décisions acquises, D1 à D69, sa [revue](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
-> en quatre passes et sa [simulation](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md).
+> décisions acquises, D1 à D75, sa [revue](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
+> en six passes et sa [simulation](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md).
 > **L'ordre est désormais P-43 → P-42 → P-44, et il ne se ré-ordonne pas** : l'économie décide
 > combien de runes une carte porte et à quel rythme les doublons arrivent, donc combien de cartes
 > un lot peut contenir — écrire le catalogue avant, c'est le réécrire (brainstorm §11, D64).
 >
 > **Le programme se livre par vagues** — une vague par version du jeu, une session par vague
-> ([ADR-102](../.obsidian_vault/_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md)). **Le
+> ([ADR-102](../.obsidian_vault/_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md), amendé
+> par [ADR-103](../.obsidian_vault/_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)). **Le
 > déroulé fait foi dans le
 > [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** :
 > les vagues, leurs versions, leur journal d'avancement. Cette section n'en garde qu'une ligne par
