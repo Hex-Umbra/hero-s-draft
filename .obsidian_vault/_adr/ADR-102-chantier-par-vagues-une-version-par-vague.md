@@ -10,7 +10,10 @@ description: A programme delivered by waves — one wave per game version, one s
 sans code** : rien n'est livré par cet ADR, `lib/`, `test/` et `assets/` sont inchangés depuis
 [ADR-101](ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md). **Vaut pour le seul
 programme P-43 → P-42 → P-44 lot 1** ; hors de lui, le rythme « une session par phase » suivi
-jusqu'ici reste la règle.
+jusqu'ici reste la règle. **Amendé le 2026-10-01 par
+[ADR-103](ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)** sur D2, D5 et D8 : le
+propriétaire fusionne puis tague, une vague ne livre rien même par héritage, et elle laisse un
+compte rendu écrit et une section dans le suivi des vagues.
 
 ### Contexte
 
