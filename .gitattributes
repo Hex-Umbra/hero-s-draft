@@ -3,3 +3,8 @@
 # tout le repo Flutter, ce qui n'est pas le sujet de ce chantier.
 .github/scripts/*.sh text eol=lf
 .github/workflows/*.yml text eol=lf
+
+# La sortie de reference de la simulation se compare octet pour octet a une
+# sortie fraiche du script, qui ecrit en LF : elle ne doit jamais etre
+# convertie en CRLF a l'extraction.
+tool/simulations/d26_reference_output.md text eol=lf
