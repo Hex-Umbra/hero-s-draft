@@ -73,7 +73,9 @@ abstract final class StatGains {
   /// Le gain converti par une règle qui le vise, ou `null` s'il n'y en a pas.
   ///
   /// Un gain nul ou négatif n'est jamais converti : il n'y a rien à
-  /// transformer, et un statut de valeur négative n'a pas de sens.
+  /// transformer, et un statut de valeur négative n'a pas de sens. Un gain
+  /// positif est converti seul, au `ratio` de la règle
+  /// (`StatRule.convertedAmount`, spec P-43 E0, A6).
   static EntityStats? _convert(
     EntityStats stats,
     StatGain gain,
@@ -105,7 +107,7 @@ abstract final class StatGains {
               id: 'might',
               name: 'Puissance',
               type: StatusType.buff,
-              value: gain.amount,
+              value: rule.convertedAmount(gain.amount),
               duration: rule.duration,
               sourceId: StatusSource.rule(rule.statName),
             ),

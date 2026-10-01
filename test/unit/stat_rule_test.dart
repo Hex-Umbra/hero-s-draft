@@ -59,6 +59,68 @@ void main() {
     });
   });
 
+  // D37 : la part convertie, bornee par le modele (spec P-43 E0, A5).
+  group('StatRule.ratio', () {
+    test('lu a 0,5', () {
+      expect(StatRule.fromJson({...ruleJson(), 'ratio': 0.5}).ratio, 0.5);
+    });
+
+    test('1 en son absence', () {
+      expect(StatRule.fromJson(ruleJson()).ratio, 1);
+    });
+
+    test('un entier est admis', () {
+      expect(StatRule.fromJson({...ruleJson(), 'ratio': 1}).ratio, 1);
+    });
+
+    test('refuse hors de ]0, 1], ou non numerique', () {
+      for (final bad in const <Object>[0, -0.5, 1.5, '0.5']) {
+        expect(
+          () => StatRule.fromJson({...ruleJson(), 'ratio': bad}),
+          throwsFormatException,
+          reason: 'ratio refuse : $bad',
+        );
+      }
+    });
+
+    // `RunState.fromJsonWithReport` reconstruit les regles depuis le
+    // registre : une egalite qui ignorerait le ratio laisserait passer une
+    // reconstruction fausse.
+    test('compte par == et hashCode', () {
+      final half = StatRule.fromJson({...ruleJson(), 'ratio': 0.5});
+      final halfAgain = StatRule.fromJson({...ruleJson(), 'ratio': 0.5});
+      final whole = StatRule.fromJson(ruleJson());
+
+      expect(half, halfAgain);
+      expect(half.hashCode, halfAgain.hashCode);
+      expect(half, isNot(whole));
+      expect(half.hashCode, isNot(whole.hashCode));
+    });
+  });
+
+  // A6 : chaque gain converti seul, arrondi a l'entier superieur a 10^-9
+  // pres, jamais moins de 1.
+  group('StatRule.convertedAmount', () {
+    StatRule withRatio(double ratio) =>
+        StatRule.fromJson({...ruleJson(), 'ratio': ratio});
+
+    const amounts = [1, 5, 6, 10, 30];
+
+    test('a 0,5 : 1 donne 1, 5 donne 3, 6 donne 3', () {
+      expect(amounts.map(withRatio(0.5).convertedAmount), [1, 3, 3, 5, 15]);
+    });
+
+    test('a 1 : le montant lui-meme', () {
+      expect(amounts.map(withRatio(1).convertedAmount), amounts);
+    });
+
+    // 0,1 x 30 vaut 3,0000000000000004 en flottant : sans la tolerance, le
+    // texte dirait « arrondi a l'entier superieur » et le moteur donnerait 4.
+    test('a 0,1 : 30 donne 3, et non 4', () {
+      expect(amounts.map(withRatio(0.1).convertedAmount), [1, 1, 1, 1, 3]);
+    });
+  });
+
   group('StatRule.parseAll', () {
     test('une cle absente : aucune regle', () {
       expect(StatRule.parseAll(null), isEmpty);

@@ -799,6 +799,27 @@ void main() {
         reason: faults.join(' ; '),
       );
     });
+
+    // La borne de `ratio` vit dans `StatRule.fromJson`, que la famille 7
+    // traverse : aucune copie dans le descripteur (spec P-43 E0, A5, §6.1).
+    test('un ratio hors de ]0, 1], ou non numerique, est refuse', () {
+      for (final ratio in const ['0', '1.5', '"0.5"']) {
+        final faults = validatorWith().validate(classeAvecRegles(
+          '[{"stat": "armor", "mode": "convert", "to": "status:might", '
+          '"ratio": $ratio}]',
+        ));
+        expect(faults, hasLength(1), reason: 'ratio $ratio : $faults');
+        expect(faults.single.message, contains('ratio'), reason: ratio);
+      }
+    });
+
+    test('un ratio de 0,5 passe', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "status:might", '
+        '"duration": 1, "ratio": 0.5}]',
+      ));
+      expect(faults, isEmpty, reason: faults.join(' ; '));
+    });
   });
 
   group('pendingIds — ce que la meme transaction va ecrire', () {

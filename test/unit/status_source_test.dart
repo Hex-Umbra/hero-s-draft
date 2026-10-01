@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/systems/stat_gains.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 
@@ -161,6 +163,40 @@ void main() {
       expect(mightOf(stats), hasLength(1));
       expect(mightOf(stats).single.value, 2 + 2);
       expect(mightOf(stats).single.duration, 4);
+    });
+  });
+
+  // Le cas de D36 : Forme Demoniaque (2 Puissance, 4 tours) puis Mur de Fer
+  // (10 Armure) au meme tour, chez une classe qui convertit a 0,5. Avant
+  // P-43 E0 : une entree de 12 pendant 4 tours.
+  group('le cas de D36', () {
+    const berserkerRule = StatRule(
+      stat: RuleStat.armor,
+      mode: RuleMode.convert,
+      to: RuleTarget.statusMight,
+      duration: 1,
+      ratio: 0.5,
+    );
+
+    test('7 ce tour, puis 2 pendant trois tours, puis 0', () {
+      var stats = StatGains.apply(
+        hero().addStatus(might(2, 4, sourceId: demonForm)),
+        const StatGain(GainResource.armor, 10, GainSource.card),
+        const [berserkerRule],
+      );
+
+      expect(
+        mightOf(stats).map((s) => (s.sourceId, s.value, s.duration)),
+        [(demonForm, 2, 4), (armorRule, 5, 1)],
+      );
+      expect(stats.effectiveMight, 7);
+
+      final releves = <int>[];
+      for (var tic = 0; tic < 4; tic++) {
+        stats = stats.tickStatuses();
+        releves.add(stats.effectiveMight);
+      }
+      expect(releves, [2, 2, 2, 0]);
     });
   });
 }
