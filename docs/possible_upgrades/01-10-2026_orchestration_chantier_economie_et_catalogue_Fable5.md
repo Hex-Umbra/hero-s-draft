@@ -67,7 +67,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 | Vague | Version | État | Étape | Branche | Spec(s) | Plan(s) | Tests | Livrée le | Close le |
 |:---:|:---|:---|:---|:---|:---|:---|---:|:---|:---|
 | 0 | — | **close** | — | `main`, par exception | — | — | 1187 | 01/10 | 01/10 |
-| 1 | `0.5.3` | à faire | — | — | — | — | — | — | — |
+| 1 | `0.5.3` | **en cours** | 3.2 · fait | `feat/v0.5.3-p43-e0-e1` | — | — | 1187 | — | — |
 | 2 | `0.5.4` | à faire | — | — | — | — | — | — | — |
 | 3 | `0.5.5` | à faire | — | — | — | — | — | — | — |
 | 4 | `0.5.6` | à faire | — | — | — | — | — | — | — |
