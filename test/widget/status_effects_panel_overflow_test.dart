@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/ui/widgets/hud/status_effects_panel.dart';
 
@@ -122,5 +123,48 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+  });
+
+  // D36, A8 (spec P-43 E0) : une ligne par entrée, chacune avec sa durée. Une
+  // ligne sommée n'aurait qu'une durée pour dire deux vieillissements.
+  testWidgets('deux Puissances de sources differentes : deux lignes', (
+    tester,
+  ) async {
+    final statuses = EntityStats(
+      maxPv: 80,
+      currentPv: 80,
+      armure: 0,
+      might: 0,
+    )
+        .addStatus(
+          StatusEffect(
+            id: 'might',
+            name: 'Puissance',
+            type: StatusType.buff,
+            value: 2,
+            duration: 4,
+            sourceId: StatusSource.card('demon_form'),
+          ),
+        )
+        .addStatus(
+          StatusEffect(
+            id: 'might',
+            name: 'Puissance',
+            type: StatusType.buff,
+            value: 5,
+            duration: 1,
+            sourceId: StatusSource.rule('armor'),
+          ),
+        )
+        .statuses;
+
+    await tester.pumpWidget(_harness(statuses));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Puissance : +2'), findsOneWidget);
+    expect(find.text('4 trs'), findsOneWidget);
+    expect(find.text('Puissance : +5'), findsOneWidget);
+    expect(find.text('1 trs'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

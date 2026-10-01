@@ -67,4 +67,25 @@ void main() {
       'mana convert status:might, 3 tour(s)',
     );
   });
+
+  // `rule:<ressource>` lit la ressource par cet accesseur : le nom du
+  // fichier, jamais le nom d'enum Dart (spec P-43 E0, §4.2).
+  test('statName rend la ressource dans le vocabulaire du fichier', () {
+    expect(
+      const StatRule(
+        stat: RuleStat.armor,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+      ).statName,
+      'armor',
+    );
+    expect(
+      const StatRule(
+        stat: RuleStat.mana,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+      ).statName,
+      'mana',
+    );
+  });
 }

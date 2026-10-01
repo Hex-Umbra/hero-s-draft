@@ -68,6 +68,11 @@ class StatRule {
   static String _nameOf<T>(T value, Map<String, T> by) =>
       by.entries.firstWhere((entry) => entry.value == value).key;
 
+  /// La ressource de cette règle dans le vocabulaire du fichier — `armor`,
+  /// jamais le nom d'énumération Dart. C'est par lui que la Puissance
+  /// convertie est posée au nom de la règle, `rule:armor` (spec P-43 E0, §4.2).
+  String get statName => _nameOf(stat, _stats);
+
   static T _read<T>(Map<String, dynamic> json, String key, Map<String, T> by) {
     final value = json[key];
     final parsed = value is String ? by[value] : null;

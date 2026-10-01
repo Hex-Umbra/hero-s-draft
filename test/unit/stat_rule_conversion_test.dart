@@ -90,6 +90,14 @@ void main() {
       final twice = StatGains.apply(once, gain, const [armorToMight]);
       expect(mightOf(twice)!.value, 8);
     });
+
+    // D36 : la conversion pose sa Puissance au nom de la règle, et non de la
+    // carte qui a donné l'armure (spec P-43 E0, A2).
+    test('la Puissance convertie porte le nom de la regle', () {
+      const gain = StatGain(GainResource.armor, 4, GainSource.card);
+      final after = StatGains.apply(stats(), gain, const [armorToMight]);
+      expect(mightOf(after)!.sourceId, 'rule:armor');
+    });
   });
 
   group('le statut armor_regen du heros', () {

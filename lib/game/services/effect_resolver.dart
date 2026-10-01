@@ -12,8 +12,18 @@ import '../game_constants.dart';
 
 class EffectResolver {
 
-  /// Helper pour créer un StatusEffect à partir des données de la carte
-  static StatusEffect? createStatus(String statusId, int value, int duration) {
+  /// Helper pour créer un StatusEffect à partir des données de la carte.
+  ///
+  /// [sourceId] est ce qui pose le statut (`StatusSource`). Seule la
+  /// Puissance le retient : tout autre statut est posé sans source et fusionne
+  /// comme avant — la portée de la règle s'écrit ici, une fois, pour le chemin
+  /// des cartes (spec P-43 E0, A1 et §4.4).
+  static StatusEffect? createStatus(
+    String statusId,
+    int value,
+    int duration, {
+    String? sourceId,
+  }) {
     switch (statusId) {
       case 'poison':
         return StatusEffect(
@@ -30,6 +40,7 @@ class EffectResolver {
           type: StatusType.buff,
           value: value,
           duration: duration,
+          sourceId: sourceId,
         );
       case 'weakness':
         return StatusEffect(

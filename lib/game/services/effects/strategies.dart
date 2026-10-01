@@ -1,6 +1,7 @@
 import 'dart:math';
 import '../../../models/card_instance.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/status_effect.dart';
 import '../../controllers/run_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/combat_controller.dart';
@@ -166,6 +167,9 @@ class ApplyStatusEffectStrategy implements EffectStrategy {
         scaledValue +
             runController.currentState.heroStats.statusBonusFor(card.data.target),
         effect.duration ?? 1,
+        // L'id de la carte, jamais celui de l'exemplaire : deux exemplaires
+        // d'une même carte s'additionnent (spec P-43 E0, A2).
+        sourceId: StatusSource.card(card.data.id),
       );
       if (status != null) {
         if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {

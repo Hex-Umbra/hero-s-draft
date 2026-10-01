@@ -229,6 +229,8 @@ void main() {
       final applied = run.currentState.heroStats.statuses
           .singleWhere((s) => s.id == 'might');
       expect(applied.value, 2);
+      // Posée au nom de la carte, par l'id de sa donnée (spec P-43 E0, A2).
+      expect(applied.sourceId, 'card:test_card');
     });
 
     test('une rune d alteration gagne la Puissance en intensite', () {

@@ -130,9 +130,9 @@ class EntityStats {
     'lastActionWasCrit': lastActionWasCrit,
   };
 
-  /// Ajoute ou combine un effet de statut
+  /// Ajoute un statut, ou le combine à l'entrée de même statut et même source
   EntityStats addStatus(StatusEffect effect) {
-    final index = statuses.indexWhere((s) => s.id == effect.id);
+    final index = statuses.indexWhere((s) => s.mergesWith(effect));
     List<StatusEffect> newStatuses = List.from(statuses);
 
     if (index != -1) {

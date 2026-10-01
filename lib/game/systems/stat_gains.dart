@@ -95,6 +95,11 @@ abstract final class StatGains {
         // R5 (spec §7.2) : la cible est la Puissance **temporaire**. Convertir
         // en Puissance permanente ferait gagner de la puissance définitive à
         // chaque `iron_wall` jouée, et casserait le jeu au troisième combat.
+        //
+        // Posée au nom de la règle, jamais de la carte qui a donné l'armure :
+        // toutes les conversions d'un tour ont la durée de la règle et
+        // fusionnent entre elles, sans rejoindre une Puissance durable
+        // (spec P-43 E0, A2).
         RuleTarget.statusMight => stats.addStatus(
             StatusEffect(
               id: 'might',
@@ -102,6 +107,7 @@ abstract final class StatGains {
               type: StatusType.buff,
               value: gain.amount,
               duration: rule.duration,
+              sourceId: StatusSource.rule(rule.statName),
             ),
           ),
       };
