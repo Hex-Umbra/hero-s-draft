@@ -1059,3 +1059,5 @@ dart run tool/simulations/d26_economy_sim.dart --quick --out test.md # ~1 min, 2
 ```
 
 Graine 26 000 000 ; la run *i* de la configuration *c* a la graine 26 000 000 + 100 000 × *c* + *i*, quel que soit le levier. Deux passes complètes ont produit des sorties identiques. Le script relit `assets/data/` à chaque lancement : un changement de donnée change les chiffres.
+
+*Ajout du 01/10.* Une relance ne se compare pas aux tables de ce rapport — ses §2 à §4 sont à k = 5 — mais à la sortie complète du script, suivie par git : `tool/simulations/d26_reference_output.md`. La manière de comparer, en deux temps, est dans le [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), §3.6 (brainstorm, D70 et D73). La passe complète a pris 422 s puis 462 s ce jour-là.
