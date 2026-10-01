@@ -25,7 +25,7 @@
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 | 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
 | 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 89 |
-| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 76 |
+| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 119 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
