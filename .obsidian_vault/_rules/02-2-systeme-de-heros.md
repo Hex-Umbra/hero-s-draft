@@ -2,11 +2,16 @@
 
 Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `cards/`) :
 
-| Héros | HP | Mana | Attaque | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Cartes de signature (`skills`) |
-|:---|:---|:---|:---|:---|:---|:---|:---|:---|
-| **Paladin** | 100 | 3 | 5 | 0 | **1** | Attaque · Compétence · Altération | `regen_armor` | `holy_shield`, `smite` |
-| **Berserker** | 80 | 3 | 15 | **10** | 0 | Attaque | `rage` | `reckless_strike`, `rage_form` |
-| **Mage** | 60 | 3 | 10 | 0 | 0 | Compétence · Altération | `channeling` | `magic_missile`, `mana_surge` |
+| Héros | HP | Mana | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Cartes de signature (`skills`) |
+|:---|:---|:---|:---|:---|:---|:---|:---|
+| **Paladin** | 100 | 3 | 0 | **1** | Attaque · Compétence · Altération | `regen_armor` | `holy_shield`, `smite` |
+| **Berserker** | 80 | 3 | **10** | 0 | Attaque | `rage` | `reckless_strike`, `rage_form` |
+| **Mage** | 60 | 3 | 0 | 0 | Compétence · Altération | `channeling` | `magic_missile`, `mana_surge` |
+
+> [!NOTE]
+> **Colonne « Attaque » retirée le 2026-10-02** : elle portait 5, 15 et 10, des dégâts de base
+> qu'aucun champ de `class.json` ni de `HeroData` ne porte plus — l'écran de sélection a cessé de
+> les afficher avec [ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md).
 
 > [!IMPORTANT]
 > **Chaque classe oriente sa Puissance** (`HeroData.mightTargets`, obligatoire dans `class.json`) —
@@ -19,9 +24,22 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > [!IMPORTANT]
 > **Le Berserker n'a plus jamais d'armure.** Son `class.json` déclare une `statRules` qui convertit
 > **tout** gain d'armure — carte, rune, passif, relique, statut `armor_regen` — en Puissance pour
-> **un tour**. *Mur de Fer* (10 armure, carte neutre présente dans tous les decks) lui donne donc 10
-> de Puissance pour un tour. La règle vit sur `RunState.statRules`, redérivée de la classe au
-> chargement et jamais sérialisée, et s'applique dans `StatGains.apply(stats, gain, rules)`.
+> **un tour**, **à 50 %, arrondi à l'entier supérieur** (`"ratio": 0.5`) : *Mur de Fer* (10 armure,
+> carte neutre présente dans tous les decks) lui donne 5 de Puissance pour le tour, *Défense* 3,
+> *Éveil* et *Cri de Guerre* 2. Chaque gain est arrondi seul — deux *Défense* font 3 + 3 — par
+> `StatRule.convertedAmount`, jamais moins de 1. La Puissance convertie porte la source
+> `rule:armor` et ne se confond pas avec celle d'une autre source ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3).
+> La règle vit sur `RunState.statRules`, redérivée de la classe au chargement et jamais sérialisée,
+> et s'applique dans `StatGains.apply(stats, gain, rules)` —
+> [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md).
+
+> [!NOTE]
+> **`ratio` est facultatif** sur une règle de `statRules` : absent, il vaut 1, la conversion
+> entière. Il est borné à **]0, 1]** et refusé hors bornes par `StatRule.fromJson`, au chargement
+> comme dans l'éditeur de contenu. **Le joueur lit le taux sur la règle de classe** — carte de
+> classe, étape « Armure & Dégâts » du tutoriel — par une seconde phrase, absente à ratio 1 :
+> « Taux : 50%, arrondi à l'entier supérieur — 6 Armure → 3 Puissance. » L'exemple est calculé par
+> la même fonction que le gain. Le texte des cartes d'armure, lui, dit toujours l'Armure.
 
 > [!NOTE]
 > **Colonnes Crit. et Maîtrise** : `HeroData.critChance` et `HeroData.mastery` (cette dernière

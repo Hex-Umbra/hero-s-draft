@@ -94,30 +94,14 @@ class CardTextRenderer {
       badges.clear();
       final damageBonus = card.game.heroCard?.stats.damageBonusFor(card.card.data.type) ?? 0;
 
-      int extraDamage = 0;
-      int extraArmor = 0;
-      for (var upgrade in card.card.forgeUpgrades) {
-        final parts = upgrade.split(':');
-        if (parts.length != 2) continue;
-        final id = parts[0];
-        final k = int.tryParse(parts[1]) ?? 0;
-        if (k <= 0) continue;
-        final upgradeData = ForgeUpgradeData.getById(id);
-        final multiplier = upgradeData?.valueMultiplier ?? 1;
-        if (id == 'sharp') extraDamage += multiplier * k;
-        if (id == 'hardened') extraArmor += multiplier * k;
-      }
-
       final isAllEnemies = card.card.data.target == CardTarget.allEnemies;
 
-      for (int i = 0; i < card.card.data.effects.length; i++) {
-        final effect = card.card.data.effects[i];
-        int scaledValue = (effect.value * card.card.rarityMultiplier).round();
-        if (effect.type == 'damage') {
-          scaledValue += extraDamage;
-        } else if (effect.type == 'armor') {
-          scaledValue += extraArmor;
-        }
+      // Les valeurs que la carte joue — rareté et runes comprises — viennent
+      // de l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
+      final effects = card.card.effective.effects;
+      for (int i = 0; i < effects.length; i++) {
+        final effect = effects[i];
+        final scaledValue = effect.value;
 
         int valueToDisplay = scaledValue;
         if (effect.type == 'damage') {
@@ -210,7 +194,7 @@ class CardTextRenderer {
         }
 
         TextPainter? separatorPainter;
-        if (i < card.card.data.effects.length - 1) {
+        if (i < effects.length - 1) {
           separatorPainter = TextPainter(
             text: TextSpan(
               text: '  |  ',
@@ -350,144 +334,6 @@ class CardTextRenderer {
       icon: Icons.help_outline,
       color: Colors.grey,
     );
-  }
-
-  String buildDescription() {
-    String desc = '';
-    final damageBonus = card.game.heroCard?.stats.damageBonusFor(card.card.data.type) ?? 0;
-
-    int extraDamage = 0;
-    int extraArmor = 0;
-    for (var upgrade in card.card.forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      if (id == 'sharp') extraDamage += 2 * k;
-      if (id == 'hardened') extraArmor += 2 * k;
-    }
-
-    for (var effect in card.card.data.effects) {
-      int scaledValue = (effect.value * card.card.rarityMultiplier).round();
-      if (effect.type == 'damage') {
-        scaledValue += extraDamage;
-      } else if (effect.type == 'armor') {
-        scaledValue += extraArmor;
-      }
-
-      if (effect.type == 'damage') {
-        final totalDmg = scaledValue + damageBonus;
-        if (card.card.data.target == CardTarget.allEnemies) {
-          desc +=
-              '${card.getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: "Inflige $totalDmg dégâts à tous les ennemis.")}\n';
-        } else {
-          desc +=
-              '${card.getTranslation((l) => l.cardDescDamage(totalDmg), fallback: "Inflige $totalDmg dégâts.")}\n';
-        }
-      }
-      if (effect.type == 'heal') {
-        desc +=
-            '${card.getTranslation((l) => l.cardDescHeal(scaledValue), fallback: "Soigne $scaledValue PV.")}\n';
-      }
-      if (effect.type == 'armor') {
-        desc +=
-            '${card.getTranslation((l) => l.cardDescArmor(scaledValue), fallback: "Donne $scaledValue Armure.")}\n';
-      }
-      if (effect.type == 'gain_mana') {
-        desc +=
-            '${card.getTranslation((l) => l.cardDescGainMana(scaledValue), fallback: "Gagne $scaledValue Mana.")}\n';
-      }
-      if (effect.type == 'draw') {
-        desc +=
-            '${card.getTranslation((l) => l.cardDescDraw(scaledValue), fallback: "Pioche $scaledValue cartes.")}\n';
-      }
-      if (effect.type == 'apply_status') {
-        final duration = effect.duration ?? 1;
-        switch (effect.statusId) {
-          case 'might':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusMight(scaledValue, duration), fallback: "Gagne $scaledValue Puissance pendant $duration tours.")}\n';
-            break;
-          case 'armor_regen':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusArmorRegen(scaledValue, duration), fallback: "Pendant $duration tours, gagne $scaledValue Armure au début du tour.")}\n';
-            break;
-          case 'poison':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusPoisonDuration(scaledValue, duration), fallback: "Applique $scaledValue Poison pendant $duration tours.")}\n';
-            break;
-          case 'weakness':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: "Applique $scaledValue Faiblesse pendant $duration tours.")}\n';
-            break;
-          case 'vulnerable':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: "Applique $scaledValue Vulnérable pendant $duration tours.")}\n';
-            break;
-          case 'might_regen':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusMightRegen(scaledValue, duration), fallback: "Gagne $scaledValue Éveil de Puissance pendant $duration tours.")}\n';
-            break;
-          case 'burn':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: "Applique $scaledValue Brûlure pendant $duration tours.")}\n';
-            break;
-          case 'freeze':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: "Applique $scaledValue Gel pendant $duration tours.")}\n';
-            break;
-          case 'shock':
-            desc +=
-                '${card.getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: "Applique $scaledValue Électrocution pendant $duration tours.")}\n';
-            break;
-        }
-      }
-    }
-    if (desc.isEmpty) {
-      desc = card.card.data.getDescription(card.activeLocale);
-    }
-
-    final List<String> upgradeDescs = [];
-    final activeLocale = card.activeLocale;
-    for (var upgrade in card.card.forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      switch (id) {
-        case 'sharp':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Tranchant $k (+${2 * k} Dégâts)' : 'Sharp $k (+${2 * k} Damage)');
-          break;
-        case 'hardened':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Endurci $k (+${2 * k} Armure)' : 'Hardened $k (+${2 * k} Armor)');
-          break;
-        case 'quick':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Véloce $k (+$k Carte(s) piochée(s))' : 'Quick $k (+$k Card(s) drawn)');
-          break;
-        case 'eco':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Économe $k (+$k Mana)' : 'Eco $k (+$k Mana)');
-          break;
-        case 'burning':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Brûlant $k (Applique $k Brûlure)' : 'Burning $k (Apply $k Burn)');
-          break;
-        case 'freezing':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Congelant $k (Applique $k Gel)' : 'Freezing $k (Apply $k Freeze)');
-          break;
-        case 'shocking':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Surchargé $k (Applique $k Électrocution)' : 'Shocking $k (Apply $k Shock)');
-          break;
-        case 'enduring':
-          upgradeDescs.add(activeLocale == 'fr' ? 'Persistant' : 'Enduring');
-          break;
-      }
-    }
-    if (upgradeDescs.isNotEmpty) {
-      desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => "• $u").join('\n')}\n';
-    }
-
-    return desc.trim();
   }
 
   void render(Canvas canvas, Vector2 size) {

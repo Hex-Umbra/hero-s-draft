@@ -26,7 +26,7 @@ void main() {
   // visiter `model_extensions.dart` des qu'un `RuleStat` (ou `RuleMode`, ou
   // `RuleTarget`) gagne une valeur — mais rien ne force a l'ajouter aussi a
   // `_stats` (ou `_modes`, ou `_targets`) dans `stat_rule.dart`, et
-  // `_nameOf`, sans `orElse` (`stat_rule.dart:68`), leve alors `StateError`
+  // `_nameOf`, sans `orElse` (`stat_rule.dart:75`), leve alors `StateError`
   // au clic, dans le menu de debug. Une liste plus courte que son
   // enumeration le dit ici, a l'execution des tests plutot qu'au clic.
   test('chaque valeur d enum porte un nom de vocabulaire fichier', () {
@@ -65,6 +65,41 @@ void main() {
         duration: 3,
       ).toString(),
       'mana convert status:might, 3 tour(s)',
+    );
+  });
+
+  // Le menu de debug lit le ratio sur cette ligne (spec P-43 E0, §6.2).
+  test('toString porte le ratio quand il differe de 1', () {
+    expect(
+      const StatRule(
+        stat: RuleStat.armor,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+        duration: 1,
+        ratio: 0.5,
+      ).toString(),
+      'armor convert status:might, 1 tour(s), ratio 0.5',
+    );
+  });
+
+  // `rule:<ressource>` lit la ressource par cet accesseur : le nom du
+  // fichier, jamais le nom d'enum Dart (spec P-43 E0, §4.2).
+  test('statName rend la ressource dans le vocabulaire du fichier', () {
+    expect(
+      const StatRule(
+        stat: RuleStat.armor,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+      ).statName,
+      'armor',
+    );
+    expect(
+      const StatRule(
+        stat: RuleStat.mana,
+        mode: RuleMode.convert,
+        to: RuleTarget.statusMight,
+      ).statName,
+      'mana',
     );
   });
 }

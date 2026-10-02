@@ -704,6 +704,18 @@ abstract class AppLocalizations {
   /// **'{duration, plural, =1{Their Mana becomes Might for one turn.} other{Their Mana becomes Might for {duration} turns.}}'**
   String statRuleConvertManaToMight(int duration);
 
+  /// Second sentence of a class rule whose conversion ratio is not 1: the rate as a percentage, and an example amount converted as the engine converts it.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate: {percent}%, rounded up — {amount} Armor → {converted} Might.'**
+  String statRuleRatioArmor(int percent, int amount, int converted);
+
+  /// Second sentence of a class rule whose conversion ratio is not 1, for a class that converts its Mana.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate: {percent}%, rounded up — {amount} Mana → {converted} Might.'**
+  String statRuleRatioMana(int percent, int amount, int converted);
+
   /// Short title of the tutorial demo panel for a class that converts its Armor into temporary Might. Upper case, like the panel titles beside it.
   ///
   /// In en, this message translates to:
@@ -1213,6 +1225,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a card to permanently upgrade.'**
   String get restCampForgeSubtitle;
+
+  /// No description provided for @forgeNoEligibleRune.
+  ///
+  /// In en, this message translates to:
+  /// **'No rune can be added to this card.'**
+  String get forgeNoEligibleRune;
 
   /// No description provided for @restCampRemoveTitle.
   ///

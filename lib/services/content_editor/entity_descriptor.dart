@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 
 import '../../models/data/card_data.dart';
+import '../../models/data/card_delta.dart';
 import '../../models/data/enemy_data.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
@@ -327,33 +328,62 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     category: EntityCategory.forgeUpgrade,
     label: 'Amélioration de forge',
     directory: 'forge_upgrades',
-    // `ForgeUpgradeData.fromJson` ne leve sur rien d'autre que `id` : toutes
-    // les autres cles ont un defaut. C'est la categorie ou la validation
-    // declarative fait tout le travail.
+    // `pools` est la seule cle que la famille 3 exige : les autres cles
+    // obligatoires d'une rune — `deltas`, et ce que la spec P-43 E1 y ajoute
+    // (§3.1) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme, que la
+    // famille 7 appelle. Un fait a un seul endroit.
     requiredKeys: const {'pools'},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
+    // Le type d'un delta, lu sur le parseur (ADR-100 D1).
+    enumKeys: {'deltas[].type': CardDelta.typeNames},
+    // `excludesRunes` nomme des runes : une liste non vide d'ids existants,
+    // une case par rune (spec P-43 E1, §6). Absente : aucune.
+    referenceListKeys: const {'excludesRunes': EntityCategory.forgeUpgrade},
     // `color` et `icon` ne sont pas un hex ni un texte libre : ce sont des
     // noms que `forge_slot_row.dart` traduit un a un (`amberAccent`,
     // `flash_on_rounded`), et un nom inconnu y retombe en silence sur du gris
     // et `Icons.help_outline`. Les huit ameliorations livrees les emploient.
-    vocabularyKeys: const {'color', 'icon'},
+    //
+    // Les types d'effet qu'une rune nomme, et le statut qu'elle pose, ne sont
+    // connus que du registre de strategies et de `createStatus` : des motifs
+    // d'**elements**, admis s'ils sont deja employes par un fichier de rune ou
+    // par le gabarit (spec P-43 E1, A13 ; `vocabularyOf`).
+    vocabularyKeys: const {
+      'color',
+      'icon',
+      'eligibleEffects[]',
+      'excludesEffects[]',
+      'deltas[].effect',
+      'deltas[].statusId',
+    },
     bilingualBases: const ['name', 'description'],
     construct: ForgeUpgradeData.fromJson,
     // `eligibleCardTypes` porte **les quatre** types, et non la liste vide :
-    // absente, la cle vaut « tous les types » (`shop_controller.dart:65` ne
-    // filtre que si elle est non nulle), tandis qu'une liste vide n'aurait
+    // absente, la cle vaut « tous les types » (`ForgeRuneRules.isEligible` ne
+    // filtre que si elle est presente), tandis qu'une liste vide n'aurait
     // rendu l'amelioration eligible a **rien**. Les quatre types enumeres sont
     // le seul equivalent honnete de l'absence, et l'auteur n'a qu'a retirer ce
     // qu'il ne veut pas.
+    //
+    // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
+    // pas monter une rune sans fin (spec P-43 E1, §6). `eligibleEffects` y
+    // porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
+    // absente, elle vaut « aucune », comme `classes` d'un passif.
     template: '''
 {
   "icon": "flash_on_rounded",
   "color": "amberAccent",
   "pools": ["common"],
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
+  "eligibleEffects": ["damage"],
+  "excludesEffects": [],
   "requiresExhaust": false,
+  "requiresMinCost": 0,
   "stackable": true,
-  "valueMultiplier": 1,
+  "maxLevel": 1,
+  "deltas": [
+    { "type": "percentBonus", "effect": "damage", "valuePercentPerLevel": 15 }
+  ],
   "weight": 10,
   "emoji": "🔮"
 }''',

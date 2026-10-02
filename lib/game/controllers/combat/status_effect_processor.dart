@@ -39,6 +39,9 @@ class StatusEffectProcessor {
           type: StatusType.buff,
           value: mightGain,
           duration: 3, // 3 tours maximum pour le joueur
+          // Le même statut pose à chaque tour : sa Puissance s'additionne
+          // comme avant, sans rejoindre celle d'une carte (spec P-43 E0, A2).
+          sourceId: StatusSource.status('might_regen'),
         ),
       );
     }
@@ -100,6 +103,10 @@ class StatusEffectProcessor {
           type: StatusType.buff,
           value: mightGain,
           duration: 1, // 1 tour maximum pour l'ennemi
+          // Une entrée à part, que le tic final ci-dessous retire dans
+          // l'appel même qui la crée : elle ne rejoint plus la Puissance de
+          // l'intention Buff (spec P-43 E0, §4.3 ; ADR-097).
+          sourceId: StatusSource.status('might_regen'),
         ),
       );
     }

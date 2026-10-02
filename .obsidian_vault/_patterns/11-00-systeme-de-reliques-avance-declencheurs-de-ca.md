@@ -53,6 +53,6 @@ Les reliques inspirées des deckbuilders classiques accumulent des charges repr�
 | Relique | ID Statut de Charge | Seuil | Durée | Effet Déclenché |
 |:---|:---|:---:|:---:|:---|
 | **Croc Kunaï** (`kunai`) | `kunai_charge` | 3 | 1 (par tour) | +1 Maîtrise permanente pour le combat |
-| **Shuriken** (`shuriken`) | `shuriken_charge` | 3 | 1 (par tour) | +1 Force pour le combat (durée 99) |
-| **Plume de scribe** (`pen_nib`) | `pen_nib_charge` | 5 | 99 (persistant) | +3 Force temporaire pour le tour en cours (durée 1) |
+| **Shuriken** (`shuriken`) | `shuriken_charge` | 3 | 1 (par tour) | +1 Puissance pour le combat (`might`, durée 99, source `relic:shuriken`) |
+| **Plume de scribe** (`pen_nib`) | `pen_nib_charge` | 5 | 99 (persistant) | +3 Puissance pour le tour en cours (`might`, durée 1, source `relic:pen_nib` — [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)) |
 | **Encensoir** (`incense_burner`) | `incense_charge` | 4 | 99 (persistant) | +8 points d'Armure |

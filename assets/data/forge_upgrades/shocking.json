@@ -14,6 +14,16 @@
   "eligibleCardTypes": [
     "attack"
   ],
+  "maxLevel": null,
+  "deltas": [
+    {
+      "type": "addEffect",
+      "effect": "apply_status",
+      "valuePerLevel": 1,
+      "statusId": "shock",
+      "durationPerLevel": 1
+    }
+  ],
   "weight": 80,
   "emoji": "⚡"
 }

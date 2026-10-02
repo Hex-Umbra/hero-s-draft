@@ -76,7 +76,10 @@ Trois lectures et un réglage, posés par
 
 > [!NOTE]
 > **Les règles de stat s'affichent dans le vocabulaire du fichier**, pas dans la phrase du joueur :
-> `armor convert status:might, 1 tour(s)` par `StatRule.toString()`. Le développeur édite la
+> `armor convert status:might, 1 tour(s)` par `StatRule.toString()`, suivi de `, ratio 0.5` quand
+> la règle déclare un `ratio` autre que 1 — la ligne du Berserker
+> ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)). Le ratio ne se règle
+> pas dans le tiroir : la règle est relue de la classe. Le développeur édite la
 > donnée, il doit la lire telle qu'il l'écrira. `StatRuleLabel.describe` reste la phrase du joueur
 > (écran de sélection, tutoriel), et passe par les ARB — **aucun libellé du tiroir n'y passe**.
 

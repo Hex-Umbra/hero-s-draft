@@ -125,4 +125,18 @@ void main() {
         ['gain_armor', 'heal']);
     expect(vocabularyOf(relic, const {})['effectType'], ['gain_armor']);
   });
+
+  test('vocabularyOf lit sous la cle nue les elements d une liste de chaines',
+      () {
+    // `knownValues` range les elements de `excludesEffects` sous la cle nue ;
+    // le motif d'elements `excludesEffects[]` les y lit (spec P-43 E1, A13).
+    write('assets/data/forge_upgrades/enduring.json',
+        '{"excludesEffects": ["gain_mana", "draw"]}');
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    final known = knownValues(fs, root, forge);
+
+    expect(known['excludesEffects'], ['draw', 'gain_mana']);
+    expect(vocabularyOf(forge, known)['excludesEffects[]'],
+        ['draw', 'gain_mana']);
+  });
 }

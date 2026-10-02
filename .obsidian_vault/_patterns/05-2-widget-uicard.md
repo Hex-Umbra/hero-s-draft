@@ -10,12 +10,20 @@ Pour éviter le pattern anti-pattern de la God Class et structurer proprement le
 - **`card_rune_sockets.dart`** : Widget de rendu et d'agencement multi-lignes (Wrapping) pour les fentes d'upgrades de la forge.
 - **`card_compact_description.dart`** : Widget de mise en forme des badges d'effets visuels et des modificateurs de forge sur la face avant de la carte.
 
+**Les valeurs viennent de l'applicateur** ([ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)) :
+`UiCard` porte la `CardData` (`data`) et la `CardRarity` (`cardRarity`) de la carte — ses deux
+factories les ont en main — au lieu d'un multiplicateur de rareté ; ses rendus
+(`card_compact_description.dart`, `ui_card_helpers.dart`) appellent `EffectiveCard` sur elles et sur
+les runes, et lisent `effects`, aligné sur les effets de la donnée. Le libellé `rarity` reste un
+texte traduit. Dans les infobulles, une ligne par rune — nom, description lus dans son fichier — au
+niveau total de ses exemplaires.
+
 Le comportement et les caractéristiques visuelles restent inchangés :
 
 - **Ratio d'aspect** : `70 / 110` constant.
 - **Style Glassmorphic** : Utilise un `BackdropFilter` (flou gaussien de 10px) avec un arrière-plan semi-transparent (dégradé linéaire vertical d'opacité `0.6` à `0.2`) et une bordure fine de `1.5` (`2.5` si sélectionné, opacité `0.5` de typeColor) pour un rendu moderne et épuré. Le motif en filigrane (watermark) en arrière-plan a été retiré.
 - **Médaillon de Coût Standard** : Un cercle flottant noir (`Color(0xFF0D1B2A)`) de rayon 12px (centré à offset `[-6, -6]` par rapport au coin supérieur gauche) affichant le coût en mana avec un liseré et un halo de lueur cyan. Câblé à l'identique entre Flutter et Flame.
-- **Fentes de Runes (Rune Sockets) avec Multi-Row Wrapping** : Remplace les anciennes étoiles par des réceptacles circulaires représentant la capacité de forge, reçue toute calculée (`UiCard.forgeCapacity`, lue sur `CardInstance.forgeCapacity`) — le widget la recalculait autrefois à partir du libellé traduit de la rareté, supprimé par [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md). Les upgrades actifs affichent leur emoji rune (⚔️, 🛡️, 🪶, 💎, 🔥, ❄️, ⚡, ⏳), tandis que les vides apparaissent sous forme de cercles blancs translucides (opacité `0.05`). Pour accommoder un grand nombre d'upgrades sans dépasser la largeur de la carte, les fentes sont agencées en multi-lignes de 5 éléments maximum.
+- **Fentes de Runes (Rune Sockets) avec Multi-Row Wrapping** : Remplace les anciennes étoiles par des réceptacles circulaires représentant la capacité de forge, reçue toute calculée (`UiCard.forgeCapacity`, lue sur `CardInstance.forgeCapacity`) — le widget la recalculait autrefois à partir du libellé traduit de la rareté, supprimé par [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md). Les upgrades actifs affichent leur emoji rune (⚔️, 🛡️, 🪶, 💎, 🔥, ❄️, ⚡, ⏳), **lu dans le fichier de la rune** depuis ADR-105, tandis que les vides apparaissent sous forme de cercles blancs translucides (opacité `0.05`). Pour accommoder un grand nombre d'upgrades sans dépasser la largeur de la carte, les fentes sont agencées en multi-lignes de 5 éléments maximum.
   - **Dans Flutter (`UiCard`)** : Utilisation d'un widget `Wrap` (`spacing: 2.0`, `runSpacing: 2.0`) confiné dans un conteneur `SizedBox` de largeur `45.0` pixels, provoquant le retour automatique à la ligne au-delà de 5 fentes.
   - **Dans Flame (`CardTextRenderer`)** : Calcul manuel de grille sur Canvas via `numRows = (totalSlots + 4) ~/ 5` et `maxSlotsPerRow = 5`, recentrant chaque ligne horizontalement et les empilant verticalement en décalant l'ordonnée Y de `16.0` pixels (diamètre 14.0 + espacement 2.0) par ligne.
 - **Suppression du Ciblage Textuel** : Les badges textuels de ciblage (Single target, All enemies, Self) ont été supprimés pour réduire le bruit visuel.
@@ -29,5 +37,5 @@ Le comportement et les caractéristiques visuelles restent inchangés :
   - **weakness** : `(Réduit les dégâts infligés par l'ennemi de 25%)` en FR / `(Reduces damage dealt by the enemy by 25%)` en EN.
   - **vulnerable** : `(L'ennemi subit 50% de dégâts supplémentaires)` en FR / `(Enemy takes 50% more damage from attacks)` en EN.
 - **Mappage HUD & Emojis** : Pour préserver la cohérence visuelle absolue :
-  - Les statuts joueurs et ennemis utilisent des émojis unifiés dans `status_indicator.dart` (`burn` 🔥, `freeze` ❄️, `shock` ⚡, `strength_regen` ✊ pour éviter la collision visuelle avec burn).
+  - Les statuts joueurs et ennemis utilisent des émojis unifiés dans `status_indicator.dart` (`burn` 🔥, `freeze` ❄️, `shock` ⚡, `might_regen` ✊ — `strength_regen` avant [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) — pour éviter la collision visuelle avec burn). Ces icônes sont **réconciliées par `id`** : un ennemi qui porterait deux Puissances de sources différentes afficherait une icône à la valeur fausse — invariant consigné par [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md).
   - Les labels linguistiques sont câblés dynamiquement à la volée dans `status_effects_panel.dart`.

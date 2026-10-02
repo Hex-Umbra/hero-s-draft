@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
@@ -233,5 +234,31 @@ void main() {
         expect(eliteEnemy.effectiveIntent?.value, 29);
       },
     );
+  });
+
+  // La portée de la règle s'écrit dans la fabrique, une fois (spec P-43 E0,
+  // A1 et §4.4) : seule la Puissance retient sa source.
+  group('EffectResolver.createStatus', () {
+    test('la Puissance retient sa source', () {
+      final status = EffectResolver.createStatus(
+        'might',
+        2,
+        4,
+        sourceId: StatusSource.card('demon_form'),
+      )!;
+
+      expect(status.sourceId, 'card:demon_form');
+    });
+
+    test('un autre statut est pose sans source', () {
+      final status = EffectResolver.createStatus(
+        'poison',
+        3,
+        2,
+        sourceId: StatusSource.card('poison_dart'),
+      )!;
+
+      expect(status.sourceId, isNull);
+    });
   });
 }

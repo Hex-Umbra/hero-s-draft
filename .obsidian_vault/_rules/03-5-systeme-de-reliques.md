@@ -5,23 +5,23 @@
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|
 | `iron_talisman` | Talisman de Fer | Common | startOfTurn | gain_armor | 2 | Gagne 2 points d'Armure au début de chaque tour. |
-| `whetstone` | Pierre à aiguiser | Common | startOfRun | gain_strength | 1 | +1 Force de manière permanente pour toute la run. |
+| `whetstone` | Pierre à aiguiser | Common | startOfRun | gain_might | 1 | +1 Puissance de manière permanente pour toute la run. |
 | `leather_boots` | Bottes en cuir | Common | startOfCombat | gain_armor | 3 | Gagne 3 points d'Armure au début du combat. |
 | `lucky_coin` | Pièce de chance | Common | startOfRun | gain_crit | 5 | +5 de chance de coup critique de manière permanente pour toute la run. |
 | `bandage` | Bandage de voyage | Common | endOfTurn | heal | 1 | Restaure 1 PV à la fin de chaque tour. |
 | `ancestral_shield` | Bouclier Ancestral | Uncommon | startOfCombat | gain_armor | 5 | Gagne 5 points d'Armure au début du combat. |
 | `protection_rune` | Rune de Protection | Uncommon | endOfTurn | gain_armor | 3 | Gagne 3 points d'Armure à la fin de chaque tour. |
-| `cursed_blade` | Lame Maudite | Uncommon | startOfRun | gain_strength | 2 | +2 Force de manière permanente pour toute la run. |
+| `cursed_blade` | Lame Maudite | Uncommon | startOfRun | gain_might | 2 | +2 Puissance de manière permanente pour toute la run. |
 | `vampiric_fang` | Croc Vampirique | Uncommon | onEnemyKilled | heal | 8 | Restaure 8 PV chaque fois qu'un ennemi meurt. |
 | `lucky_charm` | Porte-bonheur | Uncommon | startOfRun | gain_crit | 10 | +10% de chance de critique de manière permanente pour toute la run. |
-| `pen_nib` | Plume de scribe | Uncommon | onCardPlayed | charge_strength_turn | 3 | Toutes les 5 cartes jouées, gagne 3 Force pour le tour en cours. |
+| `pen_nib` | Plume de scribe | Uncommon | onCardPlayed | charge_might_turn | 3 | Toutes les 5 cartes jouées, gagne 3 Puissance pour le tour en cours. |
 | `mage_amulet` | Amulette du Mage | Rare | onCardPlayed | gain_armor | 1 | Gagne 1 point d'Armure chaque fois que vous jouez une carte. |
 | `mana_crystal` | Cristal de Mana | Rare | startOfCombat | gain_mana | 1 | Gagne 1 Mana au début du combat (tour 1 uniquement). |
 | `spirit_essence` | Essence Spirituelle | Rare | onEnemyKilled | gain_mana | 1 | Gagne 1 Mana chaque fois qu'un ennemi meurt. |
 | `regen_ring` | Anneau Régenérant | Rare | endOfTurn | heal | 2 | Restaure 2 PV à la fin de chaque tour. |
 | `critical_lens` | Lentille de Focalisation | Rare | startOfRun | gain_crit | 15 | +15% de chance de critique de manière permanente pour toute la run. |
 | `kunai` | Croc Kunaï | Rare | onAttackPlayed | charge_mastery_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Maîtrise pour le combat. |
-| `shuriken` | Shuriken | Rare | onAttackPlayed | charge_strength_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Force pour le combat. |
+| `shuriken` | Shuriken | Rare | onAttackPlayed | charge_might_combat | 1 | Toutes les 3 attaques jouées dans un tour, gagne 1 Puissance pour le combat. |
 | `incense_burner` | Encensoir | Rare | startOfTurn | charge_armor_turn | 8 | Tous les 4 tours, gagne 8 points d'Armure. |
 | `lucky_clover` | Trèfle Chanceux | Epic | startOfRun | gain_luck | 1 | +1 Chance de manière permanente pour toute la run. |
 | `energy_stone` | Pierre d'Énergie | Epic | startOfTurn | gain_mana | 1 | Gagne 1 Mana au début de chaque tour. |
@@ -52,6 +52,6 @@
 **Système de Charges (Reliques Actives)** :
 Les reliques à charges accumulent des compteurs représentés par des effets de statut temporaires ou de combat sur le Héros. Une fois le seuil de charges atteint, le compteur est réinitialisé et l'effet bénéfique s'applique :
 - **Kunaï** (`kunai`) : Génère `kunai_charge` (durée 1, donc réinitialisé à chaque tour). À 3 charges, reset et ajoute +1 Maîtrise pour le combat via le statut temporaire `'mastery'` (durée 99) — valable pour n'importe quel passif qui déclare un bloc `mastery` ([`_rules/03-2`](03-2-gestion-de-l-armure.md)).
-- **Shuriken** (`shuriken`) : Génère `shuriken_charge` (durée 1). À 3 charges, reset et ajoute +1 Force permanente pour le combat (`strength` de 99 tours).
-- **Plume de Scribe** (`pen_nib`) : Génère `pen_nib_charge` (durée 99). À 5 charges, reset et ajoute +3 Force temporaire pour le tour en cours (`strength` de 1 tour).
+- **Shuriken** (`shuriken`) : Génère `shuriken_charge` (durée 1). À 3 charges, reset et ajoute +1 Puissance pour le combat (`might` de 99 tours, source `relic:shuriken`).
+- **Plume de Scribe** (`pen_nib`) : Génère `pen_nib_charge` (durée 99). À 5 charges, reset et ajoute +3 Puissance pour le tour en cours (`might` de 1 tour, source `relic:pen_nib`). Chaque relique a sa source : les deux Puissances ne se confondent pas, chacune garde sa durée ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)). Les noms `strength` et `charge_strength_*` que portait cette fiche sont devenus `might` et `charge_might_*` avec [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) — corrigé le 2026-10-02.
 - **Encensoir** (`incense_burner`) : Génère `incense_charge` (durée 99). À 4 charges, reset et octroie +8 points d'Armure.

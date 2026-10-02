@@ -1,5 +1,6 @@
 import 'package:roguelike_card_game/models/data/audio_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
@@ -43,10 +44,24 @@ HeroData fixtureHero(String id) => HeroData.fromJson({
       'mightTargets': ['attack'],
     });
 
+ForgeUpgradeData fixtureRune(String id) => ForgeUpgradeData.fromJson({
+      'id': id,
+      'name_en': 'x',
+      'name_fr': 'x',
+      'description_en': 'x',
+      'description_fr': 'x',
+      'pools': ['common'],
+      'maxLevel': null,
+      'deltas': [
+        {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
+      ],
+    });
+
 GameDataRegistry fixtureRegistry({
   List<CardData> cards = const [],
   List<HeroData> heroes = const [],
   List<PassiveData> passives = const [],
+  List<ForgeUpgradeData> forgeUpgrades = const [],
 }) =>
     GameDataRegistry(
       enemies: const [],
@@ -55,7 +70,7 @@ GameDataRegistry fixtureRegistry({
       events: const [],
       passives: passives,
       relics: const [],
-      forgeUpgrades: const [],
+      forgeUpgrades: forgeUpgrades,
       audio: const AudioData.disabled(),
     );
 

@@ -15,6 +15,7 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Les trois passifs du Berserker (spec P-41, §6.3).
@@ -134,10 +135,38 @@ void main() {
       run.startTurn();
 
       expect(stats().might, 0);
-      expect(
-        stats().statuses.singleWhere((s) => s.id == 'might').duration,
-        1,
+      final gained = stats().statuses.singleWhere((s) => s.id == 'might');
+      expect(gained.duration, 1);
+      expect(gained.sourceId, 'passive:rage');
+    });
+
+    // R3 c de la revue du brainstorm v3 (spec P-43 E0, §4.6) : la Puissance
+    // de Rage ne grossit plus l'entree d'une Forme Demoniaque en cours.
+    test('Rage ne rejoint pas une Forme Demoniaque, et expire au tic suivant', () {
+      run.startNewRun(berserker, rage());
+      run.addStatus(
+        StatusEffect(
+          id: 'might',
+          name: 'Puissance',
+          type: StatusType.buff,
+          value: 2,
+          duration: 4,
+          sourceId: StatusSource.card('demon_form'),
+        ),
       );
+
+      run.startTurn();
+      run.startTurn();
+
+      final might = stats().statuses.where((s) => s.id == 'might').toList();
+      expect(might, hasLength(2));
+      final fromDemon =
+          might.singleWhere((s) => s.sourceId == 'card:demon_form');
+      expect((fromDemon.value, fromDemon.duration), (2, 2));
+      final fromRage = might.singleWhere((s) => s.sourceId == 'passive:rage');
+      expect((fromRage.value, fromRage.duration), (1, 1));
+      // Avant P-43 E0 : une seule entree, 2 + 1 + 1 = 4.
+      expect(temporaryMight(), 2 + 1);
     });
   });
 
@@ -209,6 +238,10 @@ void main() {
 
       expect(combat.currentState.enemies, isEmpty);
       expect(temporaryMight(), 2);
+      expect(
+        stats().statuses.singleWhere((s) => s.id == 'might').sourceId,
+        'passive:frenzy',
+      );
       expect(container.read(deckProvider).hand, hasLength(1));
     });
   });

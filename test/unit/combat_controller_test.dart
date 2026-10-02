@@ -190,6 +190,36 @@ void main() {
       expect(defendedEnemy.stats.armure, 6);
     });
 
+    // P-43 E0 (spec, A2) : l'intention Buff pose sa Puissance au nom de
+    // l'ennemi, par l'id de sa donnee ; deux Buff font une entree.
+    test('l intention Buff pose une Puissance au nom de l ennemi', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final combatController = container.read(combatProvider.notifier);
+      container.read(runProvider.notifier).startNewRun(paladinHero);
+
+      final orc = EnemyInstance(
+        data: orcData,
+        stats: EntityStats(maxPv: 30, currentPv: 30, armure: 0, might: 8),
+        currentIntent: EnemyIntent(type: IntentType.buff, value: 2),
+      );
+      combatController.state = CombatState(
+        enemies: [orc],
+        selectedEnemyId: orc.id,
+        turnPhase: TurnPhase.enemy,
+      );
+
+      combatController.resolveEnemyIntent(orc.id);
+      combatController.resolveEnemyIntent(orc.id);
+
+      final might = combatController.currentState.enemies.single.stats.statuses
+          .where((s) => s.id == 'might')
+          .toList();
+      expect(might, hasLength(1));
+      expect(might.single.sourceId, 'enemy:orc');
+      expect(might.single.value, 2 + 2);
+    });
+
     test(
       'startEnemyTurn ticks statuses (Poison) on all enemies and cleans up dead ones',
       () {

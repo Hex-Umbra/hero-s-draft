@@ -96,6 +96,29 @@ void main() {
       expect(engine.playCard(engine.mockState.hand.first), isFalse);
       expect(engine.mockState.hand, hasLength(1));
     });
+
+    test('une carte peu commune joue sa valeur a la rarete, par l applicateur',
+        () {
+      // G1 : une valeur de 1 en commune vaut 2 en peu commune (spec P-43 E1,
+      // §4.3) ; le tutoriel joue ce que le jeu joue (ADR-081).
+      engine.seedEnemy();
+      const tap = CardData(
+        id: 'tutorial_tap',
+        cost: 0,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [CardEffect(type: 'damage', value: 1)],
+      );
+      final card = CardInstance(data: tap, rarity: CardRarity.uncommon);
+      engine.mockState.hand = [card];
+
+      engine.playCard(card);
+
+      expect(engine.mockState.enemy!.stats.currentPv,
+          engine.fixtures.trainingEnemy.maxHp - 2);
+    });
   });
 
   group('L\'absorption d\'armure suit EntityStats.takeDamage', () {
@@ -165,12 +188,14 @@ void main() {
 
       engine.playCard(engine.mockState.hand.first);
 
-      // Aucune Armure conservee, et la Puissance temporaire a sa place :
-      // c'est `StatGains.apply` qui le decide, pas le tutoriel.
+      // Aucune Armure conservee, et la Puissance temporaire a sa place, au
+      // taux de la classe : 5 Armure a 50 %, arrondi au superieur, font 3.
+      // C'est `StatGains.apply` qui le decide, pas le tutoriel.
       expect(engine.mockState.heroStats.armure, 0);
       final buff = engine.mockState.heroStats.statuses
           .firstWhere((s) => s.id == 'might');
-      expect(buff.value, valeur);
+      expect(valeur, 5);
+      expect(buff.value, 3);
       expect(buff.duration, berserker.statRules.first.duration);
     });
 
@@ -275,15 +300,16 @@ void main() {
 
       engine.gainArmorForDemo(4);
 
-      // Le meme verdict que `playCard` : c'est le meme appel a StatGains.
+      // Le meme verdict que `playCard` : c'est le meme appel a StatGains —
+      // 4 Armure au taux de la classe, 50 % : 2 Puissance.
       expect(engine.mockState.heroStats.armure, 0);
-      expect(engine.mockState.heroStats.effectiveMight, 4);
+      expect(engine.mockState.heroStats.effectiveMight, 2);
     });
 
     test('resetHeroStatsForDemo efface les statuts', () {
       // Regression : `addStatus` empile (`entity_stats.dart:134`). Sans ce
-      // nettoyage, presser deux fois « Voir la difference » afficherait +4
-      // puis +8 Puissance a un Berserker.
+      // nettoyage, presser deux fois « Voir la difference » afficherait +2
+      // puis +4 Puissance a un Berserker.
       final berserker =
           engine.fixtures.heroes.firstWhere((h) => h.id == 'berserker');
       engine.chooseHero(berserker);

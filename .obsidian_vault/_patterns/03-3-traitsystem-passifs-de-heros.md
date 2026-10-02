@@ -29,6 +29,11 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 | `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
 | `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat |
 
+La Puissance que posent *Ferveur*, *Rage* et *Frénésie* passe par une fabrique locale qui lui donne
+la source `passive:<id du passif>` : elle fusionne avec elle-même d'un déclenchement à l'autre,
+jamais avec la Puissance d'une carte ou d'une relique ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md),
+[`_rules/04-00`](../_rules/04-00-alterations-d-etat-statuts.md) §4.3).
+
 **Ce qu'un passif reçoit.** `PassiveEvent(RelicTrigger trigger, {CardInstance? card, String? enemyId,
 int? absorbedDamage, int? survivingArmor})` — toujours `const`-constructible. Les trois charges utiles
 ajoutées par P-41 lot B existent parce qu'un passif ne peut pas les recalculer :

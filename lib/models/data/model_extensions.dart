@@ -152,18 +152,36 @@ extension MightTargetsLabels on Set<MightTarget> {
 }
 
 extension StatRuleLabel on StatRule {
+  /// Le montant de l'exemple que la seconde phrase convertit : les
+  /// « 6 Armure → 3 Puissance » de D37.
+  static const int _ratioExampleAmount = 6;
+
   /// La règle en clair : « Son Armure devient de la Puissance pour un tour. »
+  ///
+  /// Quand son `ratio` diffère de 1, une seconde phrase dit le taux et un
+  /// exemple : « Taux : 50%, arrondi à l'entier supérieur — 6 Armure →
+  /// 3 Puissance. » L'exemple sort de [StatRule.convertedAmount], l'arithmétique
+  /// même du moteur : il ne peut pas mentir sur elle (spec P-43 E0, A7, §5.1).
   ///
   /// Générée à partir de la règle, jamais écrite classe par classe
   /// (spec P-41, §8.3). Le `switch` est **exhaustif** sur le triplet
   /// (ressource, mode, cible) : ajouter une valeur à l'une des trois
-  /// énumérations sans son libellé ne compile plus.
-  String describe(AppLocalizations l10n) => switch ((stat, mode, to)) {
-        (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) =>
+  /// énumérations sans ses deux libellés ne compile plus.
+  String describe(AppLocalizations l10n) {
+    final percent = (ratio * 100).round();
+    final converted = convertedAmount(_ratioExampleAmount);
+    final (sentence, rate) = switch ((stat, mode, to)) {
+      (RuleStat.armor, RuleMode.convert, RuleTarget.statusMight) => (
           l10n.statRuleConvertArmorToMight(duration),
-        (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) =>
+          l10n.statRuleRatioArmor(percent, _ratioExampleAmount, converted),
+        ),
+      (RuleStat.mana, RuleMode.convert, RuleTarget.statusMight) => (
           l10n.statRuleConvertManaToMight(duration),
-      };
+          l10n.statRuleRatioMana(percent, _ratioExampleAmount, converted),
+        ),
+    };
+    return ratio == 1 ? sentence : '$sentence $rate';
+  }
 
   /// Le titre court du panneau de démonstration du tutoriel : ce que la
   /// ressource devient, en majuscules comme les titres voisins.

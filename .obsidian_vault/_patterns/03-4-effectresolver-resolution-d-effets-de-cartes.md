@@ -7,12 +7,17 @@
 #### `canPlayCard(CardInstance, RunState, String? selectedEnemyId) → bool`
 - Vérifie : mana suffisant (≥ `currentCost`), carte non-status, carte ciblée → `selectedEnemyId` requis.
 
-#### `resolveCard(CardInstance, RunController, DeckNotifier, CombatController, String?) → bool`
-1. Déduit le coût en mana de la carte.
-2. Itère sur la liste des effets `cardData.effects` (List\<CardEffect\>).
-3. Calcule la valeur mise à l'échelle pour chaque effet selon le niveau de la carte :
-   $$scaledValue = baseValue \times (1 + (level - 1) \times 0.5)$$
-4. Délègue l'exécution de l'effet à la stratégie correspondante enregistrée dans l' **`EffectRegistry`** sous `lib/game/services/effects/` :
+#### `resolveCard(CardInstance, RunController, DeckNotifier, CombatController, String?, EffectRegistry) → bool`
+1. Déduit le coût en mana de la carte (`currentCost`).
+2. Lit la carte **telle qu'elle se joue** : `card.effective`, l'`EffectiveCard` que calcule l'applicateur
+   unique — rareté (G1, G2) et runes comprises ([`_patterns/10-00`](10-00-architecture-du-systeme-de-forge-et-de-fusion.md) §10.2).
+3. Itère sur `addedEffects` (les effets que les runes ajoutent : pioche de `quick`, mana d'`eco`,
+   statuts des runes élémentaires), **puis** sur `effects` (les effets propres, à leur valeur jouée),
+   chaque valeur passée telle quelle en `scaledValue`. **Le résolveur n'a plus aucun code de rune** —
+   ni `switch` par id, ni bloc élémentaire, ni multiplicateur en ligne, ni armure de rune à part —
+   [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md), qui complète
+   [ADR-061](../_adr/ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md).
+4. Délègue l'exécution de chaque effet à la stratégie correspondante enregistrée dans l' **`EffectRegistry`** sous `lib/game/services/effects/` :
    - **Strategy Pattern (Extensibilité)** : Au lieu d'un switch/case monolithique, le système instancie des classes implémentant l'interface `EffectStrategy`.
    - **6 Stratégies Spécifiques** :
      - `DamageEffectStrategy` : Gère le calcul des dégâts physiques/magiques (via `DamagePipeline`), l'application aux cibles (mono ou multi-ennemis) et les statuts associés.
@@ -20,7 +25,7 @@
      - `ArmorEffectStrategy` : Traite la génération d'armure d'un effet de carte (`GainSource.card`) — la Maîtrise, elle, n'agit que sur les gains d'un passif ([`_patterns/03-3`](03-3-traitsystem-passifs-de-heros.md)), jamais sur ceux d'une carte.
      - `GainManaEffectStrategy` : Gère les gains de mana (restauration ou surcapacité temporaire).
      - `DrawEffectStrategy` : Déclenche la pioche de cartes dans le deck.
-     - `ApplyStatusEffectStrategy` : Gère l'application d'effets de statut (buffs/debuffs) sur soi ou sur la cible.
+     - `ApplyStatusEffectStrategy` : Gère l'application d'effets de statut (buffs/debuffs) sur soi ou sur la cible, par `EntityStats.addStatus` ; la Puissance d'une carte porte la source `card:<id>`, tout autre statut aucune ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)). Les statuts des runes élémentaires passent par elle — elle lit la cible de la carte : une Attaque `target: self` portant une rune élémentaire poserait le statut sur le héros (aucune carte livrée ; ADR-105, Conséquences).
 
 #### `DamagePipeline.calculate`
 Le calcul des dégâts physiques, magiques et des intentions d'attaques ennemies est entièrement délégué à la méthode statique unifiée `DamagePipeline.calculate(int initialDamage, EntityStats attackerStats, EntityStats defenderStats)` dans `lib/game/services/damage_pipeline.dart`. 
@@ -33,4 +38,4 @@ Le calcul s'exécute selon les étapes logiques strictes suivantes :
 
 Il retourne un tuple `(int finalDamage, bool isCrit)`.
 
-**Statuts créables et gérés** : `poison`, `strength`, `weakness`, `strength_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution), `vulnerable` (Vulnérable), `crit_chance` (Chance de critique temporaire).
+**Statuts que fabrique `EffectResolver.createStatus`** — re-lu le 2026-10-02 : `poison`, `might`, `weakness`, `vulnerable`, `might_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution). Seule la branche `might` retient le paramètre facultatif `sourceId` (ADR-104). `strength` et `strength_regen`, que cette ligne citait, sont devenus `might` et `might_regen` avec [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) ; `crit_chance` n'est pas fabriqué ici.

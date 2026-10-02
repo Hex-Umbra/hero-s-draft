@@ -44,7 +44,7 @@ L'ordre de ces deux tests d'arrêt compte : main pleine est évaluée **avant** 
 |:---|:---|:---|
 | Main d'ouverture d'un combat | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerCombat()` |
 | Début de chaque tour joueur | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerTurn()` |
-| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet | `DrawEffectStrategy`, `EffectResolver.resolveCard()` |
+| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet ; `quick` : 1 par niveau, plafonnée au niveau 1 | `DrawEffectStrategy`, pour l'une comme pour l'autre : la pioche de `quick` est un effet que la rune ajoute, résolu avant ceux de la carte par la même stratégie — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) |
 
 `cardsPerTurn` vaut **5** par défaut et se modifie par relique — voir
 [03-5-systeme-de-reliques.md](03-5-systeme-de-reliques.md), `scholars_satchel`.

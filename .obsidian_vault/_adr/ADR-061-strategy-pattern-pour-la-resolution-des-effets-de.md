@@ -1,7 +1,10 @@
 ## 🧠 ADR-061 : Strategy Pattern pour la résolution des effets de cartes (v0.2.3)
 
 ### Statut
-✅ Accepté & Implémenté (v0.2.3)
+✅ Accepté & Implémenté (v0.2.3). **Complété le 2026-10-02 par
+[ADR-105](ADR-105-moteur-de-runes-data-driven.md)** (P-43, lot E1, livré sur branche, en attente du
+propriétaire) : les effets qu'ajoutent les runes passent eux aussi par le registre, et le résolveur
+n'a plus aucun code de rune.
 
 ### Contexte
 Dans `EffectResolver`, la résolution des effets de cartes reposait sur un switch/case monolithique géant. L'ajout ou la modification d'effets (dégâts, soin, armure, pioche, mana, statut) nécessitait d'étendre ce switch, augmentant la complexité cyclomatique et le risque de régression à chaque sprint.

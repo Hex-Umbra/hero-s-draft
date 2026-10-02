@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'data/card_data.dart';
+import 'effective_card.dart';
 
 class CardInstance {
   final String uniqueId;
@@ -23,32 +24,18 @@ class CardInstance {
   /// Nombre de runes de forge que cette carte peut porter.
   int get forgeCapacity => data.forgeCapacityAt(rarity);
 
+  /// La carte telle qu'elle se joue — sa rareté et ses runes appliquées, sur
+  /// le catalogue du registre (spec P-43 E1, §4.2).
+  EffectiveCard get effective =>
+      EffectiveCard.withRunes(data, rarity, forgeUpgrades);
+
   /// La carte est-elle épuisée une fois jouée ? Un pouvoir l'est toujours ;
-  /// une carte `isExhaust` l'est sauf si elle porte la rune `enduring`,
-  /// **quel que soit son tier** : la fusion de runes et la fusion 3→1 en ont
-  /// produit des tiers supérieurs, qu'une sauvegarde peut encore contenir.
+  /// une carte `isExhaust` l'est sauf si une de ses runes lève l'épuisement,
+  /// **quel que soit son niveau** (ADR-094 D4) : c'est la donnée de la rune
+  /// qui le dit (`removeExhaust`), plus son id.
   bool get exhaustsOnPlay =>
       data.type == CardType.power ||
-      (data.isExhaust &&
-          !forgeUpgrades.any((rune) => rune.split(':').first == 'enduring'));
-
-  double get rarityMultiplier {
-    switch (rarity) {
-      case CardRarity.common:
-        return 1.0;
-      case CardRarity.uncommon:
-        return 1.2;
-      case CardRarity.rare:
-        return 1.4;
-      case CardRarity.epic:
-        return 1.6;
-      case CardRarity.legendary:
-        return 2.0;
-      case CardRarity.unique:
-        return 1.0;
-    }
-  }
-
+      (data.isExhaust && !effective.removesExhaust);
   CardInstance copyWith({
     String? uniqueId,
     CardData? data,

@@ -2,8 +2,8 @@
   "id": "hardened",
   "name_en": "Hardened",
   "name_fr": "Endurci",
-  "description_en": "+{val} Block on the card",
-  "description_fr": "+{val} Armure sur la carte",
+  "description_en": "+{val} Block on the card (+{percent}% of base, at least +{tier})",
+  "description_fr": "+{val} Armure sur la carte (+{percent}% de la base, au moins +{tier})",
   "icon": "shield_rounded",
   "color": "blueAccent",
   "pools": [
@@ -11,11 +11,17 @@
     "uncommon",
     "rare"
   ],
-  "eligibleCardTypes": [
-    "attack",
-    "skill"
+  "eligibleEffects": [
+    "armor"
   ],
-  "valueMultiplier": 2,
+  "maxLevel": null,
+  "deltas": [
+    {
+      "type": "percentBonus",
+      "effect": "armor",
+      "valuePercentPerLevel": 15
+    }
+  ],
   "weight": 100,
   "emoji": "🛡️"
 }

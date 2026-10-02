@@ -181,6 +181,24 @@
       "duration": { "type": "int" }
     }
   },
+  "statRuleRatioArmor": "Rate: {percent}%, rounded up — {amount} Armor → {converted} Might.",
+  "@statRuleRatioArmor": {
+    "description": "Second sentence of a class rule whose conversion ratio is not 1: the rate as a percentage, and an example amount converted as the engine converts it.",
+    "placeholders": {
+      "percent": { "type": "int" },
+      "amount": { "type": "int" },
+      "converted": { "type": "int" }
+    }
+  },
+  "statRuleRatioMana": "Rate: {percent}%, rounded up — {amount} Mana → {converted} Might.",
+  "@statRuleRatioMana": {
+    "description": "Second sentence of a class rule whose conversion ratio is not 1, for a class that converts its Mana.",
+    "placeholders": {
+      "percent": { "type": "int" },
+      "amount": { "type": "int" },
+      "converted": { "type": "int" }
+    }
+  },
   "statRuleArmorToMightTitle": "ARMOR → MIGHT",
   "@statRuleArmorToMightTitle": {
     "description": "Short title of the tutorial demo panel for a class that converts its Armor into temporary Might. Upper case, like the panel titles beside it."
@@ -450,6 +468,7 @@
   },
   "restCampForgeTitle": "FORGE A CARD",
   "restCampForgeSubtitle": "Choose a card to permanently upgrade.",
+  "forgeNoEligibleRune": "No rune can be added to this card.",
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",

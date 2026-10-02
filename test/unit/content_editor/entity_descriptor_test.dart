@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
@@ -218,6 +219,8 @@ void main() {
   // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
   //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
   //   qui suit la table le verifie ;
+  // - `excludesRunes` d'une rune, `referenceListKeys` elle aussi : absente,
+  //   elle vaut « aucune » (spec P-43 E1, §6) ;
   // - `requires`, `fallbackDescription` et `shortDescription` d'une
   //   recompense de niveau : `requires` et les deux paires de prose sont des
   //   cles optionnelles du modele, ecartees du gabarit a dessein pour qu'une
@@ -260,9 +263,13 @@ void main() {
         'color',
         'pools',
         'eligibleCardTypes',
+        'eligibleEffects',
+        'excludesEffects',
         'requiresExhaust',
+        'requiresMinCost',
         'stackable',
-        'valueMultiplier',
+        'maxLevel',
+        'deltas',
         'weight',
         'emoji',
       },
@@ -375,10 +382,33 @@ void main() {
   // `forge_slot_row.dart` lit `color` et `icon` par leur nom (`amberAccent`,
   // `flash_on_rounded`) et retombe en silence sur du gris et
   // `Icons.help_outline` : ce sont des vocabulaires du moteur, pas un hex.
-  test('la couleur et l icone d une amelioration de forge sont des noms du '
-      'moteur', () {
+  // Les types d'effet qu'une rune nomme ne sont connus que du registre de
+  // strategies : des motifs d'elements (spec P-43 E1, A13).
+  test('la couleur, l icone et les types d effet d une amelioration de forge '
+      'sont des noms du moteur', () {
     final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
-    expect(forge.vocabularyKeys, {'color', 'icon'});
+    expect(forge.vocabularyKeys, {
+      'color',
+      'icon',
+      'eligibleEffects[]',
+      'excludesEffects[]',
+      'deltas[].effect',
+      'deltas[].statusId',
+    });
     expect(forge.hexColorKeys, isEmpty);
+  });
+
+  test('le type d un delta est lu sur le parseur (ADR-100 D1)', () {
+    expect(
+      kEntityDescriptors[EntityCategory.forgeUpgrade]!.enumKeys['deltas[].type'],
+      CardDelta.typeNames,
+    );
+  });
+
+  test('excludesRunes designe des runes, et manque au gabarit', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    expect(forge.referenceListKeys,
+        {'excludesRunes': EntityCategory.forgeUpgrade});
+    expect(forge.decodeTemplate().containsKey('excludesRunes'), isFalse);
   });
 }

@@ -14,6 +14,16 @@
   "eligibleCardTypes": [
     "attack"
   ],
+  "maxLevel": 1,
+  "deltas": [
+    {
+      "type": "addEffect",
+      "effect": "apply_status",
+      "valuePerLevel": 1,
+      "statusId": "freeze",
+      "durationPerLevel": 1
+    }
+  ],
   "weight": 80,
   "emoji": "❄️"
 }

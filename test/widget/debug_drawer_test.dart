@@ -51,6 +51,7 @@ const _berserker = HeroData(
       mode: RuleMode.convert,
       to: RuleTarget.statusMight,
       duration: 1,
+      ratio: 0.5,
     ),
   ],
 );
@@ -324,8 +325,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // La regle, dans le vocabulaire du fichier : c'est la donnee que le
-    // developpeur edite, pas la phrase du joueur.
+    // developpeur edite, pas la phrase du joueur — ratio compris.
     final regle = _berserker.statRules.first.toString();
+    expect(regle, 'armor convert status:might, 1 tour(s), ratio 0.5');
     await _scrollTo(tester, find.text(regle));
     expect(find.text(regle), findsOneWidget);
 

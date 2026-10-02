@@ -4,11 +4,14 @@ import 'package:roguelike_card_game/game/controllers/shop_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+
+import 'shipped_data.dart';
 
 void main() {
   group('ShopController Unit Tests', () {
@@ -298,6 +301,160 @@ void main() {
       }
 
       expect(rolled, {CardRarity.epic, CardRarity.legendary});
+    });
+
+    test('la boutique ne pose une premiere rune qu eligible a la carte', () {
+      // Les runes et les cartes livrees ; le registre vide le remplace en
+      // sortie, comme au cas suivant.
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      final catalog = shippedRuneRegistry(shippedRuneIds()).forgeUpgrades;
+      final cards = shippedNeutralCards();
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      var checked = 0;
+      for (var i = 0; i < 200; i++) {
+        shopController.initializeShop(cards, 0);
+        for (final card in shopController.state.cardsForSale) {
+          if (card.forgeUpgrades.isEmpty) continue;
+          checked++;
+          final (id, _) = ForgeUpgradeData.parseRef(card.forgeUpgrades.first)!;
+          final rune = catalog.singleWhere((r) => r.id == id);
+          expect(
+            ForgeRuneRules.isEligible(
+                rune, card.copyWith(forgeUpgrades: const []), catalog),
+            isTrue,
+            reason: '${card.data.id} : ${card.forgeUpgrades}',
+          );
+        }
+      }
+      // Garde contre un test qui passerait à vide.
+      expect(checked, greaterThan(0));
+    });
+
+    test('une rune plafonnee n est jamais tiree au-dessus de son plafond', () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      // Cumulable, comme eco aujourd'hui : le tirage la monterait a 2 ou 3.
+      GameDataRegistry(
+        enemies: const [],
+        heroes: const [],
+        cards: const [],
+        events: const [],
+        passives: const [],
+        relics: const [],
+        forgeUpgrades: const [
+          ForgeUpgradeData(
+            id: 'capped',
+            nameEn: 'Capped',
+            nameFr: 'Plafonnee',
+            descriptionEn: '',
+            descriptionFr: '',
+            icon: '',
+            color: '',
+            pools: ['common', 'uncommon', 'rare'],
+            maxLevel: 1,
+          ),
+        ],
+      );
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      final rolled = <String>{};
+      for (var i = 0; i < 200; i++) {
+        shopController.initializeShop(testCardPool, 0);
+        for (final card in shopController.state.cardsForSale) {
+          rolled.addAll(card.forgeUpgrades);
+        }
+      }
+
+      expect(rolled, {'capped:1'});
+    });
+
+    test('une pre-forgee ne porte que des runes eligibles a ses runes deja '
+        'tirees, jamais au-dela d un plafond (spec P-43 E1, A12)', () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      final catalog = shippedRuneRegistry(shippedRuneIds()).forgeUpgrades;
+      final cards = shippedNeutralCards();
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      for (var i = 0; i < 300; i++) {
+        shopController.initializeShop(cards, 0);
+        for (final card in shopController.state.cardsForSale) {
+          for (var n = 0; n < card.forgeUpgrades.length; n++) {
+            final (id, _) = ForgeUpgradeData.parseRef(card.forgeUpgrades[n])!;
+            final before = card.copyWith(
+                forgeUpgrades: card.forgeUpgrades.sublist(0, n));
+            expect(
+              ForgeRuneRules.isEligible(
+                  catalog.singleWhere((r) => r.id == id), before, catalog),
+              isTrue,
+              reason: '${card.data.id} : ${card.forgeUpgrades}',
+            );
+          }
+          ForgeUpgradeData.levelsOf(card.forgeUpgrades).forEach((id, level) {
+            final cap = catalog.singleWhere((r) => r.id == id).maxLevel;
+            expect(level, lessThanOrEqualTo(cap ?? level),
+                reason: '${card.data.id} : ${card.forgeUpgrades}');
+          });
+        }
+      }
+    });
+
+    test('une Concentration pre-forgee porte au plus une rune, Veloce', () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      shippedRuneRegistry(shippedRuneIds());
+      final concentration = shippedCard('concentration');
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      final carried = <String>{};
+      for (var i = 0; i < 300; i++) {
+        shopController.initializeShop([concentration], 0);
+        for (final card in shopController.state.cardsForSale) {
+          if (card.forgeUpgrades.isNotEmpty) {
+            carried.add(card.forgeUpgrades.join(','));
+          }
+        }
+      }
+
+      expect(carried, {'quick:1'});
     });
 
     test('la boutique ne tire une rune non cumulable qu au tier 1', () {

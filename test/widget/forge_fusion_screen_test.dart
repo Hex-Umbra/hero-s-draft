@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
@@ -50,9 +51,22 @@ void main() {
     color: 'redAccent',
     pools: ['common', 'uncommon', 'rare'],
     eligibleCardTypes: ['attack'],
-    valueMultiplier: 2,
+    deltas: [PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 15)],
     weight: 100,
     emoji: '⚔️',
+  );
+
+  const ecoUpgrade = ForgeUpgradeData(
+    id: 'eco',
+    nameEn: 'Eco',
+    nameFr: 'Économe',
+    descriptionEn: 'Gains +{tier} Mana on play',
+    descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
+    icon: 'diamond_rounded',
+    color: 'cyanAccent',
+    pools: ['rare'],
+    maxLevel: 1,
+    deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
   );
 
   const enduringUpgrade = ForgeUpgradeData(
@@ -78,7 +92,7 @@ void main() {
     events: const [],
     passives: const [],
     relics: const [],
-    forgeUpgrades: const [sharpUpgrade, enduringUpgrade],
+    forgeUpgrades: const [sharpUpgrade, ecoUpgrade, enduringUpgrade],
   );
 
   Future<ProviderContainer> pumpForgeFusionScreen(
@@ -140,6 +154,25 @@ void main() {
       expect(find.text('ELIGIBLE CARDS'), findsNothing);
       expect(find.text('Strike'), findsNothing);
       expect(find.text('Defend'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a card whose fusion would lose a level is not listed (spec P-43 E1, A10)',
+    (WidgetTester tester) async {
+      // Deux eco:1, d'une sauvegarde d'avant 0.5.3 : les reunir donnerait
+      // eco:1 contre 80 or.
+      final cappedCard = CardInstance(
+        data: strikeCard,
+        forgeUpgrades: const ['eco:1', 'eco:1'],
+      );
+
+      await pumpForgeFusionScreen(tester, masterDeck: [cappedCard]);
+
+      expect(
+        find.text('No cards in your deck have identical runes to merge.'),
+        findsOneWidget,
+      );
     },
   );
 

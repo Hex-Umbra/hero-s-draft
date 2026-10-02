@@ -7,8 +7,9 @@ import '../../models/enemy_instance.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
 
-/// Valeur imprimée sur la carte, multipliée par la rareté — utilisée pour le
-/// texte flottant déclenché par le chemin tap-puis-tap.
+/// Valeur imprimée sur la carte, à sa rareté, telle que l'applicateur la
+/// calcule — utilisée pour le texte flottant déclenché par le chemin
+/// tap-puis-tap.
 ///
 /// Ce n'est **pas** le résultat du pipeline de dégâts : contrairement à
 /// `TutorialEngine.playCard` (`tutorial_engine.dart:387-395`), elle
@@ -22,10 +23,8 @@ import '../tutorial_engine.dart';
 /// Il n'existe pas d'équivalent pour l'armure : ce qu'un gain d'armure
 /// devient dépend de la classe, et seul le moteur le sait (spec P-41, §9.1).
 int _damageValue(CardInstance card) {
-  for (final effect in card.data.effects) {
-    if (effect.type == 'damage') {
-      return (effect.value * card.rarityMultiplier).round();
-    }
+  for (final effect in card.effective.effects) {
+    if (effect.type == 'damage') return effect.value;
   }
   return 0;
 }

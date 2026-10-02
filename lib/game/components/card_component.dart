@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' hide Image;
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
 import '../systems/power_rules.dart';
@@ -343,25 +344,10 @@ class CardComponent extends PositionComponent
 
     final damageBonus = game.heroCard?.stats.damageBonusFor(card.data.type) ?? 0;
 
-    int extraDamage = 0;
-    int extraArmor = 0;
-    for (var upgrade in card.forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      if (id == 'sharp') extraDamage += 2 * k;
-      if (id == 'hardened') extraArmor += 2 * k;
-    }
-
-    for (var effect in card.data.effects) {
-      int scaledValue = (effect.value * card.rarityMultiplier).round();
-      if (effect.type == 'damage') {
-        scaledValue += extraDamage;
-      } else if (effect.type == 'armor') {
-        scaledValue += extraArmor;
-      }
+    // Les valeurs que la carte joue — rareté et runes comprises — viennent de
+    // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
+    for (final effect in card.effective.effects) {
+      final scaledValue = effect.value;
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + damageBonus;
         if (card.data.target == CardTarget.allEnemies) {
@@ -449,59 +435,14 @@ class CardComponent extends PositionComponent
       }
     }
 
-    if (card.forgeUpgrades.isNotEmpty) {
+    // Une ligne par rune, au niveau total de ses exemplaires — celui que joue
+    // le moteur —, lue dans la donnée (spec P-43 E1, §5.2).
+    final runeLines = ForgeUpgradeData.tooltipLines(
+        card.forgeUpgrades, activeLocale, card.data, card.rarity);
+    if (runeLines.isNotEmpty) {
       desc += '\n\n${activeLocale == 'fr' ? '=== AMÉLIORATIONS DE LA FORGE ===' : '=== FORGE UPGRADES ==='}';
-      for (var upgrade in card.forgeUpgrades) {
-        final parts = upgrade.split(':');
-        final id = parts[0];
-        final tierStr = parts.length > 1 ? parts[1] : '1';
-        final tier = int.tryParse(tierStr) ?? 1;
-        final isFr = activeLocale == 'fr';
-        
-        String upgName = '';
-        String upgDesc = '';
-        
-        switch (id) {
-          case 'sharp':
-            upgName = isFr ? 'Tranchant $tier' : 'Sharp $tier';
-            final val = 2 * tier;
-            upgDesc = isFr ? '+$val Dégâts sur la carte' : '+$val Damage on the card';
-            break;
-          case 'hardened':
-            upgName = isFr ? 'Endurci $tier' : 'Hardened $tier';
-            final val = 2 * tier;
-            upgDesc = isFr ? '+$val Armure sur la carte' : '+$val Block on the card';
-            break;
-          case 'burning':
-            upgName = isFr ? 'Brûlant $tier' : 'Burning $tier';
-            upgDesc = isFr ? 'Applique $tier Brûlure' : 'Applies $tier Burn';
-            break;
-          case 'freezing':
-            upgName = isFr ? 'Congelant $tier' : 'Freezing $tier';
-            upgDesc = isFr ? 'Applique $tier Gel' : 'Applies $tier Freeze';
-            break;
-          case 'shocking':
-            upgName = isFr ? 'Surchargé $tier' : 'Shocking $tier';
-            upgDesc = isFr ? 'Applique $tier Électrocution' : 'Applies $tier Shock';
-            break;
-          case 'quick':
-            upgName = isFr ? 'Véloce $tier' : 'Quick $tier';
-            upgDesc = isFr ? 'Pioche +$tier carte(s)' : 'Draw +$tier card(s)';
-            break;
-          case 'eco':
-            upgName = isFr ? 'Économe $tier' : 'Eco $tier';
-            upgDesc = isFr ? 'Gagne +$tier Mana à l\'utilisation' : 'Gains +$tier Mana on play';
-            break;
-          case 'enduring':
-            upgName = isFr ? 'Persistant' : 'Enduring';
-            upgDesc = isFr ? 'Retire Épuisement (Exhaust)' : 'Removes Exhaust';
-            break;
-          default:
-            upgName = id;
-            upgDesc = '';
-        }
-        
-        desc += '\n• $upgName : $upgDesc';
+      for (final line in runeLines) {
+        desc += '\n• $line';
       }
     }
 

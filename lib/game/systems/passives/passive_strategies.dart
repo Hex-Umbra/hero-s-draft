@@ -9,15 +9,17 @@ import '../stat_gains.dart';
 import 'passive_counters.dart';
 import 'passive_strategy.dart';
 
-/// La Puissance temporaire qu'un passif accorde. Le nom est celui que voient
-/// le panneau des statuts et la carte du héros ; l'identifiant `might` est ce
-/// que lit `effectiveMight`.
-StatusEffect _temporaryMight(int value, int duration) => StatusEffect(
+/// La Puissance temporaire qu'un passif accorde, pour sa durée et à son nom :
+/// elle ne rejoint jamais celle d'une carte ou d'une règle (spec P-43 E0,
+/// A2). Le nom est celui que voient le panneau des statuts et la carte du
+/// héros ; l'identifiant `might` est ce que lit `effectiveMight`.
+StatusEffect _temporaryMight(PassiveData passive, int value) => StatusEffect(
       id: 'might',
       name: 'Puissance',
       type: StatusType.buff,
       value: value,
-      duration: duration,
+      duration: passive.duration,
+      sourceId: StatusSource.passive(passive.id),
     );
 
 /// `gain_armor` : accorde `value` d'armure.
@@ -127,7 +129,7 @@ class FervorPassive extends PassiveStrategy {
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
     if ((event.absorbedDamage ?? 0) <= 0) return;
-    run.addStatus(_temporaryMight(passive.value, passive.duration));
+    run.addStatus(_temporaryMight(passive, passive.value));
   }
 }
 
@@ -171,9 +173,7 @@ class RagePassive extends PassiveStrategy {
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
     final stats = run.currentState.heroStats;
     final tranches = (stats.maxPv - stats.currentPv) ~/ _pvPerTranche;
-    run.addStatus(
-      _temporaryMight(passive.value * (1 + tranches), passive.duration),
-    );
+    run.addStatus(_temporaryMight(passive, passive.value * (1 + tranches)));
   }
 }
 
@@ -212,7 +212,7 @@ class FrenzyPassive extends PassiveStrategy {
 
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    run.addStatus(_temporaryMight(passive.value, passive.duration));
+    run.addStatus(_temporaryMight(passive, passive.value));
     if (passive.draw > 0) {
       run.ref
           .read(deckProvider.notifier)

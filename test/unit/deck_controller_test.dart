@@ -6,6 +6,8 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 
+import 'shipped_data.dart';
+
 CardInstance _card(String id) => CardInstance(
       data: CardData(
         id: id,
@@ -446,6 +448,9 @@ void main() {
     late DeckNotifier notifier;
 
     setUp(() {
+      // Persistant, tel que le jeu le livre : l'épuisement lit la donnée de
+      // la rune, plus son id (spec P-43 E1, §4.5).
+      shippedRuneRegistry(const ['enduring']);
       container = ProviderContainer();
       notifier = container.read(deckProvider.notifier);
     });

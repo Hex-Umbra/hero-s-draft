@@ -2,8 +2,8 @@
   "id": "sharp",
   "name_en": "Sharp",
   "name_fr": "Tranchant",
-  "description_en": "+{val} Damage on the card",
-  "description_fr": "+{val} Dégâts sur la carte",
+  "description_en": "+{val} Damage on the card (+{percent}% of base, at least +{tier})",
+  "description_fr": "+{val} Dégâts sur la carte (+{percent}% de la base, au moins +{tier})",
   "icon": "hardware_rounded",
   "color": "redAccent",
   "pools": [
@@ -11,10 +11,17 @@
     "uncommon",
     "rare"
   ],
-  "eligibleCardTypes": [
-    "attack"
+  "eligibleEffects": [
+    "damage"
   ],
-  "valueMultiplier": 2,
+  "maxLevel": null,
+  "deltas": [
+    {
+      "type": "percentBonus",
+      "effect": "damage",
+      "valuePercentPerLevel": 15
+    }
+  ],
   "weight": 100,
   "emoji": "⚔️"
 }

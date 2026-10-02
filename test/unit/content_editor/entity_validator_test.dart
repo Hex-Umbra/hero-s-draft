@@ -592,13 +592,74 @@ void main() {
             descriptor: forge,
             id: 'eclat',
             bilingual: prose,
-            mechanics: '{"pools": ["common"], "color": "$color"}',
+            mechanics: '{"pools": ["common"], "color": "$color", '
+                '"maxLevel": 1, "deltas": [{"type": "removeExhaust"}]}',
           );
 
       expect(validatorWith().validate(withColor('orange')).single.field,
           'color');
       // Le nom du gabarit passe dans une arborescence vide.
       expect(validatorWith().validate(withColor('amberAccent')), isEmpty);
+    });
+  });
+
+  group('une rune de forge (spec P-43 E1, §6)', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+
+    EntityDraft runeDraft(Map<String, dynamic> changes) => EntityDraft(
+          descriptor: forge,
+          id: 'eclat',
+          bilingual: const {
+            'name_fr': 'x',
+            'name_en': 'x',
+            'description_fr': 'x',
+            'description_en': 'x',
+          },
+          mechanics: jsonEncode({...forge.decodeTemplate(), ...changes}),
+        );
+
+    EntityValidator withRunes() => validatorWith(
+          registry: fixtureRegistry(forgeUpgrades: [fixtureRune('sharp')]),
+        );
+
+    test('excludesRunes vide est refuse par la famille 6', () {
+      final faults = withRunes().validate(runeDraft({'excludesRunes': []}));
+      expect(faults.single.field, 'excludesRunes');
+    });
+
+    test('excludesRunes inconnu est refuse par la famille 6, connu passe', () {
+      final faults = withRunes().validate(runeDraft({
+        'excludesRunes': ['sharpp'],
+      }));
+      expect(faults.single.field, 'excludesRunes');
+      expect(faults.single.message, contains('sharpp'));
+
+      expect(
+        withRunes().validate(runeDraft({
+          'excludesRunes': ['sharp'],
+        })),
+        isEmpty,
+      );
+    });
+
+    test('maxLevel 0 est refuse par la famille 7', () {
+      final faults = withRunes().validate(runeDraft({'maxLevel': 0}));
+      expect(faults.single.message, contains('maxLevel'));
+    });
+
+    test('un type d effet inconnu d eligibleEffects est refuse, damage passe',
+        () {
+      final faults = withRunes().validate(runeDraft({
+        'eligibleEffects': ['damge'],
+      }));
+      expect(faults.single.field, 'eligibleEffects[0]');
+
+      expect(
+        withRunes().validate(runeDraft({
+          'eligibleEffects': ['damage'],
+        })),
+        isEmpty,
+      );
     });
   });
 
@@ -798,6 +859,27 @@ void main() {
         hasLength(1),
         reason: faults.join(' ; '),
       );
+    });
+
+    // La borne de `ratio` vit dans `StatRule.fromJson`, que la famille 7
+    // traverse : aucune copie dans le descripteur (spec P-43 E0, A5, §6.1).
+    test('un ratio hors de ]0, 1], ou non numerique, est refuse', () {
+      for (final ratio in const ['0', '1.5', '"0.5"']) {
+        final faults = validatorWith().validate(classeAvecRegles(
+          '[{"stat": "armor", "mode": "convert", "to": "status:might", '
+          '"ratio": $ratio}]',
+        ));
+        expect(faults, hasLength(1), reason: 'ratio $ratio : $faults');
+        expect(faults.single.message, contains('ratio'), reason: ratio);
+      }
+    });
+
+    test('un ratio de 0,5 passe', () {
+      final faults = validatorWith().validate(classeAvecRegles(
+        '[{"stat": "armor", "mode": "convert", "to": "status:might", '
+        '"duration": 1, "ratio": 0.5}]',
+      ));
+      expect(faults, isEmpty, reason: faults.join(' ; '));
     });
   });
 

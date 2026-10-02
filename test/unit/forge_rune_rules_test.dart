@@ -5,7 +5,10 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
-ForgeUpgradeData _rune(String id, {bool stackable = true}) => ForgeUpgradeData(
+import 'shipped_data.dart';
+
+ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
+    ForgeUpgradeData(
       id: id,
       nameEn: id,
       nameFr: id,
@@ -15,6 +18,7 @@ ForgeUpgradeData _rune(String id, {bool stackable = true}) => ForgeUpgradeData(
       color: '',
       pools: const ['common'],
       stackable: stackable,
+      maxLevel: maxLevel,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -45,6 +49,8 @@ void main() {
         _rune('sharp'),
         _rune('hardened'),
         _rune('enduring', stackable: false),
+        _rune('eco', maxLevel: 1),
+        _rune('capped', maxLevel: 2),
       ],
     );
   });
@@ -54,6 +60,10 @@ void main() {
       final rune = ForgeUpgradeData.fromJson({
         'id': 'sharp',
         'pools': ['common'],
+        'maxLevel': null,
+        'deltas': [
+          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
+        ],
       });
       expect(rune.stackable, isTrue);
     });
@@ -63,6 +73,10 @@ void main() {
         'id': 'enduring',
         'pools': ['rare'],
         'stackable': false,
+        'maxLevel': 1,
+        'deltas': [
+          {'type': 'removeExhaust'},
+        ],
       });
       expect(rune.stackable, isFalse);
       expect(ForgeUpgradeData.fromJson(rune.toJson()).stackable, isFalse);
@@ -88,6 +102,10 @@ void main() {
       expect(ForgeRuneRules.consolidate(['enduring:3']), ['enduring:1']);
     });
 
+    test('borne la somme au plafond de la rune : le surplus se perd', () {
+      expect(ForgeRuneRules.consolidate(['capped:1', 'capped:2']), ['capped:2']);
+    });
+
     test('traite une rune absente du registre comme cumulable', () {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
     });
@@ -97,6 +115,29 @@ void main() {
         ForgeRuneRules.consolidate(['sharp', 'sharp:0', 'sharp:x', 'hardened:2']),
         ['hardened:2'],
       );
+    });
+  });
+
+  group('ForgeRuneRules.consolidate, exclusions', () {
+    test('trois Potions de Soin enduring, eco et vide : eco est ecartee', () {
+      // Le catalogue livré : enduring exclut eco dans son fichier.
+      final potions = [
+        for (final carried in const [
+          ['enduring:1'],
+          ['eco:1'],
+          <String>[],
+        ])
+          CardInstance(data: shippedCard('heal_potion'), forgeUpgrades: carried),
+      ];
+      shippedRuneRegistry(shippedRuneIds(), cards: [potions.first.data]);
+
+      final runes = ForgeRuneRules.consolidate(
+        [for (final potion in potions) ...potion.forgeUpgrades],
+      );
+
+      // Une carte rendant du mana sans s'épuiser : le moteur que D44 et D51
+      // ferment. La première arrivée est gardée.
+      expect(runes, ['enduring:1']);
     });
   });
 
@@ -116,6 +157,26 @@ void main() {
     test('une reference mal formee ne compte pas, comme dans consolidate', () {
       expect(
         ForgeRuneRules.fusionOptionsFor(_cardWith(['sharp', 'sharp:x', 'sharp:1'])),
+        isEmpty,
+      );
+    });
+
+    test('deux eco:1 : aucune option, la fusion perdrait un niveau', () {
+      expect(
+        ForgeRuneRules.fusionOptionsFor(_cardWith(['eco:1', 'eco:1'])),
+        isEmpty,
+      );
+    });
+
+    test('1 + 1 sous un plafond de 2 : proposee', () {
+      final options =
+          ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:1', 'capped:1']));
+      expect(options.single.totalTier, 2);
+    });
+
+    test('2 + 1 sous un plafond de 2 : non proposee', () {
+      expect(
+        ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:2', 'capped:1'])),
         isEmpty,
       );
     });

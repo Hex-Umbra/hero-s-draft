@@ -15,6 +15,14 @@
     "skill",
     "power"
   ],
+  "maxLevel": 1,
+  "deltas": [
+    {
+      "type": "addEffect",
+      "effect": "draw",
+      "valuePerLevel": 1
+    }
+  ],
   "weight": 60,
   "emoji": "🪶"
 }

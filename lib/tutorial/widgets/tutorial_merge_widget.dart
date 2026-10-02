@@ -262,8 +262,8 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                     const SizedBox(height: 4),
                     Text(
                       isFrench
-                          ? 'Même coût. Valeurs ×1,2.'
-                          : 'Same cost. Values ×1.2.',
+                          ? 'Même coût, rareté supérieure.'
+                          : 'Same cost, higher rarity.',
                       style: TextStyle(
                         color: Colors.grey.shade300,
                         fontSize: 12,

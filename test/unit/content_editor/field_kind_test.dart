@@ -61,7 +61,7 @@ void main() {
   test('le type JSON decide ensuite', () {
     expect(kindOf(card, const ['isExhaust'], false), FieldKind.boolean);
     expect(kindOf(card, const ['cost'], 1), FieldKind.integer);
-    expect(kindOf(forge, const ['valueMultiplier'], 1.5), FieldKind.decimal);
+    expect(kindOf(hero, const ['statRules', 0, 'ratio'], 0.5), FieldKind.decimal);
     expect(kindOf(relic, const ['emoji'], '🪙'), FieldKind.text);
     expect(kindOf(card, const ['effects'], [
       {'type': 'damage'},

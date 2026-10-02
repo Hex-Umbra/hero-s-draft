@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/data/forge_upgrade_data.dart';
+import '../../../models/effective_card.dart';
 
 class UiCardEffectVisuals {
   final IconData icon;
@@ -212,29 +214,11 @@ Color getCardRarityColor(BuildContext context, String? rarity) {
   return Colors.white54;
 }
 
-String getRuneEmoji(String upgrade) {
-  final id = upgrade.split(':')[0];
-  switch (id) {
-    case 'sharp':
-      return '⚔️';
-    case 'hardened':
-      return '🛡️';
-    case 'quick':
-      return '🪶';
-    case 'eco':
-      return '💎';
-    case 'burning':
-      return '🔥';
-    case 'freezing':
-      return '❄️';
-    case 'shocking':
-      return '⚡';
-    case 'enduring':
-      return '⏳';
-    default:
-      return '🔮';
-  }
-}
+/// L'emoji d'une rune, lu dans sa donnée comme le rendu Flame le lit déjà
+/// (spec P-43 E1, §5.2) ; une rune absente du registre prend l'emoji par
+/// défaut.
+String getRuneEmoji(String upgrade) =>
+    ForgeUpgradeData.getById(upgrade.split(':')[0])?.emoji ?? '🔮';
 
 String getCardTypeLabel(BuildContext context, CardType? type) {
   final l10n = AppLocalizations.of(context)!;
@@ -256,9 +240,9 @@ String buildDetailedDescription(
   BuildContext context, {
   required String title,
   required String description,
-  required double rarityMultiplier,
+  required CardData? data,
+  required CardRarity cardRarity,
   required List<String> forgeUpgrades,
-  List<CardEffect>? effects,
   String? target,
   CardTarget? targetType,
   String? rarity,
@@ -329,6 +313,7 @@ String buildDetailedDescription(
 
   // Add elemental header if applicable
   String desc = details.isNotEmpty ? '$details\n' : '';
+  final effects = data?.effects;
   final elementalType = determineDamageType(title, effects);
   if (effects != null && effects.isNotEmpty && elementalType != 'physical') {
     final typeStr = elementalType == 'fire'
@@ -341,29 +326,15 @@ String buildDetailedDescription(
     desc += '[$typeStr]\n';
   }
 
-  if (effects == null || effects.isEmpty) {
+  if (data == null || data.effects.isEmpty) {
     return desc + description;
   }
 
-  int extraDamage = 0;
-  int extraArmor = 0;
-  for (var upgrade in forgeUpgrades) {
-    final parts = upgrade.split(':');
-    if (parts.length != 2) continue;
-    final id = parts[0];
-    final k = int.tryParse(parts[1]) ?? 0;
-    if (k <= 0) continue;
-    if (id == 'sharp') extraDamage += 2 * k;
-    if (id == 'hardened') extraArmor += 2 * k;
-  }
-
-  for (var effect in effects) {
-    int scaledValue = (effect.value * rarityMultiplier).round();
-    if (effect.type == 'damage') {
-      scaledValue += extraDamage;
-    } else if (effect.type == 'armor') {
-      scaledValue += extraArmor;
-    }
+  // Les valeurs que la carte joue — rareté et runes comprises — viennent de
+  // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
+  for (final effect
+      in EffectiveCard.withRunes(data, cardRarity, forgeUpgrades).effects) {
+    final scaledValue = effect.value;
 
     if (effect.type == 'damage') {
       if (target == 'Tous les ennemis' || target == 'allEnemies') {
@@ -440,40 +411,10 @@ String buildDetailedDescription(
     }
   }
 
-  final List<String> upgradeDescs = [];
-  for (var upgrade in forgeUpgrades) {
-    final parts = upgrade.split(':');
-    if (parts.length != 2) continue;
-    final id = parts[0];
-    final k = int.tryParse(parts[1]) ?? 0;
-    if (k <= 0) continue;
-    switch (id) {
-      case 'sharp':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Tranchant $k (+${2 * k} Dégâts)' : 'Sharp $k (+${2 * k} Damage)');
-        break;
-      case 'hardened':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Endurci $k (+${2 * k} Armure)' : 'Hardened $k (+${2 * k} Armor)');
-        break;
-      case 'quick':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Véloce $k (+$k Carte(s) piochée(s))' : 'Quick $k (+$k Card(s) drawn)');
-        break;
-      case 'eco':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Économe $k (+$k Mana)' : 'Eco $k (+$k Mana)');
-        break;
-      case 'burning':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Brûlant $k (Applique $k Brûlure)' : 'Burning $k (Apply $k Burn)');
-        break;
-      case 'freezing':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Congelant $k (Applique $k Gel)' : 'Freezing $k (Apply $k Freeze)');
-        break;
-      case 'shocking':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Surchargé $k (Applique $k Électrocution)' : 'Shocking $k (Apply $k Shock)');
-        break;
-      case 'enduring':
-        upgradeDescs.add(activeLocale == 'fr' ? 'Persistant' : 'Enduring');
-        break;
-    }
-  }
+  // Une ligne par rune, au niveau total de ses exemplaires — celui que joue
+  // le moteur —, lue dans la donnée (spec P-43 E1, §5.2).
+  final upgradeDescs = ForgeUpgradeData.tooltipLines(
+      forgeUpgrades, activeLocale, data, cardRarity);
   if (upgradeDescs.isNotEmpty) {
     desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => '• $u').join('\n')}\n';
   }

@@ -33,11 +33,18 @@ class StatRule {
   /// La durée du statut produit, en tours.
   final int duration;
 
+  /// La part de chaque gain que la règle convertit, dans ]0, 1] ; 1 par
+  /// défaut, la conversion entière d'avant (spec P-43 E0, D37). Un garde-fou
+  /// de classe, pas un nerf de carte : le Berserker la déclare à 0,5. Le
+  /// montant converti est [convertedAmount].
+  final double ratio;
+
   const StatRule({
     required this.stat,
     required this.mode,
     required this.to,
     this.duration = 1,
+    this.ratio = 1,
   });
 
   static const Map<String, RuleStat> _stats = {
@@ -68,6 +75,41 @@ class StatRule {
   static String _nameOf<T>(T value, Map<String, T> by) =>
       by.entries.firstWhere((entry) => entry.value == value).key;
 
+  /// La ressource de cette règle dans le vocabulaire du fichier — `armor`,
+  /// jamais le nom d'énumération Dart. C'est par lui que la Puissance
+  /// convertie est posée au nom de la règle, `rule:armor` (spec P-43 E0, §4.2).
+  String get statName => _nameOf(stat, _stats);
+
+  /// Ce que devient un gain strictement positif de [amount] : son produit par
+  /// [ratio], arrondi à l'entier supérieur, jamais moins de 1. L'arrondi se
+  /// fait à 10⁻⁹ près : `0.1 × 30` vaut 3,0000000000000004 en flottant, et
+  /// monterait sinon à 4. À ratio 1, [amount] lui-même.
+  ///
+  /// Chaque gain est converti seul (spec P-43 E0, A6). La seule arithmétique
+  /// du ratio : `StatGains` la lit au gain, `StatRuleLabel.describe` pour
+  /// l'exemple qu'il écrit au joueur.
+  int convertedAmount(int amount) {
+    final converted = (amount * ratio - _roundingTolerance).ceil();
+    return converted < 1 ? 1 : converted;
+  }
+
+  static const double _roundingTolerance = 1e-9;
+
+  /// Lit `ratio`, absent : 1. Le moteur refuse déjà de créer une Puissance
+  /// nulle ou négative (`StatGains._convert`) ; le modèle refuse au
+  /// chargement le ratio qui en fabriquerait une. La borne haute laisse
+  /// élargir plus tard sans casser aucun fichier (spec P-43 E0, A5).
+  static double _readRatio(Object? value) {
+    if (value == null) return 1;
+    if (value is! num || value <= 0 || value > 1) {
+      throw FormatException(
+        'statRules.ratio : valeur "$value" refusée — attendu : un nombre '
+        'dans ]0, 1]',
+      );
+    }
+    return value.toDouble();
+  }
+
   static T _read<T>(Map<String, dynamic> json, String key, Map<String, T> by) {
     final value = json[key];
     final parsed = value is String ? by[value] : null;
@@ -85,6 +127,7 @@ class StatRule {
         mode: _read(json, 'mode', _modes),
         to: _read(json, 'to', _targets),
         duration: json['duration'] as int? ?? 1,
+        ratio: _readRatio(json['ratio']),
       );
 
   // Egalite par valeur : `RunState.fromJsonWithReport` reconstruit ces regles
@@ -98,20 +141,23 @@ class StatRule {
           other.stat == stat &&
           other.mode == mode &&
           other.to == to &&
-          other.duration == duration);
+          other.duration == duration &&
+          other.ratio == ratio);
 
   @override
-  int get hashCode => Object.hash(stat, mode, to, duration);
+  int get hashCode => Object.hash(stat, mode, to, duration, ratio);
 
   /// La règle dans le vocabulaire du **fichier de classe** :
-  /// `armor convert status:might, 1 tour(s)`.
+  /// `armor convert status:might, 1 tour(s)`, suivi de `, ratio 0.5` quand le
+  /// ratio diffère de 1.
   ///
   /// C'est la forme qu'un développeur lit au menu de debug — la donnée qu'il
   /// édite. La phrase du joueur, elle, est `StatRuleLabel.describe`
   /// (`model_extensions.dart`), et passe par les ARB.
   @override
-  String toString() => '${_nameOf(stat, _stats)} ${_nameOf(mode, _modes)} '
-      '${_nameOf(to, _targets)}, $duration tour(s)';
+  String toString() => '$statName ${_nameOf(mode, _modes)} '
+      '${_nameOf(to, _targets)}, $duration tour(s)'
+      '${ratio == 1 ? '' : ', ratio $ratio'}';
 
   /// Lit la clé `statRules` d'une classe. Absente : aucune règle — c'est le
   /// cas du Paladin et du Mage.

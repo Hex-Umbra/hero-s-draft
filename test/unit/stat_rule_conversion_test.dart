@@ -18,6 +18,15 @@ void main() {
     duration: 1,
   );
 
+  // Le taux du Berserker (spec P-43 E0, D37).
+  const armorToMightHalf = StatRule(
+    stat: RuleStat.armor,
+    mode: RuleMode.convert,
+    to: RuleTarget.statusMight,
+    duration: 1,
+    ratio: 0.5,
+  );
+
   EntityStats stats() => EntityStats(
         maxPv: 80,
         currentPv: 80,
@@ -89,6 +98,33 @@ void main() {
       final once = StatGains.apply(stats(), gain, const [armorToMight]);
       final twice = StatGains.apply(once, gain, const [armorToMight]);
       expect(mightOf(twice)!.value, 8);
+    });
+
+    // D36 : la conversion pose sa Puissance au nom de la règle, et non de la
+    // carte qui a donné l'armure (spec P-43 E0, A2).
+    test('la Puissance convertie porte le nom de la regle', () {
+      const gain = StatGain(GainResource.armor, 4, GainSource.card);
+      final after = StatGains.apply(stats(), gain, const [armorToMight]);
+      expect(mightOf(after)!.sourceId, 'rule:armor');
+    });
+
+    // D37 : la moitie de l'armure, arrondie a l'entier superieur.
+    test('a 0,5 : 6 Armure donnent 3 Puissance, et aucune Armure', () {
+      const gain = StatGain(GainResource.armor, 6, GainSource.card);
+      final after = StatGains.apply(stats(), gain, const [armorToMightHalf]);
+
+      expect(after.armure, 2, reason: 'aucune armure ecrite');
+      expect(mightOf(after)!.value, 3);
+    });
+
+    // A6 : chaque gain est arrondi seul — deux gains de 5 font 3 + 3, et non
+    // l'arrondi de 10 / 2.
+    test('a 0,5 : deux gains de 5 donnent 6, arrondis un par un', () {
+      const gain = StatGain(GainResource.armor, 5, GainSource.card);
+      final once = StatGains.apply(stats(), gain, const [armorToMightHalf]);
+      final twice = StatGains.apply(once, gain, const [armorToMightHalf]);
+
+      expect(mightOf(twice)!.value, 3 + 3);
     });
   });
 

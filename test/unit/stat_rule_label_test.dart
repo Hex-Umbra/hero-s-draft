@@ -50,4 +50,48 @@ void main() {
     expect(regle.describe(fr), 'Son Mana devient de la Puissance pour un tour.');
     expect(regle.describe(en), 'Their Mana becomes Might for one turn.');
   });
+
+  // D37, A7 (spec P-43 E0, §5.1) : a un ratio autre que 1, une seconde phrase
+  // dit le taux, et l'exemple de D37 tel que le moteur le calcule.
+  test('a 0,5, la conversion d armure dit son taux et son exemple', () {
+    const regle = StatRule(
+      stat: RuleStat.armor,
+      mode: RuleMode.convert,
+      to: RuleTarget.statusMight,
+      duration: 1,
+      ratio: 0.5,
+    );
+
+    expect(
+      regle.describe(fr),
+      'Son Armure devient de la Puissance pour un tour. '
+      "Taux : 50%, arrondi à l'entier supérieur — 6 Armure → 3 Puissance.",
+    );
+    expect(
+      regle.describe(en),
+      'Their Armor becomes Might for one turn. '
+      'Rate: 50%, rounded up — 6 Armor → 3 Might.',
+    );
+  });
+
+  test('a 0,5, la conversion de mana dit son taux et son exemple', () {
+    const regle = StatRule(
+      stat: RuleStat.mana,
+      mode: RuleMode.convert,
+      to: RuleTarget.statusMight,
+      duration: 1,
+      ratio: 0.5,
+    );
+
+    expect(
+      regle.describe(fr),
+      'Son Mana devient de la Puissance pour un tour. '
+      "Taux : 50%, arrondi à l'entier supérieur — 6 Mana → 3 Puissance.",
+    );
+    expect(
+      regle.describe(en),
+      'Their Mana becomes Might for one turn. '
+      'Rate: 50%, rounded up — 6 Mana → 3 Might.',
+    );
+  });
 }

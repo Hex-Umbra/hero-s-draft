@@ -133,7 +133,7 @@ const List<TutorialStep> kTutorialSteps = [
         'played — it will not come back this combat.\n\n'
         'The damage printed on a card is not the final number: your Hero\'s '
         'Might is added on top, depending on what their class strengthens, and '
-        'rarity multiplies the base value.',
+        'rarity raises the base value.',
     bodyFr:
         'Jouer une carte coûte du Mana. Le coût est inscrit dans le **médaillon '
         'rond cyan en haut à gauche** de la carte.\n\n'
@@ -146,7 +146,7 @@ const List<TutorialStep> kTutorialSteps = [
         'à l\'exil — il ne reviendra pas de ce combat.\n\n'
         'Les dégâts imprimés sur une carte ne sont pas le chiffre final : '
         'la Puissance de votre héros s\'y ajoute, selon ce que renforce sa '
-        'classe, et la rareté multiplie la valeur de base.',
+        'classe, et la rareté augmente la valeur de base.',
     type: TutorialStepType.cards,
   ),
   TutorialStep(
@@ -265,8 +265,10 @@ const List<TutorialStep> kTutorialSteps = [
         'you hold three copies of the same card **at the same rarity**, the '
         'group offers a merge. Select exactly three, confirm, and they become '
         'one card of the next rarity up.\n\n'
-        'Rarity **never changes a card\'s Mana cost** — it multiplies its '
-        'values: ×1.2 uncommon, ×1.4 rare, ×1.6 epic, ×2.0 legendary.\n\n'
+        'Rarity **never changes a card\'s Mana cost** — it raises its values: '
+        '×1.2 uncommon, ×1.4 rare, ×1.6 epic, ×2.0 legendary, and always by at '
+        'least 1 per merge. Cards drawn and Mana gained do not grow with '
+        'rarity.\n\n'
         'Forge upgrades carried by the three copies are inherited and merged, '
         'capped by the new rarity\'s capacity. Your class cards are unique, and '
         'unique cards never merge. **The Fusion Forge is a separate, paid '
@@ -278,8 +280,10 @@ const List<TutorialStep> kTutorialSteps = [
         'même rareté**, le groupe propose une fusion. Sélectionnez-en exactement '
         'trois, confirmez, et elles deviennent une carte de la rareté '
         'supérieure.\n\n'
-        'La rareté **ne change jamais le coût en Mana** — elle multiplie les '
-        'valeurs : ×1,2 peu commun, ×1,4 rare, ×1,6 épique, ×2,0 légendaire.\n\n'
+        'La rareté **ne change jamais le coût en Mana** — elle augmente les '
+        'valeurs : ×1,2 peu commun, ×1,4 rare, ×1,6 épique, ×2,0 légendaire, et '
+        'toujours d\'au moins 1 à chaque fusion. La pioche et le Mana qu\'une '
+        'carte rend ne grandissent pas avec la rareté.\n\n'
         'Les améliorations de forge des trois exemplaires sont héritées et '
         'consolidées, dans la limite de la capacité de la nouvelle rareté. Vos '
         'cartes de classe sont uniques, et une carte unique ne fusionne jamais. '

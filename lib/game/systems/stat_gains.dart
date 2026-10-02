@@ -10,7 +10,6 @@ enum GainResource { armor, mana, might }
 /// passif avant qu'il ne calcule son gain (spec P-49, §6.3).
 enum GainSource {
   card,
-  rune,
   passive,
   relic,
   status,
@@ -73,7 +72,9 @@ abstract final class StatGains {
   /// Le gain converti par une règle qui le vise, ou `null` s'il n'y en a pas.
   ///
   /// Un gain nul ou négatif n'est jamais converti : il n'y a rien à
-  /// transformer, et un statut de valeur négative n'a pas de sens.
+  /// transformer, et un statut de valeur négative n'a pas de sens. Un gain
+  /// positif est converti seul, au `ratio` de la règle
+  /// (`StatRule.convertedAmount`, spec P-43 E0, A6).
   static EntityStats? _convert(
     EntityStats stats,
     StatGain gain,
@@ -95,13 +96,19 @@ abstract final class StatGains {
         // R5 (spec §7.2) : la cible est la Puissance **temporaire**. Convertir
         // en Puissance permanente ferait gagner de la puissance définitive à
         // chaque `iron_wall` jouée, et casserait le jeu au troisième combat.
+        //
+        // Posée au nom de la règle, jamais de la carte qui a donné l'armure :
+        // toutes les conversions d'un tour ont la durée de la règle et
+        // fusionnent entre elles, sans rejoindre une Puissance durable
+        // (spec P-43 E0, A2).
         RuleTarget.statusMight => stats.addStatus(
             StatusEffect(
               id: 'might',
               name: 'Puissance',
               type: StatusType.buff,
-              value: gain.amount,
+              value: rule.convertedAmount(gain.amount),
               duration: rule.duration,
+              sourceId: StatusSource.rule(rule.statName),
             ),
           ),
       };

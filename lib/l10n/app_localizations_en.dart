@@ -363,6 +363,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String statRuleRatioArmor(int percent, int amount, int converted) {
+    return 'Rate: $percent%, rounded up — $amount Armor → $converted Might.';
+  }
+
+  @override
+  String statRuleRatioMana(int percent, int amount, int converted) {
+    return 'Rate: $percent%, rounded up — $amount Mana → $converted Might.';
+  }
+
+  @override
   String get statRuleArmorToMightTitle => 'ARMOR → MIGHT';
 
   @override
@@ -686,6 +696,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restCampForgeSubtitle => 'Choose a card to permanently upgrade.';
+
+  @override
+  String get forgeNoEligibleRune => 'No rune can be added to this card.';
 
   @override
   String get restCampRemoveTitle => 'REMOVE A CARD';

@@ -359,7 +359,7 @@ class TutorialEngine extends ChangeNotifier {
   /// Les **statuts** sont vidés pour la même raison : la conversion d'armure
   /// d'une classe en pose un (`might`), et `addStatus` empile
   /// (`entity_stats.dart:134`). Sans ce nettoyage, rejouer la démonstration
-  /// afficherait +4 puis +8 Puissance.
+  /// afficherait +2 puis +4 Puissance au Berserker.
   void resetHeroStatsForDemo(int desiredPv) {
     final stats = mockState.heroStats;
     mockState.heroStats = stats.copyWith(
@@ -382,8 +382,8 @@ class TutorialEngine extends ChangeNotifier {
     );
     mockState.hand.remove(card);
 
-    for (final effect in card.data.effects) {
-      final scaled = (effect.value * card.rarityMultiplier).round();
+    for (final effect in card.effective.effects) {
+      final scaled = effect.value;
 
       if (effect.type == 'damage') {
         final enemy = mockState.enemy;

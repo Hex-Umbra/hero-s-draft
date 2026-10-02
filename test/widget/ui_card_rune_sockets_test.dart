@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card/card_rune_sockets.dart';
 
@@ -81,5 +83,47 @@ void main() {
     );
 
     expect(_socketCount(tester), 5);
+  });
+
+  testWidgets('l emoji d une prise vient de la donnee de la rune', (
+    WidgetTester tester,
+  ) async {
+    GameDataRegistry(
+      enemies: const [],
+      heroes: const [],
+      cards: const [],
+      events: const [],
+      passives: const [],
+      relics: const [],
+      forgeUpgrades: const [
+        ForgeUpgradeData(
+          id: 'test_rune',
+          nameEn: 'Test',
+          nameFr: 'Test',
+          descriptionEn: '',
+          descriptionFr: '',
+          icon: '',
+          color: '',
+          pools: ['common'],
+          emoji: '🧪',
+        ),
+      ],
+    );
+
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: _cardData(CardRarity.common, 1),
+        forgeUpgrades: const ['test_rune:1'],
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byType(CardRuneSockets),
+        matching: find.text('🧪'),
+      ),
+      findsOneWidget,
+    );
   });
 }

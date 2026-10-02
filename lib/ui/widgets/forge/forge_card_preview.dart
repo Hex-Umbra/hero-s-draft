@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/card_instance.dart';
 import '../ui_card.dart';
+import '../ui_card/ui_card_helpers.dart';
 
 class ForgeCardPreview extends StatelessWidget {
   final CardInstance card;
@@ -17,30 +18,6 @@ class ForgeCardPreview extends StatelessWidget {
     required this.locale,
     required this.l10n,
   });
-
-  String _getRuneEmoji(String upgrade) {
-    final id = upgrade.split(':')[0];
-    switch (id) {
-      case 'sharp':
-        return '⚔️';
-      case 'hardened':
-        return '🛡️';
-      case 'quick':
-        return '🪶';
-      case 'eco':
-        return '💎';
-      case 'burning':
-        return '🔥';
-      case 'freezing':
-        return '❄️';
-      case 'shocking':
-        return '⚡';
-      case 'enduring':
-        return '⏳';
-      default:
-        return '🔮';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +71,7 @@ class ForgeCardPreview extends StatelessWidget {
                     child: Center(
                       child: FittedBox(
                         child: Text(
-                          _getRuneEmoji(upgrade),
+                          getRuneEmoji(upgrade),
                           style: const TextStyle(fontSize: 11.0),
                         ),
                       ),

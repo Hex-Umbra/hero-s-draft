@@ -7,7 +7,7 @@ Gérée par `ShopController` :
   - Surcoût de forge : +20 Or par amélioration de forge présente (rune socket occupée) sur la carte.
 - **Scaling de Progression par Acte** : L'inventaire de la boutique s'adapte à l'avancement du joueur sur la carte :
   - *Rareté accrue* : Les probabilités d'apparition de cartes de rareté supérieure (Rare, Épique, Légendaire) augmentent linéairement à chaque Acte.
-  - *Améliorations pré-forge* : À partir de l'Acte 2, les cartes ont des chances croissantes de comporter une ou plusieurs runes d'améliorations générées aléatoirement. Ces runes sont garanties compatibles avec la nature de la carte (pool d'upgrades physiques/élémentaires pour les attaques, utilitaires pour les compétences/pouvoirs).
+  - *Améliorations pré-forge* : À partir de l'Acte 2, les cartes ont des chances croissantes de comporter une ou plusieurs runes d'améliorations générées aléatoirement. Ces runes passent par le même prédicat d'éligibilité que la forge du feu, appliqué à la carte avec les runes déjà tirées ([`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) : jamais une rune qui ne ferait rien sur la carte, ni deux runes qui s'excluent, ni une rune au-delà de son plafond. Une carte à qui ne reste aucune rune éligible en porte une de moins — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md).
 - **Services additionnels** :
   - Soin (achat unique par visite, prix fixe).
   - Expansion de boutique (+1 carte permanent dans l'inventaire de vente, via `InventoryController.buyShopExpansion()`).

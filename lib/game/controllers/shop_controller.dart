@@ -47,31 +47,21 @@ class ShopController extends Notifier<ShopState> {
     return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
   }
 
-  /// Helper pour obtenir les upgrades éligibles selon le pool de rareté et le type de carte
+  /// Les runes éligibles du pool [poolName] pour [card], hors celles déjà
+  /// tirées ([currentRolls]) : `pools` reste le ciblage par rareté du tirage,
+  /// tout le reste est le prédicat, lu dans la donnée (spec P-43 E1, §4.6).
   List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName, List<String> currentRolls) {
     final registry = GameDataRegistry.instance;
     if (registry == null) return [];
 
-    final eligible = <String>[];
-    for (final upgrade in registry.forgeUpgrades) {
-      if (!upgrade.pools.contains(poolName)) continue;
-
-      final alreadyInRolls = currentRolls.any((u) => u.split(':')[0] == upgrade.id);
-      if (alreadyInRolls) continue;
-
-      // Exclusions spécifiques au type de carte:
-      if (upgrade.eligibleCardTypes != null &&
-          !upgrade.eligibleCardTypes!.contains(card.data.type.name)) {
-        continue;
-      }
-
-      if (upgrade.requiresExhaust && !card.data.isExhaust) {
-        continue;
-      }
-
-      eligible.add(upgrade.id);
-    }
-    return eligible;
+    final catalog = registry.forgeUpgrades;
+    return [
+      for (final upgrade in catalog)
+        if (upgrade.pools.contains(poolName) &&
+            !currentRolls.any((u) => u.split(':')[0] == upgrade.id) &&
+            ForgeRuneRules.isEligible(upgrade, card, catalog))
+          upgrade.id,
+    ];
   }
 
   /// Helper privé pour tirer un ID d'upgrade aléatoire compatible
@@ -133,12 +123,18 @@ class ShopController extends Notifier<ShopState> {
     return upgrades.last.id;
   }
 
-  /// Helper privé pour générer un upgrade de forge aléatoire avec son tier
-  String _rollRandomUpgrade(CardInstance card, List<String> existingUpgrades, Random rng) {
-    final excludedIds = existingUpgrades.map((u) => u.split(':')[0]).toList();
-    String? rolledId = _rollUpgradeId(card, rng, excludedIds);
-    rolledId ??= _rollUpgradeId(card, rng, []);
-    rolledId ??= 'sharp';
+  /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :
+  /// le prédicat les lit (spec P-43 E1, A12). `null` s'il ne lui reste aucune
+  /// rune éligible : la carte en reçoit une de moins.
+  String? _rollRandomUpgrade(CardInstance card, Random rng) {
+    final excludedIds =
+        card.forgeUpgrades.map((u) => u.split(':')[0]).toList();
+    // Le repli sans exclusion ne repropose qu'une rune encore éligible, donc
+    // sans plafond atteint : deux `sharp` restent possibles, « une rune par
+    // type » est E2.
+    final rolledId = _rollUpgradeId(card, rng, excludedIds) ??
+        _rollUpgradeId(card, rng, []);
+    if (rolledId == null) return null;
 
     int tier = 1;
     if (ForgeRuneRules.isStackable(rolledId)) {
@@ -151,7 +147,14 @@ class ShopController extends Notifier<ShopState> {
         tier = 3;
       }
     }
-    return '$rolledId:$tier';
+    // Borné par le plafond de la rune, ce que la carte en porte déjà compris
+    // (D72, spec P-43 E1, §4.7).
+    final carried =
+        ForgeUpgradeData.levelsOf(card.forgeUpgrades)[rolledId] ?? 0;
+    final level = ForgeUpgradeData.getById(rolledId)
+            ?.boundLevel(tier, carried: carried) ??
+        tier;
+    return '$rolledId:$level';
   }
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte
@@ -212,13 +215,13 @@ class ShopController extends Notifier<ShopState> {
       upgradesToRoll = maxUpgrades;
     }
 
-    if (upgradesToRoll > 0) {
-      final List<String> upgrades = [];
-      for (int i = 0; i < upgradesToRoll; i++) {
-        final newUpgrade = _rollRandomUpgrade(instance, upgrades, rng);
-        upgrades.add(newUpgrade);
-      }
-      instance = instance.copyWith(forgeUpgrades: upgrades);
+    for (int i = 0; i < upgradesToRoll; i++) {
+      final newUpgrade = _rollRandomUpgrade(instance, rng);
+      // Une carte à qui ne reste aucune rune éligible en reçoit moins (A12).
+      if (newUpgrade == null) break;
+      instance = instance.copyWith(
+        forgeUpgrades: [...instance.forgeUpgrades, newUpgrade],
+      );
     }
 
     return instance;
