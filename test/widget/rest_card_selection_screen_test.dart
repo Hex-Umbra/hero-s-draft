@@ -86,6 +86,20 @@ void main() {
     await _settleNotifications(tester);
   });
 
+  testWidgets('une Frappe commune sans rune ouvre le dialogue de forge',
+      (tester) async {
+    final card = CardInstance(data: shippedCard('strike_basic'));
+    final container = await _pumpForgeSelection(tester, card);
+
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
+    expect(container.read(notificationProvider), isEmpty);
+
+    await _settleNotifications(tester);
+  });
+
   testWidgets('une carte pleine garde son message', (tester) async {
     final card = CardInstance(
       data: shippedCard('strike_basic'),

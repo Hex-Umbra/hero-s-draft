@@ -5,6 +5,8 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
+import 'shipped_data.dart';
+
 ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
     ForgeUpgradeData(
       id: id,
@@ -113,6 +115,29 @@ void main() {
         ForgeRuneRules.consolidate(['sharp', 'sharp:0', 'sharp:x', 'hardened:2']),
         ['hardened:2'],
       );
+    });
+  });
+
+  group('ForgeRuneRules.consolidate, exclusions', () {
+    test('trois Potions de Soin enduring, eco et vide : eco est ecartee', () {
+      // Le catalogue livré : enduring exclut eco dans son fichier.
+      final potions = [
+        for (final carried in const [
+          ['enduring:1'],
+          ['eco:1'],
+          <String>[],
+        ])
+          CardInstance(data: shippedCard('heal_potion'), forgeUpgrades: carried),
+      ];
+      shippedRuneRegistry(shippedRuneIds(), cards: [potions.first.data]);
+
+      final runes = ForgeRuneRules.consolidate(
+        [for (final potion in potions) ...potion.forgeUpgrades],
+      );
+
+      // Une carte rendant du mana sans s'épuiser : le moteur que D44 et D51
+      // ferment. La première arrivée est gardée.
+      expect(runes, ['enduring:1']);
     });
   });
 

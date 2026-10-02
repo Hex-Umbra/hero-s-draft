@@ -321,10 +321,12 @@ void main() {
       final cards = shippedNeutralCards();
       runController.updateState(container.read(runProvider).copyWith(act: 3));
 
+      var checked = 0;
       for (var i = 0; i < 200; i++) {
         shopController.initializeShop(cards, 0);
         for (final card in shopController.state.cardsForSale) {
           if (card.forgeUpgrades.isEmpty) continue;
+          checked++;
           final (id, _) = ForgeUpgradeData.parseRef(card.forgeUpgrades.first)!;
           final rune = catalog.singleWhere((r) => r.id == id);
           expect(
@@ -335,6 +337,8 @@ void main() {
           );
         }
       }
+      // Garde contre un test qui passerait à vide.
+      expect(checked, greaterThan(0));
     });
 
     test('une rune plafonnee n est jamais tiree au-dessus de son plafond', () {

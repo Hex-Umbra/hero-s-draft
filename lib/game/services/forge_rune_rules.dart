@@ -36,12 +36,26 @@ class ForgeRuneRules {
   /// les tiers d'une rune cumulable s'additionnent, bornés par son `maxLevel`
   /// — le surplus se perd (spec P-43 E1, A9) ; une rune non cumulable est
   /// gardée une fois au tier 1. Une référence mal formée ou de tier nul est
-  /// ignorée.
-  static List<String> consolidate(Iterable<String> runes) => [
-        for (final MapEntry(key: id, value: tier)
-            in ForgeUpgradeData.levelsOf(runes).entries)
-          '$id:${isStackable(id) ? _bounded(id, tier) : 1}',
-      ];
+  /// ignorée. Deux runes qui s'excluent (`excludesRunes`, dans un sens ou
+  /// l'autre) ne sont jamais réunies : la première arrivée est gardée, car la
+  /// fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
+  static List<String> consolidate(Iterable<String> runes) {
+    final kept = <String>[];
+    final result = <String>[];
+    for (final MapEntry(key: id, value: tier)
+        in ForgeUpgradeData.levelsOf(runes).entries) {
+      if (kept.any((other) => _exclude(id, other))) continue;
+      kept.add(id);
+      result.add('$id:${isStackable(id) ? _bounded(id, tier) : 1}');
+    }
+    return result;
+  }
+
+  /// Les runes [a] et [b] s'excluent-elles ? Symétrique, lu dans le registre ;
+  /// une rune absente du registre n'exclut rien et n'est exclue par rien.
+  static bool _exclude(String a, String b) =>
+      (ForgeUpgradeData.getById(a)?.excludesRunes.contains(b) ?? false) ||
+      (ForgeUpgradeData.getById(b)?.excludesRunes.contains(a) ?? false);
 
   /// [tier] borné par le plafond de la rune [id] (D72) ; une rune absente du
   /// registre n'en a pas.
