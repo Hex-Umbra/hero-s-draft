@@ -75,6 +75,10 @@ Map<String, List<String>> knownValues(
 /// Exclure le fichier edite refuserait de modifier toute carte portant une
 /// valeur unique — l'animation `fire`, le statut `burn`, chacun porte par une
 /// seule carte (spec §4.5).
+///
+/// [knownValues] range les éléments d'une liste de chaînes sous la clé nue
+/// (`excludesEffects`) : un motif d'éléments (`excludesEffects[]`) les lit
+/// là (spec P-43 E1, A13).
 Map<String, List<String>> vocabularyOf(
   EntityDescriptor descriptor,
   Map<String, List<String>> known,
@@ -84,6 +88,8 @@ Map<String, List<String>> vocabularyOf(
     for (final pattern in descriptor.vocabularyKeys)
       pattern: ({
         ...?known[pattern],
+        if (pattern.endsWith('[]'))
+          ...?known[pattern.substring(0, pattern.length - 2)],
         for (final (_, value) in valuesMatching(template, pattern))
           if (value is String && value.isNotEmpty) value,
       }.toList()

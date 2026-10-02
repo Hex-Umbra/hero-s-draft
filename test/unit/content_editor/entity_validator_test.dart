@@ -603,6 +603,66 @@ void main() {
     });
   });
 
+  group('une rune de forge (spec P-43 E1, §6)', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+
+    EntityDraft runeDraft(Map<String, dynamic> changes) => EntityDraft(
+          descriptor: forge,
+          id: 'eclat',
+          bilingual: const {
+            'name_fr': 'x',
+            'name_en': 'x',
+            'description_fr': 'x',
+            'description_en': 'x',
+          },
+          mechanics: jsonEncode({...forge.decodeTemplate(), ...changes}),
+        );
+
+    EntityValidator withRunes() => validatorWith(
+          registry: fixtureRegistry(forgeUpgrades: [fixtureRune('sharp')]),
+        );
+
+    test('excludesRunes vide est refuse par la famille 6', () {
+      final faults = withRunes().validate(runeDraft({'excludesRunes': []}));
+      expect(faults.single.field, 'excludesRunes');
+    });
+
+    test('excludesRunes inconnu est refuse par la famille 6, connu passe', () {
+      final faults = withRunes().validate(runeDraft({
+        'excludesRunes': ['sharpp'],
+      }));
+      expect(faults.single.field, 'excludesRunes');
+      expect(faults.single.message, contains('sharpp'));
+
+      expect(
+        withRunes().validate(runeDraft({
+          'excludesRunes': ['sharp'],
+        })),
+        isEmpty,
+      );
+    });
+
+    test('maxLevel 0 est refuse par la famille 7', () {
+      final faults = withRunes().validate(runeDraft({'maxLevel': 0}));
+      expect(faults.single.message, contains('maxLevel'));
+    });
+
+    test('un type d effet inconnu d eligibleEffects est refuse, damage passe',
+        () {
+      final faults = withRunes().validate(runeDraft({
+        'eligibleEffects': ['damge'],
+      }));
+      expect(faults.single.field, 'eligibleEffects[0]');
+
+      expect(
+        withRunes().validate(runeDraft({
+          'eligibleEffects': ['damage'],
+        })),
+        isEmpty,
+      );
+    });
+  });
+
   group('famille ressources', () {
     void seedAudio() => File('$root/assets/data/audio.json')
       ..parent.createSync(recursive: true)
