@@ -15,6 +15,14 @@
     "power"
   ],
   "requiresExhaust": true,
+  "excludesEffects": [
+    "gain_mana",
+    "draw"
+  ],
+  "excludesRunes": [
+    "eco",
+    "quick"
+  ],
   "stackable": false,
   "maxLevel": 1,
   "deltas": [

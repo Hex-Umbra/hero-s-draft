@@ -68,4 +68,44 @@ class ForgeRuneRules {
     });
     return options;
   }
+
+  /// La rune [rune] peut-elle s'offrir à [card] ? Le prédicat unique de
+  /// l'éligibilité (D44, D51, D61, D75 ; spec P-43 E1, A3, §4.6) : une
+  /// fonction pure, sur le modèle de `CardData.isOfferableTo` — toute règle
+  /// est un champ du fichier de rune, aucune n'est un `case` par id. [catalog]
+  /// sert à lire les exclusions des runes que la carte porte déjà. `pools`
+  /// n'en est pas une condition : c'est le ciblage par rareté des tirages,
+  /// qui le gardent (D68).
+  static bool isEligible(
+    ForgeUpgradeData rune,
+    CardInstance card,
+    Iterable<ForgeUpgradeData> catalog,
+  ) {
+    final types = rune.eligibleCardTypes;
+    if (types != null && !types.contains(card.data.type.name)) return false;
+
+    // Les effets propres de la carte, jamais ceux qu'une rune lui ajoute.
+    final own = {for (final effect in card.data.effects) effect.type};
+    final wanted = rune.eligibleEffects;
+    if (wanted != null && !wanted.any(own.contains)) return false;
+    if (rune.excludesEffects.any(own.contains)) return false;
+
+    if (rune.requiresExhaust && !card.data.isExhaust) return false;
+    if (card.currentCost < rune.requiresMinCost) return false;
+
+    // La symétrie des exclusions : une rune portée absente du catalogue est
+    // ignorée.
+    final carried = ForgeUpgradeData.levelsOf(card.forgeUpgrades);
+    for (final id in carried.keys) {
+      final other = catalog.where((r) => r.id == id).firstOrNull;
+      if (other == null) continue;
+      if (rune.excludesRunes.contains(id) ||
+          other.excludesRunes.contains(rune.id)) {
+        return false;
+      }
+    }
+
+    // D75 : une rune dont la carte a atteint le plafond ne se repropose pas.
+    return rune.boundLevel(1, carried: carried[rune.id] ?? 0) >= 1;
+  }
 }

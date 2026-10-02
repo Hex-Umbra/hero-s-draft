@@ -244,6 +244,104 @@ void main() {
     );
   });
 
+  group('eligibilite', () {
+    test('lit les champs d eligibilite', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'eligibleEffects': ['damage'],
+        'excludesEffects': ['draw'],
+        'requiresMinCost': 1,
+        'excludesRunes': ['eco'],
+      }));
+      expect(rune.eligibleEffects, ['damage']);
+      expect(rune.excludesEffects, ['draw']);
+      expect(rune.requiresMinCost, 1);
+      expect(rune.excludesRunes, ['eco']);
+    });
+
+    test('absents : toute carte, aucune exclusion, aucun cout minimal', () {
+      final rune = ForgeUpgradeData.fromJson(_json());
+      expect(rune.eligibleEffects, isNull);
+      expect(rune.excludesEffects, isEmpty);
+      expect(rune.requiresMinCost, 0);
+      expect(rune.excludesRunes, isEmpty);
+    });
+
+    test('refuse eligibleEffects vide, eligible a rien', () {
+      expect(() => ForgeUpgradeData.fromJson(_json({'eligibleEffects': []})),
+          _refused('eligibleEffects'));
+    });
+
+    test('accepte excludesEffects vide : aucune exclusion', () {
+      expect(
+        ForgeUpgradeData.fromJson(_json({'excludesEffects': []}))
+            .excludesEffects,
+        isEmpty,
+      );
+    });
+
+    test('refuse un requiresMinCost negatif ou non entier', () {
+      for (final bad in [-1, 1.5]) {
+        expect(() => ForgeUpgradeData.fromJson(_json({'requiresMinCost': bad})),
+            _refused('requiresMinCost'),
+            reason: '$bad');
+      }
+    });
+
+    test('refuse excludesRunes vide', () {
+      expect(() => ForgeUpgradeData.fromJson(_json({'excludesRunes': []})),
+          _refused('excludesRunes'));
+    });
+
+    test('refuse son propre id dans excludesRunes', () {
+      expect(
+        () => ForgeUpgradeData.fromJson(_json({
+          'excludesRunes': ['eco', 'sharp'],
+        })),
+        _refused('excludesRunes'),
+      );
+    });
+
+    test('toJson fait l aller-retour des champs d eligibilite', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'eligibleEffects': ['armor'],
+        'excludesEffects': ['gain_mana', 'draw'],
+        'requiresMinCost': 1,
+        'excludesRunes': ['quick'],
+      }));
+      final restored = ForgeUpgradeData.fromJson(rune.toJson());
+      expect(restored.eligibleEffects, ['armor']);
+      expect(restored.excludesEffects, ['gain_mana', 'draw']);
+      expect(restored.requiresMinCost, 1);
+      expect(restored.excludesRunes, ['quick']);
+    });
+  });
+
+  group('boundLevel', () {
+    final uncapped = ForgeUpgradeData.fromJson(_json());
+    final capped = ForgeUpgradeData.fromJson(_json({'maxLevel': 2}));
+
+    test('sans plafond : la demande', () {
+      expect(uncapped.boundLevel(3), 3);
+      expect(uncapped.boundLevel(3, carried: 5), 3);
+    });
+
+    test('un plafond borne la demande', () {
+      expect(capped.boundLevel(1), 1);
+      expect(capped.boundLevel(3), 2);
+    });
+
+    test('ce que la carte porte deja compte', () {
+      expect(capped.boundLevel(3, carried: 1), 1);
+      expect(capped.boundLevel(1, carried: 2), 0);
+    });
+
+    // Review Focus 2 : une sauvegarde d'avant 0.5.3 peut porter plus que le
+    // plafond.
+    test('jamais negatif', () {
+      expect(capped.boundLevel(1, carried: 3), 0);
+    });
+  });
+
   group('references id:niveau', () {
     test('parseRef lit une reference, ou rien', () {
       expect(ForgeUpgradeData.parseRef('sharp:2'), ('sharp', 2));

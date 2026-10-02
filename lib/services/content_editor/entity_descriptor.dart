@@ -341,21 +341,26 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: ForgeUpgradeData.fromJson,
     // `eligibleCardTypes` porte **les quatre** types, et non la liste vide :
-    // absente, la cle vaut « tous les types » (`shop_controller.dart:65` ne
-    // filtre que si elle est non nulle), tandis qu'une liste vide n'aurait
+    // absente, la cle vaut « tous les types » (`ForgeRuneRules.isEligible` ne
+    // filtre que si elle est presente), tandis qu'une liste vide n'aurait
     // rendu l'amelioration eligible a **rien**. Les quatre types enumeres sont
     // le seul equivalent honnete de l'absence, et l'auteur n'a qu'a retirer ce
     // qu'il ne veut pas.
     //
     // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
-    // pas monter une rune sans fin (spec P-43 E1, §6).
+    // pas monter une rune sans fin (spec P-43 E1, §6). `eligibleEffects` y
+    // porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
+    // absente, elle vaut « aucune », comme `classes` d'un passif.
     template: '''
 {
   "icon": "flash_on_rounded",
   "color": "amberAccent",
   "pools": ["common"],
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
+  "eligibleEffects": ["damage"],
+  "excludesEffects": [],
   "requiresExhaust": false,
+  "requiresMinCost": 0,
   "stackable": true,
   "maxLevel": 1,
   "deltas": [

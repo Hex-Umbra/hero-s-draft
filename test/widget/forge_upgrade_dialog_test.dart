@@ -51,8 +51,53 @@ Future<ProviderContainer> _pumpDialog(
   return container;
 }
 
+/// Les fentes `id:niveau` que la forge propose à [card] : celles de départ,
+/// puis celles de [rerolls] relances de la première.
+Future<Set<String>> _offeredSlots(
+  WidgetTester tester,
+  CardInstance card, {
+  int rerolls = 20,
+}) async {
+  final container = await _pumpDialog(tester, card);
+  Iterable<String> slots() =>
+      (container.read(runProvider).forgeTargetSessions[card.uniqueId] ??
+              const <String>[])
+          .map((slot) => slot.split(':').take(2).join(':'));
+
+  final offered = {...slots()};
+  for (var i = 0; i < rerolls; i++) {
+    await tester.tap(find.byIcon(Icons.autorenew).first);
+    await tester.pump();
+    offered.addAll(slots());
+  }
+  return offered;
+}
+
+Set<String> _ids(Set<String> slots) =>
+    {for (final slot in slots) slot.split(':').first};
+
 /// L'offre de la forge du feu (spec P-43 E1, §4.6, §4.7, §5.1).
 void main() {
+  testWidgets('aucune fente ne propose Endurci sur une Frappe', (tester) async {
+    shippedRuneRegistry(const ['sharp', 'hardened']);
+
+    final offered = await _offeredSlots(
+        tester, CardInstance(data: shippedCard('strike_basic')));
+
+    expect(_ids(offered), {'sharp'});
+  });
+
+  testWidgets('aucune fente ne propose Econome sur une Concentration',
+      (tester) async {
+    // Une carte gratuite, qui pioche : seule Veloce lui reste (D44).
+    shippedRuneRegistry(const ['eco', 'quick']);
+
+    final offered = await _offeredSlots(
+        tester, CardInstance(data: shippedCard('concentration')));
+
+    expect(_ids(offered), {'quick'});
+  });
+
   testWidgets('une fente Tranchant 1 dit son gain sur une Frappe epique qui '
       'en porte deja un', (tester) async {
     shippedRuneRegistry(const ['sharp']);

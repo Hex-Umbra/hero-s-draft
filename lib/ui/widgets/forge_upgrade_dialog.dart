@@ -77,27 +77,20 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     }
   }
 
+  /// Les runes éligibles du pool [poolName] pour [card] : `pools` reste le
+  /// ciblage par rareté du tirage, tout le reste est le prédicat, lu dans la
+  /// donnée (spec P-43 E1, §4.6).
   List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName) {
     final registry = GameDataRegistry.instance;
     if (registry == null) return [];
 
-    final eligible = <String>[];
-    for (final upgrade in registry.forgeUpgrades) {
-      if (!upgrade.pools.contains(poolName)) continue;
-
-      // Card type specific exclusions:
-      if (upgrade.eligibleCardTypes != null &&
-          !upgrade.eligibleCardTypes!.contains(card.data.type.name)) {
-        continue;
-      }
-
-      if (upgrade.requiresExhaust && !card.data.isExhaust) {
-        continue;
-      }
-
-      eligible.add(upgrade.id);
-    }
-    return eligible;
+    final catalog = registry.forgeUpgrades;
+    return [
+      for (final upgrade in catalog)
+        if (upgrade.pools.contains(poolName) &&
+            ForgeRuneRules.isEligible(upgrade, card, catalog))
+          upgrade.id,
+    ];
   }
 
   String? _rollUpgradeId(

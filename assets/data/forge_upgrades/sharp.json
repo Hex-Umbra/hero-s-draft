@@ -11,8 +11,8 @@
     "uncommon",
     "rare"
   ],
-  "eligibleCardTypes": [
-    "attack"
+  "eligibleEffects": [
+    "damage"
   ],
   "maxLevel": null,
   "deltas": [

@@ -64,10 +64,24 @@ void main() {
 
     final offenders = [
       for (final rune in registry.forgeUpgrades)
-        for (final delta in rune.deltas)
-          if (_effectOf(delta) case final type?
-              when strategies.get(type) == null)
+        for (final type in {
+          ...?rune.eligibleEffects,
+          ...rune.excludesEffects,
+          for (final delta in rune.deltas) ?_effectOf(delta),
+        })
+          if (strategies.get(type) == null)
             '${rune.id} → type d effet "$type" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('chaque id d excludesRunes designe une rune livree', () {
+    final known = registry.forgeUpgrades.map((r) => r.id).toSet();
+    final offenders = [
+      for (final rune in registry.forgeUpgrades)
+        for (final id in rune.excludesRunes)
+          if (!known.contains(id)) '${rune.id} → excludesRunes "$id" introuvable',
     ];
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));

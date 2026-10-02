@@ -4,11 +4,14 @@ import 'package:roguelike_card_game/game/controllers/shop_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+
+import 'shipped_data.dart';
 
 void main() {
   group('ShopController Unit Tests', () {
@@ -298,6 +301,40 @@ void main() {
       }
 
       expect(rolled, {CardRarity.epic, CardRarity.legendary});
+    });
+
+    test('la boutique ne pose une premiere rune qu eligible a la carte', () {
+      // Les runes et les cartes livrees ; le registre vide le remplace en
+      // sortie, comme au cas suivant.
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      final catalog = shippedRuneRegistry(shippedRuneIds()).forgeUpgrades;
+      final cards = shippedNeutralCards();
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      for (var i = 0; i < 200; i++) {
+        shopController.initializeShop(cards, 0);
+        for (final card in shopController.state.cardsForSale) {
+          if (card.forgeUpgrades.isEmpty) continue;
+          final (id, _) = ForgeUpgradeData.parseRef(card.forgeUpgrades.first)!;
+          final rune = catalog.singleWhere((r) => r.id == id);
+          expect(
+            ForgeRuneRules.isEligible(
+                rune, card.copyWith(forgeUpgrades: const []), catalog),
+            isTrue,
+            reason: '${card.data.id} : ${card.forgeUpgrades}',
+          );
+        }
+      }
     });
 
     test('la boutique ne tire une rune non cumulable qu au tier 1', () {

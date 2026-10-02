@@ -1,3 +1,5 @@
+import 'dart:math' show max, min;
+
 import 'package:flutter/foundation.dart';
 import 'card_data.dart';
 import 'card_delta.dart';
@@ -15,7 +17,23 @@ class ForgeUpgradeData {
   final String color;
   final List<String> pools;
   final List<String>? eligibleCardTypes;
+
+  /// Les types d'effet dont la carte doit porter au moins un, parmi ses effets
+  /// propres ; `null` : toute carte (D61). Jamais vide : `[]` serait « éligible
+  /// à rien ».
+  final List<String>? eligibleEffects;
+
+  /// Les types d'effet qu'aucun effet propre de la carte ne doit porter (D44).
+  final List<String> excludesEffects;
   final bool requiresExhaust;
+
+  /// Le coût courant minimal de la carte (D44, D61) : `eco` ne vient pas sur
+  /// une carte gratuite.
+  final int requiresMinCost;
+
+  /// Les runes avec lesquelles celle-ci ne cohabite pas sur une carte (D51) ;
+  /// le prédicat lit la règle dans les deux sens (D61).
+  final List<String> excludesRunes;
 
   /// Une rune cumulable additionne ses tiers : deux `sharp:1` valent un
   /// `sharp:2`. Une rune non cumulable est binaire — `enduring` retire
@@ -45,7 +63,11 @@ class ForgeUpgradeData {
     required this.color,
     required this.pools,
     this.eligibleCardTypes,
+    this.eligibleEffects,
+    this.excludesEffects = const [],
     this.requiresExhaust = false,
+    this.requiresMinCost = 0,
+    this.excludesRunes = const [],
     this.stackable = true,
     this.maxLevel,
     this.deltas = const [],
@@ -67,13 +89,67 @@ class ForgeUpgradeData {
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
+      eligibleEffects:
+          _readNames(id, json, 'eligibleEffects', allowEmpty: false),
+      excludesEffects:
+          _readNames(id, json, 'excludesEffects', allowEmpty: true) ??
+              const [],
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
+      requiresMinCost: _readMinCost(id, json['requiresMinCost']),
+      excludesRunes: _readExcludedRunes(id, json),
       stackable: json['stackable'] as bool? ?? true,
       maxLevel: _readMaxLevel(id, json),
       deltas: _readDeltas(id, json['deltas']),
       weight: json['weight'] as int? ?? 10,
       emoji: json['emoji'] as String? ?? '🔮',
     );
+  }
+
+  /// Une liste de noms facultative : `null` si la clé est absente. Une liste
+  /// vide n'est admise que si [allowEmpty] — `eligibleEffects: []` serait
+  /// « éligible à rien », `excludesRunes: []` ne dirait rien.
+  static List<String>? _readNames(
+    String id,
+    Map<String, dynamic> json,
+    String key, {
+    required bool allowEmpty,
+  }) {
+    final raw = json[key];
+    if (raw == null) return null;
+    if (raw is! List ||
+        raw.any((name) => name is! String) ||
+        (raw.isEmpty && !allowEmpty)) {
+      throw FormatException(
+        '$id : $key doit être une liste ${allowEmpty ? '' : 'non vide '}de '
+        'noms — reçu : $raw',
+      );
+    }
+    return List<String>.unmodifiable(raw);
+  }
+
+  static int _readMinCost(String id, Object? raw) {
+    if (raw == null) return 0;
+    if (raw is! int || raw < 0) {
+      throw FormatException(
+        '$id : requiresMinCost vaut un entier d\'au moins 0 — reçu : $raw',
+      );
+    }
+    return raw;
+  }
+
+  /// Absente : aucune. Sinon une liste non vide d'ids de rune, qui ne nomme
+  /// pas la rune elle-même ; l'existence des ids, que le chargeur ne voit pas,
+  /// est vérifiée par le test d'intégrité et par l'éditeur (spec P-43 E1,
+  /// §3.1).
+  static List<String> _readExcludedRunes(String id, Map<String, dynamic> json) {
+    final runes = _readNames(id, json, 'excludesRunes', allowEmpty: false);
+    if (runes == null) return const [];
+    if (runes.contains(id)) {
+      throw FormatException(
+        '$id : excludesRunes ne peut pas nommer la rune elle-même',
+      );
+    }
+    return runes;
   }
 
   /// La clé est obligatoire (D27) : `null` pour « sans plafond », sinon un
@@ -121,7 +197,11 @@ class ForgeUpgradeData {
       'color': color,
       'pools': pools,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
+      if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
+      if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
+      'requiresMinCost': requiresMinCost,
+      if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
       'stackable': stackable,
       'maxLevel': maxLevel,
       'deltas': [for (final delta in deltas) delta.toJson()],
@@ -193,6 +273,15 @@ class ForgeUpgradeData {
           if (getById(id) case final rune?)
             rune.tooltipLine(level, locale, card, rarity),
       ];
+
+  /// La borne de niveau (D72, D75) : [requested] sans plafond ; sinon ce
+  /// qu'il reste sous `maxLevel` une fois comptés les [carried] niveaux que la
+  /// carte porte déjà — jamais négatif (spec P-43 E1, §4.7).
+  int boundLevel(int requested, {int carried = 0}) {
+    final cap = maxLevel;
+    if (cap == null) return requested;
+    return max(0, min(requested, cap - carried));
+  }
 
   /// Lit **une** référence `id:niveau` : `(id, niveau)`, ou `null` si elle est
   /// mal formée ou de niveau nul. L'unique analyseur des références de rune

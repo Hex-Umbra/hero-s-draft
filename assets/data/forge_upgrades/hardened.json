@@ -11,9 +11,8 @@
     "uncommon",
     "rare"
   ],
-  "eligibleCardTypes": [
-    "attack",
-    "skill"
+  "eligibleEffects": [
+    "armor"
   ],
   "maxLevel": null,
   "deltas": [
