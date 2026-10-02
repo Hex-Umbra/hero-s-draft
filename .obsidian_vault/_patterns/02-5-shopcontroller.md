@@ -2,29 +2,60 @@
 
 **Provider** : `NotifierProvider<ShopController, ShopState>`
 
-**État (`ShopState`)** :
-- `cardsForSale` : `List<CardInstance>` — Liste des instances de cartes actuellement en vente dans la boutique.
-- `hasBoughtHeal` : `bool` — Indique si le joueur a déjà acheté le soin unique de cette visite.
-- `cloneOptions` : `List<CardInstance>` — Cache persistant anti-exploit contenant les 3 choix de cartes du deck éligibles au clonage.
-- `clonePurchasedCount` : `int` — Nombre d'utilisations du Miroir Magique lors de la session courante.
-- Getter `clonePrice` : Calcul du coût dynamique cumulatif du clonage ($150 \ll \text{clonePurchasedCount}$ soit $150 \rightarrow 300 \rightarrow 600 \rightarrow 1200 \dots$ Or).
+**État (`ShopState`) — l'étal**, tiré une fois par nœud de boutique et retenu, achats compris,
+jusqu'à ce que le nœud courant de la run change ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md),
+P-43 E2, branche de la vague 2, en attente du propriétaire) :
+- `cardsForSale` : `List<CardInstance>` — les cartes en vente, pré-forgées et relancées comprises.
+- `purchasedHeal` : `bool` — le soin unique du nœud est-il acheté.
+- `cloneOptions` : `List<CardInstance>` — les trois choix du Miroir Magique, tirés à sa première ouverture.
+- `clonePurchasedCount` : `int` — les achats au Miroir ; getter `clonePrice` = $150 \ll \text{clonePurchasedCount}$ ($150 \rightarrow 300 \rightarrow 600 \dots$ Or).
+- `deckCopy` : `CardInstance?` — la copie d'une carte du deck, `null` sans carte copiable ou une fois achetée.
+- `nodeId` : `String?` — le nœud courant de la run pour lequel l'étal a été tiré.
+
+> [!IMPORTANT]
+> **Le seul Notifier de `lib/game/controllers/` qui écoute un autre provider.** `build()` pose
+> `ref.listen(runProvider.select((run) => run.currentNodeId), …)`, qui remet l'état à
+> `const ShopState()` dès que le nœud courant change — départ vers un autre nœud, acte, run neuve,
+> sauvegarde chargée. Rentrer dans le même nœud ne le change pas. **Pas `ref.watch`** : il laisse
+> le Notifier périmé entre le changement de nœud et la lecture suivante de `state`, et tout
+> `ref.read` de ses méthodes y lève l'assertion de Riverpod « Cannot use ref functions after the
+> dependency of a provider changed ». L'étal retenu est un instantané : la copie et les options du
+> Miroir ne suivent pas un deck qui change dans le même nœud. Il ne se sauvegarde pas.
 
 **Responsabilités & Logique métier** :
-- `initializeShop(allCards, bonusShopCards, act, rng)` : Filtre les cartes de type `status` et de rareté `unique`, puis génère un assortiment de `3 + bonusShopCards` instances de cartes (`CardInstance`) adaptées au scaling de l'Acte en cours. Réinitialise le compteur `clonePurchasedCount` à 0 et vide le cache `cloneOptions`.
-- `_generateShopCardInstance(data, act, rng)` (privé) : Détermine procéduralement la rareté finale de la carte et ses améliorations de forge initiales :
-  - *Rareté* : Probabilité accrue de raretés élevées (Rare, Épique, Légendaire) selon l'Acte.
-  - *Améliorations* : À partir de l'Acte 2, tire une ou deux runes selon l'Acte (via `_rollRandomUpgrade`), dans la limite de la capacité de la carte ; **une carte à qui ne reste aucune rune éligible en reçoit moins** — le tirage s'arrête.
-- `_rollRandomUpgrade(card, rng)` (privé) : Tire une rune pour une carte **qui porte déjà les runes tirées avant elle** : le prédicat `ForgeRuneRules.isEligible` les lit (exclusions, plafonds). Même ciblage de pool par rareté et même tirage pondéré par `weight` que la forge du feu ; niveau 1, 2 ou 3 à 80/15/5 % pour une rune cumulable, **borné par `maxLevel`**. Rend `null` quand rien ne s'offre : le repli sur `'sharp'` a disparu — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md). Deux *Tranchant* restent possibles sur une pré-forgée : seules les runes plafonnées ne se reposent pas.
-- `buyCard(cardInstance)` : Retire la `CardInstance` spécifique de la liste des cartes en vente, consomme l'or via `inventoryProvider` et ajoute l'instance exacte au deck du joueur.
-- `cloneCard()` : Duplique la carte sélectionnée parmi les `cloneOptions` (avec les mêmes runes et niveau), débite `clonePrice` de l'or et incrémente `clonePurchasedCount` dans l'état de la boutique.
-- `clearCloneOptions()` : Appelé en quittant la boutique, vide le cache `cloneOptions` et réinitialise `clonePurchasedCount` à 0 (réinitialisant le prix du Miroir Magique à sa valeur de base de 150 Or).
-- `buyHeal()` : Restaure 30% des PV Max du héros, débite l'or et marque `hasBoughtHeal = true`.
-- `expandShop()` : Augmente de manière permanente le nombre de cartes en vente, débitant l'or.
-- `rerollCards(allCards, act, rng)` : Régénère un ensemble complet de `CardInstance` scalées pour l'Acte en cours, pour un coût d'or progressif.
-- `purgeCard(card)` : Supprime définitivement une carte du deck en échange d'un coût fixe en or.
+- `initializeShop(allCards, bonusShopCards)` : appelé à chaque création de `ShopScreen`. **Ne fait
+  rien si `state.nodeId` égale le nœud courant non nul** — l'écran rend alors l'étal retenu. Sinon,
+  tire `3 + bonusShopCards` cartes proposables (`CardData.isOfferableTo`,
+  [ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) scalées par
+  l'acte, la copie du deck, et note le nœud. Sans nœud courant — les tests unitaires —, chaque appel
+  tire.
+- `_generateShopCardInstance(data, act, rng)` (privé) : la rareté finale, tirée plus haute selon
+  l'acte, puis les runes : 15 % d'une à l'acte 2 ; dès l'acte 3, 30 % d'une et 10 % de deux —
+  **bornées par `finalRarity.fusionRank`** (D28), une commune n'en porte aucune. Une carte à qui ne
+  reste aucune rune éligible en reçoit moins.
+- `_rollRandomUpgrade(card, rng)` (privé) : une rune par `ForgeRuneRules.drawRunes(card, catalogue,
+  rng, count: 1)` — le tirage de la fusion, sur la carte **avec les runes déjà tirées**, au rang de
+  la carte —, puis un niveau 1, 2 ou 3 à 80/15/5 %, **borné par `maxLevel`**. Une rune ne se repose
+  jamais deux fois sur une même pré-forgée.
+- `_drawDeckCopy(rng)` (privé) et `buyDeckCopy()` : la copie (D46) — une carte uniforme de
+  `DeckState.copyableCards`, recréée `CardInstance(data, rarity)`, sans rune, identifiant neuf ;
+  achetée au prix `getCardPrice` d'une carte sans rune de sa rareté, elle rejoint le deck et quitte
+  l'étal.
+- `buyCard(card, price)` : retire l'instance de l'étal, dépense l'or par `inventoryProvider`, ajoute
+  l'instance exacte au deck.
+- `cloneCard(card)` : duplique une carte des `cloneOptions` — runes et rareté comprises —, débite
+  `clonePrice`, incrémente `clonePurchasedCount`. `setCloneOptions` retient les trois choix.
+  **`clearCloneOptions` n'existe plus** : le Miroir repart avec tout l'étal, au nœud suivant (point
+  5 d'[ADR-067](../_adr/ADR-067-equilibrage-de-l-economie-scaling-par-acte-des-car.md), amendé par
+  ADR-106).
+- `buyHeal(price, amount)` : soigne, débite l'or, marque `purchasedHeal`.
+- `expandShop(price, allCards)` : une carte de plus, de façon permanente (`buyShopExpansion`).
+- `rerollCards(price, allCards, bonusShopCards)` : remplace les cartes en vente dans l'étal retenu,
+  sans toucher ni la copie ni le nœud — la copie est tirée, non choisie.
+- `purgeCard(price, card)` : retire définitivement une carte du deck contre de l'or.
 
 **Tarification dynamique (`getCardPrice(CardInstance card)`)** :
 Calculé à la volée pour chaque carte exposée :
-$$\text{Prix} = \text{BaseRareté} + (20 \times \text{nombre d'upgrades de forge})$$
+$$\text{Prix} = \text{BaseRareté} + (20 \times \text{nombre de runes})$$
 - Base par Rareté : Commun (25 Or), Peu Commun (50 Or), Rare (100 Or), Épique (150 Or), Légendaire (200 Or).
-- Surcoût de Forge : +20 Or par rune d'amélioration présente dans l'instance.
+- Surcoût : +20 Or par rune présente dans l'instance — la copie du deck, sans rune, coûte la base.

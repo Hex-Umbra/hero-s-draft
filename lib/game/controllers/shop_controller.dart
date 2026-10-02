@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/shop_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
-import '../../models/data/forge_upgrade_data.dart';
 import '../../models/card_instance.dart';
 import '../services/forge_rune_rules.dart';
 import 'run_controller.dart';
@@ -11,8 +10,18 @@ import 'deck_controller.dart';
 import 'inventory_controller.dart';
 
 class ShopController extends Notifier<ShopState> {
+  /// L'étal est oublié dès que le nœud courant de la run change — le départ
+  /// vers un autre nœud, un acte, une run, une sauvegarde chargée ailleurs
+  /// (spec P-43 E2, A11, §4.9). Rentrer dans le même nœud ne le change pas.
+  /// Un écouteur, et non `ref.watch` : celui-ci laisserait le Notifier
+  /// périmé entre le changement de nœud et la lecture suivante de `state`,
+  /// et tout `ref.read` de ses méthodes y lèverait l'assertion de Riverpod.
   @override
   ShopState build() {
+    ref.listen(
+      runProvider.select((run) => run.currentNodeId),
+      (previous, next) => state = const ShopState(),
+    );
     return const ShopState();
   }
 
@@ -47,114 +56,20 @@ class ShopController extends Notifier<ShopState> {
     return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
   }
 
-  /// Les runes éligibles du pool [poolName] pour [card], hors celles déjà
-  /// tirées ([currentRolls]) : `pools` reste le ciblage par rareté du tirage,
-  /// tout le reste est le prédicat, lu dans la donnée (spec P-43 E1, §4.6).
-  List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName, List<String> currentRolls) {
-    final registry = GameDataRegistry.instance;
-    if (registry == null) return [];
-
-    final catalog = registry.forgeUpgrades;
-    return [
-      for (final upgrade in catalog)
-        if (upgrade.pools.contains(poolName) &&
-            !currentRolls.any((u) => u.split(':')[0] == upgrade.id) &&
-            ForgeRuneRules.isEligible(upgrade, card, catalog))
-          upgrade.id,
-    ];
-  }
-
-  /// Helper privé pour tirer un ID d'upgrade aléatoire compatible
-  String? _rollUpgradeId(CardInstance card, Random rand, List<String> excludedIdsInCurrentRolls) {
-    final r = rand.nextInt(100);
-    String targetPool;
-    if (card.rarity == CardRarity.common) {
-      targetPool = 'common';
-    } else if (card.rarity == CardRarity.uncommon) {
-      targetPool = r < 75 ? 'common' : 'uncommon';
-    } else {
-      targetPool = r < 65 ? 'common' : (r < 90 ? 'uncommon' : 'rare');
-    }
-
-    List<String> poolOrder = ['rare', 'uncommon', 'common'];
-    int startIndex = poolOrder.indexOf(targetPool);
-    if (startIndex == -1) startIndex = 2;
-
-    for (int i = startIndex; i < poolOrder.length; i++) {
-      final pool = poolOrder[i];
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-
-    for (final pool in poolOrder) {
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-    return null;
-  }
-
-  String _rollWeighted(List<String> eligibleIds, Random rand) {
-    int totalWeight = 0;
-    final upgrades = <ForgeUpgradeData>[];
-    for (final id in eligibleIds) {
-      final upg = ForgeUpgradeData.getById(id);
-      if (upg != null) {
-        upgrades.add(upg);
-        totalWeight += upg.weight;
-      }
-    }
-
-    if (totalWeight == 0 || upgrades.isEmpty) {
-      return eligibleIds[rand.nextInt(eligibleIds.length)];
-    }
-
-    int choice = rand.nextInt(totalWeight);
-    int currentSum = 0;
-    for (final upg in upgrades) {
-      currentSum += upg.weight;
-      if (choice < currentSum) {
-        return upg.id;
-      }
-    }
-    return upgrades.last.id;
-  }
-
   /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :
-  /// le prédicat les lit (spec P-43 E1, A12). `null` s'il ne lui reste aucune
-  /// rune éligible : la carte en reçoit une de moins.
+  /// une parmi celles que le prédicat accepte au rang de la carte, pondérées
+  /// par `weight` — le tirage de la fusion (spec P-43 E2, A12, §4.9). `null`
+  /// s'il ne lui en reste aucune : la carte en reçoit une de moins. Son niveau
+  /// est tiré 80 · 15 · 5 %, puis borné par le plafond de la rune (D72) ; la
+  /// carte n'en porte aucun niveau, le prédicat refusant une rune portée.
   String? _rollRandomUpgrade(CardInstance card, Random rng) {
-    final excludedIds =
-        card.forgeUpgrades.map((u) => u.split(':')[0]).toList();
-    // Le repli sans exclusion ne repropose qu'une rune encore éligible, donc
-    // sans plafond atteint : deux `sharp` restent possibles, « une rune par
-    // type » est E2.
-    final rolledId = _rollUpgradeId(card, rng, excludedIds) ??
-        _rollUpgradeId(card, rng, []);
-    if (rolledId == null) return null;
-
-    int tier = 1;
-    if (ForgeRuneRules.isStackable(rolledId)) {
-      final t = rng.nextInt(100);
-      if (t < 80) {
-        tier = 1;
-      } else if (t < 95) {
-        tier = 2;
-      } else {
-        tier = 3;
-      }
-    }
-    // Borné par le plafond de la rune, ce que la carte en porte déjà compris
-    // (D72, spec P-43 E1, §4.7).
-    final carried =
-        ForgeUpgradeData.levelsOf(card.forgeUpgrades)[rolledId] ?? 0;
-    final level = ForgeUpgradeData.getById(rolledId)
-            ?.boundLevel(tier, carried: carried) ??
-        tier;
-    return '$rolledId:$level';
+    final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
+    final drawn = ForgeRuneRules.drawRunes(card, catalog, rng, count: 1);
+    if (drawn.isEmpty) return null;
+    final rune = catalog.firstWhere((r) => r.id == drawn.single);
+    final roll = rng.nextInt(100);
+    final tier = roll < 80 ? 1 : (roll < 95 ? 2 : 3);
+    return '${rune.id}:${rune.boundLevel(tier)}';
   }
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte
@@ -195,7 +110,9 @@ class ShopController extends Notifier<ShopState> {
       rarity: finalRarity,
     );
 
-    final int maxUpgrades = data.forgeCapacityAt(finalRarity);
+    // Une pré-forgée porte au plus autant de runes que sa rareté a demandé
+    // de fusions — une commune n'en porte aucune (D28 ; spec P-43 E2, §4.9).
+    final int maxUpgrades = finalRarity.fusionRank;
 
     int upgradesToRoll = 0;
     final rollUpgrade = rng.nextInt(100);
@@ -227,31 +144,52 @@ class ShopController extends Notifier<ShopState> {
     return instance;
   }
 
-  /// Initialise la boutique avec une sélection aléatoire de cartes de jeu
+  /// Tire l'étal — les cartes en vente et la copie d'une carte du deck — pour
+  /// le nœud courant de la run, et le note (spec P-43 E2, A11, §4.9). Un
+  /// étal déjà tiré pour ce nœud est retenu tel quel, achats compris :
+  /// sortir puis revenir ne le retire pas. Sans nœud courant, chaque appel
+  /// tire.
   void initializeShop(List<CardData> allCards, int bonusShopCards) {
-    final List<CardData> eligibleCards = _getEligibleCards(allCards);
-
-    if (eligibleCards.isEmpty) {
-      state = const ShopState(cardsForSale: [], purchasedHeal: false);
-      return;
-    }
+    final nodeId = ref.read(runProvider).currentNodeId;
+    if (nodeId != null && state.nodeId == nodeId) return;
 
     final rng = Random();
-    final List<CardData> shuffled = List.from(eligibleCards)..shuffle(rng);
-    final count = min(shuffled.length, 3 + bonusShopCards);
-
+    final eligibleCards = _getEligibleCards(allCards)..shuffle(rng);
+    final count = min(eligibleCards.length, 3 + bonusShopCards);
     final int act = ref.read(runProvider).act;
-    final List<CardInstance> generatedInstances = shuffled
-        .take(count)
-        .map((cardData) => _generateShopCardInstance(cardData, act, rng))
-        .toList();
 
     state = ShopState(
-      cardsForSale: generatedInstances,
-      purchasedHeal: false,
-      cloneOptions: const [],
-      clonePurchasedCount: 0,
+      cardsForSale: [
+        for (final cardData in eligibleCards.take(count))
+          _generateShopCardInstance(cardData, act, rng),
+      ],
+      deckCopy: _drawDeckCopy(rng),
+      nodeId: nodeId,
     );
+  }
+
+  /// La copie d'une carte tirée uniformément parmi les cartes copiables du
+  /// deck (D46 ; ADR-094 D2) : même rareté, sans ses runes, identifiant neuf ;
+  /// `null` si le deck n'en a aucune (ADR-101 D4).
+  CardInstance? _drawDeckCopy(Random rng) {
+    final copyable = ref.read(deckProvider).copyableCards;
+    if (copyable.isEmpty) return null;
+    final source = copyable[rng.nextInt(copyable.length)];
+    return CardInstance(data: source.data, rarity: source.rarity);
+  }
+
+  /// Achète la copie du deck, au prix d'une carte de sa rareté (spec P-43
+  /// E2, A11) : elle rejoint le deck et quitte l'étal. Faux sans copie ou
+  /// faute d'or, sans rien toucher.
+  bool buyDeckCopy() {
+    final copy = state.deckCopy;
+    if (copy == null ||
+        !ref.read(inventoryProvider.notifier).spendGold(getCardPrice(copy))) {
+      return false;
+    }
+    ref.read(deckProvider.notifier).addCardToMasterDeck(copy);
+    state = state.copyWith(removeDeckCopy: true);
+    return true;
   }
 
   /// Achète une carte spécifique de la boutique
@@ -365,14 +303,6 @@ class ShopController extends Notifier<ShopState> {
   /// Définit les options persistantes pour le clonage de cartes
   void setCloneOptions(List<CardInstance> options) {
     state = state.copyWith(cloneOptions: options);
-  }
-
-  /// Nettoie les options de clonage et réinitialise le coût du miroir à 0
-  void clearCloneOptions() {
-    state = state.copyWith(
-      cloneOptions: const [],
-      clonePurchasedCount: 0,
-    );
   }
 }
 

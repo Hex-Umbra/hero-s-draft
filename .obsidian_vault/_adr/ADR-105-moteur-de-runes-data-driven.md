@@ -12,7 +12,13 @@ D61, D68, D72 et D75, et les propositions G1 et G2 de son §4.5). **Livré sur l
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md),
 en attente du test, de la PR, de la fusion et du tag du propriétaire.** Spec `229bce6`, plan
 `5bd2f10`, huit commits de code `ae939e6`..`633fe24` et un correctif de la revue d'ensemble,
-`ee814e9`.
+`ee814e9`. **Fusionné dans `main` le 2026-10-02 par la PR #47** (commit de fusion `559df08`),
+tagué sur ce commit, CI/CD verte, release publiée — constaté par la porte d'entrée de la vague 2.
+**Amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, livré sur
+branche, en attente du propriétaire) sur D1 (six sortes de delta), D3 (`ForgeRuneRules` gagne
+`drawRunes`, l'affûtage et le Puits), D7 (`boundLevel` borne la fusion, les pré-forgées,
+l'affûtage et le Puits), D8 (le prédicat gagne le rang et « une rune par type », ses lecteurs
+changent) et D10 (l'héritage garde toutes les runes).
 **Amende [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)** sur ses
 décisions D1, D3, D4 et D5 ; **complète [ADR-061](ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md)** ;
 livre la décision D4 d'[ADR-104](ADR-104-un-statut-par-source-et-ratio-de-conversion.md).

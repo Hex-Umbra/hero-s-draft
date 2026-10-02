@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
@@ -7,7 +9,12 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
 import 'shipped_data.dart';
 
-ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
+ForgeUpgradeData _rune(
+  String id, {
+  int? maxLevel,
+  int minFusionRank = 1,
+  int weight = 10,
+}) =>
     ForgeUpgradeData(
       id: id,
       nameEn: id,
@@ -16,9 +23,9 @@ ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
       descriptionFr: '',
       icon: '',
       color: '',
-      pools: const ['common'],
-      stackable: stackable,
+      minFusionRank: minFusionRank,
       maxLevel: maxLevel,
+      weight: weight,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -48,57 +55,29 @@ void main() {
       forgeUpgrades: [
         _rune('sharp'),
         _rune('hardened'),
-        _rune('enduring', stackable: false),
+        _rune('enduring', maxLevel: 1),
         _rune('eco', maxLevel: 1),
         _rune('capped', maxLevel: 2),
       ],
     );
   });
 
-  group('ForgeUpgradeData.stackable', () {
-    test('une rune est cumulable par defaut', () {
-      final rune = ForgeUpgradeData.fromJson({
-        'id': 'sharp',
-        'pools': ['common'],
-        'maxLevel': null,
-        'deltas': [
-          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
-        ],
-      });
-      expect(rune.stackable, isTrue);
-    });
-
-    test('le JSON declare une rune non cumulable, et toJson la conserve', () {
-      final rune = ForgeUpgradeData.fromJson({
-        'id': 'enduring',
-        'pools': ['rare'],
-        'stackable': false,
-        'maxLevel': 1,
-        'deltas': [
-          {'type': 'removeExhaust'},
-        ],
-      });
-      expect(rune.stackable, isFalse);
-      expect(ForgeUpgradeData.fromJson(rune.toJson()).stackable, isFalse);
-    });
-  });
-
   group('ForgeRuneRules.consolidate', () {
-    test('additionne les tiers des runes cumulables de meme id', () {
+    test('additionne les niveaux des runes de meme id', () {
       expect(
         ForgeRuneRules.consolidate(['sharp:1', 'hardened:1', 'sharp:2']),
         ['sharp:3', 'hardened:1'],
       );
     });
 
-    test('garde une rune non cumulable une seule fois, au tier 1', () {
+    test('garde une rune de plafond 1 une seule fois, au niveau 1', () {
       expect(
         ForgeRuneRules.consolidate(['enduring:1', 'sharp:1', 'enduring:1']),
         ['enduring:1', 'sharp:1'],
       );
     });
 
-    test('ramene au tier 1 une rune non cumulable deja montee', () {
+    test('ramene au niveau 1 une rune de plafond 1 deja montee', () {
       expect(ForgeRuneRules.consolidate(['enduring:3']), ['enduring:1']);
     });
 
@@ -106,7 +85,7 @@ void main() {
       expect(ForgeRuneRules.consolidate(['capped:1', 'capped:2']), ['capped:2']);
     });
 
-    test('traite une rune absente du registre comme cumulable', () {
+    test('une rune absente du registre n a pas de plafond', () {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
     });
 
@@ -141,51 +120,173 @@ void main() {
     });
   });
 
-  group('ForgeRuneRules.fusionOptionsFor', () {
-    test('une fusion par rune cumulable portee au moins deux fois', () {
-      final options = ForgeRuneRules.fusionOptionsFor(
-        _cardWith(['sharp:1', 'sharp:2', 'hardened:1']),
-      );
+  // L'offre de la fusion (spec P-43 E2, A2, §4.4).
+  group('ForgeRuneRules.drawRunes', () {
+    // Une Frappe peu commune : le rang 1 qu'atteint une premiere fusion.
+    final card = CardInstance(
+      data: const CardData(
+        id: 'strike',
+        cost: 1,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [CardEffect(type: 'damage', value: 6)],
+      ),
+      rarity: CardRarity.uncommon,
+    );
+    // Refusee a une peu commune : elle attend le rang 2.
+    final refused = _rune('refused', minFusionRank: 2);
 
-      expect(options, hasLength(1));
-      expect(options.single.upgradeId, 'sharp');
-      expect(options.single.originalUpgrades, ['sharp:1', 'sharp:2']);
-      expect(options.single.totalTier, 3);
-      expect(options.single.cost, 80);
+    test('au plus count ids distincts, tous eligibles', () {
+      const eligible = ['a', 'b', 'c', 'd', 'e'];
+      final catalog = [for (final id in eligible) _rune(id), refused];
+      for (var seed = 0; seed < 20; seed++) {
+        final drawn =
+            ForgeRuneRules.drawRunes(card, catalog, Random(seed), count: 3);
+        expect(drawn, hasLength(3), reason: 'graine $seed');
+        expect(drawn.toSet(), hasLength(3), reason: 'graine $seed');
+        expect(drawn, everyElement(isIn(eligible)), reason: 'graine $seed');
+      }
     });
 
-    test('une reference mal formee ne compte pas, comme dans consolidate', () {
+    test('moins s il y en a moins', () {
+      final drawn = ForgeRuneRules.drawRunes(
+          card, [_rune('a'), _rune('b'), refused], Random(1),
+          count: 3);
+      expect(drawn.toSet(), {'a', 'b'});
+    });
+
+    test('aucune s il n y en a pas', () {
+      expect(ForgeRuneRules.drawRunes(card, [refused], Random(1), count: 3),
+          isEmpty);
+    });
+
+    test('le tirage suit weight', () {
+      final catalog = [_rune('heavy', weight: 90), _rune('light', weight: 10)];
+      final rng = Random(42);
+      var heavy = 0;
+      for (var i = 0; i < 2000; i++) {
+        if (ForgeRuneRules.drawRunes(card, catalog, rng, count: 1).single ==
+            'heavy') {
+          heavy++;
+        }
+      }
+      expect(heavy / 2000, inInclusiveRange(0.86, 0.94));
+    });
+
+    // Review Focus 1 : un fichier peut declarer weight 0 ; D65 veut une offre
+    // tant qu'une rune est eligible.
+    test('des runes de poids nul se tirent encore', () {
+      final catalog = [_rune('a', weight: 0), _rune('b', weight: 0)];
       expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['sharp', 'sharp:x', 'sharp:1'])),
-        isEmpty,
+        ForgeRuneRules.drawRunes(card, catalog, Random(3), count: 3).toSet(),
+        {'a', 'b'},
       );
     });
+  });
 
-    test('deux eco:1 : aucune option, la fusion perdrait un niveau', () {
+  // L'affutage (spec P-43 E2, §4.7).
+  group('l affutage', () {
+    test('sharpenCost : 50 or par niveau porte (D20, D63)', () {
       expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['eco:1', 'eco:1'])),
-        isEmpty,
+        [for (var level = 1; level <= 4; level++) ForgeRuneRules.sharpenCost(level)],
+        [50, 100, 150, 200],
       );
     });
 
-    test('1 + 1 sous un plafond de 2 : proposee', () {
-      final options =
-          ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:1', 'capped:1']));
-      expect(options.single.totalTier, 2);
-    });
-
-    test('2 + 1 sous un plafond de 2 : non proposee', () {
+    test('canSharpen : jusqu au plafond, sans fin sans plafond', () {
+      expect(ForgeRuneRules.canSharpen(_rune('sharp'), 9), isTrue);
+      expect(ForgeRuneRules.canSharpen(_rune('capped', maxLevel: 2), 1), isTrue);
       expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:2', 'capped:1'])),
-        isEmpty,
+          ForgeRuneRules.canSharpen(_rune('capped', maxLevel: 2), 2), isFalse);
+      expect(ForgeRuneRules.canSharpen(_rune('eco', maxLevel: 1), 1), isFalse);
+    });
+
+    test('hasSharpenableRune : une rune portee sous son plafond, et du '
+        'catalogue', () {
+      final catalog = [_rune('sharp'), _rune('eco', maxLevel: 1)];
+      expect(ForgeRuneRules.hasSharpenableRune(_cardWith([]), catalog), isFalse);
+      expect(ForgeRuneRules.hasSharpenableRune(_cardWith(['eco:1']), catalog),
+          isFalse);
+      expect(
+          ForgeRuneRules.hasSharpenableRune(_cardWith(['absente:1']), catalog),
+          isFalse);
+      expect(
+        ForgeRuneRules.hasSharpenableRune(
+            _cardWith(['eco:1', 'sharp:3']), catalog),
+        isTrue,
+      );
+    });
+  });
+
+  // Le Puits d'echange (spec P-43 E2, A5, A6, §4.8).
+  group('le Puits', () {
+    const given = [1, 2, 3, 4, 5, 6, 9, 12];
+
+    test('wellCost : 50 or par niveau de la rune donnee (A6, D39)', () {
+      expect([for (final level in given) ForgeRuneRules.wellCost(level)],
+          [50, 100, 150, 200, 250, 300, 450, 600]);
+    });
+
+    test('wellLevel : les deux tiers, arrondis au plus proche, au moins 1 '
+        '(D39)', () {
+      expect(
+        [for (final level in given) ForgeRuneRules.wellLevel(_rune('x'), level)],
+        [1, 1, 2, 3, 3, 4, 6, 8],
       );
     });
 
-    test('jamais de fusion pour une rune non cumulable', () {
-      expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['enduring:1', 'enduring:1'])),
-        isEmpty,
+    test('wellLevel : borne par le plafond de la rune recue — Tranchant 9 '
+        'contre Econome 1', () {
+      expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 9), 1);
+    });
+
+    // Les runes livrees, par une liste fixe : le cas ne bouge pas quand une
+    // rune s'ajoute au catalogue.
+    List<String> optionsOf(
+      CardInstance card,
+      String givenId,
+      List<String> ids,
+    ) =>
+        [
+          for (final rune in ForgeRuneRules.wellOptions(
+              card, givenId, [for (final id in ids) shippedRune(id)]))
+            rune.id,
+        ];
+
+    test('wellOptions : toutes les eligibles, la rune donnee exclue', () {
+      final strike = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['sharp:2'],
       );
+      expect(
+        optionsOf(
+            strike, 'sharp', const ['burning', 'freezing', 'hardened', 'sharp']),
+        ['burning', 'freezing'],
+      );
+    });
+
+    test('wellOptions : jugee sans la rune donnee — Persistant donne, Econome '
+        'possible sur une rare', () {
+      final potion = CardInstance(
+        data: shippedCard('heal_potion'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['enduring:1'],
+      );
+      expect(optionsOf(potion, 'enduring', const ['eco', 'enduring', 'quick']),
+          ['eco', 'quick']);
+    });
+
+    test('wellOptions : au rang de la carte', () {
+      final potion = CardInstance(
+        data: shippedCard('heal_potion'),
+        rarity: CardRarity.uncommon,
+        forgeUpgrades: const ['enduring:1'],
+      );
+      expect(optionsOf(potion, 'enduring', const ['eco', 'enduring', 'quick']),
+          isEmpty);
     });
   });
 }

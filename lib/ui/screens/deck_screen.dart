@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -7,8 +9,10 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
+import '../widgets/forge_upgrade_dialog.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
@@ -62,7 +66,10 @@ class DeckScreen extends ConsumerWidget {
                   mainAxisSpacing: 12,
                 ),
                 itemCount: groups.keys.length,
-                itemBuilder: (context, index) {
+                // `_` et non `context` : la fusion se lance avec le `context`
+                // de l'écran, que la grille ne démonte pas (spec P-43 E2,
+                // §4.5).
+                itemBuilder: (_, index) {
                   final key = groups.keys.elementAt(index);
                   final cardList = groups[key]!;
                   final card = cardList.first;
@@ -115,7 +122,7 @@ class DeckScreen extends ConsumerWidget {
                             ),
                           ),
                           onPressed: () {
-                            _confirmMerge(context, ref, card, cardList);
+                            _confirmMerge(context, ref, cardList);
                           },
                           child: Text(
                             l10n.mergeLabel(3),
@@ -153,29 +160,49 @@ class DeckScreen extends ConsumerWidget {
     );
   }
 
+  /// La fusion, puis le choix d'une rune (spec P-43 E2, A1, §4.5). [context]
+  /// est celui de l'écran, jamais celui de la case de la grille : la fusion
+  /// reconstruit la grille, qui peut démonter la case qui l'a lancée pendant
+  /// le dialogue de choix.
   void _confirmMerge(
     BuildContext context,
     WidgetRef ref,
-    CardInstance card,
     List<CardInstance> duplicates,
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final cardName = card.data.getName(locale);
 
-    final merged = await showDialog<bool>(
+    final merged = await showDialog<CardInstance>(
       context: context,
       builder: (ctx) => _MergeDialog(duplicates: duplicates, ref: ref),
     );
+    if (merged == null || !context.mounted) return;
 
-    final nextRarity = card.rarity.next;
-    if (merged == true && nextRarity != null) {
-      if (context.mounted) {
-        context.showNotification(
-          l10n.deckMergeSuccess(cardName, nextRarity.index + 1),
-          type: NotificationType.success,
-        );
-      }
+    // L'offre : une fonction pure, sur la carte que la fusion rend, au rang
+    // qu'elle atteint ; l'état ne change que par `DeckNotifier`.
+    final offer = ForgeRuneRules.drawRunes(
+      merged,
+      GameDataRegistry.instance?.forgeUpgrades ?? const <ForgeUpgradeData>[],
+      Random(),
+      count: 3,
+    );
+    if (offer.isNotEmpty) {
+      await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ForgeUpgradeDialog(card: merged, offer: offer),
+      );
+      if (!context.mounted) return;
+    }
+
+    context.showNotification(
+      l10n.deckMergeSuccess(merged.data.getName(locale), merged.rarity.index + 1),
+      type: NotificationType.success,
+    );
+    // Sans rune éligible, la fusion s'est faite sans dialogue : le joueur lit
+    // les deux faits, dans cet ordre (A1).
+    if (offer.isEmpty) {
+      context.showNotification(l10n.forgeNoEligibleRune);
     }
   }
 }
@@ -195,11 +222,6 @@ class _MergeDialog extends StatefulWidget {
 
 class _MergeDialogState extends State<_MergeDialog> {
   final Set<String> _selectedCardIds = {};
-  int _step = 1;
-  List<CardInstance> _selectedCards = [];
-  List<String> _consolidatedUpgrades = [];
-  final Set<String> _chosenUpgrades = {};
-  late int _capacity;
 
   @override
   void initState() {
@@ -207,41 +229,21 @@ class _MergeDialogState extends State<_MergeDialog> {
     if (widget.duplicates.length == 3) {
       _selectedCardIds.addAll(widget.duplicates.map((c) => c.uniqueId));
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _proceedToUpgrades();
+        _performMerge();
       });
     }
   }
 
-  void _proceedToUpgrades() {
-    _selectedCards = widget.duplicates
-        .where((c) => _selectedCardIds.contains(c.uniqueId))
-        .toList();
-    if (_selectedCards.length != 3) return;
-
-    final firstCard = _selectedCards[0];
-    final nextRarity = firstCard.rarity.next;
-    if (nextRarity == null) return;
-    _capacity = firstCard.data.forgeCapacityAt(nextRarity);
-
-    _consolidatedUpgrades = ForgeRuneRules.consolidate(
-      _selectedCards.expand((card) => card.forgeUpgrades),
-    );
-
-    if (_consolidatedUpgrades.length <= _capacity) {
-      _performMerge(_consolidatedUpgrades);
-    } else {
-      setState(() {
-        _step = 2;
-      });
-    }
-  }
-
-  void _performMerge(List<String> upgrades) {
-    widget.ref.read(deckProvider.notifier).mergeCards(
-      _selectedCards.map((c) => c.uniqueId).toList(),
-      upgrades,
-    );
-    Navigator.of(context).pop(true);
+  /// La fusion des trois exemplaires choisis ; le dialogue se ferme sur la
+  /// carte qu'elle rend, `null` si elle est refusée (spec P-43 E2, §4.5).
+  void _performMerge() {
+    final merged = widget.ref.read(deckProvider.notifier).mergeCards(
+          widget.duplicates
+              .where((c) => _selectedCardIds.contains(c.uniqueId))
+              .map((c) => c.uniqueId)
+              .toList(),
+        );
+    Navigator.of(context).pop(merged);
   }
 
   @override
@@ -249,167 +251,86 @@ class _MergeDialogState extends State<_MergeDialog> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    if (_step == 1) {
-      return GameDialog(
-        glowColor: Colors.green,
-        title: Text(
-          l10n.confirmMerge,
-        ),
-        content: Material(
-          color: Colors.transparent,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Sélectionnez exactement 3 cartes à fusionner (Sélectionné: ${_selectedCardIds.length}/3)',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: widget.duplicates.length,
-                  itemBuilder: (context, index) {
-                    final card = widget.duplicates[index];
-                    final isSelected = _selectedCardIds.contains(card.uniqueId);
-                    final upgradesText = card.forgeUpgrades.isEmpty
-                        ? (locale == 'fr' ? '(Sans amélioration)' : '(No upgrade)')
-                        : card.forgeUpgrades.map((u) {
-                            final parts = u.split(':');
-                            final id = parts[0];
-                            final tier = parts.length > 1 ? parts[1] : '1';
-                            final upgradeData = ForgeUpgradeData.getById(id);
-                            return upgradeData != null
-                                ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
-                                : '$id $tier';
-                          }).join(', ');
-                    return CheckboxListTile(
-                      title: Text(
-                        '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        'Forge: $upgradesText',
-                        style: const TextStyle(color: Colors.white54),
-                      ),
-                      value: isSelected,
-                      activeColor: Colors.green,
-                      checkColor: Colors.black,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            if (_selectedCardIds.length < 3) {
-                              _selectedCardIds.add(card.uniqueId);
-                            }
-                          } else {
-                            _selectedCardIds.remove(card.uniqueId);
+    return GameDialog(
+      glowColor: Colors.green,
+      title: Text(
+        l10n.confirmMerge,
+      ),
+      content: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sélectionnez exactement 3 cartes à fusionner (Sélectionné: ${_selectedCardIds.length}/3)',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.duplicates.length,
+                itemBuilder: (context, index) {
+                  final card = widget.duplicates[index];
+                  final isSelected = _selectedCardIds.contains(card.uniqueId);
+                  // Le niveau que joue chaque rune, par l'analyseur unique,
+                  // nommé selon la règle des infobulles (spec P-43 E2, §4.11,
+                  // E-S6).
+                  final runes = [
+                    for (final MapEntry(key: id, value: level)
+                        in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries)
+                      ForgeUpgradeData.getById(id)?.nameAt(level, locale) ??
+                          '$id $level',
+                  ];
+                  return CheckboxListTile(
+                    title: Text(
+                      '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      runes.isEmpty
+                          ? l10n.mergeRunesNone
+                          : l10n.mergeRunesLabel(runes.join(', ')),
+                      style: const TextStyle(color: Colors.white54),
+                    ),
+                    value: isSelected,
+                    activeColor: Colors.green,
+                    checkColor: Colors.black,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          if (_selectedCardIds.length < 3) {
+                            _selectedCardIds.add(card.uniqueId);
                           }
-                        });
-                      },
-                    );
-                  },
-                ),
+                        } else {
+                          _selectedCardIds.remove(card.uniqueId);
+                        }
+                      });
+                    },
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        actions: [
-          GameButton(
-            text: l10n.cancel,
-            baseColor: Colors.white70,
-            onPressed: () => Navigator.of(context).pop(),
-            height: 38,
-            fontSize: 14,
-          ),
-          GameButton(
-            text: 'Continuer',
-            onPressed: _selectedCardIds.length == 3 ? _proceedToUpgrades : null,
-            baseColor: Colors.green,
-            height: 38,
-            fontSize: 14,
-          ),
-        ],
-      );
-    } else {
-      return GameDialog(
-        glowColor: Colors.orange,
-        title: const Text(
-          'Capacité de Forge Dépassée',
+      ),
+      actions: [
+        GameButton(
+          text: l10n.cancel,
+          baseColor: Colors.white70,
+          onPressed: () => Navigator.of(context).pop(),
+          height: 38,
+          fontSize: 14,
         ),
-        content: Material(
-          color: Colors.transparent,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'La rareté supérieure ne supporte que $_capacity améliorations.\nChoisissez lesquelles conserver (Sélectionné: ${_chosenUpgrades.length}/$_capacity) :',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _consolidatedUpgrades.length,
-                  itemBuilder: (context, index) {
-                    final upgrade = _consolidatedUpgrades[index];
-                    final parts = upgrade.split(':');
-                    final id = parts[0];
-                    final tier = parts[1];
-                    final upgradeData = ForgeUpgradeData.getById(id);
-                    final displayName = upgradeData != null 
-                        ? (upgradeData.stackable ? '${upgradeData.getName(locale)} (Niveau $tier)' : upgradeData.getName(locale))
-                        : '${id.toUpperCase()} (Niveau $tier)';
-                    final isSelected = _chosenUpgrades.contains(upgrade);
-                    return CheckboxListTile(
-                      title: Text(
-                        displayName,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      value: isSelected,
-                      activeColor: Colors.green,
-                      checkColor: Colors.black,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            if (_chosenUpgrades.length < _capacity) {
-                              _chosenUpgrades.add(upgrade);
-                            }
-                          } else {
-                            _chosenUpgrades.remove(upgrade);
-                          }
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+        GameButton(
+          text: 'Continuer',
+          onPressed: _selectedCardIds.length == 3 ? _performMerge : null,
+          baseColor: Colors.green,
+          height: 38,
+          fontSize: 14,
         ),
-        actions: [
-          GameButton(
-            text: l10n.cancel,
-            baseColor: Colors.white70,
-            onPressed: () => Navigator.of(context).pop(),
-            height: 38,
-            fontSize: 14,
-          ),
-          GameButton(
-            text: 'Fusionner',
-            onPressed: _chosenUpgrades.isNotEmpty &&
-                    _chosenUpgrades.length <= _capacity
-                ? () {
-                    _performMerge(_chosenUpgrades.toList());
-                  }
-                : null,
-            baseColor: Colors.green,
-            height: 38,
-            fontSize: 14,
-          ),
-        ],
-      );
-    }
+      ],
+    );
   }
 }

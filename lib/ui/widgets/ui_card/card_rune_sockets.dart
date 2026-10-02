@@ -1,22 +1,18 @@
-import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'ui_card_helpers.dart';
 
+/// Une prise par rune portée, garnie de son emoji ; aucune vide — la
+/// capacité n'existe plus (spec P-43 E2, §4.10).
 class CardRuneSockets extends StatelessWidget {
   final List<String> forgeUpgrades;
-  final int totalSlots;
 
   const CardRuneSockets({
     super.key,
     required this.forgeUpgrades,
-    required this.totalSlots,
   });
 
   @override
   Widget build(BuildContext context) {
-    final filledSlots = forgeUpgrades.length;
-    final emptySlots = max(0, totalSlots - filledSlots);
-
     return SizedBox(
       width: 58.0,
       child: Wrap(
@@ -52,21 +48,6 @@ class CardRuneSockets extends StatelessWidget {
                   ),
                 ),
               )),
-          ...List.generate(
-            emptySlots,
-            (index) => Container(
-              width: 10.0,
-              height: 10.0,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.05),
-                border: Border.all(
-                  color: Colors.white24,
-                  width: 0.5,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

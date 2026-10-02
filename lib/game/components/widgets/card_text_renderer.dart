@@ -1,4 +1,5 @@
 import 'dart:math' show max;
+
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
@@ -358,11 +359,8 @@ class CardTextRenderer {
 
 
 
-    // Rune sockets row instead of stars
-    final int appliedUpgradesCount = card.card.forgeUpgrades.length;
-    // Une carte sauvegardée au-delà de sa capacité montre toutes ses runes,
-    // comme `CardRuneSockets` hors combat.
-    final int totalSlots = max(card.card.forgeCapacity, appliedUpgradesCount);
+    // Une prise par rune portée, aucune vide (spec P-43 E2, §4.10).
+    final int totalSlots = card.card.forgeUpgrades.length;
 
     final double socketDiameter = 14.0;
     final double socketRadius = 7.0;
@@ -383,44 +381,29 @@ class CardTextRenderer {
       for (int i = 0; i < rowSlotsCount; i++) {
         final int globalIndex = rowStartIndex + i;
         final double centerX = startX + i * (socketDiameter + socketSpacing) + socketRadius;
-        if (globalIndex < appliedUpgradesCount) {
-          // Filled socket
-          final socketBgPaint = Paint()
-            ..color = Colors.black45.withValues(alpha: opacity)
-            ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBgPaint);
+        final socketBgPaint = Paint()
+          ..color = Colors.black45.withValues(alpha: opacity)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBgPaint);
 
-          final socketBorderPaint = Paint()
-            ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.5;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBorderPaint);
+        final socketBorderPaint = Paint()
+          ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5;
+        canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBorderPaint);
 
-          final emoji = _getRuneEmoji(card.card.forgeUpgrades[globalIndex]);
-          final emojiPainter = TextPainter(
-            text: TextSpan(
-              text: emoji,
-              style: const TextStyle(fontSize: 8.0),
-            ),
-            textDirection: TextDirection.ltr,
-          )..layout();
-          emojiPainter.paint(
-            canvas,
-            Offset(centerX - emojiPainter.width / 2, socketsY - emojiPainter.height / 2),
-          );
-        } else {
-          // Empty socket
-          final emptyBgPaint = Paint()
-            ..color = Colors.white.withValues(alpha: 0.05 * opacity)
-            ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBgPaint);
-
-          final emptyBorderPaint = Paint()
-            ..color = Colors.white24.withValues(alpha: opacity)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.5;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBorderPaint);
-        }
+        final emoji = _getRuneEmoji(card.card.forgeUpgrades[globalIndex]);
+        final emojiPainter = TextPainter(
+          text: TextSpan(
+            text: emoji,
+            style: const TextStyle(fontSize: 8.0),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        emojiPainter.paint(
+          canvas,
+          Offset(centerX - emojiPainter.width / 2, socketsY - emojiPainter.height / 2),
+        );
       }
     }
 
@@ -430,8 +413,9 @@ class CardTextRenderer {
       currentY += spacing;
     }
 
-    // Badge Usage Unique (fixe)
-    final showExhaustBadge = card.card.data.isExhaust || card.card.data.type == CardType.power;
+    // Badge Usage Unique (fixe) : la carte s'épuise-t-elle, runes comprises
+    // (spec P-43 E2, A13) ?
+    final showExhaustBadge = card.card.exhaustsOnPlay;
     if (showExhaustBadge) {
       final badgeWidth = usagePainter.width + 12;
       final badgeRect = Rect.fromCenter(
@@ -454,13 +438,20 @@ class CardTextRenderer {
 
     // Le badge de ciblage textuel a été supprimé.
 
-    // Description (centrée parfaitement sur la carte)
+    // Le bas de l'en-tête : les prises de rune, puis le badge.
+    final headerBottom = currentY + (showExhaustBadge ? 14 + spacing : 0);
+
+    // Description (centrée sur la carte, sous l'en-tête)
     if (descPainter != null) {
       descPainter!.paint(
         canvas,
         Offset(
           size.x / 2 - descPainter!.width / 2,
-          (size.y / 2) - descPainter!.height / 2 + 5,
+          centerBlockTop(
+            cardHeight: size.y,
+            blockHeight: descPainter!.height,
+            headerBottom: headerBottom,
+          ),
         ),
       );
     } else if (badges.isNotEmpty) {
@@ -481,7 +472,11 @@ class CardTextRenderer {
       }
 
       double currentX = size.x / 2 - totalWidth / 2;
-      double startY = (size.y / 2) - maxHeight / 2 + 5;
+      double startY = centerBlockTop(
+        cardHeight: size.y,
+        blockHeight: maxHeight,
+        headerBottom: headerBottom,
+      );
 
       for (final b in badges) {
         b.iconAndValuePainter.paint(canvas, Offset(currentX, startY));
@@ -548,9 +543,24 @@ class CardTextRenderer {
     typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
   }
 
-  String _getRuneEmoji(String upgrade) {
-    final id = upgrade.split(':')[0];
-    final upgradeData = ForgeUpgradeData.getById(id);
-    return upgradeData?.emoji ?? '🔮';
-  }
+  /// Le haut du bloc central — la description ou les effets — de hauteur
+  /// [blockHeight] : centré sur la carte, mais jamais au-dessus de
+  /// [headerBottom], le bas des prises de rune et du badge « Usage unique ».
+  /// Une carte porte jusqu'à neuf runes — deux rangées de prises — et
+  /// `spectral` montre le badge sur une attaque (spec P-43 E2, partie 2).
+  static double centerBlockTop({
+    required double cardHeight,
+    required double blockHeight,
+    required double headerBottom,
+  }) =>
+      max(headerBottom, cardHeight / 2 - blockHeight / 2 + 5);
+
+  /// L'emoji d'une rune, par l'analyseur unique des références (spec P-43
+  /// E2, §1.3, E-S6) ; une référence mal formée, ou une rune absente du
+  /// registre, prend l'emoji par défaut.
+  String _getRuneEmoji(String upgrade) =>
+      switch (ForgeUpgradeData.parseRef(upgrade)) {
+        (final id, _) => ForgeUpgradeData.getById(id)?.emoji ?? '🔮',
+        null => '🔮',
+      };
 }

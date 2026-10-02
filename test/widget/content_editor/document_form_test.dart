@@ -81,7 +81,7 @@ void main() {
     // Atteignable par la vue brute ou un fichier retouche a la main : le
     // formulaire levait en construction.
     final document = EditorDocument({
-      'pools': ['common'],
+      'excludesEffects': ['draw'],
       'eligibleCardTypes': 'attack',
     });
     await pump(tester, document, forge);

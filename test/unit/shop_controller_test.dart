@@ -248,7 +248,7 @@ void main() {
       expect(deckNotifier.state.masterDeck[1].data.id, testCardPool[0].id);
     });
 
-    test('cloneCard price doubles on subsequent purchases and resets on clearCloneOptions', () {
+    test('cloneCard price doubles on subsequent purchases and resets at the next node', () {
       final cardToClone = CardInstance(data: testCardPool[0]);
       deckNotifier.initializeStarterDeck([cardToClone]);
 
@@ -275,8 +275,8 @@ void main() {
       expect(shopController.state.clonePrice, 1200);
       expect(shopController.state.clonePurchasedCount, 3);
 
-      // Réinitialisation de la boutique (sortie du shop)
-      shopController.clearCloneOptions();
+      // Le Miroir repart avec l'etal, au noeud suivant (spec P-43 E2, A11).
+      runController.travelToNode('node_suivant');
       expect(shopController.state.clonePrice, 150);
       expect(shopController.state.clonePurchasedCount, 0);
     });
@@ -353,7 +353,7 @@ void main() {
           forgeUpgrades: const [],
         ),
       );
-      // Cumulable, comme eco aujourd'hui : le tirage la monterait a 2 ou 3.
+      // Sans plafond, le tirage la monterait a 2 ou 3.
       GameDataRegistry(
         enemies: const [],
         heroes: const [],
@@ -370,7 +370,6 @@ void main() {
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['common', 'uncommon', 'rare'],
             maxLevel: 1,
           ),
         ],
@@ -457,9 +456,10 @@ void main() {
       expect(carried, {'quick:1'});
     });
 
-    test('la boutique ne tire une rune non cumulable qu au tier 1', () {
-      // Le registre est statique : un registre vide le remplace en sortie,
-      // equivalent a son absence pour ce controleur.
+    // D28, D3, D48 : une pre-forgee porte au plus `fusionRank` runes,
+    // distinctes, eligibles au rang de sa rarete (spec P-43 E2, §4.9, §8).
+    test('une pre-forgee porte au plus fusionRank runes, distinctes, et jamais '
+        'Econome ni Veloce sous la rare', () {
       addTearDown(
         () => GameDataRegistry(
           enemies: const [],
@@ -471,7 +471,54 @@ void main() {
           forgeUpgrades: const [],
         ),
       );
-      // Un id autre qu'`enduring` : c'est la donnee qui decide, pas l'id.
+      shippedRuneRegistry(shippedRuneIds());
+      final cards = shippedNeutralCards();
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      var runed = 0;
+      var rareOrAbove = 0;
+      for (var i = 0; i < 300; i++) {
+        shopController.initializeShop(cards, 0);
+        for (final card in shopController.state.cardsForSale) {
+          if (card.rarity.fusionRank >= 2) rareOrAbove++;
+          final ids = [
+            for (final ref in card.forgeUpgrades)
+              ForgeUpgradeData.parseRef(ref)!.$1,
+          ];
+          final reason = '${card.data.id} ${card.rarity.name} : '
+              '${card.forgeUpgrades}';
+          // Une commune, de rang 0, n'en porte aucune.
+          expect(ids.length, lessThanOrEqualTo(card.rarity.fusionRank),
+              reason: reason);
+          expect(ids.toSet(), hasLength(ids.length), reason: reason);
+          if (card.rarity.fusionRank < 2) {
+            expect(ids, isNot(contains('eco')), reason: reason);
+            expect(ids, isNot(contains('quick')), reason: reason);
+          }
+          if (ids.isNotEmpty) runed++;
+        }
+      }
+      // Gardes contre un test qui passerait a vide : des cartes runees, et
+      // des cartes de rang 2 au moins, ou la borne et Econome s'eprouvent.
+      expect(runed, greaterThan(0));
+      expect(rareOrAbove, greaterThan(0));
+    });
+
+    // Le tirage de la fusion, sans ciblage par rarete (D68 ; spec P-43 E2,
+    // A12, §4.9) : une peu commune recoit l'une ou l'autre rune.
+    test('une pre-forgee tire parmi toutes les runes eligibles, a leur poids',
+        () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
       GameDataRegistry(
         enemies: const [],
         heroes: const [],
@@ -481,29 +528,229 @@ void main() {
         relics: const [],
         forgeUpgrades: const [
           ForgeUpgradeData(
-            id: 'steadfast',
-            nameEn: 'Steadfast',
-            nameFr: 'Inebranlable',
+            id: 'alpha',
+            nameEn: 'Alpha',
+            nameFr: 'Alpha',
             descriptionEn: '',
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['common', 'uncommon', 'rare'],
-            stackable: false,
+          ),
+          ForgeUpgradeData(
+            id: 'beta',
+            nameEn: 'Beta',
+            nameFr: 'Beta',
+            descriptionEn: '',
+            descriptionFr: '',
+            icon: '',
+            color: '',
           ),
         ],
       );
       runController.updateState(container.read(runProvider).copyWith(act: 3));
 
-      final rolled = <String>{};
-      for (var i = 0; i < 100; i++) {
+      final onUncommon = <String>{};
+      for (var i = 0; i < 300; i++) {
         shopController.initializeShop(testCardPool, 0);
         for (final card in shopController.state.cardsForSale) {
-          rolled.addAll(card.forgeUpgrades);
+          if (card.rarity != CardRarity.uncommon) continue;
+          onUncommon.addAll([
+            for (final ref in card.forgeUpgrades)
+              ForgeUpgradeData.parseRef(ref)!.$1,
+          ]);
         }
       }
 
-      expect(rolled, {'steadfast:1'});
+      expect(onUncommon, {'alpha', 'beta'});
+    });
+
+    // La copie du deck (D46 ; spec P-43 E2, A11, §4.9).
+    group('la copie du deck', () {
+      const signature = CardData(
+        id: 'signature_paladin',
+        cost: 1,
+        type: CardType.skill,
+        category: CardCategory.characterSpecific,
+        heroClass: 'paladin',
+        rarity: CardRarity.unique,
+        target: CardTarget.self,
+        effects: [],
+      );
+
+      test('tiree des cartes copiables du deck : meme rarete, sans rune, '
+          'identifiant neuf', () {
+        final source = CardInstance(
+          data: testCardPool[0],
+          rarity: CardRarity.rare,
+          forgeUpgrades: const ['sharp:2'],
+        );
+        deckNotifier.initializeStarterDeck(
+            [source, CardInstance(data: signature)]);
+
+        for (var i = 0; i < 50; i++) {
+          shopController.initializeShop(testCardPool, 0);
+          final copy = shopController.state.deckCopy!;
+          expect(copy.data.id, source.data.id);
+          expect(copy.rarity, CardRarity.rare);
+          expect(copy.forgeUpgrades, isEmpty);
+          expect(copy.uniqueId, isNot(source.uniqueId));
+        }
+      });
+
+      test('sans carte copiable, pas de copie', () {
+        shopController.initializeShop(testCardPool, 0);
+        expect(shopController.state.deckCopy, isNull);
+
+        deckNotifier.initializeStarterDeck([CardInstance(data: signature)]);
+        shopController.initializeShop(testCardPool, 0);
+        expect(shopController.state.deckCopy, isNull);
+      });
+
+      test('au prix d une carte de sa rarete : 25, 50, 100, 150, 200', () {
+        final prices = <int>[];
+        for (final rarity in const [
+          CardRarity.common,
+          CardRarity.uncommon,
+          CardRarity.rare,
+          CardRarity.epic,
+          CardRarity.legendary,
+        ]) {
+          deckNotifier.initializeStarterDeck([
+            CardInstance(
+              data: testCardPool[0],
+              rarity: rarity,
+              forgeUpgrades: const ['sharp:1'],
+            ),
+          ]);
+          shopController.initializeShop(testCardPool, 0);
+          prices.add(
+              ShopController.getCardPrice(shopController.state.deckCopy!));
+        }
+        expect(prices, [25, 50, 100, 150, 200]);
+      });
+
+      test('buyDeckCopy depense son prix, l ajoute au deck et la retire de '
+          'l etal', () {
+        deckNotifier.initializeStarterDeck(
+            [CardInstance(data: testCardPool[0], rarity: CardRarity.rare)]);
+        shopController.initializeShop(testCardPool, 0);
+        final copy = shopController.state.deckCopy!;
+
+        // 100 or : le prix d'une rare, tout juste.
+        expect(shopController.buyDeckCopy(), isTrue);
+
+        expect(inventoryController.state.gold, 0);
+        expect(deckNotifier.state.masterDeck.map((c) => c.uniqueId),
+            contains(copy.uniqueId));
+        expect(shopController.state.deckCopy, isNull);
+        expect(shopController.buyDeckCopy(), isFalse);
+      });
+
+      test('buyDeckCopy refuse faute d or, sans rien toucher', () {
+        deckNotifier.initializeStarterDeck(
+            [CardInstance(data: testCardPool[0], rarity: CardRarity.epic)]);
+        shopController.initializeShop(testCardPool, 0);
+        final copy = shopController.state.deckCopy;
+
+        // 150 or pour une epique, 100 en poche.
+        expect(shopController.buyDeckCopy(), isFalse);
+
+        expect(inventoryController.state.gold, 100);
+        expect(deckNotifier.state.masterDeck, hasLength(1));
+        expect(shopController.state.deckCopy, same(copy));
+      });
+
+      test('rerollCards garde la copie', () {
+        deckNotifier.initializeStarterDeck([CardInstance(data: testCardPool[0])]);
+        shopController.initializeShop(testCardPool, 0);
+        final copy = shopController.state.deckCopy;
+
+        expect(shopController.rerollCards(15, testCardPool, 0), isTrue);
+
+        expect(shopController.state.deckCopy, same(copy));
+      });
+    });
+
+    // L'etal entier, tire une fois par noeud de boutique et retenu, achats
+    // compris, jusqu'a ce que le noeud courant change (spec P-43 E2, A11,
+    // §4.9).
+    group('l etal retenu a son noeud', () {
+      setUp(() {
+        deckNotifier.initializeStarterDeck([CardInstance(data: testCardPool[0])]);
+        inventoryController.gainGold(1000);
+        runController.travelToNode('node_3_1');
+      });
+
+      test('deux initializeShop au meme noeud rendent le meme etal, achats '
+          'compris', () {
+        shopController.initializeShop(testCardPool, 0);
+        final bought = shopController.state.cardsForSale.first;
+        shopController.buyCard(bought, ShopController.getCardPrice(bought));
+        shopController.buyHeal(30, 30);
+        shopController.buyDeckCopy();
+        shopController.setCloneOptions([CardInstance(data: testCardPool[1])]);
+        shopController.cloneCard(deckNotifier.state.masterDeck.first);
+        final kept = shopController.state;
+
+        shopController.initializeShop(testCardPool, 0);
+
+        expect(shopController.state, same(kept));
+        expect(kept.cardsForSale, isNot(contains(bought)));
+        expect(kept.deckCopy, isNull);
+        expect(kept.purchasedHeal, isTrue);
+        expect(kept.cloneOptions, hasLength(1));
+        expect(kept.clonePrice, 300);
+      });
+
+      test('une relance payante est retenue de meme', () {
+        shopController.initializeShop(testCardPool, 0);
+        final copy = shopController.state.deckCopy;
+        shopController.rerollCards(15, testCardPool, 0);
+        final rerolled = shopController.state.cardsForSale;
+
+        shopController.initializeShop(testCardPool, 0);
+
+        expect(shopController.state.cardsForSale, same(rerolled));
+        expect(shopController.state.deckCopy, same(copy));
+      });
+
+      // Review Focus 3 : ce qui change le noeud courant de la run retire
+      // l'etal, et la boutique se rappelle aussitot sans erreur.
+      final departures = <String, void Function(RunController)>{
+        'un autre noeud': (run) => run.travelToNode('node_4_2'),
+        'un acte neuf': (run) => run.advanceToNextWorld(),
+        'une run neuve': (run) => run.startNewRun(dummyHero),
+        'une sauvegarde chargee sur un autre noeud': (run) => run
+            .hydrate(run.currentState.copyWith(currentNodeId: 'node_7_0')),
+      };
+      for (final MapEntry(key: name, value: depart) in departures.entries) {
+        test('$name retire l etal', () {
+          shopController.initializeShop(testCardPool, 0);
+          shopController.setCloneOptions([CardInstance(data: testCardPool[1])]);
+          final first = shopController.state;
+
+          depart(runController);
+
+          expect(shopController.state.cardsForSale, isEmpty);
+          expect(shopController.state.deckCopy, isNull);
+          expect(shopController.state.cloneOptions, isEmpty);
+          expect(shopController.state.nodeId, isNull);
+          shopController.initializeShop(testCardPool, 0);
+          expect(shopController.state, isNot(same(first)));
+          expect(shopController.state.cardsForSale, isNotEmpty);
+        });
+      }
+
+      test('sans noeud courant, chaque appel tire', () {
+        runController.startNewRun(dummyHero);
+        shopController.initializeShop(testCardPool, 0);
+        final first = shopController.state;
+
+        shopController.initializeShop(testCardPool, 0);
+
+        expect(shopController.state, isNot(same(first)));
+        expect(shopController.state.nodeId, isNull);
+      });
     });
 
     group('filtre de classe sur le pool de boutique', () {

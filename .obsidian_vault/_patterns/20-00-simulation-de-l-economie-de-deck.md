@@ -9,8 +9,8 @@
 > le lot qui change un schéma ou un dossier qu'il parse le réaligne dans une tâche de son plan ;
 > c'est l'orchestrateur de la vague qui le relance et compare (§20.5).
 
-`tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 3 925 lignes
-(**vérifié le 2026-10-01**, `wc -l`). Il n'est ni un test, ni un asset, ni déclaré dans
+`tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 3 961 lignes
+(**vérifié le 2026-10-02**, `wc -l`). Il n'est ni un test, ni un asset, ni déclaré dans
 `pubspec.yaml`, et n'importe rien de `lib/` : Flame, donc Flutter, refuse `dart run`. Il doit
 rester `dart analyze` propre (`CLAUDE.md`, § Tooling).
 
@@ -26,41 +26,46 @@ pas recopiés ici.
 
 ### 20.2. Ce qu'il lit dans `assets/data/`
 
-Lu le 2026-10-01 dans le chargeur du script (`GameData.load`, `d26_economy_sim.dart:722-877` ; `:2115`).
-Son lecteur de dossier ne descend pas dans les sous-dossiers et lève une exception sur un dossier
-absent (`_jsonFiles`, `:413-421`). Il lit par clé : un champ neuf ne le dérange pas, un champ
+Re-lu le 2026-10-02, après la vague 2, dans le chargeur du script (`GameData.load`,
+`d26_economy_sim.dart:723-899`). Son lecteur de dossier ne descend pas dans les sous-dossiers et
+lève une exception sur un dossier absent (`_jsonFiles`, `:414-422`). Il lit par clé : un champ neuf ne le dérange pas, un champ
 attendu et absent le fait planter. **Chaque lot de runs relit les données dans son propre
-isolate** (`:880-881`, `:3376`) : ni changement de branche ni écriture sous `assets/data/` tant
+isolate** (`:902-903`, `:3412`) : ni changement de branche ni écriture sous `assets/data/` tant
 qu'une passe tourne.
 
 | Dossier | Champs lus | Ce que ça implique |
 |:---|:---|:---|
 | `enemies/*/enemy.json` | `id`, `maxHp`, `baseDamage`, `tier`, `xp`, `gold`, `critChance`, `intents` | Un champ renommé casse le chargement |
-| `cards/` | chaque fichier, **à plat** | Un sous-dossier de `cards/` n'est pas lu : ses cartes sont **ignorées**. Une carte que le script prend par son identifiant et qui a été déplacée le fait planter (`:501`) |
+| `cards/` | chaque fichier, **à plat** | Un sous-dossier de `cards/` n'est pas lu : ses cartes sont **ignorées**. Une carte que le script prend par son identifiant et qui a été déplacée le fait planter (`:502`) |
 | `relics/` | `id`, `rarity`, `trigger`, `effectType`, `value` | — |
 | `level_up_rewards/` | chaque récompense, son pool et ses `values` | Tout `effect` est accepté : un fichier neuf allonge la liste tirée, sans erreur |
-| `forge_upgrades/` | `id`, `weight`, `eligibleCardTypes` | `pools` n'est pas lu ; un fichier de rune neuf est pris par le cas par défaut, **en plus** de sa définition en dur — doublon |
-| `events/` | chaque événement (`:861-873`) | Trois événements du brainstorm s'y ajoutent en dur |
-| `passives/` | `value`, `duration`, `threshold` et le bloc `mastery` (`:779-791`) | La tranche de Bénédiction et le plancher de Flux sont en dur |
-| `classes/*/class.json` | `maxHp`, `maxMana`, `critChance`, `mastery`, `mightTargets`, et de `statRules` le seul mode `convert` (`:808-816`) | Le taux de conversion est en dur |
-| `classes/*/cards/` | les signatures : coût, type, cible, effets de chaque fichier (`:797-807`) | Le dossier renommé ou absent fait planter le script ; seuls leur recharge et le type d'une d'elles sont en dur |
+| `forge_upgrades/` | `id`, `weight`, `eligibleCardTypes` | **Lus dans l'ordre d'une liste explicite de 17 ids** (`runeOrder`, `:829-833`), pas dans celui des fichiers : un fichier de rune dont l'id n'y figure pas fait planter le script, qui demande de lui donner sa place. Une rune qui a son fichier n'a plus d'entrée en dur — `cheap`, `precise` et `spectral` depuis la vague 2 ; sa condition et ses exclusions restent données par le `switch` (`:853-874`). `minFusionRank` et `maxLevel` ne sont pas lus |
+| `events/` | chaque événement (`:883-895`) | Trois événements du brainstorm s'y ajoutent en dur |
+| `passives/` | `value`, `duration`, `threshold` et le bloc `mastery` (`:780-792`) | La tranche de Bénédiction et le plancher de Flux sont en dur |
+| `classes/*/class.json` | `maxHp`, `maxMana`, `critChance`, `mastery`, `mightTargets`, et de `statRules` le seul mode `convert` (`:809-817`) | Le taux de conversion est en dur |
+| `classes/*/cards/` | les signatures : coût, type, cible, effets de chaque fichier (`:798-808`) | Le dossier renommé ou absent fait planter le script ; seuls leur recharge et le type d'une d'elles sont en dur |
 
-**Les listes se tirent par index**, dans l'ordre « fichiers triés par nom, puis entrées en dur » :
-runes, reliques (`:2517-2522`), événements (`:2940-2947`), récompenses (`:2602-2626`). Un fichier
-de plus se range au milieu des autres et décale tous les tirages qui suivent — chaque run n'a
-qu'un générateur (`:3298`).
+**Les listes se tirent par index.** Reliques (`:2553-2558`), événements (`:2976-2983`) et
+récompenses (`:2638-2662`) le sont dans l'ordre « fichiers triés par nom, puis entrées en dur » : un
+fichier de plus se range au milieu des autres et décale tous les tirages qui suivent — chaque run
+n'a qu'un générateur (`:3334`). **Les runes, depuis la vague 2, suivent `runeOrder`**, l'ordre que
+la référence a mesuré — les huit fichiers d'avant E2 triés, puis les neuf runes du brainstorm
+§8 — : un fichier neuf y prend la place exacte de son entrée en dur, sans rien décaler.
 
 ### 20.3. Ce qui est codé en dur
 
 Les lots de cartes par passif — les exemples du brainstorm, complétés par des cartes génériques,
-et les cartes survivantes prises par identifiant (`lotCards`, `:500` et suivantes) ; cinq des
-runes d'aujourd'hui, redéfinies par un `switch` (`:830-846`), et les runes que le brainstorm
-ajoute (`:848-859`) ; trois événements (`:2940-2945`), quatre reliques (`:693-696`) et une
-récompense de niveau du brainstorm (`:2609-2615`) ; la recharge des signatures (`:803`) ; le taux
-de conversion du Berserker et les plafonds de niveau des runes. Le coefficient de la difficulté
-adaptative vaut 2 par défaut (`:91`, `ddaK`), la valeur que le brainstorm a retenue.
+et les cartes survivantes prises par identifiant (`lotCards`, `:501` et suivantes) ; la condition
+et les exclusions de huit runes à fichier, redonnées par un `switch` (`:853-874`), et les six runes
+du brainstorm qui n'ont pas encore de fichier (`hardRunes`, `:835-842`) ; trois événements
+(`:2976-2981`), quatre reliques (`:694-697`) et une récompense de niveau du brainstorm
+(`:2645-2651`) ; la recharge des signatures (`:804`) ; le taux de conversion du Berserker et les
+plafonds de niveau des runes. Le coefficient de la difficulté adaptative vaut 2 par défaut (`:92`,
+`ddaK`), la valeur que le brainstorm a retenue. **Le `spectral` du script suit D33 depuis la vague
+2** (`bff3078`) : 40 % de la valeur de base à la rareté par niveau, au moins +1, sans multiplier la
+Puissance — comme le jeu ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)).
 
-**La table d'XP n'est ni lue ni en dur : elle est recalée à chaque lancement** (`:3801-3806`).
+**La table d'XP n'est ni lue ni en dur : elle est recalée à chaque lancement** (`:3837-3842`).
 Elle égale aujourd'hui celle que le brainstorm a retenue ; dès qu'une donnée change, le script en
 joue une autre. Le lot qui écrit la table dans la donnée du jeu la lui fait lire.
 
@@ -74,11 +79,12 @@ dart run tool/simulations/d26_economy_sim.dart --out <fichier>
 dart run tool/simulations/d26_economy_sim.dart --quick --out <fichier>
 ```
 
-La graine est fixée (`seedBase`, `:3345`) et les fichiers sont lus triés : deux passes donnent la
+La graine est fixée (`seedBase`, `:3381`) et les fichiers sont lus triés : deux passes donnent la
 même sortie. La passe complète a pris 422 secondes le 2026-10-01, puis 462 le même jour avec la
-suite de tests lancée à côté — à lancer en arrière-plan ; `--quick` joue 25 runs par
+suite de tests lancée à côté, puis 467 et 406 secondes aux deux relances de la vague 2 — à lancer
+en arrière-plan ; `--quick` joue 25 runs par
 configuration, en une minute environ : une fumée, pas une mesure. La sortie ne s'écrit qu'à la
-toute fin (`:3919-3921`) : supprimer le fichier de sortie avant de lancer, et attendre la ligne
+toute fin (`:3955-3957`) : supprimer le fichier de sortie avant de lancer, et attendre la ligne
 `écrit : <chemin>`.
 
 ### 20.5. Quand le relancer
@@ -88,16 +94,23 @@ ce qu'il code en dur (§20.3).
 
 **La relance se compare à une sortie de référence, pas au rapport.**
 `tool/simulations/d26_reference_output.md` est la sortie complète du script, suivie par git — 798
-lignes, produite le 2026-10-01 (**vérifié le 2026-10-01**, `wc -l`), et retrouvée octet pour
-octet par une seconde passe le même jour (`sha256sum`). Son attribut `eol=lf` (`.gitattributes`)
+lignes (**vérifié le 2026-10-02**, `wc -l`). Produite le 2026-10-01 et retrouvée octet pour octet
+par une seconde passe le même jour (`sha256sum`), elle a été **recommitée le 2026-10-02**
+(`cba147c`) sur la sortie du second temps de la vague 2. Son attribut `eol=lf` (`.gitattributes`)
 l'empêche d'être convertie à l'extraction. La comparaison se fait **en deux temps**
 ([ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md), D5) :
 
 1. **Le réalignement seul** — aucune valeur en dur ne change, chaque fichier neuf prend la place
-   exacte de son entrée en dur : `git diff --no-index` est vide, hors la ligne « Données lues » de
-   la sortie, qui compte les fichiers (`:3837-3841`).
+   exacte de son entrée en dur : `git diff --no-index` est **entièrement vide**. La ligne
+   « Données lues » de la sortie (`:3873-3877`) compte les entrées que le script joue — 17 runes,
+   avant comme après le réalignement de la vague 2 (`9f1f203`) —, pas les fichiers.
 2. **Chaque changement voulu** — une valeur jouée remplacée, une entrée retirée — relancé à
-   part : l'écart est attribué, et la référence recommitée.
+   part : l'écart est attribué, et la référence recommitée. La vague 2 l'a fait une fois : le
+   `spectral` aligné sur D33 change 477 lignes sur 798 (Berserker en tête), sans bouger le deck,
+   les fusions, le niveau, la difficulté adaptative ni les quasi-morts — écart expliqué au
+   [compte rendu de la vague](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-2-compte-rendu.md),
+   §4. La table d'XP recalée à chaque lancement y dérive de −25 à +40 XP par acte : une sortie de
+   calibration, pas une valeur du jeu.
 
 Un écart inexpliqué arrête le lot. Le diff vide est un test de non-régression du script, pas une
 validation des données. Le rapport, lui, porte deux passes à deux réglages de la difficulté
@@ -112,8 +125,7 @@ constats sur la survie, l'or et la boucle d'XP sont portés sur la ligne de P-16
 `docs/ROADMAP.md`.
 
 > [!NOTE]
-> **L'en-tête du fichier se dit encore « script jetable … ni committé ».** C'est périmé depuis le
-> 2026-09-30 : le script est suivi par git et `CLAUDE.md` le décrit comme un outil durable. À
-> corriger par le premier lot qui le modifie — cette fiche ne touche pas au code. De même, il joue
-> encore une relique et un événement que le brainstorm a depuis retirés du programme : le lot qui
-> les en sort explique l'écart et recommite la référence.
+> **L'en-tête du fichier ne se dit plus « script jetable … ni committé »** : la vague 2 l'a corrigé
+> dans sa tâche de réalignement (`9f1f203`). Il joue encore une relique et un événement que le
+> brainstorm a depuis retirés du programme : le lot qui les en sort explique l'écart et recommite
+> la référence.

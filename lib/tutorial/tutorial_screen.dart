@@ -70,8 +70,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
             enemy.stats.currentPv < enemy.stats.maxPv &&
             engine.armorGainedThisStep;
       case TutorialStepType.merge:
+        // L'étape enseigne un choix : elle n'est franchie qu'une fois la rune
+        // choisie, ou quand aucune ne s'offre (spec P-43 E2, A18).
         return engine.mockState.hand.length == 1 &&
-            engine.mockState.hand.first.rarity != CardRarity.common;
+            engine.mockState.hand.first.rarity != CardRarity.common &&
+            engine.mockState.mergeOffer.isEmpty;
       case TutorialStepType.xp:
         return engine.mockState.playerLevel > 1;
       case TutorialStepType.draft:

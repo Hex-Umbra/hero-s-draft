@@ -50,18 +50,19 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.amber,
       titleEn: 'Shop',
       titleFr: 'Boutique',
-      descEn: 'Buy cards, reroll stock, purge a card. No relics.',
+      descEn: 'Buy cards or a copy of yours, reroll stock, purge a card. No '
+          'relics.',
       descFr:
-          'Achetez des cartes, relancez le stock, purgez-en une. Aucune '
-          'relique.',
+          'Achetez des cartes ou la copie d\'une des vôtres, relancez le '
+          'stock, purgez-en une. Aucune relique.',
     ),
     NodeTypeInfo(
       icon: Icons.nightlight_round,
       color: Colors.greenAccent,
       titleEn: 'Rest Site',
       titleFr: 'Repos',
-      descEn: 'Heal 30% max HP, forge, or remove a card.',
-      descFr: 'Soignez 30 % des PV max, forgez ou retirez une carte.',
+      descEn: 'Heal 30% max HP, sharpen a rune, or remove a card.',
+      descFr: 'Soignez 30 % des PV max, affûtez une rune ou retirez une carte.',
     ),
     NodeTypeInfo(
       icon: Icons.help_outline,
@@ -81,10 +82,10 @@ class TutorialNodeTypesWidget extends StatelessWidget {
     NodeTypeInfo(
       icon: Icons.layers_rounded,
       color: Colors.deepPurpleAccent,
-      titleEn: 'Fusion Forge',
-      titleFr: 'Forge de Fusion',
-      descEn: 'Merge duplicate upgrades, for gold.',
-      descFr: 'Fusionne les améliorations dupliquées, contre de l\'or.',
+      titleEn: 'Exchange Well',
+      titleFr: 'Puits d\'échange',
+      descEn: 'Swap a rune for another, for gold.',
+      descFr: 'Échangez une rune contre une autre, contre de l\'or.',
     ),
     NodeTypeInfo(
       icon: Icons.style,

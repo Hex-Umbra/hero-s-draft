@@ -25,7 +25,6 @@ class UiCard extends StatelessWidget {
   /// La rareté de jeu de la carte ; [rarity] en est le libellé traduit.
   final CardRarity cardRarity;
   final List<String> forgeUpgrades;
-  final int forgeCapacity;
   final CardType? type;
   final CardTarget? targetType;
   final bool isExhaust;
@@ -44,7 +43,6 @@ class UiCard extends StatelessWidget {
     this.data,
     this.cardRarity = CardRarity.common,
     this.forgeUpgrades = const [],
-    this.forgeCapacity = 1,
     this.type,
     this.targetType,
     this.isExhaust = false,
@@ -73,10 +71,9 @@ class UiCard extends StatelessWidget {
       data: card.data,
       cardRarity: card.rarity,
       forgeUpgrades: card.forgeUpgrades,
-      forgeCapacity: card.forgeCapacity,
       type: card.data.type,
       targetType: card.data.target,
-      isExhaust: card.data.isExhaust,
+      isExhaust: card.exhaustsOnPlay,
       isSelected: isSelected,
       isGrayedOut: isGrayedOut,
       onTap: onTap,
@@ -104,7 +101,6 @@ class UiCard extends StatelessWidget {
       data: card,
       cardRarity: card.rarity,
       forgeUpgrades: forgeUpgrades,
-      forgeCapacity: card.forgeCapacityAt(card.rarity),
       type: card.type,
       targetType: card.target,
       isExhaust: card.isExhaust,
@@ -241,10 +237,7 @@ class UiCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 3),
-                                CardRuneSockets(
-                                  forgeUpgrades: forgeUpgrades,
-                                  totalSlots: forgeCapacity,
-                                ),
+                                CardRuneSockets(forgeUpgrades: forgeUpgrades),
                                 if (showBadge) ...[
                                   const SizedBox(height: 3),
                                   Container(

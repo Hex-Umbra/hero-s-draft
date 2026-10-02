@@ -56,7 +56,8 @@ poignée « DEBUG » au bord gauche ouvre un panneau.
 Contenu des onglets : **Héros** — PV/mana max, Puissance **et ses cibles**, chance, critique,
 niveau, XP, « Gagner un niveau », plus l'**identité de la run en lecture seule** (voir 18.3 bis) ;
 **Run** — or, acte (sans régénérer la carte), niveau, drafts en attente, cartes par
-tour, forges bonus, « Acte suivant » ; **Deck** — piocher 1, défausser la main, ajouter/retirer
+tour, « Acte suivant » — la ligne des forges bonus est partie avec `bonusForgeSlots`
+([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) ; **Deck** — piocher 1, défausser la main, ajouter/retirer
 une carte ; **Reliques** — ajouter/retirer ; **Combat** — PV/mana/armure du héros, soin et mana
 complets, PV par ennemi ou « 0 PV », tous les ennemis à 0, gagner/perdre, sauter la phase ennemie.
 

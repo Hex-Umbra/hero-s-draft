@@ -1,5 +1,52 @@
 [
   {
+    "version": "0.5.4",
+    "date": "2026-10-02",
+    "title": "La Fusion Devient Forge",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Chaque fusion de trois cartes vous offre désormais une rune au choix parmi trois, posée au niveau 1 sur la carte fusionnée — moins de trois quand moins lui sont permises, et la fusion vous prévient quand aucune ne l'est.",
+          "La carte fusionnée garde toutes les runes de ses trois exemplaires, une même rune additionnant ses niveaux : plus de limite de runes par carte, plus d'emplacements de rune vides, plus de choix de ce que l'on garde.",
+          "Le feu de camp affûte désormais au lieu de forger : à la place du repos ou de l'oubli, une rune de l'une de vos cartes gagne un niveau, pour 50 or × son niveau actuel, et la fenêtre d'affûtage affiche l'or dont vous disposez. La forge du feu de camp disparaît, avec ses emplacements à remplir, ses relances et ses emplacements achetés.",
+          "Le Puits d'échange remplace la Forge de Fusion et apparaît désormais à coup sûr tous les trois actes, entre les étages 3 et 7 : vous y échangez une rune d'une carte contre n'importe quelle autre qui lui est permise, reçue aux deux tiers du niveau de la rune donnée (au moins 1), pour 50 or × le niveau donné. Un seul échange par visite.",
+          "La boutique vend désormais la copie d'une carte de votre deck : même rareté, sans ses runes, au prix d'une carte de cette rareté.",
+          "Trois nouvelles runes : Allégé (la carte coûte 1 Mana de moins), Précis (+5 % de chance de critique par niveau sur les dégâts de la carte) et Spectral (+40 % des dégâts de base de la carte par niveau, mais la carte s'épuise une fois jouée)."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le tutoriel de la fusion vous apprend désormais à choisir la rune que reçoit la carte fusionnée.",
+          "L'infobulle détaillée d'une carte présente désormais ses runes sous le titre « Runes », au lieu d'« Upgrades »."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Une carte ne porte plus qu'une rune de chaque sorte, et Véloce et Économe ne s'offrent plus qu'aux cartes rares ou de rareté supérieure, soit à partir de la deuxième fusion.",
+          "Les cartes déjà runées de la boutique ne portent pas plus de runes que leur rareté n'a demandé de fusions : une carte commune n'en porte plus aucune.",
+          "Les cartes de classe ne reçoivent plus de rune.",
+          "À savoir : les fusions restent rares jusqu'à la prochaine version, qui apportera une carte après chaque combat. D'ici là, les doublons ne viennent que des récompenses de boss, de la boutique et du Miroir Magique, et les runes à affûter au feu de camp ou à échanger au Puits se font rares."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Au feu de camp, quitter l'écran par le retour après avoir agi termine désormais la visite, comme « Continuer la route » : on ne peut plus revenir pour un second repos, un second oubli ou un second affûtage. Au Puits d'échange, il en va de même après un échange ; sans échange, vous pouvez toujours y revenir.",
+          "À la boutique, sortir par le retour puis revenir rend désormais le même étal : les mêmes cartes, la même copie, les mêmes options du Miroir Magique à leur prix, et ce qui a été acheté reste acheté, soin compris. On ne peut plus renouveler l'étal gratuitement en sortant puis en revenant.",
+          "Le badge « Usage unique » dit enfin vrai : il quitte une carte qui porte Persistant et apparaît sur une carte qui porte Spectral.",
+          "Sur une carte en combat, le texte des effets ne chevauche plus les runes ni le badge « Usage unique », même quand la carte porte deux rangées de runes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.3",
     "date": "2026-10-02",
     "title": "La Juste Mesure",

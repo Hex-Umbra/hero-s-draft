@@ -14,7 +14,14 @@ sealed class CardDelta {
   const CardDelta();
 
   /// Les `type` qu'un fichier peut déclarer.
-  static const typeNames = ['percentBonus', 'addEffect', 'removeExhaust'];
+  static const typeNames = [
+    'percentBonus',
+    'addEffect',
+    'removeExhaust',
+    'reduceCost',
+    'critBonus',
+    'addExhaust',
+  ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
   /// un paramètre manquant : `GameDataLoader` accumule le refus.
@@ -27,6 +34,11 @@ sealed class CardDelta {
         ),
       'addEffect' => AddEffectDelta._fromJson(json),
       'removeExhaust' => const RemoveExhaustDelta(),
+      'reduceCost' =>
+        ReduceCostDelta(valuePerLevel: _positive(json, 'valuePerLevel')),
+      'critBonus' =>
+        CritBonusDelta(valuePerLevel: _positive(json, 'valuePerLevel')),
+      'addExhaust' => const AddExhaustDelta(),
       _ => throw FormatException(
           'deltas.type : valeur "$type" inconnue — attendu : '
           '${typeNames.join(', ')}',
@@ -148,4 +160,37 @@ final class RemoveExhaustDelta extends CardDelta {
 
   @override
   Map<String, dynamic> toJson() => {'type': 'removeExhaust'};
+}
+
+/// La carte coûte `valuePerLevel × L` Mana de moins, jamais moins de 0 ; la
+/// rareté ne change jamais le coût (spec P-43 E2, §4.1) : `cheap`.
+final class ReduceCostDelta extends CardDelta {
+  const ReduceCostDelta({required this.valuePerLevel});
+
+  final int valuePerLevel;
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'type': 'reduceCost', 'valuePerLevel': valuePerLevel};
+}
+
+/// +`valuePerLevel × L` points de pourcentage de critique sur les dégâts de
+/// la carte (spec P-43 E2, §4.1) : `precise`.
+final class CritBonusDelta extends CardDelta {
+  const CritBonusDelta({required this.valuePerLevel});
+
+  final int valuePerLevel;
+
+  @override
+  Map<String, dynamic> toJson() =>
+      {'type': 'critBonus', 'valuePerLevel': valuePerLevel};
+}
+
+/// La carte s'épuise, quel que soit le niveau, et l'emporte sur
+/// [RemoveExhaustDelta] (D33 ; spec P-43 E2, A10) : `spectral`.
+final class AddExhaustDelta extends CardDelta {
+  const AddExhaustDelta();
+
+  @override
+  Map<String, dynamic> toJson() => {'type': 'addExhaust'};
 }

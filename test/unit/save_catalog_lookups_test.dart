@@ -108,7 +108,6 @@ void main() {
             descriptionFr: "N'est jamais épuisée.",
             icon: 'shield_rounded',
             color: 'blueAccent',
-            pools: ['common'],
           ),
         ],
       );

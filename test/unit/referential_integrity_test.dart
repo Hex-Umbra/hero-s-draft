@@ -10,12 +10,16 @@ import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dar
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/ui/widgets/forge/rune_style.dart';
 
 /// Le type d'effet qu'un delta nomme, s'il en nomme un.
 String? _effectOf(CardDelta delta) => switch (delta) {
       PercentBonusDelta(:final effect) => effect,
       AddEffectDelta(:final effect) => effect,
       RemoveExhaustDelta() => null,
+      ReduceCostDelta() => null,
+      CritBonusDelta() => null,
+      AddExhaustDelta() => null,
     };
 
 /// Sans ce fichier, le probleme §2.2 de la spec n est pas resolu : un dossier
@@ -71,6 +75,21 @@ void main() {
         })
           if (strategies.get(type) == null)
             '${rune.id} → type d effet "$type" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Un nom que les tables ne connaissent pas retomberait en silence sur du
+  // gris et une icone d'aide (spec P-43 E2, A19).
+  test('chaque icone et chaque couleur de rune livree est connue des tables',
+      () {
+    final offenders = [
+      for (final rune in registry.forgeUpgrades) ...[
+        if (!runeIcons.containsKey(rune.icon)) '${rune.id} → icone "${rune.icon}"',
+        if (!runeColors.containsKey(rune.color))
+          '${rune.id} → couleur "${rune.color}"',
+      ],
     ];
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));

@@ -202,8 +202,7 @@ void main() {
             'description_fr': 'x',
             'description_en': 'x',
           },
-          mechanics: '{"pools": ["common"], '
-              '"eligibleCardTypes": ["attack", "sortilege"]}',
+          mechanics: '{"eligibleCardTypes": ["attack", "sortilege"]}',
         ),
       );
       expect(faults, hasLength(1));
@@ -592,7 +591,8 @@ void main() {
             descriptor: forge,
             id: 'eclat',
             bilingual: prose,
-            mechanics: '{"pools": ["common"], "color": "$color", '
+            mechanics: '{"minFusionRank": 1, '
+                '"color": "$color", '
                 '"maxLevel": 1, "deltas": [{"type": "removeExhaust"}]}',
           );
 
@@ -645,6 +645,11 @@ void main() {
     test('maxLevel 0 est refuse par la famille 7', () {
       final faults = withRunes().validate(runeDraft({'maxLevel': 0}));
       expect(faults.single.message, contains('maxLevel'));
+    });
+
+    test('minFusionRank 0 est refuse par la famille 7', () {
+      final faults = withRunes().validate(runeDraft({'minFusionRank': 0}));
+      expect(faults.single.message, contains('minFusionRank'));
     });
 
     test('un type d effet inconnu d eligibleEffects est refuse, damage passe',

@@ -15,7 +15,12 @@ class ForgeUpgradeData {
   final String descriptionFr;
   final String icon;
   final String color;
-  final List<String> pools;
+
+  /// Le rang de fusion minimal de la carte qui reçoit la rune (D48 ; spec
+  /// P-43 E2, A8, §4.3) : `eco` et `quick` attendent une carte rare. La clé
+  /// est obligatoire dans le fichier, un entier d'au moins 1 — une commune ne
+  /// porte jamais de rune ; le constructeur en laisse 1 aux tests.
+  final int minFusionRank;
   final List<String>? eligibleCardTypes;
 
   /// Les types d'effet dont la carte doit porter au moins un, parmi ses effets
@@ -34,11 +39,6 @@ class ForgeUpgradeData {
   /// Les runes avec lesquelles celle-ci ne cohabite pas sur une carte (D51) ;
   /// le prédicat lit la règle dans les deux sens (D61).
   final List<String> excludesRunes;
-
-  /// Une rune cumulable additionne ses tiers : deux `sharp:1` valent un
-  /// `sharp:2`. Une rune non cumulable est binaire — `enduring` retire
-  /// l'épuisement ou non — et n'a qu'un tier, 1 (voir `ForgeRuneRules`).
-  final bool stackable;
 
   /// Le niveau le plus haut que la rune atteint sur une carte, exemplaires
   /// additionnés ; `null` : sans plafond (D27, spec P-43 E1, A8). La clé est
@@ -61,14 +61,13 @@ class ForgeUpgradeData {
     required this.descriptionFr,
     required this.icon,
     required this.color,
-    required this.pools,
+    this.minFusionRank = 1,
     this.eligibleCardTypes,
     this.eligibleEffects,
     this.excludesEffects = const [],
     this.requiresExhaust = false,
     this.requiresMinCost = 0,
     this.excludesRunes = const [],
-    this.stackable = true,
     this.maxLevel,
     this.deltas = const [],
     this.weight = 10,
@@ -85,7 +84,7 @@ class ForgeUpgradeData {
       descriptionFr: json['description_fr'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
       color: json['color'] as String? ?? '',
-      pools: List<String>.from(json['pools'] as List? ?? []),
+      minFusionRank: _readMinFusionRank(id, json['minFusionRank']),
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
@@ -97,7 +96,6 @@ class ForgeUpgradeData {
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       requiresMinCost: _readMinCost(id, json['requiresMinCost']),
       excludesRunes: _readExcludedRunes(id, json),
-      stackable: json['stackable'] as bool? ?? true,
       maxLevel: _readMaxLevel(id, json),
       deltas: _readDeltas(id, json['deltas']),
       weight: json['weight'] as int? ?? 10,
@@ -171,6 +169,19 @@ class ForgeUpgradeData {
     return value;
   }
 
+  /// La clé est obligatoire (spec P-43 E2, A8) : un entier d'au moins 1.
+  /// Facultative, elle laisserait une rune neuve s'offrir dès la première
+  /// fusion faute de l'avoir dit — le précédent de `maxLevel`.
+  static int _readMinFusionRank(String id, Object? raw) {
+    if (raw is! int || raw < 1) {
+      throw FormatException(
+        '$id : minFusionRank est obligatoire, un entier d\'au moins 1 — '
+        'reçu : $raw',
+      );
+    }
+    return raw;
+  }
+
   static List<CardDelta> _readDeltas(String id, Object? raw) {
     if (raw is! List || raw.isEmpty) {
       throw FormatException(
@@ -195,14 +206,13 @@ class ForgeUpgradeData {
       'description_fr': descriptionFr,
       'icon': icon,
       'color': color,
-      'pools': pools,
+      'minFusionRank': minFusionRank,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
       if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
       if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
       if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
-      'stackable': stackable,
       'maxLevel': maxLevel,
       'deltas': [for (final delta in deltas) delta.toJson()],
       'weight': weight,
@@ -217,9 +227,8 @@ class ForgeUpgradeData {
   /// La description de la rune au niveau [level], sur [card] à [rarity] (spec
   /// P-43 E1, §5.1) : `{tier}` est le niveau ; `{percent}`, le pourcentage de
   /// ce niveau ; `{val}`, ce que la rune ajoute à **cette** carte au-delà des
-  /// [carried] niveaux qu'elle en porte déjà — le gain que joue le moteur,
-  /// calculé par l'applicateur sur le premier effet propre du type visé, 0 si
-  /// la carte n'en a pas.
+  /// [carried] niveaux qu'elle en porte déjà, sur son premier delta chiffré
+  /// (spec P-43 E2, A14, §5.2) — 0 si elle n'en a pas.
   String getDescription(
     int level,
     String locale,
@@ -232,17 +241,37 @@ class ForgeUpgradeData {
     return template
         .replaceAll('{tier}', '$level')
         .replaceAll('{percent}', '${(bonus?.valuePercentPerLevel ?? 0) * level}')
-        .replaceAll('{val}', '${_addedTo(card, rarity, level, carried, bonus)}');
+        .replaceAll('{val}', '${_valueAdded(card, rarity, level, carried)}');
   }
 
-  static int _addedTo(
+  /// `{val}` : ce que le premier delta chiffré de la rune ajoute à [card] —
+  /// le gain que joue le moteur, l'applicateur le calcule quand il dépend de
+  /// la carte ; un delta sans chiffre est passé.
+  int _valueAdded(CardData card, CardRarity rarity, int level, int carried) {
+    for (final delta in deltas) {
+      final value = switch (delta) {
+        PercentBonusDelta() =>
+          _percentAdded(card, rarity, level, carried, delta),
+        AddEffectDelta() => delta.valuePerLevel * level,
+        RemoveExhaustDelta() => null,
+        ReduceCostDelta() => _costCut(card, rarity, level, carried, delta),
+        CritBonusDelta() => delta.valuePerLevel * level,
+        AddExhaustDelta() => null,
+      };
+      if (value != null) return value;
+    }
+    return 0;
+  }
+
+  /// Le bonus marginal de [bonus] sur le premier effet propre du type visé,
+  /// 0 si la carte n'en a pas.
+  static int _percentAdded(
     CardData card,
     CardRarity rarity,
     int level,
     int carried,
-    PercentBonusDelta? bonus,
+    PercentBonusDelta bonus,
   ) {
-    if (bonus == null) return 0;
     final index = card.effects.indexWhere((e) => e.type == bonus.effect);
     if (index == -1) return 0;
     int valueAt(int total) =>
@@ -250,14 +279,31 @@ class ForgeUpgradeData {
     return valueAt(carried + level) - valueAt(carried);
   }
 
+  /// La baisse de coût marginale de [cut] sur [card], plancher 0 compris.
+  static int _costCut(
+    CardData card,
+    CardRarity rarity,
+    int level,
+    int carried,
+    ReduceCostDelta cut,
+  ) {
+    int costAt(int total) =>
+        EffectiveCard.apply(card, rarity, [(cut, total)]).cost;
+    return costAt(carried) - costAt(carried + level);
+  }
+
+  /// Le nom de la rune au niveau [level] : le niveau ne s'écrit que si la
+  /// rune en a plus d'un (`maxLevel` autre que 1). La règle des infobulles
+  /// (spec P-43 E1, §5.2), que suivent aussi la ligne de rune et le dialogue
+  /// de fusion (spec P-43 E2, §4.11).
+  String nameAt(int level, String locale) =>
+      maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
+
   /// La ligne de la rune dans l'infobulle d'une carte, au niveau [level] que
   /// joue le moteur — le total de ses exemplaires (spec P-43 E1, §5.2) :
-  /// `<nom>[ <niveau>] : <description>`. Le niveau ne s'écrit que si la rune
-  /// en a plus d'un (`maxLevel` autre que 1).
-  String tooltipLine(int level, String locale, CardData card, CardRarity rarity) {
-    final name = maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
-    return '$name : ${getDescription(level, locale, card, rarity)}';
-  }
+  /// `<nom>[ <niveau>] : <description>`.
+  String tooltipLine(int level, String locale, CardData card, CardRarity rarity) =>
+      '${nameAt(level, locale)} : ${getDescription(level, locale, card, rarity)}';
 
   /// Les lignes des runes [runes] dans l'infobulle de [card] à [rarity] : une
   /// par id, au niveau total de ses exemplaires ([levelsOf]) ; une rune absente

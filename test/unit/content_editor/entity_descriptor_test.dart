@@ -236,7 +236,6 @@ void main() {
         'animation',
         'isExhaust',
         'effects',
-        'baseMaxForgeUpgrades',
       },
       EntityCategory.relic: {
         'trigger',
@@ -261,13 +260,12 @@ void main() {
       EntityCategory.forgeUpgrade: {
         'icon',
         'color',
-        'pools',
+        'minFusionRank',
         'eligibleCardTypes',
         'eligibleEffects',
         'excludesEffects',
         'requiresExhaust',
         'requiresMinCost',
-        'stackable',
         'maxLevel',
         'deltas',
         'weight',

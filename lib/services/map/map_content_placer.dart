@@ -20,8 +20,10 @@ class MapContentPlacer {
       }
     }
 
-    // 25% chance to place a forgeFusion node on floors 3 to 7
-    if (random.nextDouble() < 0.25) {
+    // Le Puits d'échange, garanti tous les trois actes (D22 ; spec P-43 E2,
+    // §4.8), sur un combat ou un événement des étages 3 à 7. Le nœud garde
+    // son type `forgeFusion` (A17).
+    if (act % 3 == 0) {
       final eligibleNodes = allNodes.where((node) {
         final floor = node.floor;
         return floor >= 3 &&

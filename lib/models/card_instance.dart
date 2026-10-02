@@ -19,10 +19,9 @@ class CardInstance {
             ? List<String>.unmodifiable(forgeUpgrades)
             : const <String>[];
 
-  int get currentCost => data.cost;
-
-  /// Nombre de runes de forge que cette carte peut porter.
-  int get forgeCapacity => data.forgeCapacityAt(rarity);
+  /// Le coût que la carte demande, ses runes appliquées (spec P-43 E2,
+  /// §4.2).
+  int get currentCost => effective.cost;
 
   /// La carte telle qu'elle se joue — sa rareté et ses runes appliquées, sur
   /// le catalogue du registre (spec P-43 E1, §4.2).
@@ -30,12 +29,16 @@ class CardInstance {
       EffectiveCard.withRunes(data, rarity, forgeUpgrades);
 
   /// La carte est-elle épuisée une fois jouée ? Un pouvoir l'est toujours ;
-  /// une carte `isExhaust` l'est sauf si une de ses runes lève l'épuisement,
-  /// **quel que soit son niveau** (ADR-094 D4) : c'est la donnée de la rune
-  /// qui le dit (`removeExhaust`), plus son id.
-  bool get exhaustsOnPlay =>
-      data.type == CardType.power ||
-      (data.isExhaust && !effective.removesExhaust);
+  /// une carte qu'une rune épuise aussi (`addExhaust`, D33), même si une
+  /// autre lève l'épuisement (spec P-43 E2, A10) ; une carte `isExhaust` l'est
+  /// sauf si une de ses runes lève l'épuisement, **quel que soit son niveau**
+  /// (ADR-094 D4) : c'est la donnée de la rune qui le dit, plus son id.
+  bool get exhaustsOnPlay {
+    if (data.type == CardType.power) return true;
+    final effective = this.effective;
+    return effective.addsExhaust ||
+        (data.isExhaust && !effective.removesExhaust);
+  }
   CardInstance copyWith({
     String? uniqueId,
     CardData? data,

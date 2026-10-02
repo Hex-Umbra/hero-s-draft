@@ -8,15 +8,15 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/rest_card_selection_screen.dart';
-import 'package:roguelike_card_game/ui/widgets/forge_upgrade_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/forge/sharpen_rune_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 
 import '../unit/shipped_data.dart';
 
-/// Monte la sélection de la forge du feu sur un deck d'une seule [card], avec
-/// les huit runes livrées.
-Future<ProviderContainer> _pumpForgeSelection(
+/// Monte la sélection de l'affûtage sur un deck d'une seule [card], avec les
+/// huit runes livrées.
+Future<ProviderContainer> _pumpSharpenSelection(
   WidgetTester tester,
   CardInstance card,
 ) async {
@@ -45,9 +45,9 @@ Future<ProviderContainer> _pumpForgeSelection(
         supportedLocales: const [Locale('en', ''), Locale('fr', '')],
         locale: const Locale('fr', ''),
         home: const RestCardSelectionScreen(
-          title: 'FORGER UNE CARTE',
-          subtitle: 'Choisissez une carte à améliorer définitivement.',
-          isForge: true,
+          title: 'AFFÛTER UNE RUNE',
+          subtitle: 'Choisissez une carte, puis la rune qui gagne un niveau.',
+          isSharpen: true,
         ),
       ),
     ),
@@ -63,56 +63,64 @@ Future<void> _settleNotifications(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox());
 }
 
-/// Le refus de la sélection du feu (spec P-43 E1, A11, §5.3).
+/// La sélection de l'affûtage (spec P-43 E2, A4, §4.7).
 void main() {
-  testWidgets('une Concentration peu commune portant Veloce est refusee, avec '
-      'le motif', (tester) async {
-    // Sa fente libre ne peut rien recevoir : Veloce est sa seule rune
-    // eligible, et son plafond est atteint.
+  testWidgets('une carte sans rune est grisee et refusee, avec son motif',
+      (tester) async {
+    final card = CardInstance(
+        data: shippedCard('strike_basic'), rarity: CardRarity.uncommon);
+    final container = await _pumpSharpenSelection(tester, card);
+
+    expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isTrue);
+
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SharpenRuneDialog), findsNothing);
+    expect(container.read(notificationProvider).last.message,
+        'Aucune rune de cette carte ne peut gagner de niveau.');
+
+    await _settleNotifications(tester);
+  });
+
+  testWidgets('une carte dont les runes sont a leur plafond est refusee de '
+      'meme', (tester) async {
+    // Une Concentration rare portant Veloce, plafonnee a 1.
     final card = CardInstance(
       data: shippedCard('concentration'),
-      rarity: CardRarity.uncommon,
+      rarity: CardRarity.rare,
       forgeUpgrades: const ['quick:1'],
     );
-    final container = await _pumpForgeSelection(tester, card);
+    final container = await _pumpSharpenSelection(tester, card);
+
+    expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isTrue);
 
     await tester.tap(find.byType(UiCard));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ForgeUpgradeDialog), findsNothing);
+    expect(find.byType(SharpenRuneDialog), findsNothing);
     expect(container.read(notificationProvider).last.message,
-        'Aucune rune ne peut être ajoutée à cette carte.');
+        'Aucune rune de cette carte ne peut gagner de niveau.');
 
     await _settleNotifications(tester);
   });
 
-  testWidgets('une Frappe commune sans rune ouvre le dialogue de forge',
+  testWidgets('une carte portant une rune affutable ouvre le dialogue',
       (tester) async {
-    final card = CardInstance(data: shippedCard('strike_basic'));
-    final container = await _pumpForgeSelection(tester, card);
-
-    await tester.tap(find.byType(UiCard));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
-    expect(container.read(notificationProvider), isEmpty);
-
-    await _settleNotifications(tester);
-  });
-
-  testWidgets('une carte pleine garde son message', (tester) async {
     final card = CardInstance(
       data: shippedCard('strike_basic'),
+      rarity: CardRarity.uncommon,
       forgeUpgrades: const ['sharp:1'],
     );
-    final container = await _pumpForgeSelection(tester, card);
+    final container = await _pumpSharpenSelection(tester, card);
+
+    expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isFalse);
 
     await tester.tap(find.byType(UiCard));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ForgeUpgradeDialog), findsNothing);
-    expect(container.read(notificationProvider).last.message,
-        "Cette carte a atteint sa capacité maximale d'améliorations de forge !");
+    expect(find.byType(SharpenRuneDialog), findsOneWidget);
+    expect(container.read(notificationProvider), isEmpty);
 
     await _settleNotifications(tester);
   });

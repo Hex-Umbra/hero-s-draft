@@ -38,7 +38,6 @@ void main() {
             descriptionFr: '+{val} Dégâts ({percent}%, {tier})',
             icon: 'hardware_rounded',
             color: 'redAccent',
-            pools: ['common'],
             deltas: [
               PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 15),
             ],
@@ -52,7 +51,6 @@ void main() {
             descriptionFr: '+{val} Armure ({percent}%, {tier})',
             icon: 'shield_rounded',
             color: 'blueAccent',
-            pools: ['common'],
             deltas: [
               PercentBonusDelta(effect: 'armor', valuePercentPerLevel: 15),
             ],
@@ -66,7 +64,6 @@ void main() {
             descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
             icon: 'diamond_rounded',
             color: 'cyanAccent',
-            pools: ['rare'],
             maxLevel: 1,
             deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
             weight: 40,
@@ -79,33 +76,11 @@ void main() {
             descriptionFr: 'Retire Épuisement',
             icon: 'hourglass_bottom_rounded',
             color: 'greenAccent',
-            pools: ['rare'],
             requiresExhaust: true,
-            stackable: false,
+            maxLevel: 1,
           ),
         ],
       );
-    });
-
-    test('Capacity limit calculation works as expected based on rarity', () {
-      final baseCard = CardData(
-        id: 'test_card',
-        cost: 1,
-        type: CardType.attack,
-        category: CardCategory.global,
-        rarity: CardRarity.common,
-        target: CardTarget.singleEnemy,
-        baseMaxForgeUpgrades: 2,
-        effects: [],
-      );
-
-      // Common card capacity = 2 + 0 = 2
-      final commonInstance = CardInstance(data: baseCard, rarity: CardRarity.common);
-      expect(commonInstance.forgeCapacity, 2);
-
-      // Epic card capacity = 2 + 3 = 5
-      final epicInstance = CardInstance(data: baseCard, rarity: CardRarity.epic);
-      expect(epicInstance.forgeCapacity, 5);
     });
 
     test('addForgeUpgrade correctly adds an upgrade to the master deck card', () {
@@ -199,70 +174,6 @@ void main() {
       expect(updatedCard.forgeUpgrades, equals(['sharp:3']));
     });
 
-    test('Identical upgrades fusion simulation calculations and costs', () {
-      final cardData = CardData(
-        id: 'strike',
-        cost: 1,
-        type: CardType.attack,
-        category: CardCategory.global,
-        rarity: CardRarity.common,
-        target: CardTarget.singleEnemy,
-        effects: [],
-      );
-
-      // Card with 2x sharp (tier 1 and tier 2) and 1x hardened (tier 1)
-      final card = CardInstance(data: cardData, forgeUpgrades: ['sharp:1', 'sharp:2', 'hardened:1']);
-
-      // Simulating _getFusionsForCard logic
-      final Map<String, List<String>> groups = {};
-      for (final upg in card.forgeUpgrades) {
-        final id = upg.split(':')[0];
-        groups.putIfAbsent(id, () => []).add(upg);
-      }
-
-      final fusions = <Map<String, dynamic>>[];
-      groups.forEach((id, list) {
-        if (list.length >= 2) {
-          int totalTier = 0;
-          for (final upg in list) {
-            totalTier += int.parse(upg.split(':')[1]);
-          }
-          final cost = 80 * (list.length - 1);
-          fusions.add({
-            'id': id,
-            'totalTier': totalTier,
-            'cost': cost,
-          });
-        }
-      });
-
-      // We expect only 1 fusion option: sharp, with total tier 3, cost 80 gold.
-      expect(fusions.length, 1);
-      expect(fusions.first['id'], 'sharp');
-      expect(fusions.first['totalTier'], 3);
-      expect(fusions.first['cost'], 80);
-
-      // Simulate fusion implementation
-      final fusionTargetId = fusions.first['id'] as String;
-      final fusionTotalTier = fusions.first['totalTier'] as int;
-
-      final updatedUpgrades = <String>[];
-      bool addedFused = false;
-      for (final upg in card.forgeUpgrades) {
-        final id = upg.split(':')[0];
-        if (id == fusionTargetId) {
-          if (!addedFused) {
-            updatedUpgrades.add('$fusionTargetId:$fusionTotalTier');
-            addedFused = true;
-          }
-        } else {
-          updatedUpgrades.add(upg);
-        }
-      }
-
-      expect(updatedUpgrades, equals(['sharp:3', 'hardened:1']));
-    });
-
     List<CardInstance> threeCopies(List<String> runes) => List.generate(
           3,
           (_) => CardInstance(data: strike, forgeUpgrades: runes),
@@ -275,10 +186,7 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        const ['eco:1', 'eco:1', 'eco:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
           ['eco:1']);
@@ -291,16 +199,13 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        const ['sharp:1', 'sharp:1', 'sharp:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
           ['sharp:3']);
     });
 
-    test('mergeCards garde une seule rune non cumulable, au tier 1', () {
+    test('mergeCards garde une rune de plafond 1 au niveau 1', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -321,10 +226,7 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        ['enduring:1', 'enduring:1', 'enduring:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(
         container.read(deckProvider).masterDeck.single.forgeUpgrades,

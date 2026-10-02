@@ -14,6 +14,7 @@ ForgeUpgradeData _rune(
   int requiresMinCost = 0,
   List<String> excludesRunes = const [],
   int? maxLevel,
+  int minFusionRank = 1,
   List<CardDelta> deltas = const [],
 }) =>
     ForgeUpgradeData(
@@ -24,7 +25,6 @@ ForgeUpgradeData _rune(
       descriptionFr: '',
       icon: '',
       color: '',
-      pools: const ['common'],
       eligibleCardTypes: eligibleCardTypes,
       eligibleEffects: eligibleEffects,
       excludesEffects: excludesEffects,
@@ -32,11 +32,16 @@ ForgeUpgradeData _rune(
       requiresMinCost: requiresMinCost,
       excludesRunes: excludesRunes,
       maxLevel: maxLevel,
+      minFusionRank: minFusionRank,
       deltas: deltas,
     );
 
+/// Une carte de test, peu commune par défaut : le rang 1 qu'atteint une
+/// première fusion, où toute rune de `minFusionRank` 1 peut s'offrir (spec
+/// P-43 E2, §8).
 CardInstance _card({
   CardType type = CardType.attack,
+  CardRarity rarity = CardRarity.uncommon,
   int cost = 1,
   bool isExhaust = false,
   List<CardEffect> effects = const [CardEffect(type: 'damage', value: 6)],
@@ -53,6 +58,7 @@ CardInstance _card({
         isExhaust: isExhaust,
         effects: effects,
       ),
+      rarity: rarity,
       forgeUpgrades: runes,
     );
 
@@ -113,6 +119,21 @@ void main() {
     expect(_eligible(rune, _card(cost: 1)), isTrue);
   });
 
+  // A15, Review Focus 4 : le cout courant, par l'applicateur sur le
+  // catalogue recu — aucun registre global n'existe dans ce fichier.
+  test('le cout courant se lit apres les runes portees, sur le catalogue '
+      'recu', () {
+    final light = _rune('light', deltas: const [
+      ReduceCostDelta(valuePerLevel: 1),
+    ]);
+    final rune = _rune('eco', requiresMinCost: 1);
+    expect(_eligible(rune, _card(cost: 1)), isTrue);
+    expect(_eligible(rune, _card(cost: 1, runes: const ['light:1']), [light]),
+        isFalse);
+    expect(_eligible(rune, _card(cost: 2, runes: const ['light:1']), [light]),
+        isTrue);
+  });
+
   group('la symetrie des exclusions (D51, D61)', () {
     final eco = _rune('eco');
     final enduring = _rune('enduring', excludesRunes: const ['eco']);
@@ -128,15 +149,27 @@ void main() {
     });
   });
 
-  test('le plafond atteint par deux exemplaires additionnes', () {
+  // D3 : une seule rune de chaque type par carte (spec P-43 E2, §4.3,
+  // condition 8) ; le plafond atteint d'E1 (D75) en est un cas.
+  test('une rune portee sous son plafond ne se repropose pas', () {
     final rune = _rune('capped', maxLevel: 2);
-    expect(_eligible(rune, _card(runes: const ['capped:1'])), isTrue);
-    expect(_eligible(rune, _card(runes: const ['capped:1', 'capped:1'])),
-        isFalse);
+    expect(_eligible(rune, _card()), isTrue);
+    expect(_eligible(rune, _card(runes: const ['capped:1'])), isFalse);
   });
 
-  test('une rune sans plafond se repropose', () {
-    expect(_eligible(_rune('sharp'), _card(runes: const ['sharp:5'])), isTrue);
+  test('une rune sans plafond portee ne se repropose pas', () {
+    expect(_eligible(_rune('sharp'), _card(runes: const ['sharp:5'])), isFalse);
+  });
+
+  // D48 : la condition 7, contre le rang de la carte qui recoit la rune.
+  test('minFusionRank contre le rang de la carte qui recoit la rune', () {
+    final rank1 = _rune('sharp');
+    final rank2 = _rune('quick', minFusionRank: 2);
+    expect(_eligible(rank1, _card(rarity: CardRarity.common)), isFalse);
+    expect(_eligible(rank1, _card(rarity: CardRarity.unique)), isFalse);
+    expect(_eligible(rank1, _card()), isTrue);
+    expect(_eligible(rank2, _card()), isFalse);
+    expect(_eligible(rank2, _card(rarity: CardRarity.rare)), isTrue);
   });
 
   test('un effet ajoute par une rune ne compte pas', () {

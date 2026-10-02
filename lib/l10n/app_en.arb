@@ -429,6 +429,8 @@
   "shopExpandDesc": "Permanently add 1 more card for sale",
   "shopClone": "Mirror Magic",
   "shopCloneDesc": "Clone a card from your deck",
+  "shopDeckCopy": "COPY FROM YOUR DECK",
+  "shopDeckCopyDesc": "Same rarity, without its runes.",
   "targetSingleEnemy": "Single enemy",
   "targetAllEnemies": "All enemies",
   "targetSelf": "Self",
@@ -442,8 +444,9 @@
       "amount": { "type": "int" }
     }
   },
-  "restCampForge": "FORGE",
-  "restCampForgeDesc": "Permanently upgrade a card in your deck.",
+  "restCampSharpen": "SHARPEN",
+  "restCampSharpenDesc": "One rune on one of your cards gains a level, for gold.",
+  "restCampSharpenNone": "No rune in your deck can gain a level.",
   "restCampRemove": "REMOVE",
   "restCampRemoveDesc": "Permanently remove a card from your deck.",
   "restCampProceed": "PROCEED ONWARD",
@@ -453,11 +456,12 @@
       "amount": { "type": "int" }
     }
   },
-  "restCampSnackbarForge": "{cardName} was upgraded to Level {level}!",
-  "@restCampSnackbarForge": {
+  "restCampSnackbarSharpen": "{runeName} reaches level {level} on {cardName}!",
+  "@restCampSnackbarSharpen": {
     "placeholders": {
-      "cardName": { "type": "String" },
-      "level": { "type": "int" }
+      "runeName": { "type": "String" },
+      "level": { "type": "int" },
+      "cardName": { "type": "String" }
     }
   },
   "restCampSnackbarRemove": "{cardName} was removed from your deck.",
@@ -466,9 +470,51 @@
       "cardName": { "type": "String" }
     }
   },
-  "restCampForgeTitle": "FORGE A CARD",
-  "restCampForgeSubtitle": "Choose a card to permanently upgrade.",
+  "restCampSharpenTitle": "SHARPEN A RUNE",
+  "restCampSharpenSubtitle": "Choose a card, then the rune that gains a level.",
   "forgeNoEligibleRune": "No rune can be added to this card.",
+  "sharpenNothingOnCard": "No rune on this card can gain a level.",
+  "sharpenAction": "Sharpen — {cost} gold",
+  "@sharpenAction": {
+    "placeholders": {
+      "cost": { "type": "int" }
+    }
+  },
+  "sharpenLevel": "Level {from} → {to}",
+  "@sharpenLevel": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "runeMaxLevel": "Max level",
+  "wellTitle": "EXCHANGE WELL",
+  "wellName": "Exchange Well",
+  "wellDesc": "Swap one of a card's runes for another, for gold.",
+  "wellEmpty": "No card in your deck carries a rune to swap.",
+  "wellPickCard": "Choose a card, then the rune to give up.",
+  "wellNoOption": "No other rune can replace it.",
+  "wellReceive": "Received at level {level}",
+  "@wellReceive": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "wellExchange": "Swap — {cost} gold",
+  "@wellExchange": {
+    "placeholders": {
+      "cost": { "type": "int" }
+    }
+  },
+  "wellDone": "{oldRune} becomes {newRune} (level {level}).",
+  "@wellDone": {
+    "placeholders": {
+      "oldRune": { "type": "String" },
+      "newRune": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
+  "wellLeave": "Leave the Well",
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",
@@ -495,6 +541,17 @@
     }
   },
   "confirmMerge": "Confirm Merge",
+  "mergeRunesLabel": "Runes: {runes}",
+  "@mergeRunesLabel": {
+    "placeholders": {
+      "runes": { "type": "String" }
+    }
+  },
+  "mergeRunesNone": "Runes: none",
+  "fusionRuneTitle": "MERGE — CHOOSE A RUNE",
+  "fusionRuneSubtitle": "The card keeps its three copies' runes and gains one more, at level 1.",
+  "fusionRuneChoose": "Choose",
+  "tooltipRunes": "Runes:",
   "statusPoison": "Poison: {value}",
   "@statusPoison": {
     "placeholders": {

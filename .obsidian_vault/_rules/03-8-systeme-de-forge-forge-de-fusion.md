@@ -1,85 +1,151 @@
-### 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5)
+### 3.8. 🔨 Runes — la Fusion qui les Donne, l'Affûtage au Feu et le Puits d'Échange
 
-La Forge permet d'ajouter des améliorations permanentes (upgrades) aux cartes du Master Deck en échange d'or. Elle a été étendue pour intégrer un système piloté par les données (data-driven) et un nœud spécial sur la carte : la **Forge de Fusion**.
+Une rune est une amélioration permanente d'une carte, notée `id:niveau` dans
+`CardInstance.forgeUpgrades`. Depuis le lot E2 de P-43
+([ADR-106](../_adr/ADR-106-fusion-egale-forge.md), branche de la vague 2, en attente du
+propriétaire), **une rune s'obtient par la fusion de cartes** (§3.8.4), **monte d'un niveau au feu
+de camp** (§3.8.5) et **s'échange au Puits d'échange** (§3.8.6) ; la boutique vend des cartes qui en
+portent déjà ([`_rules/03-9`](03-9-boutique.md)). Ont disparu avec E2 : la forge du feu — ses fentes
+tirées, ses relances, ses fentes achetées et sa « session » dans `RunState` —, la Forge de Fusion,
+la capacité de runes d'une carte, et les clés `pools` et `stackable`.
 
-#### 3.8.1. Forge classique (Améliorations Data-Driven)
-- **Structure pilotée par les données** : Toutes les améliorations de forge (runes) sont définies de manière déclarative, un fichier par rune sous `assets/data/forge_upgrades/` : nom et description bilingues, emoji, icône, couleur, poids (`weight`), pools de rareté (`pools`), **champs d'éligibilité, plafond de niveau (`maxLevel`) et effet (`deltas`)**. Le modèle `ForgeUpgradeData` (`lib/models/data/forge_upgrade_data.dart`) les lit et fournit le registre statique `getById(id)`. **Aucune rune n'a de code à son nom** : ni son effet, ni son éligibilité, ni ses textes — un test (`rune_ids_in_code_test.dart`) refuse tout id de rune livrée écrit en littéral dans `lib/` — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md).
-- **Ce que fait une rune — ses deltas**, appliqués par un seul applicateur (`EffectiveCard`), pour le moteur comme pour tous les rendus. Au niveau L :
+#### 3.8.1. Une rune est un fichier
 
-  | Rune | Delta | Effet |
-  |:---|:---|:---|
-  | *Tranchant* (`sharp`) | `percentBonus` dégâts, 15 | Chaque effet de dégâts de la carte gagne **15 % × L de sa valeur à la rareté de la carte, au moins +L** (arrondi entier, demie vers le haut). Sur *Frappe* commune (6) : +1 au niveau 1 ; sur *Frappe Lourde* (12) : +2 |
-  | *Endurci* (`hardened`) | `percentBonus` armure, 15 | Idem sur chaque effet d'armure : *Mur de Fer* (10) +2 au niveau 1 |
-  | *Véloce* (`quick`) | `addEffect` `draw` | Pioche L cartes à la pose |
-  | *Économe* (`eco`) | `addEffect` `gain_mana` | Rend L mana **à la pose** — ce n'est pas une réduction de coût |
-  | *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent `burn`, `freeze`, `shock` de valeur L pour L tours, par `addStatus` : ils fusionnent avec le statut que la cible porte ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3) |
-  | *Persistant* (`enduring`) | `removeExhaust` | La carte ne s'épuise plus, quel que soit le niveau (`CardInstance.exhaustsOnPlay` lit la donnée) |
+- **Un fichier par rune** sous `assets/data/forge_upgrades/` : nom et description bilingues, emoji,
+  icône, couleur, poids de tirage (`weight`), **rang minimal (`minFusionRank`, obligatoire, entier
+  ≥ 1)**, champs d'éligibilité, **plafond (`maxLevel`, obligatoire, `null` = sans plafond)** et
+  **effet (`deltas`, obligatoire)**. `ForgeUpgradeData.fromJson` refuse une clé obligatoire absente
+  ou hors bornes ; le modèle tient le registre `getById(id)`.
+- **Aucune rune n'a de code à son nom** — ni son effet, ni son éligibilité, ni ses textes :
+  `rune_ids_in_code_test.dart` refuse tout id de rune livrée écrit en littéral dans `lib/`
+  ([ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)). Les noms d'icône et de couleur se
+  traduisent par deux tables, `runeIcons` et `runeColors` (`lib/ui/widgets/forge/rune_style.dart`) ;
+  un nom inconnu retombe sur du gris et un point d'interrogation, et un test d'intégrité exige que
+  chaque rune livrée ait les siens.
 
-  Les effets ajoutés se résolvent **avant** ceux de la carte, par les mêmes stratégies — *Économe* fait entendre le son du gain de mana. Ils ne sont ni multipliés par la rareté ni visés par un pourcentage. Deux exemplaires d'un même id **additionnent leurs niveaux** : la carte joue, et ses infobulles écrivent, une ligne par rune au niveau total.
-- **Plafond de niveau (`maxLevel`, clé obligatoire)** : 1 pour *Économe*, *Véloce*, *Congelant* et *Persistant* ; `null` — sans plafond — pour *Tranchant*, *Endurci*, *Brûlant* et *Surchargé*. **Une seule fonction, `ForgeUpgradeData.boundLevel`, borne les quatre endroits qui écrivent un niveau** : le tirage du feu, celui des cartes pré-forgées de la boutique, la fusion de cartes 3→1 et la Forge de Fusion (§3.8.2). Le niveau qu'affiche une fente est donc celui que la carte recevra, ce qu'elle porte déjà compris.
-- **Cumul** : seules les runes sans plafond se cumulent sur une carte. **Une rune dont le plafond est atteint sur la carte n'est plus proposée** — exemplaires additionnés (D75) : une carte ne porte jamais deux *Économe*, *Véloce*, *Congelant* ou *Persistant*.
-- **Rune non cumulable** : une amélioration déclarée `"stackable": false` — aujourd'hui la seule `enduring` — est binaire. Elle est tirée au niveau 1, et affichée sans niveau dans la fente de la forge et le dialogue de fusion ; les infobulles, elles, écrivent le niveau selon `maxLevel`. `stackable` vit jusqu'à la vague suivante du programme, qui le supprime — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md), amendé par ADR-105.
-- **Limite de Capacité & Fentes de Runes (Rune Sockets)** : Une carte peut accueillir au maximum $baseMaxForgeUpgrades + fusionRank$ améliorations, `CardRarity.fusionRank` valant 0 à 4 de `common` à `legendary` — le nombre de fusions qu'il a fallu pour atteindre la rareté (`CardData.forgeCapacityAt` ; renommé depuis `forgeSlotBonus`, mêmes valeurs). Les cartes uniques de classe ont une limite fixe de 5 améliorations, `unique` n'ajoutant aucun emplacement. Une carte sauvegardée au-delà de sa capacité garde ses runes et les montre toutes, mais n'en accepte plus. Les améliorations de forge sont représentées par des fentes de runes circulaires disposées sur plusieurs rangées (maximum 5 fentes par ligne, avec retour à la ligne automatique géré par `Wrap` en Flutter et par division/coordonnées Canvas en Flame) ; l'emoji d'une rune est lu dans son fichier.
-- **Génération Probabiliste de Slots de Base** : À chaque session d'ouverture pour une carte donnée, le système génère de 1 à 5 slots d'options d'upgrades indépendants (tirages de Bernoulli successifs) selon les chances suivantes :
-  - Slot 1 : 100% (Garanti)
-  - Slot 2 : 50%
-  - Slot 3 : 25%
-  - Slot 4 : 10%
-  - Slot 5 : 2%
-- **Anti-Exploit de Reroll Sauvage (Session Persistence)** : Afin d'éviter que le joueur ne contourne le coût des relances ou ne force de meilleures options en fermant et rouvrant simplement la forge, la session de forge active est persistée dans `RunState` (`forgeSlots` contenant les options tirées formatées `id:tier`, et `forgeTargetCardId` contenant l'identifiant unique de la carte ciblée).
-  - Si le joueur ouvre la forge sur une carte et que `runState.forgeTargetCardId == card.uniqueId`, le dialogue charge immédiatement les fentes préalablement générées et sauvegardées.
-  - Si la carte est différente ou s'il n'y a pas de session active, un nouveau tirage est effectué et immédiatement sauvegardé via `RunNotifier.setForgeSession()`.
-  - La session n'est effacée (via `clearForgeSession()`) qu'après validation d'une amélioration ou lors du départ définitif du camp de repos (`RestScreen`).
-- **Éligibilité : un prédicat unique, lu dans la donnée** (`ForgeRuneRules.isEligible`, ADR-105). Une rune s'offre à une carte si et seulement si :
-  - son `eligibleCardTypes`, s'il existe, contient le type de la carte ;
-  - son `eligibleEffects`, s'il existe, nomme un **effet propre** de la carte — *Tranchant* exige des dégâts, *Endurci* de l'armure ; les effets ajoutés par d'autres runes ne comptent pas ;
-  - aucun effet propre n'est dans son `excludesEffects` — *Persistant* refuse une carte qui pioche ou rend du mana ;
-  - `requiresExhaust` est satisfait — *Persistant* ne s'offre qu'à une carte qui s'épuise ;
-  - le coût **courant** de la carte atteint `requiresMinCost` — *Économe* ne s'offre pas à une carte gratuite ;
-  - aucune rune portée ne l'exclut ni n'est exclue par elle (`excludesRunes`, **symétrique**) — *Persistant* ne cohabite ni avec *Économe* ni avec *Véloce* ;
-  - son plafond n'est pas atteint sur la carte.
+#### 3.8.2. Les onze runes
 
-  Sur les 23 cartes livrées, sans rune : les Attaques sans armure reçoivent *Tranchant*, les trois runes élémentaires, *Véloce* et *Économe* ; les Attaques à armure, les mêmes et *Endurci* ; *Éveil*, *Défense*, *Mur de Fer*, *Endurci*, *Véloce* et *Économe* ; *Bouclier Sacré*, les mêmes et *Persistant* ; *Potion de Soin*, *Véloce*, *Économe* et *Persistant* ; *Forme Démoniaque*, *Métallisation* et *Posture de Rage*, *Véloce* et *Économe* ; *Concentration*, *Focalisation* et *Surtension de Mana*, *Véloce* seule — matrice gardée par `forge_upgrades_catalog_test.dart`.
-- **Une carte sans aucune rune éligible est refusée à la sélection du feu**, avec le message « Aucune rune ne peut être ajoutée à cette carte. » (`forgeNoEligibleRune`) — après le refus d'une carte pleine, qui garde le sien. La forge ne s'ouvre pas.
-- **Le tirage d'une fente** (`ForgeUpgradeDialog`, et de même pour les cartes pré-forgées de la boutique) :
-  1. un **pool ciblé selon la rareté de la carte** — commune : `common` ; peu commune : `common` à 75 %, `uncommon` à 25 % ; rare et au-delà : `common` à 65 %, `uncommon` à 25 %, `rare` à 10 % ;
-  2. parmi les runes de ce pool (`pools`) que le prédicat accepte, hors celles déjà proposées dans la session, un **tirage pondéré par `weight`** ; si le pool ciblé est vide, le tirage descend vers `common`, puis essaie tous les pools — c'est ainsi qu'une carte commune sans dégâts ni armure se voit proposer *Véloce*, *Économe* ou *Persistant* ; en dernier recours, l'exclusion des ids déjà proposés est levée ;
-  3. un niveau 1, 2 ou 3 à 80, 15 et 5 % pour une rune cumulable, 1 sinon — **puis borné par le plafond**.
+Au niveau L, appliquées par un seul applicateur (`EffectiveCard`), pour le moteur comme pour tous
+les rendus :
 
-  Les clés `weightCommon`, `weightUncommon` et `weightRare` que cette fiche décrivait jusqu'au 2026-10-02 n'existent dans aucun fichier : le ciblage par rareté est en code, le poids est la clé `weight`. Le repli sur *Tranchant* quand rien n'était éligible a disparu.
-- **Relance Individuelle (Reroll)** : Le joueur peut relancer le tirage d'un slot spécifique. Le coût en or augmente exponentiellement par slot :
-  $$\text{Coût} = \text{round}(20 \times 1.25^n)$$
-  où $n$ est le nombre de relances déjà appliquées à ce slot. Consomme l'or de l'inventaire via `inventoryProvider`. ⚠️ Sur une carte qui n'accepte qu'une rune (*Concentration*, *Focalisation*, *Surtension de Mana* : *Véloce*), une relance payante ne peut rien changer — défaut connu, laissé à la vague suivante du programme, qui supprime la forge du feu.
-- **Achat de Fentes Progressives (Buy Slots)** : Le joueur peut étendre sa grille d'options en achetant des fentes bonus additionnelles (champ `bonusForgeSlots` de `RunState`).
-  - Capacité maximale : Capée à 4 fentes bonus achetées (soit un maximum de 5 slots affichés au total).
-  - Tarification progressive en or : $50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or.
-  - Le bouton d'achat en bas de la liste est désactivé si l'or disponible est insuffisant ou si la capacité maximale de 5 slots est atteinte.
-- **Descriptions** : identiques sur la carte, dans ses infobulles et à la forge, une ligne par rune au niveau qu'elle joue. Celles de *Tranchant* et *Endurci* disent le gain réel : « +{val} Dégâts sur la carte (+{percent}% de la base, au moins +{tier}) » ; à la forge, `{val}` est le gain **marginal** de la fente, ce que la carte porte déjà compris.
-- **Architecture Modulaire & UI Responsive (v0.2.2)** : Le dialogue de forge (`ForgeUpgradeDialog`) a été converti en interface plein écran réactive (`Dialog.fullscreen`) et découpé selon le principe de responsabilité unique (SRP) :
-  - **`ForgeCardPreview`** : Affiche le visuel de la carte sélectionnée avec son coût en mana, sa description dynamique et ses runes d'amélioration à gauche (sur Desktop) ou en haut (sur Mobile).
-  - **`ForgeSlotRow`** : Ligne d'option d'amélioration gérant le bouton de forge, le coût de relance et le bouton de reroll. Elle reçoit la carte forgée, pour dire le gain exact de sa rune.
-  - **`ForgeBuySlotButton`** : Bouton d'achat de slots bonus en bas de la liste d'options.
-  - Desktop : Disposition en colonnes jumelles (`Row`) avec aperçu de carte à gauche et panneau de défilement scrollable (`ListView`) contenant les slots d'amélioration et le bouton d'achat à droite.
-  - Mobile : Empilement vertical fluide (`Column`) assurant un scroll confortable et empêchant tout débordement (RenderFlex overflow).
+| Rune | Delta | Effet | Plafond | Rang min. | Poids |
+|:---|:---|:---|:---:|:---:|---:|
+| *Tranchant* (`sharp`) | `percentBonus` dégâts, 15 | Chaque effet de dégâts gagne **15 % × L de sa valeur à la rareté, au moins +L** (entier, demie vers le haut) : *Frappe* (6) +1 au niveau 1, *Frappe Lourde* (12) +2 | — | 1 | 100 |
+| *Endurci* (`hardened`) | `percentBonus` armure, 15 | Idem sur chaque effet d'armure : *Mur de Fer* (10) +2 au niveau 1 | — | 1 | 100 |
+| *Spectral* (`spectral`) | `percentBonus` dégâts, 40 ; `addExhaust` | **40 % × L de la valeur à la rareté, au moins +L** — la Puissance n'y entre pas — et **la carte s'épuise** | — | 1 | 50 |
+| *Précis* (`precise`) | `critBonus`, 5 | **+5 × L points de chance critique** sur les dégâts de la carte ([`_rules/03-11`](03-11-systeme-de-coup-critique.md)) | 10 | 1 | 50 |
+| *Allégé* (`cheap`) | `reduceCost`, 1 | **La carte coûte L Mana de moins**, jamais sous 0 | 1 | 1 | 50 |
+| *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent `burn`, `freeze`, `shock` de valeur L pour L tours, par `addStatus` : ils fusionnent avec le statut que la cible porte ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3) | — · 1 · — | 1 | 80 |
+| *Véloce* (`quick`) | `addEffect` `draw` | Pioche L cartes à la pose | 1 | **2** | 60 |
+| *Économe* (`eco`) | `addEffect` `gain_mana` | Rend L Mana **à la pose** — ce n'est pas une réduction de coût | 1 | **2** | 40 |
+| *Persistant* (`enduring`) | `removeExhaust` | La carte ne s'épuise plus | 1 | 1 | 30 |
 
-#### 3.8.2. Forge de Fusion (Fusion Forge)
-Le nœud de **Forge de Fusion** (`MapNodeType.forgeFusion`) permet au joueur de combiner les améliorations identiques d'une carte pour cumuler leurs tiers (ex: combiner `sharp:1` et `sharp:2` en un unique `sharp:3` sur la carte).
-- **Règles de Fusion** :
-  - Seules les améliorations de même type (même ID de rune) sur une même carte sont éligibles à la fusion.
-  - Leurs tiers sont additionnés. Exemple : deux runes de dégâts Tier 1 fusionnent en une rune de dégâts Tier 2. Trois runes Tier 1 fusionnent en une rune Tier 3.
-  - Les runes non cumulables (`stackable: false`, comme `enduring`) ne possèdent pas de statistiques cumulables (binaire persistant/exhaust) et sont exclues de la fusion (`ForgeRuneRules.fusionOptionsFor`). Cette exclusion n'existait pas dans le code avant le 2026-09-15.
-  - **Une fusion qui perdrait un niveau n'est pas proposée** : seulement si la somme tient sous le `maxLevel` de la rune (ADR-105). Sans objet en partie neuve — aucune carte n'y porte deux exemplaires dont la somme dépasse le plafond ; le cas ne vient que d'une sauvegarde plus ancienne.
-- **Formule du Coût en Or** :
-  La fusion a un coût strict calculé en fonction du nombre de runes fusionnées :
-  $$\text{Coût} = 80 \times (N - 1) \text{ Or}$$
-  Où $N$ est le nombre de runes de même type sélectionnées pour être combinées.
-  - Fusionner 2 runes coûte 80 Or.
-  - Fusionner 3 runes coûte 160 Or.
-- **Interface Utilisateur (`ForgeFusionScreen`)** :
-  - L'écran analyse le deck et n'affiche que les cartes possédant au moins deux améliorations du même type (runes identiques) dont la fusion est proposable. Si aucune carte n'est éligible, un message de fallback est affiché.
-  - Lors de la sélection d'une carte éligible, l'écran montre son aperçu visuel complet (UiCard) et liste les fusions possibles.
-  - Un bouton de validation applique la fusion, débite l'or via `inventoryProvider.notifier.spendGold(...)` et met à jour le deck via `deckProvider.notifier.setForgeUpgrades(...)`.
-  - Le joueur peut quitter l'atelier à tout moment en cliquant sur le bouton de retour, ce qui finalise le nœud sur la carte.
+- **Les effets ajoutés** se résolvent **avant** ceux de la carte, par les mêmes stratégies ; ils ne
+  sont ni multipliés par la rareté ni visés par un pourcentage. Deux pourcentages sur un même effet
+  ne se composent pas : *Tranchant* et *Spectral* s'additionnent, chacun sur la valeur à la rareté.
+- **L'épuisement** : `CardInstance.exhaustsOnPlay` — un pouvoir, une carte *Spectrale*, ou une carte
+  `isExhaust` sans *Persistant*. **L'épuisement de *Spectral* l'emporte sur *Persistant*.** Le badge
+  « Usage unique » et les particules d'épuisement lisent ce même prédicat : ils apparaissent sur une
+  carte *Spectrale* et quittent une carte *Persistante*.
+- **Le coût** : `CardInstance.currentCost` est le coût que calcule l'applicateur — *Allégé* le
+  baisse, la rareté ne le change jamais ([`_rules/03-1`](03-1-gestion-du-mana.md)).
+- **Le plafond** : une seule fonction, `ForgeUpgradeData.boundLevel`, borne les quatre endroits qui
+  écrivent un niveau — l'héritage de la fusion, les pré-forgées de la boutique, l'affûtage et le
+  Puits.
+- **Une rune de chaque type par carte** (D3) — une rune portée ne se repropose jamais —, et **aucun
+  plafond du nombre de runes** : la capacité de runes d'une carte n'existe plus.
+- **Les descriptions** sont les mêmes sur la carte, dans ses infobulles et dans chaque dialogue, une
+  ligne par rune au niveau qu'elle joue. `{val}` y dit **ce que la rune ajoute à cette carte**, pour
+  toute sorte chiffrée ; dans un dialogue qui offre une rune ou un niveau, c'est le gain **marginal**,
+  ce que la carte porte déjà compris.
 
-La fusion de **cartes** 3→1, qui réunit les runes de trois exemplaires, est une autre règle :
-[`_rules/02-4`](02-4-progression-de-rarete-dynamique-et-fusion-int.md).
+#### 3.8.3. Éligibilité — un prédicat unique, lu dans la donnée
+
+`ForgeRuneRules.isEligible(rune, carte, catalogue)` : une rune s'offre à une carte si et seulement
+si, à la fois :
+
+1. son `eligibleCardTypes`, s'il existe, contient le type de la carte ;
+2. son `eligibleEffects`, s'il existe, nomme un **effet propre** de la carte — les effets qu'une
+   autre rune ajoute ne comptent pas ;
+3. aucun effet propre n'est dans son `excludesEffects` — *Persistant* refuse une carte qui pioche ou
+   rend du Mana ;
+4. `requiresExhaust` est satisfait — *Persistant* ne s'offre qu'à une carte qui s'épuise ;
+5. le coût **courant** de la carte, calculé par l'applicateur sur le catalogue reçu, atteint
+   `requiresMinCost` — ni *Économe* ni *Allégé* sur une carte gratuite ;
+6. aucune rune portée ne l'exclut ni n'est exclue par elle (`excludesRunes`, **symétrique**) —
+   *Persistant* ne cohabite ni avec *Économe* ni avec *Véloce*, *Allégé* pas avec *Économe* ;
+7. **`minFusionRank` ≤ le rang de la carte qui la reçoit** (`CardRarity.fusionRank`) — à la fusion,
+   le rang **atteint** ; en boutique et au Puits, le rang de la carte. Une commune et une carte de
+   classe, de rang 0, n'en reçoivent aucune ;
+8. **la carte ne la porte pas déjà.**
+
+Ce que le prédicat offre, sur les cartes livrées sans rune héritée — matrice gardée par
+`forge_upgrades_catalog_test.dart` :
+
+| Cartes | Première fusion (peu commune) | Deuxième fusion (rare) |
+|:---|:---|:---|
+| *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Attaque Rapide*, *Balayage*, *Coup de Tonnerre* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral* | les mêmes, *Économe*, *Véloce* |
+| *Cri de Guerre* | les mêmes et *Endurci* | et *Économe*, *Véloce* |
+| *Défense*, *Mur de Fer*, *Éveil* | *Endurci*, *Allégé* | et *Économe*, *Véloce* |
+| *Potion de Soin* | *Persistant*, *Allégé* | et *Économe*, *Véloce* — jamais avec *Persistant* |
+| *Forme Démoniaque*, *Métallisation* | *Allégé* | et *Économe*, *Véloce* |
+| *Concentration*, *Focalisation* | **aucune** | *Véloce* |
+
+Les six cartes de classe, `unique`, ne fusionnent pas et ne reçoivent jamais de rune.
+
+#### 3.8.4. La fusion donne la rune
+
+La fusion 3 → 1 ([`_rules/02-4`](02-4-progression-de-rarete-dynamique-et-fusion-int.md)) garde
+toutes les runes de ses trois exemplaires, puis **offre une rune parmi trois** :
+
+- l'offre est tirée sur la carte fusionnée, au rang qu'elle atteint, par `ForgeRuneRules.drawRunes` :
+  **jusqu'à trois runes distinctes, pondérées par `weight`, sans remise**, parmi celles que le
+  prédicat accepte — **moins s'il y en a moins, jamais aucune tant qu'une existe** (D65) ;
+- le dialogue de fusion (`ForgeUpgradeDialog`) montre la carte et une ligne par rune offerte, au
+  niveau 1 ; **il ne se ferme que par un choix** — ni annulation, ni relance, ni fente achetée ;
+- sans aucune rune éligible — la première fusion d'une *Concentration* —, la fusion se fait sans
+  dialogue : « fusion réussie », puis « Aucune rune ne peut être ajoutée à cette carte. » ;
+- **la fusion reste gratuite** (D32).
+
+#### 3.8.5. L'affûtage au feu de camp
+
+Au feu de camp, « AFFÛTER » remplace l'ancienne forge parmi trois options exclusives
+([`_rules/03-7`](03-7-feu-de-camp-repos.md)) :
+
+- **une rune d'une carte gagne un niveau**, une seule, une fois par visite (D4, D14) ;
+- **coût : 50 × le niveau porté** — 50, 100, 150, 200… (`ForgeRuneRules.sharpenCost`, D20, D63) ;
+  il croît avec le niveau de la rune, pas avec le rang de la carte ;
+- se montent : *Tranchant*, *Endurci*, *Brûlant*, *Surchargé*, *Spectral* sans plafond, *Précis*
+  jusqu'au niveau 10 ; jamais *Économe*, *Véloce*, *Congelant*, *Persistant*, *Allégé*, au plafond
+  dès le niveau 1 (`canSharpen`) ;
+- la référence `id:n` devient `id:n+1` à sa place, par `GoldManager.sharpenRune`, qui refuse — sans
+  rien toucher — une rune au plafond ou l'or qui manque.
+
+#### 3.8.6. Le Puits d'échange
+
+Le Puits d'échange remplace la Forge de Fusion — même nœud de la carte, `MapNodeType.forgeFusion`,
+désormais garanti **tous les trois actes** ([`_rules/02-1`](02-1-generation-procedurale-de-carte.md)) :
+
+- le joueur choisit une carte qui porte une rune, la rune à **donner**, puis **une remplaçante parmi
+  toutes celles que le prédicat accepte sur la carte sans la rune donnée**, à son rang
+  (`ForgeRuneRules.wellOptions`) — donner *Persistant* pour *Économe* est donc possible ;
+- **la rune reçue entre aux deux tiers du niveau donné**, arrondi au plus proche, au moins 1, puis
+  bornée par son plafond (`wellLevel` = `boundLevel((2L + 1) ~/ 3)`, D39) : *Tranchant* 9 contre
+  *Économe* donne *Économe* 1 ;
+- **coût : 50 × le niveau de la rune donnée** (`wellCost`, base distincte de celle de l'affûtage) ;
+- **un échange par visite** ; la rune reçue prend la place de la rune donnée, par
+  `GoldManager.exchangeRune`, qui refuse sans rien toucher une remplaçante hors de l'offre ou l'or
+  qui manque ;
+- après un échange, quitter l'écran — bouton ou retour système — résout le nœud ; sans échange, le
+  retour ne le résout pas, et le joueur peut revenir.
+
+| Niveau donné | 1 | 2 | 3 | 4 | 5 | 6 | 9 | 12 |
+|:---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Niveau reçu, avant plafond | 1 | 1 | 2 | 3 | 3 | 4 | 6 | 8 |
+| Coût (or) | 50 | 100 | 150 | 200 | 250 | 300 | 450 | 600 |
+
+> [!NOTE]
+> **Les sources de rune en jeu** : la fusion (une rune par fusion), les pré-forgées de la boutique,
+> et les clones qui recopient les runes (boss « cartes », Miroirs). Les niveaux montent par
+> l'héritage et l'affûtage. **Les fusions restent rares jusqu'à la vague 3**, qui ajoute une carte
+> après chaque combat : d'ici là, les runes à affûter ou à échanger le sont aussi.

@@ -154,7 +154,9 @@ class CardAnimator {
     card.game.audio.onMoment(GameMoment.cardPlay, source: card.card.data);
 
     void wrappedOnComplete() {
-      if (card.card.data.isExhaust) {
+      // Les runes comprises (spec P-43 E2, A13) ; un pouvoir, comme
+      // aujourd'hui, sans particules.
+      if (card.card.exhaustsOnPlay && card.card.data.type != CardType.power) {
         spawnExhaustParticles(card.position);
       }
       onComplete();

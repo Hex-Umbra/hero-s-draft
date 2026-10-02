@@ -636,6 +636,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopCloneDesc => 'Clone a card from your deck';
 
   @override
+  String get shopDeckCopy => 'COPY FROM YOUR DECK';
+
+  @override
+  String get shopDeckCopyDesc => 'Same rarity, without its runes.';
+
+  @override
   String get targetSingleEnemy => 'Single enemy';
 
   @override
@@ -662,10 +668,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get restCampForge => 'FORGE';
+  String get restCampSharpen => 'SHARPEN';
 
   @override
-  String get restCampForgeDesc => 'Permanently upgrade a card in your deck.';
+  String get restCampSharpenDesc =>
+      'One rune on one of your cards gains a level, for gold.';
+
+  @override
+  String get restCampSharpenNone => 'No rune in your deck can gain a level.';
 
   @override
   String get restCampRemove => 'REMOVE';
@@ -682,8 +692,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String restCampSnackbarForge(String cardName, int level) {
-    return '$cardName was upgraded to Level $level!';
+  String restCampSnackbarSharpen(String runeName, int level, String cardName) {
+    return '$runeName reaches level $level on $cardName!';
   }
 
   @override
@@ -692,13 +702,66 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get restCampForgeTitle => 'FORGE A CARD';
+  String get restCampSharpenTitle => 'SHARPEN A RUNE';
 
   @override
-  String get restCampForgeSubtitle => 'Choose a card to permanently upgrade.';
+  String get restCampSharpenSubtitle =>
+      'Choose a card, then the rune that gains a level.';
 
   @override
   String get forgeNoEligibleRune => 'No rune can be added to this card.';
+
+  @override
+  String get sharpenNothingOnCard => 'No rune on this card can gain a level.';
+
+  @override
+  String sharpenAction(int cost) {
+    return 'Sharpen — $cost gold';
+  }
+
+  @override
+  String sharpenLevel(int from, int to) {
+    return 'Level $from → $to';
+  }
+
+  @override
+  String get runeMaxLevel => 'Max level';
+
+  @override
+  String get wellTitle => 'EXCHANGE WELL';
+
+  @override
+  String get wellName => 'Exchange Well';
+
+  @override
+  String get wellDesc => 'Swap one of a card\'s runes for another, for gold.';
+
+  @override
+  String get wellEmpty => 'No card in your deck carries a rune to swap.';
+
+  @override
+  String get wellPickCard => 'Choose a card, then the rune to give up.';
+
+  @override
+  String get wellNoOption => 'No other rune can replace it.';
+
+  @override
+  String wellReceive(int level) {
+    return 'Received at level $level';
+  }
+
+  @override
+  String wellExchange(int cost) {
+    return 'Swap — $cost gold';
+  }
+
+  @override
+  String wellDone(String oldRune, String newRune, int level) {
+    return '$oldRune becomes $newRune (level $level).';
+  }
+
+  @override
+  String get wellLeave => 'Leave the Well';
 
   @override
   String get restCampRemoveTitle => 'REMOVE A CARD';
@@ -740,6 +803,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmMerge => 'Confirm Merge';
+
+  @override
+  String mergeRunesLabel(String runes) {
+    return 'Runes: $runes';
+  }
+
+  @override
+  String get mergeRunesNone => 'Runes: none';
+
+  @override
+  String get fusionRuneTitle => 'MERGE — CHOOSE A RUNE';
+
+  @override
+  String get fusionRuneSubtitle =>
+      'The card keeps its three copies\' runes and gains one more, at level 1.';
+
+  @override
+  String get fusionRuneChoose => 'Choose';
+
+  @override
+  String get tooltipRunes => 'Runes:';
 
   @override
   String statusPoison(int value) {

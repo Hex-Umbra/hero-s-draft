@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
 import 'shipped_data.dart';
 
@@ -21,6 +22,10 @@ CardInstance _card(String id) => CardInstance(
         effects: const [],
       ),
     );
+
+/// Un exemplaire commun d'une même carte, portant [runes].
+CardInstance _strikeWith(List<String> runes) =>
+    CardInstance(data: _card('strike').data, forgeUpgrades: runes);
 
 void main() {
   group('DeckNotifier Tests', () {
@@ -82,7 +87,8 @@ void main() {
       expect(notifier.state.reshuffleCount, 1);
     });
 
-    test('mergeCards successfully upgrades rarity and merges forge upgrades', () {
+    test('mergeCards monte la rarete et reunit les runes des trois exemplaires',
+        () {
       final baseCardData = const CardData(
         id: 'strike',
         nameEn: 'Strike',
@@ -95,7 +101,6 @@ void main() {
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
         effects: [],
-        baseMaxForgeUpgrades: 1,
       );
 
       final card1 = CardInstance(
@@ -116,70 +121,80 @@ void main() {
 
       notifier.initializeStarterDeck([card1, card2, card3]);
 
-      // Merge the 3 cards
-      // The capacity of next rarity (Uncommon) is baseMaxForgeUpgrades (1) + nextRarityIndex (1) = 2.
-      // Inherited list has ['sharp:1', 'hardened:1', 'sharp:1'].
-      // Auto-fusion should consolidate them to ['sharp:2', 'hardened:1'] (2 upgrades).
-      notifier.mergeCards(
-        [card1.uniqueId, card2.uniqueId, card3.uniqueId],
-        ['sharp:1', 'hardened:1', 'sharp:1'],
-      );
+      final merged =
+          notifier.mergeCards([card1.uniqueId, card2.uniqueId, card3.uniqueId]);
 
       expect(notifier.state.masterDeck.length, 1);
       final mergedCard = notifier.state.masterDeck.first;
+      // La carte rendue est celle que le deck porte : l'ecran de deck tire
+      // l'offre sur elle (spec P-43 E2, §4.5).
+      expect(merged, same(mergedCard));
       expect(mergedCard.rarity, CardRarity.uncommon);
-      expect(mergedCard.forgeUpgrades.length, 2);
-      expect(mergedCard.forgeUpgrades.contains('sharp:2'), isTrue);
-      expect(mergedCard.forgeUpgrades.contains('hardened:1'), isTrue);
+      expect(mergedCard.forgeUpgrades, ['sharp:2', 'hardened:1']);
     });
 
-    test('mergeCards limits upgrades to the capacity of the next rarity level', () {
-      final baseCardData = const CardData(
-        id: 'strike',
-        nameEn: 'Strike',
-        nameFr: 'Frappe',
-        descriptionEn: 'd',
-        descriptionFr: 'd',
-        cost: 1,
-        type: CardType.attack,
-        category: CardCategory.global,
-        rarity: CardRarity.common,
-        target: CardTarget.singleEnemy,
-        effects: [],
-        baseMaxForgeUpgrades: 1,
-      );
+    // D13 : aucun plafond de runes par carte (spec P-43 E2, §4.6).
+    test('mergeCards garde toutes les runes des trois exemplaires', () {
+      final trio = [
+        _strikeWith(const ['sharp:1', 'hardened:1']),
+        _strikeWith(const ['burning:1']),
+        _strikeWith(const ['shocking:1']),
+      ];
+      notifier.initializeStarterDeck(trio);
 
-      final card1 = CardInstance(
-        data: baseCardData,
-        rarity: CardRarity.common,
-        forgeUpgrades: ['sharp:1'],
-      );
-      final card2 = CardInstance(
-        data: baseCardData,
-        rarity: CardRarity.common,
-        forgeUpgrades: ['hardened:1'],
-      );
-      final card3 = CardInstance(
-        data: baseCardData,
-        rarity: CardRarity.common,
-        forgeUpgrades: ['quick:1'],
-      );
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList());
 
-      notifier.initializeStarterDeck([card1, card2, card3]);
-
-      // Merge cards. Next rarity is Uncommon, capacity = 2.
-      // We pass 3 upgrades: ['sharp:1', 'hardened:1', 'quick:1'].
-      // Since capacity is 2, it should limit to 2 upgrades.
-      notifier.mergeCards(
-        [card1.uniqueId, card2.uniqueId, card3.uniqueId],
-        ['sharp:1', 'hardened:1', 'quick:1'],
+      expect(
+        notifier.state.masterDeck.single.forgeUpgrades,
+        ['sharp:1', 'hardened:1', 'burning:1', 'shocking:1'],
       );
+    });
 
-      expect(notifier.state.masterDeck.length, 1);
-      final mergedCard = notifier.state.masterDeck.first;
-      expect(mergedCard.rarity, CardRarity.uncommon);
-      // Upgrades should be limited to 2
-      expect(mergedCard.forgeUpgrades.length, 2);
+    test('mergeCards additionne les niveaux d une meme rune : sharp:3, sharp:1 '
+        'et burning:1 donnent sharp:4 et burning:1', () {
+      final trio = [
+        _strikeWith(const ['sharp:3']),
+        _strikeWith(const ['sharp:1']),
+        _strikeWith(const ['burning:1']),
+      ];
+      notifier.initializeStarterDeck(trio);
+
+      notifier.mergeCards(trio.map((c) => c.uniqueId).toList());
+
+      expect(notifier.state.masterDeck.single.forgeUpgrades,
+          ['sharp:4', 'burning:1']);
+    });
+
+    // E-S3 : l'heritage suit la regle d'exclusion de `consolidate` (spec P-43
+    // E2, §1.1, §4.6).
+    test('mergeCards ecarte une rune exclue par une rune gardee avant elle',
+        () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      // Le catalogue livre : Persistant exclut Econome dans son fichier.
+      shippedRuneRegistry(shippedRuneIds());
+      final potions = [
+        for (final runes in const [
+          ['enduring:1'],
+          ['eco:1'],
+          <String>[],
+        ])
+          CardInstance(data: shippedCard('heal_potion'), forgeUpgrades: runes),
+      ];
+      notifier.initializeStarterDeck(potions);
+
+      notifier.mergeCards(potions.map((c) => c.uniqueId).toList());
+
+      expect(notifier.state.masterDeck.single.forgeUpgrades, ['enduring:1']);
     });
 
     test('mergeCards refuse trois legendaires : aucune rarete au-dela', () {
@@ -189,7 +204,8 @@ void main() {
       );
       notifier.initializeStarterDeck(copies);
 
-      notifier.mergeCards(copies.map((c) => c.uniqueId).toList(), const []);
+      expect(notifier.mergeCards(copies.map((c) => c.uniqueId).toList()),
+          isNull);
 
       expect(notifier.state.masterDeck, hasLength(3));
       expect(
@@ -207,7 +223,7 @@ void main() {
       ];
       notifier.initializeStarterDeck(trio);
 
-      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+      expect(notifier.mergeCards(trio.map((c) => c.uniqueId).toList()), isNull);
 
       expect(notifier.state.masterDeck, trio);
     });
@@ -216,7 +232,7 @@ void main() {
       final trio = [_card('strike'), _card('strike'), _card('defend')];
       notifier.initializeStarterDeck(trio);
 
-      notifier.mergeCards(trio.map((c) => c.uniqueId).toList(), const []);
+      expect(notifier.mergeCards(trio.map((c) => c.uniqueId).toList()), isNull);
 
       expect(notifier.state.masterDeck, trio);
     });
@@ -450,7 +466,7 @@ void main() {
     setUp(() {
       // Persistant, tel que le jeu le livre : l'épuisement lit la donnée de
       // la rune, plus son id (spec P-43 E1, §4.5).
-      shippedRuneRegistry(const ['enduring']);
+      shippedRuneRegistry(const ['enduring', 'spectral']);
       container = ProviderContainer();
       notifier = container.read(deckProvider.notifier);
     });
@@ -500,6 +516,17 @@ void main() {
       play(card);
       expect(notifier.state.discardPile, [card]);
       expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    // D33, A10 : la carte s'epuise, meme portant Persistant.
+    test('Spectral epuise la carte, meme portant Persistant', () {
+      final plain = cardWith(isExhaust: false, runes: const ['spectral:1']);
+      final both =
+          cardWith(runes: const ['enduring:1', 'spectral:1']);
+      play(plain);
+      play(both);
+      expect(notifier.state.exhaustPile, [plain, both]);
+      expect(notifier.state.discardPile, isEmpty);
     });
 
     test('un pouvoir est epuise meme s il porte Persistant', () {

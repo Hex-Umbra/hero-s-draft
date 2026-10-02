@@ -5,6 +5,10 @@
 le 2026-09-15** (P-40 bloc 2) : la capacité vaut `baseMaxForgeUpgrades + forgeSlotBonus` et non plus
 `+ rarityIndex`, pour qu'une carte `unique` n'ajoute aucun emplacement. Rien ne change pour les cinq
 raretés de l'échelle.
+⚠️ **Caduc le 2026-10-02 pour tout ce qui en restait**, par [ADR-106](ADR-106-fusion-egale-forge.md)
+(P-43, lot E2, livré sur branche, en attente du propriétaire) : la capacité, les fentes tirées, les
+pools, la relance et le dialogue au feu disparaissent. Le tirage de niveau 80 · 15 · 5 % ne vit plus
+qu'en boutique, pour les cartes pré-forgées.
 
 ### Contexte
 L'amélioration des cartes au feu de camp manquait d'aléa et de choix stratégiques significatifs. Proposer des choix d'améliorations fixes et illimités rendait la forge monotone. Un système roguelike robuste exigeait des options aléatoires limitées par la rareté de la carte, des probabilités de slots d'options variables et un coût de relance exponentiel.

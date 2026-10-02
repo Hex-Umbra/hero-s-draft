@@ -50,13 +50,14 @@ void main() {
 
   test('les listes de chaines sont aplaties', () {
     write('assets/data/forge_upgrades/a.json',
-        '{"pools": ["common", "rare"]}');
-    write('assets/data/forge_upgrades/b.json', '{"pools": ["rare"]}');
+        '{"eligibleCardTypes": ["attack", "skill"]}');
+    write('assets/data/forge_upgrades/b.json',
+        '{"eligibleCardTypes": ["skill"]}');
 
     final values =
         knownValues(fs, root, kEntityDescriptors[EntityCategory.forgeUpgrade]!);
 
-    expect(values['pools'], ['common', 'rare']);
+    expect(values['eligibleCardTypes'], ['attack', 'skill']);
   });
 
   test('une carte est cherchee a plat ET sous chaque classe', () {

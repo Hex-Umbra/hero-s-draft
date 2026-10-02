@@ -52,7 +52,8 @@ Finder _body(String text) => find.descendant(
 /// Les rendus Flutter de la carte lisent l'applicateur : ce qu'ils montrent
 /// est ce que le moteur joue (spec P-43 E1, §4.2).
 void main() {
-  setUpAll(() => shippedRuneRegistry(const ['sharp', 'quick']));
+  setUpAll(() => shippedRuneRegistry(
+      const ['enduring', 'quick', 'sharp', 'spectral']));
 
   testWidgets('une Frappe legendaire portant Tranchant 2 montre 16 degats',
       (tester) async {
@@ -150,5 +151,48 @@ void main() {
     final tooltip = _tooltip(tester);
     expect(tooltip, contains('Véloce : Pioche +1 carte(s)'));
     expect(tooltip, isNot(contains('Véloce 1')));
+  });
+
+  // Spec P-43 E2, §5.7 : l'en-tete nomme les runes, plus la forge.
+  testWidgets('l infobulle ouvre les runes par leur nom', (tester) async {
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: shippedCard('strike_basic'),
+        forgeUpgrades: const ['quick:1'],
+      ),
+    );
+
+    final tooltip = _tooltip(tester);
+    expect(tooltip, contains('⚙️ Runes :'));
+    expect(tooltip, isNot(contains('Upgrades')));
+  });
+
+  // Le badge dit la regle que joue le moteur (spec P-43 E2, A13).
+  group('le badge Usage unique', () {
+    testWidgets('une carte Spectrale le montre', (tester) async {
+      await _pumpCard(
+        tester,
+        CardInstance(
+          data: shippedCard('strike_basic'),
+          rarity: CardRarity.uncommon,
+          forgeUpgrades: const ['spectral:1'],
+        ),
+      );
+      expect(find.text('USAGE UNIQUE'), findsOneWidget);
+    });
+
+    testWidgets('une Potion de Soin Persistante ne le montre plus',
+        (tester) async {
+      await _pumpCard(
+        tester,
+        CardInstance(
+          data: shippedCard('heal_potion'),
+          rarity: CardRarity.uncommon,
+          forgeUpgrades: const ['enduring:1'],
+        ),
+      );
+      expect(find.text('USAGE UNIQUE'), findsNothing);
+    });
   });
 }

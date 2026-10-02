@@ -235,8 +235,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "isExhaust": false,
   "effects": [
     { "type": "damage", "value": 6 }
-  ],
-  "baseMaxForgeUpgrades": 1
+  ]
 }''',
   ),
   EntityCategory.relic: EntityDescriptor(
@@ -328,11 +327,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     category: EntityCategory.forgeUpgrade,
     label: 'Amélioration de forge',
     directory: 'forge_upgrades',
-    // `pools` est la seule cle que la famille 3 exige : les autres cles
-    // obligatoires d'une rune — `deltas`, et ce que la spec P-43 E1 y ajoute
-    // (§3.1) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme, que la
-    // famille 7 appelle. Un fait a un seul endroit.
-    requiredKeys: const {'pools'},
+    // La famille 3 n'exige aucune cle : les cles obligatoires d'une rune —
+    // `deltas`, `maxLevel` (spec P-43 E1, §3.1) et `minFusionRank` (spec
+    // P-43 E2, A8) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme,
+    // que la famille 7 appelle. Un fait a un seul endroit.
+    requiredKeys: const {},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
     // Le type d'un delta, lu sur le parseur (ADR-100 D1).
     enumKeys: {'deltas[].type': CardDelta.typeNames},
@@ -340,9 +339,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // une case par rune (spec P-43 E1, §6). Absente : aucune.
     referenceListKeys: const {'excludesRunes': EntityCategory.forgeUpgrade},
     // `color` et `icon` ne sont pas un hex ni un texte libre : ce sont des
-    // noms que `forge_slot_row.dart` traduit un a un (`amberAccent`,
-    // `flash_on_rounded`), et un nom inconnu y retombe en silence sur du gris
-    // et `Icons.help_outline`. Les huit ameliorations livrees les emploient.
+    // noms que `runeColors` et `runeIcons` (`lib/ui/widgets/forge/
+    // rune_style.dart`) traduisent un a un (`amberAccent`,
+    // `flash_on_rounded`), et un nom inconnu y retombe sur du gris et
+    // `Icons.help_outline` ; le test d'integrite exige que chaque rune livree
+    // ait les siens (spec P-43 E2, A19). Les onze runes livrees les emploient.
     //
     // Les types d'effet qu'une rune nomme, et le statut qu'elle pose, ne sont
     // connus que du registre de strategies et de `createStatus` : des motifs
@@ -366,20 +367,21 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // qu'il ne veut pas.
     //
     // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
-    // pas monter une rune sans fin (spec P-43 E1, §6). `eligibleEffects` y
-    // porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
-    // absente, elle vaut « aucune », comme `classes` d'un passif.
+    // pas monter une rune sans fin (spec P-43 E1, §6). `minFusionRank` y vaut
+    // 1 : la rune s'offre des la premiere fusion ; `eco` et `quick` en
+    // demandent 2 (spec P-43 E2, D48). `eligibleEffects` y porte l'exemple du
+    // delta, `damage` ; `excludesRunes` n'y figure pas : absente, elle vaut
+    // « aucune », comme `classes` d'un passif.
     template: '''
 {
   "icon": "flash_on_rounded",
   "color": "amberAccent",
-  "pools": ["common"],
+  "minFusionRank": 1,
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "eligibleEffects": ["damage"],
   "excludesEffects": [],
   "requiresExhaust": false,
   "requiresMinCost": 0,
-  "stackable": true,
   "maxLevel": 1,
   "deltas": [
     { "type": "percentBonus", "effect": "damage", "valuePercentPerLevel": 15 }

@@ -2,13 +2,11 @@
   "id": "eco",
   "name_en": "Eco",
   "name_fr": "Économe",
-  "description_en": "Gains +{tier} Mana on play",
-  "description_fr": "Gagne +{tier} Mana à l'utilisation",
+  "description_en": "Gains +{val} Mana on play",
+  "description_fr": "Gagne +{val} Mana à l'utilisation",
   "icon": "diamond_rounded",
   "color": "cyanAccent",
-  "pools": [
-    "rare"
-  ],
+  "minFusionRank": 2,
   "eligibleCardTypes": [
     "attack",
     "skill",

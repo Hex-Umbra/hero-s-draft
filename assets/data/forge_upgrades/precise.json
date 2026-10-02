@@ -1,0 +1,22 @@
+{
+  "id": "precise",
+  "name_en": "Precise",
+  "name_fr": "Précis",
+  "description_en": "+{val}% critical chance on the card's damage",
+  "description_fr": "+{val}% de chance de critique sur les dégâts de la carte",
+  "icon": "gps_fixed_rounded",
+  "color": "pinkAccent",
+  "minFusionRank": 1,
+  "eligibleEffects": [
+    "damage"
+  ],
+  "maxLevel": 10,
+  "deltas": [
+    {
+      "type": "critBonus",
+      "valuePerLevel": 5
+    }
+  ],
+  "weight": 50,
+  "emoji": "🎯"
+}

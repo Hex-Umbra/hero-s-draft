@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'data/card_data.dart';
 import 'data/card_delta.dart';
 import 'data/forge_upgrade_data.dart';
@@ -11,6 +13,9 @@ class EffectiveCard {
     required this.addedEffects,
     required this.effects,
     required this.removesExhaust,
+    required this.cost,
+    required this.critChanceBonus,
+    required this.addsExhaust,
   });
 
   /// Les effets que les deltas ajoutent, résolus avant ceux de la carte.
@@ -22,6 +27,19 @@ class EffectiveCard {
 
   /// Vrai si un delta lève l'épuisement de la carte.
   final bool removesExhaust;
+
+  /// Le coût en Mana que la carte demande : celui de la donnée, moins ce que
+  /// les deltas lui retirent, jamais sous 0 — la rareté ne le change jamais
+  /// (spec P-43 E2, §4.2).
+  final int cost;
+
+  /// Les points de pourcentage de critique que les deltas ajoutent aux dégâts
+  /// de la carte (spec P-43 E2, §4.2).
+  final int critChanceBonus;
+
+  /// Vrai si un delta épuise la carte ; l'emporte sur [removesExhaust] (spec
+  /// P-43 E2, A10).
+  final bool addsExhaust;
 
   /// La couture commune aux runes et, en vague 5, aux évolutions de
   /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
@@ -37,6 +55,9 @@ class EffectiveCard {
     final effects = List<CardEffect>.of(atRarity);
     final added = <CardEffect>[];
     var removesExhaust = false;
+    var costReduction = 0;
+    var critChanceBonus = 0;
+    var addsExhaust = false;
 
     for (final (delta, level) in deltas) {
       switch (delta) {
@@ -54,6 +75,12 @@ class EffectiveCard {
           added.add(delta.effectAt(level));
         case RemoveExhaustDelta():
           removesExhaust = true;
+        case ReduceCostDelta():
+          costReduction += delta.valuePerLevel * level;
+        case CritBonusDelta():
+          critChanceBonus += delta.valuePerLevel * level;
+        case AddExhaustDelta():
+          addsExhaust = true;
       }
     }
 
@@ -61,6 +88,9 @@ class EffectiveCard {
       addedEffects: List.unmodifiable(added),
       effects: List.unmodifiable(effects),
       removesExhaust: removesExhaust,
+      cost: max(0, data.cost - costReduction),
+      critChanceBonus: critChanceBonus,
+      addsExhaust: addsExhaust,
     );
   }
 

@@ -8,7 +8,6 @@ import '../../models/data/stat_rule.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
-import '../../models/data/forge_upgrade_data.dart';
 import '../../services/map_generator_service.dart';
 import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
@@ -29,10 +28,6 @@ class RunState {
   final List<MapNode> mapNodes;
   final String? currentNodeId;
   final PassiveData? activePassive; // Passif dynamique du héros
-  final List<String> forgeSlots;
-  final String? forgeTargetCardId;
-  final Map<String, List<String>> forgeTargetSessions;
-  final int bonusForgeSlots;
   final int pendingDrafts; // Nombre de drafts de montée de niveau en attente
 
   /// Cartes piochées au début de chaque tour, et taille de la main d'ouverture.
@@ -74,10 +69,6 @@ class RunState {
     this.mapNodes = const [],
     this.currentNodeId,
     this.activePassive,
-    this.forgeSlots = const [],
-    this.forgeTargetCardId,
-    this.forgeTargetSessions = const {},
-    this.bonusForgeSlots = 0,
     this.pendingDrafts = 0,
     this.cardsPerTurn = 5,
     this.statRules = const [],
@@ -92,12 +83,6 @@ class RunState {
     String? currentNodeId,
     bool resetCurrentNode = false,
     PassiveData? activePassive,
-    List<String>? forgeSlots,
-    String? forgeTargetCardId,
-    bool resetForgeTargetCardId = false,
-    Map<String, List<String>>? forgeTargetSessions,
-    bool resetForgeTargetSessions = false,
-    int? bonusForgeSlots,
     int? pendingDrafts,
     int? cardsPerTurn,
     List<StatRule>? statRules,
@@ -112,14 +97,6 @@ class RunState {
           ? null
           : (currentNodeId ?? this.currentNodeId),
       activePassive: activePassive ?? this.activePassive,
-      forgeSlots: forgeSlots ?? this.forgeSlots,
-      forgeTargetCardId: resetForgeTargetCardId
-          ? null
-          : (forgeTargetCardId ?? this.forgeTargetCardId),
-      forgeTargetSessions: resetForgeTargetSessions
-          ? const {}
-          : (forgeTargetSessions ?? this.forgeTargetSessions),
-      bonusForgeSlots: bonusForgeSlots ?? this.bonusForgeSlots,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
       cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
       statRules: statRules ?? this.statRules,
@@ -136,10 +113,6 @@ class RunState {
         'activePassiveId': activePassive?.id,
         'activePassiveNameFr': activePassive?.nameFr,
         'activePassiveNameEn': activePassive?.nameEn,
-        'forgeSlots': forgeSlots,
-        'forgeTargetCardId': forgeTargetCardId,
-        'forgeTargetSessions': forgeTargetSessions,
-        'bonusForgeSlots': bonusForgeSlots,
         'pendingDrafts': pendingDrafts,
         'cardsPerTurn': cardsPerTurn,
       };
@@ -148,20 +121,6 @@ class RunState {
     Map<String, dynamic> json,
   ) {
     final missing = <MissingSaveItem>[];
-
-    final (forgeSlots, forgeSlotsMissing) =
-        ForgeUpgradeData.filterValidRefs(json['forgeSlots'] as List<dynamic>?);
-    missing.addAll(forgeSlotsMissing);
-
-    final rawSessions =
-        json['forgeTargetSessions'] as Map<String, dynamic>? ?? const {};
-    final forgeTargetSessions = <String, List<String>>{};
-    rawSessions.forEach((cardId, refs) {
-      final (upgrades, sessionMissing) =
-          ForgeUpgradeData.filterValidRefs(refs as List<dynamic>?);
-      forgeTargetSessions[cardId] = upgrades;
-      missing.addAll(sessionMissing);
-    });
 
     final activePassiveId = json['activePassiveId'] as String?;
     PassiveData? activePassive;
@@ -189,10 +148,6 @@ class RunState {
           .toList(),
       currentNodeId: json['currentNodeId'] as String?,
       activePassive: activePassive,
-      forgeSlots: forgeSlots,
-      forgeTargetCardId: json['forgeTargetCardId'] as String?,
-      forgeTargetSessions: forgeTargetSessions,
-      bonusForgeSlots: json['bonusForgeSlots'] as int? ?? 0,
       pendingDrafts: json['pendingDrafts'] as int? ?? 0,
       cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
@@ -219,7 +174,7 @@ class RunController extends Notifier<RunState> {
   RunState build() {
     _playerStatsManager = PlayerStatsManager(this, ref);
     _mapProgressionManager = MapProgressionManager(this, ref);
-    _goldManager = GoldManager(this, ref);
+    _goldManager = GoldManager(ref);
 
     return RunState(
       currentLevel: 1,
@@ -500,27 +455,15 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.applyLifestealBuff(value: value, duration: duration);
   }
 
-  void setForgeSession(String cardId, List<String> slots) {
-    final updated = Map<String, List<String>>.from(state.forgeTargetSessions);
-    updated[cardId] = slots;
-    state = state.copyWith(
-      forgeTargetSessions: updated,
-      forgeTargetCardId: cardId,
-      forgeSlots: slots,
-    );
-  }
+  /// Affûte une rune d'une carte du deck, contre de l'or (spec P-43 E2,
+  /// §4.7) ; voir `GoldManager.sharpenRune`.
+  bool sharpenRune(String cardId, String runeId) =>
+      _goldManager.sharpenRune(cardId, runeId);
 
-  void clearForgeSession() {
-    state = state.copyWith(
-      resetForgeTargetCardId: true,
-      forgeSlots: const [],
-      resetForgeTargetSessions: true,
-    );
-  }
-
-  bool buyBonusForgeSlot() {
-    return _goldManager.buyBonusForgeSlot();
-  }
+  /// Échange au Puits une rune d'une carte du deck contre une autre, contre
+  /// de l'or (spec P-43 E2, §4.8) ; voir `GoldManager.exchangeRune`.
+  bool exchangeRune(String cardId, String givenId, String receivedId) =>
+      _goldManager.exchangeRune(cardId, givenId, receivedId);
 }
 
 final runProvider = NotifierProvider<RunController, RunState>(RunController.new);

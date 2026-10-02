@@ -63,9 +63,13 @@ trois clés optionnelles d'une récompense de niveau (`requires`, `fallbackDescr
 > **Une borne numérique vit au modèle, pas au descripteur** : le `ratio` d'une règle de `statRules`,
 > borné à ]0, 1], est refusé par `StatRule.fromJson`, que la famille 7 appelle
 > ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)) ; de même,
-> `maxLevel` et `deltas` d'une rune sont exigés par `ForgeUpgradeData.fromJson`, et le descripteur
-> de rune n'exige que `pools`. Le gabarit de rune porte `"maxLevel": 1`, valeur prudente : un
-> plafond oublié ne laisse pas monter une rune sans fin.
+> `maxLevel`, `deltas` et `minFusionRank` d'une rune sont exigés par `ForgeUpgradeData.fromJson`,
+> et le descripteur de rune **n'exige aucune clé** (`requiredKeys` vide) depuis que `pools` a
+> disparu ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Le gabarit de rune porte
+> `"maxLevel": 1`, valeur prudente — un plafond oublié ne laisse pas monter une rune sans fin —, et
+> `"minFusionRank": 1` ; il ne porte plus ni `pools` ni `stackable`. Le gabarit de carte a perdu
+> `baseMaxForgeUpgrades`. `color` et `icon` d'une rune sont des noms que `runeColors` et `runeIcons`
+> (`lib/ui/widgets/forge/rune_style.dart`) traduisent ; un nom inconnu y retombe sur du gris.
 
 ### 19.3. Le pipeline de validation
 

@@ -2,15 +2,11 @@
   "id": "freezing",
   "name_en": "Freezing",
   "name_fr": "Congelant",
-  "description_en": "Applies {tier} Freeze",
-  "description_fr": "Applique {tier} Gel",
+  "description_en": "Applies {val} Freeze",
+  "description_fr": "Applique {val} Gel",
   "icon": "ac_unit_rounded",
   "color": "lightBlueAccent",
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
+  "minFusionRank": 1,
   "eligibleCardTypes": [
     "attack"
   ],

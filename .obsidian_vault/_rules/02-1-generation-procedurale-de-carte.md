@@ -4,7 +4,7 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - **`MapNodeGenerator`** (Phase 1) : Instancie les nœuds et définit leurs types par défaut selon l'étage.
 - **`MapConnectionBuilder`** (Phase 2) : Établit les liaisons (Directed Acyclic Graph) entre les étages successifs.
 - **`MapValidator`** (Phase 3) : Valide et ajuste les quotas minimum/maximum de nœuds par type, et applique la règle anti-répétition de chemin (maximum 2 nœuds Repos ou Élite consécutifs).
-- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques ou la **Forge de Fusion**).
+- **`MapContentPlacer`** (Phase 4) : Gère le placement conditionnel d'événements ou de nœuds spéciaux (comme l'échange de reliques ou le **Puits d'échange**).
 
 **Phase 1 — Création des nœuds** :
 - Itère de l'étage 0 à `floors-1` (0 à 9).
@@ -47,9 +47,9 @@ Le service statique `MapGeneratorService.generateMap({floors = 10, maxWidth = 5}
 - **Position centrale (x = 1)** : Triple (x3) l'or et l'expérience globale (XP) accumulés lors de la victoire, et octroie en plus au joueur une carte aléatoire tirée du jeu entier (excluant les cartes uniques de classe et les cartes de statut) (icône Magie/XP).
 - **Position droite (x = 2)** : Garantit l'obtention d'une relique de rareté supérieure (minimum Uncommon, excluant totalement les communes, icône Diamant). Les chances de rareté sont : Legendary 15%, Epic 30%, Rare 35%, Uncommon 20%.
 
-**Génération du nœud de la Forge de Fusion (`MapNodeType.forgeFusion`)** :
-- Le nœud spécial `forgeFusion` (icône de fente de fusion `Icons.layers_rounded` violette/fuchsia) a une **probabilité d'apparition de 25% par carte/map**.
-- S'il est généré, il est placé de manière aléatoire sur un étage intermédiaire entre les **étages 3 et 7**, en écrasant un nœud éligible. Cela évite qu'il n'interfère avec les premiers étages d'apprentissage (0 à 2), le nœud de repos obligatoire (étage 8) et les boss (étage 9).
-- Il est explicitement répertorié dans la légende de la carte (`MapLegend`) sous l'icône `Icons.layers_rounded` fuchsia.
+**Génération du nœud du Puits d'échange (`MapNodeType.forgeFusion`)** — l'ancienne Forge de Fusion, remplacée par le lot E2 de P-43 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md), branche de la vague 2, en attente du propriétaire ; le type garde son nom) :
+- Le Puits est **garanti tous les trois actes** — actes 3, 6, 9… (`act % 3 == 0`, D22) —, là où l'ancienne Forge de Fusion apparaissait avec une probabilité de 25 % par carte.
+- Il remplace un nœud **de combat ou d'événement des étages 3 à 7**, tiré au hasard, qui garde son `originalType`. Cela évite les premiers étages d'apprentissage (0 à 2), le nœud de repos obligatoire (étage 8) et les boss (étage 9). L'Autel des reliques est placé avant lui : un nœud devenu Autel n'est plus candidat.
+- Il garde son icône `Icons.layers_rounded` fuchsia ; l'infobulle et la légende de la carte (`MapLegend`) l'appellent « Puits d'échange ». Ses règles : [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md) §3.8.6.
 
 **Modèle `MapNode`** : `id` (ex: "node_0_0"), `type` (MapNodeType), `connections` (List\<String\>), `position` (Vector2 Flame), `isCompleted` (bool mutable).

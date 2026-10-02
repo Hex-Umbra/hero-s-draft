@@ -4,11 +4,13 @@ import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
+import 'shipped_data.dart';
+
 /// Un fichier de rune minimal et valide : chaque test n'y change que ce qu'il
 /// veut casser.
 Map<String, dynamic> _json([Map<String, dynamic> overrides = const {}]) => {
       'id': 'sharp',
-      'pools': ['common'],
+      'minFusionRank': 1,
       'maxLevel': null,
       'deltas': [
         {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
@@ -55,6 +57,42 @@ void main() {
             .having((d) => d.durationPerLevel, 'durationPerLevel', 1),
       );
       expect(removed, isA<RemoveExhaustDelta>());
+    });
+
+    test('lit les trois sortes neuves', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'deltas': [
+          {'type': 'reduceCost', 'valuePerLevel': 1},
+          {'type': 'critBonus', 'valuePerLevel': 5},
+          {'type': 'addExhaust'},
+        ],
+      }));
+
+      final [cut, crit, exhaust] = rune.deltas;
+      expect(cut, isA<ReduceCostDelta>().having((d) => d.valuePerLevel, 'valuePerLevel', 1));
+      expect(crit, isA<CritBonusDelta>().having((d) => d.valuePerLevel, 'valuePerLevel', 5));
+      expect(exhaust, isA<AddExhaustDelta>());
+    });
+
+    test('refuse un reduceCost ou un critBonus sans valuePerLevel strictement '
+        'positif', () {
+      for (final type in ['reduceCost', 'critBonus']) {
+        for (final bad in [
+          <String, dynamic>{},
+          {'valuePerLevel': 0},
+          {'valuePerLevel': -1},
+        ]) {
+          expect(
+            () => ForgeUpgradeData.fromJson(_json({
+              'deltas': [
+                {'type': type, ...bad},
+              ],
+            })),
+            _refused('valuePerLevel'),
+            reason: '$type $bad',
+          );
+        }
+      }
     });
 
     test('refuse une rune sans deltas', () {
@@ -182,6 +220,23 @@ void main() {
         [for (final delta in rune.deltas) delta.toJson()],
       );
     });
+
+    test('toJson fait l aller-retour des sortes neuves', () {
+      const deltas = [
+        {'type': 'reduceCost', 'valuePerLevel': 1},
+        {'type': 'critBonus', 'valuePerLevel': 5},
+        {'type': 'addExhaust'},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': deltas}));
+      expect(
+        [
+          for (final delta
+              in ForgeUpgradeData.fromJson(rune.toJson()).deltas)
+            delta.toJson(),
+        ],
+        deltas,
+      );
+    });
   });
 
   group('maxLevel', () {
@@ -208,6 +263,68 @@ void main() {
           containsPair('maxLevel', null));
       final capped = ForgeUpgradeData.fromJson(_json({'maxLevel': 2}));
       expect(ForgeUpgradeData.fromJson(capped.toJson()).maxLevel, 2);
+    });
+  });
+
+  // Spec P-43 E2, A8 : la cle est obligatoire, un entier d'au moins 1.
+  group('minFusionRank', () {
+    test('lu dans le fichier ; 1 au constructeur', () {
+      expect(
+        ForgeUpgradeData.fromJson(_json({'minFusionRank': 2})).minFusionRank,
+        2,
+      );
+      expect(
+        const ForgeUpgradeData(
+          id: 'x',
+          nameEn: 'x',
+          nameFr: 'x',
+          descriptionEn: '',
+          descriptionFr: '',
+          icon: '',
+          color: '',
+        ).minFusionRank,
+        1,
+      );
+    });
+
+    test('refuse une rune sans minFusionRank', () {
+      expect(() => ForgeUpgradeData.fromJson(_json()..remove('minFusionRank')),
+          _refused('minFusionRank'));
+    });
+
+    test('refuse un minFusionRank nul, negatif, decimal ou null', () {
+      for (final bad in [0, -1, 1.5, null]) {
+        expect(() => ForgeUpgradeData.fromJson(_json({'minFusionRank': bad})),
+            _refused('minFusionRank'),
+            reason: '$bad');
+      }
+    });
+
+    test('toJson ecrit minFusionRank', () {
+      final rune = ForgeUpgradeData.fromJson(_json({'minFusionRank': 2}));
+      expect(rune.toJson(), containsPair('minFusionRank', 2));
+      expect(ForgeUpgradeData.fromJson(rune.toJson()).minFusionRank, 2);
+    });
+  });
+
+  // Spec P-43 E2, §4.11 : les cles que le modele ne lit plus ne s'ecrivent
+  // plus.
+  test('toJson n ecrit que les cles du modele', () {
+    expect(ForgeUpgradeData.fromJson(_json()).toJson().keys.toSet(), {
+      'id',
+      'name_en',
+      'name_fr',
+      'description_en',
+      'description_fr',
+      'icon',
+      'color',
+      'minFusionRank',
+      'requiresExhaust',
+      'requiresMinCost',
+      'maxLevel',
+      'deltas',
+      'weight',
+      'emoji',
     });
   });
 
@@ -242,6 +359,93 @@ void main() {
           'fr', strike, CardRarity.common),
       ['Tranchant 3 : +3 Dégâts'],
     );
+  });
+
+  // `{val}` pour toute sorte chiffree (spec P-43 E2, A14, §5.2).
+  group('{val}', () {
+    const strike = CardData(
+      id: 'strike_basic',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [CardEffect(type: 'damage', value: 30)],
+    );
+
+    test('sur addEffect : la valeur par niveau fois le niveau, pas le '
+        'niveau', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': 'Pioche +{val}',
+        'deltas': [
+          {'type': 'addEffect', 'effect': 'draw', 'valuePerLevel': 2},
+        ],
+      }));
+      expect(rune.getDescription(3, 'fr', strike, CardRarity.common),
+          'Pioche +6');
+    });
+
+    test('lit le premier delta chiffre', () {
+      // Le pourcentage donnerait 15 % x 2 x 30 = 9 ; le premier delta
+      // chiffre est le mana rendu, 1 par niveau.
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}',
+        'deltas': [
+          {'type': 'removeExhaust'},
+          {'type': 'addEffect', 'effect': 'gain_mana', 'valuePerLevel': 1},
+          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
+        ],
+      }));
+      expect(rune.getDescription(2, 'fr', strike, CardRarity.common), '+2');
+    });
+
+    test('sur reduceCost : la baisse marginale, plancher 0 compris', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '-{val}',
+        'deltas': [
+          {'type': 'reduceCost', 'valuePerLevel': 1},
+        ],
+      }));
+      // La Frappe coute 1 : un niveau la porte a 0, un second n'ote plus rien.
+      expect(rune.getDescription(1, 'fr', strike, CardRarity.common), '-1');
+      expect(
+        rune.getDescription(1, 'fr', strike, CardRarity.common, carried: 1),
+        '-0',
+      );
+    });
+
+    test('sur critBonus : la valeur par niveau fois le niveau', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}%',
+        'deltas': [
+          {'type': 'critBonus', 'valuePerLevel': 5},
+        ],
+      }));
+      expect(rune.getDescription(3, 'fr', strike, CardRarity.common), '+15%');
+    });
+
+    test('les cinq runes a effet ajoute disent leur valeur, que l ecran '
+        'montrait deja', () {
+      final card = shippedCard('strike_basic');
+      String text(String id, int level) =>
+          shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
+      expect(text('burning', 3), 'Applique 3 Brûlure');
+      expect(text('freezing', 1), 'Applique 1 Gel');
+      expect(text('shocking', 2), 'Applique 2 Électrocution');
+      expect(text('quick', 1), 'Pioche +1 carte(s)');
+      expect(text('eco', 1), "Gagne +1 Mana à l'utilisation");
+    });
+  });
+
+  // La regle des infobulles, que suivent la ligne de rune et le dialogue de
+  // fusion (spec P-43 E2, §4.11).
+  test('nameAt n ecrit le niveau que d une rune a plusieurs niveaux', () {
+    final sharp = ForgeUpgradeData.fromJson(_json({'name_fr': 'Tranchant'}));
+    final eco = ForgeUpgradeData.fromJson(
+        _json({'name_fr': 'Économe', 'maxLevel': 1}));
+    expect(sharp.nameAt(1, 'fr'), 'Tranchant 1');
+    expect(sharp.nameAt(3, 'fr'), 'Tranchant 3');
+    expect(eco.nameAt(1, 'fr'), 'Économe');
   });
 
   group('eligibilite', () {

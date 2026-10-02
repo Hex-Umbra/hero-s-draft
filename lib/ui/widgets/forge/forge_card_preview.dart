@@ -1,20 +1,19 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/card_instance.dart';
 import '../ui_card.dart';
 import '../ui_card/ui_card_helpers.dart';
 
+/// La carte d'un dialogue de forge, et une prise par rune qu'elle porte —
+/// aucune vide : la capacité n'existe plus (spec P-43 E2, §4.5, §4.10).
 class ForgeCardPreview extends StatelessWidget {
   final CardInstance card;
-  final int totalMaxForgeUpgrades;
   final String locale;
   final AppLocalizations l10n;
 
   const ForgeCardPreview({
     super.key,
     required this.card,
-    required this.totalMaxForgeUpgrades,
     required this.locale,
     required this.l10n,
   });
@@ -33,16 +32,6 @@ class ForgeCardPreview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        Text(
-          locale == 'fr' ? 'CAPACITÉ' : 'CAPACITY',
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-          ),
-        ),
-        const SizedBox(height: 6),
         SizedBox(
           width: 120.0,
           child: Wrap(
@@ -77,28 +66,8 @@ class ForgeCardPreview extends StatelessWidget {
                       ),
                     ),
                   )),
-              ...List.generate(
-                max(0, totalMaxForgeUpgrades - card.forgeUpgrades.length),
-                (index) => Container(
-                  width: 18.0,
-                  height: 18.0,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.05),
-                    border: Border.all(
-                      color: Colors.white24,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${card.forgeUpgrades.length} / $totalMaxForgeUpgrades ${locale == 'fr' ? 'Améliorations' : 'Upgrades'}',
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
         ),
       ],
     );

@@ -6,11 +6,7 @@
   "description_fr": "+{val} Armure sur la carte (+{percent}% de la base, au moins +{tier})",
   "icon": "shield_rounded",
   "color": "blueAccent",
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
+  "minFusionRank": 1,
   "eligibleEffects": [
     "armor"
   ],

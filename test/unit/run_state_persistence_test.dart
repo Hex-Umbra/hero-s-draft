@@ -4,7 +4,6 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/missing_save_item.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
-import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
 void main() {
@@ -26,18 +25,7 @@ void main() {
         events: [],
         passives: [regenArmor],
         relics: [],
-        forgeUpgrades: [
-          const ForgeUpgradeData(
-            id: 'enduring',
-            nameEn: 'Enduring',
-            nameFr: 'Increvable',
-            descriptionEn: 'Never exhausts.',
-            descriptionFr: "N'est jamais épuisée.",
-            icon: 'shield_rounded',
-            color: 'blueAccent',
-            pools: ['common'],
-          ),
-        ],
+        forgeUpgrades: [],
       );
     });
 
@@ -56,12 +44,6 @@ void main() {
           ),
           mapNodes: const [],
           currentNodeId: 'floor_3_node_1',
-          forgeSlots: const ['enduring:1'],
-          forgeTargetCardId: 'card-1',
-          forgeTargetSessions: const {
-            'card-1': ['enduring:1'],
-          },
-          bonusForgeSlots: 1,
           pendingDrafts: 2,
           cardsPerTurn: 7,
         );
@@ -76,12 +58,6 @@ void main() {
       expect(restored.activePassive?.id, 'regen_armor');
       expect(restored.heroStats.currentPv, 60);
       expect(restored.currentNodeId, 'floor_3_node_1');
-      expect(restored.forgeSlots, ['enduring:1']);
-      expect(restored.forgeTargetCardId, 'card-1');
-      expect(restored.forgeTargetSessions, {
-        'card-1': ['enduring:1'],
-      });
-      expect(restored.bonusForgeSlots, 1);
       expect(restored.pendingDrafts, 2);
       expect(missing, isEmpty);
     });
@@ -113,23 +89,6 @@ void main() {
           nameFr: 'Passif Retiré',
           nameEn: 'Removed Passive',
           category: 'passive',
-        ),
-      ]);
-    });
-
-    test('drops a missing forge upgrade id from forgeSlots and reports it', () {
-      final json = buildRunState().toJson();
-      json['forgeSlots'] = ['enduring:1', 'removed_upgrade:2'];
-
-      final (restored, missing) = RunState.fromJsonWithReport(json);
-
-      expect(restored.forgeSlots, ['enduring:1']);
-      expect(missing, [
-        const MissingSaveItem(
-          id: 'removed_upgrade',
-          nameFr: 'removed_upgrade',
-          nameEn: 'removed_upgrade',
-          category: 'forgeUpgrade',
         ),
       ]);
     });

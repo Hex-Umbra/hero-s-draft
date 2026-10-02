@@ -127,6 +127,35 @@ void main() {
     });
   });
 
+  // Les trois runes neuves, sur les vraies cartes (spec P-43 E2, §4.1, §4.2).
+  group('Allege, Precis et Spectral', () {
+    test('Allege : la Frappe ne coute plus de mana', () {
+      play(card('strike_basic', runes: const ['cheap:1']));
+      expect(hero().currentMana, 9);
+    });
+
+    test('Precis : le critique de la carte s ajoute a celui du heros', () {
+      // 50 % du heros et 50 % de Precis 10 : le coup est critique, x1,5. Vingt
+      // coups, pour qu'un fil coupe ne passe pas sur la chance (50 % du heros
+      // seul : une chance sur un million de les voir tous critiques).
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(critChance: 50)));
+      for (var i = 0; i < 20; i++) {
+        combat.state = combat.currentState.copyWith(enemies: [
+          combat.currentState.enemies.single
+              .copyWith(stats: enemy().copyWith(currentPv: 100)),
+        ]);
+        play(card('strike_basic', runes: const ['precise:10']));
+        expect(enemy().currentPv, 100 - 9, reason: 'coup ${i + 1}');
+      }
+    });
+
+    test('Spectral 1 sur une Frappe commune : +40 % de la base, +2', () {
+      play(card('strike_basic', runes: const ['spectral:1']));
+      expect(enemy().currentPv, 100 - (6 + 2));
+    });
+  });
+
   group('les statuts des runes : addStatus, sans source (spec E0, A4)', () {
     test('Coup de Tonnerre et Surcharge, trois fois : 5, 7 puis 9 degats', () {
       // Chaque choc de rune rejoint le choc en cours, que `DamagePipeline`

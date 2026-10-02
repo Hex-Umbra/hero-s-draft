@@ -1,124 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import 'package:roguelike_card_game/ui/screens/forge_fusion_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
-import 'package:roguelike_card_game/models/data/card_delta.dart';
-import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
-import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/ui/screens/forge_fusion_screen.dart';
+import 'package:roguelike_card_game/ui/widgets/forge/forge_slot_row.dart';
+import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
+import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 
+import '../unit/shipped_data.dart';
+
+/// Le Puits d'échange (spec P-43 E2, A5, §4.8), sur les runes livrées.
 void main() {
-  const strikeCard = CardData(
-    id: 'strike',
-    nameEn: 'Strike',
-    nameFr: 'Frappe',
-    descriptionEn: 'Deal 6 damage',
-    descriptionFr: 'Inflige 6 dégâts',
-    cost: 1,
-    type: CardType.attack,
-    category: CardCategory.global,
-    rarity: CardRarity.common,
-    target: CardTarget.singleEnemy,
-    effects: [],
+  const hero = HeroData(
+    id: 'paladin',
+    classCard: 'paladin.png',
+    maxHp: 100,
+    maxMana: 3,
   );
 
-  const defendCard = CardData(
-    id: 'defend',
-    nameEn: 'Defend',
-    nameFr: 'Défense',
-    descriptionEn: 'Gain 5 armor',
-    descriptionFr: 'Gagne 5 armure',
-    cost: 1,
-    type: CardType.skill,
-    category: CardCategory.global,
-    rarity: CardRarity.common,
-    target: CardTarget.self,
-    effects: [],
-  );
+  /// Une Frappe rare portant [runes].
+  CardInstance strike(List<String> runes) => CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: runes,
+      );
 
-  const sharpUpgrade = ForgeUpgradeData(
-    id: 'sharp',
-    nameEn: 'Sharp',
-    nameFr: 'Tranchant',
-    descriptionEn: '+{val} Damage on the card',
-    descriptionFr: '+{val} Dégâts sur la carte',
-    icon: 'hardware_rounded',
-    color: 'redAccent',
-    pools: ['common', 'uncommon', 'rare'],
-    eligibleCardTypes: ['attack'],
-    deltas: [PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 15)],
-    weight: 100,
-    emoji: '⚔️',
-  );
-
-  const ecoUpgrade = ForgeUpgradeData(
-    id: 'eco',
-    nameEn: 'Eco',
-    nameFr: 'Économe',
-    descriptionEn: 'Gains +{tier} Mana on play',
-    descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
-    icon: 'diamond_rounded',
-    color: 'cyanAccent',
-    pools: ['rare'],
-    maxLevel: 1,
-    deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
-  );
-
-  const enduringUpgrade = ForgeUpgradeData(
-    id: 'enduring',
-    nameEn: 'Enduring',
-    nameFr: 'Persistant',
-    descriptionEn: 'Removes Exhaust',
-    descriptionFr: 'Retire Épuisement',
-    icon: 'hourglass_bottom_rounded',
-    color: 'greenAccent',
-    pools: ['rare'],
-    requiresExhaust: true,
-    stackable: false,
-  );
-
-  // Constructing GameDataRegistry sets its static `instance`, which is what
-  // ForgeUpgradeData.getById() reads from (see lib/models/data/forge_upgrade_data.dart).
-  // ignore: unused_local_variable
-  final mockRegistry = GameDataRegistry(
-    enemies: const [],
-    heroes: const [],
-    cards: const [strikeCard, defendCard],
-    events: const [],
-    passives: const [],
-    relics: const [],
-    forgeUpgrades: const [sharpUpgrade, ecoUpgrade, enduringUpgrade],
-  );
-
-  Future<ProviderContainer> pumpForgeFusionScreen(
+  /// Une run neuve, au premier nœud de sa carte, avec [deck] pour deck et
+  /// [gold] or. Une liste fixe de runes livrées : le cas ne bouge pas quand
+  /// une rune s'ajoute au catalogue. Le chargeur de données est remplacé :
+  /// sans cela, la vraie donnée se charge en tâche de fond et remplace le
+  /// registre pendant le test.
+  ProviderContainer startRun(
     WidgetTester tester, {
-    required List<CardInstance> masterDeck,
-    int initialGold = 200,
-  }) async {
-    // Wide viewport so the desktop (side-by-side) layout is used, keeping the
-    // eligible-cards list and the fusion-options panel both on screen at once.
+    required List<CardInstance> deck,
+    int gold = 1000,
+  }) {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    final container = ProviderContainer();
+    final registry =
+        shippedRuneRegistry(const ['burning', 'eco', 'hardened', 'sharp']);
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+    );
     addTearDown(container.dispose);
 
-    container.read(inventoryProvider.notifier).reset(initialGold: initialGold);
-    final deckNotifier = container.read(deckProvider.notifier);
-    for (final card in masterDeck) {
-      deckNotifier.addCardToMasterDeck(card);
+    final run = container.read(runProvider.notifier);
+    run.startNewRun(hero);
+    run.travelToNode(container.read(runProvider).mapNodes.first.id);
+    container.read(inventoryProvider.notifier).reset(initialGold: gold);
+    for (final card in deck) {
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
     }
+    return container;
+  }
 
-    await tester.pumpWidget(
+  Widget app(ProviderContainer container, Widget home) =>
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
@@ -129,135 +77,200 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [Locale('en', ''), Locale('fr', '')],
-          locale: const Locale('en', ''),
-          home: const Scaffold(body: ForgeFusionScreen()),
+          locale: const Locale('fr', ''),
+          home: home,
         ),
-      ),
-    );
+      );
 
+  /// Le Puits en page d'accueil.
+  Future<ProviderContainer> pumpWell(
+    WidgetTester tester, {
+    required List<CardInstance> deck,
+    int gold = 1000,
+  }) async {
+    final container = startRun(tester, deck: deck, gold: gold);
+    await tester.pumpWidget(app(container, const ForgeFusionScreen()));
     await tester.pumpAndSettle();
     return container;
   }
 
-  testWidgets(
-    'shows the empty-state fallback when no card has duplicate upgrades',
-    (WidgetTester tester) async {
-      final noDupCard = CardInstance(data: strikeCard, forgeUpgrades: const ['sharp:1']);
-      final noUpgradeCard = CardInstance(data: defendCard);
+  /// Le Puits poussé sur une vraie pile, comme la carte du monde le pousse :
+  /// le retour système a une page où revenir.
+  Future<ProviderContainer> pushWell(
+    WidgetTester tester, {
+    required List<CardInstance> deck,
+  }) async {
+    final container = startRun(tester, deck: deck);
+    await tester.pumpWidget(app(
+      container,
+      Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ForgeFusionScreen()),
+            ),
+            child: const Text('Ouvrir le Puits'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Ouvrir le Puits'));
+    await tester.pumpAndSettle();
+    return container;
+  }
 
-      await pumpForgeFusionScreen(tester, masterDeck: [noDupCard, noUpgradeCard]);
+  /// Échange Tranchant 3, sur la seule carte du deck, contre Brûlant : la
+  /// carte, la rune donnée, puis la première remplaçante.
+  Future<void> exchangeSharp(WidgetTester tester) async {
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tranchant 3'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Échanger — 150 or').first);
+    await tester.pumpAndSettle();
+  }
 
-      expect(
-        find.text('No cards in your deck have identical runes to merge.'),
-        findsOneWidget,
-      );
-      expect(find.text('ELIGIBLE CARDS'), findsNothing);
-      expect(find.text('Strike'), findsNothing);
-      expect(find.text('Defend'), findsNothing);
-    },
-  );
+  // La notification se ferme d'elle-même après 3,5 s.
+  Future<void> settleNotification(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpWidget(const SizedBox());
+  }
 
-  testWidgets(
-    'a card whose fusion would lose a level is not listed (spec P-43 E1, A10)',
-    (WidgetTester tester) async {
-      // Deux eco:1, d'une sauvegarde d'avant 0.5.3 : les reunir donnerait
-      // eco:1 contre 80 or.
-      final cappedCard = CardInstance(
-        data: strikeCard,
-        forgeUpgrades: const ['eco:1', 'eco:1'],
-      );
+  /// La couleur que le texte [label] porte vraiment : celle du style rendu,
+  /// héritée de la tuile ou forcée sur le `Text`.
+  Color? titleColor(WidgetTester tester, String label) => tester
+      .widget<RichText>(find.descendant(
+          of: find.text(label), matching: find.byType(RichText)))
+      .text
+      .style
+      ?.color;
 
-      await pumpForgeFusionScreen(tester, masterDeck: [cappedCard]);
+  bool currentNodeCompleted(ProviderContainer container) {
+    final run = container.read(runProvider);
+    return run.mapNodes
+        .singleWhere((n) => n.id == run.currentNodeId)
+        .isCompleted;
+  }
 
-      expect(
-        find.text('No cards in your deck have identical runes to merge.'),
-        findsOneWidget,
-      );
-    },
-  );
+  Future<void> pressBack(WidgetTester tester) async {
+    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.pumpAndSettle();
+  }
 
-  testWidgets(
-    'lists a card with two identical upgrades as fusable',
-    (WidgetTester tester) async {
-      final fusableCard = CardInstance(
-        data: strikeCard,
-        forgeUpgrades: const ['sharp:1', 'sharp:1'],
-      );
-      final plainCard = CardInstance(data: defendCard);
+  testWidgets('les cartes qui portent une rune, et elles seules',
+      (tester) async {
+    await pumpWell(tester, deck: [
+      strike(const ['sharp:2']),
+      CardInstance(data: shippedCard('defend_basic')),
+    ]);
 
-      await pumpForgeFusionScreen(tester, masterDeck: [fusableCard, plainCard]);
+    expect(find.text('PUITS D\'ÉCHANGE'), findsOneWidget);
+    expect(find.text('Choisissez une carte, puis la rune à donner.'),
+        findsOneWidget);
+    expect(find.byType(UiCard), findsOneWidget);
+  });
 
-      expect(find.text('ELIGIBLE CARDS'), findsOneWidget);
-      expect(find.text('Strike'), findsOneWidget);
-      expect(find.text('1 merge(s) available'), findsOneWidget);
-      // The non-eligible card must not appear in the eligible list.
-      expect(find.text('Defend'), findsNothing);
-    },
-  );
+  testWidgets('les remplacantes d une rune : toutes, a leur niveau d arrivee, '
+      'au cout de la rune donnee', (tester) async {
+    await pumpWell(tester, deck: [strike(const ['sharp:3'])]);
 
-  testWidgets(
-    'performing a fusion deducts gold and merges the upgrades into one higher tier',
-    (WidgetTester tester) async {
-      final fusableCard = CardInstance(
-        data: strikeCard,
-        forgeUpgrades: const ['sharp:1', 'sharp:1'],
-      );
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+    final before = titleColor(tester, 'Tranchant 3');
+    await tester.tap(find.text('Tranchant 3'));
+    await tester.pumpAndSettle();
+    // La rune choisie se montre choisie.
+    expect(titleColor(tester, 'Tranchant 3'), isNot(before));
 
-      final container = await pumpForgeFusionScreen(
-        tester,
-        masterDeck: [fusableCard],
-        initialGold: 200,
-      );
+    // Brulant aux deux tiers de 3, Econome borne a 1 ; Endurci ne vise que
+    // l'armure.
+    expect(find.byType(ForgeSlotRow), findsNWidgets(2));
+    expect(find.text('Échanger — 150 or'), findsNWidgets(2));
+    expect(find.text('Reçue au niveau 2'), findsOneWidget);
+    expect(find.text('Reçue au niveau 1'), findsOneWidget);
+  });
 
-      // Select the eligible card to reveal its fusion options.
-      await tester.tap(find.text('Strike'));
-      await tester.pumpAndSettle();
+  testWidgets('un echange par visite : le Puits echange, puis ne propose plus '
+      'que la sortie', (tester) async {
+    final card = strike(const ['sharp:3']);
+    final container = await pumpWell(tester, deck: [card], gold: 300);
 
-      // Cost is 80 * (2 upgrades - 1) = 80, shown on the fuse button
-      // (note: the button label always renders "Or", the French word for
-      // gold, regardless of locale — this is how the widget is implemented).
-      final fuseButton = find.text('80 Or');
-      expect(fuseButton, findsOneWidget);
+    await exchangeSharp(tester);
 
-      await tester.tap(fuseButton);
-      await tester.pumpAndSettle();
+    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        ['burning:2']);
+    expect(container.read(inventoryProvider).gold, 150);
+    expect(container.read(notificationProvider).last.message,
+        'Tranchant devient Brûlant (niveau 2).');
+    // L'or suffirait a un second echange : rien ne le propose plus.
+    expect(find.byType(UiCard), findsNothing);
+    expect(find.byType(ForgeSlotRow), findsNothing);
+    expect(find.text('Quitter le Puits'), findsOneWidget);
 
-      // Gold was deducted.
-      expect(container.read(inventoryProvider).gold, 120);
+    await settleNotification(tester);
+  });
 
-      // The two sharp:1 upgrades merged into a single sharp:2.
-      final updatedCard = container
-          .read(deckProvider)
-          .masterDeck
-          .firstWhere((c) => c.uniqueId == fusableCard.uniqueId);
-      expect(updatedCard.forgeUpgrades, ['sharp:2']);
+  // Review Focus 2.
+  testWidgets('une rune sans remplacante se montre inactive, avec son motif',
+      (tester) async {
+    // Une Defense peu commune, sur ce catalogue sans Allege : ni degats, ni
+    // rang 2.
+    await pumpWell(tester, deck: [
+      CardInstance(
+        data: shippedCard('defend_basic'),
+        rarity: CardRarity.uncommon,
+        forgeUpgrades: const ['hardened:1'],
+      ),
+    ]);
 
-      // The card is no longer eligible, so the empty-state message returns.
-      expect(
-        find.text('No cards in your deck have identical runes to merge.'),
-        findsOneWidget,
-      );
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+    expect(find.text('Aucune autre rune ne peut la remplacer.'),
+        findsOneWidget);
+    // Et se montre inactive : ni blanche, ni de la couleur du choix.
+    expect(titleColor(tester, 'Endurci 1'), isNot(Colors.white));
 
-      // Pump to let any notification timers expire.
-      await tester.pump(const Duration(seconds: 5));
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
+    await tester.tap(find.text('Endurci 1'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ForgeSlotRow), findsNothing);
+  });
 
-  testWidgets(
-    'une rune non cumulable portee deux fois ne rend pas la carte eligible',
-    (WidgetTester tester) async {
-      final card = CardInstance(
-        data: strikeCard,
-        forgeUpgrades: const ['enduring:1', 'enduring:1'],
-      );
+  testWidgets('un deck sans rune montre l ecran vide et la sortie',
+      (tester) async {
+    await pumpWell(tester, deck: [CardInstance(data: shippedCard('defend_basic'))]);
 
-      await pumpForgeFusionScreen(tester, masterDeck: [card]);
+    expect(find.text('Aucune carte de votre deck ne porte de rune à échanger.'),
+        findsOneWidget);
+    expect(find.text('Quitter le Puits'), findsOneWidget);
+  });
 
-      expect(
-        find.text('No cards in your deck have identical runes to merge.'),
-        findsOneWidget,
-      );
-    },
-  );
+  // Spec P-43 E2, A5 : apres un echange, toute sortie resout le noeud ; sans
+  // echange, le joueur peut revenir.
+  group('le retour systeme', () {
+    testWidgets('apres un echange, il resout le noeud et ferme l ecran, une '
+        'seule fois', (tester) async {
+      final container = await pushWell(tester, deck: [strike(const ['sharp:3'])]);
+
+      await exchangeSharp(tester);
+      await pressBack(tester);
+
+      expect(find.byType(ForgeFusionScreen), findsNothing);
+      expect(find.text('Ouvrir le Puits'), findsOneWidget);
+      expect(currentNodeCompleted(container), isTrue);
+      expect(container.read(checkpointProvider), 1);
+
+      await settleNotification(tester);
+    });
+
+    testWidgets('sans echange, il ferme l ecran et le noeud reste non resolu',
+        (tester) async {
+      final container = await pushWell(tester, deck: [strike(const ['sharp:3'])]);
+
+      await pressBack(tester);
+
+      expect(find.byType(ForgeFusionScreen), findsNothing);
+      expect(currentNodeCompleted(container), isFalse);
+      expect(container.read(checkpointProvider), 0);
+    });
+  });
 }

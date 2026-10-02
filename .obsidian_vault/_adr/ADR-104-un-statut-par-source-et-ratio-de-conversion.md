@@ -10,7 +10,9 @@ description: A status remembers what applied it — addStatus merges only the sa
 la branche `feat/v0.5.3-p43-e0-e1` — vague 1 du
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md),
 en attente du test, de la PR, de la fusion et du tag du propriétaire.** Spec `f38a0f1`, plan
-`bdd82f6`, cinq commits de code `258aca1`..`dd5ae0c`.
+`bdd82f6`, cinq commits de code `258aca1`..`dd5ae0c`. **Fusionné dans `main` le 2026-10-02 par la
+PR #47** (commit de fusion `559df08`), tagué sur ce commit, CI/CD verte, release publiée — constaté
+par la porte d'entrée de la vague 2.
 **Complète [ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md)** — `StatRule` gagne
 `ratio` — sans amender aucune de ses décisions ; le passage unique
 d'[ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) tient. Sa décision D4
