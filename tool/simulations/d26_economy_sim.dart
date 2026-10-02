@@ -1,7 +1,8 @@
 // Simulation D26 — l'économie de deck du brainstorm v3, sur 15 actes.
 //
-// Script JETABLE, hors du code du jeu : ni déclaré dans pubspec.yaml, ni
-// importé par lib/, ni committé. Il n'importe rien de lib/ : Flame, donc
+// Script hors du code du jeu, suivi par git avec sa sortie de référence
+// (d26_reference_output.md, à côté) : ni déclaré dans pubspec.yaml, ni
+// importé par lib/, ni un test. Il n'importe rien de lib/ : Flame, donc
 // Flutter, refuse `dart run`. Les FORMULES du jeu y sont portées, chacune
 // avec son `fichier:ligne` ; les DONNÉES (ennemis, neutres, signatures,
 // reliques, récompenses de niveau, runes, passifs, classes) sont relues dans
@@ -819,15 +820,37 @@ class GameData {
       );
     }
 
-    // Les runes : les 8 d'aujourd'hui (poids et types lus dans la donnée),
-    // plus celles du §8. Éligibilité en donnée (D44).
-    final runes = <RuneDef>[];
+    // Les runes, dans l'ordre que la référence a mesuré — les huit fichiers
+    // d'avant E2 triés, puis les neuf du §8 — : la liste est tirée par index,
+    // et un fichier neuf rangé au milieu décalerait tous les tirages (D73 ;
+    // spec P-43 E2, §9). Chacune vient de son fichier s'il existe — poids et
+    // types lus dans la donnée, condition et exclusions données par le
+    // `switch` —, de son entrée en dur sinon. Éligibilité en donnée (D44).
+    const runeOrder = [
+      'burning', 'eco', 'enduring', 'freezing', 'hardened', 'quick', 'sharp',
+      'shocking', 'cheap', 'piercing', 'lifesteal', 'transfusion', 'precise',
+      'splash', 'echo', 'retain', 'spectral',
+    ];
+    // §8 — les runes sans fichier. DÉFAUT : poids 50, `minFusionRank` 1.
+    const hardRunes = {
+      'piercing': RuneDef('piercing', 50, needs: 'damage'),
+      'lifesteal': RuneDef('lifesteal', 50, needs: 'damage'),
+      'transfusion': RuneDef('transfusion', 50, needs: 'hpCost'), // D40
+      'splash': RuneDef('splash', 50, needs: 'singleDamage'),
+      'echo': RuneDef('echo', 50),
+      'retain': RuneDef('retain', 50),
+    };
+    final fromFiles = <String, RuneDef>{};
     for (final f in _jsonFiles('$root/forge_upgrades')) {
       final j = _json(f.path);
       final id = j['id'] as String;
+      if (!runeOrder.contains(id)) {
+        throw StateError('rune « $id » (${f.path}) absente de runeOrder : '
+            'lui donner sa place dans la liste tirée par index');
+      }
       final weight = j['weight'] as int? ?? 50;
       final types = [for (final t in (j['eligibleCardTypes'] as List? ?? const [])) t as String];
-      runes.add(switch (id) {
+      fromFiles[id] = switch (id) {
         // D33 : en pourcentage de la valeur de base — DÉFAUT : éligible à
         // toute carte qui porte l'effet (sans quoi aucune Compétence de
         // dégâts du Mage ne prend de rune de dégâts).
@@ -842,21 +865,20 @@ class GameData {
         // D44 : `excludesEffects: ["gain_mana", "draw"]` ; D51 : `excludesRunes`.
         'enduring' => RuneDef(id, weight,
             types: types, needs: 'exhaustNoEngine', excludes: const ['eco', 'quick']),
+        // §8, fichiers d'E2 (spec P-43 E2, §3.2) : la définition qu'avait leur
+        // entrée en dur.
+        'cheap' => RuneDef(id, weight, needs: 'cost1', excludes: const ['eco']),
+        'precise' => RuneDef(id, weight, needs: 'damage'),
+        'spectral' => RuneDef(id, weight, needs: 'damage'),
         _ => RuneDef(id, weight, types: types),
-      });
+      };
     }
-    // §8 — runes nouvelles. DÉFAUT : poids 50, `minFusionRank` 1.
-    runes.addAll(const [
-      RuneDef('cheap', 50, needs: 'cost1', excludes: ['eco']),
-      RuneDef('piercing', 50, needs: 'damage'),
-      RuneDef('lifesteal', 50, needs: 'damage'),
-      RuneDef('transfusion', 50, needs: 'hpCost'), // D40
-      RuneDef('precise', 50, needs: 'damage'),
-      RuneDef('splash', 50, needs: 'singleDamage'),
-      RuneDef('echo', 50),
-      RuneDef('retain', 50),
-      RuneDef('spectral', 50, needs: 'damage'),
-    ]);
+    final runes = [
+      for (final id in runeOrder)
+        fromFiles[id] ??
+            hardRunes[id] ??
+            (throw StateError('rune « $id » : ni fichier ni entrée en dur')),
+    ];
 
     final events = <EventDef>[
       for (final f in _jsonFiles('$root/events'))
