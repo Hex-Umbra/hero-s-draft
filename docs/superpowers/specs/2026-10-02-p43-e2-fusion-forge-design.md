@@ -1282,9 +1282,12 @@ chaque carte sauvegardée embarque — perd `baseMaxForgeUpgrades` : une sauvega
 les ignore. Les sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de cela n'est testé ni annoncé.
 
 L'étal retenu de la boutique (§4.9) ne se sauvegarde pas, comme `ShopState` aujourd'hui (`SaveService` n'écrit que la
-run, le deck et l'inventaire, `lib/services/save_service.dart:60-62`) : après tout chargement de sauvegarde — une
-relance de l'application comme « Continuer » depuis l'accueil, qui appelle `hydrate` (`:127-129`) —, la boutique tire
-un étal neuf.
+run, le deck et l'inventaire, `lib/services/save_service.dart:60-62`). Il se retire, comme partout ailleurs, quand le
+nœud courant change (2 ter) ; un chargement de sauvegarde — une relance de l'application comme « Continuer » depuis
+l'accueil, qui appelle `hydrate` (`:127-129`) — n'y fait exception qu'en vidant l'état en mémoire. Rien de cela ne se
+voit en jeu : une sauvegarde prise sur un nœud de boutique l'a résolu, et on n'y rentre plus. *(Phrase corrigée à la
+revue d'ensemble de la partie 2 : elle disait que la boutique tire un étal neuf « après tout chargement », ce que 2 ter
+ne dit pas.)*
 
 ---
 

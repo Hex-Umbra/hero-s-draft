@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.2.
 **Branche** : `feat/v0.5.4-p43-e2-fusion-forge`, ouverte le 02/10/2026 depuis `main` à `559df08`.
 **Ouvert le** : 02/10/2026, à la fin du plan de la partie 1 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : **en cours** — la partie 1 est implémentée ; restent le plan et l'implémentation de la partie 2, la simulation, la note de version et la mémoire.
+**État** : **en cours** — les deux parties sont implémentées et la simulation relancée ; restent la note de version et la mémoire (§3.7), puis le cahier de test et les statistiques (§3.8).
 
 ---
 
@@ -15,6 +15,8 @@
 | Arrêt et reprise | Spec non convergée au troisième tour, vague arrêtée (`6e94be7`) ; arrêt levé par le propriétaire le 02/10, reprise sans `stash` (arbre propre, `dart analyze` propre, 1375 tests verts) |
 | Spec E2 | Convergée au quatrième tour, `90dd137` |
 | E2, partie 1 | Plan `7a071b6` ; cinq commits de code `3eafb5e`..`d6e6cd5` et un correctif de la revue d'ensemble `1407e2e` ; **1426 tests** (+51), `dart analyze` propre |
+| E2, partie 2 | Plan `017aa4c` ; neuf commits de code `bcc5b36`..`bff3078` (dont un correctif de revue de tâche, `cd967cf`) et un correctif de la revue d'ensemble `0010ca2` ; **1480 tests** (+54), `dart analyze` propre |
+| Simulation (§3.6) | Premier temps sur `9f1f203` : diff vide contre la référence ; second temps sur `bff3078` : 477 lignes, l'écart expliqué au §4 ; référence recommitée |
 
 ---
 
@@ -123,6 +125,55 @@ Recopiées du registre de SDD avant la suppression de son espace de travail, dan
 
 Mineurs différés pendant les revues de tâche, triés par la revue d'ensemble : résolus par les tâches suivantes — le niveau porté passé à `boundLevel` dans l'ancien dialogue, la forme imbriquée de `mergeCards`, le `pop(true)` après un trio invalide ; laissés — une offre vide ouvrirait un dialogue qu'on ne ferme pas (impossible : l'appelant teste l'offre vide), des ids en double dans `mergeCards` (l'écran passe un ensemble), `_removeCard` qui lit `ref` avant de tester `mounted` (antérieur, inatteignable), le niveau recalculé par le message d'affûtage, l'offre vide du tutoriel testée au seul niveau du widget, le bouton de rune du tutoriel trouvé par sa clé en texte.
 
+### 2.4. Plan E2, partie 2 — [`2026-10-02-p43-e2-fusion-forge-partie-2.md`](../plans/2026-10-02-p43-e2-fusion-forge-partie-2.md)
+
+Écrit sur le code que la partie 1 a laissé, et rejoué par son rédacteur sur une extraction hors du dépôt. Un tour de vérification : le vérificateur l'a rejoué tâche par tâche sur sa propre extraction. Résultat : chaque tâche verte et propre, totaux mesurés égaux aux annoncés (1435 · 1435 · 1450 · 1450 · 1453 · 1475 · 1480 · 1480 · 1480), tests aléatoires rejoués huit fois, fumée `--quick` après le réalignement identique à l'octet. **Prêt** ; sept mineurs corrigés au passage par le rédacteur, sans qu'aucun total bouge.
+
+Questions que le plan a tranchées sans que la spec les pose, jugées conformes par le vérificateur et consignées par l'orchestrateur :
+
+| # | Question | Choix | Motif |
+|:---|:---|:---|:---|
+| P6 | La tournure Riverpod de l'étal retenu (la spec, 2 ter, la laissait au plan) | `ref.listen` sur un `select` de `currentNodeId` dans `ShopController.build` | Avec `ref.watch`, le Notifier devient périmé au changement de nœud et `initializeShop` lève l'assertion de Riverpod « Cannot use ref functions after the dependency of a provider changed » — mesuré : sept tests rouges |
+| P7 | Le cas `steadfast` de `shop_controller_test`, que le tableau du tour 3 de la spec (n° 4) disait réécrit en `maxLevel: 1` | Supprimé, dans la tâche qui retire la lecture d'`isStackable` par la boutique | Réécrit, il doublait le cas `capped` voisin ; le plafond 1 en boutique reste gardé par `capped` — rien n'est perdu |
+| P8 | Comment des tests gardent l'absence de `pools` et `stackable` | Ils comparent l'ensemble exact des clés (`toJson`, les clés de chaque fichier), sans nommer les deux mots | Les commandes de contrôle de la spec (§4.11) ne rendent alors que les trois homonymes ; les tests sont plus forts que ceux que §8 demandait |
+| P9 | « ⚙️ Upgrades: », en anglais dans les deux langues (S6) | Une clé ARB `tooltipRunes` (« Runes : » / « Runes: ») | La règle de §5.3 pour `lib/ui` |
+| P10 | Le débordement des prises en combat (S6) — mesuré : 9 runes au plus, sur un *Cri de Guerre* épique ou mieux, deux rangées de prises | La fonction pure `CardTextRenderer.centerBlockTop`, qui garde le bloc central sous l'en-tête, les prises et le badge | Écartés : des prises plus petites, plus de prises par rangée |
+| P11 | La mise en page de l'écran du Puits | Une colonne défilante : les cartes, la rune à donner, les remplaçantes | A5 fixe l'ordre, pas la mise en page |
+| P12 | `ShopScreen.build` | Remplacé en entier ; l'état vide garde son centrage | Retirer le `PopScope` sans `dart format` laissait 170 lignes mal indentées |
+| P13 | Les particules d'épuisement | `exhaustsOnPlay && type != power` | La lettre d'A13 : les pouvoirs restent ignorés |
+| P14 | Le commentaire d'en-tête du script de simulation (« jetable … ni committé ») | Corrigé dans la tâche de réalignement | Le script est suivi par git depuis le 01/10, sa sortie de référence aussi |
+
+### 2.5. Les décisions de SDD — exécution du plan de la partie 2
+
+Même méthode que pour la partie 1 : implémenteurs Sonnet, relecteurs Sonnet (Opus pour les Tasks 1, 3 et 6), revue d'ensemble Opus, base de la revue d'ensemble `017aa4c` — le commit où le plan commence (§3.5). Une seule revue de tâche a demandé un tour de correction (Task 1).
+
+| # | Décision | Motif | Si elle est fausse |
+|:---|:---|:---|:---|
+| S8 | Task 1 : un constat important, imposé par le code du plan — la couleur blanche forcée du titre masquait l'état choisi et l'état inactif de la rune à donner au Puits — **corrigé** (`cd967cf`) | La spec §4.8 veut qu'une rune sans remplaçante « se montre inactive » ; filtre 6, sur un échange payant et irréversible | Trois lignes de style |
+| S9 | Task 6 : le coût courant d'une carte passe désormais par l'applicateur, et le rendu Flame le relit à chaque image pour chaque carte en main — gardé | La spec §4.2 impose ce passage ; aucun blocage de la boucle, seulement des allocations, qu'une mémorisation supprimerait plus tard | Des allocations par image, à mesurer si le combat ralentit |
+| S10 | Revue d'ensemble : quatre mineurs corrigés aussitôt (`0010ca2`) — le test de couleur du Puits, qui passait sur l'ancien code ; le test bout à bout de *Précis*, qui ne détectait une rupture du câblage qu'une fois sur deux ; la ligne du tutoriel « Même coût, rareté supérieure. », qui contredisait la carte quand *Allégé* venait d'être choisi — elle ne s'affiche plus que tant qu'aucune rune n'est choisie ; la doc de `ForgeSlotRow.detail` | Peu coûteux ; le troisième est ce que le joueur lit (filtre 6) | Une quinzaine de lignes |
+| S11 | Revue d'ensemble : la phrase du §7 de la spec — l'étal retiré « après tout chargement de sauvegarde » — contredisait 2 ter, que le code suit ; corrigée dans la spec | Sans effet en jeu : une sauvegarde prise sur un nœud de boutique l'a résolu | Aucun |
+| S12 | Revue d'ensemble : renvoyés à la file (§5) — sept mineurs de test et de forme | Aucun ne change le jeu | Rien en `0.5.4` |
+
+Mineurs différés pendant les revues de tâche, triés par la revue d'ensemble — laissés : `exchangeRune` et `sharpenRune` partagent une recherche et une fin presque identiques (à factoriser à la troisième copie) ; le journal de débogage que le test d'une rune absente du registre imprime ; la rune relue par `firstWhere` après `drawRunes` ; le bloc de tirage de l'étal répété par `initializeShop` et `rerollCards` ; le prix de la copie calculé deux fois à l'écran ; le message d'achat de la copie, recopié de celui d'une carte ; la liste des clés du modèle tenue deux fois dans le test du catalogue ; un `percentBonus` sans effet correspondant qui arrêterait la recherche de `{val}` (aucune rune livrée n'a cette forme) ; la hauteur du badge écrite deux fois ; `centerBlockTop`, qui descend aussi une carte sans rune à description très haute (voulu) ; deux commentaires du script et un du test de mise en page.
+
+---
+
+## 4. La simulation
+
+`tool/simulations/d26_economy_sim.dart`, relancé en deux temps (§3.6, D73), chaque fois sur une extraction hors du dépôt (`git archive <commit> tool/simulations assets/data`, spec §9), sortie vers `.superpowers/`, comparée par `git diff --no-index` à la référence suivie, `tool/simulations/d26_reference_output.md`.
+
+**Premier temps — le réalignement seul** (`9f1f203`, Task 8 de la partie 2). Le script lit ses runes par une liste d'ordre explicite des 17 ids ; les trois fichiers neufs prennent la place exacte de leurs entrées en dur. Mesure complète en 467 s : **diff vide** contre la référence, ligne « Données lues » comprise — elle compte les runes, 17, et non les fichiers (§5). La fumée `--quick` de la tâche l'avait déjà montré : même empreinte md5 avant et après.
+
+**Second temps — le `spectral` du script suit D33** (`bff3078`, Task 9, changement voulu, A10). Avant, le script multipliait la valeur par coup par `1 + 0,4 × niveau`, Puissance et part de `sharp` comprises. Désormais, comme dans le jeu, la rune ajoute 40 % de la valeur de base à la rareté par niveau, au moins +1, sans jamais multiplier la Puissance. Mesure complète en 406 s : **477 lignes sur 798 changent**, dans toutes les tables qui mesurent un combat. L'écart s'explique entièrement par ce changement :
+
+- **Les dégâts baissent là où la Puissance est forte.** Dégâts par tour à l'acte 15, toutes configurations : 752 → 659. Le Berserker, dont la Puissance s'applique aux Attaques et qui convertit son armure, perd le plus : Sang 4285 → 2543, Vampire 933 → 610, Carnage 778 → 574. Le Paladin et le Mage bougent peu (Croisé 853 → 836, Arcaniste 875 → 834, Marque 933 → 938).
+- **L'or et l'affûtage suivent.** L'IA du script valorise moins `spectral`, affûte un peu moins (Σ niveaux à l'acte 15 : 73 → 71) et garde plus d'or (5596 → 5900). Le constat de P-16 sur l'or qui dort se renforce.
+- **Ce que les décisions mesurées supposent ne bouge pas.** Le deck fait 35 cartes à l'acte 15, les fusions sont 45 et le héros est niveau 30 avec 12 évolutions (D56, D67). La DDA à k = 2 reproduit toujours la courbe d'aujourd'hui : budget à l'acte 15 de 786 contre 785 pour la formule actuelle (D59). Les quasi-morts à l'acte 15 restent à 233 → 234.
+- **La table d'XP que le script recale à chaque lancement bouge de −25 à +40 XP selon l'acte** (115 · 200 · 310 · 475 · 590 · 770 · 955 · 1080 · 1050 · 1190 · 1410 · 1345 · 1275 · 1380 · 1040, contre la table de D67). C'est une sortie de calibration, pas une valeur du jeu : D67 reste acquise et la vague 3 l'écrira telle quelle. La fiche de la vague 3 prévoit que le script lise alors la table du jeu, la calibration restant affichée à côté (§5).
+
+La référence est recommitée sur la sortie du second temps : la vague 3 se comparera à elle.
+
 ---
 
 ## 5. Trouvé périmé, et pour la file
@@ -133,9 +184,22 @@ Mineurs différés pendant les revues de tâche, triés par la revue d'ensemble 
 
 **Ce que la revue d'ensemble apprend de la méthode** : le plan a ajouté un comportement (P4) sans le test qui le garde ; ni la spec ni le plan n'ont reporté le solde d'or que montrait le dialogue remplacé ; le relevé des textes de la spec (§5.7), qui cherchait « forge », a manqué « Upgrades ».
 
+**Trouvé périmé en partie 2** :
+- **le fichier d'orchestration, §3.6 et §7.3, dit que la ligne « Données lues » de la simulation compte les fichiers** : elle compte les entrées que le script joue (`data.runes.length`, `d26_economy_sim.dart:3840`) — 17 runes avant comme après le réalignement, 20 avec le script non réaligné. La spec (§9) le disait déjà. Pour la vague 3, l'écart « attendu d'avance » sur cette ligne est donc probablement nul, et un réalignement correct rend un diff entièrement vide ;
+- **la table d'XP que le script recale** dérive de −25 à +40 XP par acte sous le `spectral` aligné (§4) : la vague 3, qui fait lire au script la table du jeu, aura les deux sous les yeux ;
+- le relevé de la spec (§8) ne listait pas trois tests que la partie 2 change (`entity_id_convention_test`, qui compte les fichiers ; un cas de `deck_screen_test` qui rougissait au hasard avec sept runes offertes au lieu de quatre ; un commentaire de `tutorial_engine_test`), et des références que la partie 1 avait déplacées — le plan de la partie 2 les a re-mesurées.
+
 **Pour la file** :
+- la copie du deck testée avec une seule carte copiable : un retour à `copyable.first` passerait ;
+- le test des pré-forgées nommé « à leur poids » ne vérifie pas les poids ; le cas « la rareté sans effet » de `reduceCost` n'applique pas le delta ;
+- pas de test d'écran pour « Quitter le Puits » sans échange, « Échanger » inactif faute d'or, ni une boutique sans carte en vente mais avec une copie ;
+- un `_drawCardsForSale` partagé par `initializeShop` et `rerollCards` ; `exchangeRune` et `sharpenRune` à factoriser à la troisième copie ;
+- le coût courant recalculé à chaque image (S9) : une mémorisation sur `CardInstance` si le combat ralentit ;
+- l'en-tête de la carte Flutter (`UiCard`) a une position de description fixe : deux rangées de prises et le badge pourraient la serrer, sur une carte épique de six runes ou plus — non mesuré ;
 - les textes français en dur du dialogue de fusion (`deck_screen.dart:266`, `:327`), antérieurs à la branche — un joueur anglais les voit quand il tient plus de trois exemplaires ;
 - une garde `selectedIds.toSet().length != 3` dans `DeckNotifier.mergeCards`, qui vérifierait elle-même son entrée ;
 - l'emoji d'une rune calculé deux fois, en Flame et en Flutter (`ui_card_helpers.dart:221`, `card_text_renderer.dart:535`) — une fonction du modèle le dirait une fois.
 
-**À signaler au propriétaire** : le libellé anglais « SHARPEN » du feu côtoie la récompense de niveau « Sharpening » (`level_up_rewards/sharpening.json`, « Aiguisage » en français).
+**À signaler au propriétaire** :
+- le libellé anglais « SHARPEN » du feu côtoie la récompense de niveau « Sharpening » (`level_up_rewards/sharpening.json`, « Aiguisage » en français) ;
+- *Précis* au niveau 10 ajoute 50 points de critique : sur le Berserker (10 de base) et avec des récompenses de critique, une carte peut devenir critique à coup sûr — c'est la donnée du brainstorm (§8, `maxLevel` 10), à regarder au test.
