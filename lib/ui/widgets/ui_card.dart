@@ -16,10 +16,16 @@ class UiCard extends StatelessWidget {
   final String? target;
   final int? cost;
   final int? level;
-  final double rarityMultiplier;
+
+  /// La carte, que ses rendus lisent par l'applicateur avec [cardRarity] et
+  /// [forgeUpgrades] (spec P-43 E1, §4.2). Absente, le corps ne montre que
+  /// [description].
+  final CardData? data;
+
+  /// La rareté de jeu de la carte ; [rarity] en est le libellé traduit.
+  final CardRarity cardRarity;
   final List<String> forgeUpgrades;
   final int forgeCapacity;
-  final List<CardEffect>? effects;
   final CardType? type;
   final CardTarget? targetType;
   final bool isExhaust;
@@ -35,10 +41,10 @@ class UiCard extends StatelessWidget {
     this.target,
     this.cost,
     this.level,
-    this.rarityMultiplier = 1.0,
+    this.data,
+    this.cardRarity = CardRarity.common,
     this.forgeUpgrades = const [],
     this.forgeCapacity = 1,
-    this.effects,
     this.type,
     this.targetType,
     this.isExhaust = false,
@@ -64,10 +70,10 @@ class UiCard extends StatelessWidget {
       target: card.data.target.getLabel(l10n),
       cost: card.currentCost,
       level: 1,
-      rarityMultiplier: card.rarityMultiplier,
+      data: card.data,
+      cardRarity: card.rarity,
       forgeUpgrades: card.forgeUpgrades,
       forgeCapacity: card.forgeCapacity,
-      effects: card.data.effects,
       type: card.data.type,
       targetType: card.data.target,
       isExhaust: card.data.isExhaust,
@@ -82,7 +88,6 @@ class UiCard extends StatelessWidget {
     required CardData card,
     required String locale,
     required AppLocalizations l10n,
-    double rarityMultiplier = 1.0,
     List<String> forgeUpgrades = const [],
     bool isSelected = false,
     bool isGrayedOut = false,
@@ -96,10 +101,10 @@ class UiCard extends StatelessWidget {
       target: card.target.getLabel(l10n),
       cost: card.cost,
       level: 1,
-      rarityMultiplier: rarityMultiplier,
+      data: card,
+      cardRarity: card.rarity,
       forgeUpgrades: forgeUpgrades,
       forgeCapacity: card.forgeCapacityAt(card.rarity),
-      effects: card.effects,
       type: card.type,
       targetType: card.target,
       isExhaust: card.isExhaust,
@@ -158,9 +163,9 @@ class UiCard extends StatelessWidget {
                 context,
                 title: title,
                 description: description,
-                rarityMultiplier: rarityMultiplier,
+                data: data,
+                cardRarity: cardRarity,
                 forgeUpgrades: forgeUpgrades,
-                effects: effects,
                 target: target,
                 targetType: targetType,
                 rarity: rarity,
@@ -274,9 +279,9 @@ class UiCard extends StatelessWidget {
                             child: Center(
                               child: CardCompactDescription(
                                 description: description,
-                                rarityMultiplier: rarityMultiplier,
+                                data: data,
+                                cardRarity: cardRarity,
                                 forgeUpgrades: forgeUpgrades,
-                                effects: effects,
                                 targetType: targetType,
                                 target: target,
                               ),

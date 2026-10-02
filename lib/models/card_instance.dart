@@ -36,9 +36,6 @@ class CardInstance {
   bool get exhaustsOnPlay =>
       data.type == CardType.power ||
       (data.isExhaust && !effective.removesExhaust);
-
-  double get rarityMultiplier => rarity.multiplier;
-
   CardInstance copyWith({
     String? uniqueId,
     CardData? data,

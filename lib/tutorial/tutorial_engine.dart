@@ -382,8 +382,8 @@ class TutorialEngine extends ChangeNotifier {
     );
     mockState.hand.remove(card);
 
-    for (final effect in card.data.effects) {
-      final scaled = (effect.value * card.rarityMultiplier).round();
+    for (final effect in card.effective.effects) {
+      final scaled = effect.value;
 
       if (effect.type == 'damage') {
         final enemy = mockState.enemy;

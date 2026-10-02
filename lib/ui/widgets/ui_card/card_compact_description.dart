@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/effective_card.dart';
 import 'ui_card_helpers.dart';
 
 class CardCompactDescription extends StatelessWidget {
   final String description;
-  final double rarityMultiplier;
+
+  /// La carte, que l'applicateur lit avec [cardRarity] et [forgeUpgrades]
+  /// (spec P-43 E1, §4.2) ; absente, le corps ne montre que [description].
+  final CardData? data;
+  final CardRarity cardRarity;
   final List<String> forgeUpgrades;
-  final List<CardEffect>? effects;
   final CardTarget? targetType;
   final String? target;
 
   const CardCompactDescription({
     super.key,
     required this.description,
-    required this.rarityMultiplier,
+    required this.data,
+    required this.cardRarity,
     required this.forgeUpgrades,
-    this.effects,
     this.targetType,
     this.target,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (effects == null || effects!.isEmpty) {
+    final data = this.data;
+    if (data == null || data.effects.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: Text(
@@ -40,29 +45,18 @@ class CardCompactDescription extends StatelessWidget {
     }
 
     final List<Widget> badges = [];
-    int extraDamage = 0;
-    int extraArmor = 0;
-    for (var upgrade in forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      if (id == 'sharp') extraDamage += 2 * k;
-      if (id == 'hardened') extraArmor += 2 * k;
-    }
+    // La valeur à la rareté, puis ce que les runes y ajoutent : deux lectures
+    // de l'applicateur, seul à calculer l'une et l'autre (spec P-43 E1, §4.2).
+    final atRarity = EffectiveCard.apply(data, cardRarity, const []).effects;
+    final played =
+        EffectiveCard.withRunes(data, cardRarity, forgeUpgrades).effects;
 
     final isAllEnemies = resolveTarget(targetType, target) == CardTarget.allEnemies;
 
-    for (int i = 0; i < effects!.length; i++) {
-      final effect = effects![i];
-      int baseValue = (effect.value * rarityMultiplier).round();
-      int bonusValue = 0;
-      if (effect.type == 'damage') {
-        bonusValue = extraDamage;
-      } else if (effect.type == 'armor') {
-        bonusValue = extraArmor;
-      }
+    for (int i = 0; i < played.length; i++) {
+      final effect = played[i];
+      final baseValue = atRarity[i].value;
+      final bonusValue = effect.value - baseValue;
       final visuals = getEffectVisuals(effect);
       final isPlayerEffect = effect.type == 'armor' ||
           effect.type == 'heal' ||
@@ -161,7 +155,7 @@ class CardCompactDescription extends StatelessWidget {
 
       badges.add(badgeWidget);
 
-      if (i < effects!.length - 1) {
+      if (i < played.length - 1) {
         badges.add(
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 6.0),

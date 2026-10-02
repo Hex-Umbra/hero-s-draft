@@ -96,6 +96,29 @@ void main() {
       expect(engine.playCard(engine.mockState.hand.first), isFalse);
       expect(engine.mockState.hand, hasLength(1));
     });
+
+    test('une carte peu commune joue sa valeur a la rarete, par l applicateur',
+        () {
+      // G1 : une valeur de 1 en commune vaut 2 en peu commune (spec P-43 E1,
+      // §4.3) ; le tutoriel joue ce que le jeu joue (ADR-081).
+      engine.seedEnemy();
+      const tap = CardData(
+        id: 'tutorial_tap',
+        cost: 0,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [CardEffect(type: 'damage', value: 1)],
+      );
+      final card = CardInstance(data: tap, rarity: CardRarity.uncommon);
+      engine.mockState.hand = [card];
+
+      engine.playCard(card);
+
+      expect(engine.mockState.enemy!.stats.currentPv,
+          engine.fixtures.trainingEnemy.maxHp - 2);
+    });
   });
 
   group('L\'absorption d\'armure suit EntityStats.takeDamage', () {

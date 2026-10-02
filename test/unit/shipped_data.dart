@@ -17,6 +17,10 @@ ForgeUpgradeData shippedRune(String id) => ForgeUpgradeData.fromJson(
       _shipped('assets/data/forge_upgrades/$id.json', id),
     );
 
+/// Une carte neutre telle que le jeu la livre (`assets/data/cards/`).
+CardData shippedCard(String id) =>
+    CardData.fromJson(_shipped('assets/data/cards/$id.json', id));
+
 /// Construit — et installe, `GameDataRegistry` étant un singleton — un
 /// registre qui ne porte que les runes livrées [runeIds] et les [cards].
 GameDataRegistry shippedRuneRegistry(

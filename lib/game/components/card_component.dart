@@ -343,25 +343,10 @@ class CardComponent extends PositionComponent
 
     final damageBonus = game.heroCard?.stats.damageBonusFor(card.data.type) ?? 0;
 
-    int extraDamage = 0;
-    int extraArmor = 0;
-    for (var upgrade in card.forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      if (id == 'sharp') extraDamage += 2 * k;
-      if (id == 'hardened') extraArmor += 2 * k;
-    }
-
-    for (var effect in card.data.effects) {
-      int scaledValue = (effect.value * card.rarityMultiplier).round();
-      if (effect.type == 'damage') {
-        scaledValue += extraDamage;
-      } else if (effect.type == 'armor') {
-        scaledValue += extraArmor;
-      }
+    // Les valeurs que la carte joue — rareté et runes comprises — viennent de
+    // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
+    for (final effect in card.effective.effects) {
+      final scaledValue = effect.value;
       if (effect.type == 'damage') {
         final totalDmg = scaledValue + damageBonus;
         if (card.data.target == CardTarget.allEnemies) {

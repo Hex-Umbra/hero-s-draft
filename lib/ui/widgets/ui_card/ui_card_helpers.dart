@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/effective_card.dart';
 
 class UiCardEffectVisuals {
   final IconData icon;
@@ -256,9 +257,9 @@ String buildDetailedDescription(
   BuildContext context, {
   required String title,
   required String description,
-  required double rarityMultiplier,
+  required CardData? data,
+  required CardRarity cardRarity,
   required List<String> forgeUpgrades,
-  List<CardEffect>? effects,
   String? target,
   CardTarget? targetType,
   String? rarity,
@@ -329,6 +330,7 @@ String buildDetailedDescription(
 
   // Add elemental header if applicable
   String desc = details.isNotEmpty ? '$details\n' : '';
+  final effects = data?.effects;
   final elementalType = determineDamageType(title, effects);
   if (effects != null && effects.isNotEmpty && elementalType != 'physical') {
     final typeStr = elementalType == 'fire'
@@ -341,29 +343,15 @@ String buildDetailedDescription(
     desc += '[$typeStr]\n';
   }
 
-  if (effects == null || effects.isEmpty) {
+  if (data == null || data.effects.isEmpty) {
     return desc + description;
   }
 
-  int extraDamage = 0;
-  int extraArmor = 0;
-  for (var upgrade in forgeUpgrades) {
-    final parts = upgrade.split(':');
-    if (parts.length != 2) continue;
-    final id = parts[0];
-    final k = int.tryParse(parts[1]) ?? 0;
-    if (k <= 0) continue;
-    if (id == 'sharp') extraDamage += 2 * k;
-    if (id == 'hardened') extraArmor += 2 * k;
-  }
-
-  for (var effect in effects) {
-    int scaledValue = (effect.value * rarityMultiplier).round();
-    if (effect.type == 'damage') {
-      scaledValue += extraDamage;
-    } else if (effect.type == 'armor') {
-      scaledValue += extraArmor;
-    }
+  // Les valeurs que la carte joue — rareté et runes comprises — viennent de
+  // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
+  for (final effect
+      in EffectiveCard.withRunes(data, cardRarity, forgeUpgrades).effects) {
+    final scaledValue = effect.value;
 
     if (effect.type == 'damage') {
       if (target == 'Tous les ennemis' || target == 'allEnemies') {
