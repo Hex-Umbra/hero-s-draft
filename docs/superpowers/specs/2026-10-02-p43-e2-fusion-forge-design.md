@@ -1,9 +1,9 @@
 # P-43 E2 — Fusion = forge — Conception
 
 Date : 2026-10-02
-Statut : **Conception, non convergée** — vague 2 (`0.5.4`), lot unique et lourd (deux parties), branche
-`feat/v0.5.4-p43-e2-fusion-forge`. **La vague est arrêtée à la vérification de cette spec** : le troisième tour a
-rendu deux constats moyens (orchestration §3.3 et §6) ; ils sont consignés, non corrigés, en §13
+Statut : **Conception — convergée au quatrième tour de vérification** (02/10/2026), après la levée de l'arrêt par le
+propriétaire — vague 2 (`0.5.4`), lot unique et lourd (deux parties), branche `feat/v0.5.4-p43-e2-fusion-forge`.
+L'arrêt, sa levée, les corrections et la convergence sont en §13
 
 Chantier ROADMAP : **P-43** « Économie unifiée », lot **E2**, le troisième des cinq lots E0 à E4. Le déroulé fait foi
 dans le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
@@ -30,8 +30,9 @@ Sources amont :
 > `spectral` rejoignent les huit runes ; `pools`, `stackable` et la capacité disparaissent avec les deux écrans qui
 > les lisaient. **En `0.5.4`, les fusions restent rares** : la trouvaille n'arrive qu'en `0.5.5`.
 
-Toute référence `fichier:ligne` de ce document a été mesurée le 2026-10-02 sur `a9e2db6`, tête de la branche — qui ne
-diffère de `main` (`559df08`) que par le fichier d'orchestration.
+Toute référence `fichier:ligne` de ce document a été mesurée le 2026-10-02 sur `a9e2db6` et `6e94be7`, identiques pour
+le code : `6e94be7`, tête de la branche, ne diffère d'`a9e2db6` que par la spec et le fichier d'orchestration, et
+`a9e2db6` ne diffère de `main` (`559df08`) que par le fichier d'orchestration.
 
 ---
 
@@ -77,7 +78,9 @@ question ne s'est révélée ne se trancher qu'en amendant une décision acquise
 par la fiche ; A1 et A18 sont nées de « la spec doit fixer » ; les autres sont apparues à la rédaction.
 L'orchestrateur a tranché six points au tour 1 de vérification, dont un apparu à la correction — le retour sur l'écran
 du feu ou du Puits après une action (A4, A5) —, et trois au tour 2 : qui tire l'offre, l'offre vide (A1), les textes
-qui nomment encore la forge (§5.7). Les deux tableaux sont en fin de section.
+qui nomment encore la forge (§5.7). À la levée de l'arrêt du tour 3, le propriétaire a décidé de l'étal de boutique
+retenu (A11), l'orchestrateur de la partie des tests supprimés (§8, §10) et du lieu de la première relance (§9), puis
+de six questions apparues à la correction (A11, §4.7, §4.9, §8, §9). Les trois tableaux sont en fin de section.
 
 **Sur le filtre 2.** Les valeurs que le script joue sans qu'une décision les fixe sont des valeurs de spec : les
 garder ne demande aucune relance, les remplacer en demande une (second temps, orchestration §3.6). Le filtre 2 ne les
@@ -112,7 +115,12 @@ les rend avec la carte — la prose du brainstorm §4.2 (`:200`, « `DeckNotifie
 §11 (`:491`, « `mergeCards` propose 3 runes ») ; (ii) la fonction pure `ForgeRuneRules.drawRunes` (§4.4), appelée par
 l'écran de deck sur la carte que `mergeCards` rend, le choix écrit par le Notifier (`addForgeUpgrade`). Ces deux phrases
 sont une prose de proposition, pas une décision acquise : D3 dit que le joueur choisit une rune parmi trois, pas qui
-les tire. **5** retient (ii) : la même fonction pure sert le jeu et le tutoriel (A18), sur le précédent du dialogue
+les tire. **D65**, une décision acquise (brainstorm `:104`, reprise au §8, `:394`), écrit aussi que « `mergeCards`
+**en propose moins, jamais aucune tant qu'une existe** » : son objet est le nombre de runes offertes à la fusion —
+moins de trois si moins sont éligibles, jamais aucune tant qu'une existe —, que `drawRunes` tient (§4.4). `mergeCards`
+y nomme le geste de fusion, pas un emplacement du code : le §4.3 du brainstorm appelle de même « le prédicat de
+`mergeCards` » (`:234`) le prédicat qu'E1 a écrit dans `ForgeRuneRules.isEligible`. Le filtre 1 n'écarte donc pas (ii).
+**5** retient (ii) : la même fonction pure sert le jeu et le tutoriel (A18), sur le précédent du dialogue
 d'E1, qui tirait ses fentes lui-même ; l'offre n'est pas un état persisté — A3 supprime la session ; tout changement
 d'état passe par `DeckNotifier`. **Choix : (ii)** — la phrase du brainstorm n'est pas suivie à la lettre, pour ces
 raisons ; son intention, une offre de trois runes à chaque fusion, l'est.
@@ -361,7 +369,7 @@ carte n'y mène). **7** retient (p). La préséance s'écrit de toute façon : `
 
 **Choix : trois sortes neuves, (x), (p) ; pour la simulation, (s1).**
 
-#### A11 — La copie du deck : son prix, sa source, la relance *(prix posé par la fiche ; le reste apparu)*
+#### A11 — La copie du deck : son prix, sa source, la relance, l'étal retenu *(prix posé par la fiche ; le reste apparu)*
 
 **Le prix.** (a) Le prix de boutique d'une carte sans rune de sa rareté — 25 · 50 · 100 · 150 · 200
 (`ShopController.getCardPrice`, `shop_controller.dart:19-43`) ; (b) une prime pour une source ciblée ; (c) le prix du
@@ -375,7 +383,63 @@ de copie (ADR-101 D4, pas de repli codé).
 **La relance de l'étal** (`rerollCards`, `:309-331`). (a) Elle ne touche pas la copie ; (b) elle la retire aussi.
 **1** retient (a) : D46, « tirée et non choisie » — 15 or par nouveau tirage la rendraient choisie.
 
-**Choix : (a), `copyableCards`, (a).**
+**Le retirage par le retour** *(constat n° 2 du tour 3 ; décidé par le propriétaire le 02/10/2026)*. Aujourd'hui
+l'étal entier se retire gratuitement : `initializeShop` le tire à chaque création de l'écran
+(`shop_screen.dart:31-43`), le retour système ne résout pas le nœud (`:307-313`, `canPop: true`) — seul « Quitter » le
+fait (`:466-469`) —, et la carte du monde laisse rentrer dans un nœud non résolu (`map_screen.dart:389-392`). Un défaut
+antérieur, sur lequel E2 pose une mécanique neuve : sortir puis revenir retirerait la copie, gratuitement.
+
+- **(a) l'étal n'est tiré qu'une fois par nœud de boutique, étendu à l'étal entier** : la boutique retient le nœud pour
+  lequel elle a tiré son étal, copie comprise, et ne le retire pas tant que ce nœud n'est pas résolu ;
+- (b) le retour système résout le nœud ;
+- (c) consigner.
+
+**1** écarte (c), au nom de D46 (« tirée et non choisie »). **5** retient (a) contre (b) : l'étal est déjà l'état du
+Notifier de la boutique, et (b) ne fermerait rien — sortir sans acheter doit rester possible, comme au Puits sans
+échange, et rouvrirait le tirage. Un seul mécanisme ferme au passage le retirage gratuit de tout l'étal, un défaut
+antérieur, dit dans la note de version (§11). **Choix : (a)** : sortir par le retour système puis revenir dans le même
+nœud rend le même étal, la même copie, et ce qui a été acheté reste acheté. Le mécanisme est en §4.9 ; le script tire
+déjà l'étal une fois par visite, aucune relance n'est due (§9).
+
+**Ce que « l'étal entier » comprend** *(apparue à la correction du tour 3 ; tranchée par l'orchestrateur à la levée de
+l'arrêt)*. `ShopState` (`lib/models/shop_state.dart:3-14`) porte les cartes en vente, le soin acheté, les
+trois options du Miroir magique et le nombre de ses achats, qui double son prix (`:16`). Le retour système vide
+aujourd'hui le Miroir — options et prix — par `clearCloneOptions` (`shop_screen.dart:307-313`,
+`shop_controller.dart:370-376`), ce que veut le point 5 d'ADR-067.
+
+- **(i) tout `ShopState`, Miroir compris** : `clearCloneOptions` disparaît, avec le `PopScope` de `ShopScreen`, qui ne
+  sert qu'à l'appeler ; le Miroir repart — options neuves, 150 or — au nœud de boutique suivant, avec le reste ;
+- (ii) les cartes, la copie et le soin retenus ; le Miroir vidé au retour, comme aujourd'hui.
+
+(ii) défait la décision même du propriétaire — « l'étal entier », « ce qui a été acheté reste acheté » : le prix du
+Miroir compte ses achats, et le retour le remettrait à 150, ses options retirées. **5** retient (i) : un état, remis à
+zéro à un seul moment, au lieu de deux morceaux d'un même état remis à zéro à deux moments. Et le point 5 d'ADR-067
+rouvre ce que son point 4 ferme : le point 4 double le prix du Miroir à chaque achat pour limiter le clonage abusif,
+le point 5 le ramène à 150 par un simple aller-retour. Avec (i), la remise à zéro suit le nœud, non la sortie de
+l'écran : c'est l'intention même d'ADR-067 qui est servie. La règle du Miroir — un clone parmi trois, runes comprises,
+le prix qui double — ne change pas (brainstorm, ligne « Miroir magique », `:176`) ; seul le moment où il repart
+change. Le point 5 d'ADR-067 est amendé par l'ADR neuf de la vague, au moment de `memory-bank-sync` (§11) — un ADR
+publié ne se réécrit pas ; le point 5 d'ADR-052 voulait déjà les options du Miroir vidées « lors de l'entrée dans une
+nouvelle boutique ». **Choix : (i).**
+
+**L'identité du nœud** *(apparue à la correction du tour 3 ; tranchée par l'orchestrateur à la levée de l'arrêt)*.
+Le nœud courant est `RunState.currentNodeId` (`lib/game/controllers/run_controller.dart:30`), écrit
+par `travelToNode` (`lib/game/controllers/run/map_progression_manager.dart:14-18`) ; son id, `node_<étage>_<colonne>`
+(`lib/services/map/map_node_generator.dart:40`), revient à chaque acte et à chaque run.
+
+- **(k1) la boutique oublie son étal dès que le nœud courant de la run change** : l'état de `ShopController` revient
+  à `const ShopState()` dès que `currentNodeId` change ;
+- (k2) la clé (acte, id), et une remise à zéro de la boutique dans `startNewRun` ;
+- (k3) l'id seul.
+
+**1** écarte (k3) : un acte ou une run plus loin, une boutique placée aux mêmes coordonnées rendrait l'étal d'une autre
+visite — la copie d'une carte d'un autre deck, quand D46 la tire « dans tout le deck du joueur ». **5** retient (k1)
+contre (k2) : une règle, à un endroit, qui suit l'état métier qui définit une visite — le nœud courant ; (k2) la
+partage entre deux Notifiers et écrit l'acte dans la clé, un second fait sur la même identité. **Choix : (k1).** La
+spec en fixe le mécanisme, pas la tournure Riverpod, que le plan choisit et dit (§4.9).
+
+**Choix : (a), `copyableCards`, (a) ; l'étal entier — Miroir compris — tiré une fois par nœud de boutique, oublié dès
+que le nœud courant change (propriétaire ; (i) et (k1) tranchés par l'orchestrateur).**
 
 #### A12 — Les cartes pré-forgées *(apparue à la rédaction)*
 
@@ -403,6 +467,15 @@ sans badge ; avec *Persistant*, le badge ment depuis ADR-094 (Conséquences).
 `exhaustsOnPlay` (`card_instance.dart:36-38`), que le moteur lit (`deck_controller.dart:268`) — et `spectral` ajoute
 l'épuisement. **Choix : (a)**, annoncé dans la note, **maintenu par l'orchestrateur au tour 1**. Il ferme au passage la
 conséquence « non planifiée » d'ADR-094 pour *Persistant* : le badge et les particules ignoraient la rune.
+
+Les trois lecteurs Flame n'ont pas de test de widget ; **une commande de contrôle** les garde, avec le badge Flutter :
+
+```
+git grep -n "data.isExhaust" -- lib/game/components lib/ui
+```
+
+rend aujourd'hui les quatre lecteurs, et **ne rend rien** après E2. Le prédicat, qui lit à bon droit l'épuisement de la
+donnée pour `requiresExhaust` (`forge_rune_rules.dart:117`), est hors de ces deux dossiers.
 
 #### A14 — `{val}` pour toute sorte qui porte un chiffre *(apparue à la rédaction — E-S5 de la vague 1)*
 
@@ -509,7 +582,23 @@ Sur les constats du deuxième tour de vérification — chaque choix est écrit 
 |:---|:---|:---|:---|:---|:---|
 | 5 | Qui tire les trois runes de la fusion | `DeckNotifier.mergeCards` tire et rend l'offre (prose du brainstorm §4.2 `:200`, §11 `:491`) · la fonction pure `drawRunes`, appelée par l'écran de deck, l'écriture par `addForgeUpgrade` | 5 | La fonction pure, appelée par l'écran ; la prose du brainstorm n'est pas suivie à la lettre — une proposition, pas une décision acquise | A1, §4.5 |
 | 8 | Les textes joueur qui nomment encore la forge | renommés · laissés | 6 | Un texte que le joueur lit et qui nomme une forge disparue est renommé (« Runes » ou l'équivalent juste), en `_fr` et `_en` ; un texte jamais affiché au joueur ne change pas ; les noms de code restent (A17) | §5.7 |
-| 4 | L'offre vide | — | 6 | La fusion se fait ; `deckMergeSuccess`, puis `forgeNoEligibleRune` ; `_MergeDialog` se ferme sur la `CardInstance` rendue | A1, §4.5, §8 |
+| 4 | L'offre vide | la fusion, `deckMergeSuccess`, puis `forgeNoEligibleRune` · la fusion et `deckMergeSuccess` seule · la fusion et `forgeNoEligibleRune` seul | 6 | La fusion se fait ; `deckMergeSuccess`, puis `forgeNoEligibleRune` ; `_MergeDialog` se ferme sur la `CardInstance` rendue | A1, §4.5, §8 |
+
+#### Tranchés à la levée de l'arrêt (tour 3)
+
+Sur les constats du troisième tour de vérification — chaque choix est écrit à sa place :
+
+| N° | Question | Options | Filtre | Choix | Où |
+|:---|:---|:---|:---|:---|:---|
+| 2 | La copie — et l'étal entier — retirée gratuitement : le retour système quitte la boutique sans résoudre le nœud, et l'écran retire l'étal à chaque entrée | l'étal tiré une fois par nœud de boutique · le retour système résout le nœud · consigner | 1 écarte « consigner » (D46, « tirée et non choisie ») ; 5 retient l'étal tiré une fois contre le retour qui résout : l'étal est déjà l'état du Notifier de la boutique, et sortir sans acheter doit rester possible, comme au Puits sans échange — ce qui rouvrirait le tirage | **Décidé par le propriétaire le 02/10/2026** : l'étal tiré une fois par nœud de boutique, **étendu à l'étal entier** — la boutique retient le nœud pour lequel elle a tiré son étal, copie comprise, et ne le retire pas tant que ce nœud n'est pas résolu ; ferme au passage le retirage gratuit de tout l'étal, un défaut antérieur, dit dans la note. Trois points apparus à sa mesure sont tranchés ci-dessous (2 bis, 2 ter, 2 quater) | A11, §2, §3.4, §4.9, §4.14, §7, §8, §9, §10, §11 |
+| 2 bis *(apparue à la correction ; tranchée par l'orchestrateur)* | Ce que « l'étal entier » comprend : le retour système vide aujourd'hui le Miroir — options et prix — par `clearCloneOptions` (point 5 d'ADR-067) | tout `ShopState`, Miroir compris · les cartes, la copie et le soin, le Miroir vidé au retour comme aujourd'hui | La décision du propriétaire (« l'étal entier », « ce qui a été acheté reste acheté ») écarte le second, puis 5 : un état, une seule remise à zéro ; le point 5 d'ADR-067 rouvre ce que son point 4 ferme — le prix ramené à 150 par un aller-retour —, et la remise à zéro au nœud sert l'intention même d'ADR-067, limiter le clonage abusif | Tout `ShopState`, Miroir compris ; `clearCloneOptions` et le `PopScope` de `ShopScreen` supprimés ; le Miroir repart au nœud suivant. Le point 5 d'ADR-067 est amendé par l'ADR neuf de la vague, à `memory-bank-sync` — un ADR publié ne se réécrit pas | A11, §4.9, §4.14, §8, §10, §11 |
+| 2 ter *(apparue à la correction ; tranchée par l'orchestrateur)* | L'identité du nœud : son id, `node_<étage>_<colonne>`, revient à chaque acte et à chaque run | l'état oublié dès que le nœud courant change · la clé (acte, id) et une remise à zéro dans `startNewRun` · l'id seul | 1 écarte l'id seul (D46 : la copie d'un autre deck) ; 5 retient le premier contre la clé (une règle, à un endroit) | L'état de `ShopController` revient à `const ShopState()` dès que `currentNodeId` change. La spec fixe le mécanisme, pas la tournure Riverpod : le plan choisit entre `ref.listen` sur un `select` et `ref.watch` sur un `select` dans `build`, qui reconstruit l'état, et dit la forme retenue ; un test garde la remise à zéro au changement de nœud | A11, §4.9, §8, §10 |
+| 2 quater *(apparue à la correction ; tranchée par l'orchestrateur)* | `initializeShop` appelé sans nœud courant — les tests unitaires qui tirent l'étal en boucle | chaque appel tire · l'étal gardé aussi pour un nœud nul | 8 | Chaque appel tire ; l'étal n'est gardé que si `nodeId` est non nul et égal au nœud courant | §4.9, §8 |
+| 5 | La partie où se supprime un test qui garde un comportement encore vivant — le groupe `stackable` de `forge_rune_rules_test.dart:58-84`, qui lit des runes sans `minFusionRank` | supprimé dès la partie 1 · gardé, avec la clé qui lui manque, jusqu'à la partie qui supprime ce qu'il garde | 5, puis 8 | **Tranché par l'orchestrateur** : un test qui garde un comportement encore vivant n'est supprimé que dans la partie qui supprime ce comportement — prolongement, aux tests, de l'invariant de §10 ; le groupe `stackable` gagne `minFusionRank` en partie 1 et disparaît en partie 2, avec `stackable` ; la règle vaut pour chaque suppression de §8 | §8, §10 |
+| 5 bis *(apparue à la correction ; tranchée par l'orchestrateur)* | Les cas « non cumulable » de `forge_rune_rules_test.dart:94-104`, que la spec disait supprimés : avec `maxLevel: 1` (n° 4), ils passent sans changer d'attente | supprimés en partie 2 · gardés en partie 2 comme cas de plafond 1 | La règle du n° 5 : ils gardent un comportement encore vivant, `enduring` plafonné à 1 | Ils deviennent, en partie 2, des cas de plafond 1, leurs attentes inchangées | §8 |
+| 9 | Où tourne la relance du premier temps, quand le code de la vague est fini et que la branche a dépassé le commit de réalignement | un clone jetable hors du dépôt · l'archive du commit (`git archive`) extraite dans le dossier temporaire de la session · le commit extrait dans le checkout principal · un worktree | 5, puis 8 | **Tranché par l'orchestrateur** : un état extrait hors du dépôt, au commit de réalignement, sans changer de branche dans le checkout principal ni ouvrir de worktree — `git archive <commit> tool/simulations assets/data`, extrait dans le dossier temporaire de la session, puis `dart run` lancé de là | §9, §10 |
+| 9 bis *(apparue à la correction ; tranchée par l'orchestrateur)* | Où tourne la relance du second temps | de même, extraite au commit `spectral` · dans le checkout principal | — | Elle **peut** tourner de même, sans que la spec l'impose : la tâche `spectral` est la dernière à toucher le script, et aucune tâche ne touche `assets/data/` après elle | §9, §10 |
+| 10 bis *(apparue à la correction ; tranchée par l'orchestrateur)* | La ligne de niveau d'une rune au plafond, dans le dialogue d'affûtage | pas de ligne · une seconde clé « Niveau {level} » · `runeMaxLevel` sur la ligne | 6, puis 8 | Pas de ligne de niveau : le bouton dit déjà « Niveau maximal » | §4.7, §8 |
 
 #### Récapitulatif
 
@@ -525,7 +614,7 @@ Sur les constats du deuxième tour de vérification — chaque choix est écrit 
 | A8 | Forme de `minFusionRank` | obligatoire ≥ 1 · facultatif · 0 admis | 5 puis 6 | Obligatoire, entier ≥ 1 |
 | A9 | Éligibilité de `precise`, `spectral` | dégâts seuls · `precise` sur le soin · `spectral` hors épuisement | 7 | `eligibleEffects: ["damage"]` — pas de second temps ; deux cas latents à la vague 5 |
 | A10 | Effet des runes neuves | sortes neuves ; D33 · modèle du script ; préséances ; second temps · exception | 1 ; 1 ; 1 puis 7 ; 2 (orchestrateur) | `reduceCost`, `critBonus`, `addExhaust` ; `spectral` sur la base à la rareté ; l'épuisement l'emporte ; le `spectral` du script aligné, second temps |
-| A11 | Copie du deck | prix de boutique · prime · prix du Miroir ; relance | 1 puis 7 ; 1 | 25 · 50 · 100 · 150 · 200, tirée dans `copyableCards`, intouchée par la relance |
+| A11 | Copie du deck | prix de boutique · prime · prix du Miroir ; relance ; retirage par le retour : étal tiré une fois par nœud · retour qui résout le nœud · consigné ; l'étal entier : tout `ShopState` · le Miroir vidé au retour ; l'identité du nœud : oubli au changement de nœud courant · clé (acte, id) · id seul | 1 puis 7 ; 1 ; 1 puis 5 (propriétaire, 02/10/2026) ; décision du propriétaire puis 5 (orchestrateur) ; 1 puis 5 (orchestrateur) | 25 · 50 · 100 · 150 · 200, tirée dans `copyableCards`, intouchée par la relance ; **l'étal entier — cartes, copie, soin, Miroir — tiré une fois par nœud de boutique et retenu, achats compris, jusqu'à ce que le nœud courant change** (propriétaire ; le Miroir et l'identité du nœud tranchés par l'orchestrateur) |
 | A12 | Pré-forgées | prédicat au rang + niveau tiré · niveau 1 · `pools` | 1 puis 7 | ≤ `fusionRank` runes, prédicat au rang, niveau 80 · 15 · 5 borné |
 | A13 | Badge « Usage unique » | `exhaustsOnPlay` · donnée | 5 | Les quatre lecteurs lisent `exhaustsOnPlay` — maintenu par l'orchestrateur ; ferme la conséquence d'ADR-094 pour *Persistant* |
 | A14 | `{val}` | toute sorte chiffrée · placeholder par sorte · littéral | 4 | `{val}` général ; cinq descriptions passent à `{val}` |
@@ -570,7 +659,8 @@ Sur les constats du deuxième tour de vérification — chaque choix est écrit 
 - le geste de fusion : `mergeCards` sans troncature, l'offre de trois runes, `ForgeUpgradeDialog` rappelé depuis
   l'écran de deck et réduit au choix (A1, A2) ;
 - `minFusionRank` (champ, huit fichiers, prédicat) et « une rune par type » (prédicat) ;
-- l'affûtage au feu (A4), le Puits (A5), la copie du deck et les pré-forgées bornées (A11, A12) ;
+- l'affûtage au feu (A4), le Puits (A5), la copie du deck, l'étal de boutique retenu à son nœud et les pré-forgées
+  bornées (A11, A12) ;
 - la capacité supprimée — ses sept lecteurs, `baseMaxForgeUpgrades` du modèle, de l'éditeur et des six fichiers de
   signature ; `pools` et `stackable` supprimés — tous leurs lecteurs (§4.10, §4.11) ;
 - la session de forge, les fentes achetées et leur API supprimées (A3) ; `fusionOptionsFor`, `FusionOption`,
@@ -673,7 +763,7 @@ Les six fichiers `assets/data/classes/*/cards/*.json` perdent `"baseMaxForgeUpgr
 | `CardData` (`lib/models/data/card_data.dart`) | `baseMaxForgeUpgrades` (`:133`, `:152`, `:222`, `:242`) et `forgeCapacityAt` (`:176-178`) supprimés ; la doc de `fusionRank` (`:34-35`) ne cite plus la capacité : « le nombre de fusions qu'il a fallu pour atteindre cette rareté ; `minFusionRank` le compare, G1 compte ses paliers, il borne les runes d'une pré-forgée » |
 | `RunState` (`lib/game/controllers/run_controller.dart:24`) | `forgeSlots`, `forgeTargetCardId`, `forgeTargetSessions`, `bonusForgeSlots` (`:32-35`) supprimés, avec leurs lignes de constructeur, `copyWith`, `toJson` et `fromJson` (A3) |
 | `RunController` (`run_controller.dart:211`) | `setForgeSession`, `clearForgeSession`, `buyBonusForgeSlot` (`:503-523`) supprimés (A3) ; `sharpenRune` et `exchangeRune` neufs, qui délèguent à `GoldManager` (A16) |
-| `ShopState` (`lib/models/shop_state.dart`) | Gagne `deckCopy` (`CardInstance?`) (§4.9) ; `toJson` / `fromJson`, sans lecteur, ne l'apprennent pas |
+| `ShopState` (`lib/models/shop_state.dart`) | Gagne `deckCopy` (`CardInstance?`) et `nodeId` (`String?`), le nœud pour lequel l'étal a été tiré (§4.9) ; `toJson` / `fromJson`, sans lecteur, ne les apprennent pas |
 | `DamagePipeline.calculate` (`lib/game/services/damage_pipeline.dart:6-11`) | Gagne `critChanceBonus` (entier, défaut 0), ajouté à `effectiveCritChance` au jet (`:24`) |
 
 ---
@@ -738,9 +828,9 @@ static List<String> drawRunes(CardInstance card, Iterable<ForgeUpgradeData> cata
 
 Fonction pure, sur ses entrées : jusqu'à `count` ids **distincts**, tirés pondérés par `weight`, sans remise, parmi les
 runes du `catalog` que le prédicat accepte sur `card` — moins s'il y en a moins, aucun s'il n'y en a pas (D65).
-**Deux lecteurs** : l'offre de fusion, `count: 3`, sur la carte fusionnée ; les pré-forgées, `count: 1` par rune, sur
-la carte avec les runes déjà posées (A12). Le tutoriel l'appelle sur son registre (A18). Le tirage par `pools`
-(`forge_upgrade_dialog.dart:96-160`, `shop_controller.dart:67-124`) disparaît.
+**Trois lecteurs** : l'offre de fusion, `count: 3`, sur la carte fusionnée ; les pré-forgées, `count: 1` par rune, sur
+la carte avec les runes déjà posées (A12) ; l'étape de fusion du tutoriel, `count: 3`, sur son registre (A18). Le
+tirage par `pools` (`forge_upgrade_dialog.dart:96-160`, `shop_controller.dart:67-124`) disparaît.
 
 ### 4.5. Le geste de fusion
 
@@ -749,7 +839,7 @@ la carte avec les runes déjà posées (A12). Le tutoriel l'appelle sur son regi
 | Le bouton « FUSIONNER (3) » (`deck_screen.dart:107-127`) | Inchangé ; `_MergeDialog` garde son étape 1, le choix de trois exemplaires quand il y en a plus (`:252-333`) |
 | `_proceedToUpgrades` (`:215-237`) | Ne calcule plus ni capacité (`:224`) ni héritage (`:226-228`) : il appelle `_performMerge` |
 | `_performMerge` (`:239-245`) | Appelle `mergeCards(ids)` et ferme `_MergeDialog` **sur la `CardInstance` rendue** — `Navigator.pop(carte)` à la place de `pop(true)` (`:244`) —, `null` si la fusion est refusée. Annuler à l'étape 1 ferme aussi sur `null` |
-| `_confirmMerge` (`:156-180`) | `showDialog<bool>` (`:166-169`) devient `showDialog<CardInstance>` ; sur `null`, rien ; sinon il tire l'offre sur la carte rendue (ligne suivante) |
+| `_confirmMerge` (`:156-180`) | `showDialog<bool>` (`:166-169`) devient `showDialog<CardInstance>` ; sur `null`, rien ; sinon il tire l'offre sur la carte rendue (ligne suivante). **Il reçoit le `context` de `DeckScreen`** (`build`, `:22`), plus celui de la case de la grille (`itemBuilder`, `:65`, passé en `:118`) : `mergeCards` reconstruit la grille, qui peut démonter la case qui a lancé la fusion pendant le dialogue de choix. Le dialogue de choix, `deckMergeSuccess` et `forgeNoEligibleRune` passent par ce `context` stable, après `context.mounted`, comme aujourd'hui (`:173`) |
 | L'étape 2, « Capacité de Forge Dépassée » (`:334-413`) | **Supprimée** |
 | `DeckNotifier.mergeCards` (`deck_controller.dart:288-334`) | `mergeCards(List<String> selectedIds)` — l'héritage se calcule dedans, une fois (§4.6) ; rend la carte créée, ou `null` si la fusion est refusée (gardes `:289`, `:305-308` inchangées) |
 | L'offre | **L'écran de deck la tire** — `_confirmMerge` (`deck_screen.dart:156-180`), couche Flutter —, sur la carte que `mergeCards` rend : `ForgeRuneRules.drawRunes(carte, registre.forgeUpgrades, Random(), count: 3)`, une fonction pure qui ne lit ni n'écrit aucun état ; l'offre est passée au dialogue. L'état ne change que par `DeckNotifier` : `mergeCards`, puis `addForgeUpgrade` (A1, tranché par l'orchestrateur au tour 2). **Offre vide** : pas de dialogue de choix ; `deckMergeSuccess`, **puis** `forgeNoEligibleRune` (A1) |
@@ -760,7 +850,7 @@ Ce que `ForgeUpgradeDialog` perd : `ForgeSlot` et sa relance (`forge_upgrade_dia
 `:51`), la session (`:53-77`), les tirages (`:80-221`), la relance et l'achat de fente (`:223-264`, `:300-303`,
 `:431-435`), le bouton Annuler (`:472-478`). `lib/ui/widgets/forge/forge_buy_slot_button.dart` est supprimé ;
 `ForgeCardPreview` perd la capacité (`forge_card_preview.dart:10`, `:37`, `:80-81`, `:100`) ; `ForgeSlotRow` perd sa
-relance (`forge_slot_row.dart:108-109`, `:168-205`) et devient la ligne de rune des trois écrans — fusion, affûtage,
+relance (`forge_slot_row.dart:108-109`, `:167-209`) et devient la ligne de rune des trois écrans — fusion, affûtage,
 Puits —, son bouton recevant son libellé et son état. Le gabarit plein écran d'ADR-039 D4 reste.
 
 **La fusion reste gratuite** (D32).
@@ -786,7 +876,7 @@ choix *s'étaler ou concentrer* est celui du joueur (brainstorm §4.2).
 |:---|:---|
 | `RestScreen` (`lib/ui/screens/rest_screen.dart`) | L'option « FORGER » (`:162-168`) devient « AFFÛTER », **inactive avec son motif** quand aucune carte du deck n'a de rune affûtable ; `_upgradeCard` (`:43-73`) devient l'affûtage ; `_leave` (`:105-109`) perd `clearForgeSession`. L'exclusivité des trois options (`_actionTaken`) tient « une fois par visite » (A4) ; `canPop: _actionTaken` (`:121`) devient `canPop: false` avec un `onPopInvokedWithResult` qui, une action faite, appelle `_leave` — le retour système résout alors le nœud comme « Continuer » (A4, mécanisme) |
 | `RestCardSelectionScreen` (`rest_card_selection_screen.dart`) | Le mode forge (`isForge`, `:19`, `:31-68`) devient le mode affûtage : le refus d'une carte pleine (`:32-40`) et celui d'une carte sans rune éligible (`:42-53`) font place à un refus unique, une carte sans rune affûtable, grisée, refusée au toucher avec `sharpenNothingOnCard` |
-| Le dialogue d'affûtage (neuf, `lib/ui/widgets/forge/`) | La carte, puis une ligne par rune portée (`levelsOf`) : son nom, son niveau et le suivant, `getDescription(1, …, carried: niveau)` — le gain marginal —, et « Affûter — `coût` or », inactif au plafond (« Niveau maximal ») ou faute d'or ; Annuler ramène à la sélection. **« Affûter » appelle `sharpenRune`, puis ferme le dialogue sur la rune affûtée ; la sélection se ferme à son tour et rend la carte et la rune à `RestScreen`**, qui passe `_actionTaken` à vrai — les précédents de la forge, `forge_upgrade_dialog.dart:266-272` (le choix écrit, puis le dialogue fermé sur lui) et `rest_card_selection_screen.dart:61-67` (la sélection fermée sur la carte et la rune). Un second affûtage n'est donc jamais offert dans la même visite : ni dans le dialogue, fermé, ni à l'écran du feu, dont les options ont disparu |
+| Le dialogue d'affûtage (neuf, `lib/ui/widgets/forge/`) | La carte, puis une ligne par rune portée (`levelsOf`) : son nom, son niveau et le suivant (`sharpenLevel`, « Niveau 2 → 3 », §5.3 — une rune au plafond n'a pas de suivant : sa ligne de niveau ne paraît pas), `getDescription(1, …, carried: niveau)` — le gain marginal —, et « Affûter — `coût` or », inactif au plafond (« Niveau maximal ») ou faute d'or ; Annuler ramène à la sélection. **« Affûter » appelle `sharpenRune`, puis ferme le dialogue sur la rune affûtée ; la sélection se ferme à son tour et rend la carte et la rune à `RestScreen`**, qui passe `_actionTaken` à vrai — les précédents de la forge, `forge_upgrade_dialog.dart:266-272` (le choix écrit, puis le dialogue fermé sur lui) et `rest_card_selection_screen.dart:61-67` (la sélection fermée sur la carte et la rune). Un second affûtage n'est donc jamais offert dans la même visite : ni dans le dialogue, fermé, ni à l'écran du feu, dont les options ont disparu |
 | L'opération | `RunController.sharpenRune(cardId, runeId)` → `GoldManager` : refuse si la rune est au plafond ou l'or insuffisant ; sinon dépense, puis réécrit la référence `id:n` en `id:n+1` à sa place (`setForgeUpgrades`, `deck_controller.dart:357-366`) |
 
 ```dart
@@ -863,7 +953,45 @@ porte aucune (D28) ; chaque rune vient de `drawRunes(instance, catalog, rng, cou
 `ShopController.buyDeckCopy()` dépense `getCardPrice(deckCopy)` — 25 · 50 · 100 · 150 · 200 —, l'ajoute au deck et la
 retire. `rerollCards` (`:309-331`) et `expandShop` ne la touchent pas. `ShopScreen` la montre **à part** des cartes en
 vente (`lib/ui/screens/shop_screen.dart:348-370`), sous le libellé `shopDeckCopy`. Le Miroir magique (`:204-285`,
-`cloneCard`, `shop_controller.dart:344-363`) ne change pas.
+`cloneCard`, `shop_controller.dart:344-363`) ne change pas, sinon le moment où il repart (ci-dessous).
+
+**L'étal retenu** (A11 — décidé par le propriétaire le 02/10/2026 ; le Miroir, l'identité du nœud et le cas sans
+nœud courant tranchés par l'orchestrateur à la levée de l'arrêt). L'étal est tout `ShopState`
+(`lib/models/shop_state.dart:3-14`) : les cartes en vente
+(`cardsForSale`, pré-forgées et relancées comprises), le soin acheté (`purchasedHeal`), les trois options du Miroir
+(`cloneOptions`, tirées à sa première ouverture, `shop_screen.dart:204-215`) et le nombre de ses achats
+(`clonePurchasedCount`, qui double son prix, `shop_state.dart:16`) — et, avec E2, `deckCopy`.
+
+- **Où le nœud est retenu** : `ShopState` gagne `nodeId` (`String?`), le nœud courant de la run
+  (`RunState.currentNodeId`, `run_controller.dart:30`) pour lequel l'étal a été tiré.
+- **Quand l'étal se tire** : `initializeShop`, appelé comme aujourd'hui à chaque création de l'écran
+  (`shop_screen.dart:31-43`), tire les cartes et la copie et note le nœud courant — **sauf** si `state.nodeId` est
+  non nul et égal à ce nœud : il ne fait alors rien, et l'écran rend l'étal retenu, achats compris — une carte achetée
+  reste absente, la copie achetée aussi, le soin reste acheté, le Miroir garde ses options et son prix. Sans nœud
+  courant — les tests unitaires, qui tirent l'étal en boucle (`test/unit/shop_controller_test.dart:298-301`,
+  `:325-339`, `:380-386`, `:408-428`, `:447-455`, `:498-504`) —, chaque appel tire, comme aujourd'hui.
+- **Quand il se retire** : l'état de `ShopController` revient à `const ShopState()` dès que le nœud courant de la run,
+  `currentNodeId`, change. La spec fixe ce mécanisme, pas sa tournure Riverpod. Aucun Notifier de
+  `lib/game/controllers/` n'utilise aujourd'hui `ref.listen` ni `ref.watch` — le seul `ref.listen` du dossier est
+  celui du Provider `autosaveOrchestratorProvider` (`checkpoint_controller.dart:22`). Le plan choisit entre
+  `ref.listen` sur un `select` de `currentNodeId` et `ref.watch` sur ce `select` dans `build`, qui reconstruit
+  l'état, et dit la forme retenue ; un test garde la remise à zéro au changement de nœud (§8). Le nœud change quand
+  le joueur part vers un autre nœud (`travelToNode`, `map_progression_manager.dart:14-18`), quand un acte commence
+  (`resetCurrentNode`, `:55`), quand une run commence (`currentNodeId: null`, `run_controller.dart:273`), quand une
+  sauvegarde se charge sur un autre nœud (`hydrate`, `:248-250`). Rentrer dans le même nœud — ce que la carte permet
+  tant qu'il n'est pas résolu
+  (`map_screen.dart:389-392`) — ne le change pas : l'étal reste. Un nœud résolu par « Quitter »
+  (`completeCurrentNode`, `shop_screen.dart:466-469`) garde son étal jusqu'au déplacement suivant : la carte ne laisse
+  plus y rentrer (`map_screen.dart:395`), et rien ne se vide sous l'écran qui se ferme.
+- **`rerollCards`** (`shop_controller.dart:309-331`) ne change pas : il remplace les cartes en vente dans l'état
+  retenu, sans toucher ni la copie ni le nœud — la relance payante reste possible, et son résultat est retenu comme le
+  reste. `expandShop` (`:286-307`) de même.
+- **Le Miroir** : `clearCloneOptions` (`shop_controller.dart:370-376`) disparaît, avec le `PopScope` de `ShopScreen`
+  (`shop_screen.dart:307-313`), qui ne sert qu'à l'appeler au retour ; le Miroir repart — options neuves, 150 or — avec
+  le reste de l'étal, au nœud suivant.
+
+Un seul mécanisme : il ferme la relance gratuite de la copie et, au passage, le retirage gratuit de tout l'étal — les
+cartes, le soin, le Miroir —, un défaut antérieur que la note de version dit (§11).
 
 ### 4.10. La capacité supprimée
 
@@ -937,6 +1065,23 @@ manquerait la définition (`forge_rune_rules.dart:32`) et les deux appels intern
 `CardRuneSockets` ; `_capacity` pour l'écran de deck. La variable locale du rendu Flame, `final int totalSlots =`, n'y
 répond pas.
 
+**La session de forge et les fentes** (A3, §4.5) — leurs noms, que les quatre commandes ne cherchent pas, et deux
+commandes de plus, **résultat vide attendu** :
+
+```
+git grep -n -e forgeSlots -e bonusForgeSlots -e forgeTargetCardId -e forgeTargetSessions -e setForgeSession \
+  -e clearForgeSession -e buyBonusForgeSlot -e ForgeBuySlotButton -e rerollCost -- lib test
+git grep -n -w ForgeSlot -- lib test
+```
+
+Elles rendent aujourd'hui 101 et 10 lignes, toutes dans du code ou des tests qu'E2 supprime ou réécrit — notamment
+`run_controller.dart:32-35`, `:139-142`, le dérivé `forgeSlotsMissing` (`:152-154`) et `:503-523` ;
+`gold_manager.dart:12-24` ; `rest_screen.dart:106`, dans `_leave` (§4.7) ; `debug_run_tab.dart:61`, `:64` ;
+`forge_buy_slot_button.dart` ; `forge_slot_row.dart` ; `forge_upgrade_dialog.dart:18-30`, `:300-303` ; et les tests
+`run_controller_test`, `run_state_persistence_test`, `forge_upgrade_dialog_test`. Deux commandes et non une : `-w` vaut pour tous les motifs
+d'une commande `git grep`, et ferait taire `isStackable(` ou `totalSlots:` (6 lignes sans lui, 1 avec) ; `ForgeSlot` le
+demande, pour ne pas prendre `ForgeSlotRow`. Les neuf noms se cherchent sans `-w`, ce qui attrape aussi leurs dérivés.
+
 ### 4.12. Ce que cela fait au jeu
 
 **L'offre à la fusion** — ce que le prédicat accepte sur les cartes livrées, sans rune héritée :
@@ -980,7 +1125,8 @@ Miroir magique) et du Miroir de montée de niveau ; **les fusions sont rares en 
 - Le format `id:niveau` de `CardInstance.forgeUpgrades` ; `addForgeUpgrade`, `setForgeUpgrades`.
 - L'applicateur sur les huit runes, G1, G2, `percentBonus` ; les stratégies d'effet (ADR-061) ; `createStatus`.
 - Les gardes de `mergeCards` : trois exemplaires d'une même carte à une même rareté, jamais au-delà de légendaire.
-- Le repos (30 %), l'oubli, l'Autel, le Miroir magique, le soin et la purge de la boutique, ses prix.
+- Le repos (30 %), l'oubli, l'Autel, le Miroir magique (sa règle ; le moment où il repart change, §4.9), le soin et la
+  purge de la boutique, ses prix ; le soin acheté reste acheté au même nœud (§4.9).
 - Les clones (boss « cartes », Miroirs) qui recopient les runes.
 
 ---
@@ -1031,6 +1177,7 @@ Tout texte que le lot écrit ou réécrit dans `lib/ui/` passe par elles.
 | `restCampSharpenSubtitle` *(remplace `restCampForgeSubtitle`)* | `Choisissez une carte, puis la rune qui gagne un niveau.` | `Choose a card, then the rune that gains a level.` |
 | `sharpenNothingOnCard` | `Aucune rune de cette carte ne peut gagner de niveau.` | `No rune on this card can gain a level.` |
 | `sharpenAction` (`{cost}`) | `Affûter — {cost} or` | `Sharpen — {cost} gold` |
+| `sharpenLevel` (`{from}`, `{to}`) — la ligne de niveau du dialogue d'affûtage (§4.7) | `Niveau {from} → {to}` | `Level {from} → {to}` |
 | `runeMaxLevel` | `Niveau maximal` | `Max level` |
 | `restCampSnackbarSharpen` (`{runeName}`, `{level}`, `{cardName}`) *(remplace `restCampSnackbarForge`, sans lecteur)* | `{runeName} passe au niveau {level} sur {cardName} !` | `{runeName} reaches level {level} on {cardName}!` |
 | `wellTitle` — titre de l'écran, en capitales comme aujourd'hui (`forge_fusion_screen.dart:119`) | `PUITS D'ÉCHANGE` | `EXCHANGE WELL` |
@@ -1134,6 +1281,11 @@ Les deux gabarits restent valides (`test/unit/content_editor/entity_validator_te
 chaque carte sauvegardée embarque — perd `baseMaxForgeUpgrades` : une sauvegarde plus ancienne les porte, la lecture
 les ignore. Les sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de cela n'est testé ni annoncé.
 
+L'étal retenu de la boutique (§4.9) ne se sauvegarde pas, comme `ShopState` aujourd'hui (`SaveService` n'écrit que la
+run, le deck et l'inventaire, `lib/services/save_service.dart:60-62`) : après tout chargement de sauvegarde — une
+relance de l'application comme « Continuer » depuis l'accueil, qui appelle `hydrate` (`:127-129`) —, la boutique tire
+un étal neuf.
+
 ---
 
 ## 8. Tests
@@ -1141,49 +1293,73 @@ les ignore. Les sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de ce
 | Sujet | Fichier | Ce qu'il verrouille |
 |:---|:---|:---|
 | Le modèle de rune | `test/unit/forge_upgrade_data_test.dart` | `minFusionRank` lu ; absent, 0, négatif, décimal refusés ; les trois sortes neuves lues, paramètre manquant ou ≤ 0 refusé ; `toJson` aller-retour sans `pools` ni `stackable` ; `{val}` sur `reduceCost` (marginal, plancher 0), `critBonus`, `addEffect` (valeur, pas niveau) |
-| Les onze runes | `test/unit/forge_upgrades_catalog_test.dart` — un test par rune | `minFusionRank` (2 pour `eco`, `quick`, 1 pour les neuf autres) ; `maxLevel` (1 pour `eco`, `quick`, `freezing`, `enduring`, `cheap` ; 10 pour `precise` ; `null` pour les cinq autres) ; éligibilité, deltas et `weight` exacts (100, 100, 80, 80, 80, 60, 40, 30, 50, 50, 50) ; aucune ne déclare `pools` ni `stackable` ; les trois neuves sans `eligibleCardTypes`. **La matrice de §4.12** : pour les 23 cartes livrées, sans rune, l'ensemble accepté au rang 1 et au rang 2 ; les six signatures n'ont rien |
+| Les onze runes | `test/unit/forge_upgrades_catalog_test.dart` — un test par rune | `minFusionRank` (2 pour `eco`, `quick`, 1 pour les neuf autres) ; `maxLevel` (1 pour `eco`, `quick`, `freezing`, `enduring`, `cheap` ; 10 pour `precise` ; `null` pour les cinq autres) ; éligibilité, deltas et `weight` exacts (100, 100, 80, 80, 80, 60, 40, 30, 50, 50, 50) ; aucune ne déclare `pools` ni `stackable` ; les trois neuves sans `eligibleCardTypes`. **La matrice de §4.12** : pour les 23 cartes livrées, sans rune, l'ensemble accepté au rang 1 et au rang 2 ; les six signatures, à leur rareté `unique`, n'ont rien. **Ses deux parties** : la matrice d'aujourd'hui (`_offers`, `:134-162` ; sa boucle, `:188-201`) juge les 23 cartes à leur rareté de donnée — commune ou `unique`, rang 0 (`lib/models/data/card_data.dart:36-37`) —, où la condition 7 du prédicat (§4.3) refuse toute rune : **en partie 1**, avec cette condition, elle passe aux rangs 1 et 2 avec les huit runes — la table de §4.12 sans `cheap`, `precise` ni `spectral` — et chaque rune déclare son `minFusionRank` ; **en partie 2**, elle gagne les trois runes neuves, et les runes perdent `pools` et `stackable` |
 | Le prédicat | `test/unit/rune_eligibility_test.dart` | `minFusionRank` contre le rang de la carte passée ; une rune portée, plafonnée ou non, refusée ; le coût courant lu après `cheap` sur le catalogue reçu (une rune de test à `requiresMinCost: 1` refusée sur une carte à 1 qui porte `cheap`) ; les conditions d'E1 inchangées |
-| Le tirage | `test/unit/forge_rune_rules_test.dart` | `drawRunes` : au plus `count` ids distincts, tous éligibles ; moins s'il y en a moins ; aucun s'il n'y en a pas ; la pondération sur de nombreux tirages ; `consolidate` sans branche (`enduring` gardé à 1 par la borne) ; le groupe `stackable` (`:58-84`), les cas « non cumulable » (`:94-104`) et le groupe `fusionOptionsFor` (`:144-190`) supprimés ; `:109-111` (`legacy:1` + `legacy:1` → `legacy:2`) **reste**, renommé « une rune absente du registre n'a pas de plafond » — ce comportement survit à E2 (`_bounded`, `forge_rune_rules.dart:62-63`) ; `sharpenCost`, `canSharpen` ; `wellLevel` — la table de §4.8, L = 1 → 1, `sharp` 9 → `eco` 1 ; `wellCost` ; `wellOptions` — la rune donnée exclue, l'éligibilité jugée sans elle (`enduring` donné → `eco` possible sur une rare), le rang de la carte |
+| Le tirage | `test/unit/forge_rune_rules_test.dart` | `drawRunes` : au plus `count` ids distincts, tous éligibles ; moins s'il y en a moins ; aucun s'il n'y en a pas ; la pondération sur de nombreux tirages ; `consolidate` sans branche : les cas « non cumulable » (`:94-104`) gardent la branche `isStackable` jusqu'en **partie 2**, où `enduring` passe à `maxLevel: 1` (`:51`, ci-dessous) et où ils deviennent « `enduring` gardé à 1 par la borne », leurs attentes inchangées ; le groupe `stackable` (`:58-84`) gagne `minFusionRank` en **partie 1** — `fromJson` l'exige — et disparaît en **partie 2**, avec `stackable` ; le groupe `fusionOptionsFor` (`:144-190`) disparaît en **partie 2**, avec `fusionOptionsFor`, et son assistant `_cardWith` (`:24-35`), qu'il est seul à lire, avec lui ; `:109-111` (`legacy:1` + `legacy:1` → `legacy:2`) **reste**, renommé « une rune absente du registre n'a pas de plafond » — ce comportement survit à E2 (`_bounded`, `forge_rune_rules.dart:62-63`) ; `sharpenCost`, `canSharpen` ; `wellLevel` — la table de §4.8, L = 1 → 1, `sharp` 9 → `eco` 1 ; `wellCost` ; `wellOptions` — la rune donnée exclue, l'éligibilité jugée sans elle (`enduring` donné → `eco` possible sur une rare), le rang de la carte |
 | L'applicateur | `test/unit/effective_card_test.dart` | `reduceCost` : coût − 1, plancher 0, la rareté sans effet ; `critBonus` additionné ; `addExhaust` ; `sharp` et `spectral` additionnés sur la base à la rareté |
 | La résolution | `test/unit/rune_resolution_test.dart` | `cheap` : le mana consommé est le coût réduit ; `precise` : `DamagePipeline.calculate` reçoit le bonus (à 100 % de critique effectif, le coup critique) ; `spectral` : +40 % de la base, au moins +1 |
 | La chaîne de dégâts | `test/unit/damage_pipeline_test.dart` *(nouveau — aucun test ne vise `DamagePipeline` seul aujourd'hui)* | `critChanceBonus` ajouté au jet : à 100 points, le coup est critique ; 0 par défaut, le jet d'aujourd'hui |
-| L'épuisement | `test/unit/deck_controller_test.dart:484-512` | Une carte `spectral` part à l'épuisement, même portant `enduring` (A10) ; les cas d'E1 inchangés |
+| L'épuisement | `test/unit/deck_controller_test.dart:484-509` | Une carte `spectral` part à l'épuisement, même portant `enduring` (A10) ; les cas d'E1 inchangés |
 | La fusion | `test/unit/deck_controller_test.dart:85-183`, `:185-222` ; `test/unit/decoupled_forge_test.dart:271`, `:287`, `:303` | `mergeCards(ids)` rend la carte ; quatre runes distinctes toutes gardées (le cas de capacité `:136-183` réécrit) ; les trois refus (`:185-222` — appels `:192`, `:210`, `:219`) passent à `mergeCards(ids)` et rendent `null` ; `sharp:3` + `sharp:1` + `burning:1` → `sharp:4`, `burning:1` ; la paire exclue d'E-S3 ; `eco:1` ×3 → `eco:1` |
-| `decoupled_forge_test` | `test/unit/decoupled_forge_test.dart` | Le cas de capacité (`:90-109`) et la simulation de la Forge de Fusion (`:202-264`) supprimés — l'assistant `threeCopies` qui suit (`:266-269`) reste, les tests de `mergeCards` le lisent ; le cas non cumulable (`:303`) devient « plafond 1 » ; `{val}` (`:141-171`) étendu aux sortes neuves |
+| `decoupled_forge_test` | `test/unit/decoupled_forge_test.dart` | Le cas de capacité (`:90-109`) et la simulation de la Forge de Fusion (`:202-264`) supprimés — l'assistant `threeCopies` qui suit (`:266-269`) reste, les tests de `mergeCards` le lisent ; le cas non cumulable (`:303`) devient « plafond 1 », `enduring` y prenant `maxLevel: 1` (`:74-85`, ci-dessous) ; `{val}` (`:141-171`) étendu aux sortes neuves |
 | `CardRarity` | `test/unit/card_rarity_test.dart` | Les cas de capacité (`:49-65`) supprimés ; `fusionRank` et `multiplier` inchangés |
 | Les prises | `test/widget/ui_card_rune_sockets_test.dart` | Une prise par rune portée, aucune vide ; une carte de classe sans rune n'en montre aucune (`:69-86` réécrits) ; l'emoji par `parseRef` |
-| Le badge | `test/widget/ui_card_values_test.dart` | Une carte `spectral` montre « Usage unique » ; une *Potion de Soin* `enduring` ne le montre plus |
+| Le badge | `test/widget/ui_card_values_test.dart` | Une carte `spectral` montre « Usage unique » ; une *Potion de Soin* `enduring` ne le montre plus. Les trois lecteurs Flame, sans test de widget, sont gardés par la commande de contrôle d'A13, dont le résultat doit être vide |
 | Le dialogue de fusion | `test/widget/forge_upgrade_dialog_test.dart` *(réécrit)* | Trois lignes pour trois runes offertes, une pour une ; ni Annuler ni retour ; le choix écrit `id:1` sur la carte et ferme ; aucune relance, aucun achat |
-| L'écran de deck | `test/widget/deck_screen_test.dart` | La fusion de trois *Frappes* ouvre le dialogue, le choix pose la rune ; trois *Concentrations* communes fusionnent sans dialogue de choix, avec `deckMergeSuccess` puis `forgeNoEligibleRune`, dans cet ordre ; plus d'étape « Capacité » ; les cas d'aujourd'hui (`:58-170`) gardés |
-| Le feu | `test/widget/rest_screen_test.dart:101-220` | Trois options, « AFFÛTER » à la place de « FORGER » ; inactive avec son motif sans rune affûtable ; le parcours d'affûtage notifie (`:157-190` réécrit) ; **D14** : après un affûtage, les trois options disparaissent et seul « Continuer » reste. **Le retour système** (A4) — `RestScreen` poussé sur une vraie pile, au nœud courant d'une carte, puis `navigator.maybePop()`, sur le précédent de `test/widget/map_screen_test.dart:244-256` : après un repos, un affûtage ou un oubli, le nœud courant est `isCompleted` — la condition qui, sur la carte du monde, interdit d'y rentrer (`map_screen.dart:389-392`) — et l'écran est fermé ; `checkpointProvider` n'a avancé que d'un cran (`completeCurrentNode` le pousse,
+| L'écran de deck | `test/widget/deck_screen_test.dart` | La fusion de trois *Frappes* ouvre le dialogue, le choix pose la rune ; trois *Concentrations* communes fusionnent sans dialogue de choix, avec `deckMergeSuccess` puis `forgeNoEligibleRune`, dans cet ordre ; **le rang atteint** : trois *Concentrations* peu communes fusionnent en rare, et le dialogue de choix n'offre que *Véloce* (`quick`, `minFusionRank` 2) — jugée au rang des exemplaires, l'offre serait vide ; **le `context` stable** (§4.5) : un deck *Frappe* peu commune, *Défense*, trois *Frappes* communes — le groupe fusionné, dernier de la grille, en sort, la carte fusionnée rejoignant la *Frappe* peu commune (`mergeCards` l'ajoute en fin de deck, `deck_controller.dart:324-330`) — : après le choix, `deckMergeSuccess` s'affiche ; plus d'étape « Capacité » ; les cas d'aujourd'hui (`:58-175`) gardés |
+| Le feu | `test/widget/rest_screen_test.dart:101-231` | Trois options, « AFFÛTER » à la place de « FORGER » ; inactive avec son motif sans rune affûtable ; le parcours d'affûtage notifie (`:157-189` réécrit) ; **D14** : après un affûtage, les trois options disparaissent et seul « Continuer » reste. **Le retour système** (A4) — `RestScreen` poussé sur une vraie pile, au nœud courant d'une carte, puis `navigator.maybePop()`, sur le précédent de `test/widget/map_screen_test.dart:244-256` : après un repos, un affûtage ou un oubli, le nœud courant est `isCompleted` — la condition qui, sur la carte du monde, interdit d'y rentrer (`map_screen.dart:389-392`) — et l'écran est fermé ; `checkpointProvider` n'a avancé que d'un cran (`completeCurrentNode` le pousse,
 `map_progression_manager.dart:45`) — pas de double `_leave` ; avant toute action, l'écran reste ouvert et le nœud non résolu |
 | La sélection du feu | `test/widget/rest_card_selection_screen_test.dart` *(réécrit)* | Une carte sans rune affûtable grisée et refusée avec `sharpenNothingOnCard` ; une carte avec une rune affûtable ouvre le dialogue |
-| Le dialogue d'affûtage | `test/widget/sharpen_rune_dialog_test.dart` *(nouveau)* | Une ligne par rune ; « Niveau maximal » pour `eco:1` ; le coût `50 × niveau` ; inactif faute d'or ; le gain marginal dans la description ; **un affûtage ferme le dialogue sur la rune affûtée ; aucun second affûtage n'est possible** — l'or n'est dépensé qu'une fois et une seule rune a monté d'un niveau |
-| Les opérations payantes | `test/unit/run_controller_test.dart` | `sharpenRune` : dépense `50 × n`, écrit `id:n+1` à sa place, refuse au plafond et faute d'or sans rien toucher ; `exchangeRune` : dépense `50 × L`, remplace à sa place par `reçue:wellLevel`, refuse une remplaçante hors `wellOptions` ; les cas de session et d'achat de fente (`:189-249`) supprimés |
+| Le dialogue d'affûtage | `test/widget/sharpen_rune_dialog_test.dart` *(nouveau)* | Une ligne par rune ; « Niveau 2 → 3 » (`sharpenLevel`) pour `sharp:2` ; « Niveau maximal » pour `eco:1`, sans ligne de niveau ; le coût `50 × niveau` ; inactif faute d'or ; le gain marginal dans la description ; **un affûtage ferme le dialogue sur la rune affûtée ; aucun second affûtage n'est possible** — l'or n'est dépensé qu'une fois et une seule rune a monté d'un niveau |
+| Les opérations payantes | `test/unit/run_controller_test.dart` | `sharpenRune` : dépense `50 × n`, écrit `id:n+1` à sa place, refuse au plafond et faute d'or sans rien toucher ; `exchangeRune` : dépense `50 × L`, remplace à sa place par `reçue:wellLevel`, refuse une remplaçante hors `wellOptions` et refuse faute d'or, sans rien toucher ; les cas de session et d'achat de fente (`:189-249`) supprimés |
 | Le Puits | `test/widget/forge_fusion_screen_test.dart` *(réécrit)* | Les cartes qui portent une rune ; les remplaçantes d'une rune ; **un échange par visite** (A5) : après un échange, les cartes et les remplaçantes disparaissent et seule la sortie reste — aucun second échange n'est possible, l'or n'est dépensé qu'une fois ; l'écran vide ; une rune sans remplaçante inactive. **Le retour système** (A5), de la même façon qu'au feu : après un échange, `maybePop()` ferme l'écran et le nœud courant est `isCompleted` ; sans échange, l'écran se ferme et le nœud courant reste non résolu |
 | Le placement | `test/unit/map_content_placer_test.dart` *(nouveau, sur le modèle de `relic_exchange_test.dart`)* | Aux actes 3, 6, 9 : un nœud `forgeFusion`, étage 3 à 7, ancien combat ou événement ; aux actes 1, 2, 4, 5, 7 : aucun |
-| La boutique | `test/unit/shop_controller_test.dart` | Une pré-forgée porte au plus `fusionRank` runes, distinctes, éligibles au rang (aucune commune runée ; jamais `eco` ni `quick` sous la rare) ; le niveau borné ; la copie tirée de `copyableCards`, même rareté, sans rune, au prix 25 · 50 · 100 · 150 · 200 ; `rerollCards` la garde ; `buyDeckCopy` l'ajoute et la retire ; deck sans carte copiable : pas de copie. Le cas « non cumulable au tier 1 » (`:460`) devient « plafond 1 » |
-| L'écran de boutique | `test/widget/shop_screen_test.dart` | La copie se montre à part, sous `shopDeckCopy` |
-| La persistance | `test/unit/run_state_persistence_test.dart:59-84`, `:120-126` ; `test/unit/deck_state_persistence_test.dart:33` | Sans les champs de forge ; sans `baseMaxForgeUpgrades` |
+| La boutique | `test/unit/shop_controller_test.dart` | Une pré-forgée porte au plus `fusionRank` runes, distinctes, éligibles au rang (aucune commune runée ; jamais `eco` ni `quick` sous la rare) ; le niveau borné ; la copie tirée de `copyableCards`, même rareté, sans rune, au prix 25 · 50 · 100 · 150 · 200 ; `rerollCards` la garde ; `buyDeckCopy` l'ajoute et la retire ; deck sans carte copiable : pas de copie. **L'étal retenu** (A11, §4.9) : deux `initializeShop` au même nœud courant rendent le même étal, copie comprise, achats compris — une carte achetée reste absente, la copie achetée aussi, le soin reste acheté, le Miroir garde ses options et son prix ; une relance payante est retenue de même ; un autre nœud courant, un acte neuf, une run neuve, une sauvegarde chargée sur un autre nœud retirent l'étal — le test qui garde la remise à zéro au changement de nœud, quelle que soit la forme Riverpod que le plan retient (§4.9) ; sans nœud courant, chaque appel tire. Le cas du prix du Miroir (`:251-282`) garde le doublement ; sa remise à zéro (`:278-281`, `clearCloneOptions`) devient « un nœud neuf remet le Miroir à 150 ». Le cas « non cumulable au tier 1 » (`:460`) devient « plafond 1 », `steadfast` y prenant `maxLevel: 1` (`:477-493`, ci-dessous) |
+| L'écran de boutique | `test/widget/shop_screen_test.dart` | La copie se montre à part, sous `shopDeckCopy`. **Sortir par le retour puis revenir garde le même étal et la même copie** — `ShopScreen` poussé sur une vraie pile, au nœud courant d'une carte (le précédent de « Le feu », ci-dessus), `maybePop()`, puis l'écran rouvert : mêmes cartes, même copie, mêmes options du Miroir à leur prix, et le nœud courant reste non résolu. Le cas du Miroir (`:212-313`) garde la mise en cache de ses options ; sa dernière attente (`:306-307`), le Miroir vidé à la sortie, devient « vidé au nœud suivant » |
+| La persistance | `test/unit/run_state_persistence_test.dart:59-84`, `:120-135` ; `test/unit/deck_state_persistence_test.dart:33` | Sans les champs de forge ; sans `baseMaxForgeUpgrades` |
 | Le chargement | `test/unit/real_bundle_load_test.dart:38`, `:97-101` | 11 runes ; l'assertion `stackable` devient « `maxLevel` 1 : `cheap`, `eco`, `enduring`, `freezing`, `quick` » |
 | Les ids hors de la donnée | `test/unit/rune_ids_in_code_test.dart:33` | `hasLength(11)` ; aucun des onze ids en littéral dans `lib/` |
 | L'intégrité | `test/unit/referential_integrity_test.dart` | Chaque `icon` et chaque `color` de rune livrée est une clé de `runeIcons` et de `runeColors` (`lib/ui/widgets/forge/rune_style.dart`, A19) |
 | L'éditeur | `test/unit/content_editor/entity_descriptor_test.dart:239`, `:264`, `:270` ; `entity_validator_test.dart`, `field_kind_test.dart`, `known_values_test.dart`, `fixtures.dart`, `document_form_test.dart` | Les clés des deux gabarits ; `minFusionRank: 0` refusé par la famille 7 ; les exemples de clé de liste sans `pools` |
 | Les fichiers réels dans l'éditeur | `test/unit/content_editor/shipped_entities_round_trip_test.dart` | Inchangé : les onze runes valident et se réécrivent à l'identique |
-| Le tutoriel | `test/tutorial/tutorial_engine_test.dart:348-360`, `:504-530` ; `test/widget/tutorial_merge_transition_test.dart` | La fusion tire une offre éligible de trois runes au plus sur le registre du tutoriel ; le choix pose `id:1` ; la carte semée est la première dont la fusion offre une rune ; sans offre, l'étape le dit ; le passage d'étape ne lève rien |
+| Le tutoriel | `test/tutorial/tutorial_engine_test.dart:348-359`, `:478-514` (le semis de l'étape de Fusion) ; `test/widget/tutorial_merge_transition_test.dart` | La fusion tire une offre éligible de trois runes au plus sur le registre du tutoriel ; le choix pose `id:1` ; la carte semée est la première dont la fusion offre une rune ; sans offre, l'étape le dit ; le passage d'étape ne lève rien |
+
+**La partie de chaque suppression** *(tranché par l'orchestrateur à la levée de l'arrêt, n° 5)*. Un test qui garde un
+comportement encore vivant n'est supprimé — ou réécrit — que dans la partie qui supprime ce comportement : le
+prolongement, aux tests, de l'invariant de §10. **5**, puis **8** : entre les deux parties, `stackable` est encore lu
+et écrit par `ForgeUpgradeData` (`fromJson`, `toJson`) et lu par `consolidate` (`forge_rune_rules.dart:49`) ; un
+comportement vivant reste gardé par son test comme un champ reste lu par son code, et le test se défait avec lui.
+
+En **partie 1**, avec la capacité, la session de forge, la forge du feu et les conditions 7 et 8 du prédicat (§4.3) :
+`decoupled_forge_test.dart:90-109` ; `card_rarity_test.dart:49-65` ; `deck_controller_test.dart:136-183`, le cas de
+capacité, réécrit (ligne « La fusion ») ; `run_controller_test.dart:189-249` ; les champs de forge de
+`run_state_persistence_test.dart:59-84` et son cas `:120-135` ; `ui_card_rune_sockets_test.dart:69-86` ;
+`rune_eligibility_test.dart:131-140`, réécrits — la condition 8 y refuse toute rune portée, plafond atteint ou non :
+`capped:1` porté (`:133`) et `sharp:5` porté (`:138-140`) n'y sont plus éligibles ; l'ensemble de clés attendu du
+gabarit de rune (`entity_descriptor_test.dart:261-275`), qui gagne `minFusionRank` avec le gabarit ;
+`forge_upgrade_dialog_test.dart`, `rest_card_selection_screen_test.dart`, et `rest_screen_test.dart:101-109`
+(« FORGER ») et `:157-189`, réécrits.
+
+En **partie 2**, avec `stackable`, `pools`, `fusionOptionsFor`, la Forge de Fusion et le Miroir vidé au retour : dans
+`forge_rune_rules_test.dart`, le groupe `stackable`, les cas « non cumulable » et le groupe `fusionOptionsFor` (ligne
+« Le tirage ») ; `decoupled_forge_test.dart:202-264` et `:303` ; l'assertion `stackable` de
+`real_bundle_load_test.dart:97-101` ; `pools` et `stackable` de l'ensemble attendu, `entity_descriptor_test.dart:264`,
+`:270` ; `shop_controller_test.dart:278-281` et `:460` ; `shop_screen_test.dart:306-307` ;
+`forge_fusion_screen_test.dart`, réécrit.
 
 **Les tests qui suivent sans changer ce qu'ils vérifient** — la liste complète, mesurée :
 
 | Ce qui change sous eux | Où |
 |:---|:---|
-| Une rune construite en Dart avec `pools:` ou `stackable:` — le paramètre disparaît ; `minFusionRank` prend 1 par défaut (A8) | `test/unit/decoupled_forge_test.dart:41`, `:55`, `:69`, `:82`, `:84` ; `effective_card_test.dart:39` ; `forge_rune_rules_test.dart:10-20` (l'assistant `_rune`), `:51` ; `rune_eligibility_test.dart:27` ; `save_catalog_lookups_test.dart:111` ; `run_state_persistence_test.dart:38` ; `deck_state_persistence_test.dart:53` ; `shop_controller_test.dart:373`, `:491-492` ; `test/widget/ui_card_rune_sockets_test.dart:107` ; `test/widget/forge_fusion_screen_test.dart:52`, `:67`, `:80`, `:82` (réécrit, §8) |
-| Une rune lue par `fromJson` sans `minFusionRank` — la clé devient obligatoire | `test/unit/forge_upgrade_data_test.dart:9-17` (`_json`, dont `pools` `:11`) ; `test/unit/content_editor/fixtures.dart:47-58` (`fixtureRune`, dont `pools` `:53`) ; `test/unit/forge_rune_rules_test.dart:58-84` (le groupe `stackable`, supprimé) ; `test/unit/content_editor/entity_validator_test.dart:595-596` — le brouillon de couleur, dont la seconde attente (`:602`) ne veut aucune faute et atteint donc `_construct` : en **partie 1** il gagne `minFusionRank` et garde `pools`, que `requiredKeys` exige encore ; en **partie 2** il perd `pools` |
+| Une rune construite en Dart avec `pools:` ou `stackable:` — le paramètre disparaît, en **partie 2** ; `minFusionRank` prend 1 par défaut (A8). **Une rune construite `stackable: false` prend `maxLevel: 1` à sa place** : sans lui, elle n'aurait plus de plafond — `consolidate` additionnerait ses niveaux, la boutique lui tirerait un niveau 2 ou 3 —, et `decoupled_forge_test.dart:303` et `shop_controller_test.dart:460` rougiraient. Ce sont `decoupled_forge_test.dart:74-85` (`enduring`, `:84`), `shop_controller_test.dart:477-493` (`steadfast`, `:492`) et `forge_rune_rules_test.dart:51` (`enduring`) | `test/unit/decoupled_forge_test.dart:41`, `:55`, `:69`, `:82`, `:84` ; `effective_card_test.dart:39` ; `forge_rune_rules_test.dart:10-20` (l'assistant `_rune`), `:51` ; `rune_eligibility_test.dart:27` ; `save_catalog_lookups_test.dart:111` ; `run_state_persistence_test.dart:38` ; `deck_state_persistence_test.dart:53` ; `shop_controller_test.dart:373`, `:491-492` ; `test/widget/ui_card_rune_sockets_test.dart:107` ; `test/widget/forge_fusion_screen_test.dart:52`, `:67`, `:80`, `:82` (réécrit, §8) |
+| Une rune lue par `fromJson` sans `minFusionRank` — la clé devient obligatoire | `test/unit/forge_upgrade_data_test.dart:9-17` (`_json`, dont `pools` `:11`) ; `test/unit/content_editor/fixtures.dart:47-58` (`fixtureRune`, dont `pools` `:53`) ; `test/unit/forge_rune_rules_test.dart:58-84` (le groupe `stackable` : il gagne `minFusionRank` en **partie 1** et disparaît en **partie 2**, avec `stackable`) ; `test/unit/content_editor/entity_validator_test.dart:595-596` — le brouillon de couleur, dont la seconde attente (`:602`) ne veut aucune faute et atteint donc `_construct` : en **partie 1** il gagne `minFusionRank` et garde `pools`, que `requiredKeys` exige encore ; en **partie 2** il perd `pools` |
 | Un brouillon qui n'atteint pas `fromJson` | `test/unit/content_editor/entity_validator_test.dart:205-206` : le validateur s'arrête à la première famille en échec (`lib/services/content_editor/entity_validator.dart:30-31`, boucle `:87-100`) et ce brouillon échoue sur l'énumération (`_enums`, `:89`) avant `_construct` (`:96`) — il n'a pas besoin de `minFusionRank` ; il ne fait que perdre `pools`, en **partie 2**, pour la commande de contrôle (§4.11) |
 | Une carte commune, que la condition 7 du prédicat refuse désormais | `test/unit/rune_eligibility_test.dart:38-57` (`_card`, `rarity: CardRarity.common` en `:51`) : en **partie 1**, avec `minFusionRank`, `_card` passe au rang 1 (`uncommon`), sans quoi la condition 7 (§4.3) refuse toute rune et ses cas positifs basculent |
 | Ce qu'une rune déclare, sous forme comparable | `test/unit/forge_upgrades_catalog_test.dart:14-48` (`_declared`, `_rune` : `pools`, `stackable`), `:83`, `:92`, `:120`, `:125`, `:137` (§8 : réécrit pour onze runes) |
 | Une carte construite avec `baseMaxForgeUpgrades:` — le paramètre disparaît | `test/unit/card_rarity_test.dart:7`, `:17` (l'assistant `_cardData`) ; `deck_controller_test.dart:98`, `:149` (et le commentaire `:120`) ; `deck_state_persistence_test.dart:33` ; `decoupled_forge_test.dart:98` ; `test/widget/ui_card_rune_sockets_test.dart:53`, `:65` ; `test/unit/content_editor/entity_descriptor_test.dart:239` |
 | `mergeCards` appelé à deux arguments — il n'en prend plus qu'un | `test/unit/deck_controller_test.dart:123`, `:173`, `:192`, `:210`, `:219` ; `decoupled_forge_test.dart:278`, `:294`, `:324` |
 | `pools` pris comme exemple de clé de liste | `test/unit/content_editor/known_values_test.dart:53-59` ; `field_kind_test.dart:69` ; `test/widget/content_editor/document_form_test.dart:84` |
+| Un `switch` exhaustif sur la classe scellée `CardDelta` (`lib/models/data/card_delta.dart:13`) : les trois sortes neuves (§4.1) le rendent non exhaustif — une erreur de compilation, `dart analyze` sale | `test/unit/referential_integrity_test.dart:15-19` (`_effectOf`) : en **partie 2**, avec les sortes, il gagne leurs trois cas, qui rendent `null` — aucune ne nomme un type d'effet. Le seul autre `switch` sur les sortes, celui de l'applicateur (`lib/models/effective_card.dart:42-57`), est réécrit au §4.2 |
 
 `dart analyze` propre et suite verte à la fin de chaque tâche, comme chaque lot du programme.
 
@@ -1244,8 +1420,32 @@ de la vague comprises, les trois fichiers neufs présents — ; celle du second 
 `spectral` est donc **la dernière à toucher le script**, et aucune tâche qui touche `assets/data/` ne vient entre les
 deux.
 
+**Où tourne la relance du premier temps** *(tranché par l'orchestrateur à la levée de l'arrêt, n° 9)*. Quand
+l'orchestrateur la lance, le code de la vague est fini : la branche a dépassé le commit de réalignement. Il en extrait
+l'état **hors du dépôt**, sans changer de branche dans le checkout principal ni ouvrir de worktree :
+`git archive <commit du réalignement> tool/simulations assets/data`, extrait (`tar -x`) dans le dossier temporaire de
+la session, puis `dart run tool/simulations/d26_economy_sim.dart --out <fichier>` lancé de ce dossier. Deux faits le
+permettent, vérifiés : le script n'importe que des bibliothèques `dart:` (`:17-21`) — il tourne hors de tout paquet,
+sans `pubspec.yaml` —, et il trouve `assets/data/` en remontant depuis son propre dossier (`_findRoot`, `:401-408`,
+la condition en `:404` ; la lecture en `:723`) : celui de l'extraction, deux niveaux au-dessus du script. Essayé le
+02/10/2026 sur `6e94be7`, en `--quick` : le script tourne depuis l'extraction, sur les données extraites, et sa ligne
+« Données lues » est celle de la référence (ligne 5). La sortie se compare ensuite à la référence,
+`tool/simulations/d26_reference_output.md` (orchestration §3.6). Le script extrait ne lit rien du checkout principal,
+qui reste libre pendant qu'il tourne. La relance du second temps peut se lancer de même, extraite au commit
+`spectral` — qui, aucune tâche ne touchant `assets/data/` après le réalignement ni le script après lui, est aussi
+l'état de la tête de branche pour ce que le script lit. Les options : un clone jetable hors du dépôt, l'archive du
+commit, le commit extrait dans le checkout principal, un worktree. **5** écarte les deux dernières : le dépôt
+travaille dans le checkout principal, sur la branche de la vague, « jamais de worktree » (orchestration §3.2, et §6
+parmi les garde-fous), et le script ne souffre aucun changement de branche pendant qu'il tourne (§3.6) ; **8** retient
+l'archive contre le clone : les deux seuls dossiers que le script lit, qu'un dossier temporaire supprimé défait.
+
 **Aucun autre second temps.** A6 garde la base du Puits (50), A7 le `minFusionRank` 1 des six runes, A9 l'éligibilité
-de `precise` et `spectral` ; le poids 50 et le `minFusionRank` 1 des trois runes neuves sont ceux de D63.
+de `precise` et `spectral` ; le poids 50 et le `minFusionRank` 1 des trois runes neuves sont ceux de D63. **L'étal
+retenu** (A11, §4.9) non plus : le script joue déjà un étal tiré une fois par visite — `visitShop` (`:2866-2936`) tire
+les trois cartes (`:2869-2872`), la copie (`:2873-2877`) et les options du Miroir (`:2878`) une fois, en tête de
+visite ; le prix du Miroir double dans la visite et repart à la suivante (`mirrorBuys`, `:2883`, `:2904`) ; le soin
+s'achète une fois au plus (`:2914-2917`) ; le script ne relance pas l'étal et ne sort jamais d'une boutique pour y
+revenir.
 
 **Les écarts du script, consignés et non relancés** — aucun n'est une valeur qu'un arbitrage d'E2 remplace :
 
@@ -1268,7 +1468,11 @@ pré-forgées bornées par le rang, niveau 80 · 15 · 5 borné (`:2842-2862`) ;
 ## 10. Le découpage en parties
 
 **L'invariant** : chaque partie laisse le jeu jouable, `dart analyze` propre et `flutter test` vert ; une partie ne
-supprime un champ qu'avec son dernier lecteur, et n'écrit aucun code que la suivante jetterait.
+supprime un champ qu'avec son dernier lecteur, et n'écrit aucun code que la suivante jetterait. **Aux tests**
+*(tranché par l'orchestrateur à la levée de l'arrêt, n° 5)* : un test qui garde un comportement encore vivant n'est
+supprimé que dans la partie qui supprime ce comportement — la partie de chaque suppression est en §8. La clé qu'un tel
+test gagne en partie 1 pour rester vert, comme `minFusionRank` au groupe `stackable` de `forge_rune_rules_test`, n'est
+pas du code que la partie 2 jette au sens de l'invariant : jusque-là, le test garde un comportement vivant.
 
 **Partie 1 — la fusion devient la forge** : la boucle change une fois.
 - `minFusionRank` (champ, huit fichiers, gabarit de rune de l'éditeur — `requiredKeys` garde `pools` jusqu'en
@@ -1285,7 +1489,9 @@ supprime un champ qu'avec son dernier lecteur, et n'écrit aucun code que la sui
   les textes de la forge de la partie 1 (§5.7) ;
 - les lecteurs de `stackable` que la partie réécrit (`forge_upgrade_dialog.dart:172`, `forge_slot_row.dart:94-96`,
   `deck_screen.dart:284`, `:362`) ;
-- les tests correspondants.
+- les tests correspondants, chaque suppression dans sa partie (§8) — dont le test de catalogue : chaque rune déclare
+  son `minFusionRank`, et la matrice passe aux rangs 1 et 2 avec les huit runes, que la condition 7 refuse toutes au
+  rang 0 de la rareté de donnée (§8).
 
 *Entre les deux parties* : `pools` n'est plus lu que par le tirage des pré-forgées (`shop_controller.dart:50-98`) et
 l'éditeur ; `stackable` que par `consolidate`, `fusionOptionsFor`, le niveau des pré-forgées et l'éditeur ; la capacité
@@ -1297,17 +1503,25 @@ même rune, et l'écran montre son état vide — jouable, et jamais livré ains
   `GoldManager.exchangeRune`, `wellOptions`, `wellLevel`, `wellCost`, la carte du monde (`wellName`, `wellDesc`), la
   prose des nœuds et la phrase du Puits de l'étape de fusion (§5.4, §5.5), les textes de la forge de la partie 2
   (§5.7) ; `fusionOptionsFor`, `FusionOption` supprimés ;
-- la boutique (§4.9) : la copie, les pré-forgées par `drawRunes` ;
+- la boutique (§4.9) : la copie ; l'étal retenu à son nœud — `nodeId` et la remise à zéro au changement de nœud courant ajoutés,
+  `clearCloneOptions` et le `PopScope` de `ShopScreen` supprimés (A11, décidé par le propriétaire) — ; les
+  pré-forgées par `drawRunes` ;
 - `pools` et `stackable` supprimés, avec leurs derniers lecteurs (§4.11) ;
 - `cheap`, `precise`, `spectral` : fichiers, sortes, lecteurs (§3.2, §4.1, §4.2), et avec `reduceCost` le coût courant
   du prédicat lu par l'applicateur sur le catalogue reçu (A15, tranché par l'orchestrateur au tour 1) ; le badge
-  (A13) ; `{val}` et les cinq descriptions (A14) ; `runeIcons`, `runeColors` et le test d'intégrité (A19) ;
+  (A13) ; `{val}` et les cinq descriptions (A14) ; `runeIcons`, `runeColors` et le test d'intégrité (A19). **Leurs
+  trois fichiers, sans `pools`, viennent avec la suppression de `pools` ou après elle** : tant que `requiredKeys` vaut
+  `{'pools'}` (`lib/services/content_editor/entity_descriptor.dart:335`), la famille 3 de l'éditeur refuse une rune
+  sans `pools`, et `shipped_entities_round_trip_test.dart:71-100`, qui valide chaque fichier livré, rougirait ;
 - le réalignement du script, premier temps (§9) ; **puis, dans une tâche à part qui le suit**, l'alignement du
   `spectral` du script sur D33, second temps (§9, A10) — fumé par `--quick`, la mesure complète relancée par
   l'orchestrateur. Le réalignement vient après toute tâche qui touche `assets/data/` ; la relance 1 tourne sur son
   commit, la relance 2 sur le commit `spectral`, la dernière tâche à toucher le script ; aucune tâche qui touche
-  `assets/data/` ne vient entre les deux ;
-- les tests correspondants.
+  `assets/data/` ne vient entre les deux. La relance 1 tourne sur son commit **extrait hors du dépôt** par
+  `git archive`, sans changer de branche ni ouvrir de worktree (§9, tranché par l'orchestrateur, n° 9) ; la relance 2
+  peut tourner de même ;
+- les tests correspondants, chaque suppression dans sa partie (§8) — dont la matrice du test de catalogue, qui gagne
+  les trois runes neuves.
 
 **Pourquoi cet ordre.** Le Puits et les pré-forgées lisent le prédicat et le tirage que la partie 1 écrit ; `pools` et
 `stackable` ne peuvent disparaître qu'avec leurs derniers lecteurs, réécrits en partie 2 ; les trois runes ne
@@ -1324,14 +1538,14 @@ partie 1 avec la capacité, dont elle remplace la ligne.
 
 | Quoi | Contenu |
 |:---|:---|
-| Un ADR neuf, « fusion = forge » | A1 à A20. Il **amende ADR-074** — le nœud devient le Puits d'échange, garanti tous les trois actes au lieu de 25 %, `base × niveau` au lieu de `80 × (N − 1)`, un échange par visite ; **ADR-094** — D1 : `forgeCapacityAt` et `forgeCapacity` supprimés, `fusionRank` comparé par `minFusionRank` et bornant les pré-forgées ; D3 : `stackable` supprimé ; D5 : `ForgeRuneRules` perd `isStackable` et `fusionOptionsFor` ; **ADR-105** — D1 : six sortes de delta ; D3 : `ForgeRuneRules` gagne `drawRunes`, l'affûtage et le Puits ; D7 : `boundLevel` borne la fusion, les pré-forgées, l'affûtage et le Puits ; D8 : le prédicat gagne le rang et « une rune par type », ses lecteurs changent ; D10 : l'héritage garde toutes les runes. Il **rend caduques** les décisions restantes d'**ADR-025** (fentes tirées, pools, relance, dialogue au feu — le tirage 80 · 15 · 5 ne vit plus qu'en boutique), d'**ADR-039** (D1 la session, D3 les fentes achetées) et le point 4 d'**ADR-024** (la capacité) — chacun ne change que de Statut |
+| Un ADR neuf, « fusion = forge » | A1 à A20. Il **amende ADR-074** — le nœud devient le Puits d'échange, garanti tous les trois actes au lieu de 25 %, `base × niveau` au lieu de `80 × (N − 1)`, un échange par visite ; son point 2, le cumul de plusieurs exemplaires d'une même rune sur une carte, devient caduc : une rune par type (D3) ; **ADR-094** — D1 : `forgeCapacityAt` et `forgeCapacity` supprimés, `fusionRank` comparé par `minFusionRank` et bornant les pré-forgées ; D2 : `copyableCards` sert quatre sources de copie, la copie du deck comprise (A11) ; D3 : `stackable` supprimé ; D4 : `exhaustsOnPlay` lit aussi `addsExhaust` (`spectral`), et sa conséquence ⚠️ — le badge et les particules qui ignoraient *Persistant* — est fermée (A13) ; D5 : `ForgeRuneRules` perd `isStackable` et `fusionOptionsFor` ; **ADR-105** — D1 : six sortes de delta ; D3 : `ForgeRuneRules` gagne `drawRunes`, l'affûtage et le Puits ; D7 : `boundLevel` borne la fusion, les pré-forgées, l'affûtage et le Puits ; D8 : le prédicat gagne le rang et « une rune par type », ses lecteurs changent ; D10 : l'héritage garde toutes les runes ; **ADR-067** — point 5 : le Miroir ne repart plus — options neuves, 150 or — à chaque sortie de la boutique, mais avec tout l'étal, au nœud courant suivant (A11, §4.9). Il **rend caduques** les décisions restantes d'**ADR-025** (fentes tirées, pools, relance, dialogue au feu — le tirage 80 · 15 · 5 ne vit plus qu'en boutique), d'**ADR-039** (D1 la session, D3 les fentes achetées) et le point 4 d'**ADR-024** (la capacité) — chacun ne change que de Statut |
 | `_rules/02-3` | « 5 runes au plus » et la capacité des cartes de classe ; les cartes de classe ne reçoivent plus de rune |
 | `_rules/02-4` | Le point 4 : plus de capacité ni de choix d'héritage ; la fusion propose une rune parmi trois ; l'héritage entier |
-| `_rules/03-7` | La forge devient l'affûtage |
+| `_rules/03-7` | La forge devient l'affûtage ; une action faite, le retour système résout le nœud comme « Continuer » (A4) |
 | `_rules/03-8` | Réécrite : l'offre de fusion, `minFusionRank`, « une rune par type », l'affûtage, le Puits, les onze runes ; la session anti-relance (`:29`, fausse), les fentes, les relances et l'achat disparaissent |
 | `_patterns/10-00` | `pools`, `stackable` et la capacité supprimés (§10.1, §10.2, « Capacité Limite par Rareté », le graphe) ; `drawRunes`, `consolidate` sans troncature |
 | `_patterns/20-00` | Le script lit les runes par une liste d'ordre explicite de 17 ids (§9) ; la ligne « un fichier de rune neuf est pris par le cas par défaut — doublon » ne vaut plus |
-| À relire, que le diff peut périmer | `_rules/02-1` (le Puits tous les trois actes) ; `_rules/03-9` (la copie, les pré-forgées) ; `_rules/03-13` (les champs de forge de `RunState`) ; `_rules/08-00` (l'étape de fusion) ; `_patterns/02-1` (`RunState`, `GoldManager`), `02-5` (`ShopController`), `03-2` (le placement), `03-7`, `05-2` (`UiCard.forgeCapacity`), `19-00` (`requiredKeys` de la rune) |
+| À relire, que le diff peut périmer | `_rules/02-1` (le Puits tous les trois actes) ; `_rules/03-9` (la copie, les pré-forgées ; l'étal retenu à son nœud, le Miroir qui ne repart plus à chaque sortie) ; `_rules/03-13` (les champs de forge de `RunState`) ; `_rules/08-00` (l'étape de fusion) ; `_patterns/02-1` (`RunState`, `GoldManager`), `02-5` (`ShopController`), `03-2` (le placement), `03-7`, `05-2` (`UiCard.forgeCapacity`), `19-00` (`requiredKeys` de la rune) |
 
 `CLAUDE.md` ne change pas : `ForgeFusionScreen` et `gold_manager.dart` gardent leur nom (A16, A17).
 
@@ -1354,6 +1568,9 @@ partie 1 avec la capacité, dont elle remplace la ligne.
 - **une correction** : au feu de camp, quitter l'écran par le retour après avoir agi termine désormais la visite, comme
   « Continuer » — on ne peut plus revenir pour un second repos, un second oubli ou un second affûtage ; au Puits, de
   même après un échange (sans échange, on peut toujours y revenir) ;
+- **une autre correction** : à la boutique, sortir par le retour puis revenir rend le même étal — les mêmes cartes, la
+  même copie, les mêmes options du Miroir magique à leur prix ; ce qui a été acheté reste acheté, le soin compris. On
+  ne peut plus retirer l'étal gratuitement en sortant puis en revenant ;
 - les cartes de classe ne reçoivent plus de rune ;
 - **à dire dans la note : les fusions restent rares jusqu'à la version suivante**, qui apporte une carte après chaque
   combat — d'ici là, les doublons ne viennent que des récompenses de boss (les cartes du boss « cartes », la carte
@@ -1365,6 +1582,10 @@ fin.
 ---
 
 ## 12. Alternatives écartées
+
+Les options que les arbitrages des tours de vérification ont écartées — dont le drapeau de visite dans `RunState`
+(tour 1, 4 bis) et les sous-arbitrages du tour 3 — ne sont pas reprises ici : un fait à un seul endroit *(tranché par
+l'orchestrateur au tour 4)*. Elles sont dans les trois tableaux « Tranchés… » du §1.2.
 
 | Idée | Motif |
 |:---|:---|
@@ -1395,7 +1616,7 @@ fin.
 | **Le `spectral` du script laissé tel quel, l'écart consigné** | La référence mesurerait un `spectral` que le jeu ne joue pas — tranché par l'orchestrateur au tour 1 (A10, §9) |
 | **Une étape de migration de sauvegarde** | Rien à migrer ; les sauvegardes ne se transfèrent pas avant la `1.0.0` (§7) |
 
-## 13. Vérification — état à l'arrêt (02/10/2026)
+## 13. Vérification — quatre tours, convergée le 02/10/2026
 
 Écrit par l'orchestrateur de la vague 2. Trois tours de vérification, chacun par un vérificateur neuf ; deux
 corrections par le rédacteur, repris avec son contexte, entre les tours. Les arbitrages des tours 1 et 2 sont dans les
@@ -1406,6 +1627,7 @@ deux tableaux « Tranchés par l'orchestrateur » du §1.2.
 | 1 | 1 moyen (`spectral` du script), 11 mineurs, 1 de rédaction | Corrigés ; cinq arbitrages de l'orchestrateur, dont le retour système après une action (4 bis) |
 | 2 | 2 moyens (ordre du calcul flottant du script ; un affûtage qui ne fermait pas son dialogue), 7 mineurs, 5 de rédaction | Corrigés ; trois arbitrages de l'orchestrateur |
 | 3 | **2 moyens**, 8 mineurs, 1 de rédaction | **Non corrigés : la troisième vérification qui rend un constat moyen arrête la vague** (orchestration §3.3, §6) |
+| 4 | 0 bloquant, 0 moyen, 5 mineurs, 4 de rédaction | Corrigés au passage, sans nouveau tour (orchestration §3.3) ; verdict : prête |
 
 **Les constats ouverts du tour 3**, tels que le vérificateur les a rendus — preuves relues sur `a9e2db6` :
 
@@ -1433,3 +1655,35 @@ deux tableaux « Tranchés par l'orchestrateur » du §1.2.
   puis revenir garde le même étal et la même copie ».
 - **n° 1 et les mineurs** : les corrections proposées par le vérificateur.
 - **Puis un quatrième tour de vérification**, par un vérificateur neuf, qui reçoit les arbitrages des tours 1 à 3.
+
+### Levée de l'arrêt (02/10/2026)
+
+**Ce que le propriétaire a décidé.** Il lève l'arrêt le 02/10/2026 et accepte les arbitrages que l'orchestrateur
+recommandait ci-dessus — pour le n° 2, l'option (a), étendue à l'étal entier : la boutique retient le nœud pour lequel
+elle a tiré son étal, copie comprise, et ne le retire pas tant que ce nœud n'est pas résolu. Il demande que les onze
+constats soient corrigés, avant un quatrième tour de vérification par un vérificateur neuf. L'orchestrateur a tranché
+les n° 5 et 9. Les trois arbitrages sont au §1.2, tableau « Tranchés à la levée de l'arrêt (tour 3) ». Six questions
+apparues à la correction — trois à la mesure du n° 2, une chacune aux n° 5, 9 et 10 — ont ensuite été tranchées par
+l'orchestrateur à la levée de l'arrêt : ce sont les lignes 2 bis, 2 ter, 2 quater, 5 bis, 9 bis et 10 bis du même
+tableau. Les références que la correction écrit ou touche sont re-mesurées sur
+`6e94be7`, qui ne diffère d'`a9e2db6` que par de la documentation.
+
+| # | Où | Comment |
+|:---|:---|:---|
+| 1 | §8, ligne « Les onze runes » ; §10 | La matrice d'aujourd'hui juge les 23 cartes à leur rareté de donnée, où la condition 7 refuse tout : en partie 1, elle passe aux rangs 1 et 2 avec les huit runes ; la partie 2 y ajoute les trois runes neuves |
+| 2 | A11 ; §1.2 (tableau du tour 3, récapitulatif) ; §2 ; §3.4 ; §4.9 ; §4.14 ; §7 ; §8, lignes « La boutique » et « L'écran de boutique » ; §9 ; §10 ; §11 | L'étal entier — cartes, copie, soin, Miroir — tiré une fois par nœud de boutique (`ShopState.nodeId`), retenu achats compris, oublié dès que le nœud courant de la run change ; `rerollCards` retenu de même ; `clearCloneOptions` et le `PopScope` de `ShopScreen` supprimés ; non sauvegardé ; le script tire déjà l'étal une fois par visite, sans relance ; partie 2 ; le point 5 d'ADR-067 amendé ; la note de version dit la correction |
+| 3 | A1, « Qui tire l'offre » | D65 cité (brainstorm `:104`, `:394`) : son objet est le nombre de runes offertes, que `drawRunes` tient ; `mergeCards` y nomme le geste de fusion, comme « le prédicat de `mergeCards` » (`:234`) |
+| 4 | §8, « Les tests qui suivent », ligne des runes construites en Dart ; lignes `decoupled_forge_test`, « La boutique », « Le tirage » | Une rune construite `stackable: false` prend `maxLevel: 1` à sa place, en partie 2 — `decoupled_forge_test.dart:74-85`, `shop_controller_test.dart:477-493`, `forge_rune_rules_test.dart:51` —, sans quoi `decoupled_forge_test.dart:303` et `shop_controller_test.dart:460` rougiraient |
+| 5 | §8, ligne « Le tirage », ligne « Une rune lue par `fromJson` », paragraphe « La partie de chaque suppression » ; §10, l'invariant | Le groupe `stackable` gagne `minFusionRank` en partie 1 et disparaît en partie 2 ; chaque suppression de §8 a sa partie, celle qui supprime ce qu'elle garde ; les cas « non cumulable » deviennent des cas de plafond 1, leurs attentes inchangées |
+| 6 | §4.5, ligne `_confirmMerge` ; §8, ligne « L'écran de deck » | `_confirmMerge` reçoit le `context` de `DeckScreen` ; le dialogue de choix et les deux notifications passent par lui ; un test où la case qui a lancé la fusion sort de la grille |
+| 7 | §8, ligne « L'écran de deck » | Trois *Concentrations* peu communes fusionnent en rare, le dialogue n'offre que *Véloce*. Re-mesuré : sur une *Concentration* rare (compétence, 0 Mana, épuisement, pioche), `eco` et `cheap` sont refusées par `requiresMinCost: 1`, `enduring` par son `excludesEffects` (`draw`), les sept autres par leur type ou leur effet visé ; `quick` seule passe — la mesure confirme le constat |
+| 8 | §8, lignes « Les opérations payantes » et « Le badge » ; A13 | `exchangeRune` refuse faute d'or sans rien toucher ; la commande `git grep -n "data.isExhaust" -- lib/game/components lib/ui`, qui rend aujourd'hui quatre lecteurs, doit être vide après E2 |
+| 9 | §9, « Où tourne la relance du premier temps » ; §10 | `git archive` du commit de réalignement, extrait dans le dossier temporaire de la session, `dart run` lancé de là ; les deux faits vérifiés (`:17-21`, `:401-408`) et un essai `--quick` sur `6e94be7` |
+| 10 | §5.3 ; §4.7 ; §8, ligne « Le dialogue d'affûtage » | `sharpenLevel` (`{from}`, `{to}`), « Niveau {from} → {to} » ; une rune au plafond n'a pas de ligne de niveau, son bouton dit « Niveau maximal » |
+| 11 | §4.4 ; §1.2, tableau du tour 2, ligne 4 ; §4.5 | « Trois lecteurs », le tutoriel compris ; les trois options de l'offre vide énumérées ; `forge_slot_row.dart:167-209` |
+
+**La convergence.** Le quatrième tour de vérification, par un vérificateur neuf qui avait reçu les arbitrages des tours
+1 à 3, a rendu le 02/10/2026 le verdict « prête » : zéro bloquant, zéro moyen, cinq mineurs et quatre de rédaction.
+Ces derniers ont été corrigés au passage, sans nouveau tour (orchestration §3.3). L'un d'eux, les alternatives du §12,
+a été tranché par l'orchestrateur (§12). La spec a convergé : l'arrêt du tour 3 est levé, et son récit ci-dessus n'est
+plus que l'histoire de la vérification.

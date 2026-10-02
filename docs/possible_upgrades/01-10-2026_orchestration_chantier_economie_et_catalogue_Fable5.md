@@ -68,7 +68,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 |:---:|:---|:---|:---|:---|:---|:---|---:|:---|:---|
 | 0 | — | **close** | — | `main`, par exception | — | — | 1187 | 01/10 | 01/10 |
 | 1 | `0.5.3` | **close** | — | `feat/v0.5.3-p43-e0-e1` | [E0](../superpowers/specs/2026-10-01-p43-e0-puissance-par-source-et-ratio-design.md) · [E1](../superpowers/specs/2026-10-02-p43-e1-moteur-de-runes-design.md) | [E0](../superpowers/plans/2026-10-01-p43-e0-puissance-par-source-et-ratio.md) · [E1](../superpowers/plans/2026-10-02-p43-e1-moteur-de-runes.md) | 1187 → 1375 | 02/10 | 02/10 |
-| 2 | `0.5.4` | **en cours** — arrêtée | E2 · 3.3 · en cours | `feat/v0.5.4-p43-e2-fusion-forge` | [E2](../superpowers/specs/2026-10-02-p43-e2-fusion-forge-design.md) *(non convergée)* | — | 1375 | — | — |
+| 2 | `0.5.4` | **en cours** | E2 · 3.3 · fait | `feat/v0.5.4-p43-e2-fusion-forge` | [E2](../superpowers/specs/2026-10-02-p43-e2-fusion-forge-design.md) | — | 1375 | — | — |
 | 3 | `0.5.5` | à faire | — | — | — | — | — | — | — |
 | 4 | `0.5.6` | à faire | — | — | — | — | — | — | — |
 | 5 | `0.5.7` | à faire | — | — | — | — | — | — | — |
@@ -82,7 +82,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 
 | Vague | Date | Étape | Motif | Levée |
 |:---:|:---|:---|:---|:---|
-| 2 | 02/10 | E2 · 3.3, troisième tour de vérification de la spec | **Trois tours sans convergence** (§3.3, §6) : le troisième vérificateur rend encore deux constats moyens — le découpage des tests entre les deux parties laisserait la partie 1 rouge (`forge_upgrades_catalog_test`) ; la copie du deck en boutique se retire gratuitement par un retour puis une nouvelle entrée, ce qui défait D46. La spec est commitée en l'état, non convergée ; les constats ouverts et les arbitrages que l'orchestrateur recommande sont en son §13. Aucune question n'exige d'amender une décision acquise | — |
+| 2 | 02/10 | E2 · 3.3, troisième tour de vérification de la spec | **Trois tours sans convergence** (§3.3, §6) : le troisième vérificateur rend encore deux constats moyens — le découpage des tests entre les deux parties laisserait la partie 1 rouge (`forge_upgrades_catalog_test`) ; la copie du deck en boutique se retire gratuitement par un retour puis une nouvelle entrée, ce qui défait D46. La spec est commitée en l'état, non convergée ; les constats ouverts et les arbitrages que l'orchestrateur recommande sont en son §13. Aucune question n'exige d'amender une décision acquise | **Levé le 02/10 par le propriétaire**, dans le prompt de la session de reprise : il accepte les arbitrages recommandés au §13 de la spec — boutique : l'option (a), étendue à l'étal entier — et demande la correction puis un quatrième tour. Reprise sans `stash` (arbre propre, `dart analyze` propre, 1375 tests verts) ; les onze constats corrigés, six questions apparues à la correction tranchées par l'orchestrateur ; **quatrième tour : prête** — 0 bloquant, 0 moyen, 5 mineurs et 4 de rédaction corrigés au passage (spec, §1.2 et §13) |
 
 **Préalable fait** : le dossier du chantier — brainstorm, revue, simulation et son script, ce fichier — est commité et poussé sur `main` (01/10, `3cd743f`..`b4f0884`).
 
