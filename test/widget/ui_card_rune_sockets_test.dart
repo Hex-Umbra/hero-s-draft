@@ -50,7 +50,7 @@ int _socketCount(WidgetTester tester) => tester
     )
     .length;
 
-CardData _cardData(CardRarity rarity, int baseMaxForgeUpgrades) => CardData(
+CardData _cardData(CardRarity rarity) => CardData(
       id: 'holy_shield',
       nameEn: 'Holy Shield',
       nameFr: 'Bouclier Sacre',
@@ -62,27 +62,32 @@ CardData _cardData(CardRarity rarity, int baseMaxForgeUpgrades) => CardData(
       rarity: rarity,
       target: CardTarget.self,
       effects: const [],
-      baseMaxForgeUpgrades: baseMaxForgeUpgrades,
     );
 
+/// Une prise par rune portée, aucune vide (spec P-43 E2, §4.10).
 void main() {
-  testWidgets('une carte de classe affiche 5 emplacements de rune, pas 10', (
+  testWidgets('une carte de classe sans rune n affiche aucun emplacement', (
     WidgetTester tester,
   ) async {
-    await _pumpCard(tester, CardInstance(data: _cardData(CardRarity.unique, 5)));
+    await _pumpCard(tester, CardInstance(data: _cardData(CardRarity.unique)));
 
-    expect(_socketCount(tester), 5);
+    expect(_socketCount(tester), 0);
   });
 
-  testWidgets('une carte globale legendaire affiche 5 emplacements', (
+  testWidgets('une carte legendaire a deux runes affiche deux emplacements, '
+      'aucun vide', (
     WidgetTester tester,
   ) async {
     await _pumpCard(
       tester,
-      CardInstance(data: _cardData(CardRarity.common, 1), rarity: CardRarity.legendary),
+      CardInstance(
+        data: _cardData(CardRarity.common),
+        rarity: CardRarity.legendary,
+        forgeUpgrades: const ['sharp:2', 'burning:1'],
+      ),
     );
 
-    expect(_socketCount(tester), 5);
+    expect(_socketCount(tester), 2);
   });
 
   testWidgets('l emoji d une prise vient de la donnee de la rune', (
@@ -113,7 +118,7 @@ void main() {
     await _pumpCard(
       tester,
       CardInstance(
-        data: _cardData(CardRarity.common, 1),
+        data: _cardData(CardRarity.common),
         forgeUpgrades: const ['test_rune:1'],
       ),
     );
@@ -125,5 +130,48 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  // Review Focus 3 : une reference mal formee ne nomme aucune rune — l'emoji
+  // passe par l'analyseur unique (spec P-43 E2, §1.3, E-S6).
+  testWidgets('une reference mal formee prend l emoji par defaut', (
+    WidgetTester tester,
+  ) async {
+    GameDataRegistry(
+      enemies: const [],
+      heroes: const [],
+      cards: const [],
+      events: const [],
+      passives: const [],
+      relics: const [],
+      forgeUpgrades: const [
+        ForgeUpgradeData(
+          id: 'test_rune',
+          nameEn: 'Test',
+          nameFr: 'Test',
+          descriptionEn: '',
+          descriptionFr: '',
+          icon: '',
+          color: '',
+          pools: ['common'],
+          emoji: '🧪',
+        ),
+      ],
+    );
+
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: _cardData(CardRarity.common),
+        forgeUpgrades: const ['test_rune'],
+      ),
+    );
+
+    Finder inSockets(String emoji) => find.descendant(
+          of: find.byType(CardRuneSockets),
+          matching: find.text(emoji),
+        );
+    expect(inSockets('🔮'), findsOneWidget);
+    expect(inSockets('🧪'), findsNothing);
   });
 }

@@ -235,8 +235,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "isExhaust": false,
   "effects": [
     { "type": "damage", "value": 6 }
-  ],
-  "baseMaxForgeUpgrades": 1
+  ]
 }''',
   ),
   EntityCategory.relic: EntityDescriptor(

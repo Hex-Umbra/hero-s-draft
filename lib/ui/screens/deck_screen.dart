@@ -4,7 +4,6 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
-import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../services/audio/audio_providers.dart';
@@ -195,11 +194,6 @@ class _MergeDialog extends StatefulWidget {
 
 class _MergeDialogState extends State<_MergeDialog> {
   final Set<String> _selectedCardIds = {};
-  int _step = 1;
-  List<CardInstance> _selectedCards = [];
-  List<String> _consolidatedUpgrades = [];
-  final Set<String> _chosenUpgrades = {};
-  late int _capacity;
 
   @override
   void initState() {
@@ -207,40 +201,21 @@ class _MergeDialogState extends State<_MergeDialog> {
     if (widget.duplicates.length == 3) {
       _selectedCardIds.addAll(widget.duplicates.map((c) => c.uniqueId));
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _proceedToUpgrades();
+        _performMerge();
       });
     }
   }
 
-  void _proceedToUpgrades() {
-    _selectedCards = widget.duplicates
-        .where((c) => _selectedCardIds.contains(c.uniqueId))
-        .toList();
-    if (_selectedCards.length != 3) return;
-
-    final firstCard = _selectedCards[0];
-    final nextRarity = firstCard.rarity.next;
-    if (nextRarity == null) return;
-    _capacity = firstCard.data.forgeCapacityAt(nextRarity);
-
-    _consolidatedUpgrades = ForgeRuneRules.consolidate(
-      _selectedCards.expand((card) => card.forgeUpgrades),
-    );
-
-    if (_consolidatedUpgrades.length <= _capacity) {
-      _performMerge(_consolidatedUpgrades);
-    } else {
-      setState(() {
-        _step = 2;
-      });
-    }
-  }
-
-  void _performMerge(List<String> upgrades) {
+  /// La fusion des trois exemplaires choisis : `mergeCards` en garde toutes
+  /// les runes (spec P-43 E2, §4.6) — plus de capacité, plus d'étape de choix
+  /// de l'héritage.
+  void _performMerge() {
     widget.ref.read(deckProvider.notifier).mergeCards(
-      _selectedCards.map((c) => c.uniqueId).toList(),
-      upgrades,
-    );
+          widget.duplicates
+              .where((c) => _selectedCardIds.contains(c.uniqueId))
+              .map((c) => c.uniqueId)
+              .toList(),
+        );
     Navigator.of(context).pop(true);
   }
 
@@ -249,167 +224,86 @@ class _MergeDialogState extends State<_MergeDialog> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
-    if (_step == 1) {
-      return GameDialog(
-        glowColor: Colors.green,
-        title: Text(
-          l10n.confirmMerge,
-        ),
-        content: Material(
-          color: Colors.transparent,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Sélectionnez exactement 3 cartes à fusionner (Sélectionné: ${_selectedCardIds.length}/3)',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: widget.duplicates.length,
-                  itemBuilder: (context, index) {
-                    final card = widget.duplicates[index];
-                    final isSelected = _selectedCardIds.contains(card.uniqueId);
-                    final upgradesText = card.forgeUpgrades.isEmpty
-                        ? (locale == 'fr' ? '(Sans amélioration)' : '(No upgrade)')
-                        : card.forgeUpgrades.map((u) {
-                            final parts = u.split(':');
-                            final id = parts[0];
-                            final tier = parts.length > 1 ? parts[1] : '1';
-                            final upgradeData = ForgeUpgradeData.getById(id);
-                            return upgradeData != null
-                                ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
-                                : '$id $tier';
-                          }).join(', ');
-                    return CheckboxListTile(
-                      title: Text(
-                        '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        'Forge: $upgradesText',
-                        style: const TextStyle(color: Colors.white54),
-                      ),
-                      value: isSelected,
-                      activeColor: Colors.green,
-                      checkColor: Colors.black,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            if (_selectedCardIds.length < 3) {
-                              _selectedCardIds.add(card.uniqueId);
-                            }
-                          } else {
-                            _selectedCardIds.remove(card.uniqueId);
+    return GameDialog(
+      glowColor: Colors.green,
+      title: Text(
+        l10n.confirmMerge,
+      ),
+      content: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sélectionnez exactement 3 cartes à fusionner (Sélectionné: ${_selectedCardIds.length}/3)',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.duplicates.length,
+                itemBuilder: (context, index) {
+                  final card = widget.duplicates[index];
+                  final isSelected = _selectedCardIds.contains(card.uniqueId);
+                  final upgradesText = card.forgeUpgrades.isEmpty
+                      ? (locale == 'fr' ? '(Sans amélioration)' : '(No upgrade)')
+                      : card.forgeUpgrades.map((u) {
+                          final parts = u.split(':');
+                          final id = parts[0];
+                          final tier = parts.length > 1 ? parts[1] : '1';
+                          final upgradeData = ForgeUpgradeData.getById(id);
+                          return upgradeData != null
+                              ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
+                              : '$id $tier';
+                        }).join(', ');
+                  return CheckboxListTile(
+                    title: Text(
+                      '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      'Forge: $upgradesText',
+                      style: const TextStyle(color: Colors.white54),
+                    ),
+                    value: isSelected,
+                    activeColor: Colors.green,
+                    checkColor: Colors.black,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          if (_selectedCardIds.length < 3) {
+                            _selectedCardIds.add(card.uniqueId);
                           }
-                        });
-                      },
-                    );
-                  },
-                ),
+                        } else {
+                          _selectedCardIds.remove(card.uniqueId);
+                        }
+                      });
+                    },
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        actions: [
-          GameButton(
-            text: l10n.cancel,
-            baseColor: Colors.white70,
-            onPressed: () => Navigator.of(context).pop(),
-            height: 38,
-            fontSize: 14,
-          ),
-          GameButton(
-            text: 'Continuer',
-            onPressed: _selectedCardIds.length == 3 ? _proceedToUpgrades : null,
-            baseColor: Colors.green,
-            height: 38,
-            fontSize: 14,
-          ),
-        ],
-      );
-    } else {
-      return GameDialog(
-        glowColor: Colors.orange,
-        title: const Text(
-          'Capacité de Forge Dépassée',
+      ),
+      actions: [
+        GameButton(
+          text: l10n.cancel,
+          baseColor: Colors.white70,
+          onPressed: () => Navigator.of(context).pop(),
+          height: 38,
+          fontSize: 14,
         ),
-        content: Material(
-          color: Colors.transparent,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'La rareté supérieure ne supporte que $_capacity améliorations.\nChoisissez lesquelles conserver (Sélectionné: ${_chosenUpgrades.length}/$_capacity) :',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _consolidatedUpgrades.length,
-                  itemBuilder: (context, index) {
-                    final upgrade = _consolidatedUpgrades[index];
-                    final parts = upgrade.split(':');
-                    final id = parts[0];
-                    final tier = parts[1];
-                    final upgradeData = ForgeUpgradeData.getById(id);
-                    final displayName = upgradeData != null 
-                        ? (upgradeData.stackable ? '${upgradeData.getName(locale)} (Niveau $tier)' : upgradeData.getName(locale))
-                        : '${id.toUpperCase()} (Niveau $tier)';
-                    final isSelected = _chosenUpgrades.contains(upgrade);
-                    return CheckboxListTile(
-                      title: Text(
-                        displayName,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      value: isSelected,
-                      activeColor: Colors.green,
-                      checkColor: Colors.black,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            if (_chosenUpgrades.length < _capacity) {
-                              _chosenUpgrades.add(upgrade);
-                            }
-                          } else {
-                            _chosenUpgrades.remove(upgrade);
-                          }
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+        GameButton(
+          text: 'Continuer',
+          onPressed: _selectedCardIds.length == 3 ? _performMerge : null,
+          baseColor: Colors.green,
+          height: 38,
+          fontSize: 14,
         ),
-        actions: [
-          GameButton(
-            text: l10n.cancel,
-            baseColor: Colors.white70,
-            onPressed: () => Navigator.of(context).pop(),
-            height: 38,
-            fontSize: 14,
-          ),
-          GameButton(
-            text: 'Fusionner',
-            onPressed: _chosenUpgrades.isNotEmpty &&
-                    _chosenUpgrades.length <= _capacity
-                ? () {
-                    _performMerge(_chosenUpgrades.toList());
-                  }
-                : null,
-            baseColor: Colors.green,
-            height: 38,
-            fontSize: 14,
-          ),
-        ],
-      );
-    }
+      ],
+    );
   }
 }

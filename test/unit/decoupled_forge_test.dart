@@ -87,27 +87,6 @@ void main() {
       );
     });
 
-    test('Capacity limit calculation works as expected based on rarity', () {
-      final baseCard = CardData(
-        id: 'test_card',
-        cost: 1,
-        type: CardType.attack,
-        category: CardCategory.global,
-        rarity: CardRarity.common,
-        target: CardTarget.singleEnemy,
-        baseMaxForgeUpgrades: 2,
-        effects: [],
-      );
-
-      // Common card capacity = 2 + 0 = 2
-      final commonInstance = CardInstance(data: baseCard, rarity: CardRarity.common);
-      expect(commonInstance.forgeCapacity, 2);
-
-      // Epic card capacity = 2 + 3 = 5
-      final epicInstance = CardInstance(data: baseCard, rarity: CardRarity.epic);
-      expect(epicInstance.forgeCapacity, 5);
-    });
-
     test('addForgeUpgrade correctly adds an upgrade to the master deck card', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -275,10 +254,7 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        const ['eco:1', 'eco:1', 'eco:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
           ['eco:1']);
@@ -291,10 +267,7 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        const ['sharp:1', 'sharp:1', 'sharp:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
           ['sharp:3']);
@@ -321,10 +294,7 @@ void main() {
       final deckNotifier = container.read(deckProvider.notifier);
       deckNotifier.initializeStarterDeck(copies);
 
-      deckNotifier.mergeCards(
-        copies.map((c) => c.uniqueId).toList(),
-        ['enduring:1', 'enduring:1', 'enduring:1'],
-      );
+      deckNotifier.mergeCards(copies.map((c) => c.uniqueId).toList());
 
       expect(
         container.read(deckProvider).masterDeck.single.forgeUpgrades,

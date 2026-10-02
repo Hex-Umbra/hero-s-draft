@@ -100,21 +100,4 @@ void main() {
 
     await _settleNotifications(tester);
   });
-
-  testWidgets('une carte pleine garde son message', (tester) async {
-    final card = CardInstance(
-      data: shippedCard('strike_basic'),
-      forgeUpgrades: const ['sharp:1'],
-    );
-    final container = await _pumpForgeSelection(tester, card);
-
-    await tester.tap(find.byType(UiCard));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ForgeUpgradeDialog), findsNothing);
-    expect(container.read(notificationProvider).last.message,
-        "Cette carte a atteint sa capacité maximale d'améliorations de forge !");
-
-    await _settleNotifications(tester);
-  });
 }

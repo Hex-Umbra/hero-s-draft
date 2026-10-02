@@ -284,8 +284,12 @@ class DeckNotifier extends Notifier<DeckState> {
     state = state.copyWith(masterDeck: [...state.masterDeck, newCard]);
   }
 
-  /// Fusionne 3 cartes identiques en une carte de rareté supérieure
-  void mergeCards(List<String> selectedIds, List<String> inheritedUpgrades) {
+  /// Fusionne trois exemplaires d'une même carte, à une même rareté, en une
+  /// carte de la rareté suivante, qui garde toutes leurs runes (D13 ; spec
+  /// P-43 E2, §4.6) : `ForgeRuneRules.consolidate` additionne les niveaux
+  /// d'une même rune, bornés par son plafond, et écarte une rune exclue par
+  /// une rune gardée avant elle ; aucun plafond de runes par carte.
+  void mergeCards(List<String> selectedIds) {
     if (selectedIds.length != 3) return;
     var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
 
@@ -306,26 +310,16 @@ class DeckNotifier extends Notifier<DeckState> {
           selectedCards.any((c) => c.data.id != first.data.id || c.rarity != first.rarity)) {
         return;
       }
-      final baseCardData = first.data;
 
-      // Retire les 3 exemplaires
+      // Retire les 3 exemplaires, puis ajoute la carte de rareté supérieure
       currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
-
-      // Réunit les runes identiques (voir `ForgeRuneRules.consolidate`)
-      var finalUpgrades = ForgeRuneRules.consolidate(inheritedUpgrades);
-
-      // Limite à la capacité de la rareté supérieure
-      final capacity = baseCardData.forgeCapacityAt(nextRarity);
-      if (finalUpgrades.length > capacity) {
-        finalUpgrades = finalUpgrades.sublist(0, capacity);
-      }
-
-      // Ajoute la carte de rareté supérieure avec les upgrades finalisés
       currentMasterDeck.add(
         CardInstance(
-          data: baseCardData,
+          data: first.data,
           rarity: nextRarity,
-          forgeUpgrades: finalUpgrades,
+          forgeUpgrades: ForgeRuneRules.consolidate(
+            selectedCards.expand((card) => card.forgeUpgrades),
+          ),
         ),
       );
 

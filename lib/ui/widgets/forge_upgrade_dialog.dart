@@ -43,12 +43,10 @@ class ForgeUpgradeDialog extends ConsumerStatefulWidget {
 
 class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
   late List<ForgeSlot> _slots;
-  late int _totalMaxForgeUpgrades;
 
   @override
   void initState() {
     super.initState();
-    _totalMaxForgeUpgrades = widget.card.forgeCapacity;
 
     final runState = ref.read(runProvider);
     if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
@@ -387,12 +385,11 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                       builder: (context, constraints) {
                         final isDesktop = constraints.maxWidth >= 720;
 
-                        // Left panel: Card + capacity info
+                        // Left panel: Card
                         final cardPanel = SizedBox(
                           width: isDesktop ? 240 : double.infinity,
                           child: ForgeCardPreview(
                             card: widget.card,
-                            totalMaxForgeUpgrades: _totalMaxForgeUpgrades,
                             locale: locale,
                             l10n: l10n,
                           ),

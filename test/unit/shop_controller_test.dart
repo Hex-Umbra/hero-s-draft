@@ -457,6 +457,50 @@ void main() {
       expect(carried, {'quick:1'});
     });
 
+    // D28, D3, D48 : une pre-forgee porte au plus `fusionRank` runes,
+    // distinctes, eligibles au rang de sa rarete (spec P-43 E2, §4.9, §8).
+    test('une pre-forgee porte au plus fusionRank runes, distinctes, et jamais '
+        'Econome ni Veloce sous la rare', () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      shippedRuneRegistry(shippedRuneIds());
+      final cards = shippedNeutralCards();
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+
+      var runed = 0;
+      for (var i = 0; i < 300; i++) {
+        shopController.initializeShop(cards, 0);
+        for (final card in shopController.state.cardsForSale) {
+          final ids = [
+            for (final ref in card.forgeUpgrades)
+              ForgeUpgradeData.parseRef(ref)!.$1,
+          ];
+          final reason = '${card.data.id} ${card.rarity.name} : '
+              '${card.forgeUpgrades}';
+          // Une commune, de rang 0, n'en porte aucune.
+          expect(ids.length, lessThanOrEqualTo(card.rarity.fusionRank),
+              reason: reason);
+          expect(ids.toSet(), hasLength(ids.length), reason: reason);
+          if (card.rarity.fusionRank < 2) {
+            expect(ids, isNot(contains('eco')), reason: reason);
+            expect(ids, isNot(contains('quick')), reason: reason);
+          }
+          if (ids.isNotEmpty) runed++;
+        }
+      }
+      // Garde contre un test qui passerait a vide.
+      expect(runed, greaterThan(0));
+    });
+
     test('la boutique ne tire une rune non cumulable qu au tier 1', () {
       // Le registre est statique : un registre vide le remplace en sortie,
       // equivalent a son absence pour ce controleur.

@@ -30,7 +30,6 @@ void main() {
       rarity: CardRarity.unique,
       target: CardTarget.self,
       effects: [],
-      baseMaxForgeUpgrades: 5,
     );
 
     setUp(() {

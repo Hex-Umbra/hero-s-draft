@@ -215,10 +215,14 @@ Color getCardRarityColor(BuildContext context, String? rarity) {
 }
 
 /// L'emoji d'une rune, lu dans sa donnée comme le rendu Flame le lit déjà
-/// (spec P-43 E1, §5.2) ; une rune absente du registre prend l'emoji par
-/// défaut.
+/// (spec P-43 E1, §5.2), par l'analyseur unique des références (spec P-43
+/// E2, §1.3, E-S6) ; une référence mal formée, ou une rune absente du
+/// registre, prend l'emoji par défaut.
 String getRuneEmoji(String upgrade) =>
-    ForgeUpgradeData.getById(upgrade.split(':')[0])?.emoji ?? '🔮';
+    switch (ForgeUpgradeData.parseRef(upgrade)) {
+      (final id, _) => ForgeUpgradeData.getById(id)?.emoji ?? '🔮',
+      null => '🔮',
+    };
 
 String getCardTypeLabel(BuildContext context, CardType? type) {
   final l10n = AppLocalizations.of(context)!;

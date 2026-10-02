@@ -173,4 +173,35 @@ void main() {
       expect(find.text('Fusion possible'), findsNothing);
     },
   );
+
+  // Spec P-43 E2, §4.5, §4.6 : plus d'etape de capacite, l'heritage entier.
+  testWidgets(
+    'trois Frappes runees differemment fusionnent sans etape de capacite, '
+    'toutes leurs runes gardees',
+    (WidgetTester tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final deckNotifier = container.read(deckProvider.notifier);
+      for (final rune in const ['sharp:1', 'burning:1', 'shocking:1']) {
+        deckNotifier.addCardToMasterDeck(
+          CardInstance(data: strikeCard, forgeUpgrades: [rune]),
+        );
+      }
+
+      await tester.pumpWidget(buildApp(container));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('FUSIONNER (3)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Capacité de Forge Dépassée'), findsNothing);
+      final merged = container.read(deckProvider).masterDeck.single;
+      expect(merged.rarity, CardRarity.uncommon);
+      expect(merged.forgeUpgrades, ['sharp:1', 'burning:1', 'shocking:1']);
+
+      // Les notifications expirent avant le demontage de l'arbre.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

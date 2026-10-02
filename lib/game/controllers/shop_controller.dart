@@ -192,7 +192,9 @@ class ShopController extends Notifier<ShopState> {
       rarity: finalRarity,
     );
 
-    final int maxUpgrades = data.forgeCapacityAt(finalRarity);
+    // Une pré-forgée porte au plus autant de runes que sa rareté a demandé
+    // de fusions — une commune n'en porte aucune (D28 ; spec P-43 E2, §4.9).
+    final int maxUpgrades = finalRarity.fusionRank;
 
     int upgradesToRoll = 0;
     final rollUpgrade = rng.nextInt(100);

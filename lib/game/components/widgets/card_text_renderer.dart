@@ -1,4 +1,3 @@
-import 'dart:math' show max;
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
@@ -358,11 +357,8 @@ class CardTextRenderer {
 
 
 
-    // Rune sockets row instead of stars
-    final int appliedUpgradesCount = card.card.forgeUpgrades.length;
-    // Une carte sauvegardée au-delà de sa capacité montre toutes ses runes,
-    // comme `CardRuneSockets` hors combat.
-    final int totalSlots = max(card.card.forgeCapacity, appliedUpgradesCount);
+    // Une prise par rune portée, aucune vide (spec P-43 E2, §4.10).
+    final int totalSlots = card.card.forgeUpgrades.length;
 
     final double socketDiameter = 14.0;
     final double socketRadius = 7.0;
@@ -383,44 +379,29 @@ class CardTextRenderer {
       for (int i = 0; i < rowSlotsCount; i++) {
         final int globalIndex = rowStartIndex + i;
         final double centerX = startX + i * (socketDiameter + socketSpacing) + socketRadius;
-        if (globalIndex < appliedUpgradesCount) {
-          // Filled socket
-          final socketBgPaint = Paint()
-            ..color = Colors.black45.withValues(alpha: opacity)
-            ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBgPaint);
+        final socketBgPaint = Paint()
+          ..color = Colors.black45.withValues(alpha: opacity)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBgPaint);
 
-          final socketBorderPaint = Paint()
-            ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.5;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBorderPaint);
+        final socketBorderPaint = Paint()
+          ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5;
+        canvas.drawCircle(Offset(centerX, socketsY), socketRadius, socketBorderPaint);
 
-          final emoji = _getRuneEmoji(card.card.forgeUpgrades[globalIndex]);
-          final emojiPainter = TextPainter(
-            text: TextSpan(
-              text: emoji,
-              style: const TextStyle(fontSize: 8.0),
-            ),
-            textDirection: TextDirection.ltr,
-          )..layout();
-          emojiPainter.paint(
-            canvas,
-            Offset(centerX - emojiPainter.width / 2, socketsY - emojiPainter.height / 2),
-          );
-        } else {
-          // Empty socket
-          final emptyBgPaint = Paint()
-            ..color = Colors.white.withValues(alpha: 0.05 * opacity)
-            ..style = PaintingStyle.fill;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBgPaint);
-
-          final emptyBorderPaint = Paint()
-            ..color = Colors.white24.withValues(alpha: opacity)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.5;
-          canvas.drawCircle(Offset(centerX, socketsY), socketRadius, emptyBorderPaint);
-        }
+        final emoji = _getRuneEmoji(card.card.forgeUpgrades[globalIndex]);
+        final emojiPainter = TextPainter(
+          text: TextSpan(
+            text: emoji,
+            style: const TextStyle(fontSize: 8.0),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        emojiPainter.paint(
+          canvas,
+          Offset(centerX - emojiPainter.width / 2, socketsY - emojiPainter.height / 2),
+        );
       }
     }
 
@@ -548,9 +529,12 @@ class CardTextRenderer {
     typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
   }
 
-  String _getRuneEmoji(String upgrade) {
-    final id = upgrade.split(':')[0];
-    final upgradeData = ForgeUpgradeData.getById(id);
-    return upgradeData?.emoji ?? '🔮';
-  }
+  /// L'emoji d'une rune, par l'analyseur unique des références (spec P-43
+  /// E2, §1.3, E-S6) ; une référence mal formée, ou une rune absente du
+  /// registre, prend l'emoji par défaut.
+  String _getRuneEmoji(String upgrade) =>
+      switch (ForgeUpgradeData.parseRef(upgrade)) {
+        (final id, _) => ForgeUpgradeData.getById(id)?.emoji ?? '🔮',
+        null => '🔮',
+      };
 }

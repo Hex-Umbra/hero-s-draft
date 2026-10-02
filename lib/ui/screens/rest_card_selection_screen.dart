@@ -26,19 +26,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
   });
 
   void _onCardTapped(BuildContext context, WidgetRef ref, CardInstance card) async {
-    final locale = Localizations.localeOf(context).languageCode;
-
     if (isForge) {
-      if (card.forgeUpgrades.length >= card.forgeCapacity) {
-        context.showNotification(
-          locale == 'fr'
-              ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"
-              : "This card has reached its maximum forge upgrades capacity!",
-          type: NotificationType.error,
-        );
-        return;
-      }
-
       // Une carte à qui plus aucune rune ne peut s'offrir est refusée avant
       // le dialogue, avec son motif : la forge ne s'ouvre jamais vide (spec
       // P-43 E1, A11).

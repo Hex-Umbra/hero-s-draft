@@ -31,8 +31,9 @@ enum CardRarity {
 
   /// Le nombre de fusions qu'il a fallu pour atteindre cette rareté : 0 à 4
   /// de `common` à `legendary`, 0 pour `unique`, qui ne fusionne jamais
-  /// (ADR-026). La capacité de forge le lit (`forgeCapacityAt`) en attendant
-  /// E2, et G1 compte ses paliers (`scaleValue`).
+  /// (ADR-026). `minFusionRank` le compare (`ForgeRuneRules.isEligible`), G1
+  /// compte ses paliers (`scaleValue`), il borne les runes d'une pré-forgée
+  /// (`ShopController`).
   int get fusionRank => switch (this) {
         CardRarity.common || CardRarity.unique => 0,
         CardRarity.uncommon => 1,
@@ -130,7 +131,6 @@ class CardData implements AudioSource {
   final String? sfx; // Identifiant de son propre a la carte (voir audio.json)
   final bool isExhaust;
   final List<CardEffect> effects;
-  final int baseMaxForgeUpgrades;
 
   const CardData({
     required this.id,
@@ -149,7 +149,6 @@ class CardData implements AudioSource {
     this.sfx,
     this.isExhaust = false,
     required this.effects,
-    this.baseMaxForgeUpgrades = 1,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -172,10 +171,6 @@ class CardData implements AudioSource {
       type != CardType.status &&
       rarity.isAcquirable &&
       (heroClass == null || heroClass == heroClassId);
-
-  /// Nombre de runes de forge qu'une carte de ce modèle porte à [rarity].
-  int forgeCapacityAt(CardRarity rarity) =>
-      baseMaxForgeUpgrades + rarity.fusionRank;
 
   factory CardData.fromJson(Map<String, dynamic> json) {
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
@@ -219,7 +214,6 @@ class CardData implements AudioSource {
               ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      baseMaxForgeUpgrades: json['baseMaxForgeUpgrades'] as int? ?? 1,
     );
   }
 
@@ -239,7 +233,6 @@ class CardData implements AudioSource {
         if (animation != null) 'animation': animation,
         'isExhaust': isExhaust,
         'effects': effects.map((e) => e.toJson()).toList(),
-        'baseMaxForgeUpgrades': baseMaxForgeUpgrades,
       };
 
   static CardData? getById(String id) {

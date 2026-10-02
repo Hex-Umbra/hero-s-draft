@@ -21,9 +21,6 @@ class CardInstance {
 
   int get currentCost => data.cost;
 
-  /// Nombre de runes de forge que cette carte peut porter.
-  int get forgeCapacity => data.forgeCapacityAt(rarity);
-
   /// La carte telle qu'elle se joue — sa rareté et ses runes appliquées, sur
   /// le catalogue du registre (spec P-43 E1, §4.2).
   EffectiveCard get effective =>

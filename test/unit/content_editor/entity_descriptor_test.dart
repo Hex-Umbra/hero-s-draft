@@ -236,7 +236,6 @@ void main() {
         'animation',
         'isExhaust',
         'effects',
-        'baseMaxForgeUpgrades',
       },
       EntityCategory.relic: {
         'trigger',
