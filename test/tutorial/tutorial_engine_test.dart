@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
@@ -345,7 +346,8 @@ void main() {
       },
     );
 
-    test('mergeCards fusionne 3 exemplaires en une carte de rareté supérieure', () {
+    test('mergeCards fusionne 3 exemplaires et tire une offre de trois runes '
+        'eligibles', () {
       engine.seedHand([
         TutorialFixtureIds.strike,
         TutorialFixtureIds.strike,
@@ -355,7 +357,35 @@ void main() {
       engine.mergeCards();
 
       expect(engine.mockState.hand, hasLength(1));
-      expect(engine.mockState.hand.first.rarity, CardRarity.uncommon);
+      final merged = engine.mockState.hand.single;
+      expect(merged.rarity, CardRarity.uncommon);
+      // Par la fonction du jeu, sur le registre du tutoriel (spec P-43 E2,
+      // A18) : Tranchant, Brulant, Congelant et Surcharge s'offrent a une
+      // Frappe peu commune, trois sont tirees.
+      final offer = engine.mockState.mergeOffer;
+      expect(offer, hasLength(3));
+      expect(offer.toSet(), hasLength(3));
+      for (final id in offer) {
+        final rune = data.forgeUpgrades.singleWhere((r) => r.id == id);
+        expect(ForgeRuneRules.isEligible(rune, merged, data.forgeUpgrades),
+            isTrue,
+            reason: id);
+      }
+    });
+
+    test('le choix pose la rune au niveau 1 et vide l offre', () {
+      engine.seedHand([
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+        TutorialFixtureIds.strike,
+      ]);
+      engine.mergeCards();
+      final id = engine.mockState.mergeOffer.first;
+
+      engine.chooseMergeRune(id);
+
+      expect(engine.mockState.hand.single.forgeUpgrades, ['$id:1']);
+      expect(engine.mockState.mergeOffer, isEmpty);
     });
 
     test('gainXp déclenche un passage de niveau au-delà de xpToNextLevel', () {
@@ -509,6 +539,37 @@ void main() {
       expect(engine.mockState.hand, hasLength(3));
       expect(
         engine.mockState.hand.every((c) => c.data.id == TutorialFixtureIds.strike),
+        isTrue,
+      );
+    });
+
+    test('la Fusion seme la premiere carte du deck dont la fusion offre une '
+        'rune', () {
+      // Peu commune, Concentration n'a aucune rune ; Frappe Lourde en a.
+      engine.setStarterDeck([
+        engine.fixtures.card('concentration'),
+        engine.fixtures.card('heavy_strike'),
+      ]);
+
+      engine.prepareStep(11);
+
+      expect(
+        engine.mockState.hand.every((c) => c.data.id == 'heavy_strike'),
+        isTrue,
+      );
+    });
+
+    test('sans carte dont la fusion offre une rune, la Fusion seme la '
+        'premiere carte fusionnable', () {
+      engine.setStarterDeck([
+        engine.fixtures.card('concentration'),
+        engine.fixtures.card('focus'),
+      ]);
+
+      engine.prepareStep(11);
+
+      expect(
+        engine.mockState.hand.every((c) => c.data.id == 'concentration'),
         isTrue,
       );
     });

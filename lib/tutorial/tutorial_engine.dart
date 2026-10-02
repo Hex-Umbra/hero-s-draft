@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 import '../models/data/game_data_registry.dart';
 import '../models/card_instance.dart';
 import '../models/data/card_data.dart';
+import '../models/data/forge_upgrade_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/passive_data.dart';
 import '../models/entity_stats.dart';
 import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
+import '../game/services/forge_rune_rules.dart';
 import '../game/systems/stat_gains.dart';
 import '../game/systems/power_rules.dart';
 import 'tutorial_data.dart';
@@ -37,6 +39,10 @@ class TutorialMockState {
   int playerLevel = 1;
   int pendingDrafts = 0;
   bool hasDrafted = false;
+
+  /// L'offre de runes de la fusion de l'étape Fusion (spec P-43 E2, A18) :
+  /// tirée à la fusion, vidée par le choix.
+  List<String> mergeOffer = [];
 
   /// Statistiques de départ dérivées de la classe choisie, ou valeurs de
   /// repli tant que l'étape 02 n'a pas été franchie.
@@ -82,6 +88,7 @@ class TutorialMockState {
     playerLevel = 1;
     pendingDrafts = 0;
     hasDrafted = false;
+    mergeOffer = [];
   }
 }
 
@@ -91,6 +98,9 @@ class TutorialEngine extends ChangeNotifier {
 
   int _currentStepIndex = 0;
   final TutorialMockState mockState = TutorialMockState();
+
+  /// Le tirage de l'offre de fusion, sans graine, comme au jeu.
+  final Random _rng = Random();
 
   TutorialEngine({required this.data}) {
     fixtures = TutorialFixtures(data);
@@ -414,19 +424,28 @@ class TutorialEngine extends ChangeNotifier {
   }
 
   /// Sème la main de l'étape Fusion : trois copies d'une carte du deck du
-  /// joueur, en excluant celles qui ne fusionnent pas — les cartes de classe
-  /// (rareté `unique`) en tête, l'étape l'enseigne elle-même. Repli sur les
-  /// fixtures si le deck est vide ou n'en contient aucune hors classe
-  /// (étape 03 sautée).
+  /// joueur — la première dont la fusion offre au moins une rune, puisque
+  /// l'étape enseigne à en choisir une (spec P-43 E2, A18) ; à défaut, la
+  /// première qui fusionne. Les cartes de classe (rareté `unique`) ne
+  /// fusionnent jamais, l'étape l'enseigne elle-même. Repli sur les fixtures
+  /// si le deck est vide ou n'en contient aucune hors classe (étape 03
+  /// sautée).
   void _seedMergeHand() {
-    CardData? candidate;
+    CardData? fusible;
+    CardData? offering;
     for (final instance in mockState.masterDeck) {
-      if (instance.data.rarity.next != null) {
-        candidate = instance.data;
+      final merged = instance.data.rarity.next;
+      if (merged == null) continue;
+      fusible ??= instance.data;
+      final card = CardInstance(data: instance.data, rarity: merged);
+      if (data.forgeUpgrades.any(
+          (rune) => ForgeRuneRules.isEligible(rune, card, data.forgeUpgrades))) {
+        offering = instance.data;
         break;
       }
     }
 
+    final candidate = offering ?? fusible;
     if (candidate == null) {
       _seedHand([
         TutorialFixtureIds.strike,
@@ -435,27 +454,46 @@ class TutorialEngine extends ChangeNotifier {
       ]);
       return;
     }
-
-    // `candidate` n'est pas promu dans la fermeture ci-dessous (limitation
-    // de l'analyse de flux de Dart à travers les closures) : on le fixe dans
-    // une variable `final` non-nullable.
-    final resolvedCandidate = candidate;
-    mockState.hand = List.generate(
-      3,
-      (_) => CardInstance(data: resolvedCandidate),
-    );
+    mockState.hand = List.generate(3, (_) => CardInstance(data: candidate));
   }
 
   /// Fusionne les 3 exemplaires de la main en une carte de rareté
-  /// supérieure, comme `DeckNotifier.mergeCards`.
+  /// supérieure, comme `DeckNotifier.mergeCards`, puis tire l'offre de runes
+  /// par la fonction du jeu, sur le registre du tutoriel (spec P-43 E2, A18 ;
+  /// ADR-081) : trois au plus, aucune si aucune ne s'offre.
   void mergeCards() {
     if (mockState.hand.length != 3) return;
     final base = mockState.hand.first;
-    mockState.hand = [
-      CardInstance(data: base.data, rarity: base.rarity.next ?? base.rarity),
-    ];
+    final merged =
+        CardInstance(data: base.data, rarity: base.rarity.next ?? base.rarity);
+    mockState.hand = [merged];
+    mockState.mergeOffer = ForgeRuneRules.drawRunes(
+      merged,
+      data.forgeUpgrades,
+      _rng,
+      count: 3,
+    );
     notifyListeners();
   }
+
+  /// Pose la rune [runeId], choisie dans l'offre, sur la carte fusionnée, au
+  /// niveau 1 — comme le dialogue de fusion du jeu —, et vide l'offre.
+  void chooseMergeRune(String runeId) {
+    if (mockState.hand.length != 1 ||
+        !mockState.mergeOffer.contains(runeId)) {
+      return;
+    }
+    final merged = mockState.hand.single;
+    mockState.hand = [
+      merged.copyWith(forgeUpgrades: [...merged.forgeUpgrades, '$runeId:1']),
+    ];
+    mockState.mergeOffer = [];
+    notifyListeners();
+  }
+
+  /// La rune [id] du registre du tutoriel, jamais de celui du jeu (ADR-081).
+  ForgeUpgradeData? runeById(String id) =>
+      data.forgeUpgrades.where((rune) => rune.id == id).firstOrNull;
 
   void draftReward() {
     mockState.hasDrafted = true;

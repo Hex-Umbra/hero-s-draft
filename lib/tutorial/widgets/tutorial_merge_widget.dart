@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
+import '../../models/card_instance.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
 
@@ -64,6 +66,59 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
   void _runMerge() {
     if (_isMerged || _controller.isAnimating) return;
     _controller.forward();
+  }
+
+  /// Le nom d'une rune du registre du tutoriel.
+  String _runeName(String id, String locale) =>
+      widget.engine.runeById(id)?.getName(locale) ?? id;
+
+  /// L'offre de la fusion, puis la rune posée (spec P-43 E2, A18, §5.5) : le
+  /// joueur touche une rune, la carte la porte ; sans offre, l'étape le dit.
+  Widget _runeChoice(CardInstance merged, bool isFrench, String locale) {
+    final style = TextStyle(color: Colors.grey.shade300, fontSize: 12);
+    final offer = widget.engine.mockState.mergeOffer;
+    if (offer.isNotEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isFrench ? 'Choisissez une rune :' : 'Choose a rune:',
+            style: style,
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final id in offer)
+                OutlinedButton(
+                  key: ValueKey('tutorial-merge-rune-$id'),
+                  onPressed: () =>
+                      setState(() => widget.engine.chooseMergeRune(id)),
+                  child: Text(_runeName(id, locale)),
+                ),
+            ],
+          ),
+        ],
+      );
+    }
+    final added = merged.forgeUpgrades.isEmpty
+        ? null
+        : ForgeUpgradeData.parseRef(merged.forgeUpgrades.last);
+    if (added == null) {
+      return Text(
+        isFrench
+            ? 'Aucune rune ne peut s\'ajouter à cette carte.'
+            : 'No rune can be added to this card.',
+        style: style,
+      );
+    }
+    final name = _runeName(added.$1, locale);
+    return Text(
+      isFrench ? 'Rune ajoutée : $name' : 'Rune added: $name',
+      style: style,
+    );
   }
 
   @override
@@ -269,6 +324,10 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                         fontSize: 12,
                       ),
                     ),
+                    if (hasMergedResult) ...[
+                      const SizedBox(height: 8),
+                      _runeChoice(hand.first, isFrench, locale),
+                    ],
                   ],
                 ),
             ],

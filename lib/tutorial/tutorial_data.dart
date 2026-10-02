@@ -269,11 +269,12 @@ const List<TutorialStep> kTutorialSteps = [
         '×1.2 uncommon, ×1.4 rare, ×1.6 epic, ×2.0 legendary, and always by at '
         'least 1 per merge. Cards drawn and Mana gained do not grow with '
         'rarity.\n\n'
-        'Forge upgrades carried by the three copies are inherited and merged, '
-        'capped by the new rarity\'s capacity. Your class cards are unique, and '
-        'unique cards never merge. **The Fusion Forge is a separate, paid '
-        'system** — a dedicated map node, not to be confused with this free '
-        'merging.',
+        'The runes of the three copies are all kept — the same rune adds up '
+        'its levels — and the merged card **gains one more, chosen among '
+        'three**, at level 1; Quick and Eco only appear from the second '
+        'merge. Your class cards are unique, and unique cards never merge. '
+        '**The Fusion Forge is a separate, paid system** — a dedicated map '
+        'node, not to be confused with this free merging.',
     bodyFr:
         'La fusion est **manuelle**, et seulement hors combat. Ouvrez votre '
         'Deck : lorsque vous détenez trois exemplaires d\'une même carte **de '
@@ -284,12 +285,14 @@ const List<TutorialStep> kTutorialSteps = [
         'valeurs : ×1,2 peu commun, ×1,4 rare, ×1,6 épique, ×2,0 légendaire, et '
         'toujours d\'au moins 1 à chaque fusion. La pioche et le Mana qu\'une '
         'carte rend ne grandissent pas avec la rareté.\n\n'
-        'Les améliorations de forge des trois exemplaires sont héritées et '
-        'consolidées, dans la limite de la capacité de la nouvelle rareté. Vos '
-        'cartes de classe sont uniques, et une carte unique ne fusionne jamais. '
-        '**La Forge de Fusion est un système distinct et payant** — un nœud '
-        'dédié de la carte du monde, à ne pas confondre avec cette '
-        'fusion-ci, qui reste gratuite.',
+        'Les runes des trois exemplaires sont toutes conservées — une même '
+        'rune additionne ses niveaux — et la carte fusionnée **en reçoit une '
+        'de plus, au choix parmi trois**, au niveau 1 ; Véloce et Économe '
+        'n\'apparaissent qu\'à partir de la deuxième fusion. Vos cartes de '
+        'classe sont uniques, et une carte unique ne fusionne jamais. **La '
+        'Forge de Fusion est un système distinct et payant** — un nœud dédié '
+        'de la carte du monde, à ne pas confondre avec cette fusion-ci, qui '
+        'reste gratuite.',
     type: TutorialStepType.merge,
   ),
   TutorialStep(

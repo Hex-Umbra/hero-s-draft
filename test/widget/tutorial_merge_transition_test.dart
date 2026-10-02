@@ -138,6 +138,16 @@ void main() {
       // aucun chiffre ne grandit comprise (spec P-43 E1, §5.4).
       expect(find.text('Même coût, rareté supérieure.'), findsOneWidget);
 
+      // L'etape enseigne un choix (spec P-43 E2, A18) : SUIVANT attend la
+      // rune. Au Paladin des cinq premieres cartes du pool, la carte semee
+      // est Eveil, dont la premiere fusion offre Endurci.
+      await tester.tap(find
+          .byWidgetPredicate((widget) =>
+              (widget.key?.toString() ?? '').contains('tutorial-merge-rune-'))
+          .first);
+      await tester.pump();
+      expect(find.textContaining('Rune ajoutée : '), findsOneWidget);
+
       await _tapNext(tester); // -> 12 L'Expérience & le Level Up
       expect(tester.takeException(), isNull);
     },
