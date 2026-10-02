@@ -175,3 +175,76 @@ Relancée le 02/10/2026 sur la tête de la branche, le code des deux lots termin
 - **Pour E2** : sous le prédicat, la première fusion d'une *Concentration* n'a aucune rune éligible (D65 tient, à vide) ; l'héritage de D13 devra suivre la règle d'exclusion de `consolidate` (E-S3).
 - **Un test peut-être instable** : `test/widget/content_editor_screen_test.dart` (groupe des imports) a échoué une fois dans une suite complète de l'implémenteur du correctif, sans se reproduire — cinq relances isolées vertes par l'orchestrateur. À surveiller.
 - **La simulation ne fusionne pas la Puissance comme le jeu** : elle tient une entrée par gain (`d26_economy_sim.dart:1376` et suivantes) — plus fin que D36 ; elle diverge du jeu sur deux *Forme Démoniaque*, sur *Ferveur* d'un tour à l'autre et sur `might_regen`. Aucune valeur de D56 à D62 ni de D67 n'en dépend.
+
+---
+
+## 6. Les statistiques de la session
+
+Ajoutées le 02/10/2026 à la demande du propriétaire, après la livraison. **Mesurées, pas estimées** : dans les transcriptions de la session (`~/.claude/projects/<projet>/9cb99a89-77ab-4370-a2a0-03f08d7f30ee.jsonl` pour l'orchestrateur, un fichier par sous-agent sous `…/subagents/`), chaque appel au modèle compté une fois par identifiant de message. Les heures sont locales (UTC+2) ; les jalons viennent des commits de la branche. Ces chiffres ne comptent pas l'ajout de cette section.
+
+### 6.1. Le temps
+
+| | |
+|:---|:---|
+| Début | **01/10/2026 à 22:12** — le prompt de lancement |
+| Fin | **02/10/2026 à 06:19** — le dernier message de l'orchestrateur, après le commit `5a3af40` (06:18) |
+| Durée | **8 h 07 min**, d'une traite, sans arrêt ni reprise |
+| Temps actif de l'orchestrateur | environ 3 h 16 min — ses tours de travail, en comptant les attentes de moins de dix minutes (les tâches courtes de l'implémentation) : ce temps chevauche donc en partie celui des agents |
+| Temps actif cumulé des sous-agents | environ 7 h 23 min — lancés l'un après l'autre, sauf les cinq reprises par message (§1 du fichier d'orchestration : tout se déroule en série) |
+
+| Étape | De | À | Durée |
+|:---|:---|:---|---:|
+| Porte d'entrée et branche (3.1, 3.2) | 22:12 | 22:15 | 3 min |
+| E0 — spec, deux tours de vérification (3.3) | 22:15 | 23:20 | 1 h 04 |
+| E0 — plan, un tour (3.4) | 23:20 | 00:32 | 1 h 12 |
+| E0 — implémentation, cinq tâches, revue d'ensemble, ouverture du compte rendu (3.5) | 00:32 | 01:04 | 32 min |
+| E1 — spec, deux tours (3.3) | 01:04 | 02:35 | 1 h 31 |
+| E1 — plan, un tour (3.4) | 02:35 | 04:27 | 1 h 52 |
+| E1 — implémentation, huit tâches, revue d'ensemble et correctif (3.5) | 04:27 | 05:42 | 1 h 15 |
+| Simulation (3.6) — 337 s de calcul | 05:42 | 05:48 | 6 min |
+| Note de version et mémoire (3.7) | 05:48 | 06:17 | 29 min |
+| Compte rendu, suivi, journal (3.8) | 06:17 | 06:19 | 2 min |
+
+Les specs et les plans prennent plus des deux tiers du temps (5 h 39) ; l'implémentation, un peu plus d'un cinquième (1 h 47).
+
+### 6.2. Les agents
+
+**43 agents** : l'orchestrateur, et **42 sous-agents** lancés par lui — aucun sous-agent n'en a lancé d'autre. Cinq d'entre eux ont été repris avec leur contexte, par message, pour corriger leur document : le rédacteur de la spec E0 (deux fois), celui de la spec E1 (deux fois), celui du plan E1 (une fois).
+
+| Rôle | Nombre | Modèle |
+|:---|---:|:---|
+| Orchestrateur | 1 | Opus 5.5 |
+| Rédacteurs de spec et de plan | 4 | Opus 5.5 |
+| Vérificateurs de spec et de plan | 6 | Opus 5.5 |
+| Implémenteurs de tâche (5 pour E0, 8 pour E1, 1 correctif) | 14 | Sonnet 5.5 |
+| Relecteurs de tâche (5 pour E0, 8 pour E1) | 13 | Sonnet 5.5, sauf deux sur Opus 5.5 (les tâches 1 et 5 d'E1, le moteur et l'éligibilité) |
+| Revues d'ensemble des deux plans | 2 | Opus 5.5 |
+| Revue ciblée du correctif | 1 | Sonnet 5.5 |
+| Skills de fin de vague (`patch-notes-writer`, `memory-bank-sync`) | 2 | Opus 5.5 |
+| **Sous-agents** | **42** | 16 Opus 5.5, 26 Sonnet 5.5 |
+
+Appels au modèle : 166 pour l'orchestrateur, 1 691 pour les sous-agents (1 492 sur Opus, 199 sur Sonnet) — **1 857** en tout.
+
+### 6.3. Les jetons
+
+| | Orchestrateur (Opus) | Sous-agents Opus | Sous-agents Sonnet | **Total** |
+|:---|---:|---:|---:|---:|
+| Entrée hors cache | 342 | 2 996 | 398 | **3 736** |
+| Écriture en cache | 886 703 | 9 520 621 | 1 473 718 | **11 881 042** |
+| Lecture du cache | 58 500 406 | 434 991 239 | 12 927 757 | **506 419 402** |
+| Sortie | 213 285 | 334 411 | 102 999 | **650 695** |
+| **Total traité** | 59 600 736 | 444 849 267 | 14 504 872 | **518 954 875** |
+
+- **Environ 519 millions de jetons traités**, dont 97,6 % relus depuis le cache : chaque appel d'un agent relit son contexte, qui grandit à chaque fichier lu. Hors lecture du cache, **12,5 millions** (entrée, écriture en cache, sortie) ; la sortie seule, **650 695 jetons**.
+- **Où ils sont allés.** Les rédacteurs et vérificateurs de specs et de plans font 73 % du total (378 millions) : ils lisent le code en entier pour re-mesurer chaque `fichier:ligne`, et les rédacteurs comme les vérificateurs de plan ont rejoué leur plan dans un clone. L'implémentation, trente agents en deux lots, n'en fait que 7 % (37 millions) : chaque implémenteur ne lit que le brief de sa tâche. Le plan E1 seul — rédaction, rejeu, vérification — compte pour 142 millions.
+
+| Étape | Sous-agents | Temps actif | Jetons traités | Dont sortie |
+|:---|---:|---:|---:|---:|
+| E0 — spec | 3 | 62 min | 67,0 M | 52 679 |
+| E0 — plan | 2 | 71 min | 55,7 M | 55 792 |
+| E0 — implémentation | 11 | 23 min | 9,6 M | 37 829 |
+| E1 — spec | 3 | 88 min | 112,7 M | 100 579 |
+| E1 — plan | 2 | 111 min | 142,2 M | 16 160 |
+| E1 — implémentation | 19 | 61 min | 27,6 M | 102 973 |
+| Fin de vague — skills | 2 | 27 min | 44,6 M | 71 398 |
+| Orchestrateur | — | ≈ 196 min | 59,6 M | 213 285 |
