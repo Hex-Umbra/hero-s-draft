@@ -136,6 +136,16 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   }
 
+  /// La couleur que le texte [label] porte vraiment : celle du style que la
+  /// tuile applique.
+  Color? titleColor(WidgetTester tester, String label) => tester
+      .widget<DefaultTextStyle>(find
+          .ancestor(
+              of: find.text(label), matching: find.byType(DefaultTextStyle))
+          .first)
+      .style
+      .color;
+
   bool currentNodeCompleted(ProviderContainer container) {
     final run = container.read(runProvider);
     return run.mapNodes
@@ -167,8 +177,11 @@ void main() {
 
     await tester.tap(find.byType(UiCard));
     await tester.pumpAndSettle();
+    final before = titleColor(tester, 'Tranchant 3');
     await tester.tap(find.text('Tranchant 3'));
     await tester.pumpAndSettle();
+    // La rune choisie se montre choisie.
+    expect(titleColor(tester, 'Tranchant 3'), isNot(before));
 
     // Brulant aux deux tiers de 3, Econome borne a 1 ; Endurci ne vise que
     // l'armure.
@@ -215,6 +228,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Aucune autre rune ne peut la remplacer.'),
         findsOneWidget);
+    // Et se montre inactive : ni blanche, ni de la couleur du choix.
+    expect(titleColor(tester, 'Endurci 1'), isNot(Colors.white));
 
     await tester.tap(find.text('Endurci 1'));
     await tester.pumpAndSettle();

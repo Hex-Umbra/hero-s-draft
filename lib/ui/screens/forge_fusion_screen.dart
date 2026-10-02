@@ -220,11 +220,11 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
     return ListTile(
       enabled: hasOption,
       selected: rune.id == _givenId,
+      textColor: Colors.white,
+      selectedColor: Colors.deepPurpleAccent,
+      selectedTileColor: Colors.white10,
       leading: Text(rune.emoji, style: const TextStyle(fontSize: 22)),
-      title: Text(
-        rune.nameAt(level, locale),
-        style: const TextStyle(color: Colors.white),
-      ),
+      title: Text(rune.nameAt(level, locale)),
       subtitle: hasOption
           ? null
           : Text(
