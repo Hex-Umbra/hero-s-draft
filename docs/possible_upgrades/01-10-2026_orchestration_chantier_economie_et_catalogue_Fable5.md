@@ -68,7 +68,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 |:---:|:---|:---|:---|:---|:---|:---|---:|:---|:---|
 | 0 | — | **close** | — | `main`, par exception | — | — | 1187 | 01/10 | 01/10 |
 | 1 | `0.5.3` | **close** | — | `feat/v0.5.3-p43-e0-e1` | [E0](../superpowers/specs/2026-10-01-p43-e0-puissance-par-source-et-ratio-design.md) · [E1](../superpowers/specs/2026-10-02-p43-e1-moteur-de-runes-design.md) | [E0](../superpowers/plans/2026-10-01-p43-e0-puissance-par-source-et-ratio.md) · [E1](../superpowers/plans/2026-10-02-p43-e1-moteur-de-runes.md) | 1187 → 1375 | 02/10 | 02/10 |
-| 2 | `0.5.4` | **en cours** | 3.6 · fait | `feat/v0.5.4-p43-e2-fusion-forge` | [E2](../superpowers/specs/2026-10-02-p43-e2-fusion-forge-design.md) | [E2 partie 1](../superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-1.md) · [E2 partie 2](../superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-2.md) | 1375 → 1426 → 1480 | — | — |
+| 2 | `0.5.4` | **en cours** | 3.7 · en cours | `feat/v0.5.4-p43-e2-fusion-forge` | [E2](../superpowers/specs/2026-10-02-p43-e2-fusion-forge-design.md) | [E2 partie 1](../superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-1.md) · [E2 partie 2](../superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-2.md) | 1375 → 1426 → 1480 | — | — |
 | 3 | `0.5.5` | à faire | — | — | — | — | — | — | — |
 | 4 | `0.5.6` | à faire | — | — | — | — | — | — | — |
 | 5 | `0.5.7` | à faire | — | — | — | — | — | — | — |
