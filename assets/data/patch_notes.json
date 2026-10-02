@@ -1,5 +1,45 @@
 [
   {
+    "version": "0.5.3",
+    "date": "2026-10-02",
+    "title": "La Juste Mesure",
+    "sections": [
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La carte de classe du Berserker, à l'écran de sélection comme dans le tutoriel, indique désormais son taux de conversion : « Taux : 50%, arrondi à l'entier supérieur — 6 Armure → 3 Puissance. »",
+          "Une carte qui ne peut plus recevoir aucune rune est désormais refusée dès sa sélection à la forge du feu de camp, avec le message « Aucune rune ne peut être ajoutée à cette carte. »",
+          "Les descriptions des runes sont désormais les mêmes sur la carte, dans ses infobulles et à la forge, avec une ligne par rune au niveau qu'elle joue réellement : une Frappe qui porte deux fois Tranchant 1 n'affiche plus qu'une ligne « Tranchant 2 », avec le chiffre que la carte inflige vraiment.",
+          "Jouer une carte qui porte la rune Économe fait désormais entendre le son du gain de mana, comme toute carte qui rend du mana."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Le Berserker ne convertit plus que la moitié de son Armure en Puissance, arrondie à l'entier supérieur : 6 points d'Armure donnent 3 de Puissance. Mur de Fer lui donne donc 5 de Puissance pour le tour au lieu de 10, Défense 3, Éveil et Cri de Guerre 2.",
+          "Les runes Tranchant et Endurci ajoutent désormais 15 % de la valeur de base de la carte par niveau, avec au moins +1 par niveau, au lieu de +2 par niveau : au niveau 1, Tranchant ajoute 1 dégât à Frappe au lieu de 2 et 2 dégâts à Frappe Lourde, Endurci 2 d'Armure à Mur de Fer. La rune grandit avec la rareté de la carte, et la forge affiche le gain exact qu'elle apportera à la carte choisie.",
+          "La forge du feu de camp ne propose plus Économe sur une carte gratuite, ni Persistant sur une carte qui pioche ou rend du mana, et ne place jamais Persistant avec Économe ou Véloce sur une même carte. Les cartes déjà forgées de la boutique suivent les mêmes règles, et une fusion de cartes ne réunit pas davantage ces runes : une rune qui ne peut pas cohabiter avec une autre est alors perdue.",
+          "Les runes Économe, Véloce, Congelant et Persistant ne dépassent plus le niveau 1 — ni au feu de camp, ni à la fusion de cartes, ni à la Forge de Fusion, ni en boutique — et une carte n'en porte plus deux exemplaires : la forge ne les propose plus à une carte qui les porte déjà. Le Gel de Congelant ne dure donc plus qu'une attaque ennemie, au lieu de deux ou trois.",
+          "Chaque fusion augmente désormais d'au moins 1 chaque valeur de dégâts, d'Armure, de soin, de Puissance ou d'altération de la carte : un Coup Empoisonné légendaire inflige 7 dégâts et applique 5 Poison au lieu de 6 et 2, une Forme Démoniaque légendaire donne 6 de Puissance au lieu de 4.",
+          "En revanche, les cartes piochées et le mana rendu par une carte ne grandissent plus avec sa rareté : une Concentration légendaire pioche 2 cartes, et non plus 4. Le tutoriel de la fusion explique désormais ces deux règles.",
+          "Les cartes communes sans dégâts ni Armure (Potion de Soin, Concentration…) se voient désormais proposer Véloce, Économe ou Persistant à la forge du feu de camp, selon ce qui leur est permis, là où on leur proposait Endurci."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Deux bonus de Puissance venus de sources différentes ne se confondent plus : chez le Berserker, Forme Démoniaque puis Mur de Fer au même tour donnaient 12 de Puissance pendant quatre tours ; ils donnent désormais 7 de Puissance ce tour-ci (2 de Forme Démoniaque, 5 de Mur de Fer), puis 2 pendant les trois tours suivants. Le panneau des effets montre une ligne par bonus, chacune avec sa durée, et la barre de vie affiche leur somme.",
+          "La Puissance du passif Rage ne s'accumule plus d'un tour à l'autre dans celle d'une Forme Démoniaque en cours.",
+          "La rune Endurci n'est plus proposée sur une carte qui ne donne pas d'Armure : elle y ajoutait une Armure à part, que la carte n'affichait pas.",
+          "Les runes Brûlant et Surchargé renforcent désormais la Brûlure ou l'Électrocution que l'ennemi porte déjà : l'Électrocution d'une rune sur un ennemi déjà électrocuté compte enfin dans les dégâts, et la Brûlure d'une rune se fond dans celle en cours, qui s'éteint au même rythme au lieu de deux fois plus vite."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.2",
     "date": "2026-09-16",
     "title": "Des Sauvegardes Qui Durent",
