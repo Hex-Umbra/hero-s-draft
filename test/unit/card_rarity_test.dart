@@ -65,6 +65,16 @@ void main() {
     });
   });
 
+  group('CardRarity.multiplier', () {
+    test('un multiplicateur par palier, 1 hors de l echelle', () {
+      expect(
+        [for (final rarity in _ladder) rarity.multiplier],
+        [1.0, 1.2, 1.4, 1.6, 2.0],
+      );
+      expect(CardRarity.unique.multiplier, 1.0);
+    });
+  });
+
   group('CardRarity.isAcquirable', () {
     test('une carte de classe n entre dans le deck qu au draft de depart', () {
       expect(CardRarity.unique.isAcquirable, isFalse);

@@ -16,6 +16,11 @@
   ],
   "requiresExhaust": true,
   "stackable": false,
+  "deltas": [
+    {
+      "type": "removeExhaust"
+    }
+  ],
   "weight": 30,
   "emoji": "⏳"
 }

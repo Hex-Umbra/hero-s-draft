@@ -1,11 +1,22 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/services/effect_resolver.dart';
+import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+
+/// Le type d'effet qu'un delta nomme, s'il en nomme un.
+String? _effectOf(CardDelta delta) => switch (delta) {
+      PercentBonusDelta(:final effect) => effect,
+      AddEffectDelta(:final effect) => effect,
+      RemoveExhaustDelta() => null,
+    };
 
 /// Sans ce fichier, le probleme §2.2 de la spec n est pas resolu : un dossier
 /// de classe incomplet serait aussi silencieux qu une entree manquante l etait
@@ -39,6 +50,41 @@ void main() {
       for (final passive in registry.passives)
         if (!PassiveStrategies.byEffectType.containsKey(passive.effectType))
           '${passive.id} → effectType "${passive.effectType}" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Un type d'effet que nomme une rune et qu'aucune stratégie ne résout ne
+  // ferait rien en jeu (spec P-43 E1, A13).
+  test('chaque type d effet que nomme une rune a sa strategie', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final strategies = container.read(effectRegistryProvider);
+
+    final offenders = [
+      for (final rune in registry.forgeUpgrades)
+        for (final delta in rune.deltas)
+          if (_effectOf(delta) case final type?
+              when strategies.get(type) == null)
+            '${rune.id} → type d effet "$type" sans stratégie',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('chaque statut que pose une rune est fabrique par createStatus', () {
+    final statuses = {
+      for (final rune in registry.forgeUpgrades)
+        for (final delta in rune.deltas)
+          if (delta case AddEffectDelta(:final statusId?)) statusId,
+    };
+    expect(statuses, isNotEmpty, reason: 'aucune rune ne pose de statut');
+
+    final offenders = [
+      for (final statusId in statuses)
+        if (EffectResolver.createStatus(statusId, 1, 1) == null)
+          'statut "$statusId" que createStatus ne fabrique pas',
     ];
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));

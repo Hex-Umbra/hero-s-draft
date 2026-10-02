@@ -17,6 +17,8 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 
+import 'shipped_data.dart';
+
 const _temporaryMight = StatusEffect(
   id: 'might',
   name: 'Puissance',
@@ -124,6 +126,9 @@ void main() {
     late String enemyId;
 
     setUp(() {
+      // Brûlant, tel que le jeu le livre : le moteur lit la rune dans le
+      // registre (spec P-43 E1, §4.4).
+      shippedRuneRegistry(const ['burning']);
       container = ProviderContainer();
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);

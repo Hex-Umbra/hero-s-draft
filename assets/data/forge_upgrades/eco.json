@@ -14,6 +14,13 @@
     "skill",
     "power"
   ],
+  "deltas": [
+    {
+      "type": "addEffect",
+      "effect": "gain_mana",
+      "valuePerLevel": 1
+    }
+  ],
   "weight": 40,
   "emoji": "💎"
 }

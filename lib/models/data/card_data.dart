@@ -38,6 +38,16 @@ enum CardRarity {
         CardRarity.legendary => 4,
       };
 
+  /// Le multiplicateur de valeur de cette rareté, que l'applicateur lit
+  /// (`EffectiveCard`). 1,0 pour `unique`, hors de l'échelle.
+  double get multiplier => switch (this) {
+        CardRarity.common || CardRarity.unique => 1.0,
+        CardRarity.uncommon => 1.2,
+        CardRarity.rare => 1.4,
+        CardRarity.epic => 1.6,
+        CardRarity.legendary => 2.0,
+      };
+
   /// Une carte de cette rareté peut-elle entrer dans le deck en cours de run :
   /// achat, récompense, copie par un Miroir ? Une carte `unique` n'y entre
   /// qu'au draft de départ (ADR-026, ADR-051).

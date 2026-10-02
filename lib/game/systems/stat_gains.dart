@@ -10,7 +10,6 @@ enum GainResource { armor, mana, might }
 /// passif avant qu'il ne calcule son gain (spec P-49, §6.3).
 enum GainSource {
   card,
-  rune,
   passive,
   relic,
   status,

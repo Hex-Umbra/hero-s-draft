@@ -592,7 +592,8 @@ void main() {
             descriptor: forge,
             id: 'eclat',
             bilingual: prose,
-            mechanics: '{"pools": ["common"], "color": "$color"}',
+            mechanics: '{"pools": ["common"], "color": "$color", '
+                '"deltas": [{"type": "removeExhaust"}]}',
           );
 
       expect(validatorWith().validate(withColor('orange')).single.field,

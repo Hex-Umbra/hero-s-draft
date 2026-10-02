@@ -22,7 +22,8 @@ class FusionOption {
 /// La Forge de Fusion et la fusion 3→1 additionnent les tiers des runes de
 /// même id. Une rune non cumulable (`ForgeUpgradeData.stackable`) n'a pas de
 /// tier qui vaille : elle n'est jamais proposée à la fusion, et une fusion 3→1
-/// n'en garde qu'un exemplaire, au tier 1.
+/// n'en garde qu'un exemplaire, au tier 1. Les références se lisent par
+/// l'analyseur unique du modèle, `ForgeUpgradeData.parseRef` (ADR-094 D5).
 class ForgeRuneRules {
   const ForgeRuneRules._();
 
@@ -31,28 +32,15 @@ class ForgeRuneRules {
   static bool isStackable(String runeId) =>
       ForgeUpgradeData.getById(runeId)?.stackable ?? true;
 
-  /// Tier d'une référence `id:tier`, ou `null` si elle est mal formée ou de
-  /// tier nul : les deux combinaisons l'ignorent alors de la même façon.
-  static int? _tierOf(String rune) {
-    final parts = rune.split(':');
-    if (parts.length != 2) return null;
-    final tier = int.tryParse(parts[1]);
-    return tier != null && tier > 0 ? tier : null;
-  }
-
   /// Réunit les runes de même id, dans l'ordre de leur première apparition :
   /// les tiers d'une rune cumulable s'additionnent, une rune non cumulable est
-  /// gardée une fois au tier 1.
-  static List<String> consolidate(Iterable<String> runes) {
-    final tiers = <String, int>{};
-    for (final rune in runes) {
-      final tier = _tierOf(rune);
-      if (tier == null) continue;
-      final id = rune.split(':').first;
-      tiers[id] = isStackable(id) ? (tiers[id] ?? 0) + tier : 1;
-    }
-    return [for (final entry in tiers.entries) '${entry.key}:${entry.value}'];
-  }
+  /// gardée une fois au tier 1. Une référence mal formée ou de tier nul est
+  /// ignorée.
+  static List<String> consolidate(Iterable<String> runes) => [
+        for (final MapEntry(key: id, value: tier)
+            in ForgeUpgradeData.levelsOf(runes).entries)
+          '$id:${isStackable(id) ? tier : 1}',
+      ];
 
   /// Fusions que la Forge de Fusion propose pour [card] : une par id de rune
   /// cumulable que la carte porte au moins deux fois, au coût de
@@ -60,8 +48,9 @@ class ForgeRuneRules {
   static List<FusionOption> fusionOptionsFor(CardInstance card) {
     final groups = <String, List<String>>{};
     for (final rune in card.forgeUpgrades) {
-      if (_tierOf(rune) == null) continue;
-      groups.putIfAbsent(rune.split(':').first, () => []).add(rune);
+      final parsed = ForgeUpgradeData.parseRef(rune);
+      if (parsed == null) continue;
+      groups.putIfAbsent(parsed.$1, () => []).add(rune);
     }
 
     final options = <FusionOption>[];
@@ -70,7 +59,10 @@ class ForgeRuneRules {
       options.add(FusionOption(
         upgradeId: id,
         originalUpgrades: runes,
-        totalTier: runes.fold(0, (sum, rune) => sum + (_tierOf(rune) ?? 0)),
+        totalTier: runes.fold(
+          0,
+          (sum, rune) => sum + (ForgeUpgradeData.parseRef(rune)?.$2 ?? 0),
+        ),
         cost: 80 * (runes.length - 1),
       ));
     });

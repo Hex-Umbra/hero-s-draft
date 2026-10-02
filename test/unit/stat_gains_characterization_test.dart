@@ -16,11 +16,14 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 
+import 'shipped_data.dart';
+
 /// Fige le comportement des gains d'armure, de mana et de puissance tel qu'il
 /// était avant leur passage par `StatGains` (spec P-41, §4.1). Ces tests
 /// passent sur le code d'origine et restent inchangés après la conversion :
-/// c'est la preuve que le lot A ne change rien au jeu. Une seule valeur a
-/// changé depuis, voulue : Armure du Berserker avec de la Maîtrise (P-49).
+/// c'est la preuve que le lot A ne change rien au jeu. Deux valeurs ont changé
+/// depuis, voulues : Armure du Berserker avec de la Maîtrise (P-49), et
+/// Endurci sur une carte sans armure, qui ne donne plus rien (P-43 E1).
 ///
 /// Couverts ailleurs : l'intention « défense » d'un ennemi
 /// (`combat_controller_test.dart`) et l'armure d'une carte du tutoriel
@@ -45,6 +48,10 @@ void main() {
 
   late ProviderContainer container;
   late RunController run;
+
+  // Les runes que ces cas jouent, telles que le jeu les livre : le moteur les
+  // lit dans le registre (spec P-43 E1, §4.4).
+  setUpAll(() => shippedRuneRegistry(const ['hardened', 'eco']));
 
   setUp(() {
     container = ProviderContainer();
@@ -113,9 +120,11 @@ void main() {
       expect(heroStats().armure, 10);
     });
 
-    test('rune hardened sur une carte sans effet d armure', () {
+    // Endurci ne vise que l'armure que la carte donne déjà (D61) : sur une
+    // carte sans effet d'armure, elle ne donne plus rien (spec P-43 E1, §4.4).
+    test('rune hardened sur une carte sans effet d armure : aucune armure', () {
       play(card(CardType.attack, const [], runes: const ['hardened:1']));
-      expect(heroStats().armure, 2);
+      expect(heroStats().armure, 0);
     });
 
     test('relique gain_armor', () {

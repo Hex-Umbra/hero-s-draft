@@ -54,6 +54,9 @@ void main() {
       final rune = ForgeUpgradeData.fromJson({
         'id': 'sharp',
         'pools': ['common'],
+        'deltas': [
+          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
+        ],
       });
       expect(rune.stackable, isTrue);
     });
@@ -63,6 +66,9 @@ void main() {
         'id': 'enduring',
         'pools': ['rare'],
         'stackable': false,
+        'deltas': [
+          {'type': 'removeExhaust'},
+        ],
       });
       expect(rune.stackable, isFalse);
       expect(ForgeUpgradeData.fromJson(rune.toJson()).stackable, isFalse);

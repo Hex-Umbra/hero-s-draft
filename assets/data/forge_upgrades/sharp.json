@@ -15,6 +15,13 @@
     "attack"
   ],
   "valueMultiplier": 2,
+  "deltas": [
+    {
+      "type": "percentBonus",
+      "effect": "damage",
+      "valuePercentPerLevel": 15
+    }
+  ],
   "weight": 100,
   "emoji": "⚔️"
 }

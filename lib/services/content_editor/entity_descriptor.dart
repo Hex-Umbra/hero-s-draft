@@ -327,9 +327,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     category: EntityCategory.forgeUpgrade,
     label: 'Amélioration de forge',
     directory: 'forge_upgrades',
-    // `ForgeUpgradeData.fromJson` ne leve sur rien d'autre que `id` : toutes
-    // les autres cles ont un defaut. C'est la categorie ou la validation
-    // declarative fait tout le travail.
+    // `pools` est la seule cle que la famille 3 exige : les autres cles
+    // obligatoires d'une rune — `deltas`, et ce que la spec P-43 E1 y ajoute
+    // (§3.1) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme, que la
+    // famille 7 appelle. Un fait a un seul endroit.
     requiredKeys: const {'pools'},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
     // `color` et `icon` ne sont pas un hex ni un texte libre : ce sont des
@@ -354,6 +355,9 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "requiresExhaust": false,
   "stackable": true,
   "valueMultiplier": 1,
+  "deltas": [
+    { "type": "percentBonus", "effect": "damage", "valuePercentPerLevel": 15 }
+  ],
   "weight": 10,
   "emoji": "🔮"
 }''',

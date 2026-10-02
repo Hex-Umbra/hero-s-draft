@@ -16,6 +16,13 @@
     "skill"
   ],
   "valueMultiplier": 2,
+  "deltas": [
+    {
+      "type": "percentBonus",
+      "effect": "armor",
+      "valuePercentPerLevel": 15
+    }
+  ],
   "weight": 100,
   "emoji": "🛡️"
 }

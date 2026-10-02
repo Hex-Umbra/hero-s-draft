@@ -5,10 +5,7 @@ import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
-import '../systems/stat_gains.dart';
-import '../systems/power_rules.dart';
 import 'effects/effect_strategy.dart';
-import '../game_constants.dart';
 
 class EffectResolver {
 
@@ -136,128 +133,22 @@ class EffectResolver {
 
     runController.consumeResource(mana: card.currentCost);
 
-    int extraDamage = 0;
-    int extraArmor = 0;
-    int extraDraw = 0;
-    int extraMana = 0;
-    int elementBurn = 0;
-    int elementFreeze = 0;
-    int elementShock = 0;
-
-    for (var upgrade in card.forgeUpgrades) {
-      final parts = upgrade.split(':');
-      if (parts.length != 2) continue;
-      final id = parts[0];
-      final k = int.tryParse(parts[1]) ?? 0;
-      if (k <= 0) continue;
-      switch (id) {
-        case 'sharp':
-          extraDamage += 2 * k;
-          break;
-        case 'hardened':
-          extraArmor += 2 * k;
-          break;
-        case 'quick':
-          extraDraw += k;
-          break;
-        case 'eco':
-          extraMana += k;
-          break;
-        case 'burning':
-          elementBurn += k;
-          break;
-        case 'freezing':
-          elementFreeze += k;
-          break;
-        case 'shocking':
-          elementShock += k;
-          break;
-      }
-    }
-
-    if (extraDraw > 0) {
-      deckController.drawCards(extraDraw, maxHandSize: GameConstants.maxHandSize);
-    }
-    if (extraMana > 0) {
-      runController.grant(
-        StatGain(GainResource.mana, extraMana, GainSource.rune),
-      );
-    }
-
-    // Apply elemental statuses if this is an Attack card
-    if (card.data.type == CardType.attack) {
-      final List<StatusEffect> extraStatuses = [];
-      // Même règle qu'un statut posé par la carte (`PowerRules`) : ces runes
-      // sont résolues ici, hors du registre de stratégies.
-      final bonus =
-          runController.currentState.heroStats.statusBonusFor(card.data.target);
-      if (elementBurn > 0) {
-        final st = createStatus('burn', elementBurn + bonus, elementBurn);
-        if (st != null) extraStatuses.add(st);
-      }
-      if (elementFreeze > 0) {
-        final st = createStatus('freeze', elementFreeze + bonus, elementFreeze);
-        if (st != null) extraStatuses.add(st);
-      }
-      if (elementShock > 0) {
-        final st = createStatus('shock', elementShock + bonus, elementShock);
-        if (st != null) extraStatuses.add(st);
-      }
-
-      if (extraStatuses.isNotEmpty) {
-        if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
-          final enemyIndex = combatController.currentState.enemies
-              .indexWhere((e) => e.id == selectedEnemyId);
-          if (enemyIndex != -1) {
-            final enemy = combatController.currentState.enemies[enemyIndex];
-            combatController.updateEnemyStats(
-              enemy.id,
-              enemy.stats.copyWith(
-                statuses: [...enemy.stats.statuses, ...extraStatuses],
-              ),
-            );
-          }
-        } else if (card.data.target == CardTarget.allEnemies) {
-          for (var enemy in combatController.currentState.enemies) {
-            combatController.updateEnemyStats(
-              enemy.id,
-              enemy.stats.copyWith(
-                statuses: [...enemy.stats.statuses, ...extraStatuses],
-              ),
-            );
-          }
-        }
-      }
-    }
-
-    for (var effect in card.data.effects) {
-      final int baseValue = effect.value;
-      int scaledValue = (baseValue * card.rarityMultiplier).round();
-      if (effect.type == 'damage') {
-        scaledValue += extraDamage;
-      } else if (effect.type == 'armor') {
-        scaledValue += extraArmor;
-      }
-
-      final strategy = registry.get(effect.type);
-      if (strategy != null) {
-        strategy.resolve(
-          card: card,
-          effect: effect,
-          scaledValue: scaledValue,
-          runController: runController,
-          deckController: deckController,
-          combatController: combatController,
-          selectedEnemyId: selectedEnemyId,
-        );
-      }
-    }
-
-    final hasArmorEffect = card.data.effects.any((e) => e.type == 'armor');
-    if (!hasArmorEffect && extraArmor > 0) {
-      runController.grant(
-        StatGain(GainResource.armor, extraArmor, GainSource.rune),
-      );
+    // Les effets que les runes ajoutent d'abord, puis ceux de la carte, à leur
+    // valeur jouée — rareté et runes comprises : l'applicateur est seul à la
+    // calculer, et les stratégies du registre seules à résoudre un effet,
+    // ceux des runes compris (spec P-43 E1, A2, §4.4). Les statuts des runes
+    // sont donc posés par `addStatus`, sans source (spec P-43 E0, A4).
+    final effective = card.effective;
+    for (final effect in [...effective.addedEffects, ...effective.effects]) {
+      registry.get(effect.type)?.resolve(
+            card: card,
+            effect: effect,
+            scaledValue: effect.value,
+            runController: runController,
+            deckController: deckController,
+            combatController: combatController,
+            selectedEnemyId: selectedEnemyId,
+          );
     }
 
     return true;

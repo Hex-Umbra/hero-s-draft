@@ -263,6 +263,7 @@ void main() {
         'requiresExhaust',
         'stackable',
         'valueMultiplier',
+        'deltas',
         'weight',
         'emoji',
       },
