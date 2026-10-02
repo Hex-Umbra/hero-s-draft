@@ -287,6 +287,17 @@ void main() {
     );
   });
 
+  // La regle des infobulles, que suivent la ligne de rune et le dialogue de
+  // fusion (spec P-43 E2, §4.11).
+  test('nameAt n ecrit le niveau que d une rune a plusieurs niveaux', () {
+    final sharp = ForgeUpgradeData.fromJson(_json({'name_fr': 'Tranchant'}));
+    final eco = ForgeUpgradeData.fromJson(
+        _json({'name_fr': 'Économe', 'maxLevel': 1}));
+    expect(sharp.nameAt(1, 'fr'), 'Tranchant 1');
+    expect(sharp.nameAt(3, 'fr'), 'Tranchant 3');
+    expect(eco.nameAt(1, 'fr'), 'Économe');
+  });
+
   group('eligibilite', () {
     test('lit les champs d eligibilite', () {
       final rune = ForgeUpgradeData.fromJson(_json({

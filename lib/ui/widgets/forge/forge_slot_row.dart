@@ -1,36 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:roguelike_card_game/l10n/app_localizations.dart';
-import '../../../models/card_instance.dart';
 import '../../../models/data/forge_upgrade_data.dart';
-import '../forge_upgrade_dialog.dart'; // Pour ForgeSlot
 import '../game_button.dart';
 
+/// La ligne d'une rune, commune aux écrans qui en proposent une — le choix
+/// de la fusion, l'affûtage du feu (spec P-43 E2, §4.5) : l'icône et la
+/// couleur de la rune, un titre, sa description, et un bouton dont l'écran
+/// donne le libellé et l'état.
 class ForgeSlotRow extends StatelessWidget {
-  final ForgeSlot slot;
+  final ForgeUpgradeData rune;
+  final String title;
+  final String description;
+  final String actionLabel;
 
-  /// La carte que la forge améliore : la fente dit ce que la rune lui ajoute
-  /// (spec P-43 E1, §5.1).
-  final CardInstance card;
-  final int currentGold;
-  final String locale;
-  final AppLocalizations l10n;
-  final VoidCallback onReroll;
-  final VoidCallback onSelect;
+  /// L'action du bouton ; `null` : le bouton est inactif.
+  final VoidCallback? onAction;
 
   const ForgeSlotRow({
     super.key,
-    required this.slot,
-    required this.card,
-    required this.currentGold,
-    required this.locale,
-    required this.l10n,
-    required this.onReroll,
-    required this.onSelect,
+    required this.rune,
+    required this.title,
+    required this.description,
+    required this.actionLabel,
+    required this.onAction,
   });
-
-  String _getTranslation(String en, String fr) {
-    return locale == 'fr' ? fr : en;
-  }
 
   Color _getUpgradeColorFromString(String colorStr) {
     switch (colorStr) {
@@ -80,33 +72,8 @@ class ForgeSlotRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts = slot.upgrade.split(':');
-    final upgradeId = parts[0];
-    final tierStr = parts.length > 1 ? parts[1] : '1';
-    final tier = int.tryParse(tierStr) ?? 1;
-
-    final upgradeData = ForgeUpgradeData.getById(upgradeId);
-
-    // Une rune absente du registre s'affiche sous son id, sans description,
-    // avec l'icône et la couleur par défaut (spec P-43 E1, §5.2).
-    final upgradeColor = _getUpgradeColorFromString(upgradeData?.color ?? '');
-    final upgradeIcon = _getUpgradeIconFromString(upgradeData?.icon ?? '');
-    final upgradeName = upgradeData != null
-        ? upgradeData.getName(locale) + (upgradeData.stackable ? ' $tier' : '')
-        : upgradeId;
-    // Ce que la fente ajoute à cette carte, au-delà de ce que la carte porte
-    // déjà de cette rune (spec P-43 E1, §5.1).
-    final upgradeDesc = upgradeData?.getDescription(
-          tier,
-          locale,
-          card.data,
-          card.rarity,
-          carried: ForgeUpgradeData.levelsOf(card.forgeUpgrades)[upgradeId] ?? 0,
-        ) ??
-        '';
-
-    final rerollCost = slot.rerollCost;
-    final canAffordReroll = currentGold >= rerollCost;
+    final color = _getUpgradeColorFromString(rune.color);
+    final icon = _getUpgradeIconFromString(rune.icon);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -115,7 +82,7 @@ class ForgeSlotRow extends StatelessWidget {
         color: Colors.white.withAlpha(8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: upgradeColor.withAlpha(60),
+          color: color.withAlpha(60),
           width: 1.5,
         ),
       ),
@@ -124,15 +91,15 @@ class ForgeSlotRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: upgradeColor.withAlpha(20),
+              color: color.withAlpha(20),
               shape: BoxShape.circle,
               border: Border.all(
-                color: upgradeColor.withAlpha(100),
+                color: color.withAlpha(100),
               ),
             ),
             child: Icon(
-              upgradeIcon,
-              color: upgradeColor,
+              icon,
+              color: color,
               size: 24,
             ),
           ),
@@ -142,16 +109,16 @@ class ForgeSlotRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  upgradeName,
+                  title,
                   style: TextStyle(
-                    color: upgradeColor,
+                    color: color,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  upgradeDesc,
+                  description,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -161,61 +128,12 @@ class ForgeSlotRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: canAffordReroll ? onReroll : null,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: canAffordReroll
-                        ? Colors.orangeAccent.withAlpha(20)
-                        : Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: canAffordReroll
-                          ? Colors.orangeAccent.withAlpha(120)
-                          : Colors.white24,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.autorenew,
-                        color: canAffordReroll
-                            ? Colors.orangeAccent
-                            : Colors.white30,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$rerollCost',
-                        style: TextStyle(
-                          color: canAffordReroll
-                              ? Colors.white
-                              : Colors.white30,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GameButton(
-                text: _getTranslation('Forge', 'Forger'),
-                onPressed: onSelect,
-                baseColor: upgradeColor,
-                height: 36,
-                fontSize: 13,
-              ),
-            ],
+          GameButton(
+            text: actionLabel,
+            onPressed: onAction,
+            baseColor: color,
+            height: 36,
+            fontSize: 13,
           ),
         ],
       ),

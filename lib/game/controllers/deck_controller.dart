@@ -288,43 +288,39 @@ class DeckNotifier extends Notifier<DeckState> {
   /// carte de la rareté suivante, qui garde toutes leurs runes (D13 ; spec
   /// P-43 E2, §4.6) : `ForgeRuneRules.consolidate` additionne les niveaux
   /// d'une même rune, bornés par son plafond, et écarte une rune exclue par
-  /// une rune gardée avant elle ; aucun plafond de runes par carte.
-  void mergeCards(List<String> selectedIds) {
-    if (selectedIds.length != 3) return;
-    var currentMasterDeck = List<CardInstance>.from(state.masterDeck);
+  /// une rune gardée avant elle ; aucun plafond de runes par carte. Rend la
+  /// carte créée — l'écran de deck tire sur elle l'offre de runes (§4.5) —,
+  /// ou `null` si la fusion est refusée.
+  CardInstance? mergeCards(List<String> selectedIds) {
+    if (selectedIds.length != 3) return null;
+    final selectedCards = [
+      for (final id in selectedIds)
+        ...state.masterDeck.where((c) => c.uniqueId == id),
+    ];
+    if (selectedCards.length != 3) return null;
 
-    final List<CardInstance> selectedCards = [];
-    for (var id in selectedIds) {
-      final cardIdx = currentMasterDeck.indexWhere((c) => c.uniqueId == id);
-      if (cardIdx != -1) {
-        selectedCards.add(currentMasterDeck[cardIdx]);
-      }
+    // Trois exemplaires d'une même carte à une même rareté, qui en a une
+    // au-delà : ni une carte `unique` ni une légendaire n'en ont.
+    final first = selectedCards.first;
+    final nextRarity = first.rarity.next;
+    if (nextRarity == null ||
+        selectedCards.any((c) => c.data.id != first.data.id || c.rarity != first.rarity)) {
+      return null;
     }
 
-    if (selectedCards.length == 3) {
-      // Trois exemplaires d'une même carte à une même rareté, qui en a une
-      // au-delà : ni une carte `unique` ni une légendaire n'en ont.
-      final first = selectedCards[0];
-      final nextRarity = first.rarity.next;
-      if (nextRarity == null ||
-          selectedCards.any((c) => c.data.id != first.data.id || c.rarity != first.rarity)) {
-        return;
-      }
-
-      // Retire les 3 exemplaires, puis ajoute la carte de rareté supérieure
-      currentMasterDeck.removeWhere((c) => selectedIds.contains(c.uniqueId));
-      currentMasterDeck.add(
-        CardInstance(
-          data: first.data,
-          rarity: nextRarity,
-          forgeUpgrades: ForgeRuneRules.consolidate(
-            selectedCards.expand((card) => card.forgeUpgrades),
-          ),
-        ),
-      );
-
-      state = state.copyWith(masterDeck: currentMasterDeck);
-    }
+    final merged = CardInstance(
+      data: first.data,
+      rarity: nextRarity,
+      forgeUpgrades: ForgeRuneRules.consolidate(
+        selectedCards.expand((card) => card.forgeUpgrades),
+      ),
+    );
+    // Retire les 3 exemplaires ; la carte fusionnée rejoint la fin du deck.
+    state = state.copyWith(masterDeck: [
+      ...state.masterDeck.where((c) => !selectedIds.contains(c.uniqueId)),
+      merged,
+    ]);
+    return merged;
   }
 
   /// Retire une carte spécifique du Master Deck (ex: Boutique ou Oubli)

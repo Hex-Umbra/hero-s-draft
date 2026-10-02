@@ -1,13 +1,18 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
+import '../widgets/forge_upgrade_dialog.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
@@ -61,7 +66,10 @@ class DeckScreen extends ConsumerWidget {
                   mainAxisSpacing: 12,
                 ),
                 itemCount: groups.keys.length,
-                itemBuilder: (context, index) {
+                // `_` et non `context` : la fusion se lance avec le `context`
+                // de l'écran, que la grille ne démonte pas (spec P-43 E2,
+                // §4.5).
+                itemBuilder: (_, index) {
                   final key = groups.keys.elementAt(index);
                   final cardList = groups[key]!;
                   final card = cardList.first;
@@ -114,7 +122,7 @@ class DeckScreen extends ConsumerWidget {
                             ),
                           ),
                           onPressed: () {
-                            _confirmMerge(context, ref, card, cardList);
+                            _confirmMerge(context, ref, cardList);
                           },
                           child: Text(
                             l10n.mergeLabel(3),
@@ -152,29 +160,49 @@ class DeckScreen extends ConsumerWidget {
     );
   }
 
+  /// La fusion, puis le choix d'une rune (spec P-43 E2, A1, §4.5). [context]
+  /// est celui de l'écran, jamais celui de la case de la grille : la fusion
+  /// reconstruit la grille, qui peut démonter la case qui l'a lancée pendant
+  /// le dialogue de choix.
   void _confirmMerge(
     BuildContext context,
     WidgetRef ref,
-    CardInstance card,
     List<CardInstance> duplicates,
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final cardName = card.data.getName(locale);
 
-    final merged = await showDialog<bool>(
+    final merged = await showDialog<CardInstance>(
       context: context,
       builder: (ctx) => _MergeDialog(duplicates: duplicates, ref: ref),
     );
+    if (merged == null || !context.mounted) return;
 
-    final nextRarity = card.rarity.next;
-    if (merged == true && nextRarity != null) {
-      if (context.mounted) {
-        context.showNotification(
-          l10n.deckMergeSuccess(cardName, nextRarity.index + 1),
-          type: NotificationType.success,
-        );
-      }
+    // L'offre : une fonction pure, sur la carte que la fusion rend, au rang
+    // qu'elle atteint ; l'état ne change que par `DeckNotifier`.
+    final offer = ForgeRuneRules.drawRunes(
+      merged,
+      GameDataRegistry.instance?.forgeUpgrades ?? const <ForgeUpgradeData>[],
+      Random(),
+      count: 3,
+    );
+    if (offer.isNotEmpty) {
+      await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ForgeUpgradeDialog(card: merged, offer: offer),
+      );
+      if (!context.mounted) return;
+    }
+
+    context.showNotification(
+      l10n.deckMergeSuccess(merged.data.getName(locale), merged.rarity.index + 1),
+      type: NotificationType.success,
+    );
+    // Sans rune éligible, la fusion s'est faite sans dialogue : le joueur lit
+    // les deux faits, dans cet ordre (A1).
+    if (offer.isEmpty) {
+      context.showNotification(l10n.forgeNoEligibleRune);
     }
   }
 }
@@ -206,17 +234,16 @@ class _MergeDialogState extends State<_MergeDialog> {
     }
   }
 
-  /// La fusion des trois exemplaires choisis : `mergeCards` en garde toutes
-  /// les runes (spec P-43 E2, §4.6) — plus de capacité, plus d'étape de choix
-  /// de l'héritage.
+  /// La fusion des trois exemplaires choisis ; le dialogue se ferme sur la
+  /// carte qu'elle rend, `null` si elle est refusée (spec P-43 E2, §4.5).
   void _performMerge() {
-    widget.ref.read(deckProvider.notifier).mergeCards(
+    final merged = widget.ref.read(deckProvider.notifier).mergeCards(
           widget.duplicates
               .where((c) => _selectedCardIds.contains(c.uniqueId))
               .map((c) => c.uniqueId)
               .toList(),
         );
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(merged);
   }
 
   @override
@@ -247,24 +274,24 @@ class _MergeDialogState extends State<_MergeDialog> {
                 itemBuilder: (context, index) {
                   final card = widget.duplicates[index];
                   final isSelected = _selectedCardIds.contains(card.uniqueId);
-                  final upgradesText = card.forgeUpgrades.isEmpty
-                      ? (locale == 'fr' ? '(Sans amélioration)' : '(No upgrade)')
-                      : card.forgeUpgrades.map((u) {
-                          final parts = u.split(':');
-                          final id = parts[0];
-                          final tier = parts.length > 1 ? parts[1] : '1';
-                          final upgradeData = ForgeUpgradeData.getById(id);
-                          return upgradeData != null
-                              ? (upgradeData.stackable ? '${upgradeData.getName(locale)} $tier' : upgradeData.getName(locale))
-                              : '$id $tier';
-                        }).join(', ');
+                  // Le niveau que joue chaque rune, par l'analyseur unique,
+                  // nommé selon la règle des infobulles (spec P-43 E2, §4.11,
+                  // E-S6).
+                  final runes = [
+                    for (final MapEntry(key: id, value: level)
+                        in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries)
+                      ForgeUpgradeData.getById(id)?.nameAt(level, locale) ??
+                          '$id $level',
+                  ];
                   return CheckboxListTile(
                     title: Text(
                       '${card.data.getName(locale)} (${card.rarity.name.toUpperCase()})',
                       style: const TextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
-                      'Forge: $upgradesText',
+                      runes.isEmpty
+                          ? l10n.mergeRunesNone
+                          : l10n.mergeRunesLabel(runes.join(', ')),
                       style: const TextStyle(color: Colors.white54),
                     ),
                     value: isSelected,

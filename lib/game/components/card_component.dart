@@ -440,7 +440,9 @@ class CardComponent extends PositionComponent
     final runeLines = ForgeUpgradeData.tooltipLines(
         card.forgeUpgrades, activeLocale, card.data, card.rarity);
     if (runeLines.isNotEmpty) {
-      desc += '\n\n${activeLocale == 'fr' ? '=== AMÉLIORATIONS DE LA FORGE ===' : '=== FORGE UPGRADES ==='}';
+      // Le même dans les deux langues, en ligne : la couche Flame, hors de la
+      // règle ARB de `lib/ui/` (spec P-43 E2, §5.7).
+      desc += '\n\n=== RUNES ===';
       for (final line in runeLines) {
         desc += '\n• $line';
       }

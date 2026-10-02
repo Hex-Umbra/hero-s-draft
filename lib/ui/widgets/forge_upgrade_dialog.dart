@@ -1,452 +1,122 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../game/controllers/deck_controller.dart';
-import '../../game/controllers/inventory_controller.dart';
-import '../../game/controllers/run_controller.dart';
-import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
-import '../../models/data/card_data.dart';
-import '../../models/data/game_data_registry.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../l10n/app_localizations.dart';
-import 'game_button.dart';
 import 'forge/forge_card_preview.dart';
 import 'forge/forge_slot_row.dart';
-import 'forge/forge_buy_slot_button.dart';
 
-class ForgeSlot {
-  final int index;
-  String upgrade; // e.g. "sharp:2"
-  int rerollsCount; // n_i
-
-  ForgeSlot({
-    required this.index,
-    required this.upgrade,
-    this.rerollsCount = 0,
-  });
-
-  int get rerollCost => (20 * pow(1.25, rerollsCount)).round();
-}
-
-class ForgeUpgradeDialog extends ConsumerStatefulWidget {
+/// Le dialogue de la fusion (spec P-43 E2, A1, A2, §4.5) : la carte fusionnée
+/// et une ligne par rune de son [offer] — trois au plus, tirées par
+/// `ForgeRuneRules.drawRunes` —, au niveau 1. Il ne se ferme que par un
+/// choix : ni annulation, ni retour, ni relance, ni fente achetée. Le choix
+/// pose `id:1` sur la carte par `DeckNotifier.addForgeUpgrade`, puis ferme
+/// le dialogue sur l'id choisi. Le gabarit plein écran d'ADR-039 D4 reste.
+class ForgeUpgradeDialog extends ConsumerWidget {
   final CardInstance card;
+
+  /// Les ids des runes offertes, trois au plus.
+  final List<String> offer;
 
   const ForgeUpgradeDialog({
     super.key,
     required this.card,
+    required this.offer,
   });
 
-  @override
-  ConsumerState<ForgeUpgradeDialog> createState() => _ForgeUpgradeDialogState();
-}
-
-class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
-  late List<ForgeSlot> _slots;
-
-  @override
-  void initState() {
-    super.initState();
-
-    final runState = ref.read(runProvider);
-    if (runState.forgeTargetSessions.containsKey(widget.card.uniqueId)) {
-      _slots = [];
-      final savedSlots = runState.forgeTargetSessions[widget.card.uniqueId]!;
-      for (int i = 0; i < savedSlots.length; i++) {
-        final s = savedSlots[i];
-        final parts = s.split(':');
-        final id = parts[0];
-        final tier = parts.length > 1 ? parts[1] : '1';
-        final rerolls = parts.length > 2 ? (int.tryParse(parts[2]) ?? 0) : 0;
-        _slots.add(ForgeSlot(
-          index: i,
-          upgrade: '$id:$tier',
-          rerollsCount: rerolls,
-        ));
-      }
-    } else {
-      _slots = _generateInitialSlots(widget.card);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(runProvider.notifier).setForgeSession(
-          widget.card.uniqueId,
-          _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
-        );
-      });
-    }
-  }
-
-  /// Les runes éligibles du pool [poolName] pour [card] : `pools` reste le
-  /// ciblage par rareté du tirage, tout le reste est le prédicat, lu dans la
-  /// donnée (spec P-43 E1, §4.6).
-  List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName) {
-    final registry = GameDataRegistry.instance;
-    if (registry == null) return [];
-
-    final catalog = registry.forgeUpgrades;
-    return [
-      for (final upgrade in catalog)
-        if (upgrade.pools.contains(poolName) &&
-            ForgeRuneRules.isEligible(upgrade, card, catalog))
-          upgrade.id,
-    ];
-  }
-
-  String? _rollUpgradeId(
-    CardInstance card,
-    Random rand,
-    List<String> excludedIdsInCurrentRolls,
-  ) {
-    final r = rand.nextInt(100);
-    String targetPool;
-    if (card.rarity == CardRarity.common) {
-      targetPool = 'common';
-    } else if (card.rarity == CardRarity.uncommon) {
-      targetPool = r < 75 ? 'common' : 'uncommon';
-    } else {
-      targetPool = r < 65 ? 'common' : (r < 90 ? 'uncommon' : 'rare');
-    }
-
-    List<String> poolOrder = ['rare', 'uncommon', 'common'];
-    int startIndex = poolOrder.indexOf(targetPool);
-    if (startIndex == -1) startIndex = 2;
-
-    for (int i = startIndex; i < poolOrder.length; i++) {
-      final pool = poolOrder[i];
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool)
-          .where((id) => !excludedIdsInCurrentRolls.contains(id))
-          .toList();
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-
-    for (final pool in poolOrder) {
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool)
-          .where((id) => !excludedIdsInCurrentRolls.contains(id))
-          .toList();
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-    return null;
-  }
-
-  String _rollWeighted(List<String> eligibleIds, Random rand) {
-    int totalWeight = 0;
-    final upgrades = <ForgeUpgradeData>[];
-    for (final id in eligibleIds) {
-      final upg = ForgeUpgradeData.getById(id);
-      if (upg != null) {
-        upgrades.add(upg);
-        totalWeight += upg.weight;
-      }
-    }
-
-    if (totalWeight == 0 || upgrades.isEmpty) {
-      return eligibleIds[rand.nextInt(eligibleIds.length)];
-    }
-
-    int choice = rand.nextInt(totalWeight);
-    int currentSum = 0;
-    for (final upg in upgrades) {
-      currentSum += upg.weight;
-      if (choice < currentSum) {
-        return upg.id;
-      }
-    }
-    return upgrades.last.id;
-  }
-
-  /// Tire une fente pour [card]. `null` seulement si aucune rune du catalogue
-  /// ne s'offre à la carte — la sélection du feu refuse une telle carte avant
-  /// d'ouvrir le dialogue (spec P-43 E1, A11).
-  String? _rollSlotUpgrade(CardInstance card, List<String> excludedIds) {
-    final rand = Random();
-    final rolledId = _rollUpgradeId(card, rand, excludedIds) ??
-        _rollUpgradeId(card, rand, []);
-    if (rolledId == null) return null;
-
-    int tier = 1;
-    if (ForgeRuneRules.isStackable(rolledId)) {
-      final t = rand.nextInt(100);
-      if (t < 80) {
-        tier = 1;
-      } else if (t < 95) {
-        tier = 2;
-      } else {
-        tier = 3;
-      }
-    }
-    // Le niveau que la fente affiche est celui que la carte recevra : borné
-    // par le plafond de la rune, ce que la carte en porte déjà compris (D72,
-    // spec P-43 E1, §4.7).
-    final carried =
-        ForgeUpgradeData.levelsOf(card.forgeUpgrades)[rolledId] ?? 0;
-    final level = ForgeUpgradeData.getById(rolledId)
-            ?.boundLevel(tier, carried: carried) ??
-        tier;
-    return '$rolledId:$level';
-  }
-
-  List<ForgeSlot> _generateInitialSlots(CardInstance card) {
-    final List<ForgeSlot> slots = [];
-    final List<String> excludedIds = [];
-    final rand = Random();
-
-    // Une fente de plus, à l'indice [index] — aucune si rien ne s'offre à la
-    // carte (A11).
-    void addSlot(int index) {
-      final upg = _rollSlotUpgrade(card, excludedIds);
-      if (upg == null) return;
-      slots.add(ForgeSlot(index: index, upgrade: upg));
-      excludedIds.add(upg.split(':')[0]);
-    }
-
-    addSlot(0);
-    if (rand.nextDouble() < 0.50) addSlot(1);
-    if (rand.nextDouble() < 0.25) addSlot(2);
-    if (rand.nextDouble() < 0.10) addSlot(3);
-    if (rand.nextDouble() < 0.02) addSlot(4);
-
-    // Add existing bonus slots
-    final runState = ref.read(runProvider);
-    final bonusCount = runState.bonusForgeSlots;
-    for (int i = 0; i < bonusCount; i++) {
-      addSlot(slots.isEmpty ? 0 : slots.map((s) => s.index).reduce(max) + 1);
-    }
-
-    return slots;
-  }
-
-  void _rerollSlot(int slotIndex, int cost) {
-    final success = ref.read(inventoryProvider.notifier).spendGold(cost);
-    if (!success) return;
-
-    setState(() {
-      final slotIdx = _slots.indexWhere((s) => s.index == slotIndex);
-      if (slotIdx != -1) {
-        final excludedIds = _slots
-            .where((s) => s.index != slotIndex)
-            .map((s) => s.upgrade.split(':')[0])
-            .toList();
-
-        final newUpgrade = _rollSlotUpgrade(widget.card, excludedIds);
-        if (newUpgrade == null) return;
-        _slots[slotIdx].upgrade = newUpgrade;
-        _slots[slotIdx].rerollsCount += 1;
-      }
-    });
-
-    ref.read(runProvider.notifier).setForgeSession(
-      widget.card.uniqueId,
-      _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
-    );
-  }
-
-  void _onBuySlotTapped() {
-    final success = ref.read(runProvider.notifier).buyBonusForgeSlot();
-    if (!success) return;
-
-    setState(() {
-      final excludedIds = _slots.map((s) => s.upgrade.split(':')[0]).toList();
-      final newUpgrade = _rollSlotUpgrade(widget.card, excludedIds);
-      if (newUpgrade == null) return;
-      final newIndex = _slots.isEmpty ? 0 : _slots.map((s) => s.index).reduce(max) + 1;
-      _slots.add(ForgeSlot(index: newIndex, upgrade: newUpgrade));
-    });
-
-    ref.read(runProvider.notifier).setForgeSession(
-      widget.card.uniqueId,
-      _slots.map((s) => '${s.upgrade}:${s.rerollsCount}').toList(),
-    );
-  }
-
-  void _selectUpgrade(String upgrade) {
-    ref
-        .read(deckProvider.notifier)
-        .addForgeUpgrade(widget.card.uniqueId, upgrade);
-    ref.read(runProvider.notifier).clearForgeSession();
-    Navigator.of(context).pop(upgrade);
-  }
-
-  String _getTranslation(String en, String fr) {
-    final locale = Localizations.localeOf(context).languageCode;
-    return locale == 'fr' ? fr : en;
-  }
-
-
-  String _getBuySlotButtonText(bool canBuySlot, int nextCost, int currentBonusSlots) {
-    final isFr = Localizations.localeOf(context).languageCode == 'fr';
-    if (currentBonusSlots >= 4 || _slots.length >= 5) {
-      return isFr
-          ? 'Capacité maximale atteinte (5 slots)'
-          : 'Maximum capacity reached (5 slots)';
-    } else {
-      return isFr
-          ? 'Acheter une fente supplémentaire ($nextCost Or)'
-          : 'Buy an additional slot ($nextCost Gold)';
-    }
+  void _choose(BuildContext context, WidgetRef ref, String runeId) {
+    ref.read(deckProvider.notifier).addForgeUpgrade(card.uniqueId, '$runeId:1');
+    Navigator.of(context).pop(runeId);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final runState = ref.watch(runProvider);
-    final currentGold = ref.watch(inventoryProvider).gold;
+  Widget build(BuildContext context, WidgetRef ref) {
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
-    final bonusCount = runState.bonusForgeSlots;
-    final nextCost = bonusCount < 4 ? [50, 80, 120, 175][bonusCount] : 0;
-    final canBuySlot = bonusCount < 4 && _slots.length < 5;
-    final hasEnoughGold = currentGold >= nextCost;
-
-    return Dialog.fullscreen(
-      backgroundColor: const Color(0xFF0D0D1A),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black,
-                const Color(0xFF1E1000).withAlpha(180),
-                Colors.black,
-              ],
-            ),
+    final rows = [
+      for (final id in offer)
+        if (ForgeUpgradeData.getById(id) case final rune?)
+          ForgeSlotRow(
+            rune: rune,
+            title: rune.nameAt(1, locale),
+            description: rune.getDescription(1, locale, card.data, card.rarity),
+            actionLabel: l10n.fusionRuneChoose,
+            onAction: () => _choose(context, ref, id),
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // HEADER
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getTranslation('FORGE UPGRADE', 'AMÉLIORATION FORGE'),
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getTranslation(
-                              'Select an upgrade slot or reroll options',
-                              'Choisissez une amélioration ou relancez les options',
-                            ),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+    ];
+
+    // Ni annulation ni retour : le dialogue ne se ferme que par un choix (A1).
+    return PopScope(
+      canPop: false,
+      child: Dialog.fullscreen(
+        backgroundColor: const Color(0xFF0D0D1A),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black,
+                  const Color(0xFF1E1000).withAlpha(180),
+                  Colors.black,
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.fusionRuneTitle,
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black38,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.amberAccent.withAlpha(100)),
-                        ),
-                        child: Row(
-                           children: [
-                            const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              '$currentGold',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.fusionRuneSubtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Divider(color: Colors.white24, height: 1),
-                  const SizedBox(height: 24),
-
-                  // MAIN RESPONSIVE CONTENT
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 720;
-
-                        // Left panel: Card
-                        final cardPanel = SizedBox(
-                          width: isDesktop ? 240 : double.infinity,
-                          child: ForgeCardPreview(
-                            card: widget.card,
-                            locale: locale,
-                            l10n: l10n,
-                          ),
-                        );
-
-                        // Right panel: Scrollable list of options + Buy slot button
-                        final listPanel = Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: Text(
-                                  _getTranslation('AVAILABLE FORGE SLOTS', 'OFFRES DE LA FORGE'),
-                                  style: const TextStyle(
-                                    color: Colors.amber,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: ListView(
-                                  children: [
-                                    ..._slots.map((slot) => ForgeSlotRow(
-                                          slot: slot,
-                                          card: widget.card,
-                                          currentGold: currentGold,
-                                          locale: locale,
-                                          l10n: l10n,
-                                          onReroll: () => _rerollSlot(slot.index, slot.rerollCost),
-                                          onSelect: () => _selectUpgrade(slot.upgrade),
-                                        )),
-                                    const SizedBox(height: 16),
-                                    ForgeBuySlotButton(
-                                      isEnabled: canBuySlot && hasEnoughGold,
-                                      text: _getBuySlotButtonText(canBuySlot, nextCost, runState.bonusForgeSlots),
-                                      onPressed: _onBuySlotTapped,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (isDesktop) {
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              cardPanel,
-                              const SizedBox(width: 48),
-                              listPanel,
-                            ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Divider(color: Colors.white24, height: 1),
+                    const SizedBox(height: 24),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isDesktop = constraints.maxWidth >= 720;
+                          final cardPanel = SizedBox(
+                            width: isDesktop ? 240 : double.infinity,
+                            child: ForgeCardPreview(
+                              card: card,
+                              locale: locale,
+                              l10n: l10n,
+                            ),
                           );
-                        } else {
+                          final listPanel = Expanded(
+                            child: ListView(children: rows),
+                          );
+                          if (isDesktop) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                cardPanel,
+                                const SizedBox(width: 48),
+                                listPanel,
+                              ],
+                            );
+                          }
                           return Column(
                             children: [
                               cardPanel,
@@ -456,26 +126,11 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                               listPanel,
                             ],
                           );
-                        }
-                      },
-                    ),
-                  ),
-
-                  // FOOTER / ACTIONS
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GameButton(
-                        text: _getTranslation('Cancel', 'Annuler'),
-                        onPressed: () => Navigator.of(context).pop(),
-                        baseColor: Colors.white70,
-                        height: 44,
-                        width: 140,
+                        },
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

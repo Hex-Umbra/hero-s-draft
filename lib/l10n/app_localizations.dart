@@ -1298,6 +1298,36 @@ abstract class AppLocalizations {
   /// **'Confirm Merge'**
   String get confirmMerge;
 
+  /// No description provided for @mergeRunesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Runes: {runes}'**
+  String mergeRunesLabel(String runes);
+
+  /// No description provided for @mergeRunesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Runes: none'**
+  String get mergeRunesNone;
+
+  /// No description provided for @fusionRuneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MERGE — CHOOSE A RUNE'**
+  String get fusionRuneTitle;
+
+  /// No description provided for @fusionRuneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The card keeps its three copies\' runes and gains one more, at level 1.'**
+  String get fusionRuneSubtitle;
+
+  /// No description provided for @fusionRuneChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get fusionRuneChoose;
+
   /// No description provided for @statusPoison.
   ///
   /// In en, this message translates to:

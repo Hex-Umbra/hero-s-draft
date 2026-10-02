@@ -750,6 +750,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get confirmMerge => 'Confirmer la fusion';
 
   @override
+  String mergeRunesLabel(String runes) {
+    return 'Runes : $runes';
+  }
+
+  @override
+  String get mergeRunesNone => 'Runes : aucune';
+
+  @override
+  String get fusionRuneTitle => 'FUSION — CHOISISSEZ UNE RUNE';
+
+  @override
+  String get fusionRuneSubtitle =>
+      'La carte garde les runes de ses trois exemplaires et en reçoit une de plus, au niveau 1.';
+
+  @override
+  String get fusionRuneChoose => 'Choisir';
+
+  @override
   String statusPoison(int value) {
     return 'Poison : $value';
   }

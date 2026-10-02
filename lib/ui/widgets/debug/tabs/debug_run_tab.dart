@@ -56,14 +56,6 @@ class DebugRunTab extends ConsumerWidget {
             (s) => s.copyWith(cardsPerTurn: v),
           ),
         ),
-        DebugNumberField(
-          label: 'Slots de forge bonus',
-          value: run.bonusForgeSlots,
-          onSubmitted: (v) => DebugActions.updateRun(
-            ref.read,
-            (s) => s.copyWith(bonusForgeSlots: v),
-          ),
-        ),
         TextButton(
           onPressed: () {
             DebugActions.advanceToNextAct(ref.read);

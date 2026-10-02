@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 
@@ -138,5 +140,41 @@ class ForgeRuneRules {
     // D3 : une seule rune de chaque type par carte — une rune portée ne se
     // repropose jamais, plafond atteint ou non (D75 en est un cas).
     return !carried.containsKey(rune.id);
+  }
+
+  /// Jusqu'à [count] ids **distincts** de runes du [catalog] que le prédicat
+  /// accepte sur [card], tirés pondérés par `weight`, sans remise (D3, D65 ;
+  /// spec P-43 E2, A2, §4.4) : moins s'il y en a moins, aucun s'il n'y en a
+  /// pas. Une fonction pure, sur ses entrées ; [card] est la carte qui reçoit
+  /// la rune — la carte fusionnée, au rang qu'elle atteint. Un poids nul ou
+  /// négatif ne pèse rien ; des runes éligibles qui ne pèsent rien se tirent
+  /// encore, à parts égales : jamais aucune tant qu'une existe (D65).
+  static List<String> drawRunes(
+    CardInstance card,
+    Iterable<ForgeUpgradeData> catalog,
+    Random rng, {
+    required int count,
+  }) {
+    final pool = [
+      for (final rune in catalog)
+        if (isEligible(rune, card, catalog)) rune,
+    ];
+    final drawn = <String>[];
+    while (drawn.length < count && pool.isNotEmpty) {
+      final weights = [for (final rune in pool) max(0, rune.weight)];
+      final total = weights.fold(0, (sum, weight) => sum + weight);
+      var index = 0;
+      if (total == 0) {
+        index = rng.nextInt(pool.length);
+      } else {
+        var pick = rng.nextInt(total);
+        while (pick >= weights[index]) {
+          pick -= weights[index];
+          index++;
+        }
+      }
+      drawn.add(pool.removeAt(index).id);
+    }
+    return drawn;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -27,12 +29,16 @@ class RestCardSelectionScreen extends ConsumerWidget {
 
   void _onCardTapped(BuildContext context, WidgetRef ref, CardInstance card) async {
     if (isForge) {
-      // Une carte à qui plus aucune rune ne peut s'offrir est refusée avant
-      // le dialogue, avec son motif : la forge ne s'ouvre jamais vide (spec
-      // P-43 E1, A11).
-      final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
-      if (!catalog
-          .any((rune) => ForgeRuneRules.isEligible(rune, card, catalog))) {
+      // La forge du feu tire son offre comme la fusion (spec P-43 E2, §4.4) ;
+      // une carte à qui aucune rune ne s'offre est refusée avant le
+      // dialogue, avec son motif (spec P-43 E1, A11).
+      final offer = ForgeRuneRules.drawRunes(
+        card,
+        GameDataRegistry.instance?.forgeUpgrades ?? const [],
+        Random(),
+        count: 3,
+      );
+      if (offer.isEmpty) {
         context.showNotification(
           AppLocalizations.of(context)!.forgeNoEligibleRune,
           type: NotificationType.error,
@@ -43,7 +49,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
       final selectedUpgrade = await showDialog<String>(
         context: context,
         barrierDismissible: false,
-        builder: (context) => ForgeUpgradeDialog(card: card),
+        builder: (context) => ForgeUpgradeDialog(card: card, offer: offer),
       );
 
       if (selectedUpgrade != null) {

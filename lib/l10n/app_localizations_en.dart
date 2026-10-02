@@ -742,6 +742,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmMerge => 'Confirm Merge';
 
   @override
+  String mergeRunesLabel(String runes) {
+    return 'Runes: $runes';
+  }
+
+  @override
+  String get mergeRunesNone => 'Runes: none';
+
+  @override
+  String get fusionRuneTitle => 'MERGE — CHOOSE A RUNE';
+
+  @override
+  String get fusionRuneSubtitle =>
+      'The card keeps its three copies\' runes and gains one more, at level 1.';
+
+  @override
+  String get fusionRuneChoose => 'Choose';
+
+  @override
   String statusPoison(int value) {
     return 'Poison: $value';
   }

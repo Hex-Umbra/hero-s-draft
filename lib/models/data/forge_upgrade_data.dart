@@ -272,14 +272,18 @@ class ForgeUpgradeData {
     return valueAt(carried + level) - valueAt(carried);
   }
 
+  /// Le nom de la rune au niveau [level] : le niveau ne s'écrit que si la
+  /// rune en a plus d'un (`maxLevel` autre que 1). La règle des infobulles
+  /// (spec P-43 E1, §5.2), que suivent aussi la ligne de rune et le dialogue
+  /// de fusion (spec P-43 E2, §4.11).
+  String nameAt(int level, String locale) =>
+      maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
+
   /// La ligne de la rune dans l'infobulle d'une carte, au niveau [level] que
   /// joue le moteur — le total de ses exemplaires (spec P-43 E1, §5.2) :
-  /// `<nom>[ <niveau>] : <description>`. Le niveau ne s'écrit que si la rune
-  /// en a plus d'un (`maxLevel` autre que 1).
-  String tooltipLine(int level, String locale, CardData card, CardRarity rarity) {
-    final name = maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
-    return '$name : ${getDescription(level, locale, card, rarity)}';
-  }
+  /// `<nom>[ <niveau>] : <description>`.
+  String tooltipLine(int level, String locale, CardData card, CardRarity rarity) =>
+      '${nameAt(level, locale)} : ${getDescription(level, locale, card, rarity)}';
 
   /// Les lignes des runes [runes] dans l'infobulle de [card] à [rarity] : une
   /// par id, au niveau total de ses exemplaires ([levelsOf]) ; une rune absente

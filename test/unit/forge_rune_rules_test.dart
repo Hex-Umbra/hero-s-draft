@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
@@ -7,7 +9,13 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
 import 'shipped_data.dart';
 
-ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
+ForgeUpgradeData _rune(
+  String id, {
+  bool stackable = true,
+  int? maxLevel,
+  int minFusionRank = 1,
+  int weight = 10,
+}) =>
     ForgeUpgradeData(
       id: id,
       nameEn: id,
@@ -17,8 +25,10 @@ ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
       icon: '',
       color: '',
       pools: const ['common'],
+      minFusionRank: minFusionRank,
       stackable: stackable,
       maxLevel: maxLevel,
+      weight: weight,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -187,6 +197,72 @@ void main() {
       expect(
         ForgeRuneRules.fusionOptionsFor(_cardWith(['enduring:1', 'enduring:1'])),
         isEmpty,
+      );
+    });
+  });
+
+  // L'offre de la fusion (spec P-43 E2, A2, §4.4).
+  group('ForgeRuneRules.drawRunes', () {
+    // Une Frappe peu commune : le rang 1 qu'atteint une premiere fusion.
+    final card = CardInstance(
+      data: const CardData(
+        id: 'strike',
+        cost: 1,
+        type: CardType.attack,
+        category: CardCategory.global,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [CardEffect(type: 'damage', value: 6)],
+      ),
+      rarity: CardRarity.uncommon,
+    );
+    // Refusee a une peu commune : elle attend le rang 2.
+    final refused = _rune('refused', minFusionRank: 2);
+
+    test('au plus count ids distincts, tous eligibles', () {
+      const eligible = ['a', 'b', 'c', 'd', 'e'];
+      final catalog = [for (final id in eligible) _rune(id), refused];
+      for (var seed = 0; seed < 20; seed++) {
+        final drawn =
+            ForgeRuneRules.drawRunes(card, catalog, Random(seed), count: 3);
+        expect(drawn, hasLength(3), reason: 'graine $seed');
+        expect(drawn.toSet(), hasLength(3), reason: 'graine $seed');
+        expect(drawn, everyElement(isIn(eligible)), reason: 'graine $seed');
+      }
+    });
+
+    test('moins s il y en a moins', () {
+      final drawn = ForgeRuneRules.drawRunes(
+          card, [_rune('a'), _rune('b'), refused], Random(1),
+          count: 3);
+      expect(drawn.toSet(), {'a', 'b'});
+    });
+
+    test('aucune s il n y en a pas', () {
+      expect(ForgeRuneRules.drawRunes(card, [refused], Random(1), count: 3),
+          isEmpty);
+    });
+
+    test('le tirage suit weight', () {
+      final catalog = [_rune('heavy', weight: 90), _rune('light', weight: 10)];
+      final rng = Random(42);
+      var heavy = 0;
+      for (var i = 0; i < 2000; i++) {
+        if (ForgeRuneRules.drawRunes(card, catalog, rng, count: 1).single ==
+            'heavy') {
+          heavy++;
+        }
+      }
+      expect(heavy / 2000, inInclusiveRange(0.86, 0.94));
+    });
+
+    // Review Focus 1 : un fichier peut declarer weight 0 ; D65 veut une offre
+    // tant qu'une rune est eligible.
+    test('des runes de poids nul se tirent encore', () {
+      final catalog = [_rune('a', weight: 0), _rune('b', weight: 0)];
+      expect(
+        ForgeRuneRules.drawRunes(card, catalog, Random(3), count: 3).toSet(),
+        {'a', 'b'},
       );
     });
   });

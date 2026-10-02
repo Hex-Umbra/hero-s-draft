@@ -103,7 +103,6 @@ class _RestScreenState extends ConsumerState<RestScreen> {
   }
 
   void _leave() {
-    ref.read(runProvider.notifier).clearForgeSession();
     ref.read(runProvider.notifier).completeCurrentNode();
     Navigator.of(context).pop();
   }

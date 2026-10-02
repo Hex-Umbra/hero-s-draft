@@ -8,6 +8,12 @@ import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
+import 'package:roguelike_card_game/ui/widgets/forge/forge_slot_row.dart';
+import 'package:roguelike_card_game/ui/widgets/forge_upgrade_dialog.dart';
+import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
+
+import '../unit/shipped_data.dart';
 
 void main() {
   const strikeCard = CardData(
@@ -53,6 +59,35 @@ void main() {
         home: DeckScreen(allowMerge: allowMerge),
       ),
     );
+  }
+
+  /// Une vue large : le dialogue de fusion est plein écran.
+  void largeView(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1600, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  /// Un deck de [cards], sur le registre des runes livrées, que l'écran de
+  /// deck lit pour tirer l'offre.
+  ProviderContainer deckOf(List<CardInstance> cards) {
+    shippedRuneRegistry(shippedRuneIds());
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    for (final card in cards) {
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
+    }
+    return container;
+  }
+
+  List<String> messagesOf(ProviderContainer container) =>
+      [for (final n in container.read(notificationProvider)) n.message];
+
+  /// Laisse expirer les notifications avant de démonter l'arbre.
+  Future<void> settle(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpWidget(const SizedBox());
   }
 
   testWidgets('DeckScreen renders all cards from the seeded master deck', (
@@ -204,4 +239,117 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  // Spec P-43 E2, A1, §4.5 : la fusion, puis le choix d'une rune.
+  testWidgets('trois Frappes fusionnent, et la carte recoit la rune choisie '
+      'parmi trois', (WidgetTester tester) async {
+    largeView(tester);
+    final strike = shippedCard('strike_basic');
+    final container =
+        deckOf([for (var i = 0; i < 3; i++) CardInstance(data: strike)]);
+
+    await tester.pumpWidget(buildApp(container));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('FUSIONNER (3)'));
+    await tester.pumpAndSettle();
+
+    // Peu commune : Tranchant, Brulant, Congelant et Surcharge s'offrent ;
+    // trois sont tirees.
+    expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
+    expect(find.byType(ForgeSlotRow), findsNWidgets(3));
+    expect(messagesOf(container), isEmpty);
+
+    await tester.tap(find.text('Choisir').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ForgeUpgradeDialog), findsNothing);
+    final merged = container.read(deckProvider).masterDeck.single;
+    expect(merged.rarity, CardRarity.uncommon);
+    final (id, level) = ForgeUpgradeData.parseRef(merged.forgeUpgrades.single)!;
+    expect(level, 1);
+    expect(id, isIn(['sharp', 'burning', 'freezing', 'shocking']));
+    expect(messagesOf(container),
+        ['Fusion réussie : Frappe est maintenant Niveau 2 !']);
+    await settle(tester);
+  });
+
+  testWidgets('trois Concentrations communes fusionnent sans choix : le '
+      'succes, puis le motif', (WidgetTester tester) async {
+    largeView(tester);
+    final container = deckOf([
+      for (var i = 0; i < 3; i++)
+        CardInstance(data: shippedCard('concentration')),
+    ]);
+
+    await tester.pumpWidget(buildApp(container));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('FUSIONNER (3)'));
+    await tester.pumpAndSettle();
+
+    // Peu commune, une carte gratuite qui pioche : aucune rune ne s'offre.
+    expect(find.byType(ForgeUpgradeDialog), findsNothing);
+    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        isEmpty);
+    expect(messagesOf(container), [
+      'Fusion réussie : Concentration est maintenant Niveau 2 !',
+      'Aucune rune ne peut être ajoutée à cette carte.',
+    ]);
+    await settle(tester);
+  });
+
+  testWidgets('le rang atteint : trois Concentrations peu communes, fusionnees '
+      'en rare, n offrent que Veloce', (WidgetTester tester) async {
+    largeView(tester);
+    final container = deckOf([
+      for (var i = 0; i < 3; i++)
+        CardInstance(
+          data: shippedCard('concentration'),
+          rarity: CardRarity.uncommon,
+        ),
+    ]);
+
+    await tester.pumpWidget(buildApp(container));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('FUSIONNER (3)'));
+    await tester.pumpAndSettle();
+
+    // Jugee au rang des exemplaires, peu commune, l'offre serait vide.
+    expect(find.byType(ForgeSlotRow), findsOneWidget);
+    expect(find.text('Véloce'), findsOneWidget);
+
+    await tester.tap(find.text('Choisir'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        ['quick:1']);
+    expect(messagesOf(container),
+        ['Fusion réussie : Concentration est maintenant Niveau 3 !']);
+    await settle(tester);
+  });
+
+  testWidgets('la case fusionnee sort de la grille : le succes s affiche '
+      'quand meme', (WidgetTester tester) async {
+    largeView(tester);
+    final strike = shippedCard('strike_basic');
+    final container = deckOf([
+      CardInstance(data: strike, rarity: CardRarity.uncommon),
+      CardInstance(data: shippedCard('defend_basic')),
+      for (var i = 0; i < 3; i++) CardInstance(data: strike),
+    ]);
+
+    await tester.pumpWidget(buildApp(container));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('FUSIONNER (3)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choisir').first);
+    await tester.pumpAndSettle();
+
+    // Le groupe fusionne, dernier de la grille, en est sorti : la carte
+    // fusionnee a rejoint la Frappe peu commune (`mergeCards` l'ajoute en
+    // fin de deck), et sa case a ete demontee pendant le choix.
+    expect(find.byType(UiCard), findsNWidgets(2));
+    expect(messagesOf(container),
+        ['Fusion réussie : Frappe est maintenant Niveau 2 !']);
+    await settle(tester);
+  });
 }

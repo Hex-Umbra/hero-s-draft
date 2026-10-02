@@ -121,10 +121,14 @@ void main() {
 
       notifier.initializeStarterDeck([card1, card2, card3]);
 
-      notifier.mergeCards([card1.uniqueId, card2.uniqueId, card3.uniqueId]);
+      final merged =
+          notifier.mergeCards([card1.uniqueId, card2.uniqueId, card3.uniqueId]);
 
       expect(notifier.state.masterDeck.length, 1);
       final mergedCard = notifier.state.masterDeck.first;
+      // La carte rendue est celle que le deck porte : l'ecran de deck tire
+      // l'offre sur elle (spec P-43 E2, §4.5).
+      expect(merged, same(mergedCard));
       expect(mergedCard.rarity, CardRarity.uncommon);
       expect(mergedCard.forgeUpgrades, ['sharp:2', 'hardened:1']);
     });
@@ -200,7 +204,8 @@ void main() {
       );
       notifier.initializeStarterDeck(copies);
 
-      notifier.mergeCards(copies.map((c) => c.uniqueId).toList());
+      expect(notifier.mergeCards(copies.map((c) => c.uniqueId).toList()),
+          isNull);
 
       expect(notifier.state.masterDeck, hasLength(3));
       expect(
@@ -218,7 +223,7 @@ void main() {
       ];
       notifier.initializeStarterDeck(trio);
 
-      notifier.mergeCards(trio.map((c) => c.uniqueId).toList());
+      expect(notifier.mergeCards(trio.map((c) => c.uniqueId).toList()), isNull);
 
       expect(notifier.state.masterDeck, trio);
     });
@@ -227,7 +232,7 @@ void main() {
       final trio = [_card('strike'), _card('strike'), _card('defend')];
       notifier.initializeStarterDeck(trio);
 
-      notifier.mergeCards(trio.map((c) => c.uniqueId).toList());
+      expect(notifier.mergeCards(trio.map((c) => c.uniqueId).toList()), isNull);
 
       expect(notifier.state.masterDeck, trio);
     });
