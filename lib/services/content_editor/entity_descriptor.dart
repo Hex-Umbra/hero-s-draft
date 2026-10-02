@@ -329,9 +329,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Amélioration de forge',
     directory: 'forge_upgrades',
     // `pools` est la seule cle que la famille 3 exige : les autres cles
-    // obligatoires d'une rune — `deltas`, et ce que la spec P-43 E1 y ajoute
-    // (§3.1) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme, que la
-    // famille 7 appelle. Un fait a un seul endroit.
+    // obligatoires d'une rune — `deltas`, `maxLevel` (spec P-43 E1, §3.1) et
+    // `minFusionRank` (spec P-43 E2, A8) — sont refusees par
+    // `ForgeUpgradeData.fromJson` lui-meme, que la famille 7 appelle. Un fait
+    // a un seul endroit.
     requiredKeys: const {'pools'},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
     // Le type d'un delta, lu sur le parseur (ADR-100 D1).
@@ -366,14 +367,17 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // qu'il ne veut pas.
     //
     // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
-    // pas monter une rune sans fin (spec P-43 E1, §6). `eligibleEffects` y
-    // porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
-    // absente, elle vaut « aucune », comme `classes` d'un passif.
+    // pas monter une rune sans fin (spec P-43 E1, §6). `minFusionRank` y vaut
+    // 1 : la rune s'offre des la premiere fusion ; `eco` et `quick` en
+    // demandent 2 (spec P-43 E2, D48). `eligibleEffects` y porte l'exemple du
+    // delta, `damage` ; `excludesRunes` n'y figure pas : absente, elle vaut
+    // « aucune », comme `classes` d'un passif.
     template: '''
 {
   "icon": "flash_on_rounded",
   "color": "amberAccent",
   "pools": ["common"],
+  "minFusionRank": 1,
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "eligibleEffects": ["damage"],
   "excludesEffects": [],

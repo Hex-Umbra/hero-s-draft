@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
@@ -12,6 +13,7 @@ const _allTypes = ['attack', 'skill', 'power'];
 /// Ce que déclare une rune, sous une forme comparable.
 Map<String, Object?> _declared(ForgeUpgradeData rune) => {
       'pools': rune.pools,
+      'minFusionRank': rune.minFusionRank,
       'eligibleCardTypes': rune.eligibleCardTypes,
       'eligibleEffects': rune.eligibleEffects,
       'excludesEffects': rune.excludesEffects,
@@ -26,6 +28,7 @@ Map<String, Object?> _declared(ForgeUpgradeData rune) => {
 
 Map<String, Object?> _rune({
   List<String> pools = _threePools,
+  int minFusionRank = 1,
   List<String>? eligibleCardTypes,
   List<String>? eligibleEffects,
   List<String> excludesEffects = const [],
@@ -39,6 +42,7 @@ Map<String, Object?> _rune({
 }) =>
     {
       'pools': pools,
+      'minFusionRank': minFusionRank,
       'eligibleCardTypes': eligibleCardTypes,
       'eligibleEffects': eligibleEffects,
       'excludesEffects': excludesEffects,
@@ -59,9 +63,10 @@ Map<String, Object?> _status(String statusId) => {
       'durationPerLevel': 1,
     };
 
-/// Les huit runes, telles que la spec P-43 E1 les fixe (§3.2). Les `weight`
-/// et les `eligibleCardTypes` des six runes autres que `sharp` et `hardened`
-/// sont ceux que la simulation lit : ils ne bougent pas (§9).
+/// Les huit runes, telles que les specs P-43 E1 (§3.2) et E2 (§3.2) les
+/// fixent : `minFusionRank` 2 pour `quick` et `eco` (D48), 1 pour les six
+/// autres (A7). Les `weight` et les `eligibleCardTypes` sont ceux que la
+/// simulation lit : ils ne bougent pas (spec P-43 E2, §9).
 final _expected = <String, Map<String, Object?>>{
   'sharp': _rune(
     eligibleEffects: const ['damage'],
@@ -81,6 +86,7 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'quick': _rune(
     pools: const ['uncommon', 'rare'],
+    minFusionRank: 2,
     eligibleCardTypes: _allTypes,
     maxLevel: 1,
     deltas: const [
@@ -90,6 +96,7 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'eco': _rune(
     pools: const ['rare'],
+    minFusionRank: 2,
     eligibleCardTypes: _allTypes,
     requiresMinCost: 1,
     maxLevel: 1,
@@ -131,38 +138,48 @@ final _expected = <String, Map<String, Object?>>{
   ),
 };
 
-const _attack = {'sharp', 'burning', 'freezing', 'shocking', 'quick', 'eco'};
+/// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
+/// la deuxième (rang 2).
+const _attackRank1 = {'sharp', 'burning', 'freezing', 'shocking'};
+const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
-/// La matrice de l'offre sur les 23 cartes livrées, sans rune, à leur rareté de
-/// donnée — `pools` mis à part, que les tirages appliquent ensuite (§4.8).
-const _offers = <String, Set<String>>{
-  'strike_basic': _attack,
-  'heavy_strike': _attack,
-  'fireball': _attack,
-  'ice_bolt': _attack,
-  'poison_stab': _attack,
-  'quick_attack': _attack,
-  'sweep': _attack,
-  'thunder_clap': _attack,
-  'reckless_strike': _attack,
-  'magic_missile': _attack,
-  'warcry': {..._attack, 'hardened'},
-  'smite': {..._attack, 'hardened'},
-  'awakening': {'hardened', 'quick', 'eco'},
-  'defend_basic': {'hardened', 'quick', 'eco'},
-  'iron_wall': {'hardened', 'quick', 'eco'},
-  'holy_shield': {'hardened', 'quick', 'eco', 'enduring'},
-  'heal_potion': {'quick', 'eco', 'enduring'},
-  'demon_form': {'quick', 'eco'},
-  'metallicize': {'quick', 'eco'},
-  'rage_form': {'quick', 'eco'},
-  'concentration': {'quick'},
-  'focus': {'quick'},
-  'mana_surge': {'quick'},
+/// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
+/// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
+/// la table de la spec P-43 E2, §4.12, sans les trois runes de la partie 2.
+/// `pools` mis à part, que le tirage de la boutique applique encore.
+const _offers = <String, (Set<String>, Set<String>)>{
+  'strike_basic': (_attackRank1, _attackRank2),
+  'heavy_strike': (_attackRank1, _attackRank2),
+  'fireball': (_attackRank1, _attackRank2),
+  'ice_bolt': (_attackRank1, _attackRank2),
+  'poison_stab': (_attackRank1, _attackRank2),
+  'quick_attack': (_attackRank1, _attackRank2),
+  'sweep': (_attackRank1, _attackRank2),
+  'thunder_clap': (_attackRank1, _attackRank2),
+  'warcry': ({..._attackRank1, 'hardened'}, {..._attackRank2, 'hardened'}),
+  'awakening': ({'hardened'}, {'hardened', 'quick', 'eco'}),
+  'defend_basic': ({'hardened'}, {'hardened', 'quick', 'eco'}),
+  'iron_wall': ({'hardened'}, {'hardened', 'quick', 'eco'}),
+  'heal_potion': ({'enduring'}, {'enduring', 'quick', 'eco'}),
+  'demon_form': (<String>{}, {'quick', 'eco'}),
+  'metallicize': (<String>{}, {'quick', 'eco'}),
+  'concentration': (<String>{}, {'quick'}),
+  'focus': (<String>{}, {'quick'}),
+};
+
+/// Les six signatures, `unique` : rang 0, elles ne fusionnent jamais et
+/// aucune rune ne s'offre à elles (spec P-43 E2, §4.12).
+const _signatures = {
+  'reckless_strike',
+  'rage_form',
+  'magic_missile',
+  'mana_surge',
+  'smite',
+  'holy_shield',
 };
 
 /// Les huit runes livrées, et l'offre qu'elles font aux 23 cartes livrées
-/// (spec P-43 E1, §3.2, §4.8, §8).
+/// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -172,8 +189,16 @@ void main() {
     registry = await loadGameDataRegistry(rootBundle);
   });
 
-  // `maxLevel` est obligatoire au chargement (A8) : une rune chargée porte la
-  // clé, `null` compris.
+  CardData cardOf(String id) => registry.cards.singleWhere((c) => c.id == id);
+
+  Set<String> offeredTo(CardInstance card) => {
+        for (final rune in registry.forgeUpgrades)
+          if (ForgeRuneRules.isEligible(rune, card, registry.forgeUpgrades))
+            rune.id,
+      };
+
+  // `maxLevel` et `minFusionRank` sont obligatoires au chargement : une rune
+  // chargée porte les deux clés.
   for (final MapEntry(key: id, value: expected) in _expected.entries) {
     test('$id declare ce que la spec fixe', () {
       final rune = registry.forgeUpgrades.singleWhere((r) => r.id == id);
@@ -182,21 +207,29 @@ void main() {
   }
 
   test('la matrice couvre les 23 cartes livrees', () {
-    expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
+    expect(registry.cards.map((c) => c.id).toSet(),
+        {..._offers.keys, ..._signatures});
   });
 
-  for (final MapEntry(key: cardId, value: runes) in _offers.entries) {
-    test('$cardId recoit ${runes.length} rune(s)', () {
-      final card =
-          CardInstance(data: registry.cards.singleWhere((c) => c.id == cardId));
-      expect(
-        {
-          for (final rune in registry.forgeUpgrades)
-            if (ForgeRuneRules.isEligible(rune, card, registry.forgeUpgrades))
-              rune.id,
-        },
-        runes,
-      );
+  for (final MapEntry(key: cardId, value: (rank1, rank2)) in _offers.entries) {
+    for (final (rarity, runes) in [
+      (CardRarity.uncommon, rank1),
+      (CardRarity.rare, rank2),
+    ]) {
+      test('$cardId ${rarity.name} recoit ${runes.length} rune(s)', () {
+        expect(
+          offeredTo(CardInstance(data: cardOf(cardId), rarity: rarity)),
+          runes,
+        );
+      });
+    }
+  }
+
+  for (final cardId in _signatures) {
+    test('$cardId, unique, ne recoit aucune rune', () {
+      final card = CardInstance(data: cardOf(cardId));
+      expect(card.rarity, CardRarity.unique);
+      expect(offeredTo(card), isEmpty);
     });
   }
 }

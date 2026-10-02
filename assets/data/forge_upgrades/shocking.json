@@ -6,6 +6,7 @@
   "description_fr": "Applique {tier} Électrocution",
   "icon": "flash_on_rounded",
   "color": "amberAccent",
+  "minFusionRank": 1,
   "pools": [
     "common",
     "uncommon",

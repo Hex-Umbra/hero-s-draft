@@ -94,12 +94,14 @@ class ForgeRuneRules {
   }
 
   /// La rune [rune] peut-elle s'offrir à [card] ? Le prédicat unique de
-  /// l'éligibilité (D44, D51, D61, D75 ; spec P-43 E1, A3, §4.6) : une
-  /// fonction pure, sur le modèle de `CardData.isOfferableTo` — toute règle
-  /// est un champ du fichier de rune, aucune n'est un `case` par id. [catalog]
-  /// sert à lire les exclusions des runes que la carte porte déjà. `pools`
-  /// n'en est pas une condition : c'est le ciblage par rareté des tirages,
-  /// qui le gardent (D68).
+  /// l'éligibilité (D3, D44, D48, D51, D61 ; spec P-43 E1, A3, §4.6 ; spec
+  /// P-43 E2, §4.3) : une fonction pure, sur le modèle de
+  /// `CardData.isOfferableTo` — toute règle est un champ du fichier de rune,
+  /// aucune n'est un `case` par id. [card] est la carte qui reçoit la rune, à
+  /// son rang : la carte fusionnée au rang qu'elle atteint, la carte
+  /// elle-même en boutique. [catalog] sert à lire les exclusions des runes
+  /// que la carte porte déjà. `pools` n'en est pas une condition : c'est le
+  /// ciblage par rareté des tirages, qui le gardent (D68).
   static bool isEligible(
     ForgeUpgradeData rune,
     CardInstance card,
@@ -117,6 +119,10 @@ class ForgeRuneRules {
     if (rune.requiresExhaust && !card.data.isExhaust) return false;
     if (card.currentCost < rune.requiresMinCost) return false;
 
+    // D48 : le rang de la carte qui reçoit la rune ; une commune et une
+    // carte `unique`, de rang 0, n'en reçoivent aucune.
+    if (rune.minFusionRank > card.rarity.fusionRank) return false;
+
     // La symétrie des exclusions : une rune portée absente du catalogue est
     // ignorée.
     final carried = ForgeUpgradeData.levelsOf(card.forgeUpgrades);
@@ -129,7 +135,8 @@ class ForgeRuneRules {
       }
     }
 
-    // D75 : une rune dont la carte a atteint le plafond ne se repropose pas.
-    return rune.boundLevel(1, carried: carried[rune.id] ?? 0) >= 1;
+    // D3 : une seule rune de chaque type par carte — une rune portée ne se
+    // repropose jamais, plafond atteint ou non (D75 en est un cas).
+    return !carried.containsKey(rune.id);
   }
 }

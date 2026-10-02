@@ -81,8 +81,11 @@ void main() {
   testWidgets('aucune fente ne propose Endurci sur une Frappe', (tester) async {
     shippedRuneRegistry(const ['sharp', 'hardened']);
 
+    // Peu commune : une commune ne recoit plus de rune (spec P-43 E2, §4.3).
     final offered = await _offeredSlots(
-        tester, CardInstance(data: shippedCard('strike_basic')));
+        tester,
+        CardInstance(
+            data: shippedCard('strike_basic'), rarity: CardRarity.uncommon));
 
     expect(_ids(offered), {'sharp'});
   });
@@ -92,8 +95,11 @@ void main() {
     // Une carte gratuite, qui pioche : seule Veloce lui reste (D44).
     shippedRuneRegistry(const ['eco', 'quick']);
 
+    // Rare : Veloce attend le rang 2 (D48).
     final offered = await _offeredSlots(
-        tester, CardInstance(data: shippedCard('concentration')));
+        tester,
+        CardInstance(
+            data: shippedCard('concentration'), rarity: CardRarity.rare));
 
     expect(_ids(offered), {'quick'});
   });
@@ -104,8 +110,10 @@ void main() {
     // avant la borne (spec P-43 E1, §4.7).
     shippedRuneRegistry(const ['eco']);
 
+    // Rare : Econome attend le rang 2 (D48).
     final offered = await _offeredSlots(
-        tester, CardInstance(data: shippedCard('strike_basic')),
+        tester,
+        CardInstance(data: shippedCard('strike_basic'), rarity: CardRarity.rare),
         rerolls: 30);
 
     expect(offered, {'eco:1'});

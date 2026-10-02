@@ -124,16 +124,13 @@ class ShopController extends Notifier<ShopState> {
   }
 
   /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :
-  /// le prédicat les lit (spec P-43 E1, A12). `null` s'il ne lui reste aucune
-  /// rune éligible : la carte en reçoit une de moins.
+  /// le prédicat les lit (spec P-43 E1, A12) et n'en repropose aucune (D3).
+  /// `null` s'il ne lui reste aucune rune éligible : la carte en reçoit une
+  /// de moins.
   String? _rollRandomUpgrade(CardInstance card, Random rng) {
     final excludedIds =
         card.forgeUpgrades.map((u) => u.split(':')[0]).toList();
-    // Le repli sans exclusion ne repropose qu'une rune encore éligible, donc
-    // sans plafond atteint : deux `sharp` restent possibles, « une rune par
-    // type » est E2.
-    final rolledId = _rollUpgradeId(card, rng, excludedIds) ??
-        _rollUpgradeId(card, rng, []);
+    final rolledId = _rollUpgradeId(card, rng, excludedIds);
     if (rolledId == null) return null;
 
     int tier = 1;

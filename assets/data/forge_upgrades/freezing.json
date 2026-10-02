@@ -6,6 +6,7 @@
   "description_fr": "Applique {tier} Gel",
   "icon": "ac_unit_rounded",
   "color": "lightBlueAccent",
+  "minFusionRank": 1,
   "pools": [
     "common",
     "uncommon",

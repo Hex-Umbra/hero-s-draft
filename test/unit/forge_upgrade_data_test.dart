@@ -9,6 +9,7 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 Map<String, dynamic> _json([Map<String, dynamic> overrides = const {}]) => {
       'id': 'sharp',
       'pools': ['common'],
+      'minFusionRank': 1,
       'maxLevel': null,
       'deltas': [
         {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
@@ -208,6 +209,48 @@ void main() {
           containsPair('maxLevel', null));
       final capped = ForgeUpgradeData.fromJson(_json({'maxLevel': 2}));
       expect(ForgeUpgradeData.fromJson(capped.toJson()).maxLevel, 2);
+    });
+  });
+
+  // Spec P-43 E2, A8 : la cle est obligatoire, un entier d'au moins 1.
+  group('minFusionRank', () {
+    test('lu dans le fichier ; 1 au constructeur', () {
+      expect(
+        ForgeUpgradeData.fromJson(_json({'minFusionRank': 2})).minFusionRank,
+        2,
+      );
+      expect(
+        const ForgeUpgradeData(
+          id: 'x',
+          nameEn: 'x',
+          nameFr: 'x',
+          descriptionEn: '',
+          descriptionFr: '',
+          icon: '',
+          color: '',
+          pools: ['common'],
+        ).minFusionRank,
+        1,
+      );
+    });
+
+    test('refuse une rune sans minFusionRank', () {
+      expect(() => ForgeUpgradeData.fromJson(_json()..remove('minFusionRank')),
+          _refused('minFusionRank'));
+    });
+
+    test('refuse un minFusionRank nul, negatif, decimal ou null', () {
+      for (final bad in [0, -1, 1.5, null]) {
+        expect(() => ForgeUpgradeData.fromJson(_json({'minFusionRank': bad})),
+            _refused('minFusionRank'),
+            reason: '$bad');
+      }
+    });
+
+    test('toJson ecrit minFusionRank', () {
+      final rune = ForgeUpgradeData.fromJson(_json({'minFusionRank': 2}));
+      expect(rune.toJson(), containsPair('minFusionRank', 2));
+      expect(ForgeUpgradeData.fromJson(rune.toJson()).minFusionRank, 2);
     });
   });
 

@@ -60,6 +60,7 @@ void main() {
       final rune = ForgeUpgradeData.fromJson({
         'id': 'sharp',
         'pools': ['common'],
+        'minFusionRank': 1,
         'maxLevel': null,
         'deltas': [
           {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
@@ -72,6 +73,7 @@ void main() {
       final rune = ForgeUpgradeData.fromJson({
         'id': 'enduring',
         'pools': ['rare'],
+        'minFusionRank': 1,
         'stackable': false,
         'maxLevel': 1,
         'deltas': [

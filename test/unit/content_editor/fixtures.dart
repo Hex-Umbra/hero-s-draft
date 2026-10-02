@@ -51,6 +51,7 @@ ForgeUpgradeData fixtureRune(String id) => ForgeUpgradeData.fromJson({
       'description_en': 'x',
       'description_fr': 'x',
       'pools': ['common'],
+      'minFusionRank': 1,
       'maxLevel': null,
       'deltas': [
         {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},

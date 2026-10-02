@@ -6,6 +6,7 @@
   "description_fr": "Pioche +{tier} carte(s)",
   "icon": "style_rounded",
   "color": "amber",
+  "minFusionRank": 2,
   "pools": [
     "uncommon",
     "rare"

@@ -262,6 +262,7 @@ void main() {
         'icon',
         'color',
         'pools',
+        'minFusionRank',
         'eligibleCardTypes',
         'eligibleEffects',
         'excludesEffects',

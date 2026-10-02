@@ -67,8 +67,8 @@ Future<void> _settleNotifications(WidgetTester tester) async {
 void main() {
   testWidgets('une Concentration peu commune portant Veloce est refusee, avec '
       'le motif', (tester) async {
-    // Sa fente libre ne peut rien recevoir : Veloce est sa seule rune
-    // eligible, et son plafond est atteint.
+    // Rien ne s'offre a une peu commune qui pioche et ne coute rien : Veloce
+    // attend le rang 2 (D48), et la carte la porte deja (D3).
     final card = CardInstance(
       data: shippedCard('concentration'),
       rarity: CardRarity.uncommon,
@@ -86,9 +86,10 @@ void main() {
     await _settleNotifications(tester);
   });
 
-  testWidgets('une Frappe commune sans rune ouvre le dialogue de forge',
+  testWidgets('une Frappe peu commune sans rune ouvre le dialogue de forge',
       (tester) async {
-    final card = CardInstance(data: shippedCard('strike_basic'));
+    final card = CardInstance(
+        data: shippedCard('strike_basic'), rarity: CardRarity.uncommon);
     final container = await _pumpForgeSelection(tester, card);
 
     await tester.tap(find.byType(UiCard));

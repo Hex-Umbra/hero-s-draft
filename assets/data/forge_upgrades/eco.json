@@ -6,6 +6,7 @@
   "description_fr": "Gagne +{tier} Mana à l'utilisation",
   "icon": "diamond_rounded",
   "color": "cyanAccent",
+  "minFusionRank": 2,
   "pools": [
     "rare"
   ],

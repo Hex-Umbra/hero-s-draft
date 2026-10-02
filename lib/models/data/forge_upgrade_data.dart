@@ -16,6 +16,12 @@ class ForgeUpgradeData {
   final String icon;
   final String color;
   final List<String> pools;
+
+  /// Le rang de fusion minimal de la carte qui reçoit la rune (D48 ; spec
+  /// P-43 E2, A8, §4.3) : `eco` et `quick` attendent une carte rare. La clé
+  /// est obligatoire dans le fichier, un entier d'au moins 1 — une commune ne
+  /// porte jamais de rune ; le constructeur en laisse 1 aux tests.
+  final int minFusionRank;
   final List<String>? eligibleCardTypes;
 
   /// Les types d'effet dont la carte doit porter au moins un, parmi ses effets
@@ -62,6 +68,7 @@ class ForgeUpgradeData {
     required this.icon,
     required this.color,
     required this.pools,
+    this.minFusionRank = 1,
     this.eligibleCardTypes,
     this.eligibleEffects,
     this.excludesEffects = const [],
@@ -86,6 +93,7 @@ class ForgeUpgradeData {
       icon: json['icon'] as String? ?? '',
       color: json['color'] as String? ?? '',
       pools: List<String>.from(json['pools'] as List? ?? []),
+      minFusionRank: _readMinFusionRank(id, json['minFusionRank']),
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
@@ -171,6 +179,19 @@ class ForgeUpgradeData {
     return value;
   }
 
+  /// La clé est obligatoire (spec P-43 E2, A8) : un entier d'au moins 1.
+  /// Facultative, elle laisserait une rune neuve s'offrir dès la première
+  /// fusion faute de l'avoir dit — le précédent de `maxLevel`.
+  static int _readMinFusionRank(String id, Object? raw) {
+    if (raw is! int || raw < 1) {
+      throw FormatException(
+        '$id : minFusionRank est obligatoire, un entier d\'au moins 1 — '
+        'reçu : $raw',
+      );
+    }
+    return raw;
+  }
+
   static List<CardDelta> _readDeltas(String id, Object? raw) {
     if (raw is! List || raw.isEmpty) {
       throw FormatException(
@@ -196,6 +217,7 @@ class ForgeUpgradeData {
       'icon': icon,
       'color': color,
       'pools': pools,
+      'minFusionRank': minFusionRank,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
       if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
       if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
