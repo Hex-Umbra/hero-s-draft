@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.1.
 **Branche** : `feat/v0.5.3-p43-e0-e1`, ouverte le 01/10/2026 depuis `main` à `0ccacce`.
 **Ouvert le** : 02/10/2026, à la fin du plan E0 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : en cours — E0 implémenté, E1 à venir.
+**État** : en cours — E0 et E1 implémentés ; restent la simulation, la note de version, la mémoire, et ce compte rendu à compléter.
 
 ---
 
@@ -13,6 +13,7 @@
 |:---|:---|
 | Porte d'entrée (01/10) | `main` propre et à jour ; CI du commit de tête `0ccacce` verte ; release `v0.5.2` publiée ; trois porteurs de version à `0.5.2` ; `dart analyze` propre ; **1187 tests** — la base de la vague |
 | E0 | Spec `f38a0f1`, plan `bdd82f6`, cinq commits de code `258aca1`..`dd5ae0c` ; **1228 tests** (+41), `dart analyze` propre |
+| E1 | Spec `229bce6`, plan `5bd2f10`, huit commits de code `ae939e6`..`633fe24` et un correctif de la revue d'ensemble `ee814e9` ; **1375 tests** (+147), `dart analyze` propre |
 
 *(Le total de la vague, le nombre de commits et l'état final s'écrivent en §3.8.)*
 
@@ -55,6 +56,54 @@ Recopiées du registre de SDD avant la suppression de son espace de travail, dan
 
 Mineurs différés pendant les revues de tâche, tous maintenus par la revue d'ensemble : `copyWith` ne remet pas `sourceId` à `null` ; le test d'Éveil ennemi prouve la non-fusion par la valeur seule ; aucun test ne sépare une Puissance de carte de l'Éveil du héros ; un commentaire de test cite `stat_rule.dart:75` ; `_roundingTolerance` déclarée après son usage ; le taux affiché arrondit 1/3 à 33 % ; la hauteur 510 laisse 8 pixels de marge.
 
+### 2.4. Spec E1 — [`2026-10-02-p43-e1-moteur-de-runes-design.md`](../specs/2026-10-02-p43-e1-moteur-de-runes-design.md), §1
+
+| # | Question | Options | Filtre qui tranche | Choix |
+|:---|:---|:---|:---|:---|
+| A1 | La forme de l'applicateur de deltas | champs à plat (esquisse du brainstorm §4.2) · liste typée de deltas · effets de carte ajoutés · garder le `switch` | 1 (D68) écarte le `switch`, puis 4 | Une liste `deltas` typée, vocabulaire fermé `CardDelta` à trois sortes (`percentBonus`, `addEffect`, `removeExhaust`) ; la couture que les évolutions de signature reprendront en vague 5 est `EffectiveCard.apply(carte, rareté, paires (delta, niveau))` |
+| A2 | Le chemin des effets qu'une rune ajoute *(apparue à la rédaction)* | le registre de stratégies · un bloc propre aux runes | 5 | Le registre (ADR-061) ; les statuts posés par `addStatus`, sans source (A4 d'E0) ; `GainSource.rune` disparaît. Conséquence assumée par l'orchestrateur : *Économe* fait entendre le son du gain de mana |
+| A3 | Où vit le code *(apparue)* | modèle et `ForgeRuneRules` · tout en service · tout au modèle | 5 | L'applicateur, la borne et l'analyseur `id:niveau` au modèle ; le prédicat dans `ForgeRuneRules` (ADR-094 D5, précédent `availablePassivesFor`) |
+| A4 | Les `switch` d'affichage par id de rune | en donnée dès E1 · laissés à E2 · emoji seuls | 4 | En donnée dès E1 |
+| A5 | La portée de G1 | dégâts et armure · plus le soin · tout effet que la rareté multiplie · par carte | 2 (la valeur que joue la simulation) | Tout effet que la rareté multiplie : dégâts, armure, soin, statuts |
+| A6 | G1 face à G2 | G1 s'arrête aux effets gelés · G1 l'emporte · une compensation · plus de fusion | 1 (D68), puis 2 | G1 s'arrête aux effets gelés : une carte dont tous les effets sont gelés (*Concentration*) ne gagne que sa rareté |
+| A7 | La base et l'arrondi du pourcentage *(apparue)* | base à la rareté ou à la commune ; niveau total, par niveau ou par exemplaire ; flottant ou entier | 1 ; 1 puis 2 ; **2 — maintenu par l'orchestrateur au premier tour** | Base prise à la rareté, niveau total des exemplaires, arithmétique entière au plus proche (demi vers le haut) : le script joue « au plus proche », l'erreur de flottant de son calcul n'est pas une valeur jouée |
+| A8 | Comment une rune déclare son plafond *(apparue)* | clé obligatoire, `null` = sans plafond · clé facultative · sentinelle | 1 (D27), puis 6 | `maxLevel` obligatoire, `null` = sans plafond |
+| A9 | La fusion de cartes dont la somme dépasse le plafond *(née de « La spec doit fixer »)* | bornée · refusée · sommée | 1 (D72, D68) | Bornée — et, ajouté par la revue d'ensemble (§2.6, E-S3), sans jamais réunir deux runes qui s'excluent |
+| A10 | La Forge de Fusion au-delà du plafond | non proposée · bornée · sommée | 1, puis 6 | Une fusion qui perdrait un niveau n'est pas proposée |
+| A11 | Le feu face à une carte sans rune éligible *(apparue)* | refus à la sélection · forge vide · repli sur `sharp` | 1 (D61), puis 6 | La carte est refusée à la sélection, avec un message (`forgeNoEligibleRune`) |
+| A12 | La boutique face à une carte sans rune éligible *(apparue)* | moins de runes · tirer une autre carte · garder les replis | 1 (D61, D75), puis 7 | Le prédicat lit la carte avec ses runes déjà tirées ; une pré-forgée en reçoit moins ; le repli sur `sharp` disparaît |
+| A13 | Le vocabulaire des types d'effet dans l'éditeur *(apparue)* | vocabulaire du disque · liste constante au modèle · texte libre | 5 | Le vocabulaire du disque sur les motifs `clé[]`, que `vocabularyOf` lit sous la clé nue ; un test d'intégrité contre le registre de stratégies |
+
+Trois arbitrages de l'orchestrateur pendant la boucle de vérification de la spec, au premier tour : A7 maintenu (ci-dessus) ; le son du gain de mana pour *Économe*, assumé comme conséquence d'A2 (filtre 5) ; les infobulles affichent le niveau selon `maxLevel != 1`, jamais selon `stackable` — E1 n'ajoute aucun lecteur à ce que D68 garde pour E2.
+
+**La boucle de vérification de la spec E1** : deux tours. Tour 1 — quatre constats moyens, tous corrigés : le vocabulaire choisi par A13 ne marchait pas sur une liste de chaînes (rejoué dans un clone au tour 2 : les huit runes livrées valident) ; « *Endurci* ne faisait rien sur une carte sans armure » était faux — elle donnait une Armure à part, que la carte n'affichait pas ; les infobulles ne disaient pas le chiffre joué quand une carte porte deux exemplaires d'une rune (désormais une ligne par rune, au niveau total, et `{val}` = le gain marginal) ; la prose du tutoriel sur la rareté devenait fausse (réécrite en deux langues). Tour 2 — prête ; neuf mineurs ou de rédaction corrigés au passage.
+
+### 2.5. Plan E1 — [`2026-10-02-p43-e1-moteur-de-runes.md`](../plans/2026-10-02-p43-e1-moteur-de-runes.md)
+
+Neuf tâches, 1228 → 1373 tests. Vérifié en un tour, rejoué en entier dans un clone par le rédacteur puis par le vérificateur (182 blocs appliqués à occurrence unique, les totaux constatés à chaque tâche) : prêt. Deux arbitrages de l'orchestrateur :
+
+| Question | Options | Filtre | Choix |
+|:---|:---|:---|:---|
+| `CardTextRenderer.buildDescription()`, comptée par la spec parmi les sites à réécrire, n'a aucun appelant | la réécrire · la supprimer | 5 (pas de code mort, `CLAUDE.md`) | Supprimée |
+| Une Attaque `target: self` portant une rune élémentaire poserait désormais le statut sur le héros (les effets de rune passent par la stratégie, qui lit la cible de la carte) — aucune carte livrée, mais l'éditeur permet d'en écrire une | une condition de cible en donnée dès E1 · consigner | 7 (périmètre : un mécanisme neuf, hors de la spec, sans contenu à filtrer) | Consigné, sans code ; à trancher quand une carte ou une rune le rendra possible — note pour l'ADR de la vague |
+
+### 2.6. Les décisions de SDD — exécution du plan E1
+
+Recopiées du registre de SDD avant la suppression de son espace de travail, dans l'ordre où elles ont été prises.
+
+| # | Décision | Motif | Si elle est fausse |
+|:---|:---|:---|:---|
+| E-S1 | Deux commits (`ae939e6`, `16767d1`) portent la ligne `Co-Authored-By: Claude Sonnet 5.5` — l'attribution de la session de l'implémenteur — au lieu de la ligne Opus des contraintes ; laissés tels quels | Aucune réécriture d'un commit (orchestration §6) ; la ligne nomme le modèle qui a écrit le code | Une ligne d'attribution non uniforme dans l'historique de la branche |
+| E-S2 | Tâche 4 : le rouge n'a pas été observé à part (modifications en une passe) ; accepté | Le rouge de cette tâche (échec de compilation) a été constaté aux deux rejeux du plan ; la revue a jugé que les tests échoueraient sans le code | Un test qui passerait sans le code |
+| E-S3 | **Constat important de la revue d'ensemble** : la fusion de cartes 3 → 1 réunissait des runes que le prédicat interdit ensemble — trois *Potions de Soin* portant *Persistant*, *Économe* et rien donnaient une carte qui rend du mana sans s'épuiser, atteignable en partie neuve. **Corrigé** (`ee814e9`) : `consolidate` écarte une rune exclue par une rune gardée avant elle, de façon symétrique, en lisant `excludesRunes` dans la donnée ; la première arrivée est gardée ; un test sur les trois potions | Filtre 1 : consigner pour E2 laissait atteignable en `0.5.3` le moteur que D44 et D51 ferment, et que la note joueur de la spec promet fermé ; filtre 4 : une règle en donnée ; filtre 8 : l'ordre de première apparition | Une fusion perd une rune sans dialogue — la note de version dit la règle. **E2, dont l'héritage (D13) garde toutes les runes, devra suivre la même règle** |
+| E-S4 | Mineur laissé : une relance payante de la forge du feu ne peut rien changer sur *Concentration*, *Focalisation* et *Surtension de Mana*, qui n'ont plus qu'une rune éligible (*Véloce*) | D68 fige le déroulé ; E2 supprime la forge du feu | Un joueur paie en `0.5.3` une relance inutile — dans la file (§5) |
+| E-S5 | Mineur laissé pour E2 : les descriptions des runes qui ajoutent un effet écrivent leur niveau, pas la valeur que joue l'applicateur ; `{val}` et `{percent}` valent 0 pour une rune sans pourcentage | Identique pour les huit runes livrées (une unité par niveau) ; `cheap` (E2) aura besoin de son propre substitut | Une rune future à deux unités par niveau afficherait un chiffre faux |
+| E-S6 | Mineur laissé : l'emoji d'une rune et la fente de la forge lisent encore `id:niveau` à la main | Affichage, hors de la règle « un seul analyseur » d'ADR-094 D5 ; E2 réécrit la forge | Rien de joué |
+
+Deux ajouts de tests faits avec le correctif `ee814e9` : le test de boutique ne peut plus passer à vide ; la sélection du feu a son cas positif (une *Frappe* sans rune ouvre la forge).
+
+Mineurs différés pendant les revues de tâche, tous maintenus par la revue d'ensemble : la copie champ par champ de `CardEffect` dans l'applicateur ; une double analyse dans `fusionOptionsFor` ; le défaut `deltas = const []` du constructeur de rune, pensé pour les tests ; pas de test d'Attaque multi-cibles avec rune élémentaire ; la doc de `ForgeRuneRules` qui parle encore de « tier » ; `scaleValue` public sans test direct ; les rendus Flame non testés par leur tâche ; un alias inutile `scaledValue` ; la fente d'une rune absente du registre sous son id ; un `continue` qui saute l'exclusion d'une candidate face à une rune hors catalogue ; un bloc de six lignes et le tirage 80/15/5 dupliqués entre le feu et la boutique ; la sélection du feu qui ne lit pas `pools` ; l'or dépensé avant un retour inatteignable ; le garde-fou des ids de rune limité aux littéraux exacts ; le message de carte pleine en dur ; trois limites de l'éditeur (motifs composés, vocabulaire vide sur une arborescence vide, cas de validateur manquants).
+
 ---
 
 ## 3. Le cahier de test manuel
@@ -71,4 +120,12 @@ Mineurs différés pendant les revues de tâche, tous maintenus par la revue d'e
 - **`StatRule.convertedAmount` et un gain nul** (S3) : la précondition « gain strictement positif » est documentée, pas imposée.
 - **Une carte d'armure ne dit pas sa Puissance convertie** (A7) : chez le Berserker, *Mur de Fer* affiche « 10 Armure » ; la règle de classe dit le taux, pas la carte. Le brainstorm §7.2 le souhaitait (« la description doit le dire ») ; aucun rendu de carte ne lit aujourd'hui les règles de classe.
 - **Un quatrième lecteur « une entrée par id »** : `status_indicator.dart:43-62` (icônes des ennemis), que la fiche ne nommait pas ; il casse déjà avec les statuts que les runes élémentaires concatènent, et A4 le répare en E1.
+- **La fiche E1 disait qu'*Endurci* « ne faisait rien » sur une carte sans armure** (fiche 8.1, ligne joueur ; revue §15 W6) : faux — elle donnait 2 × niveau d'Armure à part, figé par `stat_gains_characterization_test.dart:116-119`. La spec E1 et la note le disent juste.
+- **Le multiplicateur de rareté était écrit à huit endroits, dont deux dans le tutoriel**, que la fiche ne nommait pas ; **la boutique et le feu retombaient sur `sharp` sans regarder l'éligibilité** (A11, A12 les ferment) ; **`CardTextRenderer.buildDescription()` était du code mort** ; **`_rules/03-8` décrit une « Sélection Pondérée par Rareté » (`weightCommon`…) que le code n'a plus**.
+- **Les cartes communes sans dégâts ni armure se voient proposer au feu *Véloce*, *Économe* ou *Persistant*** : leur pool `common` est vide sous le prédicat, et le repli préexistant de la forge descend au pool `rare` (D68 garde `pools` jusqu'à E2). C'est ce qui rendait E-S3 atteignable ; à dire dans la note de version.
+- **La relance payante sans effet** (E-S4) et **les descriptions des runes à effet ajouté** (E-S5) : pour E2.
+- **La cible des statuts de rune** (§2.5) : l'éligibilité des runes élémentaires ne lit pas la cible de la carte.
+- **Le badge « Usage unique » et les particules d'épuisement ignorent *Persistant*** (ADR-094, Conséquences) : non planifié.
+- **Pour E2** : sous le prédicat, la première fusion d'une *Concentration* n'a aucune rune éligible (D65 tient, à vide) ; l'héritage de D13 devra suivre la règle d'exclusion de `consolidate` (E-S3).
+- **Un test peut-être instable** : `test/widget/content_editor_screen_test.dart` (groupe des imports) a échoué une fois dans une suite complète de l'implémenteur du correctif, sans se reproduire — cinq relances isolées vertes par l'orchestrateur. À surveiller.
 - **La simulation ne fusionne pas la Puissance comme le jeu** : elle tient une entrée par gain (`d26_economy_sim.dart:1376` et suivantes) — plus fin que D36 ; elle diverge du jeu sur deux *Forme Démoniaque*, sur *Ferveur* d'un tour à l'autre et sur `might_regen`. Aucune valeur de D56 à D62 ni de D67 n'en dépend.
