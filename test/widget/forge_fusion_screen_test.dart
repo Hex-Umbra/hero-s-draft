@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
@@ -50,7 +51,7 @@ void main() {
     color: 'redAccent',
     pools: ['common', 'uncommon', 'rare'],
     eligibleCardTypes: ['attack'],
-    valueMultiplier: 2,
+    deltas: [PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 15)],
     weight: 100,
     emoji: '⚔️',
   );

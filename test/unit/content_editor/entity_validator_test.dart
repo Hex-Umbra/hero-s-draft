@@ -593,7 +593,7 @@ void main() {
             id: 'eclat',
             bilingual: prose,
             mechanics: '{"pools": ["common"], "color": "$color", '
-                '"deltas": [{"type": "removeExhaust"}]}',
+                '"maxLevel": 1, "deltas": [{"type": "removeExhaust"}]}',
           );
 
       expect(validatorWith().validate(withColor('orange')).single.field,

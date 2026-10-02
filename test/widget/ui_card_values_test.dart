@@ -52,7 +52,7 @@ Finder _body(String text) => find.descendant(
 /// Les rendus Flutter de la carte lisent l'applicateur : ce qu'ils montrent
 /// est ce que le moteur joue (spec P-43 E1, §4.2).
 void main() {
-  setUpAll(() => shippedRuneRegistry(const ['sharp']));
+  setUpAll(() => shippedRuneRegistry(const ['sharp', 'quick']));
 
   testWidgets('une Frappe legendaire portant Tranchant 2 montre 16 degats',
       (tester) async {
@@ -98,5 +98,57 @@ void main() {
         allOf(contains('Donne 7 Armure.'), contains('Pioche 1 cartes.')));
     expect(_body('7'), findsOneWidget);
     expect(_body('1'), findsOneWidget);
+  });
+
+  testWidgets('l infobulle ecrit Tranchant au niveau qu il joue',
+      (tester) async {
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.legendary,
+        forgeUpgrades: const ['sharp:2'],
+      ),
+    );
+
+    expect(
+      _tooltip(tester),
+      contains('Tranchant 2 : +4 Dégâts sur la carte (+30% de la base, au '
+          'moins +2)'),
+    );
+  });
+
+  testWidgets('deux Tranchant 1 font une seule ligne, au niveau total',
+      (tester) async {
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.epic,
+        forgeUpgrades: const ['sharp:1', 'sharp:1'],
+      ),
+    );
+
+    final tooltip = _tooltip(tester);
+    expect(
+      tooltip,
+      contains('Tranchant 2 : +3 Dégâts sur la carte (+30% de la base, au '
+          'moins +2)'),
+    );
+    expect('Tranchant'.allMatches(tooltip), hasLength(1));
+  });
+
+  testWidgets('une rune a niveau unique s ecrit sans niveau', (tester) async {
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: shippedCard('strike_basic'),
+        forgeUpgrades: const ['quick:1'],
+      ),
+    );
+
+    final tooltip = _tooltip(tester);
+    expect(tooltip, contains('Véloce : Pioche +1 carte(s)'));
+    expect(tooltip, isNot(contains('Véloce 1')));
   });
 }

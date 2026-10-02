@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'card_data.dart';
 import 'card_delta.dart';
 import 'game_data_registry.dart';
+import '../effective_card.dart';
 import '../missing_save_item.dart';
 
 class ForgeUpgradeData {
@@ -19,7 +21,12 @@ class ForgeUpgradeData {
   /// `sharp:2`. Une rune non cumulable est binaire — `enduring` retire
   /// l'épuisement ou non — et n'a qu'un tier, 1 (voir `ForgeRuneRules`).
   final bool stackable;
-  final int valueMultiplier;
+
+  /// Le niveau le plus haut que la rune atteint sur une carte, exemplaires
+  /// additionnés ; `null` : sans plafond (D27, spec P-43 E1, A8). La clé est
+  /// obligatoire dans le fichier, `null` compris ; le constructeur laisse aux
+  /// tests une rune sans plafond.
+  final int? maxLevel;
 
   /// Ce que fait la rune : des sortes de delta, déclarées par niveau (spec
   /// P-43 E1, A1, §4.1). Obligatoire et non vide dans le fichier ; le
@@ -40,7 +47,7 @@ class ForgeUpgradeData {
     this.eligibleCardTypes,
     this.requiresExhaust = false,
     this.stackable = true,
-    this.valueMultiplier = 1,
+    this.maxLevel,
     this.deltas = const [],
     this.weight = 10,
     this.emoji = '🔮',
@@ -62,11 +69,30 @@ class ForgeUpgradeData {
           : null,
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       stackable: json['stackable'] as bool? ?? true,
-      valueMultiplier: json['valueMultiplier'] as int? ?? 1,
+      maxLevel: _readMaxLevel(id, json),
       deltas: _readDeltas(id, json['deltas']),
       weight: json['weight'] as int? ?? 10,
       emoji: json['emoji'] as String? ?? '🔮',
     );
+  }
+
+  /// La clé est obligatoire (D27) : `null` pour « sans plafond », sinon un
+  /// entier d'au moins 1 — une sentinelle dirait « aucun » par un nombre
+  /// (spec P-43 E1, A8).
+  static int? _readMaxLevel(String id, Map<String, dynamic> json) {
+    if (!json.containsKey('maxLevel')) {
+      throw FormatException(
+        '$id : maxLevel est obligatoire — null pour « sans plafond »',
+      );
+    }
+    final value = json['maxLevel'];
+    if (value == null) return null;
+    if (value is! int || value < 1) {
+      throw FormatException(
+        '$id : maxLevel vaut null ou un entier d\'au moins 1 — reçu : $value',
+      );
+    }
+    return value;
   }
 
   static List<CardDelta> _readDeltas(String id, Object? raw) {
@@ -97,7 +123,7 @@ class ForgeUpgradeData {
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
       'requiresExhaust': requiresExhaust,
       'stackable': stackable,
-      'valueMultiplier': valueMultiplier,
+      'maxLevel': maxLevel,
       'deltas': [for (final delta in deltas) delta.toJson()],
       'weight': weight,
       'emoji': emoji,
@@ -108,13 +134,65 @@ class ForgeUpgradeData {
     return locale == 'fr' ? nameFr : nameEn;
   }
 
-  String getDescription(int tier, String locale) {
+  /// La description de la rune au niveau [level], sur [card] à [rarity] (spec
+  /// P-43 E1, §5.1) : `{tier}` est le niveau ; `{percent}`, le pourcentage de
+  /// ce niveau ; `{val}`, ce que la rune ajoute à **cette** carte au-delà des
+  /// [carried] niveaux qu'elle en porte déjà — le gain que joue le moteur,
+  /// calculé par l'applicateur sur le premier effet propre du type visé, 0 si
+  /// la carte n'en a pas.
+  String getDescription(
+    int level,
+    String locale,
+    CardData card,
+    CardRarity rarity, {
+    int carried = 0,
+  }) {
     final template = locale == 'fr' ? descriptionFr : descriptionEn;
-    final val = tier * valueMultiplier;
+    final bonus = deltas.whereType<PercentBonusDelta>().firstOrNull;
     return template
-        .replaceAll('{tier}', tier.toString())
-        .replaceAll('{val}', val.toString());
+        .replaceAll('{tier}', '$level')
+        .replaceAll('{percent}', '${(bonus?.valuePercentPerLevel ?? 0) * level}')
+        .replaceAll('{val}', '${_addedTo(card, rarity, level, carried, bonus)}');
   }
+
+  static int _addedTo(
+    CardData card,
+    CardRarity rarity,
+    int level,
+    int carried,
+    PercentBonusDelta? bonus,
+  ) {
+    if (bonus == null) return 0;
+    final index = card.effects.indexWhere((e) => e.type == bonus.effect);
+    if (index == -1) return 0;
+    int valueAt(int total) =>
+        EffectiveCard.apply(card, rarity, [(bonus, total)]).effects[index].value;
+    return valueAt(carried + level) - valueAt(carried);
+  }
+
+  /// La ligne de la rune dans l'infobulle d'une carte, au niveau [level] que
+  /// joue le moteur — le total de ses exemplaires (spec P-43 E1, §5.2) :
+  /// `<nom>[ <niveau>] : <description>`. Le niveau ne s'écrit que si la rune
+  /// en a plus d'un (`maxLevel` autre que 1).
+  String tooltipLine(int level, String locale, CardData card, CardRarity rarity) {
+    final name = maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
+    return '$name : ${getDescription(level, locale, card, rarity)}';
+  }
+
+  /// Les lignes des runes [runes] dans l'infobulle de [card] à [rarity] : une
+  /// par id, au niveau total de ses exemplaires ([levelsOf]) ; une rune absente
+  /// du registre n'en a pas.
+  static List<String> tooltipLines(
+    List<String> runes,
+    String locale,
+    CardData card,
+    CardRarity rarity,
+  ) =>
+      [
+        for (final MapEntry(key: id, value: level) in levelsOf(runes).entries)
+          if (getById(id) case final rune?)
+            rune.tooltipLine(level, locale, card, rarity),
+      ];
 
   /// Lit **une** référence `id:niveau` : `(id, niveau)`, ou `null` si elle est
   /// mal formée ou de niveau nul. L'unique analyseur des références de rune

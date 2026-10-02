@@ -1,12 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
 /// Un fichier de rune minimal et valide : chaque test n'y change que ce qu'il
 /// veut casser.
 Map<String, dynamic> _json([Map<String, dynamic> overrides = const {}]) => {
       'id': 'sharp',
       'pools': ['common'],
+      'maxLevel': null,
       'deltas': [
         {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
       ],
@@ -179,6 +182,66 @@ void main() {
         [for (final delta in rune.deltas) delta.toJson()],
       );
     });
+  });
+
+  group('maxLevel', () {
+    test('null : sans plafond ; un entier : le plafond', () {
+      expect(ForgeUpgradeData.fromJson(_json()).maxLevel, isNull);
+      expect(ForgeUpgradeData.fromJson(_json({'maxLevel': 1})).maxLevel, 1);
+    });
+
+    test('refuse une rune sans maxLevel', () {
+      expect(() => ForgeUpgradeData.fromJson(_json()..remove('maxLevel')),
+          _refused('maxLevel'));
+    });
+
+    test('refuse un maxLevel nul, negatif ou decimal', () {
+      for (final bad in [0, -1, 1.5]) {
+        expect(() => ForgeUpgradeData.fromJson(_json({'maxLevel': bad})),
+            _refused('maxLevel'),
+            reason: '$bad');
+      }
+    });
+
+    test('toJson ecrit maxLevel, meme nul', () {
+      expect(ForgeUpgradeData.fromJson(_json()).toJson(),
+          containsPair('maxLevel', null));
+      final capped = ForgeUpgradeData.fromJson(_json({'maxLevel': 2}));
+      expect(ForgeUpgradeData.fromJson(capped.toJson()).maxLevel, 2);
+    });
+  });
+
+  // Review Focus 3 : une sauvegarde peut porter une rune que le catalogue n'a
+  // plus.
+  test('tooltipLines : une ligne par id au niveau total, rien pour une rune '
+      'absente du registre', () {
+    GameDataRegistry(
+      enemies: const [],
+      heroes: const [],
+      cards: const [],
+      events: const [],
+      passives: const [],
+      relics: const [],
+      forgeUpgrades: [
+        ForgeUpgradeData.fromJson(_json(
+            {'name_fr': 'Tranchant', 'description_fr': '+{val} Dégâts'})),
+      ],
+    );
+    const strike = CardData(
+      id: 'strike_basic',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [CardEffect(type: 'damage', value: 6)],
+    );
+
+    expect(
+      ForgeUpgradeData.tooltipLines(const ['sharp:1', 'legacy:2', 'sharp:2'],
+          'fr', strike, CardRarity.common),
+      ['Tranchant 3 : +3 Dégâts'],
+    );
   });
 
   group('references id:niveau', () {

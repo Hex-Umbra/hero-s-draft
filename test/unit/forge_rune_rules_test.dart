@@ -54,6 +54,7 @@ void main() {
       final rune = ForgeUpgradeData.fromJson({
         'id': 'sharp',
         'pools': ['common'],
+        'maxLevel': null,
         'deltas': [
           {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
         ],
@@ -66,6 +67,7 @@ void main() {
         'id': 'enduring',
         'pools': ['rare'],
         'stackable': false,
+        'maxLevel': 1,
         'deltas': [
           {'type': 'removeExhaust'},
         ],

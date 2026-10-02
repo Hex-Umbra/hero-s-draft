@@ -15,6 +15,7 @@
     "skill",
     "power"
   ],
+  "maxLevel": 1,
   "deltas": [
     {
       "type": "addEffect",

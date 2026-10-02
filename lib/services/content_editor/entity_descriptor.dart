@@ -346,6 +346,9 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // rendu l'amelioration eligible a **rien**. Les quatre types enumeres sont
     // le seul equivalent honnete de l'absence, et l'auteur n'a qu'a retirer ce
     // qu'il ne veut pas.
+    //
+    // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
+    // pas monter une rune sans fin (spec P-43 E1, §6).
     template: '''
 {
   "icon": "flash_on_rounded",
@@ -354,7 +357,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "requiresExhaust": false,
   "stackable": true,
-  "valueMultiplier": 1,
+  "maxLevel": 1,
   "deltas": [
     { "type": "percentBonus", "effect": "damage", "valuePercentPerLevel": 15 }
   ],

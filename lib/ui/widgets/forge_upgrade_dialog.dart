@@ -430,6 +430,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
                                   children: [
                                     ..._slots.map((slot) => ForgeSlotRow(
                                           slot: slot,
+                                          card: widget.card,
                                           currentGold: currentGold,
                                           locale: locale,
                                           l10n: l10n,

@@ -16,6 +16,7 @@
   ],
   "requiresExhaust": true,
   "stackable": false,
+  "maxLevel": 1,
   "deltas": [
     {
       "type": "removeExhaust"

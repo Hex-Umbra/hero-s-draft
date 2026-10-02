@@ -262,7 +262,7 @@ void main() {
         'eligibleCardTypes',
         'requiresExhaust',
         'stackable',
-        'valueMultiplier',
+        'maxLevel',
         'deltas',
         'weight',
         'emoji',

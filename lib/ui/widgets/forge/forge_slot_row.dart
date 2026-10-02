@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../models/card_instance.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../forge_upgrade_dialog.dart'; // Pour ForgeSlot
 import '../game_button.dart';
 
 class ForgeSlotRow extends StatelessWidget {
   final ForgeSlot slot;
+
+  /// La carte que la forge améliore : la fente dit ce que la rune lui ajoute
+  /// (spec P-43 E1, §5.1).
+  final CardInstance card;
   final int currentGold;
   final String locale;
   final AppLocalizations l10n;
@@ -15,6 +20,7 @@ class ForgeSlotRow extends StatelessWidget {
   const ForgeSlotRow({
     super.key,
     required this.slot,
+    required this.card,
     required this.currentGold,
     required this.locale,
     required this.l10n,
@@ -24,111 +30,6 @@ class ForgeSlotRow extends StatelessWidget {
 
   String _getTranslation(String en, String fr) {
     return locale == 'fr' ? fr : en;
-  }
-
-  String _getUpgradeName(String upgrade) {
-    final parts = upgrade.split(':');
-    final id = parts[0];
-    final tier = parts.length > 1 ? parts[1] : '1';
-    final isFr = locale == 'fr';
-
-    switch (id) {
-      case 'sharp':
-        return isFr ? 'Tranchant $tier' : 'Sharp $tier';
-      case 'hardened':
-        return isFr ? 'Endurci $tier' : 'Hardened $tier';
-      case 'burning':
-        return isFr ? 'Brûlant $tier' : 'Burning $tier';
-      case 'freezing':
-        return isFr ? 'Congelant $tier' : 'Freezing $tier';
-      case 'shocking':
-        return isFr ? 'Surchargé $tier' : 'Shocking $tier';
-      case 'quick':
-        return isFr ? 'Véloce $tier' : 'Quick $tier';
-      case 'eco':
-        return isFr ? 'Économe $tier' : 'Eco $tier';
-      case 'enduring':
-        return isFr ? 'Persistant' : 'Enduring';
-      default:
-        return id;
-    }
-  }
-
-  String _getUpgradeDescription(String upgrade) {
-    final parts = upgrade.split(':');
-    final id = parts[0];
-    final tierStr = parts.length > 1 ? parts[1] : '1';
-    final tier = int.tryParse(tierStr) ?? 1;
-    final isFr = locale == 'fr';
-
-    switch (id) {
-      case 'sharp':
-        final val = 2 * tier;
-        return isFr ? '+$val Dégâts sur la carte' : '+$val Damage on the card';
-      case 'hardened':
-        final val = 2 * tier;
-        return isFr ? '+$val Armure sur la carte' : '+$val Block on the card';
-      case 'burning':
-        return isFr ? 'Applique $tier Brûlure' : 'Applies $tier Burn';
-      case 'freezing':
-        return isFr ? 'Applique $tier Gel' : 'Applies $tier Freeze';
-      case 'shocking':
-        return isFr ? 'Applique $tier Électrocution' : 'Applies $tier Shock';
-      case 'quick':
-        return isFr ? 'Pioche +$tier carte(s)' : 'Draw +$tier card(s)';
-      case 'eco':
-        return isFr ? 'Gagne +$tier Mana à l\'utilisation' : 'Gains +$tier Mana on play';
-      case 'enduring':
-        return isFr ? 'Retire Épuisement (Exhaust)' : 'Removes Exhaust';
-      default:
-        return '';
-    }
-  }
-
-  IconData _getUpgradeIcon(String id) {
-    switch (id) {
-      case 'sharp':
-        return Icons.hardware_rounded;
-      case 'hardened':
-        return Icons.shield_rounded;
-      case 'burning':
-        return Icons.local_fire_department_rounded;
-      case 'freezing':
-        return Icons.ac_unit_rounded;
-      case 'shocking':
-        return Icons.flash_on_rounded;
-      case 'quick':
-        return Icons.style_rounded;
-      case 'eco':
-        return Icons.diamond_rounded;
-      case 'enduring':
-        return Icons.hourglass_bottom_rounded;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
-  Color _getUpgradeColor(String id) {
-    switch (id) {
-      case 'sharp':
-        return Colors.redAccent;
-      case 'hardened':
-        return Colors.blueAccent;
-      case 'burning':
-        return Colors.orangeAccent;
-      case 'freezing':
-        return Colors.lightBlueAccent;
-      case 'shocking':
-        return Colors.amberAccent;
-      case 'quick':
-        return Colors.amber;
-      case 'eco':
-        return Colors.cyanAccent;
-      case 'enduring':
-        return Colors.greenAccent;
-      default:
-        return Colors.grey;
-    }
   }
 
   Color _getUpgradeColorFromString(String colorStr) {
@@ -186,19 +87,23 @@ class ForgeSlotRow extends StatelessWidget {
 
     final upgradeData = ForgeUpgradeData.getById(upgradeId);
 
-    // Extraction dynamique avec conservation des fallbacks
-    final upgradeColor = upgradeData != null
-        ? _getUpgradeColorFromString(upgradeData.color)
-        : _getUpgradeColor(upgradeId);
-    final upgradeIcon = upgradeData != null
-        ? _getUpgradeIconFromString(upgradeData.icon)
-        : _getUpgradeIcon(upgradeId);
+    // Une rune absente du registre s'affiche sous son id, sans description,
+    // avec l'icône et la couleur par défaut (spec P-43 E1, §5.2).
+    final upgradeColor = _getUpgradeColorFromString(upgradeData?.color ?? '');
+    final upgradeIcon = _getUpgradeIconFromString(upgradeData?.icon ?? '');
     final upgradeName = upgradeData != null
         ? upgradeData.getName(locale) + (upgradeData.stackable ? ' $tier' : '')
-        : _getUpgradeName(slot.upgrade);
-    final upgradeDesc = upgradeData != null
-        ? upgradeData.getDescription(tier, locale)
-        : _getUpgradeDescription(slot.upgrade);
+        : upgradeId;
+    // Ce que la fente ajoute à cette carte, au-delà de ce que la carte porte
+    // déjà de cette rune (spec P-43 E1, §5.1).
+    final upgradeDesc = upgradeData?.getDescription(
+          tier,
+          locale,
+          card.data,
+          card.rarity,
+          carried: ForgeUpgradeData.levelsOf(card.forgeUpgrades)[upgradeId] ?? 0,
+        ) ??
+        '';
 
     final rerollCost = slot.rerollCost;
     final canAffordReroll = currentGold >= rerollCost;
