@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.1.
 **Branche** : `feat/v0.5.3-p43-e0-e1`, ouverte le 01/10/2026 depuis `main` à `0ccacce`.
 **Ouvert le** : 02/10/2026, à la fin du plan E0 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : en cours — E0 et E1 implémentés ; restent la simulation, la note de version, la mémoire, et ce compte rendu à compléter.
+**État** : **livrée sur branche le 02/10/2026** — en attente du test manuel, de la PR, de la fusion et du tag `v0.5.3` du propriétaire (orchestration §3.9).
 
 ---
 
@@ -15,7 +15,10 @@
 | E0 | Spec `f38a0f1`, plan `bdd82f6`, cinq commits de code `258aca1`..`dd5ae0c` ; **1228 tests** (+41), `dart analyze` propre |
 | E1 | Spec `229bce6`, plan `5bd2f10`, huit commits de code `ae939e6`..`633fe24` et un correctif de la revue d'ensemble `ee814e9` ; **1375 tests** (+147), `dart analyze` propre |
 
-*(Le total de la vague, le nombre de commits et l'état final s'écrivent en §3.8.)*
+| Simulation (§3.6) | Relancée sur le code terminé : diff vide contre la référence (§4) |
+| Note de version (§3.7) | `0.5.3`, « La Juste Mesure » — quinze entrées (4 améliorations, 7 équilibrages, 4 corrections), `52cba87` ; trois porteurs de version à `0.5.3` (`verify_version.sh 0.5.3` cohérent), liens de repli du site rafraîchis (`grep '0\.5\.2' site/*.html` vide), `node --test` 20/20 depuis `site/`, `test_scripts.sh` 57 ok |
+| Mémoire (§3.7) | `c4de883` — ADR-104 (un statut par source et `ratio`) et ADR-105 (le moteur de runes data-driven, qui amende ADR-094 et complète ADR-061) ; onze fiches `_rules` et dix `_patterns` rattrapées ; `docs/ROADMAP.md` non touchée (aucune de ses lignes ne se clôt). Écart de méthode : l'agent a mesuré la base de tests sur `main` dans un worktree détaché, retiré ensuite (vérifié : il n'en reste rien) — §6 l'exclut ; sans effet sur la branche |
+| **La vague** | Branche `feat/v0.5.3-p43-e0-e1`, version `0.5.3`, **24 commits** sur `main` (ce dernier compris), **1375 tests verts** (base 1187, +188), `dart analyze` propre — constatés sur la tête de la branche après la note et la mémoire |
 
 ---
 
@@ -108,11 +111,54 @@ Mineurs différés pendant les revues de tâche, tous maintenus par la revue d'e
 
 ## 3. Le cahier de test manuel
 
-*(Écrit en §3.8, pour la vague entière.)*
+Ce qu'il faut jouer pour voir chaque changement de la `0.5.3`, puis ce qui doit rester tel quel. Le menu de debug (onglet Héros, cartes, reliques, or) raccourcit les mises en place.
+
+### 3.1. La Puissance du Berserker (E0)
+
+| À jouer | Attendu |
+|:---|:---|
+| Écran de sélection de classe, carte du Berserker | La règle de classe a une seconde phrase : « Taux : 50%, arrondi à l'entier supérieur — 6 Armure → 3 Puissance. » ; rien ne déborde, sur mobile comme sur bureau. Paladin et Mage : inchangés, une seule phrase (ils n'ont pas de règle) |
+| Tutoriel avec le Berserker, étape « Armure & Dégâts » | Le cadre montre les deux phrases sans déborder ; le badge de Puissance affiche la moitié de l'Armure gagnée, arrondie au-dessus |
+| Berserker : jouer *Mur de Fer* (10 Armure) | +5 Puissance ce tour, au lieu de +10. *Défense* (5) → +3 ; *Éveil* (4) → +2 ; *Cri de Guerre* (4) → +2 |
+| Berserker : *Forme Démoniaque*, puis *Mur de Fer* au même tour | Puissance 7 ce tour-ci, puis 2 pendant trois tours (avant : 12 pendant quatre tours). Le panneau des effets montre **deux** lignes « Puissance » ; la barre de vie affiche la somme |
+| Berserker avec le passif *Rage*, *Forme Démoniaque* en cours | La Puissance de *Rage* ne s'accumule plus d'un tour à l'autre dans celle de *Forme Démoniaque* |
+| Deux *Forme Démoniaque* jouées à un tour d'écart | Une seule ligne « Puissance » de 4 : la même carte s'additionne, comme avant |
+| Paladin avec *Ferveur*, deux déclenchements à la suite | Une seule ligne, qui prend la plus longue durée — comme avant |
+
+### 3.2. Les runes (E1)
+
+| À jouer | Attendu |
+|:---|:---|
+| Feu de camp → forge, *Tranchant* sur une *Frappe* commune | La description dit « +1 Dégâts sur la carte (+15% de la base, au moins +1) » ; la carte inflige 1 de plus (avant : +2). Sur *Frappe Lourde*, +2 |
+| *Endurci* | Proposée seulement sur une carte qui donne de l'Armure (parmi les neutres : *Défense*, *Mur de Fer*, *Éveil*, *Cri de Guerre*) ; plus jamais sur *Frappe* |
+| *Économe* | Jamais proposée sur une carte gratuite (*Concentration*, *Focalisation*, *Surtension de Mana*) |
+| *Persistant* | Jamais sur une carte qui pioche ou rend du mana ; jamais sur une carte qui porte *Économe* ou *Véloce*, ni l'inverse |
+| *Économe*, *Véloce*, *Congelant*, *Persistant* | Jamais au niveau 2 ou plus : ni au feu, ni sur une carte pré-forgée de la boutique, ni après une fusion de cartes, ni au nœud Forge de Fusion ; plus reproposées à une carte qui les porte déjà |
+| Fusionner trois *Potions de Soin* portant *Persistant*, *Économe* et rien | La carte obtenue ne porte que *Persistant* |
+| Une *Concentration* peu commune qui porte *Véloce* 1, au feu | Refusée à la sélection, avec un message qui dit qu'aucune rune ne peut plus s'y poser ; la forge ne s'ouvre pas |
+| Une *Frappe* sans rune, au feu | La forge s'ouvre normalement |
+| Fusion 3 → 1 | Chaque chiffre de dégâts, d'armure, de soin ou de statut monte d'au moins 1 par rareté. *Coup Empoisonné* légendaire : 7 dégâts et 5 Poison (avant : 6 et 2) ; *Forme Démoniaque* légendaire : 6 Puissance (avant : 4) ; *Concentration* légendaire : pioche toujours 2 (avant : 4) |
+| *Brûlant* ou *Surchargé* sur une attaque, jouée deux fois sur le même ennemi dans le tour | La brûlure se fond dans celle qui est en cours, et s'éteint au même rythme ; le choc compte enfin dans les dégâts du coup suivant |
+| Jouer une carte qui porte *Économe* | Le son du gain de mana se fait entendre |
+| Infobulle d'une carte qui porte deux *Tranchant* 1 | Une seule ligne, « Tranchant 2 : … », au chiffre que la carte joue |
+| Tutoriel, étape de la fusion | Le texte sur la rareté dit « au moins +1 par fusion » et que la pioche et le mana ne changent pas |
+| Cartes communes sans dégâts ni armure (*Potion de Soin*, *Concentration*…) au feu | Elles se voient proposer *Véloce*, *Économe* ou *Persistant* (selon ce qui leur est permis) : c'est le repli de la forge, qui existait déjà, maintenant que *Tranchant* et *Endurci* ne leur sont plus proposées |
+
+### 3.3. Ce qui doit rester inchangé
+
+- Le déroulé de chaque écran : la forge du feu (fentes, relances, achat de fente), la boutique, la fusion de cartes et son dialogue d'héritage, le nœud Forge de Fusion — seul s'ajoute le refus du feu ci-dessus.
+- Le nombre de runes qu'une carte peut porter selon sa rareté, et les prix de la forge et de la boutique.
+- *Tranchant*, *Endurci*, *Brûlant* et *Surchargé* restent sans plafond de niveau.
+- Paladin et Mage : leurs passifs, leurs statistiques ; le poison s'additionne comme avant.
+- Une partie neuve est conseillée : avant la `1.0`, une sauvegarde d'une version précédente n'a pas à se recharger.
 
 ## 4. La simulation
 
-*(Relancée en §3.6, une fois le code de la vague terminé.)*
+Relancée le 02/10/2026 sur la tête de la branche, le code des deux lots terminé et vert (`ee814e9` pour le code ; commande : `dart run tool/simulations/d26_economy_sim.dart --out .superpowers/d26_vague_1.md`, fichier supprimé avant le lancement) — 337 s.
+
+- **Un seul temps, sans réalignement** (fiche 8.1, orchestration §7.3, ligne 1) : E0 ajoute `ratio` à la classe du Berserker, que le script ignore (son taux est en dur) ; E1 ajoute aux huit runes `deltas`, `maxLevel` et les champs d'éligibilité, que le script ignore, et retire l'`eligibleCardTypes` de *Tranchant* et d'*Endurci*, qu'il ignorait déjà ; aucun `weight` n'a bougé, ni l'`eligibleCardTypes` des six autres runes (vérifié par commande contre `main`).
+- **Résultat** : `git diff --no-index tool/simulations/d26_reference_output.md .superpowers/d26_vague_1.md` — **code 0, rien d'affiché : identique**, ligne « Données lues » comprise (aucun fichier créé ni supprimé sous `assets/data/`).
+- **Ce que ce diff vide prouve** : que le script n'a pas bougé et que la réserve de la fiche tient — un test de non-régression du script, pas une validation des données de la vague (D73). Ni le script ni la référence ne sont recommités.
 
 ## 5. Trouvé périmé, et pour la file
 

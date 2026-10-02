@@ -67,7 +67,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 | Vague | Version | État | Étape | Branche | Spec(s) | Plan(s) | Tests | Livrée le | Close le |
 |:---:|:---|:---|:---|:---|:---|:---|---:|:---|:---|
 | 0 | — | **close** | — | `main`, par exception | — | — | 1187 | 01/10 | 01/10 |
-| 1 | `0.5.3` | **en cours** | 3.7 · fait | `feat/v0.5.3-p43-e0-e1` | [E0](../superpowers/specs/2026-10-01-p43-e0-puissance-par-source-et-ratio-design.md) · [E1](../superpowers/specs/2026-10-02-p43-e1-moteur-de-runes-design.md) | [E0](../superpowers/plans/2026-10-01-p43-e0-puissance-par-source-et-ratio.md) · [E1](../superpowers/plans/2026-10-02-p43-e1-moteur-de-runes.md) | 1187 → 1375 | — | — |
+| 1 | `0.5.3` | **livrée sur branche** | 3.8 · fait | `feat/v0.5.3-p43-e0-e1` | [E0](../superpowers/specs/2026-10-01-p43-e0-puissance-par-source-et-ratio-design.md) · [E1](../superpowers/specs/2026-10-02-p43-e1-moteur-de-runes-design.md) | [E0](../superpowers/plans/2026-10-01-p43-e0-puissance-par-source-et-ratio.md) · [E1](../superpowers/plans/2026-10-02-p43-e1-moteur-de-runes.md) | 1187 → 1375 | 02/10 | — |
 | 2 | `0.5.4` | à faire | — | — | — | — | — | — | — |
 | 3 | `0.5.5` | à faire | — | — | — | — | — | — | — |
 | 4 | `0.5.6` | à faire | — | — | — | — | — | — | — |
