@@ -337,7 +337,7 @@ class CardComponent extends PositionComponent
 
     desc += '${card.data.getDescription(activeLocale)}\n\n';
 
-    if (card.data.type == CardType.power || card.data.isExhaust) {
+    if (card.exhaustsOnPlay) {
       desc +=
           '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }

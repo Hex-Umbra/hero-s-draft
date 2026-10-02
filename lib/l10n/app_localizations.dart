@@ -1430,6 +1430,12 @@ abstract class AppLocalizations {
   /// **'Choose'**
   String get fusionRuneChoose;
 
+  /// No description provided for @tooltipRunes.
+  ///
+  /// In en, this message translates to:
+  /// **'Runes:'**
+  String get tooltipRunes;
+
   /// No description provided for @statusPoison.
   ///
   /// In en, this message translates to:

@@ -420,7 +420,8 @@ String buildDetailedDescription(
   final upgradeDescs = ForgeUpgradeData.tooltipLines(
       forgeUpgrades, activeLocale, data, cardRarity);
   if (upgradeDescs.isNotEmpty) {
-    desc += '\n⚙️ Upgrades:\n${upgradeDescs.map((u) => '• $u').join('\n')}\n';
+    desc += '\n⚙️ ${l10n.tooltipRunes}\n'
+        '${upgradeDescs.map((u) => '• $u').join('\n')}\n';
   }
 
   return desc.isNotEmpty ? desc.trim() : description;

@@ -73,7 +73,7 @@ class UiCard extends StatelessWidget {
       forgeUpgrades: card.forgeUpgrades,
       type: card.data.type,
       targetType: card.data.target,
-      isExhaust: card.data.isExhaust,
+      isExhaust: card.exhaustsOnPlay,
       isSelected: isSelected,
       isGrayedOut: isGrayedOut,
       onTap: onTap,

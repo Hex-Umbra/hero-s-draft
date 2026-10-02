@@ -551,6 +551,7 @@
   "fusionRuneTitle": "MERGE — CHOOSE A RUNE",
   "fusionRuneSubtitle": "The card keeps its three copies' runes and gains one more, at level 1.",
   "fusionRuneChoose": "Choose",
+  "tooltipRunes": "Runes:",
   "statusPoison": "Poison: {value}",
   "@statusPoison": {
     "placeholders": {

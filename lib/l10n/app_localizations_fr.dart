@@ -833,6 +833,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fusionRuneChoose => 'Choisir';
 
   @override
+  String get tooltipRunes => 'Runes :';
+
+  @override
   String statusPoison(int value) {
     return 'Poison : $value';
   }

@@ -228,6 +228,7 @@
   "fusionRuneTitle": "FUSION — CHOISISSEZ UNE RUNE",
   "fusionRuneSubtitle": "La carte garde les runes de ses trois exemplaires et en reçoit une de plus, au niveau 1.",
   "fusionRuneChoose": "Choisir",
+  "tooltipRunes": "Runes :",
   "statusPoison": "Poison : {value}",
   "statusMight": "Puissance : +{value}",
   "statusWeakness": "Faiblesse : {value}",
