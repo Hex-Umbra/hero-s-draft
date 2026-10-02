@@ -62,6 +62,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 🔨 | [P-41 — Plan du lot D, partie 2](superpowers/plans/2026-09-20-p41-lot-d-partie-2-console-de-debug.md) *(validation de `statRules`, passif garanti à la création guidée, récompenses éditables, menu de debug)* | 20/09/2026 |
 | 📐🔨 | [P-49 — Passifs partagés](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) *(éligibilité déclarée par le passif, point d'accès unique, Maîtrise hybride)* | 16/09/2026 |
 | 📐🔨 | [P-43 E0 — Une Puissance par source et le `ratio` de conversion](superpowers/specs/2026-10-01-p43-e0-puissance-par-source-et-ratio-design.md) · [plan](superpowers/plans/2026-10-01-p43-e0-puissance-par-source-et-ratio.md) *(vague 1, `0.5.3` ; D36, D37)* | 01/10/2026 |
+| 📐 | [P-43 E1 — Le moteur de runes data-driven](superpowers/specs/2026-10-02-p43-e1-moteur-de-runes-design.md) *(vague 1, `0.5.3` ; D27, D33, D44, D51, D61, D68, D72, D75, G1, G2)* | 02/10/2026 |
 | 📝 | [Compte rendu de la vague 1 — `0.5.3`, E0 et E1](superpowers/reports/2026-10-02-economie-et-catalogue-vague-1-compte-rendu.md) *(arbitrages, décisions d'exécution, cahier de test manuel, simulation)* | 02/10/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
