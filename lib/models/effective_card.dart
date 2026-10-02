@@ -95,8 +95,16 @@ class EffectiveCard {
         runeDeltas(runes, GameDataRegistry.instance?.forgeUpgrades ?? const []),
       );
 
+  /// G2 : la pioche et le mana rendu ne grandissent pas avec la rareté — la
+  /// seule écriture de la règle (brainstorm §4.5, spec P-43 E1, A6, §4.3).
+  static const _frozenByRarity = {'draw', 'gain_mana'};
+
+  /// L'effet à la rareté de la carte : G1 (`CardRarity.scaleValue`), sauf
+  /// pour ce que G2 gèle.
   static CardEffect _atRarity(CardEffect effect, CardRarity rarity) =>
-      _withValue(effect, (effect.value * rarity.multiplier).round());
+      _frozenByRarity.contains(effect.type)
+          ? effect
+          : _withValue(effect, rarity.scaleValue(effect.value));
 
   static CardEffect _withValue(CardEffect effect, int value) => CardEffect(
         type: effect.type,

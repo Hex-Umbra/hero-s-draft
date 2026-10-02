@@ -42,6 +42,65 @@ ForgeUpgradeData _rune(String id, List<CardDelta> deltas) => ForgeUpgradeData(
 
 /// L'applicateur : la carte telle qu'elle se joue (spec P-43 E1, §4.1, §4.2).
 void main() {
+  group('G1 et G2', () {
+    // Spec §4.3 : la valeur d'un effet, de commune a legendaire.
+    List<int> ladder(CardEffect effect) => [
+          for (final rarity in const [
+            CardRarity.common,
+            CardRarity.uncommon,
+            CardRarity.rare,
+            CardRarity.epic,
+            CardRarity.legendary,
+          ])
+            EffectiveCard.apply(_card([effect]), rarity, const [])
+                .effects
+                .single
+                .value,
+        ];
+
+    test('G1 : chaque palier ajoute au moins 1 aux petites valeurs', () {
+      expect(ladder(_damage(1)), [1, 2, 3, 4, 5]);
+      expect(ladder(_damage(2)), [2, 3, 4, 5, 6]);
+      expect(ladder(_damage(3)), [3, 4, 5, 6, 7]);
+      expect(ladder(_damage(4)), [4, 5, 6, 7, 8]);
+    });
+
+    test('G1 : a partir de 5, la valeur multipliee d aujourd hui', () {
+      expect(ladder(_damage(5)), [5, 6, 7, 8, 10]);
+      expect(ladder(_damage(12)), [12, 14, 17, 19, 24]);
+    });
+
+    test('G1 vaut pour le soin et pour la valeur d un statut', () {
+      expect(ladder(const CardEffect(type: 'heal', value: 3)), [3, 4, 5, 6, 7]);
+      expect(
+        ladder(const CardEffect(
+            type: 'apply_status', value: 1, statusId: 'poison', duration: 2)),
+        [1, 2, 3, 4, 5],
+      );
+    });
+
+    test('unique rend la base', () {
+      expect(
+        EffectiveCard.apply(_card([_damage(1)]), CardRarity.unique, const [])
+            .effects
+            .single
+            .value,
+        1,
+      );
+    });
+
+    test('G2 : la pioche et le mana ne grandissent pas avec la rarete', () {
+      expect(ladder(const CardEffect(type: 'draw', value: 2)), [2, 2, 2, 2, 2]);
+      expect(
+          ladder(const CardEffect(type: 'gain_mana', value: 1)), [1, 1, 1, 1, 1]);
+    });
+
+    // Review Focus 1 : sans sa garde, une valeur nulle gagnerait 1 par palier.
+    test('une valeur nulle reste nulle a toute rarete', () {
+      expect(ladder(_damage(0)), [0, 0, 0, 0, 0]);
+    });
+  });
+
   group('percentBonus', () {
     test('la table de D33 sur une carte commune', () {
       // Spec §4.8 : le bonus des niveaux 1 a 4 selon la valeur de l'effet.

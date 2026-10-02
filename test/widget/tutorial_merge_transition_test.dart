@@ -134,6 +134,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 650)); // fin du contrôleur (600 ms) + flash
       await tester.pump(const Duration(milliseconds: 200)); // callback différé de 150 ms
+      // L'encart dit ce qui est vrai de toute carte fusionnée, une carte dont
+      // aucun chiffre ne grandit comprise (spec P-43 E1, §5.4).
+      expect(find.text('Même coût, rareté supérieure.'), findsOneWidget);
 
       await _tapNext(tester); // -> 12 L'Expérience & le Level Up
       expect(tester.takeException(), isNull);

@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:flutter/foundation.dart';
 import '../../services/audio/audio_source.dart';
 import 'game_data_registry.dart';
@@ -27,10 +29,11 @@ enum CardRarity {
         CardRarity.legendary || CardRarity.unique => null,
       };
 
-  /// Emplacements de rune que cette rareté ajoute à `baseMaxForgeUpgrades`.
-  ///
-  /// Nul pour `unique` : une carte de classe a une capacité fixe (ADR-026).
-  int get forgeSlotBonus => switch (this) {
+  /// Le nombre de fusions qu'il a fallu pour atteindre cette rareté : 0 à 4
+  /// de `common` à `legendary`, 0 pour `unique`, qui ne fusionne jamais
+  /// (ADR-026). La capacité de forge le lit (`forgeCapacityAt`) en attendant
+  /// E2, et G1 compte ses paliers (`scaleValue`).
+  int get fusionRank => switch (this) {
         CardRarity.common || CardRarity.unique => 0,
         CardRarity.uncommon => 1,
         CardRarity.rare => 2,
@@ -38,8 +41,8 @@ enum CardRarity {
         CardRarity.legendary => 4,
       };
 
-  /// Le multiplicateur de valeur de cette rareté, que l'applicateur lit
-  /// (`EffectiveCard`). 1,0 pour `unique`, hors de l'échelle.
+  /// Le multiplicateur du palier de cette rareté, que G1 applique palier par
+  /// palier (`scaleValue`). 1,0 pour `unique`, hors de l'échelle.
   double get multiplier => switch (this) {
         CardRarity.common || CardRarity.unique => 1.0,
         CardRarity.uncommon => 1.2,
@@ -47,6 +50,28 @@ enum CardRarity {
         CardRarity.epic => 1.6,
         CardRarity.legendary => 2.0,
       };
+
+  /// Les paliers de l'échelle de fusion au-delà de `common`, dans l'ordre.
+  static const _fusionSteps = [
+    CardRarity.uncommon,
+    CardRarity.rare,
+    CardRarity.epic,
+    CardRarity.legendary,
+  ];
+
+  /// G1 : [base] à cette rareté. À chaque palier franchi depuis `common` —
+  /// [fusionRank] paliers —, la valeur prend le multiplicateur du palier, et
+  /// au moins 1 de plus que la précédente : une fusion augmente d'au moins 1
+  /// chaque chiffre que la rareté multiplie (brainstorm §4.5, spec P-43 E1,
+  /// A5, §4.3). Une base nulle ou négative est rendue telle quelle.
+  int scaleValue(int base) {
+    if (base <= 0) return base;
+    var value = base;
+    for (final step in _fusionSteps.take(fusionRank)) {
+      value = max((base * step.multiplier).round(), value + 1);
+    }
+    return value;
+  }
 
   /// Une carte de cette rareté peut-elle entrer dans le deck en cours de run :
   /// achat, récompense, copie par un Miroir ? Une carte `unique` n'y entre
@@ -150,7 +175,7 @@ class CardData implements AudioSource {
 
   /// Nombre de runes de forge qu'une carte de ce modèle porte à [rarity].
   int forgeCapacityAt(CardRarity rarity) =>
-      baseMaxForgeUpgrades + rarity.forgeSlotBonus;
+      baseMaxForgeUpgrades + rarity.fusionRank;
 
   factory CardData.fromJson(Map<String, dynamic> json) {
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';

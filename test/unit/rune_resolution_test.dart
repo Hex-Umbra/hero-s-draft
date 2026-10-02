@@ -165,6 +165,16 @@ void main() {
     });
   });
 
+  test('G1 : un Coup Empoisonne legendaire inflige 7 degats et pose 5 Poison',
+      () {
+    play(card('poison_stab', rarity: CardRarity.legendary));
+    expect(enemy().currentPv, 100 - 7);
+    expect(
+      enemyStatuses('poison').map((s) => (s.value, s.duration)),
+      [(5, 2)],
+    );
+  });
+
   test('le Berserker convertit en une fois l armure de la carte et celle de '
       'la rune', () {
     // Defense (5) et Endurci 1 (+1) : un seul gain de 6, converti a 0,5.

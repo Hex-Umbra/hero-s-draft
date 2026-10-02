@@ -65,6 +65,13 @@ void main() {
     });
   });
 
+  group('CardRarity.fusionRank', () {
+    test('le nombre de fusions qui menent a la rarete, 0 hors de l echelle', () {
+      expect([for (final rarity in _ladder) rarity.fusionRank], [0, 1, 2, 3, 4]);
+      expect(CardRarity.unique.fusionRank, 0);
+    });
+  });
+
   group('CardRarity.multiplier', () {
     test('un multiplicateur par palier, 1 hors de l echelle', () {
       expect(
