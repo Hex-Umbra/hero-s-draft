@@ -5,7 +5,8 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
-ForgeUpgradeData _rune(String id, {bool stackable = true}) => ForgeUpgradeData(
+ForgeUpgradeData _rune(String id, {bool stackable = true, int? maxLevel}) =>
+    ForgeUpgradeData(
       id: id,
       nameEn: id,
       nameFr: id,
@@ -15,6 +16,7 @@ ForgeUpgradeData _rune(String id, {bool stackable = true}) => ForgeUpgradeData(
       color: '',
       pools: const ['common'],
       stackable: stackable,
+      maxLevel: maxLevel,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -45,6 +47,8 @@ void main() {
         _rune('sharp'),
         _rune('hardened'),
         _rune('enduring', stackable: false),
+        _rune('eco', maxLevel: 1),
+        _rune('capped', maxLevel: 2),
       ],
     );
   });
@@ -96,6 +100,10 @@ void main() {
       expect(ForgeRuneRules.consolidate(['enduring:3']), ['enduring:1']);
     });
 
+    test('borne la somme au plafond de la rune : le surplus se perd', () {
+      expect(ForgeRuneRules.consolidate(['capped:1', 'capped:2']), ['capped:2']);
+    });
+
     test('traite une rune absente du registre comme cumulable', () {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
     });
@@ -124,6 +132,26 @@ void main() {
     test('une reference mal formee ne compte pas, comme dans consolidate', () {
       expect(
         ForgeRuneRules.fusionOptionsFor(_cardWith(['sharp', 'sharp:x', 'sharp:1'])),
+        isEmpty,
+      );
+    });
+
+    test('deux eco:1 : aucune option, la fusion perdrait un niveau', () {
+      expect(
+        ForgeRuneRules.fusionOptionsFor(_cardWith(['eco:1', 'eco:1'])),
+        isEmpty,
+      );
+    });
+
+    test('1 + 1 sous un plafond de 2 : proposee', () {
+      final options =
+          ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:1', 'capped:1']));
+      expect(options.single.totalTier, 2);
+    });
+
+    test('2 + 1 sous un plafond de 2 : non proposee', () {
+      expect(
+        ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:2', 'capped:1'])),
         isEmpty,
       );
     });

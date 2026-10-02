@@ -176,7 +176,15 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
         tier = 3;
       }
     }
-    return '$rolledId:$tier';
+    // Le niveau que la fente affiche est celui que la carte recevra : borné
+    // par le plafond de la rune, ce que la carte en porte déjà compris (D72,
+    // spec P-43 E1, §4.7).
+    final carried =
+        ForgeUpgradeData.levelsOf(card.forgeUpgrades)[rolledId] ?? 0;
+    final level = ForgeUpgradeData.getById(rolledId)
+            ?.boundLevel(tier, carried: carried) ??
+        tier;
+    return '$rolledId:$level';
   }
 
   List<ForgeSlot> _generateInitialSlots(CardInstance card) {

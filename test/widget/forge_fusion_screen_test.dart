@@ -56,6 +56,19 @@ void main() {
     emoji: '⚔️',
   );
 
+  const ecoUpgrade = ForgeUpgradeData(
+    id: 'eco',
+    nameEn: 'Eco',
+    nameFr: 'Économe',
+    descriptionEn: 'Gains +{tier} Mana on play',
+    descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
+    icon: 'diamond_rounded',
+    color: 'cyanAccent',
+    pools: ['rare'],
+    maxLevel: 1,
+    deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
+  );
+
   const enduringUpgrade = ForgeUpgradeData(
     id: 'enduring',
     nameEn: 'Enduring',
@@ -79,7 +92,7 @@ void main() {
     events: const [],
     passives: const [],
     relics: const [],
-    forgeUpgrades: const [sharpUpgrade, enduringUpgrade],
+    forgeUpgrades: const [sharpUpgrade, ecoUpgrade, enduringUpgrade],
   );
 
   Future<ProviderContainer> pumpForgeFusionScreen(
@@ -141,6 +154,25 @@ void main() {
       expect(find.text('ELIGIBLE CARDS'), findsNothing);
       expect(find.text('Strike'), findsNothing);
       expect(find.text('Defend'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a card whose fusion would lose a level is not listed (spec P-43 E1, A10)',
+    (WidgetTester tester) async {
+      // Deux eco:1, d'une sauvegarde d'avant 0.5.3 : les reunir donnerait
+      // eco:1 contre 80 or.
+      final cappedCard = CardInstance(
+        data: strikeCard,
+        forgeUpgrades: const ['eco:1', 'eco:1'],
+      );
+
+      await pumpForgeFusionScreen(tester, masterDeck: [cappedCard]);
+
+      expect(
+        find.text('No cards in your deck have identical runes to merge.'),
+        findsOneWidget,
+      );
     },
   );
 

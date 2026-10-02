@@ -98,6 +98,19 @@ void main() {
     expect(_ids(offered), {'quick'});
   });
 
+  testWidgets('Econome n est jamais tiree au-dessus du niveau 1',
+      (tester) async {
+    // Seule rune du catalogue : chaque fente la tire, a un niveau de 1 a 3
+    // avant la borne (spec P-43 E1, §4.7).
+    shippedRuneRegistry(const ['eco']);
+
+    final offered = await _offeredSlots(
+        tester, CardInstance(data: shippedCard('strike_basic')),
+        rerolls: 30);
+
+    expect(offered, {'eco:1'});
+  });
+
   testWidgets('une fente Tranchant 1 dit son gain sur une Frappe epique qui '
       'en porte deja un', (tester) async {
     shippedRuneRegistry(const ['sharp']);

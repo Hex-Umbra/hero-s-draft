@@ -59,6 +59,19 @@ void main() {
             weight: 80,
           ),
           const ForgeUpgradeData(
+            id: 'eco',
+            nameEn: 'Eco',
+            nameFr: 'Économe',
+            descriptionEn: 'Gains +{tier} Mana on play',
+            descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
+            icon: 'diamond_rounded',
+            color: 'cyanAccent',
+            pools: ['rare'],
+            maxLevel: 1,
+            deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
+            weight: 40,
+          ),
+          const ForgeUpgradeData(
             id: 'enduring',
             nameEn: 'Enduring',
             nameFr: 'Persistant',
@@ -248,6 +261,43 @@ void main() {
       }
 
       expect(updatedUpgrades, equals(['sharp:3', 'hardened:1']));
+    });
+
+    List<CardInstance> threeCopies(List<String> runes) => List.generate(
+          3,
+          (_) => CardInstance(data: strike, forgeUpgrades: runes),
+        );
+
+    test('mergeCards borne trois eco:1 a eco:1 (spec P-43 E1, A9)', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final copies = threeCopies(const ['eco:1']);
+      final deckNotifier = container.read(deckProvider.notifier);
+      deckNotifier.initializeStarterDeck(copies);
+
+      deckNotifier.mergeCards(
+        copies.map((c) => c.uniqueId).toList(),
+        const ['eco:1', 'eco:1', 'eco:1'],
+      );
+
+      expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+          ['eco:1']);
+    });
+
+    test('mergeCards additionne trois sharp:1 en sharp:3', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final copies = threeCopies(const ['sharp:1']);
+      final deckNotifier = container.read(deckProvider.notifier);
+      deckNotifier.initializeStarterDeck(copies);
+
+      deckNotifier.mergeCards(
+        copies.map((c) => c.uniqueId).toList(),
+        const ['sharp:1', 'sharp:1', 'sharp:1'],
+      );
+
+      expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+          ['sharp:3']);
     });
 
     test('mergeCards garde une seule rune non cumulable, au tier 1', () {

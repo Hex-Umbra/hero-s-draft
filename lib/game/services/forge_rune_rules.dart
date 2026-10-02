@@ -33,18 +33,26 @@ class ForgeRuneRules {
       ForgeUpgradeData.getById(runeId)?.stackable ?? true;
 
   /// Réunit les runes de même id, dans l'ordre de leur première apparition :
-  /// les tiers d'une rune cumulable s'additionnent, une rune non cumulable est
+  /// les tiers d'une rune cumulable s'additionnent, bornés par son `maxLevel`
+  /// — le surplus se perd (spec P-43 E1, A9) ; une rune non cumulable est
   /// gardée une fois au tier 1. Une référence mal formée ou de tier nul est
   /// ignorée.
   static List<String> consolidate(Iterable<String> runes) => [
         for (final MapEntry(key: id, value: tier)
             in ForgeUpgradeData.levelsOf(runes).entries)
-          '$id:${isStackable(id) ? tier : 1}',
+          '$id:${isStackable(id) ? _bounded(id, tier) : 1}',
       ];
+
+  /// [tier] borné par le plafond de la rune [id] (D72) ; une rune absente du
+  /// registre n'en a pas.
+  static int _bounded(String id, int tier) =>
+      ForgeUpgradeData.getById(id)?.boundLevel(tier) ?? tier;
 
   /// Fusions que la Forge de Fusion propose pour [card] : une par id de rune
   /// cumulable que la carte porte au moins deux fois, au coût de
-  /// `80 × (N - 1)` or.
+  /// `80 × (N - 1)` or — et seulement si la somme tient sous le plafond de la
+  /// rune : une fusion qui perdrait un niveau n'est pas proposée (spec P-43
+  /// E1, A10).
   static List<FusionOption> fusionOptionsFor(CardInstance card) {
     final groups = <String, List<String>>{};
     for (final rune in card.forgeUpgrades) {
@@ -56,13 +64,15 @@ class ForgeRuneRules {
     final options = <FusionOption>[];
     groups.forEach((id, runes) {
       if (runes.length < 2 || !isStackable(id)) return;
+      final totalTier = runes.fold(
+        0,
+        (sum, rune) => sum + (ForgeUpgradeData.parseRef(rune)?.$2 ?? 0),
+      );
+      if (_bounded(id, totalTier) != totalTier) return;
       options.add(FusionOption(
         upgradeId: id,
         originalUpgrades: runes,
-        totalTier: runes.fold(
-          0,
-          (sum, rune) => sum + (ForgeUpgradeData.parseRef(rune)?.$2 ?? 0),
-        ),
+        totalTier: totalTier,
         cost: 80 * (runes.length - 1),
       ));
     });
