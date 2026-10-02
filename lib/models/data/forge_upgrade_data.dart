@@ -227,9 +227,8 @@ class ForgeUpgradeData {
   /// La description de la rune au niveau [level], sur [card] à [rarity] (spec
   /// P-43 E1, §5.1) : `{tier}` est le niveau ; `{percent}`, le pourcentage de
   /// ce niveau ; `{val}`, ce que la rune ajoute à **cette** carte au-delà des
-  /// [carried] niveaux qu'elle en porte déjà — le gain que joue le moteur,
-  /// calculé par l'applicateur sur le premier effet propre du type visé, 0 si
-  /// la carte n'en a pas.
+  /// [carried] niveaux qu'elle en porte déjà, sur son premier delta chiffré
+  /// (spec P-43 E2, A14, §5.2) — 0 si elle n'en a pas.
   String getDescription(
     int level,
     String locale,
@@ -242,17 +241,34 @@ class ForgeUpgradeData {
     return template
         .replaceAll('{tier}', '$level')
         .replaceAll('{percent}', '${(bonus?.valuePercentPerLevel ?? 0) * level}')
-        .replaceAll('{val}', '${_addedTo(card, rarity, level, carried, bonus)}');
+        .replaceAll('{val}', '${_valueAdded(card, rarity, level, carried)}');
   }
 
-  static int _addedTo(
+  /// `{val}` : ce que le premier delta chiffré de la rune ajoute à [card] —
+  /// le gain que joue le moteur, l'applicateur le calcule quand il dépend de
+  /// la carte ; un delta sans chiffre est passé.
+  int _valueAdded(CardData card, CardRarity rarity, int level, int carried) {
+    for (final delta in deltas) {
+      final value = switch (delta) {
+        PercentBonusDelta() =>
+          _percentAdded(card, rarity, level, carried, delta),
+        AddEffectDelta() => delta.valuePerLevel * level,
+        RemoveExhaustDelta() => null,
+      };
+      if (value != null) return value;
+    }
+    return 0;
+  }
+
+  /// Le bonus marginal de [bonus] sur le premier effet propre du type visé,
+  /// 0 si la carte n'en a pas.
+  static int _percentAdded(
     CardData card,
     CardRarity rarity,
     int level,
     int carried,
-    PercentBonusDelta? bonus,
+    PercentBonusDelta bonus,
   ) {
-    if (bonus == null) return 0;
     final index = card.effects.indexWhere((e) => e.type == bonus.effect);
     if (index == -1) return 0;
     int valueAt(int total) =>

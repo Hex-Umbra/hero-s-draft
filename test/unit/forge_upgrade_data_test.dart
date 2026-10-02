@@ -4,6 +4,8 @@ import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
+import 'shipped_data.dart';
+
 /// Un fichier de rune minimal et valide : chaque test n'y change que ce qu'il
 /// veut casser.
 Map<String, dynamic> _json([Map<String, dynamic> overrides = const {}]) => {
@@ -304,6 +306,57 @@ void main() {
           'fr', strike, CardRarity.common),
       ['Tranchant 3 : +3 Dégâts'],
     );
+  });
+
+  // `{val}` pour toute sorte chiffree (spec P-43 E2, A14, §5.2).
+  group('{val}', () {
+    const strike = CardData(
+      id: 'strike_basic',
+      cost: 1,
+      type: CardType.attack,
+      category: CardCategory.global,
+      rarity: CardRarity.common,
+      target: CardTarget.singleEnemy,
+      effects: [CardEffect(type: 'damage', value: 30)],
+    );
+
+    test('sur addEffect : la valeur par niveau fois le niveau, pas le '
+        'niveau', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': 'Pioche +{val}',
+        'deltas': [
+          {'type': 'addEffect', 'effect': 'draw', 'valuePerLevel': 2},
+        ],
+      }));
+      expect(rune.getDescription(3, 'fr', strike, CardRarity.common),
+          'Pioche +6');
+    });
+
+    test('lit le premier delta chiffre', () {
+      // Le pourcentage donnerait 15 % x 2 x 30 = 9 ; le premier delta
+      // chiffre est le mana rendu, 1 par niveau.
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}',
+        'deltas': [
+          {'type': 'removeExhaust'},
+          {'type': 'addEffect', 'effect': 'gain_mana', 'valuePerLevel': 1},
+          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
+        ],
+      }));
+      expect(rune.getDescription(2, 'fr', strike, CardRarity.common), '+2');
+    });
+
+    test('les cinq runes a effet ajoute disent leur valeur, que l ecran '
+        'montrait deja', () {
+      final card = shippedCard('strike_basic');
+      String text(String id, int level) =>
+          shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
+      expect(text('burning', 3), 'Applique 3 Brûlure');
+      expect(text('freezing', 1), 'Applique 1 Gel');
+      expect(text('shocking', 2), 'Applique 2 Électrocution');
+      expect(text('quick', 1), 'Pioche +1 carte(s)');
+      expect(text('eco', 1), "Gagne +1 Mana à l'utilisation");
+    });
   });
 
   // La regle des infobulles, que suivent la ligne de rune et le dialogue de
