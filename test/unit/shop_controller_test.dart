@@ -477,9 +477,11 @@ void main() {
       runController.updateState(container.read(runProvider).copyWith(act: 3));
 
       var runed = 0;
+      var rareOrAbove = 0;
       for (var i = 0; i < 300; i++) {
         shopController.initializeShop(cards, 0);
         for (final card in shopController.state.cardsForSale) {
+          if (card.rarity.fusionRank >= 2) rareOrAbove++;
           final ids = [
             for (final ref in card.forgeUpgrades)
               ForgeUpgradeData.parseRef(ref)!.$1,
@@ -497,13 +499,16 @@ void main() {
           if (ids.isNotEmpty) runed++;
         }
       }
-      // Garde contre un test qui passerait a vide.
+      // Gardes contre un test qui passerait a vide : des cartes runees, et
+      // des cartes de rang 2 au moins, ou la borne et Econome s'eprouvent.
       expect(runed, greaterThan(0));
+      expect(rareOrAbove, greaterThan(0));
     });
 
-    test('la boutique ne tire une rune non cumulable qu au tier 1', () {
-      // Le registre est statique : un registre vide le remplace en sortie,
-      // equivalent a son absence pour ce controleur.
+    // Le tirage de la fusion, sans ciblage par rarete (D68 ; spec P-43 E2,
+    // A12, §4.9) : une peu commune recoit l'une ou l'autre rune.
+    test('une pre-forgee tire parmi toutes les runes eligibles, a leur poids',
+        () {
       addTearDown(
         () => GameDataRegistry(
           enemies: const [],
@@ -515,7 +520,6 @@ void main() {
           forgeUpgrades: const [],
         ),
       );
-      // Un id autre qu'`enduring` : c'est la donnee qui decide, pas l'id.
       GameDataRegistry(
         enemies: const [],
         heroes: const [],
@@ -525,29 +529,42 @@ void main() {
         relics: const [],
         forgeUpgrades: const [
           ForgeUpgradeData(
-            id: 'steadfast',
-            nameEn: 'Steadfast',
-            nameFr: 'Inebranlable',
+            id: 'alpha',
+            nameEn: 'Alpha',
+            nameFr: 'Alpha',
             descriptionEn: '',
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['common', 'uncommon', 'rare'],
-            stackable: false,
+            pools: ['rare'],
+          ),
+          ForgeUpgradeData(
+            id: 'beta',
+            nameEn: 'Beta',
+            nameFr: 'Beta',
+            descriptionEn: '',
+            descriptionFr: '',
+            icon: '',
+            color: '',
+            pools: ['common'],
           ),
         ],
       );
       runController.updateState(container.read(runProvider).copyWith(act: 3));
 
-      final rolled = <String>{};
-      for (var i = 0; i < 100; i++) {
+      final onUncommon = <String>{};
+      for (var i = 0; i < 300; i++) {
         shopController.initializeShop(testCardPool, 0);
         for (final card in shopController.state.cardsForSale) {
-          rolled.addAll(card.forgeUpgrades);
+          if (card.rarity != CardRarity.uncommon) continue;
+          onUncommon.addAll([
+            for (final ref in card.forgeUpgrades)
+              ForgeUpgradeData.parseRef(ref)!.$1,
+          ]);
         }
       }
 
-      expect(rolled, {'steadfast:1'});
+      expect(onUncommon, {'alpha', 'beta'});
     });
 
     group('filtre de classe sur le pool de boutique', () {

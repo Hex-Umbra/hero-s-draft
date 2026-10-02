@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/shop_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
-import '../../models/data/forge_upgrade_data.dart';
 import '../../models/card_instance.dart';
 import '../services/forge_rune_rules.dart';
 import 'run_controller.dart';
@@ -47,111 +46,20 @@ class ShopController extends Notifier<ShopState> {
     return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
   }
 
-  /// Les runes éligibles du pool [poolName] pour [card], hors celles déjà
-  /// tirées ([currentRolls]) : `pools` reste le ciblage par rareté du tirage,
-  /// tout le reste est le prédicat, lu dans la donnée (spec P-43 E1, §4.6).
-  List<String> _getEligibleUpgradesForPool(CardInstance card, String poolName, List<String> currentRolls) {
-    final registry = GameDataRegistry.instance;
-    if (registry == null) return [];
-
-    final catalog = registry.forgeUpgrades;
-    return [
-      for (final upgrade in catalog)
-        if (upgrade.pools.contains(poolName) &&
-            !currentRolls.any((u) => u.split(':')[0] == upgrade.id) &&
-            ForgeRuneRules.isEligible(upgrade, card, catalog))
-          upgrade.id,
-    ];
-  }
-
-  /// Helper privé pour tirer un ID d'upgrade aléatoire compatible
-  String? _rollUpgradeId(CardInstance card, Random rand, List<String> excludedIdsInCurrentRolls) {
-    final r = rand.nextInt(100);
-    String targetPool;
-    if (card.rarity == CardRarity.common) {
-      targetPool = 'common';
-    } else if (card.rarity == CardRarity.uncommon) {
-      targetPool = r < 75 ? 'common' : 'uncommon';
-    } else {
-      targetPool = r < 65 ? 'common' : (r < 90 ? 'uncommon' : 'rare');
-    }
-
-    List<String> poolOrder = ['rare', 'uncommon', 'common'];
-    int startIndex = poolOrder.indexOf(targetPool);
-    if (startIndex == -1) startIndex = 2;
-
-    for (int i = startIndex; i < poolOrder.length; i++) {
-      final pool = poolOrder[i];
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-
-    for (final pool in poolOrder) {
-      final eligibleIds = _getEligibleUpgradesForPool(card, pool, excludedIdsInCurrentRolls);
-      if (eligibleIds.isNotEmpty) {
-        return _rollWeighted(eligibleIds, rand);
-      }
-    }
-    return null;
-  }
-
-  String _rollWeighted(List<String> eligibleIds, Random rand) {
-    int totalWeight = 0;
-    final upgrades = <ForgeUpgradeData>[];
-    for (final id in eligibleIds) {
-      final upg = ForgeUpgradeData.getById(id);
-      if (upg != null) {
-        upgrades.add(upg);
-        totalWeight += upg.weight;
-      }
-    }
-
-    if (totalWeight == 0 || upgrades.isEmpty) {
-      return eligibleIds[rand.nextInt(eligibleIds.length)];
-    }
-
-    int choice = rand.nextInt(totalWeight);
-    int currentSum = 0;
-    for (final upg in upgrades) {
-      currentSum += upg.weight;
-      if (choice < currentSum) {
-        return upg.id;
-      }
-    }
-    return upgrades.last.id;
-  }
-
   /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :
-  /// le prédicat les lit (spec P-43 E1, A12) et n'en repropose aucune (D3).
-  /// `null` s'il ne lui reste aucune rune éligible : la carte en reçoit une
-  /// de moins.
+  /// une parmi celles que le prédicat accepte au rang de la carte, pondérées
+  /// par `weight` — le tirage de la fusion (spec P-43 E2, A12, §4.9). `null`
+  /// s'il ne lui en reste aucune : la carte en reçoit une de moins. Son niveau
+  /// est tiré 80 · 15 · 5 %, puis borné par le plafond de la rune (D72) ; la
+  /// carte n'en porte aucun niveau, le prédicat refusant une rune portée.
   String? _rollRandomUpgrade(CardInstance card, Random rng) {
-    final excludedIds =
-        card.forgeUpgrades.map((u) => u.split(':')[0]).toList();
-    final rolledId = _rollUpgradeId(card, rng, excludedIds);
-    if (rolledId == null) return null;
-
-    int tier = 1;
-    if (ForgeRuneRules.isStackable(rolledId)) {
-      final t = rng.nextInt(100);
-      if (t < 80) {
-        tier = 1;
-      } else if (t < 95) {
-        tier = 2;
-      } else {
-        tier = 3;
-      }
-    }
-    // Borné par le plafond de la rune, ce que la carte en porte déjà compris
-    // (D72, spec P-43 E1, §4.7).
-    final carried =
-        ForgeUpgradeData.levelsOf(card.forgeUpgrades)[rolledId] ?? 0;
-    final level = ForgeUpgradeData.getById(rolledId)
-            ?.boundLevel(tier, carried: carried) ??
-        tier;
-    return '$rolledId:$level';
+    final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
+    final drawn = ForgeRuneRules.drawRunes(card, catalog, rng, count: 1);
+    if (drawn.isEmpty) return null;
+    final rune = catalog.firstWhere((r) => r.id == drawn.single);
+    final roll = rng.nextInt(100);
+    final tier = roll < 80 ? 1 : (roll < 95 ? 2 : 3);
+    return '${rune.id}:${rune.boundLevel(tier)}';
   }
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte
