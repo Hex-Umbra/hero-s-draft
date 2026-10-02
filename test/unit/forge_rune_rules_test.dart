@@ -153,54 +153,6 @@ void main() {
     });
   });
 
-  group('ForgeRuneRules.fusionOptionsFor', () {
-    test('une fusion par rune cumulable portee au moins deux fois', () {
-      final options = ForgeRuneRules.fusionOptionsFor(
-        _cardWith(['sharp:1', 'sharp:2', 'hardened:1']),
-      );
-
-      expect(options, hasLength(1));
-      expect(options.single.upgradeId, 'sharp');
-      expect(options.single.originalUpgrades, ['sharp:1', 'sharp:2']);
-      expect(options.single.totalTier, 3);
-      expect(options.single.cost, 80);
-    });
-
-    test('une reference mal formee ne compte pas, comme dans consolidate', () {
-      expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['sharp', 'sharp:x', 'sharp:1'])),
-        isEmpty,
-      );
-    });
-
-    test('deux eco:1 : aucune option, la fusion perdrait un niveau', () {
-      expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['eco:1', 'eco:1'])),
-        isEmpty,
-      );
-    });
-
-    test('1 + 1 sous un plafond de 2 : proposee', () {
-      final options =
-          ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:1', 'capped:1']));
-      expect(options.single.totalTier, 2);
-    });
-
-    test('2 + 1 sous un plafond de 2 : non proposee', () {
-      expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['capped:2', 'capped:1'])),
-        isEmpty,
-      );
-    });
-
-    test('jamais de fusion pour une rune non cumulable', () {
-      expect(
-        ForgeRuneRules.fusionOptionsFor(_cardWith(['enduring:1', 'enduring:1'])),
-        isEmpty,
-      );
-    });
-  });
-
   // L'offre de la fusion (spec P-43 E2, A2, §4.4).
   group('ForgeRuneRules.drawRunes', () {
     // Une Frappe peu commune : le rang 1 qu'atteint une premiere fusion.
@@ -298,6 +250,76 @@ void main() {
             _cardWith(['eco:1', 'sharp:3']), catalog),
         isTrue,
       );
+    });
+  });
+
+  // Le Puits d'echange (spec P-43 E2, A5, A6, §4.8).
+  group('le Puits', () {
+    const given = [1, 2, 3, 4, 5, 6, 9, 12];
+
+    test('wellCost : 50 or par niveau de la rune donnee (A6, D39)', () {
+      expect([for (final level in given) ForgeRuneRules.wellCost(level)],
+          [50, 100, 150, 200, 250, 300, 450, 600]);
+    });
+
+    test('wellLevel : les deux tiers, arrondis au plus proche, au moins 1 '
+        '(D39)', () {
+      expect(
+        [for (final level in given) ForgeRuneRules.wellLevel(_rune('x'), level)],
+        [1, 1, 2, 3, 3, 4, 6, 8],
+      );
+    });
+
+    test('wellLevel : borne par le plafond de la rune recue — Tranchant 9 '
+        'contre Econome 1', () {
+      expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 9), 1);
+    });
+
+    // Les runes livrees, par une liste fixe : le cas ne bouge pas quand une
+    // rune s'ajoute au catalogue.
+    List<String> optionsOf(
+      CardInstance card,
+      String givenId,
+      List<String> ids,
+    ) =>
+        [
+          for (final rune in ForgeRuneRules.wellOptions(
+              card, givenId, [for (final id in ids) shippedRune(id)]))
+            rune.id,
+        ];
+
+    test('wellOptions : toutes les eligibles, la rune donnee exclue', () {
+      final strike = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['sharp:2'],
+      );
+      expect(
+        optionsOf(
+            strike, 'sharp', const ['burning', 'freezing', 'hardened', 'sharp']),
+        ['burning', 'freezing'],
+      );
+    });
+
+    test('wellOptions : jugee sans la rune donnee — Persistant donne, Econome '
+        'possible sur une rare', () {
+      final potion = CardInstance(
+        data: shippedCard('heal_potion'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['enduring:1'],
+      );
+      expect(optionsOf(potion, 'enduring', const ['eco', 'enduring', 'quick']),
+          ['eco', 'quick']);
+    });
+
+    test('wellOptions : au rang de la carte', () {
+      final potion = CardInstance(
+        data: shippedCard('heal_potion'),
+        rarity: CardRarity.uncommon,
+        forgeUpgrades: const ['enduring:1'],
+      );
+      expect(optionsOf(potion, 'enduring', const ['eco', 'enduring', 'quick']),
+          isEmpty);
     });
   });
 }

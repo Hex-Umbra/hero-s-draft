@@ -486,6 +486,33 @@
     }
   },
   "runeMaxLevel": "Max level",
+  "wellTitle": "EXCHANGE WELL",
+  "wellName": "Exchange Well",
+  "wellDesc": "Swap one of a card's runes for another, for gold.",
+  "wellEmpty": "No card in your deck carries a rune to swap.",
+  "wellPickCard": "Choose a card, then the rune to give up.",
+  "wellNoOption": "No other rune can replace it.",
+  "wellReceive": "Received at level {level}",
+  "@wellReceive": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "wellExchange": "Swap — {cost} gold",
+  "@wellExchange": {
+    "placeholders": {
+      "cost": { "type": "int" }
+    }
+  },
+  "wellDone": "{oldRune} becomes {newRune} (level {level}).",
+  "@wellDone": {
+    "placeholders": {
+      "oldRune": { "type": "String" },
+      "newRune": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
+  "wellLeave": "Leave the Well",
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",

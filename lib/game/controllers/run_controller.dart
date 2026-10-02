@@ -459,6 +459,11 @@ class RunController extends Notifier<RunState> {
   /// §4.7) ; voir `GoldManager.sharpenRune`.
   bool sharpenRune(String cardId, String runeId) =>
       _goldManager.sharpenRune(cardId, runeId);
+
+  /// Échange au Puits une rune d'une carte du deck contre une autre, contre
+  /// de l'or (spec P-43 E2, §4.8) ; voir `GoldManager.exchangeRune`.
+  bool exchangeRune(String cardId, String givenId, String receivedId) =>
+      _goldManager.exchangeRune(cardId, givenId, receivedId);
 }
 
 final runProvider = NotifierProvider<RunController, RunState>(RunController.new);

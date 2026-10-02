@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/data/forge_upgrade_data.dart';
+import '../../../models/data/game_data_registry.dart';
 import '../../services/forge_rune_rules.dart';
 import '../deck_controller.dart';
 import '../inventory_controller.dart';
@@ -44,6 +45,45 @@ class GoldManager {
             card.forgeUpgrades,
             runeId,
             '$runeId:${level + 1}',
+          ),
+        );
+    return true;
+  }
+
+  /// Échange au Puits la rune [givenId] de la carte [cardId] du deck contre
+  /// [receivedId] (D6, D39 ; spec P-43 E2, A5, §4.8) : la rune reçue prend
+  /// sa place, au niveau `ForgeRuneRules.wellLevel`, contre
+  /// `ForgeRuneRules.wellCost(niveau donné)` or. Refuse — sans rien toucher —
+  /// si la carte ne porte pas la rune donnée, si la rune reçue n'est pas
+  /// parmi `ForgeRuneRules.wellOptions`, ou si l'or manque. Rend vrai si
+  /// l'échange a eu lieu.
+  bool exchangeRune(String cardId, String givenId, String receivedId) {
+    final card = ref
+        .read(deckProvider)
+        .masterDeck
+        .where((c) => c.uniqueId == cardId)
+        .firstOrNull;
+    final level = card == null
+        ? null
+        : ForgeUpgradeData.levelsOf(card.forgeUpgrades)[givenId];
+    if (card == null || level == null) return false;
+    final received = ForgeRuneRules.wellOptions(
+      card,
+      givenId,
+      GameDataRegistry.instance?.forgeUpgrades ?? const [],
+    ).where((r) => r.id == receivedId).firstOrNull;
+    if (received == null) return false;
+    if (!ref
+        .read(inventoryProvider.notifier)
+        .spendGold(ForgeRuneRules.wellCost(level))) {
+      return false;
+    }
+    ref.read(deckProvider.notifier).setForgeUpgrades(
+          cardId,
+          ForgeRuneRules.replaceRune(
+            card.forgeUpgrades,
+            givenId,
+            '$receivedId:${ForgeRuneRules.wellLevel(received, level)}',
           ),
         );
     return true;

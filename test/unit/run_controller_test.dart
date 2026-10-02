@@ -328,5 +328,95 @@ void main() {
       expect(container.read(inventoryProvider).gold, 99);
       expect(runesOf(card), ['sharp:2']);
     });
+
+    test('refuse une rune que la carte ne porte pas, sans rien toucher', () {
+      final card = seed(const ['sharp:2'], gold: 1000);
+
+      expect(run.sharpenRune(card.uniqueId, 'burning'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 1000);
+      expect(runesOf(card), ['sharp:2']);
+    });
+
+    test('refuse une rune absente du registre, sans rien toucher', () {
+      final card = seed(const ['legacy:1'], gold: 1000);
+
+      expect(run.sharpenRune(card.uniqueId, 'legacy'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 1000);
+      expect(runesOf(card), ['legacy:1']);
+    });
+  });
+
+  // Le Puits : payer et ecrire, ou rien (spec P-43 E2, §4.8, A16).
+  group('RunController.exchangeRune', () {
+    late ProviderContainer container;
+    late RunController run;
+
+    setUp(() {
+      shippedRuneRegistry(const ['burning', 'eco', 'hardened', 'quick', 'sharp']);
+      container = ProviderContainer();
+      run = container.read(runProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    /// Une Frappe rare portant [runes], seule carte du deck, et [gold] or.
+    CardInstance seed(List<String> runes, {required int gold}) {
+      container.read(inventoryProvider.notifier).reset(initialGold: gold);
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: runes,
+      );
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
+      return card;
+    }
+
+    List<String> runesOf(CardInstance card) => container
+        .read(deckProvider)
+        .masterDeck
+        .singleWhere((c) => c.uniqueId == card.uniqueId)
+        .forgeUpgrades;
+
+    // Review Focus 1 : l'or tout juste suffisant.
+    test('depense 50 x L et met la rune recue a sa place, aux deux tiers', () {
+      final card = seed(const ['sharp:3', 'quick:1'], gold: 150);
+
+      expect(run.exchangeRune(card.uniqueId, 'sharp', 'burning'), isTrue);
+
+      expect(container.read(inventoryProvider).gold, 0);
+      expect(runesOf(card), ['burning:2', 'quick:1']);
+    });
+
+    test('refuse une rune recue hors wellOptions, sans rien toucher', () {
+      final card = seed(const ['sharp:3', 'quick:1'], gold: 1000);
+
+      // Endurci ne vise que l'armure ; Veloce est deja portee.
+      expect(run.exchangeRune(card.uniqueId, 'sharp', 'hardened'), isFalse);
+      expect(run.exchangeRune(card.uniqueId, 'sharp', 'quick'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 1000);
+      expect(runesOf(card), ['sharp:3', 'quick:1']);
+    });
+
+    test('refuse faute d or, sans rien toucher', () {
+      final card = seed(const ['sharp:3'], gold: 149);
+
+      expect(run.exchangeRune(card.uniqueId, 'sharp', 'burning'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 149);
+      expect(runesOf(card), ['sharp:3']);
+    });
+
+    test('refuse une rune donnee que la carte ne porte pas, sans rien '
+        'toucher', () {
+      final card = seed(const ['sharp:3'], gold: 1000);
+
+      expect(run.exchangeRune(card.uniqueId, 'burning', 'eco'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 1000);
+      expect(runesOf(card), ['sharp:3']);
+    });
   });
 }

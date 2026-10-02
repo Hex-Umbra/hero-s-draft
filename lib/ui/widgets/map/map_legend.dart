@@ -114,9 +114,7 @@ class MapLegend extends StatelessWidget {
           LegendItem(
             icon: Icons.layers_rounded,
             color: Colors.deepPurpleAccent,
-            label: Localizations.localeOf(context).languageCode == 'fr'
-                ? "Forge de Fusion"
-                : "Fusion Forge",
+            label: l10n.wellName,
           ),
           const Divider(color: Colors.white24, height: 12),
           LegendItem(

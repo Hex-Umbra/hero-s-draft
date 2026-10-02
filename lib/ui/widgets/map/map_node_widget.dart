@@ -52,13 +52,7 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
               : "Exchange 3 of your relics for a higher rarity relic."
         );
       case MapNodeType.forgeFusion:
-        final isFr = Localizations.localeOf(context).languageCode == 'fr';
-        return (
-          isFr ? "Forge de Fusion" : "Fusion Forge",
-          isFr
-              ? "Fusionnez des runes identiques sur vos cartes contre de l'or pour cumuler leurs effets."
-              : "Merge identical runes on your cards for gold to combine their effects."
-        );
+        return (l10n.wellName, l10n.wellDesc);
       case MapNodeType.boss:
         if (widget.node.bossRewardType == BossRewardType.cards) {
           return (l10n.legendBossCards, l10n.tooltipBossDesc);

@@ -1262,6 +1262,66 @@ abstract class AppLocalizations {
   /// **'Max level'**
   String get runeMaxLevel;
 
+  /// No description provided for @wellTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EXCHANGE WELL'**
+  String get wellTitle;
+
+  /// No description provided for @wellName.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange Well'**
+  String get wellName;
+
+  /// No description provided for @wellDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap one of a card\'s runes for another, for gold.'**
+  String get wellDesc;
+
+  /// No description provided for @wellEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No card in your deck carries a rune to swap.'**
+  String get wellEmpty;
+
+  /// No description provided for @wellPickCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a card, then the rune to give up.'**
+  String get wellPickCard;
+
+  /// No description provided for @wellNoOption.
+  ///
+  /// In en, this message translates to:
+  /// **'No other rune can replace it.'**
+  String get wellNoOption;
+
+  /// No description provided for @wellReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Received at level {level}'**
+  String wellReceive(int level);
+
+  /// No description provided for @wellExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap — {cost} gold'**
+  String wellExchange(int cost);
+
+  /// No description provided for @wellDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{oldRune} becomes {newRune} (level {level}).'**
+  String wellDone(String oldRune, String newRune, int level);
+
+  /// No description provided for @wellLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the Well'**
+  String get wellLeave;
+
   /// No description provided for @restCampRemoveTitle.
   ///
   /// In en, this message translates to:

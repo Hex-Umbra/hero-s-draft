@@ -3,9 +3,9 @@ import '../../../models/data/forge_upgrade_data.dart';
 import '../game_button.dart';
 
 /// La ligne d'une rune, commune aux écrans qui en proposent une — le choix
-/// de la fusion, l'affûtage du feu (spec P-43 E2, §4.5) : l'icône et la
-/// couleur de la rune, un titre, sa description, et un bouton dont l'écran
-/// donne le libellé et l'état.
+/// de la fusion, l'affûtage du feu, l'échange au Puits (spec P-43 E2,
+/// §4.5) : l'icône et la couleur de la rune, un titre, sa description, et un
+/// bouton dont l'écran donne le libellé et l'état.
 class ForgeSlotRow extends StatelessWidget {
   final ForgeUpgradeData rune;
   final String title;

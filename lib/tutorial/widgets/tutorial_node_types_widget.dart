@@ -81,10 +81,10 @@ class TutorialNodeTypesWidget extends StatelessWidget {
     NodeTypeInfo(
       icon: Icons.layers_rounded,
       color: Colors.deepPurpleAccent,
-      titleEn: 'Fusion Forge',
-      titleFr: 'Forge de Fusion',
-      descEn: 'Merge duplicate upgrades, for gold.',
-      descFr: 'Fusionne les améliorations dupliquées, contre de l\'or.',
+      titleEn: 'Exchange Well',
+      titleFr: 'Puits d\'échange',
+      descEn: 'Swap a rune for another, for gold.',
+      descFr: 'Échangez une rune contre une autre, contre de l\'or.',
     ),
     NodeTypeInfo(
       icon: Icons.style,

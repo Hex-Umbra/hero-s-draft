@@ -79,7 +79,8 @@ const List<TutorialStep> kTutorialSteps = [
         'gold, **or remove a card from your deck**.\n'
         '• 🎭 Event: narrative choices with real consequences.\n'
         '• 🔄 Relic Shrine: sacrifice relics for a better one.\n'
-        '• 🧩 Fusion Forge: merge a card\'s duplicate upgrades, for gold.\n'
+        '• 🧩 Exchange Well: swap one of a card\'s runes for another, for '
+        'gold — every third act.\n'
         '• 💀 Boss: three at the summit, one reward each — cards, triple XP '
         'and gold, or an improved relic. Choosing the Boss is choosing the '
         'reward.',
@@ -93,8 +94,8 @@ const List<TutorialStep> kTutorialSteps = [
         'contre de l\'or, **ou retirer une carte de votre deck**.\n'
         '• 🎭 Événement : choix narratifs aux conséquences réelles.\n'
         '• 🔄 Autel des Reliques : sacrifier des reliques pour une meilleure.\n'
-        '• 🧩 Forge de Fusion : fusionner les améliorations dupliquées d\'une '
-        'carte, contre de l\'or.\n'
+        '• 🧩 Puits d\'échange : échanger une rune d\'une carte contre une '
+        'autre, contre de l\'or — tous les trois actes.\n'
         '• 💀 Boss : trois au sommet, une récompense chacun — des cartes, le '
         'triple d\'XP et d\'or, ou une relique améliorée. Choisir le Boss, '
         'c\'est choisir la récompense.',
@@ -273,7 +274,7 @@ const List<TutorialStep> kTutorialSteps = [
         'its levels — and the merged card **gains one more, chosen among '
         'three**, at level 1; Quick and Eco only appear from the second '
         'merge. Your class cards are unique, and unique cards never merge. '
-        '**The Fusion Forge is a separate, paid system** — a dedicated map '
+        '**The Exchange Well is a separate, paid system** — a dedicated map '
         'node, not to be confused with this free merging.',
     bodyFr:
         'La fusion est **manuelle**, et seulement hors combat. Ouvrez votre '
@@ -289,8 +290,8 @@ const List<TutorialStep> kTutorialSteps = [
         'rune additionne ses niveaux — et la carte fusionnée **en reçoit une '
         'de plus, au choix parmi trois**, au niveau 1 ; Véloce et Économe '
         'n\'apparaissent qu\'à partir de la deuxième fusion. Vos cartes de '
-        'classe sont uniques, et une carte unique ne fusionne jamais. **La '
-        'Forge de Fusion est un système distinct et payant** — un nœud dédié '
+        'classe sont uniques, et une carte unique ne fusionne jamais. **Le '
+        'Puits d\'échange est un système distinct et payant** — un nœud dédié '
         'de la carte du monde, à ne pas confondre avec cette fusion-ci, qui '
         'reste gratuite.',
     type: TutorialStepType.merge,

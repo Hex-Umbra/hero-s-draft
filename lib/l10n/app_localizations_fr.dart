@@ -729,6 +729,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get runeMaxLevel => 'Niveau maximal';
 
   @override
+  String get wellTitle => 'PUITS D\'ÉCHANGE';
+
+  @override
+  String get wellName => 'Puits d\'échange';
+
+  @override
+  String get wellDesc =>
+      'Échangez une rune d\'une carte contre une autre, contre de l\'or.';
+
+  @override
+  String get wellEmpty =>
+      'Aucune carte de votre deck ne porte de rune à échanger.';
+
+  @override
+  String get wellPickCard => 'Choisissez une carte, puis la rune à donner.';
+
+  @override
+  String get wellNoOption => 'Aucune autre rune ne peut la remplacer.';
+
+  @override
+  String wellReceive(int level) {
+    return 'Reçue au niveau $level';
+  }
+
+  @override
+  String wellExchange(int cost) {
+    return 'Échanger — $cost or';
+  }
+
+  @override
+  String wellDone(String oldRune, String newRune, int level) {
+    return '$oldRune devient $newRune (niveau $level).';
+  }
+
+  @override
+  String get wellLeave => 'Quitter le Puits';
+
+  @override
   String get restCampRemoveTitle => 'OUBLIER UNE CARTE';
 
   @override

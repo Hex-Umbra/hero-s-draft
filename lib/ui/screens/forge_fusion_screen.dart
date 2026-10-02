@@ -7,15 +7,22 @@ import '../../game/controllers/run_controller.dart';
 import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
-import '../widgets/screen_scaffold.dart';
-import '../widgets/page_header.dart';
-import '../widgets/gold_indicator.dart';
-import '../widgets/ui_card.dart';
+import '../widgets/forge/forge_slot_row.dart';
 import '../widgets/game_button.dart';
+import '../widgets/gold_indicator.dart';
 import '../widgets/notification_overlay.dart';
+import '../widgets/page_header.dart';
+import '../widgets/screen_scaffold.dart';
+import '../widgets/ui_card.dart';
 
+/// Le Puits d'échange (D6, D22 ; spec P-43 E2, A5, §4.8) : une rune d'une
+/// carte contre n'importe quelle autre que le prédicat lui permet, aux deux
+/// tiers de son niveau, contre `50 × niveau` or. Un échange par visite : fait,
+/// l'écran ne propose plus que la sortie, et toute sortie résout le nœud. Le
+/// nœud garde son type `forgeFusion`, l'écran son nom (A17).
 class ForgeFusionScreen extends ConsumerStatefulWidget {
   const ForgeFusionScreen({super.key});
 
@@ -24,61 +31,47 @@ class ForgeFusionScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
-  CardInstance? _selectedCard;
+  /// La carte choisie, par son identifiant : elle se relit dans le deck.
+  String? _cardId;
 
-  void _onCardSelected(CardInstance card) {
-    setState(() {
-      _selectedCard = card;
-    });
-  }
+  /// La rune à donner, sur la carte choisie.
+  String? _givenId;
 
-  void _onFusionPerform(CardInstance card, FusionOption fusion, int currentGold) {
-    if (currentGold < fusion.cost) {
-      final isFr = Localizations.localeOf(context).languageCode == 'fr';
-      context.showNotification(
-        isFr ? "Or insuffisant !" : "Not enough Gold!",
-        type: NotificationType.error,
-      );
+  /// Un échange par visite (spec P-43 E2, A5) : un état de déroulé de
+  /// l'écran, qui ne lui survit pas — toute sortie après l'échange résout le
+  /// nœud.
+  bool _exchanged = false;
+
+  /// Les runes du [catalog] que [card] porte, chacune à son niveau.
+  static List<(ForgeUpgradeData, int)> _runesOf(
+    CardInstance card,
+    List<ForgeUpgradeData> catalog,
+  ) =>
+      [
+        for (final MapEntry(key: id, value: level)
+            in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries)
+          if (catalog.where((r) => r.id == id).firstOrNull case final rune?)
+            (rune, level),
+      ];
+
+  void _exchange(
+    CardInstance card,
+    ForgeUpgradeData given,
+    ForgeUpgradeData received,
+    int level,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    if (!ref
+        .read(runProvider.notifier)
+        .exchangeRune(card.uniqueId, given.id, received.id)) {
       return;
     }
-
-    final success = ref.read(inventoryProvider.notifier).spendGold(fusion.cost);
-    if (!success) return;
-
-    // Calculer les nouveaux upgrades
-    final updatedUpgrades = <String>[];
-    bool addedFused = false;
-    for (final upg in card.forgeUpgrades) {
-      final id = upg.split(':')[0];
-      if (id == fusion.upgradeId) {
-        if (!addedFused) {
-          updatedUpgrades.add('${fusion.upgradeId}:${fusion.totalTier}');
-          addedFused = true;
-        }
-      } else {
-        updatedUpgrades.add(upg);
-      }
-    }
-
-    ref.read(deckProvider.notifier).setForgeUpgrades(card.uniqueId, updatedUpgrades);
-
-    final isFr = Localizations.localeOf(context).languageCode == 'fr';
-    final upgradeData = ForgeUpgradeData.getById(fusion.upgradeId);
-    final upgradeName = upgradeData?.getName(isFr ? 'fr' : 'en') ?? fusion.upgradeId;
-
+    setState(() => _exchanged = true);
     context.showNotification(
-      isFr
-          ? "Fusion réussie : $upgradeName (Niveau ${fusion.totalTier})"
-          : "Fusion success: $upgradeName (Tier ${fusion.totalTier})",
+      l10n.wellDone(given.getName(locale), received.getName(locale), level),
       type: NotificationType.success,
     );
-
-    // Mettre à jour l'instance de carte sélectionnée en la rechargeant du deck
-    final masterDeck = ref.read(deckProvider).masterDeck;
-    final updatedCard = masterDeck.firstWhere((c) => c.uniqueId == card.uniqueId, orElse: () => card);
-    setState(() {
-      _selectedCard = updatedCard;
-    });
   }
 
   void _leave() {
@@ -90,358 +83,182 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
   Widget build(BuildContext context) {
     ref.read(musicConductorProvider).onScene(MusicScene.map);
 
-    final deckState = ref.watch(deckProvider);
-    final masterDeck = deckState.masterDeck;
-    final inventoryState = ref.watch(inventoryProvider);
-    final currentGold = inventoryState.gold;
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final isFr = locale == 'fr';
+    final gold = ref.watch(inventoryProvider).gold;
+    final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
+    final cards = [
+      for (final card in ref.watch(deckProvider).masterDeck)
+        if (_runesOf(card, catalog).isNotEmpty) card,
+    ];
+    final selected = cards.where((c) => c.uniqueId == _cardId).firstOrNull;
 
-    // Trouver toutes les cartes éligibles du deck (ayant au moins deux améliorations de même type)
-    final eligibleCards = masterDeck.where((card) {
-      return ForgeRuneRules.fusionOptionsFor(card).isNotEmpty;
-    }).toList();
-
-    // Si la carte sélectionnée n'est plus éligible, la déselectionner
-    if (_selectedCard != null) {
-      final cardStillExists = masterDeck.any((c) => c.uniqueId == _selectedCard!.uniqueId);
-      if (!cardStillExists) {
-        _selectedCard = null;
-      } else {
-        final currentCardInDeck = masterDeck.firstWhere((c) => c.uniqueId == _selectedCard!.uniqueId);
-        if (ForgeRuneRules.fusionOptionsFor(currentCardInDeck).isEmpty) {
-          _selectedCard = null;
-        }
-      }
+    final Widget content;
+    if (_exchanged) {
+      content = const Center(
+        child: Icon(Icons.check_circle_outline, color: Colors.green, size: 100),
+      );
+    } else if (cards.isEmpty) {
+      content = Center(
+        child: Text(
+          l10n.wellEmpty,
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      );
+    } else {
+      content = SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.wellPickCard,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                for (final card in cards)
+                  SizedBox(
+                    width: 120,
+                    child: UiCard.fromInstance(
+                      card: card,
+                      locale: locale,
+                      l10n: l10n,
+                      isSelected: card.uniqueId == _cardId,
+                      onTap: () => setState(() {
+                        _cardId = card.uniqueId;
+                        _givenId = null;
+                      }),
+                    ),
+                  ),
+              ],
+            ),
+            if (selected != null) ..._runeChoice(selected, catalog, gold),
+          ],
+        ),
+      );
     }
-
-    final header = PageHeader(
-      title: isFr ? 'FORGE DE FUSION' : 'FUSION FORGE',
-      showBackButton: false,
-      isParchment: false,
-      actions: const [
-        GoldIndicator(),
-      ],
-    );
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.dark,
-      appBar: header,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              const Color(0xFF2E0854).withAlpha(120),
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 760;
-
-                      if (eligibleCards.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.layers_clear_rounded, size: 64, color: Colors.white24),
-                              const SizedBox(height: 16),
-                              Text(
-                                isFr
-                                    ? "Aucune carte de votre deck n'a de runes identiques à fusionner."
-                                    : "No cards in your deck have identical runes to merge.",
-                                style: const TextStyle(color: Colors.white70, fontSize: 16),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      // Left panel: List of eligible cards
-                      final cardsListPanel = Container(
-                        width: isDesktop ? 300 : double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(5),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.deepPurpleAccent.withAlpha(40)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              isFr ? "CARTES ÉLIGIBLES" : "ELIGIBLE CARDS",
-                              style: const TextStyle(
-                                color: Colors.deepPurpleAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: eligibleCards.length,
-                                itemBuilder: (context, index) {
-                                  final card = eligibleCards[index];
-                                  final isSelected = _selectedCard?.uniqueId == card.uniqueId;
-                                  final fusions = ForgeRuneRules.fusionOptionsFor(card);
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Colors.deepPurpleAccent.withAlpha(40)
-                                          : Colors.white.withAlpha(5),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? Colors.deepPurpleAccent
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                    child: ListTile(
-                                      onTap: () => _onCardSelected(card),
-                                      title: Text(
-                                        card.data.getName(locale),
-                                        style: TextStyle(
-                                          color: isSelected ? Colors.white : Colors.white70,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      subtitle: Text(
-                                        isFr
-                                            ? "${fusions.length} fusion(s) possible(s)"
-                                            : "${fusions.length} merge(s) available",
-                                        style: TextStyle(
-                                          color: isSelected ? Colors.purpleAccent : Colors.white38,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      trailing: const Icon(Icons.chevron_right, color: Colors.white30),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      // Right panel: Details of selected card and fusions
-                      final detailsPanel = Expanded(
-                        child: _selectedCard == null
-                            ? Center(
-                                child: Text(
-                                  isFr
-                                      ? "Sélectionnez une carte à gauche pour afficher ses options de fusion."
-                                      : "Select a card on the left to view its fusion options.",
-                                  style: const TextStyle(color: Colors.white38),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withAlpha(5),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.deepPurpleAccent.withAlpha(40)),
-                                ),
-                                child: isDesktop
-                                    ? Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          SizedBox(
-                                            width: 150,
-                                            child: Column(
-                                              children: [
-                                                UiCard.fromInstance(
-                                                  card: _selectedCard!,
-                                                  locale: locale,
-                                                  l10n: AppLocalizations.of(context)!,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 24),
-                                          Expanded(
-                                            child: _buildFusionOptionsList(
-                                              _selectedCard!,
-                                              ForgeRuneRules.fusionOptionsFor(_selectedCard!),
-                                              currentGold,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            Center(
-                                              child: SizedBox(
-                                                width: 140,
-                                                height: 196,
-                                                child: UiCard.fromInstance(
-                                                  card: _selectedCard!,
-                                                  locale: locale,
-                                                  l10n: AppLocalizations.of(context)!,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 24),
-                                            _buildFusionOptionsList(
-                                              _selectedCard!,
-                                              ForgeRuneRules.fusionOptionsFor(_selectedCard!),
-                                              currentGold,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                              ),
-                      );
-
-                      if (isDesktop) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            cardsListPanel,
-                            const SizedBox(width: 24),
-                            detailsPanel,
-                          ],
-                        );
-                      } else {
-                        return Column(
-                          children: [
-                            if (_selectedCard == null)
-                              Expanded(child: cardsListPanel)
-                            else ...[
-                              ElevatedButton.icon(
-                                onPressed: () => setState(() => _selectedCard = null),
-                                icon: const Icon(Icons.arrow_back),
-                                label: Text(isFr ? "Retour aux cartes" : "Back to cards"),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.deepPurple,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Expanded(child: detailsPanel),
-                            ],
-                          ],
-                        );
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GameButton(
-                      text: isFr ? "Quitter l'atelier" : "Leave workshop",
-                      onPressed: _leave,
-                      baseColor: Colors.deepPurpleAccent,
-                      height: 48,
-                      width: 200,
-                    ),
-                  ],
-                ),
-              ],
+      // Avant tout échange, le retour ferme l'écran sans résoudre le nœud :
+      // le joueur peut revenir. Après, il le résout par le chemin de la
+      // sortie ; le pop de `_leave` repasse ici avec `didPop` vrai (A5).
+      canPop: !_exchanged,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _leave();
+      },
+      appBar: PageHeader(
+        title: l10n.wellTitle,
+        showBackButton: false,
+        isParchment: false,
+        actions: const [GoldIndicator()],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: content),
+            const SizedBox(height: 24),
+            Center(
+              child: GameButton(
+                text: l10n.wellLeave,
+                onPressed: _leave,
+                baseColor: Colors.deepPurpleAccent,
+                height: 48,
+                width: 220,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildFusionOptionsList(CardInstance card, List<FusionOption> fusions, int currentGold) {
-    final isFr = Localizations.localeOf(context).languageCode == 'fr';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          isFr ? "FUSIONS POSSIBLES" : "AVAILABLE FUSIONS",
-          style: const TextStyle(
-            color: Colors.amber,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...fusions.map((fusion) {
-          final upgradeData = ForgeUpgradeData.getById(fusion.upgradeId);
-          final upgradeName = upgradeData?.getName(isFr ? 'fr' : 'en') ?? fusion.upgradeId;
-          final upgradeEmoji = upgradeData?.emoji ?? '🔮';
-          final hasEnoughGold = currentGold >= fusion.cost;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(8),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withAlpha(40)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  upgradeEmoji,
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isFr
-                            ? "Fusionner ${fusion.originalUpgrades.length}x $upgradeName"
-                            : "Merge ${fusion.originalUpgrades.length}x $upgradeName",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isFr
-                            ? "Résultat : $upgradeName (Niveau ${fusion.totalTier})"
-                            : "Result: $upgradeName (Tier ${fusion.totalTier})",
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GameButton(
-                  text: '${fusion.cost} Or',
-                  onPressed: hasEnoughGold
-                      ? () => _onFusionPerform(card, fusion, currentGold)
-                      : null,
-                  baseColor: hasEnoughGold ? Colors.amber : Colors.grey,
-                  height: 36,
-                  fontSize: 13,
-                ),
-              ],
-            ),
-          );
-        }),
+  /// Les runes de [card], la rune à donner choisie parmi elles, puis toutes
+  /// ses remplaçantes (spec P-43 E2, A5, §4.8). Une rune sans remplaçante se
+  /// montre inactive, avec son motif.
+  List<Widget> _runeChoice(
+    CardInstance card,
+    List<ForgeUpgradeData> catalog,
+    int gold,
+  ) {
+    final runes = _runesOf(card, catalog);
+    final given = runes.where((r) => r.$1.id == _givenId).firstOrNull;
+    return [
+      const SizedBox(height: 24),
+      for (final (rune, level) in runes) _givenTile(card, rune, level, catalog),
+      if (given case (final rune, final level)) ...[
+        const SizedBox(height: 16),
+        for (final received in ForgeRuneRules.wellOptions(card, rune.id, catalog))
+          _optionRow(card, rune, level, received, gold),
       ],
+    ];
+  }
+
+  /// Une rune de la carte, à donner.
+  Widget _givenTile(
+    CardInstance card,
+    ForgeUpgradeData rune,
+    int level,
+    List<ForgeUpgradeData> catalog,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final hasOption =
+        ForgeRuneRules.wellOptions(card, rune.id, catalog).isNotEmpty;
+    return ListTile(
+      enabled: hasOption,
+      selected: rune.id == _givenId,
+      leading: Text(rune.emoji, style: const TextStyle(fontSize: 22)),
+      title: Text(
+        rune.nameAt(level, locale),
+        style: const TextStyle(color: Colors.white),
+      ),
+      subtitle: hasOption
+          ? null
+          : Text(
+              l10n.wellNoOption,
+              style: const TextStyle(color: Colors.white54),
+            ),
+      onTap: () => setState(() => _givenId = rune.id),
+    );
+  }
+
+  /// Une remplaçante de [given], portée au niveau [givenLevel] : son niveau
+  /// d'arrivée, ce qu'elle fait sur la carte, et « Échanger — coût or »,
+  /// inactif faute d'or.
+  Widget _optionRow(
+    CardInstance card,
+    ForgeUpgradeData given,
+    int givenLevel,
+    ForgeUpgradeData received,
+    int gold,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final level = ForgeRuneRules.wellLevel(received, givenLevel);
+    final cost = ForgeRuneRules.wellCost(givenLevel);
+    return ForgeSlotRow(
+      rune: received,
+      title: received.getName(locale),
+      detail: l10n.wellReceive(level),
+      description:
+          received.getDescription(level, locale, card.data, card.rarity),
+      actionLabel: l10n.wellExchange(cost),
+      onAction: gold >= cost
+          ? () => _exchange(card, given, received, level)
+          : null,
     );
   }
 }
