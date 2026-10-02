@@ -194,6 +194,7 @@
   "restCampSnackbarRemove": "{cardName} a été retirée du deck.",
   "restCampForgeTitle": "FORGER UNE CARTE",
   "restCampForgeSubtitle": "Choisissez une carte à améliorer définitivement.",
+  "forgeNoEligibleRune": "Aucune rune ne peut être ajoutée à cette carte.",
   "restCampRemoveTitle": "OUBLIER UNE CARTE",
   "restCampRemoveSubtitle": "Choisissez une carte à retirer définitivement de votre deck.",
   "draftDeckTitle": "CONSTITUTION DU DECK",

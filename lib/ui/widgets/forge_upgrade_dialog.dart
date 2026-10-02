@@ -159,11 +159,14 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     return upgrades.last.id;
   }
 
-  String _rollSlotUpgrade(CardInstance card, List<String> excludedIds) {
+  /// Tire une fente pour [card]. `null` seulement si aucune rune du catalogue
+  /// ne s'offre à la carte — la sélection du feu refuse une telle carte avant
+  /// d'ouvrir le dialogue (spec P-43 E1, A11).
+  String? _rollSlotUpgrade(CardInstance card, List<String> excludedIds) {
     final rand = Random();
-    String? rolledId = _rollUpgradeId(card, rand, excludedIds);
-    rolledId ??= _rollUpgradeId(card, rand, []);
-    rolledId ??= 'sharp';
+    final rolledId = _rollUpgradeId(card, rand, excludedIds) ??
+        _rollUpgradeId(card, rand, []);
+    if (rolledId == null) return null;
 
     int tier = 1;
     if (ForgeRuneRules.isStackable(rolledId)) {
@@ -192,42 +195,26 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     final List<String> excludedIds = [];
     final rand = Random();
 
-    final upg1 = _rollSlotUpgrade(card, excludedIds);
-    slots.add(ForgeSlot(index: 0, upgrade: upg1));
-    excludedIds.add(upg1.split(':')[0]);
-
-    if (rand.nextDouble() < 0.50) {
+    // Une fente de plus, à l'indice [index] — aucune si rien ne s'offre à la
+    // carte (A11).
+    void addSlot(int index) {
       final upg = _rollSlotUpgrade(card, excludedIds);
-      slots.add(ForgeSlot(index: 1, upgrade: upg));
+      if (upg == null) return;
+      slots.add(ForgeSlot(index: index, upgrade: upg));
       excludedIds.add(upg.split(':')[0]);
     }
 
-    if (rand.nextDouble() < 0.25) {
-      final upg = _rollSlotUpgrade(card, excludedIds);
-      slots.add(ForgeSlot(index: 2, upgrade: upg));
-      excludedIds.add(upg.split(':')[0]);
-    }
-
-    if (rand.nextDouble() < 0.10) {
-      final upg = _rollSlotUpgrade(card, excludedIds);
-      slots.add(ForgeSlot(index: 3, upgrade: upg));
-      excludedIds.add(upg.split(':')[0]);
-    }
-
-    if (rand.nextDouble() < 0.02) {
-      final upg = _rollSlotUpgrade(card, excludedIds);
-      slots.add(ForgeSlot(index: 4, upgrade: upg));
-      excludedIds.add(upg.split(':')[0]);
-    }
+    addSlot(0);
+    if (rand.nextDouble() < 0.50) addSlot(1);
+    if (rand.nextDouble() < 0.25) addSlot(2);
+    if (rand.nextDouble() < 0.10) addSlot(3);
+    if (rand.nextDouble() < 0.02) addSlot(4);
 
     // Add existing bonus slots
     final runState = ref.read(runProvider);
     final bonusCount = runState.bonusForgeSlots;
     for (int i = 0; i < bonusCount; i++) {
-      final upg = _rollSlotUpgrade(card, excludedIds);
-      final newIndex = slots.isEmpty ? 0 : slots.map((s) => s.index).reduce(max) + 1;
-      slots.add(ForgeSlot(index: newIndex, upgrade: upg));
-      excludedIds.add(upg.split(':')[0]);
+      addSlot(slots.isEmpty ? 0 : slots.map((s) => s.index).reduce(max) + 1);
     }
 
     return slots;
@@ -246,6 +233,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
             .toList();
 
         final newUpgrade = _rollSlotUpgrade(widget.card, excludedIds);
+        if (newUpgrade == null) return;
         _slots[slotIdx].upgrade = newUpgrade;
         _slots[slotIdx].rerollsCount += 1;
       }
@@ -264,6 +252,7 @@ class _ForgeUpgradeDialogState extends ConsumerState<ForgeUpgradeDialog> {
     setState(() {
       final excludedIds = _slots.map((s) => s.upgrade.split(':')[0]).toList();
       final newUpgrade = _rollSlotUpgrade(widget.card, excludedIds);
+      if (newUpgrade == null) return;
       final newIndex = _slots.isEmpty ? 0 : _slots.map((s) => s.index).reduce(max) + 1;
       _slots.add(ForgeSlot(index: newIndex, upgrade: newUpgrade));
     });

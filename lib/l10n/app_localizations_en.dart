@@ -698,6 +698,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restCampForgeSubtitle => 'Choose a card to permanently upgrade.';
 
   @override
+  String get forgeNoEligibleRune => 'No rune can be added to this card.';
+
+  @override
   String get restCampRemoveTitle => 'REMOVE A CARD';
 
   @override

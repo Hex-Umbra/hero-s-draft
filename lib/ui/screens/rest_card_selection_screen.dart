@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
@@ -32,6 +34,19 @@ class RestCardSelectionScreen extends ConsumerWidget {
           locale == 'fr'
               ? "Cette carte a atteint sa capacité maximale d'améliorations de forge !"
               : "This card has reached its maximum forge upgrades capacity!",
+          type: NotificationType.error,
+        );
+        return;
+      }
+
+      // Une carte à qui plus aucune rune ne peut s'offrir est refusée avant
+      // le dialogue, avec son motif : la forge ne s'ouvre jamais vide (spec
+      // P-43 E1, A11).
+      final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
+      if (!catalog
+          .any((rune) => ForgeRuneRules.isEligible(rune, card, catalog))) {
+        context.showNotification(
+          AppLocalizations.of(context)!.forgeNoEligibleRune,
           type: NotificationType.error,
         );
         return;

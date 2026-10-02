@@ -468,6 +468,7 @@
   },
   "restCampForgeTitle": "FORGE A CARD",
   "restCampForgeSubtitle": "Choose a card to permanently upgrade.",
+  "forgeNoEligibleRune": "No rune can be added to this card.",
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",

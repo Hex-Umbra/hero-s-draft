@@ -704,6 +704,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez une carte à améliorer définitivement.';
 
   @override
+  String get forgeNoEligibleRune =>
+      'Aucune rune ne peut être ajoutée à cette carte.';
+
+  @override
   String get restCampRemoveTitle => 'OUBLIER UNE CARTE';
 
   @override

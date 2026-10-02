@@ -1226,6 +1226,12 @@ abstract class AppLocalizations {
   /// **'Choose a card to permanently upgrade.'**
   String get restCampForgeSubtitle;
 
+  /// No description provided for @forgeNoEligibleRune.
+  ///
+  /// In en, this message translates to:
+  /// **'No rune can be added to this card.'**
+  String get forgeNoEligibleRune;
+
   /// No description provided for @restCampRemoveTitle.
   ///
   /// In en, this message translates to:
