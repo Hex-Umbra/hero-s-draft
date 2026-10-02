@@ -314,16 +314,22 @@ class _TutorialMergeWidgetState extends State<TutorialMergeWidget>
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isFrench
-                          ? 'Même coût, rareté supérieure.'
-                          : 'Same cost, higher rarity.',
-                      style: TextStyle(
-                        color: Colors.grey.shade300,
-                        fontSize: 12,
+                    // Une rune choisie peut changer le coût (Allégé) : la ligne
+                    // ne vaut que tant qu'aucune n'a été posée.
+                    if (!hasMergedResult ||
+                        widget.engine.mockState.mergeOffer.isNotEmpty ||
+                        hand.first.forgeUpgrades.isEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        isFrench
+                            ? 'Même coût, rareté supérieure.'
+                            : 'Same cost, higher rarity.',
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
+                    ],
                     if (hasMergedResult) ...[
                       const SizedBox(height: 8),
                       _runeChoice(hand.first, isFrench, locale),

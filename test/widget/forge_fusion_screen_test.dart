@@ -136,15 +136,14 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   }
 
-  /// La couleur que le texte [label] porte vraiment : celle du style que la
-  /// tuile applique.
+  /// La couleur que le texte [label] porte vraiment : celle du style rendu,
+  /// héritée de la tuile ou forcée sur le `Text`.
   Color? titleColor(WidgetTester tester, String label) => tester
-      .widget<DefaultTextStyle>(find
-          .ancestor(
-              of: find.text(label), matching: find.byType(DefaultTextStyle))
-          .first)
+      .widget<RichText>(find.descendant(
+          of: find.text(label), matching: find.byType(RichText)))
+      .text
       .style
-      .color;
+      ?.color;
 
   bool currentNodeCompleted(ProviderContainer container) {
     final run = container.read(runProvider);

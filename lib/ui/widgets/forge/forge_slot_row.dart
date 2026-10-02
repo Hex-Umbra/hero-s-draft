@@ -11,8 +11,9 @@ class ForgeSlotRow extends StatelessWidget {
   final ForgeUpgradeData rune;
   final String title;
 
-  /// Une ligne sous le titre — le niveau et le suivant, à l'affûtage ;
-  /// `null` : aucune.
+  /// Une ligne sous le titre — le niveau et le suivant, à l'affûtage ; le
+  /// niveau d'arrivée (« Reçue au niveau N »), au Puits d'échange ; `null` :
+  /// aucune.
   final String? detail;
   final String description;
   final String actionLabel;

@@ -135,11 +135,19 @@ void main() {
     });
 
     test('Precis : le critique de la carte s ajoute a celui du heros', () {
-      // 50 % du heros et 50 % de Precis 10 : le coup est critique, x1,5.
+      // 50 % du heros et 50 % de Precis 10 : le coup est critique, x1,5. Vingt
+      // coups, pour qu'un fil coupe ne passe pas sur la chance (50 % du heros
+      // seul : une chance sur un million de les voir tous critiques).
       run.updateState(run.currentState
           .copyWith(heroStats: hero().copyWith(critChance: 50)));
-      play(card('strike_basic', runes: const ['precise:10']));
-      expect(enemy().currentPv, 100 - 9);
+      for (var i = 0; i < 20; i++) {
+        combat.state = combat.currentState.copyWith(enemies: [
+          combat.currentState.enemies.single
+              .copyWith(stats: enemy().copyWith(currentPv: 100)),
+        ]);
+        play(card('strike_basic', runes: const ['precise:10']));
+        expect(enemy().currentPv, 100 - 9, reason: 'coup ${i + 1}');
+      }
     });
 
     test('Spectral 1 sur une Frappe commune : +40 % de la base, +2', () {

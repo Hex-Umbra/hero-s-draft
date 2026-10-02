@@ -150,6 +150,8 @@ void main() {
           .first);
       await tester.pump();
       expect(find.textContaining('Rune ajoutée : '), findsOneWidget);
+      // Une rune posée peut changer le coût : la ligne ne le promet plus.
+      expect(find.text('Même coût, rareté supérieure.'), findsNothing);
 
       await _tapNext(tester); // -> 12 L'Expérience & le Level Up
       expect(tester.takeException(), isNull);
