@@ -7,6 +7,11 @@ corrections de la revue indépendante comprises, plus la réparation des cartes 
 (D1, formule de capacité) et **dépasse en partie**
 [ADR-051](ADR-051-filtrage-des-cartes-de-rarete-unique-dans-les-reco.md) (le pool du draft de boss).
 Conception : `docs/superpowers/specs/2026-09-15-p40-bloc-2-cartes-et-forge-design.md`.
+**Amendé le 2026-10-02 par [ADR-105](ADR-105-moteur-de-runes-data-driven.md)** (P-43, lot E1, livré
+sur branche, en attente du propriétaire) sur D1 (`forgeSlotBonus` devient `fusionRank`), D3
+(`maxLevel` double `stackable`), D4 (l'épuisement lu dans la donnée) et D5 (le prédicat
+d'éligibilité, la borne et l'analyseur de niveau) ; la conséquence « textes de runes codés en dur
+par id » est close.
 
 ### Contexte
 

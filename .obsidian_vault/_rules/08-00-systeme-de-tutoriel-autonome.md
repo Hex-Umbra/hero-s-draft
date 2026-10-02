@@ -94,13 +94,23 @@ sur l'étape 01.
    ce que la classe en a fait. Le titre du panneau est **généré** depuis la règle qui vise
    l'Armure (`StatRule.shortTitle` → « ARMURE → PUISSANCE »), jamais écrit classe par classe
    (ADR-090), et la règle elle-même est écrite en clair sous les deux panneaux par
-   `StatRuleLabel.describe` — la même phrase qu'à l'écran de sélection.
+   `StatRuleLabel.describe` — les mêmes phrases qu'à l'écran de sélection : **deux** quand la règle
+   déclare un `ratio` autre que 1, la seconde disant le taux et son exemple (« Taux : 50%, arrondi à
+   l'entier supérieur — 6 Armure → 3 Puissance. »). Le Berserker y voit +2 Puissance pour les 4
+   Armure de la démonstration, et *Défense* lui en donne 3 à l'étape des cartes —
+   [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md).
 10. **Effets Élémentaires** : galerie animée Poison, Brûlure, Gel, Électrocution, avec leurs
     règles exactes (valeur de Poison qui ne baisse jamais, Brûlure en début de tour, etc.).
 11. **Intentions Ennemies** : lues dans le panneau `EnemyIntentsPanel` réel, en bas à droite —
     pas au-dessus de l'ennemi — avec ses 4 paliers d'attaque.
 12. **Fusion de Cartes** *(fusion effectuée)* : manuelle, hors combat, 3 exemplaires de même
-    rareté ; la rareté multiplie les valeurs sans jamais changer le coût.
+    rareté ; la rareté **augmente** les valeurs sans jamais changer le coût — ×1,2 à ×2,0, et
+    toujours d'au moins 1 par fusion —, mais ni la pioche ni le Mana qu'une carte rend (G1, G2,
+    [`_rules/02-4`](02-4-progression-de-rarete-dynamique-et-fusion-int.md)). L'encart de fin dit
+    « Même coût, rareté supérieure. », vrai quelle que soit la carte fusionnée. Le jeu d'une carte
+    et la valeur affichée passent par l'applicateur du jeu, `EffectiveCard` — aucune recopie
+    ([ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md),
+    [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)).
 13. **Expérience & Level Up** *(niveau gagné)* : palier `100 × 1,5^(niveau-1)`, drafts qui
     s'empilent si plusieurs niveaux tombent d'un coup.
 14. **Draft de Récompenses** *(récompense choisie)* : `DraftChoiceCard` et

@@ -20,9 +20,11 @@ applique `PassiveData.withMastery(heroStats.effectiveMastery)` au passif actif a
 stratégie de son `effectType` — la stratégie calcule donc directement le bon montant. `effectiveMastery`
 (getter dynamique sur `EntityStats`) combine toujours la base `mastery` et les bonus temporaires de
 combat issus du statut `'mastery'` (ex. Croc Kunaï, [`_rules/03-5`](03-5-systeme-de-reliques.md)).
-Les gains d'armure de relique, de carte, de rune, de statut et d'intention ennemie (`RunController`,
-`EffectResolver`, `strategies.dart`, `status_effect_processor.dart`, `turn_phase_manager.dart`) n'ont
-jamais bénéficié de la Maîtrise et continuent de n'en recevoir aucune.
+Les gains d'armure de relique, de carte, de statut et d'intention ennemie (`RunController`,
+`strategies.dart`, `status_effect_processor.dart`, `turn_phase_manager.dart`) n'ont jamais bénéficié
+de la Maîtrise et continuent de n'en recevoir aucune. Depuis
+[ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md), la rune *Endurci* ne fait plus de gain à
+part : elle augmente l'effet d'armure de la carte, et ne s'offre qu'à une carte qui en porte un.
 
 **Persistance et Cycle de Reset** :
 - **Reset de Tour** : L'armure accumulée par le joueur est réinitialisée à `0` au début de son tour (au lancement de `startTurn()` dans `RunController`, avant l'application des reliques et effets de statut de début de tour). Cela évite l'accumulation infinie d'armure d'un tour à l'autre et garantit l'équilibrage des reliques ou effets générateurs d'armure.

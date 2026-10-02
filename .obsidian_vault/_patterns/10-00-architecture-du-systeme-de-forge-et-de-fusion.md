@@ -22,11 +22,21 @@ Le dialogue de forge `ForgeUpgradeDialog` (affiché via `RestScreen`) a été re
    - L'effacement de la session (`clearForgeSession()`) n'est déclenché que lors d'un choix d'upgrade réussi, ou lors de la sortie définitive du camp de repos via `RestScreen._leave()`.
    - **Navigation d'Annulation** : Si le joueur ferme le dialogue de forge sans effectuer de choix, il retourne à l'écran de sélection des cartes du repos (pour lui permettre de choisir une autre carte à forger) au lieu d'être renvoyé directement au menu principal du feu de camp.
 
-3. **Filtrage Intelligent des Upgrades par Type de Carte** :
-   Pour éliminer les upgrades incohérents, la méthode `_getEligibleUpgradesForPool()` filtre le catalogue d'upgrades :
-   - `CardType.skill` : Exclut tous les upgrades offensifs physiques (`sharp`) ou élémentaires (`burning`, `freezing`, `shocking`).
-   - `CardType.power` : Filtre le pool pour ne conserver que les upgrades utilitaires (`eco`, `quick`, `enduring`).
-   - `CardType.attack` : Donne accès au pool complet sans restriction.
+3. **Éligibilité par un prédicat unique, lu dans la donnée** ([ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)) :
+   `_getEligibleUpgradesForPool()` ne garde du catalogue que les runes dont `pools` contient le pool
+   tiré **et** que `ForgeRuneRules.isEligible(rune, card, catalog)` accepte — fonction pure, sur le
+   modèle de `CardData.isOfferableTo`, qui lit les champs du fichier de rune (`eligibleCardTypes`,
+   `eligibleEffects` et `excludesEffects` sur les effets **propres** de la carte, `requiresExhaust`,
+   `requiresMinCost` sur `currentCost`, `excludesRunes` dans les deux sens) et le plafond
+   (`boundLevel(1, carried: …) ≥ 1`). **Aucun `case` par id ni par type de carte** : la règle est un
+   champ. Ses trois lecteurs sont ce dialogue, la boutique (`ShopController._getEligibleUpgradesForPool`,
+   sur la carte **avec les runes déjà tirées**) et `RestCardSelectionScreen`, qui **refuse une carte
+   sans aucune rune éligible** avant d'ouvrir le dialogue (`forgeNoEligibleRune`). Le repli sur
+   `'sharp'` des deux tirages a disparu : le dialogue rend `null` quand rien ne s'offre, la boutique
+   pose une rune de moins.
+   **Le niveau tiré est borné** — 1, 2 ou 3 à 80/15/5 % pour une rune cumulable, puis
+   `boundLevel(niveau, carried: ce que la carte porte de cet id)` : la fente affiche ce que la carte
+   recevra.
 
 4. **Achat de Fentes Progressives (Buy Slots)** :
    Le bouton d'achat en bas du `ListView` permet d'acquérir de nouvelles fentes d'upgrades en cours de session :
@@ -45,7 +55,7 @@ graph TD
     Dialog --> CheckExploit{runState.forgeTargetCardId == card.uniqueId ?}
     CheckExploit -- Oui (Anti-Exploit) --> LoadSession[Recharger slots depuis runState.forgeSlots]
     CheckExploit -- Non --> GenBase[Tirer 1 à 5 slots de base + bonusForgeSlots]
-    GenBase --> FilterTypes[Appliquer filtrage sémantique par CardType]
+    GenBase --> FilterTypes[Appliquer le prédicat ForgeRuneRules.isEligible et borner le niveau]
     FilterTypes --> SaveSession[Sauvegarder session via setForgeSession]
     LoadSession --> Loop[Afficher Options de Forge]
     SaveSession --> Loop
@@ -81,26 +91,41 @@ La fusion interactive permet au joueur de fusionner 3 exemplaires d'une carte à
    La méthode `mergeCards` de `DeckNotifier` reçoit les identifiants uniques des 3 cartes sélectionnées. Elle valide que ces 3 cartes existent dans le deck, partagent le même id de carte et la même rareté courante, et que cette rareté a une suivante (`CardRarity.next`, nul pour `legendary` et `unique`) — validation complète depuis le 2026-09-15.
 
 2. **Consolidation des Upgrades (`ForgeRuneRules`)** :
-   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`), **sauf une rune non cumulable** (`ForgeUpgradeData.stackable` faux), gardée une fois au tier 1. Les améliorations uniques sont simplement copiées.
+   Le système rassemble toutes les améliorations de forge des 3 cartes consommées. Si plusieurs cartes possèdent la même amélioration (même ID d'upgrade), leurs Tiers sont cumulés (ex: `sharp:1` + `sharp:2` = `sharp:3`), **sauf une rune non cumulable** (`ForgeUpgradeData.stackable` faux), gardée une fois au tier 1. Les améliorations uniques sont simplement copiées. **Deux bornes** ([ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)) : la somme passe par `boundLevel` — le surplus au-delà du `maxLevel` se perd (trois `eco:1` → `eco:1`) ; et une rune exclue par une rune **gardée avant elle** (`excludesRunes`, lu dans la donnée, symétrique) est écartée — la première arrivée est gardée, dans l'ordre de première apparition. Sans cette seconde borne, la fusion réunissait *Persistant* et *Économe*, que le prédicat interdit ensemble ; l'héritage de la vague suivante du programme devra suivre la même règle.
 
    > [!IMPORTANT]
-   > **Un seul algorithme de cumul.** `lib/game/services/forge_rune_rules.dart` sert la fusion 3→1 (`consolidate`), son dialogue d'héritage (le même `consolidate`) et la Forge de Fusion (`fusionOptionsFor`), avec un seul analyseur de tier. Les trois en portaient chacun une copie, dont aucune ne connaissait les runes non cumulables — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md).
+   > **Un seul algorithme de cumul.** `lib/game/services/forge_rune_rules.dart` sert la fusion 3→1 (`consolidate`), son dialogue d'héritage (le même `consolidate`) et la Forge de Fusion (`fusionOptionsFor`, qui ne propose une fusion que si la somme tient sous le plafond). **Un seul analyseur de niveau**, au modèle : `ForgeUpgradeData.parseRef` lit une référence `id:niveau`, `levelsOf` additionne les niveaux par id ; une référence mal formée ou de niveau nul est ignorée partout — [ADR-094](../_adr/ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) D5, amendé par ADR-105.
 
 3. **Capacité Limite par Rareté** :
    Chaque palier de rareté possède une capacité d'amélioration maximale (`CardData.forgeCapacityAt`) :
-   $$\text{Capacité} = baseMaxForgeUpgrades + forgeSlotBonus$$
+   $$\text{Capacité} = baseMaxForgeUpgrades + fusionRank$$
+   `CardRarity.fusionRank` (renommé depuis `forgeSlotBonus`, mêmes valeurs) compte les fusions qu'il a fallu pour atteindre la rareté : 0 à 4 de `common` à `legendary`, 0 pour `unique`.
    - Carte globale (`baseMaxForgeUpgrades: 1`) : 1 emplacement en commune, 5 en légendaire.
    - Carte de classe (`baseMaxForgeUpgrades: 5`) : 5, la rareté `unique` n'ajoutant rien.
    
    Si la liste des améliorations consolidées dépasse la capacité de la rareté supérieure ciblée par la fusion, l'interface utilisateur impose un choix d'héritage interactif pour sélectionner précisément les upgrades à conserver.
 
-4. **Modificateurs de Rareté** :
-   Lors de la résolution d'une carte en combat (`EffectResolver`), les valeurs de base (dégâts, blocage) sont multipliées par un coefficient lié à sa rareté active, remplaçant la progression par niveau numérique. Les upgrades de forge (ex. ajouter +X dégâts par Tier de `sharp`) s'additionnent ensuite au résultat mis à l'échelle.
+4. **La carte telle qu'elle se joue : l'applicateur `EffectiveCard`** (`lib/models/effective_card.dart`, [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)) :
+   une fonction pure, `EffectiveCard.apply(data, rarity, paires (delta, niveau))`, seul endroit où la
+   rareté et les runes se calculent — pour `EffectResolver.resolveCard`, les rendus de carte
+   (Flame et Flutter : pastilles, descriptions, infobulles) et le tutoriel. `CardInstance.effective`
+   l'appelle sur le catalogue du registre ; `CardInstance.rarityMultiplier` n'existe plus, et
+   `UiCard` porte la `CardData` et la `CardRarity` à la place d'un multiplicateur.
+   1. **Les effets propres** prennent leur valeur à la rareté : `CardRarity.scaleValue` (G1 : au moins
+      +1 par palier), sauf `draw` et `gain_mana`, gelés (G2). `effects` garde la longueur et l'ordre de
+      `CardData.effects`.
+   2. **Les deltas** des runes (`CardDelta`, trois sortes) : `percentBonus` ajoute
+      `max((p × L × B + 50) ~/ 100, L)` à chaque effet propre visé, B pris à l'étape 1 ; `addEffect`
+      remplit `addedEffects`, résolus avant les effets propres par les stratégies du registre
+      (ADR-061) ; `removeExhaust` lève `removesExhaust`, que lit `exhaustsOnPlay`.
+   `EffectiveCard.runeDeltas` traduit les runes d'une carte en paires, exemplaires d'un même id
+   additionnés. C'est la couture que les évolutions de signature reprendront : leurs données se
+   traduiront en paires, sans lire une rune.
 
 ```mermaid
 graph TD
     SelectMerge[Sélectionner 3 Cartes Identiques] --> CheckRarity{Même Rareté ?}
-    CheckRarity -- Oui --> Consolidate[Cumuler Upgrades & Additionner Tiers]
+    CheckRarity -- Oui --> Consolidate[Cumuler Upgrades, Additionner Tiers bornés par maxLevel, écarter les runes exclues]
     CheckRarity -- Non --> Fail[Erreur de Validation]
     Consolidate --> CheckCap{Nb Upgrades > Capacité Rareté + 1 ?}
     CheckCap -- Oui --> UIInherit[Afficher Choix d'Héritage Interactif]

@@ -37,18 +37,20 @@ livrés étant tous pilotés par la table ([ADR-100](../_adr/ADR-100-console-de-
 
 | Table | Désigne | Exemple |
 |:---|:---|:---|
-| `enumKeys` / `enumListKeys` | Une ou plusieurs valeurs d'un **enum Dart réel** — ou, quand le fichier n'écrit pas le nom Dart, une table **exposée par le modèle** | `rarity`, `intents[].type`, `eligibleCardTypes` ; `statRules[].stat`/`[].mode`/`[].to`, lus sur `StatRule.statNames`/`modeNames`/`targetNames` |
-| `vocabularyKeys` | Une chaîne libre dans le modèle, fermée dans le moteur | `effects[].type`, `color` et `icon` d'une forge |
+| `enumKeys` / `enumListKeys` | Une ou plusieurs valeurs d'un **enum Dart réel** — ou, quand le fichier n'écrit pas le nom Dart, une table **exposée par le modèle** | `rarity`, `intents[].type`, `eligibleCardTypes` ; `statRules[].stat`/`[].mode`/`[].to`, lus sur `StatRule.statNames`/`modeNames`/`targetNames` ; `deltas[].type` d'une rune, lu sur `CardDelta.typeNames` |
+| `vocabularyKeys` | Une chaîne libre dans le modèle, fermée dans le moteur | `effects[].type`, `color` et `icon` d'une forge ; d'une rune, les motifs d'**éléments** `eligibleEffects[]`, `excludesEffects[]`, `deltas[].effect`, `deltas[].statusId` — pour un motif `clé[]`, `vocabularyOf` lit aussi les valeurs que `knownValues` range sous la clé nue ([ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)) |
 | `referenceKeys` | Une entité d'une autre catégorie | *(aucun descripteur livré ne l'emploie depuis P-49 — `passiveTrait` en était le seul ; le mécanisme reste, vérifié sur un descripteur de test)* |
-| `referenceListKeys` | Une **liste** d'entités d'une autre catégorie, non vide | `classes` d'un passif → catégorie `heroClass` ([ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)) |
+| `referenceListKeys` | Une **liste** d'entités d'une autre catégorie — ou de la même —, non vide | `classes` d'un passif → catégorie `heroClass` ([ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)) ; `excludesRunes` d'une rune → catégorie `forgeUpgrade` |
 | `hexColorKeys` | Un `#RRGGBB` | `themeColor` |
 | `assetKeys` | Un `AssetSlot` son, ou image à nom imposé (jeton `{id}`) | `sfx`, `classCard`, `iconPath`, `spritePath` d'un ennemi |
 
 Un chemin s'écrit `effects[].type`, `[]` valant « tout élément » (`field_path.dart`). Un gabarit ne
 porte **que** les clés qu'une entité de sa catégorie emploie ; `entity_descriptor_test.dart` garde
 `clés lues par le modèle = gabarit ∪ assetKeys ∪ exclusions nommées` — `spritePath` d'une carte,
-réservé aux illustrations à venir, et les trois clés optionnelles d'une récompense de niveau
-(`requires`, `fallbackDescription`, `shortDescription`), nommées dans le test.
+réservé aux illustrations à venir, `classes` d'un passif et `excludesRunes` d'une rune — deux
+listes de références dont l'absence a un sens (« toutes les classes », « aucune rune ») —, et les
+trois clés optionnelles d'une récompense de niveau (`requires`, `fallbackDescription`,
+`shortDescription`), nommées dans le test.
 
 > [!IMPORTANT]
 > **Un vocabulaire n'est jamais recopié dans un descripteur, il est lu sur le moteur.**
@@ -58,6 +60,12 @@ réservé aux illustrations à venir, et les trois clés optionnelles d'une réc
 > descripteur la lit. Une liste écrite à la main divergerait du parseur au premier ajout.
 > Un gabarit, lui, ne porte jamais une valeur « toute faite » d'une clé optionnelle : `statRules`
 > y figure **vide**, faute de quoi toute classe créée naîtrait convertisseuse d'armure.
+> **Une borne numérique vit au modèle, pas au descripteur** : le `ratio` d'une règle de `statRules`,
+> borné à ]0, 1], est refusé par `StatRule.fromJson`, que la famille 7 appelle
+> ([ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)) ; de même,
+> `maxLevel` et `deltas` d'une rune sont exigés par `ForgeUpgradeData.fromJson`, et le descripteur
+> de rune n'exige que `pools`. Le gabarit de rune porte `"maxLevel": 1`, valeur prudente : un
+> plafond oublié ne laisse pas monter une rune sans fin.
 
 ### 19.3. Le pipeline de validation
 
