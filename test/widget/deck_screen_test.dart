@@ -253,8 +253,8 @@ void main() {
     await tester.tap(find.text('FUSIONNER (3)'));
     await tester.pumpAndSettle();
 
-    // Peu commune : Tranchant, Brulant, Congelant et Surcharge s'offrent ;
-    // trois sont tirees.
+    // Peu commune : Tranchant, Brulant, Congelant, Surcharge, Allege, Precis
+    // et Spectral s'offrent ; trois sont tirees.
     expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
     expect(find.byType(ForgeSlotRow), findsNWidgets(3));
     expect(messagesOf(container), isEmpty);
@@ -267,7 +267,18 @@ void main() {
     expect(merged.rarity, CardRarity.uncommon);
     final (id, level) = ForgeUpgradeData.parseRef(merged.forgeUpgrades.single)!;
     expect(level, 1);
-    expect(id, isIn(['sharp', 'burning', 'freezing', 'shocking']));
+    expect(
+      id,
+      isIn([
+        'sharp',
+        'burning',
+        'freezing',
+        'shocking',
+        'cheap',
+        'precise',
+        'spectral',
+      ]),
+    );
     expect(messagesOf(container),
         ['Fusion réussie : Frappe est maintenant Niveau 2 !']);
     await settle(tester);

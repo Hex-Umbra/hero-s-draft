@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
+import '../../models/effective_card.dart';
 
 /// Les règles des runes de forge, notées `id:niveau` : l'héritage de la
 /// fusion 3→1 (D13), son offre, l'affûtage au feu de camp et l'échange au
@@ -63,7 +64,15 @@ class ForgeRuneRules {
     if (rune.excludesEffects.any(own.contains)) return false;
 
     if (rune.requiresExhaust && !card.data.isExhaust) return false;
-    if (card.currentCost < rune.requiresMinCost) return false;
+
+    // Le coût courant, par l'applicateur sur [catalog] — jamais sur le
+    // registre global : le tutoriel juge sur le sien (spec P-43 E2, A15).
+    final cost = EffectiveCard.apply(
+      card.data,
+      card.rarity,
+      EffectiveCard.runeDeltas(card.forgeUpgrades, catalog),
+    ).cost;
+    if (cost < rune.requiresMinCost) return false;
 
     // D48 : le rang de la carte qui reçoit la rune ; une commune et une
     // carte `unique`, de rang 0, n'en reçoivent aucune.

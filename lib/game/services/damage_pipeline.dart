@@ -3,11 +3,15 @@ import '../../models/entity_stats.dart';
 import '../../models/status_effect.dart';
 
 class DamagePipeline {
+  /// [critChanceBonus] : les points de pourcentage de critique que la carte
+  /// jouée ajoute à ceux de l'attaquant — ses runes (`critBonus`, spec P-43
+  /// E2, §4.2) ; 0 pour un ennemi.
   static (int damage, bool isCrit) calculate({
     required int initialDamage,
     required EntityStats attackerStats,
     required EntityStats defenderStats,
     bool canCrit = true,
+    int critChanceBonus = 0,
   }) {
     int totalDamage = initialDamage;
 
@@ -21,7 +25,8 @@ class DamagePipeline {
     bool isCrit = false;
     if (canCrit) {
       final random = Random();
-      if (random.nextInt(100) < attackerStats.effectiveCritChance) {
+      if (random.nextInt(100) <
+          attackerStats.effectiveCritChance + critChanceBonus) {
         totalDamage = (totalDamage * attackerStats.critMultiplier).round();
         isCrit = true;
       }

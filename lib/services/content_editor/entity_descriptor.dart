@@ -339,9 +339,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // une case par rune (spec P-43 E1, §6). Absente : aucune.
     referenceListKeys: const {'excludesRunes': EntityCategory.forgeUpgrade},
     // `color` et `icon` ne sont pas un hex ni un texte libre : ce sont des
-    // noms que `forge_slot_row.dart` traduit un a un (`amberAccent`,
-    // `flash_on_rounded`), et un nom inconnu y retombe en silence sur du gris
-    // et `Icons.help_outline`. Les huit ameliorations livrees les emploient.
+    // noms que `runeColors` et `runeIcons` (`lib/ui/widgets/forge/
+    // rune_style.dart`) traduisent un a un (`amberAccent`,
+    // `flash_on_rounded`), et un nom inconnu y retombe sur du gris et
+    // `Icons.help_outline` ; le test d'integrite exige que chaque rune livree
+    // ait les siens (spec P-43 E2, A19). Les onze runes livrees les emploient.
     //
     // Les types d'effet qu'une rune nomme, et le statut qu'elle pose, ne sont
     // connus que du registre de strategies et de `createStatus` : des motifs

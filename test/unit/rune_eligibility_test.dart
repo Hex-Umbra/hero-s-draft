@@ -119,6 +119,21 @@ void main() {
     expect(_eligible(rune, _card(cost: 1)), isTrue);
   });
 
+  // A15, Review Focus 4 : le cout courant, par l'applicateur sur le
+  // catalogue recu — aucun registre global n'existe dans ce fichier.
+  test('le cout courant se lit apres les runes portees, sur le catalogue '
+      'recu', () {
+    final light = _rune('light', deltas: const [
+      ReduceCostDelta(valuePerLevel: 1),
+    ]);
+    final rune = _rune('eco', requiresMinCost: 1);
+    expect(_eligible(rune, _card(cost: 1)), isTrue);
+    expect(_eligible(rune, _card(cost: 1, runes: const ['light:1']), [light]),
+        isFalse);
+    expect(_eligible(rune, _card(cost: 2, runes: const ['light:1']), [light]),
+        isTrue);
+  });
+
   group('la symetrie des exclusions (D51, D61)', () {
     final eco = _rune('eco');
     final enduring = _rune('enduring', excludesRunes: const ['eco']);

@@ -61,12 +61,12 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('il y a bien 85 fichiers d entite', () {
-    // 17 cartes neutres + 25 reliques + 5 evenements + 8 ameliorations de
+  test('il y a bien 88 fichiers d entite', () {
+    // 17 cartes neutres + 25 reliques + 5 evenements + 11 ameliorations de
     // forge + 9 passifs + 8 recompenses de niveau + 3 class.json + 6 cartes
     // de classe + 4 enemy.json.
-    expect(_entityFiles().length, 85,
-        reason: '17 cartes neutres + 25 reliques + 5 evenements + 8 '
+    expect(_entityFiles().length, 88,
+        reason: '17 cartes neutres + 25 reliques + 5 evenements + 11 '
             'ameliorations de forge + 9 passifs + 8 recompenses de niveau + '
             '3 class.json + 6 cartes de classe + 4 enemy.json');
   });

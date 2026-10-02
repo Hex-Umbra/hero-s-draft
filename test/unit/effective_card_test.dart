@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/effective_card.dart';
 
 CardData _card(List<CardEffect> effects) => CardData(
@@ -211,6 +213,129 @@ void main() {
           .removesExhaust,
       isFalse,
     );
+  });
+
+  // Les trois sortes neuves (spec P-43 E2, §4.1, §4.2).
+  group('reduceCost, critBonus, addExhaust', () {
+    CardData costing(int cost) => CardData(
+          id: 'test_card',
+          cost: cost,
+          type: CardType.attack,
+          category: CardCategory.global,
+          rarity: CardRarity.common,
+          target: CardTarget.singleEnemy,
+          effects: [_damage(6)],
+        );
+    const cut = ReduceCostDelta(valuePerLevel: 1);
+
+    test('reduceCost : le cout moins valuePerLevel x niveau, plancher 0, la '
+        'rarete sans effet', () {
+      expect(
+          EffectiveCard.apply(costing(2), CardRarity.common, [(cut, 1)]).cost,
+          1);
+      expect(
+          EffectiveCard.apply(costing(1), CardRarity.common, [(cut, 3)]).cost,
+          0);
+      expect(
+          EffectiveCard.apply(costing(2), CardRarity.legendary, const []).cost,
+          2);
+    });
+
+    test('critBonus : additionne dans critChanceBonus', () {
+      const crit = CritBonusDelta(valuePerLevel: 5);
+      expect(
+        EffectiveCard.apply(
+                costing(1), CardRarity.common, [(crit, 2), (crit, 1)])
+            .critChanceBonus,
+        15,
+      );
+      expect(
+        EffectiveCard.apply(costing(1), CardRarity.common, const [])
+            .critChanceBonus,
+        0,
+      );
+    });
+
+    test('addExhaust leve addsExhaust, quel que soit le niveau', () {
+      for (final level in [1, 3]) {
+        expect(
+          EffectiveCard.apply(costing(1), CardRarity.common,
+              [(const AddExhaustDelta(), level)]).addsExhaust,
+          isTrue,
+          reason: 'niveau $level',
+        );
+      }
+      expect(
+        EffectiveCard.apply(costing(1), CardRarity.common, const [])
+            .addsExhaust,
+        isFalse,
+      );
+    });
+
+    // Deux pourcentages sur un meme effet s'additionnent, sans se composer.
+    test('sharp et spectral s additionnent, chacun sur la valeur a la '
+        'rarete', () {
+      // 10 en commune, 14 en rare : +2 a 15 %, +6 a 40 %.
+      const spectral =
+          PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 40);
+      expect(
+        _values(EffectiveCard.apply(_card([_damage(10)]), CardRarity.rare,
+            [(_sharp, 1), (spectral, 1)])),
+        [14 + 2 + 6],
+      );
+    });
+  });
+
+  // CardInstance lit l'applicateur sur le registre (spec P-43 E2, §4.2,
+  // A10).
+  group('CardInstance', () {
+    setUp(() {
+      GameDataRegistry(
+        enemies: const [],
+        heroes: const [],
+        cards: const [],
+        events: const [],
+        passives: const [],
+        relics: const [],
+        forgeUpgrades: [
+          _rune('leger', const [ReduceCostDelta(valuePerLevel: 1)]),
+          _rune('ephemere', const [AddExhaustDelta()]),
+          _rune('tenace', const [RemoveExhaustDelta()]),
+        ],
+      );
+    });
+
+    CardInstance carrying(List<String> runes, {bool isExhaust = false}) =>
+        CardInstance(
+          data: CardData(
+            id: 'test_card',
+            cost: 2,
+            type: CardType.attack,
+            category: CardCategory.global,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            isExhaust: isExhaust,
+            effects: [_damage(6)],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    test('currentCost est le cout de l applicateur', () {
+      expect(carrying(const []).currentCost, 2);
+      expect(carrying(const ['leger:1']).currentCost, 1);
+    });
+
+    test('exhaustsOnPlay : addExhaust epuise, et l emporte sur removeExhaust',
+        () {
+      expect(carrying(const ['ephemere:1']).exhaustsOnPlay, isTrue);
+      expect(
+        carrying(const ['tenace:1', 'ephemere:1'], isExhaust: true)
+            .exhaustsOnPlay,
+        isTrue,
+      );
+      expect(carrying(const ['tenace:1'], isExhaust: true).exhaustsOnPlay,
+          isFalse);
+    });
   });
 
   test('effects a la longueur et l ordre des effets de la donnee', () {

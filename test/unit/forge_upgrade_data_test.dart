@@ -59,6 +59,42 @@ void main() {
       expect(removed, isA<RemoveExhaustDelta>());
     });
 
+    test('lit les trois sortes neuves', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'deltas': [
+          {'type': 'reduceCost', 'valuePerLevel': 1},
+          {'type': 'critBonus', 'valuePerLevel': 5},
+          {'type': 'addExhaust'},
+        ],
+      }));
+
+      final [cut, crit, exhaust] = rune.deltas;
+      expect(cut, isA<ReduceCostDelta>().having((d) => d.valuePerLevel, 'valuePerLevel', 1));
+      expect(crit, isA<CritBonusDelta>().having((d) => d.valuePerLevel, 'valuePerLevel', 5));
+      expect(exhaust, isA<AddExhaustDelta>());
+    });
+
+    test('refuse un reduceCost ou un critBonus sans valuePerLevel strictement '
+        'positif', () {
+      for (final type in ['reduceCost', 'critBonus']) {
+        for (final bad in [
+          <String, dynamic>{},
+          {'valuePerLevel': 0},
+          {'valuePerLevel': -1},
+        ]) {
+          expect(
+            () => ForgeUpgradeData.fromJson(_json({
+              'deltas': [
+                {'type': type, ...bad},
+              ],
+            })),
+            _refused('valuePerLevel'),
+            reason: '$type $bad',
+          );
+        }
+      }
+    });
+
     test('refuse une rune sans deltas', () {
       expect(() => ForgeUpgradeData.fromJson(_json()..remove('deltas')),
           _refused('deltas'));
@@ -182,6 +218,23 @@ void main() {
       expect(
         [for (final delta in restored.deltas) delta.toJson()],
         [for (final delta in rune.deltas) delta.toJson()],
+      );
+    });
+
+    test('toJson fait l aller-retour des sortes neuves', () {
+      const deltas = [
+        {'type': 'reduceCost', 'valuePerLevel': 1},
+        {'type': 'critBonus', 'valuePerLevel': 5},
+        {'type': 'addExhaust'},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': deltas}));
+      expect(
+        [
+          for (final delta
+              in ForgeUpgradeData.fromJson(rune.toJson()).deltas)
+            delta.toJson(),
+        ],
+        deltas,
       );
     });
   });
@@ -344,6 +397,31 @@ void main() {
         ],
       }));
       expect(rune.getDescription(2, 'fr', strike, CardRarity.common), '+2');
+    });
+
+    test('sur reduceCost : la baisse marginale, plancher 0 compris', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '-{val}',
+        'deltas': [
+          {'type': 'reduceCost', 'valuePerLevel': 1},
+        ],
+      }));
+      // La Frappe coute 1 : un niveau la porte a 0, un second n'ote plus rien.
+      expect(rune.getDescription(1, 'fr', strike, CardRarity.common), '-1');
+      expect(
+        rune.getDescription(1, 'fr', strike, CardRarity.common, carried: 1),
+        '-0',
+      );
+    });
+
+    test('sur critBonus : la valeur par niveau fois le niveau', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}%',
+        'deltas': [
+          {'type': 'critBonus', 'valuePerLevel': 5},
+        ],
+      }));
+      expect(rune.getDescription(3, 'fr', strike, CardRarity.common), '+15%');
     });
 
     test('les cinq runes a effet ajoute disent leur valeur, que l ecran '

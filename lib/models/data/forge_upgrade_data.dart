@@ -254,6 +254,9 @@ class ForgeUpgradeData {
           _percentAdded(card, rarity, level, carried, delta),
         AddEffectDelta() => delta.valuePerLevel * level,
         RemoveExhaustDelta() => null,
+        ReduceCostDelta() => _costCut(card, rarity, level, carried, delta),
+        CritBonusDelta() => delta.valuePerLevel * level,
+        AddExhaustDelta() => null,
       };
       if (value != null) return value;
     }
@@ -274,6 +277,19 @@ class ForgeUpgradeData {
     int valueAt(int total) =>
         EffectiveCard.apply(card, rarity, [(bonus, total)]).effects[index].value;
     return valueAt(carried + level) - valueAt(carried);
+  }
+
+  /// La baisse de coût marginale de [cut] sur [card], plancher 0 compris.
+  static int _costCut(
+    CardData card,
+    CardRarity rarity,
+    int level,
+    int carried,
+    ReduceCostDelta cut,
+  ) {
+    int costAt(int total) =>
+        EffectiveCard.apply(card, rarity, [(cut, total)]).cost;
+    return costAt(carried) - costAt(carried + level);
   }
 
   /// Le nom de la rune au niveau [level] : le niveau ne s'écrit que si la

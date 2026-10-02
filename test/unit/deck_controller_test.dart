@@ -466,7 +466,7 @@ void main() {
     setUp(() {
       // Persistant, tel que le jeu le livre : l'épuisement lit la donnée de
       // la rune, plus son id (spec P-43 E1, §4.5).
-      shippedRuneRegistry(const ['enduring']);
+      shippedRuneRegistry(const ['enduring', 'spectral']);
       container = ProviderContainer();
       notifier = container.read(deckProvider.notifier);
     });
@@ -516,6 +516,17 @@ void main() {
       play(card);
       expect(notifier.state.discardPile, [card]);
       expect(notifier.state.exhaustPile, isEmpty);
+    });
+
+    // D33, A10 : la carte s'epuise, meme portant Persistant.
+    test('Spectral epuise la carte, meme portant Persistant', () {
+      final plain = cardWith(isExhaust: false, runes: const ['spectral:1']);
+      final both =
+          cardWith(runes: const ['enduring:1', 'spectral:1']);
+      play(plain);
+      play(both);
+      expect(notifier.state.exhaustPile, [plain, both]);
+      expect(notifier.state.discardPile, isEmpty);
     });
 
     test('un pouvoir est epuise meme s il porte Persistant', () {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../game_button.dart';
+import 'rune_style.dart';
 
 /// La ligne d'une rune, commune aux écrans qui en proposent une — le choix
 /// de la fusion, l'affûtage du feu, l'échange au Puits (spec P-43 E2,
@@ -29,56 +30,11 @@ class ForgeSlotRow extends StatelessWidget {
     required this.onAction,
   });
 
-  Color _getUpgradeColorFromString(String colorStr) {
-    switch (colorStr) {
-      case 'redAccent':
-        return Colors.redAccent;
-      case 'blueAccent':
-        return Colors.blueAccent;
-      case 'orangeAccent':
-        return Colors.orangeAccent;
-      case 'lightBlueAccent':
-        return Colors.lightBlueAccent;
-      case 'amberAccent':
-        return Colors.amberAccent;
-      case 'amber':
-        return Colors.amber;
-      case 'cyanAccent':
-        return Colors.cyanAccent;
-      case 'greenAccent':
-        return Colors.greenAccent;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getUpgradeIconFromString(String iconStr) {
-    switch (iconStr) {
-      case 'hardware_rounded':
-        return Icons.hardware_rounded;
-      case 'shield_rounded':
-        return Icons.shield_rounded;
-      case 'local_fire_department_rounded':
-        return Icons.local_fire_department_rounded;
-      case 'ac_unit_rounded':
-        return Icons.ac_unit_rounded;
-      case 'flash_on_rounded':
-        return Icons.flash_on_rounded;
-      case 'style_rounded':
-        return Icons.style_rounded;
-      case 'diamond_rounded':
-        return Icons.diamond_rounded;
-      case 'hourglass_bottom_rounded':
-        return Icons.hourglass_bottom_rounded;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _getUpgradeColorFromString(rune.color);
-    final icon = _getUpgradeIconFromString(rune.icon);
+    // Un nom inconnu retombe sur du gris et une icône d'aide (A19).
+    final color = runeColors[rune.color] ?? Colors.grey;
+    final icon = runeIcons[rune.icon] ?? Icons.help_outline;
     final detail = this.detail;
 
     return Container(

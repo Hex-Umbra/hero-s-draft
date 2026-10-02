@@ -1,0 +1,23 @@
+{
+  "id": "cheap",
+  "name_en": "Light",
+  "name_fr": "Allégé",
+  "description_en": "Costs {val} less Mana (never below 0)",
+  "description_fr": "Coûte {val} Mana de moins (jamais sous 0)",
+  "icon": "savings_rounded",
+  "color": "tealAccent",
+  "minFusionRank": 1,
+  "requiresMinCost": 1,
+  "excludesRunes": [
+    "eco"
+  ],
+  "maxLevel": 1,
+  "deltas": [
+    {
+      "type": "reduceCost",
+      "valuePerLevel": 1
+    }
+  ],
+  "weight": 50,
+  "emoji": "🪙"
+}

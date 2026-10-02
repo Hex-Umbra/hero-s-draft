@@ -360,8 +360,8 @@ void main() {
       final merged = engine.mockState.hand.single;
       expect(merged.rarity, CardRarity.uncommon);
       // Par la fonction du jeu, sur le registre du tutoriel (spec P-43 E2,
-      // A18) : Tranchant, Brulant, Congelant et Surcharge s'offrent a une
-      // Frappe peu commune, trois sont tirees.
+      // A18) : Tranchant, Brulant, Congelant, Surcharge, Allege, Precis et
+      // Spectral s'offrent a une Frappe peu commune, trois sont tirees.
       final offer = engine.mockState.mergeOffer;
       expect(offer, hasLength(3));
       expect(offer.toSet(), hasLength(3));

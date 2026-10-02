@@ -26,6 +26,8 @@ class DamageEffectStrategy implements EffectStrategy {
     required String? selectedEnemyId,
   }) {
     int dealt = 0;
+    // Le critique que les runes de la carte ajoutent (spec P-43 E2, §4.2).
+    final critChanceBonus = card.effective.critChanceBonus;
 
     if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
       final enemyIndex = combatController.currentState.enemies.indexWhere(
@@ -37,6 +39,7 @@ class DamageEffectStrategy implements EffectStrategy {
           initialDamage: scaledValue + runController.currentState.heroStats.damageBonusFor(card.data.type),
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
+          critChanceBonus: critChanceBonus,
         );
         combatController.updateEnemyStats(
           selectedEnemyId,
@@ -50,6 +53,7 @@ class DamageEffectStrategy implements EffectStrategy {
           initialDamage: scaledValue + runController.currentState.heroStats.damageBonusFor(card.data.type),
           attackerStats: runController.currentState.heroStats,
           defenderStats: enemy.stats,
+          critChanceBonus: critChanceBonus,
         );
         combatController.updateEnemyStats(
           enemy.id,

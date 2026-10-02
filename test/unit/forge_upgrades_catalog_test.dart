@@ -59,10 +59,11 @@ Map<String, Object?> _status(String statusId) => {
       'durationPerLevel': 1,
     };
 
-/// Les huit runes, telles que les specs P-43 E1 (§3.2) et E2 (§3.2) les
-/// fixent : `minFusionRank` 2 pour `quick` et `eco` (D48), 1 pour les six
-/// autres (A7). Les `weight` et les `eligibleCardTypes` sont ceux que la
-/// simulation lit : ils ne bougent pas (spec P-43 E2, §9).
+/// Les onze runes, telles que les specs P-43 E1 (§3.2) et E2 (§3.2) les
+/// fixent : `minFusionRank` 2 pour `quick` et `eco` (D48), 1 pour les neuf
+/// autres (A7, D63). Les `weight` et les `eligibleCardTypes` sont ceux que la
+/// simulation lit : ils ne bougent pas, et les trois runes neuves n'ont pas
+/// d'`eligibleCardTypes` (spec P-43 E2, §3.2, §9).
 final _expected = <String, Map<String, Object?>>{
   'sharp': _rune(
     eligibleEffects: const ['damage'],
@@ -128,16 +129,50 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 30,
   ),
+  'cheap': _rune(
+    requiresMinCost: 1,
+    excludesRunes: const ['eco'],
+    maxLevel: 1,
+    deltas: const [
+      {'type': 'reduceCost', 'valuePerLevel': 1},
+    ],
+    weight: 50,
+  ),
+  'precise': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: 10,
+    deltas: const [
+      {'type': 'critBonus', 'valuePerLevel': 5},
+    ],
+    weight: 50,
+  ),
+  'spectral': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: null,
+    deltas: const [
+      {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 40},
+      {'type': 'addExhaust'},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
 /// la deuxième (rang 2).
-const _attackRank1 = {'sharp', 'burning', 'freezing', 'shocking'};
+const _attackRank1 = {
+  'sharp',
+  'burning',
+  'freezing',
+  'shocking',
+  'cheap',
+  'precise',
+  'spectral',
+};
 const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
 /// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
-/// la table de la spec P-43 E2, §4.12, sans les trois runes neuves.
+/// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
   'strike_basic': (_attackRank1, _attackRank2),
   'heavy_strike': (_attackRank1, _attackRank2),
@@ -148,12 +183,12 @@ const _offers = <String, (Set<String>, Set<String>)>{
   'sweep': (_attackRank1, _attackRank2),
   'thunder_clap': (_attackRank1, _attackRank2),
   'warcry': ({..._attackRank1, 'hardened'}, {..._attackRank2, 'hardened'}),
-  'awakening': ({'hardened'}, {'hardened', 'quick', 'eco'}),
-  'defend_basic': ({'hardened'}, {'hardened', 'quick', 'eco'}),
-  'iron_wall': ({'hardened'}, {'hardened', 'quick', 'eco'}),
-  'heal_potion': ({'enduring'}, {'enduring', 'quick', 'eco'}),
-  'demon_form': (<String>{}, {'quick', 'eco'}),
-  'metallicize': (<String>{}, {'quick', 'eco'}),
+  'awakening': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
+  'defend_basic': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
+  'iron_wall': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
+  'heal_potion': ({'enduring', 'cheap'}, {'enduring', 'cheap', 'quick', 'eco'}),
+  'demon_form': ({'cheap'}, {'cheap', 'quick', 'eco'}),
+  'metallicize': ({'cheap'}, {'cheap', 'quick', 'eco'}),
   'concentration': (<String>{}, {'quick'}),
   'focus': (<String>{}, {'quick'}),
 };
@@ -169,7 +204,7 @@ const _signatures = {
   'holy_shield',
 };
 
-/// Les huit runes livrées, et l'offre qu'elles font aux 23 cartes livrées
+/// Les onze runes livrées, et l'offre qu'elles font aux 23 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
