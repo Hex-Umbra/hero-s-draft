@@ -49,7 +49,6 @@ void main() {
             descriptionFr: '+{val} Dégâts',
             icon: 'hardware_rounded',
             color: 'redAccent',
-            pools: ['common'],
           ),
         ],
       );

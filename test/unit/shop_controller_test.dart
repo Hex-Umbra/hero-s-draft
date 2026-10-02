@@ -353,7 +353,7 @@ void main() {
           forgeUpgrades: const [],
         ),
       );
-      // Cumulable, comme eco aujourd'hui : le tirage la monterait a 2 ou 3.
+      // Sans plafond, le tirage la monterait a 2 ou 3.
       GameDataRegistry(
         enemies: const [],
         heroes: const [],
@@ -370,7 +370,6 @@ void main() {
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['common', 'uncommon', 'rare'],
             maxLevel: 1,
           ),
         ],
@@ -536,7 +535,6 @@ void main() {
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['rare'],
           ),
           ForgeUpgradeData(
             id: 'beta',
@@ -546,7 +544,6 @@ void main() {
             descriptionFr: '',
             icon: '',
             color: '',
-            pools: ['common'],
           ),
         ],
       );

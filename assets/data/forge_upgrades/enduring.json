@@ -7,9 +7,6 @@
   "icon": "hourglass_bottom_rounded",
   "color": "greenAccent",
   "minFusionRank": 1,
-  "pools": [
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack",
     "skill",
@@ -24,7 +21,6 @@
     "eco",
     "quick"
   ],
-  "stackable": false,
   "maxLevel": 1,
   "deltas": [
     {

@@ -8,7 +8,6 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 /// veut casser.
 Map<String, dynamic> _json([Map<String, dynamic> overrides = const {}]) => {
       'id': 'sharp',
-      'pools': ['common'],
       'minFusionRank': 1,
       'maxLevel': null,
       'deltas': [
@@ -228,7 +227,6 @@ void main() {
           descriptionFr: '',
           icon: '',
           color: '',
-          pools: ['common'],
         ).minFusionRank,
         1,
       );
@@ -251,6 +249,27 @@ void main() {
       final rune = ForgeUpgradeData.fromJson(_json({'minFusionRank': 2}));
       expect(rune.toJson(), containsPair('minFusionRank', 2));
       expect(ForgeUpgradeData.fromJson(rune.toJson()).minFusionRank, 2);
+    });
+  });
+
+  // Spec P-43 E2, §4.11 : les cles que le modele ne lit plus ne s'ecrivent
+  // plus.
+  test('toJson n ecrit que les cles du modele', () {
+    expect(ForgeUpgradeData.fromJson(_json()).toJson().keys.toSet(), {
+      'id',
+      'name_en',
+      'name_fr',
+      'description_en',
+      'description_fr',
+      'icon',
+      'color',
+      'minFusionRank',
+      'requiresExhaust',
+      'requiresMinCost',
+      'maxLevel',
+      'deltas',
+      'weight',
+      'emoji',
     });
   });
 

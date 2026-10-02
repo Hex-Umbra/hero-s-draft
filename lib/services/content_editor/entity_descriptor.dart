@@ -327,12 +327,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     category: EntityCategory.forgeUpgrade,
     label: 'Amélioration de forge',
     directory: 'forge_upgrades',
-    // `pools` est la seule cle que la famille 3 exige : les autres cles
-    // obligatoires d'une rune — `deltas`, `maxLevel` (spec P-43 E1, §3.1) et
-    // `minFusionRank` (spec P-43 E2, A8) — sont refusees par
-    // `ForgeUpgradeData.fromJson` lui-meme, que la famille 7 appelle. Un fait
-    // a un seul endroit.
-    requiredKeys: const {'pools'},
+    // La famille 3 n'exige aucune cle : les cles obligatoires d'une rune —
+    // `deltas`, `maxLevel` (spec P-43 E1, §3.1) et `minFusionRank` (spec
+    // P-43 E2, A8) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme,
+    // que la famille 7 appelle. Un fait a un seul endroit.
+    requiredKeys: const {},
     enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
     // Le type d'un delta, lu sur le parseur (ADR-100 D1).
     enumKeys: {'deltas[].type': CardDelta.typeNames},
@@ -375,14 +374,12 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
 {
   "icon": "flash_on_rounded",
   "color": "amberAccent",
-  "pools": ["common"],
   "minFusionRank": 1,
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
   "eligibleEffects": ["damage"],
   "excludesEffects": [],
   "requiresExhaust": false,
   "requiresMinCost": 0,
-  "stackable": true,
   "maxLevel": 1,
   "deltas": [
     { "type": "percentBonus", "effect": "damage", "valuePercentPerLevel": 15 }

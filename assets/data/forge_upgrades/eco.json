@@ -7,9 +7,6 @@
   "icon": "diamond_rounded",
   "color": "cyanAccent",
   "minFusionRank": 2,
-  "pools": [
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack",
     "skill",

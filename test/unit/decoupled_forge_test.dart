@@ -38,7 +38,6 @@ void main() {
             descriptionFr: '+{val} Dégâts ({percent}%, {tier})',
             icon: 'hardware_rounded',
             color: 'redAccent',
-            pools: ['common'],
             deltas: [
               PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 15),
             ],
@@ -52,7 +51,6 @@ void main() {
             descriptionFr: '+{val} Armure ({percent}%, {tier})',
             icon: 'shield_rounded',
             color: 'blueAccent',
-            pools: ['common'],
             deltas: [
               PercentBonusDelta(effect: 'armor', valuePercentPerLevel: 15),
             ],
@@ -66,7 +64,6 @@ void main() {
             descriptionFr: 'Gagne +{tier} Mana à l\'utilisation',
             icon: 'diamond_rounded',
             color: 'cyanAccent',
-            pools: ['rare'],
             maxLevel: 1,
             deltas: [AddEffectDelta(effect: 'gain_mana', valuePerLevel: 1)],
             weight: 40,
@@ -79,9 +76,8 @@ void main() {
             descriptionFr: 'Retire Épuisement',
             icon: 'hourglass_bottom_rounded',
             color: 'greenAccent',
-            pools: ['rare'],
             requiresExhaust: true,
-            stackable: false,
+            maxLevel: 1,
           ),
         ],
       );
@@ -209,7 +205,7 @@ void main() {
           ['sharp:3']);
     });
 
-    test('mergeCards garde une seule rune non cumulable, au tier 1', () {
+    test('mergeCards garde une rune de plafond 1 au niveau 1', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 

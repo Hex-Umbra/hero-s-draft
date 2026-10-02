@@ -7,11 +7,6 @@
   "icon": "shield_rounded",
   "color": "blueAccent",
   "minFusionRank": 1,
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
   "eligibleEffects": [
     "armor"
   ],

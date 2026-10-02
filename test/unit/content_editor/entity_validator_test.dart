@@ -202,8 +202,7 @@ void main() {
             'description_fr': 'x',
             'description_en': 'x',
           },
-          mechanics: '{"pools": ["common"], '
-              '"eligibleCardTypes": ["attack", "sortilege"]}',
+          mechanics: '{"eligibleCardTypes": ["attack", "sortilege"]}',
         ),
       );
       expect(faults, hasLength(1));
@@ -592,7 +591,7 @@ void main() {
             descriptor: forge,
             id: 'eclat',
             bilingual: prose,
-            mechanics: '{"pools": ["common"], "minFusionRank": 1, '
+            mechanics: '{"minFusionRank": 1, '
                 '"color": "$color", '
                 '"maxLevel": 1, "deltas": [{"type": "removeExhaust"}]}',
           );

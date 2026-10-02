@@ -15,7 +15,6 @@ class ForgeUpgradeData {
   final String descriptionFr;
   final String icon;
   final String color;
-  final List<String> pools;
 
   /// Le rang de fusion minimal de la carte qui reçoit la rune (D48 ; spec
   /// P-43 E2, A8, §4.3) : `eco` et `quick` attendent une carte rare. La clé
@@ -41,11 +40,6 @@ class ForgeUpgradeData {
   /// le prédicat lit la règle dans les deux sens (D61).
   final List<String> excludesRunes;
 
-  /// Une rune cumulable additionne ses tiers : deux `sharp:1` valent un
-  /// `sharp:2`. Une rune non cumulable est binaire — `enduring` retire
-  /// l'épuisement ou non — et n'a qu'un tier, 1 (voir `ForgeRuneRules`).
-  final bool stackable;
-
   /// Le niveau le plus haut que la rune atteint sur une carte, exemplaires
   /// additionnés ; `null` : sans plafond (D27, spec P-43 E1, A8). La clé est
   /// obligatoire dans le fichier, `null` compris ; le constructeur laisse aux
@@ -67,7 +61,6 @@ class ForgeUpgradeData {
     required this.descriptionFr,
     required this.icon,
     required this.color,
-    required this.pools,
     this.minFusionRank = 1,
     this.eligibleCardTypes,
     this.eligibleEffects,
@@ -75,7 +68,6 @@ class ForgeUpgradeData {
     this.requiresExhaust = false,
     this.requiresMinCost = 0,
     this.excludesRunes = const [],
-    this.stackable = true,
     this.maxLevel,
     this.deltas = const [],
     this.weight = 10,
@@ -92,7 +84,6 @@ class ForgeUpgradeData {
       descriptionFr: json['description_fr'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
       color: json['color'] as String? ?? '',
-      pools: List<String>.from(json['pools'] as List? ?? []),
       minFusionRank: _readMinFusionRank(id, json['minFusionRank']),
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
@@ -105,7 +96,6 @@ class ForgeUpgradeData {
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       requiresMinCost: _readMinCost(id, json['requiresMinCost']),
       excludesRunes: _readExcludedRunes(id, json),
-      stackable: json['stackable'] as bool? ?? true,
       maxLevel: _readMaxLevel(id, json),
       deltas: _readDeltas(id, json['deltas']),
       weight: json['weight'] as int? ?? 10,
@@ -216,7 +206,6 @@ class ForgeUpgradeData {
       'description_fr': descriptionFr,
       'icon': icon,
       'color': color,
-      'pools': pools,
       'minFusionRank': minFusionRank,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
       if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
@@ -224,7 +213,6 @@ class ForgeUpgradeData {
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
       if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
-      'stackable': stackable,
       'maxLevel': maxLevel,
       'deltas': [for (final delta in deltas) delta.toJson()],
       'weight': weight,

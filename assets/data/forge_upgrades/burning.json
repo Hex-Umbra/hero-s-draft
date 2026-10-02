@@ -7,11 +7,6 @@
   "icon": "local_fire_department_rounded",
   "color": "orangeAccent",
   "minFusionRank": 1,
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack"
   ],

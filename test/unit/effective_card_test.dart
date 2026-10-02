@@ -36,7 +36,6 @@ ForgeUpgradeData _rune(String id, List<CardDelta> deltas) => ForgeUpgradeData(
       descriptionFr: '',
       icon: '',
       color: '',
-      pools: const ['common'],
       deltas: deltas,
     );
 

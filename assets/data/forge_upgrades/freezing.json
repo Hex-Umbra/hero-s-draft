@@ -7,11 +7,6 @@
   "icon": "ac_unit_rounded",
   "color": "lightBlueAccent",
   "minFusionRank": 1,
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack"
   ],

@@ -66,7 +66,8 @@ void main() {
     expect(kindOf(card, const ['effects'], [
       {'type': 'damage'},
     ]), FieldKind.objectList);
-    expect(kindOf(forge, const ['pools'], ['common']), FieldKind.stringList);
+    expect(kindOf(forge, const ['excludesEffects'], ['draw']),
+        FieldKind.stringList);
     expect(kindOf(card, const ['meta'], {'a': 1}), FieldKind.object);
   });
 

@@ -96,8 +96,8 @@ void main() {
     expect(registry.events, hasLength(5));
     expect(registry.forgeUpgrades, hasLength(8));
     expect(
-      registry.forgeUpgrades.where((u) => !u.stackable).map((u) => u.id),
-      ['enduring'],
+      registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),
+      ['eco', 'enduring', 'freezing', 'quick'],
     );
     expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));

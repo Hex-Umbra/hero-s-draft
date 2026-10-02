@@ -11,7 +11,6 @@ import 'shipped_data.dart';
 
 ForgeUpgradeData _rune(
   String id, {
-  bool stackable = true,
   int? maxLevel,
   int minFusionRank = 1,
   int weight = 10,
@@ -24,9 +23,7 @@ ForgeUpgradeData _rune(
       descriptionFr: '',
       icon: '',
       color: '',
-      pools: const ['common'],
       minFusionRank: minFusionRank,
-      stackable: stackable,
       maxLevel: maxLevel,
       weight: weight,
     );
@@ -58,59 +55,29 @@ void main() {
       forgeUpgrades: [
         _rune('sharp'),
         _rune('hardened'),
-        _rune('enduring', stackable: false),
+        _rune('enduring', maxLevel: 1),
         _rune('eco', maxLevel: 1),
         _rune('capped', maxLevel: 2),
       ],
     );
   });
 
-  group('ForgeUpgradeData.stackable', () {
-    test('une rune est cumulable par defaut', () {
-      final rune = ForgeUpgradeData.fromJson({
-        'id': 'sharp',
-        'pools': ['common'],
-        'minFusionRank': 1,
-        'maxLevel': null,
-        'deltas': [
-          {'type': 'percentBonus', 'effect': 'damage', 'valuePercentPerLevel': 15},
-        ],
-      });
-      expect(rune.stackable, isTrue);
-    });
-
-    test('le JSON declare une rune non cumulable, et toJson la conserve', () {
-      final rune = ForgeUpgradeData.fromJson({
-        'id': 'enduring',
-        'pools': ['rare'],
-        'minFusionRank': 1,
-        'stackable': false,
-        'maxLevel': 1,
-        'deltas': [
-          {'type': 'removeExhaust'},
-        ],
-      });
-      expect(rune.stackable, isFalse);
-      expect(ForgeUpgradeData.fromJson(rune.toJson()).stackable, isFalse);
-    });
-  });
-
   group('ForgeRuneRules.consolidate', () {
-    test('additionne les tiers des runes cumulables de meme id', () {
+    test('additionne les niveaux des runes de meme id', () {
       expect(
         ForgeRuneRules.consolidate(['sharp:1', 'hardened:1', 'sharp:2']),
         ['sharp:3', 'hardened:1'],
       );
     });
 
-    test('garde une rune non cumulable une seule fois, au tier 1', () {
+    test('garde une rune de plafond 1 une seule fois, au niveau 1', () {
       expect(
         ForgeRuneRules.consolidate(['enduring:1', 'sharp:1', 'enduring:1']),
         ['enduring:1', 'sharp:1'],
       );
     });
 
-    test('ramene au tier 1 une rune non cumulable deja montee', () {
+    test('ramene au niveau 1 une rune de plafond 1 deja montee', () {
       expect(ForgeRuneRules.consolidate(['enduring:3']), ['enduring:1']);
     });
 
@@ -118,7 +85,7 @@ void main() {
       expect(ForgeRuneRules.consolidate(['capped:1', 'capped:2']), ['capped:2']);
     });
 
-    test('traite une rune absente du registre comme cumulable', () {
+    test('une rune absente du registre n a pas de plafond', () {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
     });
 

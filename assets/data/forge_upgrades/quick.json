@@ -7,10 +7,6 @@
   "icon": "style_rounded",
   "color": "amber",
   "minFusionRank": 2,
-  "pools": [
-    "uncommon",
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack",
     "skill",

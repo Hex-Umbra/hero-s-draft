@@ -7,11 +7,6 @@
   "icon": "flash_on_rounded",
   "color": "amberAccent",
   "minFusionRank": 1,
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
   "eligibleCardTypes": [
     "attack"
   ],

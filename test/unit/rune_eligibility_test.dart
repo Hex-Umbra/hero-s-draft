@@ -25,7 +25,6 @@ ForgeUpgradeData _rune(
       descriptionFr: '',
       icon: '',
       color: '',
-      pools: const ['common'],
       eligibleCardTypes: eligibleCardTypes,
       eligibleEffects: eligibleEffects,
       excludesEffects: excludesEffects,

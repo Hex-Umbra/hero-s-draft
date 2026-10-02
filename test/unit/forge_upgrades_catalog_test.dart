@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
@@ -7,12 +10,10 @@ import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-const _threePools = ['common', 'uncommon', 'rare'];
 const _allTypes = ['attack', 'skill', 'power'];
 
 /// Ce que déclare une rune, sous une forme comparable.
 Map<String, Object?> _declared(ForgeUpgradeData rune) => {
-      'pools': rune.pools,
       'minFusionRank': rune.minFusionRank,
       'eligibleCardTypes': rune.eligibleCardTypes,
       'eligibleEffects': rune.eligibleEffects,
@@ -20,14 +21,12 @@ Map<String, Object?> _declared(ForgeUpgradeData rune) => {
       'requiresExhaust': rune.requiresExhaust,
       'requiresMinCost': rune.requiresMinCost,
       'excludesRunes': rune.excludesRunes,
-      'stackable': rune.stackable,
       'maxLevel': rune.maxLevel,
       'deltas': [for (final delta in rune.deltas) delta.toJson()],
       'weight': rune.weight,
     };
 
 Map<String, Object?> _rune({
-  List<String> pools = _threePools,
   int minFusionRank = 1,
   List<String>? eligibleCardTypes,
   List<String>? eligibleEffects,
@@ -35,13 +34,11 @@ Map<String, Object?> _rune({
   bool requiresExhaust = false,
   int requiresMinCost = 0,
   List<String> excludesRunes = const [],
-  bool stackable = true,
   required int? maxLevel,
   required List<Map<String, Object?>> deltas,
   required int weight,
 }) =>
     {
-      'pools': pools,
       'minFusionRank': minFusionRank,
       'eligibleCardTypes': eligibleCardTypes,
       'eligibleEffects': eligibleEffects,
@@ -49,7 +46,6 @@ Map<String, Object?> _rune({
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
       'excludesRunes': excludesRunes,
-      'stackable': stackable,
       'maxLevel': maxLevel,
       'deltas': deltas,
       'weight': weight,
@@ -85,7 +81,6 @@ final _expected = <String, Map<String, Object?>>{
     weight: 100,
   ),
   'quick': _rune(
-    pools: const ['uncommon', 'rare'],
     minFusionRank: 2,
     eligibleCardTypes: _allTypes,
     maxLevel: 1,
@@ -95,7 +90,6 @@ final _expected = <String, Map<String, Object?>>{
     weight: 60,
   ),
   'eco': _rune(
-    pools: const ['rare'],
     minFusionRank: 2,
     eligibleCardTypes: _allTypes,
     requiresMinCost: 1,
@@ -124,12 +118,10 @@ final _expected = <String, Map<String, Object?>>{
     weight: 80,
   ),
   'enduring': _rune(
-    pools: const ['rare'],
     eligibleCardTypes: _allTypes,
     excludesEffects: const ['gain_mana', 'draw'],
     requiresExhaust: true,
     excludesRunes: const ['eco', 'quick'],
-    stackable: false,
     maxLevel: 1,
     deltas: const [
       {'type': 'removeExhaust'},
@@ -145,8 +137,7 @@ const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
 /// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
-/// la table de la spec P-43 E2, §4.12, sans les trois runes de la partie 2.
-/// `pools` mis à part, que le tirage de la boutique applique encore.
+/// la table de la spec P-43 E2, §4.12, sans les trois runes neuves.
 const _offers = <String, (Set<String>, Set<String>)>{
   'strike_basic': (_attackRank1, _attackRank2),
   'heavy_strike': (_attackRank1, _attackRank2),
@@ -205,6 +196,41 @@ void main() {
       expect(_declared(rune), expected);
     });
   }
+
+  // Spec P-43 E2, §4.11 : une cle qu'aucun modele ne lit passerait le
+  // chargement en silence, comme toute cle inconnue ; aucun fichier n'en
+  // porte.
+  test('chaque cle d un fichier de rune est lue par le modele', () {
+    const read = {
+      'id',
+      'name_en',
+      'name_fr',
+      'description_en',
+      'description_fr',
+      'icon',
+      'color',
+      'minFusionRank',
+      'eligibleCardTypes',
+      'eligibleEffects',
+      'excludesEffects',
+      'requiresExhaust',
+      'requiresMinCost',
+      'excludesRunes',
+      'maxLevel',
+      'deltas',
+      'weight',
+      'emoji',
+    };
+    final offenders = [
+      for (final file in Directory('assets/data/forge_upgrades').listSync())
+        if (file is File && file.path.endsWith('.json'))
+          for (final key in (jsonDecode(file.readAsStringSync())
+                  as Map<String, dynamic>)
+              .keys)
+            if (!read.contains(key)) '${file.path} : $key',
+    ];
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
 
   test('la matrice couvre les 23 cartes livrees', () {
     expect(registry.cards.map((c) => c.id).toSet(),

@@ -7,11 +7,6 @@
   "icon": "hardware_rounded",
   "color": "redAccent",
   "minFusionRank": 1,
-  "pools": [
-    "common",
-    "uncommon",
-    "rare"
-  ],
   "eligibleEffects": [
     "damage"
   ],

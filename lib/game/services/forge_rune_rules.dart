@@ -5,22 +5,15 @@ import '../../models/data/forge_upgrade_data.dart';
 
 /// Les règles des runes de forge, notées `id:niveau` : l'héritage de la
 /// fusion 3→1 (D13), son offre, l'affûtage au feu de camp et l'échange au
-/// Puits (spec P-43 E2). Une rune non cumulable (`ForgeUpgradeData.stackable`)
-/// n'a pas de niveau qui vaille : une fusion 3→1 n'en garde qu'un exemplaire,
-/// au niveau 1. Les références se lisent par l'analyseur unique du modèle,
-/// `ForgeUpgradeData.parseRef` (ADR-094 D5).
+/// Puits (spec P-43 E2). Les références se lisent par l'analyseur unique du
+/// modèle, `ForgeUpgradeData.parseRef` (ADR-094 D5).
 class ForgeRuneRules {
   const ForgeRuneRules._();
 
-  /// Une rune absente du registre est traitée comme cumulable, ce qu'étaient
-  /// toutes les runes avant l'apparition du champ.
-  static bool isStackable(String runeId) =>
-      ForgeUpgradeData.getById(runeId)?.stackable ?? true;
-
   /// Réunit les runes de même id, dans l'ordre de leur première apparition :
-  /// les tiers d'une rune cumulable s'additionnent, bornés par son `maxLevel`
-  /// — le surplus se perd (spec P-43 E1, A9) ; une rune non cumulable est
-  /// gardée une fois au tier 1. Une référence mal formée ou de tier nul est
+  /// leurs niveaux s'additionnent, bornés par son `maxLevel` — le surplus se
+  /// perd, une rune de plafond 1 reste au niveau 1 (spec P-43 E1, A9 ; spec
+  /// P-43 E2, §4.6). Une référence mal formée ou de niveau nul est
   /// ignorée. Deux runes qui s'excluent (`excludesRunes`, dans un sens ou
   /// l'autre) ne sont jamais réunies : la première arrivée est gardée, car la
   /// fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
@@ -31,7 +24,7 @@ class ForgeRuneRules {
         in ForgeUpgradeData.levelsOf(runes).entries) {
       if (kept.any((other) => _exclude(id, other))) continue;
       kept.add(id);
-      result.add('$id:${isStackable(id) ? _bounded(id, tier) : 1}');
+      result.add('$id:${_bounded(id, tier)}');
     }
     return result;
   }
@@ -53,9 +46,8 @@ class ForgeRuneRules {
   /// `CardData.isOfferableTo` — toute règle est un champ du fichier de rune,
   /// aucune n'est un `case` par id. [card] est la carte qui reçoit la rune, à
   /// son rang : la carte fusionnée au rang qu'elle atteint, la carte
-  /// elle-même en boutique. [catalog] sert à lire les exclusions des runes
-  /// que la carte porte déjà. `pools` n'en est pas une condition : c'est le
-  /// ciblage par rareté des tirages, qui le gardent (D68).
+  /// elle-même en boutique et au Puits. [catalog] sert à lire les exclusions
+  /// des runes que la carte porte déjà.
   static bool isEligible(
     ForgeUpgradeData rune,
     CardInstance card,
