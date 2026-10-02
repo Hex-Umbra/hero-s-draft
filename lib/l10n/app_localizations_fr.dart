@@ -665,11 +665,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get restCampForge => 'FORGER';
+  String get restCampSharpen => 'AFFÛTER';
 
   @override
-  String get restCampForgeDesc =>
-      'Améliore définitivement une carte de votre deck.';
+  String get restCampSharpenDesc =>
+      'Une rune d\'une de vos cartes gagne un niveau, contre de l\'or.';
+
+  @override
+  String get restCampSharpenNone =>
+      'Aucune rune de votre deck ne peut gagner de niveau.';
 
   @override
   String get restCampRemove => 'OUBLIER';
@@ -687,8 +691,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String restCampSnackbarForge(String cardName, int level) {
-    return '$cardName a été améliorée au Niveau $level !';
+  String restCampSnackbarSharpen(String runeName, int level, String cardName) {
+    return '$runeName passe au niveau $level sur $cardName !';
   }
 
   @override
@@ -697,15 +701,32 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get restCampForgeTitle => 'FORGER UNE CARTE';
+  String get restCampSharpenTitle => 'AFFÛTER UNE RUNE';
 
   @override
-  String get restCampForgeSubtitle =>
-      'Choisissez une carte à améliorer définitivement.';
+  String get restCampSharpenSubtitle =>
+      'Choisissez une carte, puis la rune qui gagne un niveau.';
 
   @override
   String get forgeNoEligibleRune =>
       'Aucune rune ne peut être ajoutée à cette carte.';
+
+  @override
+  String get sharpenNothingOnCard =>
+      'Aucune rune de cette carte ne peut gagner de niveau.';
+
+  @override
+  String sharpenAction(int cost) {
+    return 'Affûter — $cost or';
+  }
+
+  @override
+  String sharpenLevel(int from, int to) {
+    return 'Niveau $from → $to';
+  }
+
+  @override
+  String get runeMaxLevel => 'Niveau maximal';
 
   @override
   String get restCampRemoveTitle => 'OUBLIER UNE CARTE';

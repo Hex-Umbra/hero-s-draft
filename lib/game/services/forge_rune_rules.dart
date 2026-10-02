@@ -177,4 +177,42 @@ class ForgeRuneRules {
     }
     return drawn;
   }
+
+  /// `b`, le coût d'un niveau d'affûtage par niveau porté (D63 ; spec P-43
+  /// E2, §4.7).
+  static const sharpenBaseCost = 50;
+
+  /// Le coût pour monter d'un niveau une rune portée au niveau [level] : il
+  /// croît avec le niveau de la rune, pas avec le rang de la carte (D20).
+  static int sharpenCost(int level) => sharpenBaseCost * level;
+
+  /// La rune [rune], portée au niveau [level], peut-elle monter d'un niveau ?
+  /// Son `maxLevel` le dit, par la borne (D72).
+  static bool canSharpen(ForgeUpgradeData rune, int level) =>
+      rune.boundLevel(1, carried: level) >= 1;
+
+  /// [card] porte-t-elle une rune que l'affûtage peut monter ? Une rune
+  /// absente du [catalog] ne se monte pas. Lu par l'option du feu et par sa
+  /// sélection (spec P-43 E2, A4).
+  static bool hasSharpenableRune(
+    CardInstance card,
+    Iterable<ForgeUpgradeData> catalog,
+  ) =>
+      ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries.any((entry) {
+        final rune = catalog.where((r) => r.id == entry.key).firstOrNull;
+        return rune != null && canSharpen(rune, entry.value);
+      });
+
+  /// [refs] où la référence de la rune [runeId] cède la place à
+  /// [replacement], à sa place (spec P-43 E2, §4.7) : l'affûtage la réécrit
+  /// `id:n+1`. Une référence mal formée reste telle quelle.
+  static List<String> replaceRune(
+    List<String> refs,
+    String runeId,
+    String replacement,
+  ) =>
+      [
+        for (final ref in refs)
+          ForgeUpgradeData.parseRef(ref)?.$1 == runeId ? replacement : ref,
+      ];
 }

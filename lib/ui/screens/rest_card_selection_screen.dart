@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -11,58 +9,52 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
-import '../widgets/forge_upgrade_dialog.dart';
+import '../widgets/forge/sharpen_rune_dialog.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
+/// La sélection d'une carte du deck, au feu de camp : pour en affûter une
+/// rune, ou pour l'oublier.
 class RestCardSelectionScreen extends ConsumerWidget {
   final String title;
   final String subtitle;
-  final bool isForge;
+
+  /// Vrai pour l'affûtage (spec P-43 E2, A4, §4.7) : une carte sans rune
+  /// affûtable est grisée et refusée au toucher, avec son motif ; une autre
+  /// ouvre le dialogue d'affûtage, et l'écran se ferme sur la carte et la
+  /// rune affûtée. Faux pour l'oubli : l'écran se ferme sur la carte touchée.
+  final bool isSharpen;
 
   const RestCardSelectionScreen({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.isForge,
+    required this.isSharpen,
   });
 
-  void _onCardTapped(BuildContext context, WidgetRef ref, CardInstance card) async {
-    if (isForge) {
-      // La forge du feu tire son offre comme la fusion (spec P-43 E2, §4.4) ;
-      // une carte à qui aucune rune ne s'offre est refusée avant le
-      // dialogue, avec son motif (spec P-43 E1, A11).
-      final offer = ForgeRuneRules.drawRunes(
-        card,
-        GameDataRegistry.instance?.forgeUpgrades ?? const [],
-        Random(),
-        count: 3,
-      );
-      if (offer.isEmpty) {
-        context.showNotification(
-          AppLocalizations.of(context)!.forgeNoEligibleRune,
-          type: NotificationType.error,
-        );
-        return;
-      }
-
-      final selectedUpgrade = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => ForgeUpgradeDialog(card: card, offer: offer),
-      );
-
-      if (selectedUpgrade != null) {
-        if (context.mounted) {
-          Navigator.of(context).pop({
-            'card': card,
-            'upgrade': selectedUpgrade,
-          });
-        }
-      }
-    } else {
-      // Card Removal
+  void _onCardTapped(
+    BuildContext context,
+    CardInstance card, {
+    required bool sharpenable,
+  }) async {
+    if (!isSharpen) {
       Navigator.of(context).pop(card);
+      return;
+    }
+    if (!sharpenable) {
+      context.showNotification(
+        AppLocalizations.of(context)!.sharpenNothingOnCard,
+        type: NotificationType.error,
+      );
+      return;
+    }
+
+    final runeId = await showDialog<String>(
+      context: context,
+      builder: (context) => SharpenRuneDialog(card: card),
+    );
+    if (runeId != null && context.mounted) {
+      Navigator.of(context).pop((card, runeId));
     }
   }
 
@@ -74,6 +66,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
     final deck = ref.watch(deckProvider).masterDeck;
+    final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
 
     final appBar = PageHeader(
       title: title,
@@ -118,13 +111,22 @@ class RestCardSelectionScreen extends ConsumerWidget {
                         mainAxisSpacing: isMobile ? 8 : 16,
                       ),
                       itemCount: deck.length,
-                      itemBuilder: (context, index) {
+                      // La sélection se ferme par le `context` de l'écran,
+                      // non par celui d'une case de la grille.
+                      itemBuilder: (_, index) {
                         final card = deck[index];
+                        final sharpenable = isSharpen &&
+                            ForgeRuneRules.hasSharpenableRune(card, catalog);
                         return UiCard.fromInstance(
                           card: card,
                           locale: locale,
                           l10n: l10n,
-                          onTap: () => _onCardTapped(context, ref, card),
+                          isGrayedOut: isSharpen && !sharpenable,
+                          onTap: () => _onCardTapped(
+                            context,
+                            card,
+                            sharpenable: sharpenable,
+                          ),
                         );
                       },
                     ),

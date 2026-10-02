@@ -60,8 +60,8 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.greenAccent,
       titleEn: 'Rest Site',
       titleFr: 'Repos',
-      descEn: 'Heal 30% max HP, forge, or remove a card.',
-      descFr: 'Soignez 30 % des PV max, forgez ou retirez une carte.',
+      descEn: 'Heal 30% max HP, sharpen a rune, or remove a card.',
+      descFr: 'Soignez 30 % des PV max, affûtez une rune ou retirez une carte.',
     ),
     NodeTypeInfo(
       icon: Icons.help_outline,

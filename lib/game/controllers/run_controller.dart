@@ -17,6 +17,7 @@ import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
 import 'run/map_progression_manager.dart';
+import 'run/gold_manager.dart';
 import 'combat/status_effect_processor.dart';
 
 class RunState {
@@ -167,11 +168,13 @@ class RunController extends Notifier<RunState> {
 
   late final PlayerStatsManager _playerStatsManager;
   late final MapProgressionManager _mapProgressionManager;
+  late final GoldManager _goldManager;
 
   @override
   RunState build() {
     _playerStatsManager = PlayerStatsManager(this, ref);
     _mapProgressionManager = MapProgressionManager(this, ref);
+    _goldManager = GoldManager(ref);
 
     return RunState(
       currentLevel: 1,
@@ -451,6 +454,11 @@ class RunController extends Notifier<RunState> {
   void applyLifestealBuff({required int value, required int duration}) {
     _playerStatsManager.applyLifestealBuff(value: value, duration: duration);
   }
+
+  /// Affûte une rune d'une carte du deck, contre de l'or (spec P-43 E2,
+  /// §4.7) ; voir `GoldManager.sharpenRune`.
+  bool sharpenRune(String cardId, String runeId) =>
+      _goldManager.sharpenRune(cardId, runeId);
 }
 
 final runProvider = NotifierProvider<RunController, RunState>(RunController.new);

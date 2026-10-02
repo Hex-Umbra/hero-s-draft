@@ -1166,17 +1166,23 @@ abstract class AppLocalizations {
   /// **'Restores 30% of Max HP ({amount} HP)'**
   String restCampRestDesc(int amount);
 
-  /// No description provided for @restCampForge.
+  /// No description provided for @restCampSharpen.
   ///
   /// In en, this message translates to:
-  /// **'FORGE'**
-  String get restCampForge;
+  /// **'SHARPEN'**
+  String get restCampSharpen;
 
-  /// No description provided for @restCampForgeDesc.
+  /// No description provided for @restCampSharpenDesc.
   ///
   /// In en, this message translates to:
-  /// **'Permanently upgrade a card in your deck.'**
-  String get restCampForgeDesc;
+  /// **'One rune on one of your cards gains a level, for gold.'**
+  String get restCampSharpenDesc;
+
+  /// No description provided for @restCampSharpenNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No rune in your deck can gain a level.'**
+  String get restCampSharpenNone;
 
   /// No description provided for @restCampRemove.
   ///
@@ -1202,11 +1208,11 @@ abstract class AppLocalizations {
   /// **'Rest complete. You recovered {amount} HP.'**
   String restCampSnackbarHeal(int amount);
 
-  /// No description provided for @restCampSnackbarForge.
+  /// No description provided for @restCampSnackbarSharpen.
   ///
   /// In en, this message translates to:
-  /// **'{cardName} was upgraded to Level {level}!'**
-  String restCampSnackbarForge(String cardName, int level);
+  /// **'{runeName} reaches level {level} on {cardName}!'**
+  String restCampSnackbarSharpen(String runeName, int level, String cardName);
 
   /// No description provided for @restCampSnackbarRemove.
   ///
@@ -1214,23 +1220,47 @@ abstract class AppLocalizations {
   /// **'{cardName} was removed from your deck.'**
   String restCampSnackbarRemove(String cardName);
 
-  /// No description provided for @restCampForgeTitle.
+  /// No description provided for @restCampSharpenTitle.
   ///
   /// In en, this message translates to:
-  /// **'FORGE A CARD'**
-  String get restCampForgeTitle;
+  /// **'SHARPEN A RUNE'**
+  String get restCampSharpenTitle;
 
-  /// No description provided for @restCampForgeSubtitle.
+  /// No description provided for @restCampSharpenSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose a card to permanently upgrade.'**
-  String get restCampForgeSubtitle;
+  /// **'Choose a card, then the rune that gains a level.'**
+  String get restCampSharpenSubtitle;
 
   /// No description provided for @forgeNoEligibleRune.
   ///
   /// In en, this message translates to:
   /// **'No rune can be added to this card.'**
   String get forgeNoEligibleRune;
+
+  /// No description provided for @sharpenNothingOnCard.
+  ///
+  /// In en, this message translates to:
+  /// **'No rune on this card can gain a level.'**
+  String get sharpenNothingOnCard;
+
+  /// No description provided for @sharpenAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharpen — {cost} gold'**
+  String sharpenAction(int cost);
+
+  /// No description provided for @sharpenLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {from} → {to}'**
+  String sharpenLevel(int from, int to);
+
+  /// No description provided for @runeMaxLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max level'**
+  String get runeMaxLevel;
 
   /// No description provided for @restCampRemoveTitle.
   ///

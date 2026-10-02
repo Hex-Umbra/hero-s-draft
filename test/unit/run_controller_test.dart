@@ -5,6 +5,11 @@ import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
+
+import 'shipped_data.dart';
 
 void main() {
   group('RunController & RunState Tests', () {
@@ -262,6 +267,66 @@ void main() {
       // là, et les 30 PV manquants ont été soignés de 20.
       expect(runController.state.heroStats.armure, 3);
       expect(runController.state.heroStats.currentPv, 90);
+    });
+  });
+
+  // Payer et ecrire, ou rien (spec P-43 E2, §4.7, A16).
+  group('RunController.sharpenRune', () {
+    late ProviderContainer container;
+    late RunController run;
+
+    setUp(() {
+      shippedRuneRegistry(const ['burning', 'eco', 'sharp']);
+      container = ProviderContainer();
+      run = container.read(runProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    /// Une Frappe rare portant [runes], seule carte du deck, et [gold] or.
+    CardInstance seed(List<String> runes, {required int gold}) {
+      container.read(inventoryProvider.notifier).reset(initialGold: gold);
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: runes,
+      );
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
+      return card;
+    }
+
+    List<String> runesOf(CardInstance card) => container
+        .read(deckProvider)
+        .masterDeck
+        .singleWhere((c) => c.uniqueId == card.uniqueId)
+        .forgeUpgrades;
+
+    // Review Focus 2 : l'or tout juste suffisant.
+    test('depense 50 x n et ecrit id:n+1 a sa place', () {
+      final card = seed(const ['burning:1', 'sharp:2', 'eco:1'], gold: 100);
+
+      expect(run.sharpenRune(card.uniqueId, 'sharp'), isTrue);
+
+      expect(container.read(inventoryProvider).gold, 0);
+      expect(runesOf(card), ['burning:1', 'sharp:3', 'eco:1']);
+    });
+
+    test('refuse une rune a son plafond, sans rien toucher', () {
+      final card = seed(const ['sharp:2', 'eco:1'], gold: 1000);
+
+      expect(run.sharpenRune(card.uniqueId, 'eco'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 1000);
+      expect(runesOf(card), ['sharp:2', 'eco:1']);
+    });
+
+    test('refuse faute d or, sans rien toucher', () {
+      final card = seed(const ['sharp:2'], gold: 99);
+
+      expect(run.sharpenRune(card.uniqueId, 'sharp'), isFalse);
+
+      expect(container.read(inventoryProvider).gold, 99);
+      expect(runesOf(card), ['sharp:2']);
     });
   });
 }

@@ -266,4 +266,38 @@ void main() {
       );
     });
   });
+
+  // L'affutage (spec P-43 E2, §4.7).
+  group('l affutage', () {
+    test('sharpenCost : 50 or par niveau porte (D20, D63)', () {
+      expect(
+        [for (var level = 1; level <= 4; level++) ForgeRuneRules.sharpenCost(level)],
+        [50, 100, 150, 200],
+      );
+    });
+
+    test('canSharpen : jusqu au plafond, sans fin sans plafond', () {
+      expect(ForgeRuneRules.canSharpen(_rune('sharp'), 9), isTrue);
+      expect(ForgeRuneRules.canSharpen(_rune('capped', maxLevel: 2), 1), isTrue);
+      expect(
+          ForgeRuneRules.canSharpen(_rune('capped', maxLevel: 2), 2), isFalse);
+      expect(ForgeRuneRules.canSharpen(_rune('eco', maxLevel: 1), 1), isFalse);
+    });
+
+    test('hasSharpenableRune : une rune portee sous son plafond, et du '
+        'catalogue', () {
+      final catalog = [_rune('sharp'), _rune('eco', maxLevel: 1)];
+      expect(ForgeRuneRules.hasSharpenableRune(_cardWith([]), catalog), isFalse);
+      expect(ForgeRuneRules.hasSharpenableRune(_cardWith(['eco:1']), catalog),
+          isFalse);
+      expect(
+          ForgeRuneRules.hasSharpenableRune(_cardWith(['absente:1']), catalog),
+          isFalse);
+      expect(
+        ForgeRuneRules.hasSharpenableRune(
+            _cardWith(['eco:1', 'sharp:3']), catalog),
+        isTrue,
+      );
+    });
+  });
 }

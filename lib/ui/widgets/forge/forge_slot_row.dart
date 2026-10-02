@@ -9,6 +9,10 @@ import '../game_button.dart';
 class ForgeSlotRow extends StatelessWidget {
   final ForgeUpgradeData rune;
   final String title;
+
+  /// Une ligne sous le titre — le niveau et le suivant, à l'affûtage ;
+  /// `null` : aucune.
+  final String? detail;
   final String description;
   final String actionLabel;
 
@@ -19,6 +23,7 @@ class ForgeSlotRow extends StatelessWidget {
     super.key,
     required this.rune,
     required this.title,
+    this.detail,
     required this.description,
     required this.actionLabel,
     required this.onAction,
@@ -74,6 +79,7 @@ class ForgeSlotRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _getUpgradeColorFromString(rune.color);
     final icon = _getUpgradeIconFromString(rune.icon);
+    final detail = this.detail;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -116,6 +122,16 @@ class ForgeSlotRow extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
+                if (detail != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    detail,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   description,
