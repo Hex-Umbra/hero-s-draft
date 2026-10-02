@@ -176,6 +176,8 @@
   "shopExpandDesc": "Ajoute 1 carte de plus en vente définitivement",
   "shopClone": "Miroir Magique",
   "shopCloneDesc": "Clone une carte de votre deck",
+  "shopDeckCopy": "COPIE DE VOTRE DECK",
+  "shopDeckCopyDesc": "Même rareté, sans ses runes.",
   "targetSingleEnemy": "Cible unique",
   "targetAllEnemies": "Tous les ennemis",
   "targetSelf": "Soi-même",

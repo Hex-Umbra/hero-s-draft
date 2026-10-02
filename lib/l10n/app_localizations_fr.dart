@@ -639,6 +639,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopCloneDesc => 'Clone une carte de votre deck';
 
   @override
+  String get shopDeckCopy => 'COPIE DE VOTRE DECK';
+
+  @override
+  String get shopDeckCopyDesc => 'Même rareté, sans ses runes.';
+
+  @override
   String get targetSingleEnemy => 'Cible unique';
 
   @override

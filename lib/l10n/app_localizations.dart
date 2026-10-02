@@ -1118,6 +1118,18 @@ abstract class AppLocalizations {
   /// **'Clone a card from your deck'**
   String get shopCloneDesc;
 
+  /// No description provided for @shopDeckCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'COPY FROM YOUR DECK'**
+  String get shopDeckCopy;
+
+  /// No description provided for @shopDeckCopyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Same rarity, without its runes.'**
+  String get shopDeckCopyDesc;
+
   /// No description provided for @targetSingleEnemy.
   ///
   /// In en, this message translates to:

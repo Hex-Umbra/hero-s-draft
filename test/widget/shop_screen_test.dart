@@ -210,7 +210,7 @@ void main() {
   );
 
   testWidgets(
-    'ShopScreen Magic Mirror clones/caches options and clears them on deactivate',
+    'ShopScreen Magic Mirror clones/caches options and clears them at the next node',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -303,7 +303,10 @@ void main() {
       // Verify we are back to the home screen
       expect(find.text('Open Shop'), findsOneWidget);
 
-      // Verify cloneOptions is cleared upon ShopScreen deactivation
+      // Le Miroir repart avec l'etal, au noeud suivant (spec P-43 E2, A11) :
+      // la sortie ne vide rien.
+      expect(container.read(shopProvider).cloneOptions, equals(options1));
+      runNotifier.travelToNode('node_suivant');
       expect(container.read(shopProvider).cloneOptions, isEmpty);
 
       // Pump to let any notification timers expire
@@ -366,4 +369,122 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  Widget app(ProviderContainer container, Widget home) =>
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
+          home: home,
+        ),
+      );
+
+  /// Une run neuve, au premier nœud de sa carte, avec une Frappe pour deck
+  /// et 1000 or.
+  ProviderContainer startRun(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
+    );
+    addTearDown(container.dispose);
+    final run = container.read(runProvider.notifier);
+    run.startNewRun(mockHero);
+    run.travelToNode(container.read(runProvider).mapNodes.first.id);
+    container.read(inventoryProvider.notifier).reset(initialGold: 1000);
+    container
+        .read(deckProvider.notifier)
+        .addCardToMasterDeck(CardInstance(data: mockCards[0]));
+    return container;
+  }
+
+  // D46 ; spec P-43 E2, A11, §4.9.
+  testWidgets('la copie du deck se montre a part, sous COPIE DE VOTRE DECK, '
+      'et s achete au prix de sa rarete', (WidgetTester tester) async {
+    final container = startRun(tester);
+    await tester.pumpWidget(app(container, const Scaffold(body: ShopScreen())));
+    await tester.pumpAndSettle();
+
+    expect(find.text('COPIE DE VOTRE DECK'), findsOneWidget);
+    expect(find.text('Même rareté, sans ses runes.'), findsOneWidget);
+    // Les trois cartes en vente, puis la copie.
+    expect(find.byType(UiCard), findsNWidgets(4));
+
+    await tester.ensureVisible(find.byType(UiCard).last);
+    await tester.tap(find.byType(UiCard).last);
+    await tester.pumpAndSettle();
+
+    expect(container.read(deckProvider).masterDeck, hasLength(2));
+    expect(container.read(inventoryProvider).gold, 1000 - 25);
+    expect(find.text('COPIE DE VOTRE DECK'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  // Decide par le proprietaire le 02/10/2026 (spec P-43 E2, A11) : l'etal
+  // entier est retenu a son noeud.
+  testWidgets('sortir par le retour puis revenir garde le meme etal et la '
+      'meme copie', (WidgetTester tester) async {
+    final container = startRun(tester);
+    await tester.pumpWidget(app(
+      container,
+      Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ShopScreen()),
+            ),
+            child: const Text('Ouvrir la boutique'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Ouvrir la boutique'));
+    await tester.pumpAndSettle();
+
+    // Le Miroir tire ses options, puis un clone double son prix.
+    await tester.tap(find.text('Miroir Magique'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    expect(
+      container
+          .read(shopProvider.notifier)
+          .cloneCard(container.read(deckProvider).masterDeck.first),
+      isTrue,
+    );
+    final before = container.read(shopProvider);
+
+    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.pumpAndSettle();
+    expect(find.byType(ShopScreen), findsNothing);
+    final run = container.read(runProvider);
+    expect(
+      run.mapNodes.singleWhere((n) => n.id == run.currentNodeId).isCompleted,
+      isFalse,
+    );
+
+    await tester.tap(find.text('Ouvrir la boutique'));
+    await tester.pumpAndSettle();
+
+    final after = container.read(shopProvider);
+    expect(after, same(before));
+    expect(after.deckCopy, isNotNull);
+    expect(after.cloneOptions, isNotEmpty);
+    expect(after.clonePrice, 300);
+    expect(find.text('COPIE DE VOTRE DECK'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
 }

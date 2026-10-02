@@ -50,10 +50,11 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.amber,
       titleEn: 'Shop',
       titleFr: 'Boutique',
-      descEn: 'Buy cards, reroll stock, purge a card. No relics.',
+      descEn: 'Buy cards or a copy of yours, reroll stock, purge a card. No '
+          'relics.',
       descFr:
-          'Achetez des cartes, relancez le stock, purgez-en une. Aucune '
-          'relique.',
+          'Achetez des cartes ou la copie d\'une des vôtres, relancez le '
+          'stock, purgez-en une. Aucune relique.',
     ),
     NodeTypeInfo(
       icon: Icons.nightlight_round,

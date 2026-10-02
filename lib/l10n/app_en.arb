@@ -429,6 +429,8 @@
   "shopExpandDesc": "Permanently add 1 more card for sale",
   "shopClone": "Mirror Magic",
   "shopCloneDesc": "Clone a card from your deck",
+  "shopDeckCopy": "COPY FROM YOUR DECK",
+  "shopDeckCopyDesc": "Same rarity, without its runes.",
   "targetSingleEnemy": "Single enemy",
   "targetAllEnemies": "All enemies",
   "targetSelf": "Self",

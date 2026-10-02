@@ -10,8 +10,18 @@ import 'deck_controller.dart';
 import 'inventory_controller.dart';
 
 class ShopController extends Notifier<ShopState> {
+  /// L'étal est oublié dès que le nœud courant de la run change — le départ
+  /// vers un autre nœud, un acte, une run, une sauvegarde chargée ailleurs
+  /// (spec P-43 E2, A11, §4.9). Rentrer dans le même nœud ne le change pas.
+  /// Un écouteur, et non `ref.watch` : celui-ci laisserait le Notifier
+  /// périmé entre le changement de nœud et la lecture suivante de `state`,
+  /// et tout `ref.read` de ses méthodes y lèverait l'assertion de Riverpod.
   @override
   ShopState build() {
+    ref.listen(
+      runProvider.select((run) => run.currentNodeId),
+      (previous, next) => state = const ShopState(),
+    );
     return const ShopState();
   }
 
@@ -134,31 +144,52 @@ class ShopController extends Notifier<ShopState> {
     return instance;
   }
 
-  /// Initialise la boutique avec une sélection aléatoire de cartes de jeu
+  /// Tire l'étal — les cartes en vente et la copie d'une carte du deck — pour
+  /// le nœud courant de la run, et le note (spec P-43 E2, A11, §4.9). Un
+  /// étal déjà tiré pour ce nœud est retenu tel quel, achats compris :
+  /// sortir puis revenir ne le retire pas. Sans nœud courant, chaque appel
+  /// tire.
   void initializeShop(List<CardData> allCards, int bonusShopCards) {
-    final List<CardData> eligibleCards = _getEligibleCards(allCards);
-
-    if (eligibleCards.isEmpty) {
-      state = const ShopState(cardsForSale: [], purchasedHeal: false);
-      return;
-    }
+    final nodeId = ref.read(runProvider).currentNodeId;
+    if (nodeId != null && state.nodeId == nodeId) return;
 
     final rng = Random();
-    final List<CardData> shuffled = List.from(eligibleCards)..shuffle(rng);
-    final count = min(shuffled.length, 3 + bonusShopCards);
-
+    final eligibleCards = _getEligibleCards(allCards)..shuffle(rng);
+    final count = min(eligibleCards.length, 3 + bonusShopCards);
     final int act = ref.read(runProvider).act;
-    final List<CardInstance> generatedInstances = shuffled
-        .take(count)
-        .map((cardData) => _generateShopCardInstance(cardData, act, rng))
-        .toList();
 
     state = ShopState(
-      cardsForSale: generatedInstances,
-      purchasedHeal: false,
-      cloneOptions: const [],
-      clonePurchasedCount: 0,
+      cardsForSale: [
+        for (final cardData in eligibleCards.take(count))
+          _generateShopCardInstance(cardData, act, rng),
+      ],
+      deckCopy: _drawDeckCopy(rng),
+      nodeId: nodeId,
     );
+  }
+
+  /// La copie d'une carte tirée uniformément parmi les cartes copiables du
+  /// deck (D46 ; ADR-094 D2) : même rareté, sans ses runes, identifiant neuf ;
+  /// `null` si le deck n'en a aucune (ADR-101 D4).
+  CardInstance? _drawDeckCopy(Random rng) {
+    final copyable = ref.read(deckProvider).copyableCards;
+    if (copyable.isEmpty) return null;
+    final source = copyable[rng.nextInt(copyable.length)];
+    return CardInstance(data: source.data, rarity: source.rarity);
+  }
+
+  /// Achète la copie du deck, au prix d'une carte de sa rareté (spec P-43
+  /// E2, A11) : elle rejoint le deck et quitte l'étal. Faux sans copie ou
+  /// faute d'or, sans rien toucher.
+  bool buyDeckCopy() {
+    final copy = state.deckCopy;
+    if (copy == null ||
+        !ref.read(inventoryProvider.notifier).spendGold(getCardPrice(copy))) {
+      return false;
+    }
+    ref.read(deckProvider.notifier).addCardToMasterDeck(copy);
+    state = state.copyWith(removeDeckCopy: true);
+    return true;
   }
 
   /// Achète une carte spécifique de la boutique
@@ -272,14 +303,6 @@ class ShopController extends Notifier<ShopState> {
   /// Définit les options persistantes pour le clonage de cartes
   void setCloneOptions(List<CardInstance> options) {
     state = state.copyWith(cloneOptions: options);
-  }
-
-  /// Nettoie les options de clonage et réinitialise le coût du miroir à 0
-  void clearCloneOptions() {
-    state = state.copyWith(
-      cloneOptions: const [],
-      clonePurchasedCount: 0,
-    );
   }
 }
 
