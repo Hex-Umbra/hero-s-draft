@@ -10,6 +10,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/ui/widgets/forge/forge_slot_row.dart';
 import 'package:roguelike_card_game/ui/widgets/forge/sharpen_rune_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
+import 'package:roguelike_card_game/ui/widgets/gold_indicator.dart';
 
 import '../unit/shipped_data.dart';
 
@@ -102,6 +103,12 @@ void main() {
     await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 99);
 
     expect(_button(tester, 'Affûter — 100 or').onPressed, isNull);
+    // Le bouton grise s'explique : le solde est sous les yeux du joueur.
+    expect(
+      find.descendant(
+          of: find.byType(GoldIndicator), matching: find.text('99')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('la description dit ce que le niveau de plus ajoute a cette '

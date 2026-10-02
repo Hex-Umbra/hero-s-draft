@@ -140,7 +140,10 @@ void main() {
 
       // L'etape enseigne un choix (spec P-43 E2, A18) : SUIVANT attend la
       // rune. Au Paladin des cinq premieres cartes du pool, la carte semee
-      // est Eveil, dont la premiere fusion offre Endurci.
+      // est Eveil, dont la premiere fusion offre Endurci. Tant que l'offre est
+      // pendante, le bouton n'est pas SUIVANT : il reste a l'etat AGIR.
+      expect(find.text('SUIVANT'), findsNothing);
+      expect(find.text('AGIR'), findsOneWidget);
       await tester.tap(find
           .byWidgetPredicate((widget) =>
               (widget.key?.toString() ?? '').contains('tutorial-merge-rune-'))

@@ -8,6 +8,7 @@ import '../../../models/card_instance.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../game_button.dart';
 import '../game_dialog.dart';
+import '../gold_indicator.dart';
 import 'forge_card_preview.dart';
 import 'forge_slot_row.dart';
 
@@ -57,7 +58,12 @@ class SharpenRuneDialog extends ConsumerWidget {
     return GameDialog(
       glowColor: Colors.amberAccent,
       maxWidth: 640,
-      title: Text(card.data.getName(locale)),
+      title: Row(
+        children: [
+          Expanded(child: Text(card.data.getName(locale))),
+          const GoldIndicator(),
+        ],
+      ),
       content: Material(
         color: Colors.transparent,
         child: Column(
