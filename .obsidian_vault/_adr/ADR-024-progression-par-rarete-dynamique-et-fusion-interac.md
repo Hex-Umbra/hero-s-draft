@@ -2,6 +2,9 @@
 
 ### Statut
 ✅ Accepté & Implémenté
+⚠️ **Point 4 rendu caduc le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2,
+livré sur branche, en attente du propriétaire) : plus de capacité ni de choix d'héritage, la fusion
+garde toutes les runes de ses trois exemplaires.
 
 ### Contexte
 Le système de progression initial reposait sur un niveau numérique de cartes peu évocateur. Pour renforcer l'aspect roguelike deckbuilder traditionnel et donner de la valeur aux doublons de cartes obtenus en récompense, le jeu avait besoin d'un mécanisme de rareté dynamique et d'une fusion interactive de cartes.

@@ -18,14 +18,14 @@
 | 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
 | 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 133 |
-| 10. Architecture du Système de Forge et de Fusion de Cartes (Forge & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 137 |
+| 10. Architecture du Système de Runes et de Fusion de Cartes (Runes & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 130 |
 | 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 58 |
 | 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
 | 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 | 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
-| 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 113 |
-| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 119 |
+| 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 114 |
+| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 131 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -37,7 +37,7 @@
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
 | 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 33 |
 | 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 49 |
-| 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 30 |
+| 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 61 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |
 | 2.6. `InventoryController` (`inventoryProvider`) | [02-6-inventorycontroller.md](../_patterns/02-6-inventorycontroller.md) | 7 |
 | 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat | [02-8-rewardcontroller-pilote-des-recompenses-de-co.md](../_patterns/02-8-rewardcontroller-pilote-des-recompenses-de-co.md) | 32 |
@@ -52,14 +52,14 @@
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 41 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 16 |
-| 3.7. Logique de Forge Data-Driven & Forge de Fusion | [03-7-logique-de-forge-data-driven-forge-de-fusion.md](../_patterns/03-7-logique-de-forge-data-driven-forge-de-fusion.md) | 21 |
+| 3.7. Logique des Runes Data-Driven & Puits d'Échange | [03-7-logique-de-forge-data-driven-forge-de-fusion.md](../_patterns/03-7-logique-de-forge-data-driven-forge-de-fusion.md) | 18 |
 
 ### 5. UI et Composants Graphiques
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 5.1. Écrans Flutter (`lib/ui/screens/`) | [05-1-ecrans-flutter.md](../_patterns/05-1-ecrans-flutter.md) | 18 |
-| 5.2. Widget `UiCard` (`lib/ui/widgets/ui_card.dart`) | [05-2-widget-uicard.md](../_patterns/05-2-widget-uicard.md) | 41 |
+| 5.2. Widget `UiCard` (`lib/ui/widgets/ui_card.dart`) | [05-2-widget-uicard.md](../_patterns/05-2-widget-uicard.md) | 43 |
 | 5.3. Composants Flame (`lib/game/components/`) | [05-3-composants-flame.md](../_patterns/05-3-composants-flame.md) | 22 |
 | 5.3.1. Abstractions Graphiques Communes (CombatEntity & BaseVisualEffect) | [05-3-1-abstractions-graphiques-communes.md](../_patterns/05-3-1-abstractions-graphiques-communes.md) | 12 |
 | 5.4. Constantes de Z-Indexing (`GameConstants`) | [05-4-constantes-de-z-indexing.md](../_patterns/05-4-constantes-de-z-indexing.md) | 13 |
@@ -69,11 +69,11 @@
 | 5.8. Rendu Vectoriel direct sur Canvas & Auras Sensoriels | [05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md](../_patterns/05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md) | 26 |
 | 5.9. Pattern de Draft Card Reels Staggered et 3D Flip (Interactive Reels Reveal) | [05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md](../_patterns/05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md) | 27 |
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
-| 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 27 |
+| 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 29 |
 
 ### 19. Éditeur de Contenu (P-30)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 155 |
+| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 159 |
 | 19.5. Éditeur de Contenu — Interface : Formulaire Inféré et Habillage « Éditeur » | [19-5-editeur-de-contenu-interface.md](../_patterns/19-5-editeur-de-contenu-interface.md) | 90 |

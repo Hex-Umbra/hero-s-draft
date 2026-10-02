@@ -72,7 +72,9 @@ sur l'étape 01.
 4. **Carte du Monde** : mini-carte annotée, dix planchers, goulot Élite au 6, Repos garanti au
    9, 3 Boss au sommet. Rappelle qu'un nœud touché engage immédiatement, sans confirmation.
 5. **Types de Rencontres** : les 8 nœuds (Combat, Élite, Boutique, Repos, Événement, Autel des
-   Reliques, Forge de Fusion, Boss).
+   Reliques, Puits d'échange, Boss). Depuis le lot E2 de P-43, la Boutique dit la copie d'une carte
+   du deck, le Repos l'affûtage d'une rune, et le Puits l'échange d'une rune contre de l'or, tous les
+   trois actes ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)).
 6. **Combat — Vue d'ensemble** : maquette annotée de la disposition de l'écran (Héros/Ennemi
    au centre, main/mana/PV en bas, effets joueur + pioche à gauche, Fin de Tour/intentions/
    défausse à droite, boutons Deck/Pause en haut à droite). **Ne montre pas de
@@ -106,8 +108,14 @@ sur l'étape 01.
 12. **Fusion de Cartes** *(fusion effectuée)* : manuelle, hors combat, 3 exemplaires de même
     rareté ; la rareté **augmente** les valeurs sans jamais changer le coût — ×1,2 à ×2,0, et
     toujours d'au moins 1 par fusion —, mais ni la pioche ni le Mana qu'une carte rend (G1, G2,
-    [`_rules/02-4`](02-4-progression-de-rarete-dynamique-et-fusion-int.md)). L'encart de fin dit
-    « Même coût, rareté supérieure. », vrai quelle que soit la carte fusionnée. Le jeu d'une carte
+    [`_rules/02-4`](02-4-progression-de-rarete-dynamique-et-fusion-int.md)). **La fusion offre
+    ensuite une rune parmi trois**, tirée par la fonction du jeu (`ForgeRuneRules.drawRunes`) sur le
+    registre du tutoriel ; le joueur en touche une, la carte la porte, et **SUIVANT attend ce
+    choix**. La main semée prend la première carte du deck dont la fusion offre au moins une rune —
+    à défaut la première qui fusionne, puis les fixtures ; sans offre, l'étape le dit. L'encart
+    « Même coût, rareté supérieure. » ne s'affiche que tant qu'aucune rune n'est choisie : *Allégé*
+    le rendrait faux. La prose dit que la fusion garde toutes les runes et que le Puits d'échange
+    est un système distinct et payant ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Le jeu d'une carte
     et la valeur affichée passent par l'applicateur du jeu, `EffectiveCard` — aucune recopie
     ([ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md),
     [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)).

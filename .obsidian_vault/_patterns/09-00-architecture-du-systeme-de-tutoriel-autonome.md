@@ -70,7 +70,7 @@ coupure est ce qui rend le parcours cohérent d'une étape à l'autre :
 | Tranche | Champs | Durée de vie |
 |:---|:---|:---|
 | **Persistante** | `chosenHero`, `activePassive`, `masterDeck` | Écrite par les étapes 02 et 03, conservée jusqu'à la fin |
-| **Scratch** | `heroStats`, `hand`, `enemy`, `playerXp`, `playerLevel`, `pendingDrafts`, `hasDrafted` | Remise à zéro par `resetScratch()` à chaque changement d'étape |
+| **Scratch** | `heroStats`, `hand`, `enemy`, `playerXp`, `playerLevel`, `pendingDrafts`, `hasDrafted`, `mergeOffer` — l'offre de runes de l'étape Fusion, tirée par `ForgeRuneRules.drawRunes` sur le registre du tutoriel et vidée par le choix ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) | Remise à zéro par `resetScratch()` à chaque changement d'étape |
 
 `prepareStep(int index)` branche sur le **type** de l'étape, jamais sur son indice : insérer
 une étape ne décale pas le câblage. `baseStatsForHero()` dérive les statistiques de départ de

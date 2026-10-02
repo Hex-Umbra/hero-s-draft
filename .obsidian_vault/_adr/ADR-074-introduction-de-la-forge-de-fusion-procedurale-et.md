@@ -5,6 +5,11 @@
 
 ### Statut
 ✅ Accepté & Implémenté (v3.1.0)
+⚠️ **Amendé, et son point 2 rendu caduc, le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)**
+(P-43, lot E2, livré sur branche, en attente du propriétaire) : le nœud devient le Puits d'échange,
+tous les trois actes au lieu de 25 %, au coût de `50 × niveau donné` au lieu de `80 × (N − 1)`, un
+échange par visite ; le cumul de plusieurs exemplaires d'une même rune sur une carte disparaît — une
+rune par type.
 
 ### Contexte
 Auparavant, le système de la Forge limitait le choix des améliorations (runes) applicables à une carte en excluant les runes déjà possédées (filtre `alreadyHas`). De plus, les descriptions et effets de runes étaient en partie codés en dur dans divers composants graphiques et textuels. Pour offrir plus de profondeur stratégique, permettre la spécialisation tactique des decks et centraliser la logique de configuration, le jeu nécessitait une architecture pilotée par les données (data-driven), le cumul libre des runes identiques, et l'introduction d'un mécanisme de fusion pour combiner les runes de même type de niveau inférieur vers un niveau supérieur.

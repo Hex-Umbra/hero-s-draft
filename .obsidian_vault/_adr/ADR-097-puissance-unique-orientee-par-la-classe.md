@@ -7,7 +7,7 @@
 18 commits `74c54cf`..`83e65b9`, section « Partie 2 » ci-dessous) — **amende [ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)**
 (décision 2, scission de `attaque` en trois puissances).
 **Complété le 2026-10-02 par [ADR-104](ADR-104-un-statut-par-source-et-ratio-de-conversion.md)**
-(P-43, lot E0, livré sur branche, en attente du propriétaire) : la règle de stat gagne un `ratio`,
+(P-43, lot E0, fusionné dans `main` le 2026-10-02 par la PR #47) : la règle de stat gagne un `ratio`,
 la Puissance une source — aucune décision ci-dessous n'est amendée.
 
 ### Contexte

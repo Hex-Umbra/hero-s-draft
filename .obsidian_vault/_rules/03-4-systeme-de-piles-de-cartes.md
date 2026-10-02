@@ -14,7 +14,8 @@ Cinq piles logiques gérées par `DeckNotifier` :
       │    └── remélange automatique ◄─────────┘
       │        (uniquement si Draw Pile vide)
       │
-      └──────────►  [Exhaust Pile]  (cartes Power, cartes isExhaust)
+      └──────────►  [Exhaust Pile]  (CardInstance.exhaustsOnPlay : Power, rune Spectral,
+                                     ou isExhaust sans rune Persistant)
                       Retiré définitivement du combat en cours
 ```
 

@@ -18,7 +18,7 @@
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
 | 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 98 |
 | 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 33 |
-| 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 32 |
+| 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 33 |
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
 | 2.6. Équilibrage Hybride, Budget de Menace et Réserve de Vagues | [02-6-equilibrage-hybride-budget-de-menace-et-reser.md](../_rules/02-6-equilibrage-hybride-budget-de-menace-et-reser.md) | 31 |
 | 2.7. 🔄 Autel d'Échange de Reliques (Relic Exchange Shrine) | [02-7-autel-d-echange-de-reliques.md](../_rules/02-7-autel-d-echange-de-reliques.md) | 24 |
@@ -30,12 +30,12 @@
 | 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 7 |
 | 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 33 |
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 20 |
-| 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 60 |
+| 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 61 |
 | 3.5. 🎒 Système de Reliques | [03-5-systeme-de-reliques.md](../_rules/03-5-systeme-de-reliques.md) | 57 |
 | 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 32 |
-| 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 6 |
-| 3.8. 🔨 Système de Forge & Forge de Fusion (Forge v2.5) | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 85 |
-| 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 18 |
+| 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 23 |
+| 3.8. 🔨 Runes — la Fusion qui les Donne, l'Affûtage au Feu et le Puits d'Échange | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 151 |
+| 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 20 |
 | 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 8 |
 | 3.11. 🎯 Système de Coup Critique (Critical Hit System) | [03-11-systeme-de-coup-critique.md](../_rules/03-11-systeme-de-coup-critique.md) | 21 |
 | 3.12. 🎨 Optimisations Visuelles, Fluidité & Animations de Combat | [03-12-optimisations-visuelles-fluidite-animations-d.md](../_rules/03-12-optimisations-visuelles-fluidite-animations-d.md) | 20 |
@@ -63,7 +63,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 132 |
+| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 140 |
 
 ### 9. Système Audio
 

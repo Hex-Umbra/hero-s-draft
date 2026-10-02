@@ -2,6 +2,9 @@
 
 ### Statut
 ✅ Accepté & Implémenté (v0.2.9)
+**Point 5 amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, livré
+sur branche, en attente du propriétaire) : le Miroir ne repart plus — options neuves, 150 or — à
+chaque sortie de la boutique, mais avec tout l'étal, au nœud courant suivant.
 
 ### Contexte
 Avant cette version, les cartes proposées à la vente dans la boutique étaient stockées sous forme de données statiques `CardData`. Leurs raretés et leurs améliorations de forge étaient fixes, et leur tarification était peu dynamique et décorrélée de l'avancement du joueur dans les Actes. Le Magic Mirror (Service de clonage) était également exploitable car son prix de 150 Or demeurait constant, permettant de cloner ses meilleures cartes à l'infini tant que l'or le permettait. L'affichage des cartes en vente n'indiquait pas leurs runes ni leur rareté visuelle car il utilisait le factory `UiCard.fromData` au lieu de l'instance dynamique.

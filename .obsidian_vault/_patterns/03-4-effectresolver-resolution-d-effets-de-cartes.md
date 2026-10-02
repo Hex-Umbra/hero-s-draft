@@ -10,7 +10,7 @@
 #### `resolveCard(CardInstance, RunController, DeckNotifier, CombatController, String?, EffectRegistry) → bool`
 1. Déduit le coût en mana de la carte (`currentCost`).
 2. Lit la carte **telle qu'elle se joue** : `card.effective`, l'`EffectiveCard` que calcule l'applicateur
-   unique — rareté (G1, G2) et runes comprises ([`_patterns/10-00`](10-00-architecture-du-systeme-de-forge-et-de-fusion.md) §10.2).
+   unique — rareté (G1, G2) et runes comprises ([`_patterns/10-00`](10-00-architecture-du-systeme-de-forge-et-de-fusion.md) §10.4).
 3. Itère sur `addedEffects` (les effets que les runes ajoutent : pioche de `quick`, mana d'`eco`,
    statuts des runes élémentaires), **puis** sur `effects` (les effets propres, à leur valeur jouée),
    chaque valeur passée telle quelle en `scaledValue`. **Le résolveur n'a plus aucun code de rune** —
@@ -32,7 +32,7 @@ Le calcul des dégâts physiques, magiques et des intentions d'attaques ennemies
 
 Le calcul s'exécute selon les étapes logiques strictes suivantes :
 1. **Faiblesse (Attaquant)** : Dégâts réduits de 25% (multiplication par `0.75` puis arrondi) si le statut `weakness` est présent sur l'attaquant.
-2. **Coup Critique** : Jet probabiliste basé sur `effectiveCritChance` de l'attaquant. En cas de succès, dégâts multipliés par `critMultiplier` de l'attaquant et assignation à `true` de `lastActionWasCrit` sur l'attaquant pour guider le rendu des tremblements, flashs et particules de la couche Flame.
+2. **Coup Critique** : Jet probabiliste basé sur `effectiveCritChance` de l'attaquant, plus le `critChanceBonus` de la carte — 0 par défaut, rempli par la rune *Précis* via `DamageEffectStrategy` ; les ennemis et le tutoriel passent 0 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). En cas de succès, dégâts multipliés par `critMultiplier` de l'attaquant et assignation à `true` de `lastActionWasCrit` sur l'attaquant pour guider le rendu des tremblements, flashs et particules de la couche Flame.
 3. **Choc (Défenseur)** : Ajout de la valeur brute cumulée du statut `shock` sur le défenseur.
 4. **Vulnérabilité (Défenseur)** : Dégâts augmentés de 50% (multiplication par `1.5` puis arrondi) si le statut `vulnerable` est présent sur le défenseur.
 

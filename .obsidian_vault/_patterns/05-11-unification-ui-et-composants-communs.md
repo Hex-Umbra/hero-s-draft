@@ -22,6 +22,8 @@ Pour éradiquer la duplication massive de code UI et uniformiser l'expérience v
 
 5. **Découpage de la Forge (`lib/ui/widgets/forge/`)** :
    - La boîte de dialogue de forge monolithique a été scindée en sous-composants unitaires pour respecter SRP :
-     - `ForgeCardPreview` : Rendu de la carte en cours d'amélioration et de sa jauge de slots de runes.
-     - `ForgeSlotRow` : Ligne d'amélioration individuelle avec bouton d'achat ("Forger") et reroll.
-     - `ForgeBuySlotButton` : Bouton d'achat de slots d'améliorations supplémentaires.
+     - `ForgeCardPreview` : Rendu de la carte qui reçoit la rune et de ses runes, sans jauge de capacité depuis [ADR-106](../_adr/ADR-106-fusion-egale-forge.md).
+     - `ForgeSlotRow` : La ligne de rune des trois écrans — fusion, affûtage, Puits —, dont le bouton reçoit son libellé et son état (« Choisir », « Affûter — coût or », « Échanger — coût or ») ; la relance a disparu.
+     - `SharpenRuneDialog` : Le dialogue d'affûtage du feu de camp, une ligne par rune portée.
+     - `rune_style.dart` : Les tables `runeIcons` et `runeColors`, qui traduisent les noms d'icône et de couleur d'une rune.
+     - `ForgeBuySlotButton`, le bouton d'achat de fentes, est supprimé avec les fentes achetées.

@@ -2,7 +2,7 @@
 
 **Provider** : `NotifierProvider<RunController, RunState>`
 
-**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `activePassive` (PassiveData?), `pendingDrafts` (int), `bonusForgeSlots` (int), `forgeSlots` (List\<String\>), `forgeTargetCardId` (String?). `passiveTrait` a disparu avec P-49 : le lien classe → passif part désormais du passif lui-même (`classes`), voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
+**État `RunState`** : `currentLevel`, `act`, `heroStats` (EntityStats), `heroClassId`, `mapNodes` (List\<MapNode\>), `currentNodeId`, `activePassive` (PassiveData?), `pendingDrafts` (int). `bonusForgeSlots`, `forgeSlots` et `forgeTargetCardId` ont disparu avec la forge du feu, et leur API (`setForgeSession`, `clearForgeSession`, `buyBonusForgeSlot`) avec eux — [ADR-106](../_adr/ADR-106-fusion-egale-forge.md). `passiveTrait` a disparu avec P-49 : le lien classe → passif part désormais du passif lui-même (`classes`), voir [ADR-096](../_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md).
 
 **Organisation Modulaire** :
 `RunController` délègue l'ensemble de ses traitements logiques à quatre gestionnaires spécialisés instanciés à sa création :
@@ -15,8 +15,8 @@
   - Gère le déplacement vers un nœud de la carte stratégique (`travelToNode`) et valide son accessibilité.
   - Gère la complétion du nœud actuel (`completeCurrentNode`) : réinitialise l'armure à 0, nettoie les statuts temporaires, et gère le passage à l'acte suivant (en déclenchant la génération d'une nouvelle carte via `MapGeneratorService`).
 - **`GoldManager`** (`lib/game/controllers/run/gold_manager.dart`) :
-  - Gère les transactions d'or (gains, dépenses, validation de solde).
-  - Gère la facturation progressive pour l'achat de fentes bonus de forge ($50 \rightarrow 80 \rightarrow 120 \rightarrow 175$ Or).
+  - Ne tient pas l'or, qui vit dans `InventoryController` (`spendGold`) : il vend des services contre lui.
+  - Vend les deux services de rune payants (ADR-106, A16) — la règle « payer et écrire, ou rien » vit ici, les formules dans `ForgeRuneRules` : **`sharpenRune(cardId, runeId)`**, l'affûtage au feu (un niveau de plus contre `50 × niveau` or), et **`exchangeRune(cardId, givenId, receivedId)`**, l'échange au Puits (la rune reçue à sa place, aux deux tiers du niveau donné, contre `50 × niveau donné` or). Chacun refuse sans rien toucher, puis dépense par `inventoryProvider` et réécrit la référence par `DeckNotifier.setForgeUpgrades` ; `RunController` les expose sous les mêmes noms. Détail : [`_patterns/10-00`](10-00-architecture-du-systeme-de-forge-et-de-fusion.md) §10.3.
 
 **Tour de combat** : `startCombat()` (initialise le combat, applique les reliques `startOfCombat` et les passifs) → `startTurn()` (réinitialise l'armure à 0 → restaure le mana → applique les reliques et statuts de début de tour, ex: `armor_regen`, `strength_regen` → décrémente les durées de statuts).
 

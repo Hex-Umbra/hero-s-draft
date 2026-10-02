@@ -12,7 +12,7 @@
    - Étage du milieu (`middleFloor = floors ~/ 2`) : Forced to exactly 1 node (chokepoint) of type Élite, enabling dynamic map sizing support.
    - Étage `floors-2` (repos garanti) : All nodes are forced to type Repos (Rest).
    - Étage `floors-1` (Boss) : Generates exactly 3 boss nodes depending on the final act requirements.
-   - **Forge de Fusion** : `MapContentPlacer` place un nœud `MapNodeType.forgeFusion` avec 25% de probabilité par carte/map, choisi de façon aléatoire sur un étage intermédiaire entre les étages 3 et 7.
+   - **Puits d'échange** : `MapContentPlacer.placeSpecialEvents` place un nœud `MapNodeType.forgeFusion` — le type garde le nom de l'ancienne Forge de Fusion — **tous les trois actes** (`act % 3 == 0`), sur un combat ou un événement des étages 3 à 7 tiré au hasard, qui garde son `originalType` ; l'Autel des reliques est placé avant lui. Jusqu'au lot E2 de P-43, la Forge de Fusion l'était avec 25 % de probabilité par carte — [ADR-106](../_adr/ADR-106-fusion-egale-forge.md). Gardé par `test/unit/map_content_placer_test.dart`.
 3. **Solver de Quotas (`_balanceQuotas`)** :
    - Itère sur les nœuds de la carte pour réallouer les types de nœuds afin de respecter les limites globales configurées dans `GameConstants.nodeQuotas` (Combat: 12-22, Elite: 3-6, Rest: 3-6, Shop: 2-5, Event: 4-9).
 4. **Algorithme Anti-Répétition de Chemin (`_hasThreeConsecutive` / `_getChainOfThree`)** :
