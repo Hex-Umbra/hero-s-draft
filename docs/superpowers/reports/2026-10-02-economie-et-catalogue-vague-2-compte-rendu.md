@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.2.
 **Branche** : `feat/v0.5.4-p43-e2-fusion-forge`, ouverte le 02/10/2026 depuis `main` à `559df08`.
 **Ouvert le** : 02/10/2026, à la fin du plan de la partie 1 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : **en cours** — les deux parties sont implémentées et la simulation relancée ; restent la note de version et la mémoire (§3.7), puis le cahier de test et les statistiques (§3.8).
+**État** : **livrée sur branche le 02/10/2026** — en attente du test manuel, de la PR, de la fusion et du tag `v0.5.4` du propriétaire (orchestration §3.9).
 
 ---
 
@@ -17,6 +17,9 @@
 | E2, partie 1 | Plan `7a071b6` ; cinq commits de code `3eafb5e`..`d6e6cd5` et un correctif de la revue d'ensemble `1407e2e` ; **1426 tests** (+51), `dart analyze` propre |
 | E2, partie 2 | Plan `017aa4c` ; neuf commits de code `bcc5b36`..`bff3078` (dont un correctif de revue de tâche, `cd967cf`) et un correctif de la revue d'ensemble `0010ca2` ; **1480 tests** (+54), `dart analyze` propre |
 | Simulation (§3.6) | Premier temps sur `9f1f203` : diff vide contre la référence ; second temps sur `bff3078` : 477 lignes, l'écart expliqué au §4 ; référence recommitée |
+| Note de version (§3.7) | `0.5.4`, « La Fusion Devient Forge » — seize entrées (6 nouveautés, 2 améliorations, 4 équilibrages, 4 corrections), `4e4fa5c` ; trois porteurs de version à `0.5.4` (`verify_version.sh 0.5.4` cohérent), liens de repli et libellé du site rafraîchis (`grep '0\.5\.3' site/*.html` vide), `node --test` 20/20 depuis `site/`, `test_scripts.sh` 57 ok. Le commit du skill a omis la ligne du journal que §3.7 y met : `82f902f` la rattrape |
+| Mémoire (§3.7) | `db52110` — ADR-106 « fusion = forge » ; ADR-024, ADR-025, ADR-039, ADR-067, ADR-074, ADR-094 et ADR-105 ne changent que de Statut (amendés ou rendus caducs par ADR-106), ADR-097, ADR-104 et ADR-105 notent la fusion de la vague 1 ; 28 fiches `_rules` et `_patterns` corrigées, dont 13 hors de la liste de la spec ; `docs/ROADMAP.md` non touchée (aucune de ses lignes ne se clôt) ; aucun worktree |
+| **La vague** | Branche `feat/v0.5.4-p43-e2-fusion-forge`, version `0.5.4`, **29 commits** sur `main` (ce dernier compris), **1480 tests verts** (base 1375, +105), `dart analyze` propre — constatés sur la tête de la branche après la note et la mémoire |
 
 ---
 
@@ -159,6 +162,83 @@ Mineurs différés pendant les revues de tâche, triés par la revue d'ensemble 
 
 ---
 
+## 3. Le cahier de test manuel
+
+Ce qu'il faut jouer pour voir chaque changement de la `0.5.4`, puis ce qui doit rester tel quel. **Une partie neuve est conseillée** : avant la `1.0`, une sauvegarde d'une version précédente n'a pas à se recharger. Les fusions sont rares en `0.5.4` — la trouvaille arrive en `0.5.5` — : le menu de debug (cartes, or, acte) raccourcit les mises en place.
+
+### 3.1. La fusion donne la rune
+
+| À jouer | Attendu |
+|:---|:---|
+| Fusionner trois *Frappes* communes (écran du deck) | La fusion se fait, puis un dialogue « choisissez une rune » propose jusqu'à trois runes, au niveau 1 ; il ne se ferme ni par Annuler ni par le retour, seulement par un choix ; la rune choisie apparaît sur la carte peu commune. Ni relance, ni emplacement à acheter |
+| Fusionner trois *Concentrations* communes | La fusion se fait sans dialogue : le message de fusion réussie, puis un message qui dit qu'aucune rune ne peut s'ajouter à cette carte |
+| Fusionner trois *Concentrations* peu communes | La carte devient rare, et le dialogue ne propose que *Véloce* |
+| Fusionner trois cartes qui portent des runes (par ex. *Tranchant* 3, *Tranchant* 1, *Brûlant* 1) | La carte garde toutes les runes ; deux runes de même sorte s'additionnent (*Tranchant* 4), au plafond de la rune près (*Économe* 1 ×3 → *Économe* 1) ; une rune qui en exclut une autre n'entre pas avec elle |
+| Une carte qui porte beaucoup de runes | Une prise par rune portée, aucune prise vide ; plus d'étiquette « Capacité » |
+| Une rune déjà portée | Elle ne se repropose plus à la fusion : une rune de chaque sorte par carte |
+| *Véloce*, *Économe* | Jamais proposées à une carte peu commune : seulement à partir de la rare |
+| Les deux compétences de classe | Elles ne reçoivent jamais de rune |
+
+### 3.2. Le feu de camp affûte
+
+| À jouer | Attendu |
+|:---|:---|
+| Un feu de camp | Trois options exclusives : se reposer, **AFFÛTER**, oublier une carte. AFFÛTER est inactive, avec son motif, si aucune rune du deck ne peut monter |
+| AFFÛTER, une carte sans rune affûtable | Grisée, refusée avec un message |
+| AFFÛTER, une carte qui porte *Tranchant* 2 | Le dialogue montre l'or du joueur, une ligne par rune : « Niveau 2 → 3 », le gain, et « Affûter — 100 or » ; inactif faute d'or. Une rune au plafond (*Économe* 1) dit « Niveau maximal » |
+| Affûter une rune | Elle monte d'un niveau, l'or baisse de 50 × l'ancien niveau ; le dialogue se ferme ; les trois options disparaissent, seul « Continuer » reste |
+| Après un repos, un affûtage ou un oubli, quitter par le retour système | La visite est terminée : on ne peut plus rentrer dans ce feu de camp pour une seconde action |
+| Avant toute action, quitter par le retour | On peut revenir, comme avant |
+
+### 3.3. Le Puits d'échange
+
+| À jouer | Attendu |
+|:---|:---|
+| La carte du monde, aux actes 3, 6, 9… | Un Puits d'échange sur un nœud des étages 3 à 7 ; plus de Forge de Fusion ; la légende et l'infobulle disent « Puits d'échange » |
+| Entrer au Puits | Une colonne : les cartes qui portent une rune, puis la rune à donner — choisie, elle se distingue ; inactive (grisée) si rien ne peut la remplacer —, puis les remplaçantes, chacune avec son niveau d'arrivée et son prix |
+| Échanger *Tranchant* 9 contre *Économe* | *Économe* arrive au niveau 1 (deux tiers de 9, borné à son plafond), pour 450 or |
+| Échanger *Tranchant* 3 contre *Brûlant* | *Brûlant* 2, pour 150 or |
+| Après un échange | Les cartes et les remplaçantes disparaissent, seule la sortie reste ; quitter par le retour termine la visite |
+| Sans échange, quitter par le retour | On peut revenir |
+
+### 3.4. La boutique
+
+| À jouer | Attendu |
+|:---|:---|
+| Entrer dans une boutique | Une quatrième carte, à part : « la copie d'une carte de votre deck », même rareté, sans ses runes, au prix d'une carte de cette rareté (25 · 50 · 100 · 150 · 200) |
+| Relancer l'étal (payant) | Les trois cartes changent, la copie reste |
+| Acheter la copie | Elle entre dans le deck et quitte l'étal |
+| Acheter une carte et le soin, utiliser le Miroir magique, puis sortir par le retour et revenir | **Le même étal** : la carte achetée reste absente, le soin reste acheté, le Miroir garde ses options et son prix doublé |
+| Passer à un autre nœud, puis entrer dans une autre boutique | Un étal neuf ; le Miroir repart à 150 or |
+| Les cartes runées de la boutique | Une commune n'en porte plus aucune ; une peu commune au plus une, une rare au plus deux ; jamais *Véloce* ni *Économe* sous la rare |
+
+### 3.5. Les trois runes neuves
+
+| À jouer | Attendu |
+|:---|:---|
+| *Allégé* sur une carte à 1 Mana ou plus | La carte coûte 1 de moins, ce que montrent la carte en main et la jouabilité ; jamais proposée sur une carte gratuite, ni avec *Économe* sur la même carte |
+| *Précis* | +5 % de critique par niveau, sur les cartes de dégâts seulement ; au niveau 10, +50 % |
+| *Spectral* sur une attaque | +40 % des dégâts de base à la rareté par niveau, au moins +1, ajoutés à la valeur de la carte ; la Puissance s'ajoute à part, et rien ne la multiplie ; la carte s'épuise, même si elle porte *Persistant*, et montre le badge « Usage unique » |
+| *Potion de Soin* qui porte *Persistant* | Elle ne montre plus le badge « Usage unique » |
+| Une carte qui porte six runes ou plus, en combat | Deux rangées de prises ; le texte des effets passe dessous, sans chevauchement, même avec le badge |
+| L'infobulle détaillée d'une carte runée | L'en-tête dit « Runes : » (« Runes: » en anglais), plus « Upgrades: » |
+| Les descriptions de *Brûlant*, *Congelant*, *Surchargé*, *Véloce*, *Économe* | Elles disent ce que la rune ajoute à cette carte, comme avant |
+
+### 3.6. Le tutoriel
+
+| À jouer | Attendu |
+|:---|:---|
+| L'étape de la fusion | La carte à fusionner est *Éveil* ; la fusion propose des runes ; le bouton dit « AGIR » tant qu'aucune n'est choisie, puis « SUIVANT » ; « Rune ajoutée : … » ; la ligne « Même coût, rareté supérieure. » disparaît une fois la rune choisie |
+| L'étape du repos | Elle parle d'affûter, plus de forger |
+
+### 3.7. Ce qui doit rester inchangé
+
+- Le repos (30 % des PV) et l'oubli d'une carte au feu de camp ; les prix des cartes et du soin en boutique ; le doublement du prix du Miroir à chaque achat dans une même boutique.
+- Le plafond des runes de la vague 1 : *Économe*, *Véloce*, *Congelant*, *Persistant* au niveau 1 ; *Tranchant* et *Endurci* à 15 % de la base par niveau.
+- Les récompenses de boss, l'Autel d'échange de reliques, les combats, les passifs et les statistiques des classes.
+
+---
+
 ## 4. La simulation
 
 `tool/simulations/d26_economy_sim.dart`, relancé en deux temps (§3.6, D73), chaque fois sur une extraction hors du dépôt (`git archive <commit> tool/simulations assets/data`, spec §9), sortie vers `.superpowers/`, comparée par `git diff --no-index` à la référence suivie, `tool/simulations/d26_reference_output.md`.
@@ -203,3 +283,157 @@ La référence est recommitée sur la sortie du second temps : la vague 3 se com
 **À signaler au propriétaire** :
 - le libellé anglais « SHARPEN » du feu côtoie la récompense de niveau « Sharpening » (`level_up_rewards/sharpening.json`, « Aiguisage » en français) ;
 - *Précis* au niveau 10 ajoute 50 points de critique : sur le Berserker (10 de base) et avec des récompenses de critique, une carte peut devenir critique à coup sûr — c'est la donnée du brainstorm (§8, `maxLevel` 10), à regarder au test.
+
+---
+
+## 6. Les statistiques de la session
+
+**Mesurées, pas estimées** (orchestration §3.8). Elles viennent des transcriptions de Claude Code : `~/.claude/projects/<projet>/<id de session>.jsonl` pour l'orchestrateur, un fichier par sous-agent sous `…/<id de session>/subagents/`. Chaque appel au modèle est compté une fois par identifiant de message.
+
+**La vague a eu deux sessions** :
+- celle qui l'a ouverte et s'est arrêtée au troisième tour de la spec (`25b3e2c9-f499-4e13-bb94-5770f2ffe282`) ;
+- celle de la reprise, qui l'a menée jusqu'ici (`628a6316-b95a-4dc2-8dea-e973ec528562`).
+
+Les deux sont comptées, séparément puis ensemble. Les heures sont locales (UTC+2) ; les jalons viennent des commits de la branche. La mesure est faite à 22:27, juste avant le commit de §3.8 : ce qui suit — l'écriture de cette section et le commit — n'y est pas compté.
+
+### 6.1. Le temps
+
+| | |
+|:---|:---|
+| Début | **02/10/2026 à 11:11** — le prompt de lancement de la première session |
+| Arrêt | **13:36** — la spec non convergée est commitée (`6e94be7`), la première session s'arrête |
+| Reprise | **13:41** — le prompt du propriétaire qui lève l'arrêt |
+| Fin | **22:27** — le dernier message de l'orchestrateur avant la mesure |
+| Durée | **11 h 16**, dont 2 h 24 de première session, 5 min d'arrêt et 8 h 46 de reprise |
+| Temps actif des orchestrateurs | environ 4 h 37 (32 min, puis 4 h 05) — leurs tours de travail, en comptant les attentes de moins de dix minutes : ce temps chevauche en partie celui des agents |
+| Temps actif cumulé des sous-agents | environ 10 h 28 (2 h 14, puis 8 h 14) — lancés l'un après l'autre, sauf les deux mesures de simulation, que l'orchestrateur a fait tourner pendant la fin de l'implémentation |
+
+| Étape | De | À | Durée |
+|:---|:---|:---|---:|
+| Porte d'entrée et branche (3.1, 3.2) | 11:11 | 11:15 | 4 min |
+| Spec — rédaction, trois tours, arrêt (3.3) | 11:15 | 13:36 | 2 h 21 |
+| Spec — reprise, correction, quatrième tour (3.3) | 13:41 | 14:56 | 1 h 15 |
+| Plan de la partie 1 — deux tours (3.4) | 14:56 | 17:15 | 2 h 19 |
+| Partie 1 — six tâches, revue d'ensemble, ouverture du compte rendu (3.5) | 17:15 | 18:18 | 1 h 03 |
+| Plan de la partie 2 — un tour (3.4) | 18:18 | 20:22 | 2 h 04 |
+| Partie 2 — dix tâches, revue d'ensemble (3.5) | 20:22 | 21:51 | 1 h 29 |
+| Simulation, deux mesures complètes de 467 s et 406 s (3.6) | 21:19 | 21:51 | pendant la partie 2 |
+| Note de version et mémoire (3.7) | 21:51 | 22:22 | 31 min |
+| Compte rendu, suivi, journal (3.8) | 22:22 | — | non compté |
+
+Les specs et les plans prennent les trois quarts du temps (7 h 59) ; l'implémentation des deux parties, moins d'un quart (2 h 32).
+
+### 6.2. Les agents
+
+**52 agents** : deux orchestrateurs, et **50 sous-agents** lancés par eux. Aucun sous-agent n'en a lancé d'autre.
+
+Cinq ont été repris avec leur contexte, par message, **sept fois** en tout :
+- le rédacteur de la spec, deux fois, dans la première session ;
+- son correcteur de la reprise, deux fois ;
+- les rédacteurs des deux plans, une fois chacun ;
+- l'implémenteur de la Task 1 de la partie 2, une fois, pour le seul tour de correction d'une revue de tâche.
+
+| Rôle | Première session | Reprise | Modèle |
+|:---|---:|---:|:---|
+| Orchestrateurs | 1 | 1 | Opus 5.5 |
+| Rédacteurs et correcteur de la spec, rédacteurs des plans | 1 | 3 | Opus 5.5 |
+| Vérificateurs de la spec et des plans | 3 | 4 | Opus 5.5 |
+| Implémenteurs (6 tâches en partie 1, 10 en partie 2, deux lots de correction des revues d'ensemble) | — | 18 | Sonnet 5.5 |
+| Relecteurs de tâche | — | 14 | Sonnet 5.5, sauf cinq sur Opus 5.5 (Tasks 3 et 4 de la partie 1 ; 1, 3 et 6 de la partie 2) |
+| Revues ciblées des correctifs | — | 3 | Sonnet 5.5 |
+| Revues d'ensemble des deux plans | — | 2 | Opus 5.5 |
+| Skills de fin de vague (`patch-notes-writer`, `memory-bank-sync`) | — | 2 | Opus 5.5 |
+| **Sous-agents** | **4** | **46** — 16 Opus 5.5, 30 Sonnet 5.5 | |
+
+Appels au modèle : **2 574** en tout.
+- Première session : 634 — 44 pour l'orchestrateur, 590 pour les sous-agents.
+- Reprise : 1 940 — 187 pour l'orchestrateur, 1 471 pour les sous-agents sur Opus, 282 sur Sonnet.
+
+### 6.3. Les jetons
+
+| | Première session (Opus) | Reprise, orchestrateur (Opus) | Reprise, sous-agents Opus | Reprise, sous-agents Sonnet | **Total** |
+|:---|---:|---:|---:|---:|---:|
+| Entrée hors cache | 1 280 | 386 | 2 950 | 568 | **5 184** |
+| Écriture en cache | 4 280 350 | 1 186 469 | 9 334 093 | 1 912 509 | **16 713 421** |
+| Lecture du cache | 228 447 643 | 72 746 603 | 519 830 136 | 20 057 493 | **841 081 875** |
+| Sortie | 176 293 | 230 527 | 612 581 | 115 219 | **1 134 620** |
+| **Total traité** | 232 905 566 | 74 163 985 | 529 779 760 | 22 085 789 | **858 935 100** |
+
+- **Environ 859 millions de jetons traités**, dont 97,9 % relus depuis le cache. Hors lecture du cache, il en reste **17,9 millions**, dont **1,13 million** de sortie.
+- **Les specs et les plans font 76 % du total** (651 millions). Leurs rédacteurs et vérificateurs lisent le code en entier pour re-mesurer chaque `fichier:ligne`. Les plans ont aussi été rejoués tâche par tâche, hors du dépôt, par leurs rédacteurs comme par leurs vérificateurs.
+- **La spec seule compte pour 334 millions** : quatre tours, avec une correction entre chacun.
+- **L'implémentation n'en fait que 8 %** (70 millions), pour 37 agents en deux parties.
+
+| Étape | Sous-agents | Temps actif | Jetons traités | Dont sortie |
+|:---|---:|---:|---:|---:|
+| Spec — rédaction, trois tours (première session) | 4 | 134 min | 224,5 M | 116 011 |
+| Spec — correction, quatrième tour | 2 | 69 min | 109,3 M | 69 860 |
+| Plan de la partie 1 | 3 | 136 min | 138,4 M | 212 682 |
+| Partie 1 — implémentation | 14 | 52 min | 30,5 M | 104 043 |
+| Plan de la partie 2 | 2 | 123 min | 179,1 M | 148 807 |
+| Partie 2 — implémentation | 23 | 83 min | 39,3 M | 138 792 |
+| Fin de vague — skills | 2 | 29 min | 55,2 M | 53 616 |
+| Orchestrateurs | — | ≈ 277 min | 82,6 M | 290 809 |
+
+### 6.4. Le coût au tarif de l'API
+
+C'est ce que la vague aurait coûté facturée au tarif public de l'API Claude. Ce n'est pas une facture réelle, ni celle de l'abonnement du propriétaire.
+
+**Méthode** :
+- chaque catégorie de jetons est multipliée par son prix, modèle par modèle ;
+- les écritures en cache sont comptées au prix de leur durée, que les transcriptions ventilent : les orchestrateurs écrivent leur cache pour une heure, les sous-agents pour cinq minutes ;
+- les jetons de réflexion sont comptés dans la sortie, comme l'API les facture ;
+- les prix sont ceux de la [page des tarifs](https://platform.claude.com/docs/en/about-claude/pricing), lus le 02/10/2026, en dollars — inchangés depuis la vague 1 ;
+- la conversion se fait au taux de référence de la BCE du 02/10/2026, **1 € = 1,1225 $**.
+
+**Aucun supplément ne s'applique**, vérifié dans chaque `usage` : aucune recherche web (`server_tool_use` à 0), vitesse standard (`speed`), aucun routage aux États-Unis (`inference_geo`), palier standard.
+
+| Prix, $ par million de jetons | Entrée | Écriture en cache, 5 min | Écriture en cache, 1 h | Lecture du cache | Sortie |
+|:---|---:|---:|---:|---:|---:|
+| Claude Opus 5.5 | 4,00 | 5,00 | 8,00 | 0,20 | 20,00 |
+| Claude Sonnet 5.5 | 2,00 | 2,50 | 4,00 | 0,20 | 10,00 |
+
+| | Dollars | **Euros** |
+|:---|---:|---:|
+| Première session — orchestrateur | 4,89 $ | **4,36 €** |
+| Première session — sous-agents Opus 5.5 (4) | 66,51 $ | **59,25 €** |
+| Reprise — orchestrateur | 28,65 $ | **25,53 €** |
+| Reprise — sous-agents Opus 5.5 (16) | 162,90 $ | **145,12 €** |
+| Reprise — sous-agents Sonnet 5.5 (30) | 9,95 $ | **8,86 €** |
+| **Total de la vague** | **272,90 $** | **243,12 €** |
+
+**Par catégorie** :
+- la lecture du cache : 62 % du coût (168,22 $, 149,86 €) ;
+- l'écriture en cache : 30 % (83,12 $, 74,05 €) ;
+- la sortie : 8 % (21,54 $, 19,19 €) ;
+- l'entrée hors cache : deux centimes.
+
+| Étape | Sous-agents | Dollars | Euros |
+|:---|---:|---:|---:|
+| Spec — rédaction, trois tours (première session) | 4 | 66,51 $ | 59,25 € |
+| Spec — correction, quatrième tour | 2 | 29,89 $ | 26,63 € |
+| Plan de la partie 1 | 3 | 49,52 $ | 44,11 € |
+| Partie 1 — implémentation | 14 | 12,51 $ | 11,14 € |
+| Plan de la partie 2 | 2 | 49,31 $ | 43,93 € |
+| Partie 2 — implémentation | 23 | 16,75 $ | 14,92 € |
+| Fin de vague — skills | 2 | 14,87 $ | 13,25 € |
+| Orchestrateurs | — | 33,54 $ | 29,88 € |
+
+**Par rôle** :
+
+| Rôle | Dollars | Euros |
+|:---|---:|---:|
+| Rédacteurs et correcteur de la spec et des plans | 126,04 $ | 112,28 € |
+| Vérificateurs | 69,19 $ | 61,64 € |
+| Orchestrateurs | 33,54 $ | 29,88 € |
+| Relecteurs, revues ciblées et revues d'ensemble | 21,14 $ | 18,83 € |
+| Les deux skills de fin de vague | 14,87 $ | 13,25 € |
+| Implémenteurs | 8,11 $ | 7,22 € |
+
+Les specs et les plans font 72 % du coût (195,23 $) ; l'implémentation des deux parties, 11 % (29,26 $).
+
+**Contre la vague 1** (171,66 $, 151,94 €, pour deux lots plus légers), la vague 2 coûte 59 % de plus. L'écart vient de deux postes :
+- **la spec**, qui a demandé quatre tours et une session de plus : 96,40 $ à elle seule, contre 60,04 $ pour les deux specs de la vague 1 ;
+- **les deux plans**, rejoués chacun deux fois hors du dépôt, par leur rédacteur puis par leur vérificateur.
+
+L'implémentation reste bon marché : un brief court par tâche, sur Sonnet 5.5.
