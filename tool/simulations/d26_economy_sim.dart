@@ -1281,10 +1281,14 @@ int scaled(int base, int rank) {
   return v;
 }
 
-/// Rune en pourcentage (D33, §8) : +15 % de la valeur de base de la carte
-/// par niveau, au moins +1 par niveau.
-int percentRuneBonus(int cardValue, int level) =>
-    max((0.15 * level * cardValue).round(), level);
+/// Rune en pourcentage (D33, §8) : +[p] % de la valeur de base de la carte
+/// par niveau, au moins +1 par niveau — `sharp` et `hardened` à 15,
+/// `spectral` à 40 (spec P-43 E2, A10, §9). L'ordre des opérations est celui
+/// d'avant le paramètre : `15 / 100` est le même flottant que `0.15`, et le
+/// produit se fait de gauche à droite — `sharp` et `hardened` ne bougent pas
+/// au bit près.
+int percentRuneBonus(int cardValue, int level, int p) =>
+    max((p / 100 * level * cardValue).round(), level);
 
 /// D48 : `eco` et `quick` à `minFusionRank` 2 ; les autres à 1 (DÉFAUT).
 int minRankOf(String id, Params p) =>
@@ -1659,20 +1663,27 @@ class Fight {
         _ => 0.0,
       };
 
-  /// Valeur par coup avant Puissance : base au rang, part de `sharp` (D33),
-  /// terme `scaleWith` jamais multiplié par la rareté (§9.2 #1).
+  /// Valeur par coup avant Puissance : base au rang, parts de `sharp` et de
+  /// `spectral` (D33 ; spec P-43 E2, A10), terme `scaleWith` jamais multiplié
+  /// par la rareté (§9.2 #1). Chaque part se calcule sur la base au rang,
+  /// coups additionnés puis répartis ; aucune ne porte sur l'autre.
   double _perHit(CardInst c, Eff e) {
     final base = scaled(e.value, c.rank);
     final sharp = c.runes['sharp'];
-    final share =
-        sharp == null ? 0.0 : percentRuneBonus(max(0, base) * e.hits, sharp) / e.hits;
-    return base + share + _scaleTerm(e);
+    final spectral = c.runes['spectral'];
+    final share = sharp == null
+        ? 0.0
+        : percentRuneBonus(max(0, base) * e.hits, sharp, 15) / e.hits;
+    final spectralShare = spectral == null
+        ? 0.0
+        : percentRuneBonus(max(0, base) * e.hits, spectral, 40) / e.hits;
+    return base + share + spectralShare + _scaleTerm(e);
   }
 
   int _armorOf(CardInst c, Eff e) {
     final base = scaled(e.value, c.rank);
     final h = c.runes['hardened'];
-    return base + (h == null ? 0 : percentRuneBonus(base, h));
+    return base + (h == null ? 0 : percentRuneBonus(base, h, 15));
   }
 
   /// Coups qui recevront la Puissance après [c], dans le mana restant.
@@ -1719,9 +1730,8 @@ class Fight {
     for (final e in d.effects) {
       switch (e.kind) {
         case 'damage':
-          final spectral = 1 + 0.4 * (r['spectral'] ?? 0);
           for (final f in d.target == Tgt.all ? active : [tgt]) {
-            var x = (_perHit(c, e) + mt * mightRatioOf(d, e, run.p)) * spectral;
+            var x = _perHit(c, e) + mt * mightRatioOf(d, e, run.p);
             if (e.scale == 'lowHpX2' && f.hp < 0.3 * f.maxHp) x *= 2;
             if (e.scale == 'vulnX2' && f.has('vulnerable')) x *= 2;
             x = x * critE + f.v('shock');
@@ -1913,7 +1923,6 @@ class Fight {
   int _dealDamage(CardInst c, Eff e, Foe? tgt) {
     final r = c.runes;
     final mt = mightFor(c.def.type) * mightRatioOf(c.def, e, run.p);
-    final spectral = 1 + 0.4 * (r['spectral'] ?? 0);
     final critChance = run.crit + 5 * (r['precise'] ?? 0);
     var current = tgt;
     var dealt = 0;
@@ -1921,7 +1930,7 @@ class Fight {
       if (current == null || !current.alive) current = target;
       final targets = c.def.target == Tgt.all ? active : [?current];
       for (final f in targets) {
-        var x = (_perHit(c, e) + mt) * spectral;
+        var x = _perHit(c, e) + mt;
         if (e.scale == 'lowHpX2' && f.hp < 0.3 * f.maxHp) x *= 2;
         if (e.scale == 'vulnX2' && f.has('vulnerable')) x *= 2;
         var dmg = x.round();
@@ -2211,7 +2220,13 @@ class Run {
       switch (e.kind) {
         case 'damage':
           final sharp = r['sharp'];
-          final bonus = sharp == null ? 0 : percentRuneBonus(max(0, val) * e.hits, sharp);
+          final spectral = r['spectral'];
+          final bonus = (sharp == null
+                  ? 0
+                  : percentRuneBonus(max(0, val) * e.hits, sharp, 15)) +
+              (spectral == null
+                  ? 0
+                  : percentRuneBonus(max(0, val) * e.hits, spectral, 40));
           final scaleTerm = switch (e.scale) {
             'armor' => 8.0,
             'missingHp' => 0.2 * (maxHp - hp),
@@ -2221,13 +2236,12 @@ class Run {
           var dmg = (val * e.hits + bonus + (scaleTerm + me * mightRatioOf(d, e, p)) * e.hits) *
               critE;
           if (e.scale == 'lowHpX2' || e.scale == 'vulnX2') dmg *= 1.3;
-          dmg *= 1 + 0.4 * (r['spectral'] ?? 0);
           v += dmg * (d.target == Tgt.all ? 2.0 : 1.0) +
               dmg * 0.25 * (r['splash'] ?? 0) +
               dmg * 0.1 * (r['lifesteal'] ?? 0);
         case 'armor':
           final h = r['hardened'];
-          final a = val + (h == null ? 0 : percentRuneBonus(val, h));
+          final a = val + (h == null ? 0 : percentRuneBonus(val, h, 15));
           v += cls.convertsArmor ? (a * 0.5).ceil() * 1.5 : a * 0.8;
         case 'draw':
           v += 3.0 * e.value;
