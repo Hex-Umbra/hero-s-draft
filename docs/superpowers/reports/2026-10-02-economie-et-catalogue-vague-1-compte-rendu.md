@@ -248,3 +248,34 @@ Appels au modèle : 166 pour l'orchestrateur, 1 691 pour les sous-agents (1 492 
 | E1 — implémentation | 19 | 61 min | 27,6 M | 102 973 |
 | Fin de vague — skills | 2 | 27 min | 44,6 M | 71 398 |
 | Orchestrateur | — | ≈ 196 min | 59,6 M | 213 285 |
+
+### 6.4. Le coût au tarif de l'API
+
+Ce que la session aurait coûté facturée au tarif public de l'API Claude — pas une facture réelle. **Méthode** : chaque catégorie de jetons multipliée par son prix, modèle par modèle ; les écritures en cache au prix de leur durée, que les transcriptions ventilent (l'orchestrateur écrit son cache pour une heure, les sous-agents pour cinq minutes) ; les jetons de réflexion sont comptés dans la sortie, comme l'API les facture. Prix lus le 02/10/2026 sur la [page des tarifs](https://platform.claude.com/docs/en/about-claude/pricing), en dollars ; conversion au taux de référence de la BCE du 01/10/2026, **1 € = 1,1298 $**. Aucun supplément ne s'applique : aucune recherche web, vitesse standard, routage mondial par défaut, palier standard.
+
+| Prix, $ par million de jetons | Entrée | Écriture en cache, 5 min | Écriture en cache, 1 h | Lecture du cache | Sortie |
+|:---|---:|---:|---:|---:|---:|
+| Claude Opus 5.5 | 4,00 | 5,00 | 8,00 | 0,20 | 20,00 |
+| Claude Sonnet 5.5 | 2,00 | 2,50 | 4,00 | 0,20 | 10,00 |
+
+| | Dollars | **Euros** |
+|:---|---:|---:|
+| Orchestrateur (Opus 5.5) | 23,06 $ | **20,41 €** |
+| Sous-agents Opus 5.5 (16) | 141,30 $ | **125,07 €** |
+| Sous-agents Sonnet 5.5 (26) | 7,30 $ | **6,46 €** |
+| **Total de la session** | **171,66 $** | **151,94 €** |
+
+**Par catégorie** : la lecture du cache fait 59 % du coût (101,28 $, 89,64 €), l'écriture en cache 34 % (58,38 $, 51,67 €), la sortie 7 % (11,98 $, 10,60 €) ; l'entrée hors cache, un centime. Le cache, relu à chaque appel, coûte donc plus que tout ce que les modèles écrivent — mais sans lui, ces 506 millions de jetons relus l'auraient été au prix plein de l'entrée, vingt fois plus cher sur Opus 5.5.
+
+| Étape | Sous-agents | Dollars | Euros |
+|:---|---:|---:|---:|
+| E0 — spec | 3 | 23,16 $ | 20,50 € |
+| E0 — plan | 2 | 17,41 $ | 15,41 € |
+| E0 — implémentation | 11 | 4,38 $ | 3,87 € |
+| E1 — spec | 3 | 36,88 $ | 32,64 € |
+| E1 — plan | 2 | 41,89 $ | 37,07 € |
+| E1 — implémentation | 19 | 11,84 $ | 10,48 € |
+| Fin de vague — skills | 2 | 13,05 $ | 11,55 € |
+| Orchestrateur | — | 23,06 $ | 20,41 € |
+
+**Par rôle** : les rédacteurs de specs et de plans, 84,59 $ (74,87 €) ; les vérificateurs, 34,75 $ (30,76 €) ; l'orchestrateur, 23,06 $ (20,41 €) ; les deux skills de fin de vague, 13,05 $ (11,55 €) ; les relecteurs de tâche et les revues d'ensemble, 10,67 $ (9,44 €) ; les implémenteurs, 5,55 $ (4,91 €). Les specs et les plans font 70 % du coût (119,34 $) ; l'implémentation des deux lots, 9 % (16,22 $) — ses implémenteurs tournent sur Sonnet 5.5, avec un brief court par tâche, et seules ses revues d'ensemble et deux revues de tâche passent sur Opus 5.5.
