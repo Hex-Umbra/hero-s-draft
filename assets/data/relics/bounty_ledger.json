@@ -1,0 +1,12 @@
+{
+  "id": "bounty_ledger",
+  "name_en": "Bounty Ledger",
+  "name_fr": "Registre des primes",
+  "description_en": "After an elite fight, +25% chance to find a second card.",
+  "description_fr": "Après un combat d'élite, +25 % de chance de trouver une seconde carte.",
+  "trigger": "startOfRun",
+  "effectType": "increase_elite_card_chance",
+  "value": 25,
+  "rarity": "rare",
+  "emoji": "📜"
+}

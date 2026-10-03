@@ -43,6 +43,14 @@ class RunState {
   /// debug l'écrit. Aucune relique ne la modifie encore (A11).
   final int maxHandSize;
 
+  /// Les deux règles de trouvaille que portent les reliques (spec P-43 E3,
+  /// §4.1, §4.2 ; D31, D57) : [extraCombatCards] cartes garanties de plus
+  /// après un combat normal (la *Sacoche du glaneur*, +1 par exemplaire), et
+  /// [eliteCardChanceBonus] points de pourcentage de plus au jet de la
+  /// seconde carte d'élite (le *Registre des primes*, +25 par exemplaire).
+  final int extraCombatCards;
+  final int eliteCardChanceBonus;
+
   /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
   /// que `cardsPerTurn` : un ennemi n'en a jamais.
   ///
@@ -80,6 +88,8 @@ class RunState {
     this.pendingDrafts = 0,
     this.cardsPerTurn = 5,
     this.maxHandSize = GameConstants.startingMaxHandSize,
+    this.extraCombatCards = 0,
+    this.eliteCardChanceBonus = 0,
     this.statRules = const [],
   });
 
@@ -95,6 +105,8 @@ class RunState {
     int? pendingDrafts,
     int? cardsPerTurn,
     int? maxHandSize,
+    int? extraCombatCards,
+    int? eliteCardChanceBonus,
     List<StatRule>? statRules,
   }) {
     return RunState(
@@ -110,6 +122,8 @@ class RunState {
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
       cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
       maxHandSize: maxHandSize ?? this.maxHandSize,
+      extraCombatCards: extraCombatCards ?? this.extraCombatCards,
+      eliteCardChanceBonus: eliteCardChanceBonus ?? this.eliteCardChanceBonus,
       statRules: statRules ?? this.statRules,
     );
   }
@@ -127,6 +141,8 @@ class RunState {
         'pendingDrafts': pendingDrafts,
         'cardsPerTurn': cardsPerTurn,
         'maxHandSize': maxHandSize,
+        'extraCombatCards': extraCombatCards,
+        'eliteCardChanceBonus': eliteCardChanceBonus,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -164,6 +180,8 @@ class RunState {
       cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
       maxHandSize:
           json['maxHandSize'] as int? ?? GameConstants.startingMaxHandSize,
+      extraCombatCards: json['extraCombatCards'] as int? ?? 0,
+      eliteCardChanceBonus: json['eliteCardChanceBonus'] as int? ?? 0,
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
       // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
       // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas

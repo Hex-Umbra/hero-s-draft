@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 
 /// Les entités telles que le jeu les livre, lues dans leur fichier par leur
 /// vrai `fromJson`, l'id injecté comme le fait le chargeur : un test du moteur
@@ -20,6 +21,10 @@ ForgeUpgradeData shippedRune(String id) => ForgeUpgradeData.fromJson(
 /// Une carte neutre telle que le jeu la livre (`assets/data/cards/`).
 CardData shippedCard(String id) =>
     CardData.fromJson(_shipped('assets/data/cards/$id.json', id));
+
+/// Une relique telle que le jeu la livre (`assets/data/relics/`).
+RelicData shippedRelic(String id) =>
+    RelicData.fromJson(_shipped('assets/data/relics/$id.json', id));
 
 /// Les ids des fichiers d'un dossier livré, triés.
 List<String> _idsIn(String directory) => [

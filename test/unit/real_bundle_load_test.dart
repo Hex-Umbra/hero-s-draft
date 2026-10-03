@@ -21,7 +21,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 85 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 90 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -33,7 +33,7 @@ void main() {
         .length;
 
     expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
-    expect(countUnder('assets/data/relics/', 4), 25, reason: 'reliques');
+    expect(countUnder('assets/data/relics/', 4), 27, reason: 'reliques');
     expect(countUnder('assets/data/events/', 4), 5, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 11, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
@@ -93,7 +93,7 @@ void main() {
     // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
     expect(registry.cards, hasLength(23)); // 17 neutres + 6 de classe
-    expect(registry.relics, hasLength(25));
+    expect(registry.relics, hasLength(27));
     expect(registry.events, hasLength(5));
     expect(registry.forgeUpgrades, hasLength(11));
     expect(

@@ -89,6 +89,27 @@ void main() {
       expect(restoredLegacy.maxHandSize, GameConstants.startingMaxHandSize);
     });
 
+    // Les deux règles de trouvaille des reliques (spec P-43 E3, §3.8, §8).
+    test('extraCombatCards et eliteCardChanceBonus round-trip et valent 0 '
+        'quand la cle manque', () {
+      final json = buildRunState()
+          .copyWith(extraCombatCards: 2, eliteCardChanceBonus: 50)
+          .toJson();
+      expect(json['extraCombatCards'], 2);
+      expect(json['eliteCardChanceBonus'], 50);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.extraCombatCards, 2);
+      expect(restored.eliteCardChanceBonus, 50);
+
+      final legacy = Map<String, dynamic>.from(json)
+        ..remove('extraCombatCards')
+        ..remove('eliteCardChanceBonus');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.extraCombatCards, 0);
+      expect(restoredLegacy.eliteCardChanceBonus, 0);
+    });
+
     test('leaves activePassive null and reports a missing passive', () {
       final json = buildRunState().toJson();
       json['activePassiveId'] = 'removed_passive';

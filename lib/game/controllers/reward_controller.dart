@@ -208,8 +208,15 @@ class RewardController extends Notifier<RewardState> {
         allCards.where((c) => c.isOfferableTo(run.heroClassId)).toList();
     final foundCards = <CardInstance>[];
     if (offerable.isNotEmpty) {
+      // Les deux règles des reliques : C (+1 carte garantie) au seul combat
+      // normal, A (+N points au premier jet) à la seule élite — jamais l'une
+      // sur le nœud de l'autre, ni sur un boss (D31, D57).
       final count = CardDrops.roll(
         GameConstants.cardDrops[currentNode.type],
+        extraGuaranteed:
+            currentNode.type == MapNodeType.combat ? run.extraCombatCards : 0,
+        firstExtraBonus:
+            currentNode.type == MapNodeType.elite ? run.eliteCardChanceBonus : 0,
         rng: rng,
       );
       for (var i = 0; i < count; i++) {

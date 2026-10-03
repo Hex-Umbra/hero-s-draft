@@ -19,6 +19,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:flame/extensions.dart';
 
 import 'scripted_random.dart';
+import 'shipped_data.dart';
 
 void main() {
   group('RewardController Unit Tests', () {
@@ -692,6 +693,46 @@ void main() {
 
         rewardController.collectGoldAndXp();
         expect(container.read(deckProvider).masterDeck, isEmpty);
+      });
+    });
+
+    // Les bonus des reliques, lus par `handleVictory` (spec P-43 E3, §4.1) :
+    // C ne touche que le combat normal, A que l'élite (D31, D57).
+    group('les reliques de la trouvaille', () {
+      test('la Sacoche du glaneur ajoute une carte au combat normal, jamais a '
+          'l elite', () {
+        inventoryController.addRelic(shippedRelic('gleaners_pouch'));
+
+        expect(foundOn(makeNode(), [99]), 2);
+        expect(foundOn(makeNode(type: MapNodeType.elite), [25]), 1);
+      });
+
+      test('trois Registres des primes portent le jet d elite a 100, jamais '
+          'le combat normal', () {
+        for (var i = 0; i < 3; i++) {
+          inventoryController.addRelic(shippedRelic('bounty_ledger'));
+        }
+        expect(runController.state.eliteCardChanceBonus, 75);
+
+        // 99 rate a 25, passe a 100.
+        expect(foundOn(makeNode(type: MapNodeType.elite), [99]), 2);
+        expect(foundOn(makeNode(), [0]), 1);
+      });
+
+      test('aucune des deux ne fait trouver une carte au boss', () {
+        inventoryController.addRelic(shippedRelic('gleaners_pouch'));
+        inventoryController.addRelic(shippedRelic('bounty_ledger'));
+
+        for (final reward in BossRewardType.values) {
+          expect(
+            foundOn(
+              makeNode(type: MapNodeType.boss, bossRewardType: reward),
+              [0],
+            ),
+            0,
+            reason: reward.name,
+          );
+        }
       });
     });
   });
