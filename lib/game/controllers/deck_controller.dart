@@ -54,6 +54,12 @@ class DeckState {
   List<CardInstance> get copyableCards =>
       masterDeck.where((card) => card.rarity.isAcquirable).toList();
 
+  /// La somme des rangs de fusion du master deck — 0 pour une commune comme
+  /// pour une signature `unique` : la difficulté en lit le double, à la place
+  /// du nombre de cartes (spec P-43 E3, §4.5, A12 ; D47, D59).
+  int get fusionRankSum =>
+      masterDeck.fold(0, (sum, card) => sum + card.rarity.fusionRank);
+
   Map<String, dynamic> toJson() => {
         'masterDeck': masterDeck.map((c) => c.toJson()).toList(),
         'drawPile': drawPile.map((c) => c.toJson()).toList(),

@@ -33,7 +33,8 @@ enum CardRarity {
   /// de `common` à `legendary`, 0 pour `unique`, qui ne fusionne jamais
   /// (ADR-026). `minFusionRank` le compare (`ForgeRuneRules.isEligible`), G1
   /// compte ses paliers (`scaleValue`), il borne les runes d'une pré-forgée
-  /// (`ShopController`).
+  /// (`ShopController`), et la difficulté en somme le double
+  /// (`DeckState.fusionRankSum`).
   int get fusionRank => switch (this) {
         CardRarity.common || CardRarity.unique => 0,
         CardRarity.uncommon => 1,

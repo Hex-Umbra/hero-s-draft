@@ -46,7 +46,7 @@ class CombatController extends Notifier<CombatState> {
     int playerMight = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
-    int playerCardsCount = 0,
+    int deckFusionRanks = 0,
     String? bossEnemyId,
   }) {
     final enemyDataList = EncounterSystem.generateEnemiesForLevel(
@@ -59,7 +59,7 @@ class CombatController extends Notifier<CombatState> {
       playerMight: playerMight,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
-      playerCardsCount: playerCardsCount,
+      deckFusionRanks: deckFusionRanks,
       bossEnemyId: bossEnemyId,
     );
 
@@ -100,7 +100,7 @@ class CombatController extends Notifier<CombatState> {
       playerMight: playerMight,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
-      playerCardsCount: playerCardsCount,
+      deckFusionRanks: deckFusionRanks,
       isBoss: isBoss,
       isElite: isElite,
     );
@@ -113,7 +113,7 @@ class CombatController extends Notifier<CombatState> {
       playerMight: playerMight,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
-      playerCardsCount: playerCardsCount,
+      deckFusionRanks: deckFusionRanks,
       playerPower: budget.playerPower,
       expectedPower: budget.expectedPower,
       baseBudget: budget.baseBudget,

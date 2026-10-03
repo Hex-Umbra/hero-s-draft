@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/combat_debug_logger.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
@@ -5,7 +6,15 @@ import 'package:roguelike_card_game/models/map_node.dart';
 
 void main() {
   group('CombatDebugLogger Unit Tests', () {
-    test('logCombatInitialization executes without errors', () {
+    test('logCombatInitialization ecrit le terme de deck en rangs de fusion', () {
+      // Le journal passe par `debugPrint` (`combat_debug_logger.dart:123`) :
+      // on le capture pour lire ce qu'il ecrit (spec P-43 E3, §4.5, §8).
+      final printed = StringBuffer();
+      final original = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) =>
+          printed.writeln(message);
+      addTearDown(() => debugPrint = original);
+
       final mockEnemy = EnemyData(
         id: 'test_enemy',
         nameEn: 'Test Enemy',
@@ -25,7 +34,7 @@ void main() {
           playerMight: 5,
           playerMaxMana: 3,
           playerRelicsCount: 2,
-          playerCardsCount: 5,
+          deckFusionRanks: 5,
           playerPower: 175.0,
           expectedPower: 145.0,
           baseBudget: 40.0,
@@ -42,6 +51,13 @@ void main() {
           isElite: false,
         );
       }, returnsNormally);
+
+      final log = printed.toString();
+      expect(log, contains('Σ rangs : 5'));
+      expect(log, contains('(2 × Σ rangs)'));
+      expect(log, contains('(2 × 5)'));
+      expect(log, isNot(contains('Cards')));
+      expect(log, isNot(contains('cardsCount')));
     });
 
     test('logCombatInitialization executes with null nodeType without errors', () {
@@ -54,7 +70,7 @@ void main() {
           playerMight: 0,
           playerMaxMana: 3,
           playerRelicsCount: 0,
-          playerCardsCount: 0,
+          deckFusionRanks: 0,
           playerPower: 145.0,
           expectedPower: 145.0,
           baseBudget: 40.0,

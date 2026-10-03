@@ -119,7 +119,7 @@ void main() {
         playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
-        playerCardsCount: 20,
+        deckFusionRanks: 20,
       );
       expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(1));
       expect(enemies.length, 1);
@@ -136,7 +136,7 @@ void main() {
         playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
-        playerCardsCount: 20,
+        deckFusionRanks: 20,
       );
       expect(enemies.length, EncounterSystem.getMaxEnemiesForNormalCombat(3));
       expect(enemies.length, 3);
@@ -154,7 +154,7 @@ void main() {
         playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
-        playerCardsCount: 20,
+        deckFusionRanks: 20,
       );
       expect(enemies.length, EncounterSystem.getMaxEnemiesForElite(3));
       expect(enemies.length, 2);
@@ -172,7 +172,7 @@ void main() {
         playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
-        playerCardsCount: 20,
+        deckFusionRanks: 20,
       );
       expect(enemies.length, EncounterSystem.getMaxEnemiesForBoss(1));
       expect(enemies.length, 1);
@@ -319,7 +319,7 @@ void main() {
         playerMight: 20,
         playerMaxMana: 10,
         playerRelicsCount: 10,
-        playerCardsCount: 20,
+        deckFusionRanks: 20,
       );
 
       expect(combatController.currentState.enemies.length, lessThanOrEqualTo(5));
@@ -533,7 +533,7 @@ void main() {
       );
     });
 
-    test('calculateBudget includes playerCardsCount in playerPower and the (act-1)*10 bonus in finalBudget', () {
+    test('calculateBudget counts 2 x deckFusionRanks in playerPower and the (act-1)*10 bonus in finalBudget', () {
       final budget = EncounterSystem.calculateBudget(
         playerLevel: 3,
         act: 2,
@@ -541,12 +541,13 @@ void main() {
         playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 2,
-        playerCardsCount: 10,
+        deckFusionRanks: 10,
         isBoss: false,
         isElite: true,
       );
 
-      // playerPower = 100 + (0*10) + (3*15) + (2*5) + (10*2) = 175
+      // playerPower = 100 + (0*10) + (3*15) + (2*5) + 2 x 10 rangs = 175 :
+      // dix rangs de fusion pesent 20 (spec P-43 E3, §4.5).
       expect(budget.playerPower, closeTo(175.0, 0.0001));
       // expectedPower = 145 + (3-1)*15 + (2-1)*20 = 195
       expect(budget.expectedPower, closeTo(195.0, 0.0001));
@@ -560,7 +561,9 @@ void main() {
       expect(budget.finalBudget, closeTo(130.9615384615385, 0.001));
     });
 
-    test('calculateBudget matches the zero-cards, act-1 baseline used elsewhere', () {
+    test('calculateBudget matches the zero-fusion-rank, act-1 baseline used elsewhere', () {
+      // Un deck de communes et de signatures : zero rang, donc zero terme de
+      // deck, quelle que soit sa taille.
       final budget = EncounterSystem.calculateBudget(
         playerLevel: 1,
         act: 1,
@@ -568,7 +571,7 @@ void main() {
         playerMight: 0,
         playerMaxMana: 3,
         playerRelicsCount: 0,
-        playerCardsCount: 0,
+        deckFusionRanks: 0,
         isBoss: false,
         isElite: false,
       );

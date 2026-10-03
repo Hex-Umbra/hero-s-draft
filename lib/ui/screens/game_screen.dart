@@ -259,7 +259,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             playerMight: runState.heroStats.might,
             playerMaxMana: runState.heroStats.maxMana,
             playerRelicsCount: ref.read(inventoryProvider).relics.length,
-            playerCardsCount: ref.read(deckProvider).masterDeck.length,
+            deckFusionRanks: ref.read(deckProvider).fusionRankSum,
             bossEnemyId: bossEnemyId,
           );
     });

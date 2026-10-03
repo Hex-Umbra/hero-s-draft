@@ -253,6 +253,46 @@ void main() {
 
       expect(DeckState(masterDeck: [strike, signature]).copyableCards, [strike]);
     });
+
+    // Le terme de deck de la difficulte (spec P-43 E3, §4.5, A12) : la somme
+    // des rangs de fusion, et non le nombre de cartes.
+    test('fusionRankSum additionne les rangs de fusion du master deck', () {
+      final signature = CardInstance(
+        data: const CardData(
+          id: 'holy_shield',
+          cost: 1,
+          type: CardType.skill,
+          category: CardCategory.characterSpecific,
+          rarity: CardRarity.unique,
+          target: CardTarget.self,
+          effects: [],
+        ),
+      );
+      CardInstance strikeAt(CardRarity rarity) =>
+          CardInstance(data: _card('strike').data, rarity: rarity);
+
+      expect(const DeckState().fusionRankSum, 0);
+      // Des communes et une signature `unique` : rang 0, quelle que soit la
+      // taille du deck.
+      expect(
+        DeckState(masterDeck: [
+          for (var i = 0; i < 20; i++) _card('c$i'),
+          signature,
+        ]).fusionRankSum,
+        0,
+      );
+      // 1 + 2 + 3 + 4, de peu commune a legendaire ; la commune ne compte pas.
+      expect(
+        DeckState(masterDeck: [
+          strikeAt(CardRarity.uncommon),
+          strikeAt(CardRarity.rare),
+          strikeAt(CardRarity.epic),
+          strikeAt(CardRarity.legendary),
+          _card('c'),
+        ]).fusionRankSum,
+        10,
+      );
+    });
   });
 
   group('DeckNotifier — aléatoire et compteur de remélange', () {
