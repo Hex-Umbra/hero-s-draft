@@ -1,12 +1,14 @@
 # P-43 E3 — Trouvaille et progression — Conception
 
 Date : 2026-10-03
-Statut : **Conception, non convergée** — vague 3 (`0.5.5`), lot unique et lourd (deux parties), branche
-`feat/v0.5.5-p43-e3-trouvaille`. **La vague est arrêtée à la vérification de cette spec** : le troisième tour a rendu
-trois constats moyens (orchestration §3.3 et §6) ; ils sont consignés, non corrigés, en §13. Corrigée après le premier
-tour (22 constats, 6 moyens, 13 mineurs, 3 de rédaction ; A8 à A28 confirmés par l'orchestrateur, A1 et A7 reconsignés
-sur son arbitrage) et après le deuxième (15 constats, 2 moyens, 10 mineurs, 3 de rédaction, plus une passe ciblée sur
-les liaisons non testées et les pièges de test du dépôt).
+Statut : **Conception, non convergée au quatrième tour** — vague 3 (`0.5.5`), lot unique et lourd (deux parties),
+branche `feat/v0.5.5-p43-e3-trouvaille`. **La vague est de nouveau arrêtée.** Le troisième tour avait rendu trois
+constats moyens et arrêté la vague (orchestration §3.3 et §6) ; le propriétaire a levé l'arrêt, les treize constats
+sont corrigés (arbitrages en §1.2), et le quatrième tour qu'il demandait rend encore deux constats moyens — ouverts en
+§13, avec les dix autres et les recommandations de l'orchestrateur. Corrigée auparavant après le premier tour (22 constats, 6 moyens,
+13 mineurs, 3 de rédaction ; A8 à A28 confirmés par l'orchestrateur, A1 et A7 reconsignés sur son arbitrage) et après
+le deuxième (15 constats, 2 moyens, 10 mineurs, 3 de rédaction, plus une passe ciblée sur les liaisons non testées et
+les pièges de test du dépôt).
 
 Chantier ROADMAP : **P-43** « Économie unifiée », lot **E3**, le quatrième des cinq lots E0 à E4. Le déroulé fait foi
 dans le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
@@ -36,7 +38,10 @@ Sources amont :
 
 Toute référence `fichier:ligne` de ce document a été mesurée le 2026-10-03 sur `9282513`, tête de la branche, qui ne
 diffère de `main` (`bca35c5`) que par le fichier d'orchestration : `git diff --stat main HEAD -- lib test assets tool`
-est vide. Base de tests de la vague : **1480** (journal de l'orchestration, §2).
+est vide. Celles que la correction du troisième tour écrit ou touche ont été re-mesurées sur `0a4eaa0`, tête de la
+branche à la levée de l'arrêt, dont `lib/`, `test/`, `assets/` et `tool/` égalent `9282513`
+(`git diff --stat 9282513 HEAD -- lib test assets tool` vide). Base de tests de la vague : **1480** (journal de
+l'orchestration, §2).
 
 ---
 
@@ -346,13 +351,18 @@ run pour cet id ; il borne donc les mêmes endroits — le script le lit dans se
 `:2895`, `:3122`).
 
 - **(a) un paramètre `capBonus`** sur `ForgeUpgradeData.boundLevel` et sur les fonctions de `ForgeRuneRules` qui le
-  lisent ; chaque appelant passe `RunState.runeCapBonus` ;
+  lisent — nommé, **optionnel, à défaut neutre** : `{int capBonus = 0}` sur `boundLevel`,
+  `{Map<String, int> capBonus = const {}}` ailleurs (§3.8) ; chaque appelant de production passe
+  `RunState.runeCapBonus` ;
 - (b) `DeckNotifier`, `ShopController` et les autres lisent `runProvider` eux-mêmes, au fond des fonctions ;
 - (c) un catalogue de runes « de la run », aux `maxLevel` relevés.
 
 **1** écarte toute option qui oublierait un écrivain (D72). **5** retient (a) : les fonctions de `ForgeRuneRules`
-restent pures par leurs entrées (spec E1, A3 ; spec E2, A15) — le tutoriel les appelle sans bonus ; (c) recopierait les
-runes par run. **Choix : (a)** ; la liste des lecteurs est en §4.8.
+restent pures par leurs entrées (spec E1, A3 ; spec E2, A15) — le tutoriel, qui n'a pas de run, n'appelle d'ailleurs
+aucune de celles qui lisent le plafond, seulement `isEligible` et `drawRunes` (`tutorial_engine.dart:442`, `:470`) ;
+(c) recopierait les runes par run. **Choix : (a)** ; la liste des lecteurs est en §4.8. Le paramètre est optionnel pour que les appels
+d'aujourd'hui, tous sans bonus, compilent tels quels : `dart analyze` ne désigne donc pas un appelant de production
+qui l'oublierait — ce sont les tests de §8 (« Le bonus de plafond, lu par ses lecteurs ») qui le gardent.
 
 #### A18 — Le nom d'une rune montée au-delà de son plafond de base *(apparue à la rédaction)*
 
@@ -379,7 +389,9 @@ futur. **Choix : (a)** ; les règles sont en §4.9.
 
 (a) **tirée une fois, à l'ouverture de l'événement** — la rareté la plus basse, au hasard parmi les ex æquo —, gardée
 dans `EventState`, nommée sur les badges ; (b) déterminée au moment du choix. **6** retient (a) : le joueur lit ce
-qu'il cède avant de choisir. **Choix : (a).**
+qu'il cède avant de choisir. **Choix : (a).** Sans relique visée — un inventaire vide, le cas courant à l'acte 1 —,
+les badges `trade_relic` disent « Aucune relique à céder » et les choix d'échange restent inactifs (arbitrage du
+propriétaire, n° 5, ci-dessous ; §4.9).
 
 #### A21 — Qui choisit la rune à l'événement d'affûtage *(apparue à la rédaction)*
 
@@ -484,10 +496,10 @@ D73 — « chaque changement voulu [...] relancé à part, l'écart attribué »
 | A14 | Tirage du boss « XP » | paires (carte, rune) · carte puis rune | 2 | Paires sous le plafond effectif, séquentiel |
 | A15 | Mythique D42(c) | type · instance ; à leur plafond · toute plafonnée ; condition · inactive | 2 ; 2 ; 5 | Un type pour la run ; candidates à leur plafond, sauf binaires, le joueur choisit ; `requires: raisableRune` |
 | A16 | Runes binaires | champ `binary` · liste dans la mythique · déduit des deltas | 1 puis 4 | `binary: true` sur `enduring` et `cheap` |
-| A17 | Bonus de plafond | paramètre `capBonus` · lecture au fond · catalogue de run | 1 puis 5 | `capBonus` sur `boundLevel` et `ForgeRuneRules` |
+| A17 | Bonus de plafond | paramètre `capBonus` · lecture au fond · catalogue de run | 1 puis 5 | `capBonus` optionnel, à défaut neutre, sur `boundLevel`, `ForgeRuneRules` et `mergeCards` |
 | A18 | `nameAt` | niveau écrit au-delà de 1 · inchangé | 6 | Le niveau s'écrit dès qu'il dépasse 1 |
 | A19 | Mécanique des événements | actions composables · actions dédiées · écrans | 5 puis 4 | `trade_relic`, `heal_percent`, `lose_hp_percent`, `sharpen_rune`, `requiresHpBelowPercent` |
-| A20 | Relique visée | tirée à l'ouverture · au choix | 6 | Tirée à l'ouverture, nommée sur les badges |
+| A20 | Relique visée | tirée à l'ouverture · au choix | 6 | Tirée à l'ouverture, nommée sur les badges ; sans elle, « Aucune relique à céder », choix inactifs |
 | A21 | Rune de l'événement d'affûtage | choisie · tirée | 2 puis 6 | Le joueur choisit, sans or ; annuler n'engage rien |
 | A22 | Retour après un choix d'événement | résout le nœud · drapeau · tel quel | 3 puis 5 | Le retour résout le nœud, comme au feu et au Puits |
 | A23 | Plancher de *Flux* | `withMastery` · stratégie ; textes effectifs · inchangés | 1 ; 6 | `withMastery` ; `{amount}` effectif ; plancher codé supprimé |
@@ -516,6 +528,27 @@ D73 — « chaque changement voulu [...] relancé à part, l'écart attribué »
 | C2.4 | Le défaut de `hasRaisableRune` dans `isAvailableWith` | faux · requis | 8, et l'accord avec `generateChoices` | Faux par défaut ; les appels à un argument compilent | §3.8 |
 | C2.5 | Les deux lecteurs de `GameScreen`, qu'aucun test ne monte | commandes de contrôle · fonction pure extraite · test de widget de `GameScreen` | 7 — le lot ne prend pas en charge les tests de `GameScreen` —, puis 8 | Des commandes de contrôle | §8 |
 | C2.6 | `StatsDialog`, sans aucun test | un test de widget neuf · le seul cas unitaire de `describeMastery` | 6 — le joueur pourrait lire « -9 » au lieu de « -1 » | Un test de widget neuf | §8 |
+
+#### Tranchés par le propriétaire — la levée de l'arrêt (03/10)
+
+Ce sont les recommandations que l'orchestrateur avait consignées à l'arrêt du troisième tour, acceptées par le
+propriétaire quand il a levé l'arrêt (§13).
+
+| # | Question | Options | Filtre | Choix | Où |
+|:---|:---|:---|:---|:---|:---|
+| n° 1 | La forme du test qui garde l'absence de signature dans la trouvaille | la rareté de l'instance trouvée · la donnée de la carte trouvée · la donnée de la carte, et en plus, pour la transition E3 → E4, aucun id de signature | — : l'instance est construite `common` (§4.1), une assertion sur `card.rarity` ne garderait rien | Les deux formes ensemble : `card.data.rarity` jamais `unique` et `card.data.heroClass` jamais une autre classe, dans les deux tests ; en plus, dans la transition, aucun `card.data.id` parmi les six signatures du registre (C3.1) ; « toutes communes », sur `card.rarity`, reste | §4.1, §8 |
+| n° 5 | Le badge `trade_relic` sans relique visée | pas de badge · un badge qui dit qu'il n'y a rien à céder | 6 — le joueur lit pourquoi le choix est inactif | `eventNoRelicToGive`, « Aucune relique à céder » · "No relic to give up" ; les choix d'échange restent inactifs | A20, §4.9, §5.1, §8, §10 |
+| n° 7 | La parenthèse « (Trèfle / Miroir) » de la fiche des probabilités | remplie depuis les mythiques en donnée · retirée · consignée hors d'E3 | 5 ne départage pas (la retirer supprime aussi le doublon) ; 6 retient la forme qui dit au joueur quelles options sont mythiques | Remplie depuis `LevelUpRewardData.inPool(rewards, RewardPool.mythic)`, par une clé ARB neuve à placeholder, `luckLevelRewardSubtitle` (`{mythicNames}`), en partie 2 (C3.2) | §3.8, §5.1, §8, §10 |
+| n° 8 | L'infobulle d'élite, `tooltipEliteDesc`, qui ne dit que la relique | réécrite en partie 1 · laissée telle quelle, consignée en §5.4 | 6 — la carte du monde dit de l'élite ce qu'en dit le tutoriel | Réécrite en partie 1 : « Un combat bien plus rude : une relique garantie, et une carte — parfois deux. » · "A much tougher fight: a guaranteed relic, and a card — sometimes two." | §5.1, §10 |
+
+#### Tranchés par l'orchestrateur — questions apparues à la correction du troisième tour
+
+Tranchées par l'arbre de décision (orchestration §5) à la correction ; l'orchestrateur les relit et peut les renverser.
+
+| # | Question | Options | Filtre | Choix | Où |
+|:---|:---|:---|:---|:---|:---|
+| C3.1 | D'où le test de la transition E3 → E4 lit les six signatures | les `skills` des classes du registre · les cartes `unique` du registre · une liste écrite dans le test | 4 écarte la liste écrite, un cas qui ne suit pas le registre ; 5 retient les `skills` : une signature est ce que la classe déclare et ce que son dossier porte (`referential_integrity_test.dart:211-229`) — les cartes `unique` relisent la rareté, l'entrée même du prédicat que la clause garde, et répéteraient sa première forme | `registry.heroes.expand((h) => h.skills)` (`HeroData.skills`, `hero_data.dart:44`), dont le test vérifie d'abord qu'il compte six ids | §8 |
+| C3.2 | Qui compose les noms des mythiques de la fiche des probabilités | `build` lui-même : la lecture de `inPool`, les noms dans la locale, joints par « / » · une fonction pure de la couche UI, testée seule, que `build` appelle | 1 à 7 ne départagent pas — la lecture reste dans la couche UI pour les deux, et le joueur lit la même parenthèse ; 8 retient la première : aucune fonction neuve, et le test de widget, qu'exige de toute façon un lecteur qu'aucun test n'ouvre (le précédent de C2.6), garde la lecture et l'affichage ensemble | Dans `build` ; un test de widget neuf, `probabilities_dialog_test.dart` | §5.1, §8 |
 
 ### 1.3. Prémisses re-mesurées
 
@@ -704,14 +737,14 @@ change.
 | `PlayerStatsManager` (`run/player_stats_manager.dart`) | `applyRunRuleModifier` (`:99-108`) écrit les trois accumulateurs ; `gainXp` (`:113-144`) lit le palier dérivé (§4.4) ; `applyRelicEffect` (`:239-436`) et `removeRelicEffect` (`:438-458`) gagnent les trois `effectType` (§4.2) |
 | `EntityStats` (`lib/models/entity_stats.dart`) | `xpToNextLevel` (`:18`, `:36`, `:55`, `:73`, `:103`, `:126`) **supprimé** (A8) |
 | `DeckState` (`deck_controller.dart:11-129`) | Gagne `int get fusionRankSum` (A12) |
-| `DeckNotifier` | Gagne `raiseRuneLevel` (A13, §4.7) ; `mergeCards` (`:294-324`) reçoit `capBonus` et le passe à `consolidate` (`:314`) |
+| `DeckNotifier` | Gagne `raiseRuneLevel` (A13, §4.7) ; `mergeCards` (`:294-324`) devient `mergeCards(List<String> selectedIds, {Map<String, int> capBonus = const {}})` et passe le bonus à `consolidate` (`:314`) |
 | `RewardState` (`reward_controller.dart:12-67`) | Gagne `foundCards` (`List<CardInstance>`) ; `rolledBonusCard` (`:24`, `:37`, `:51`, `:64`, `:207`) **supprimé** en partie 2, avec la carte bonus ; gagne `sharpenedRunes`, de type `List<({String cardUniqueId, String runeId, int level})>?` : une entrée par rune montée par le boss « XP » — l'identifiant de l'exemplaire, l'id de la rune et le niveau **atteint** ; `null` hors d'un boss « XP », liste vide pour un boss « XP » sans paire affûtable — §4.6 |
 | `EncounterSystem` | `calculateBudget` (`encounter_system.dart:86-131`) : `playerCardsCount` (`:93`, `:101`) devient `deckFusionRanks` ; de même `generateEnemiesForLevel` (`:220`, `:235`), `CombatController.initializeCombat` (`combat_controller.dart:49`, `:62`, `:103`, `:116`) et `CombatDebugLogger` (`combat_debug_logger.dart:17`, `:62`, `:69`, `:70` — `:69` écrit la formule en clair, « (cardsCount * 2) ») |
 | `PassiveMastery` (`passive_data.dart:10-71`) | Gagne `floor` (`int?`) ; `fromJson` (`:43-70`) le refuse si `perPoint` n'est pas négatif ; `describe` (`:39-41`) cède la place à `PassiveData.describeMastery` (A23) |
 | `PassiveData` | La documentation de `threshold` (`:90-92`) dit ses deux lectures — les Compétences à réunir de *Flux*, l'armure d'une tranche de *Bénédiction* ; `fromJson` (`:166-204`) refuse un `floor` supérieur à la valeur de base du paramètre ; `withMastery` (`:134-146`) applique le plancher ; gagne `describeMastery(locale, {from, to})` |
-| `ForgeUpgradeData` (`lib/models/data/forge_upgrade_data.dart`) | Gagne `binary` (`bool`, défaut faux ; refusé avec un `maxLevel` autre que 1), lu et écrit par `toJson` ; `boundLevel` (`:326-330`) gagne `capBonus` ; `nameAt` (`:299-300`) suit A18 |
-| `ForgeRuneRules` (`lib/game/services/forge_rune_rules.dart`) | `consolidate`, `canSharpen`, `hasSharpenableRune`, `wellLevel` gagnent `capBonus` (§4.8) ; gagne `raisableCaps` et `sharpenablePairs` |
-| `LevelUpRewardData` (`level_up_reward_data.dart`) | `RewardEffect` (`:7-13`) gagne `raiseRuneCap` ; `RewardRequirement` (`:36-40`) gagne `raisableRune` ; `isAvailableWith` (`:165-168`) devient `isAvailableWith(PassiveData? passive, {bool hasRaisableRune = false})` — défaut faux, comme `generateChoices` : ses appels d'aujourd'hui à un argument (`level_up_reward_requirement_test.dart:89-93`) compilent tels quels ; `describe` (`:138-150`) reçoit la Maîtrise effective, paramètre requis (A23, §4.11) ; `DraftChoiceLabels.getChoiceDescription` (`draft_choice_labels.dart:47-56`) de même |
+| `ForgeUpgradeData` (`lib/models/data/forge_upgrade_data.dart`) | Gagne `binary` (`bool`, défaut faux ; refusé avec un `maxLevel` autre que 1), lu et écrit par `toJson` ; `boundLevel` (`:326-330`) devient `boundLevel(int requested, {int carried = 0, int capBonus = 0})`, le bonus ajouté au plafond ; `nameAt` (`:299-300`) suit A18 |
+| `ForgeRuneRules` (`lib/game/services/forge_rune_rules.dart`) | `consolidate` (`:21`), `canSharpen` (`:144`), `hasSharpenableRune` (`:150-153`) et `wellLevel` (`:185`) gagnent, après leurs paramètres d'aujourd'hui, `{Map<String, int> capBonus = const {}}`, lu par id de rune (§4.8). **Optionnel, à défaut neutre**, comme sur `boundLevel` et `mergeCards` (A17) : les appels de test d'aujourd'hui, tous sans bonus, compilent tels quels — ces quatre fonctions dans `forge_rune_rules_test.dart`, `boundLevel` dans `forge_upgrade_data_test.dart`, `DeckNotifier.mergeCards` dans `deck_controller_test.dart` et `decoupled_forge_test.dart` (17, 7, 7 et 3 lignes, comptées par `git grep -c`) ; seuls les appelants de production le passent (§4.8). Gagne `raisableCaps` et `sharpenablePairs` |
+| `LevelUpRewardData` (`level_up_reward_data.dart`) | `RewardEffect` (`:7-13`) gagne `raiseRuneCap` ; `RewardRequirement` (`:36-40`) gagne `raisableRune` ; `isAvailableWith` (`:165-168`) devient `isAvailableWith(PassiveData? passive, {bool hasRaisableRune = false})` — défaut faux, comme `generateChoices` : ses appels d'aujourd'hui à un argument (`level_up_reward_requirement_test.dart:89-93`) compilent tels quels ; `describe` (`:138-150`) reçoit la Maîtrise effective, paramètre requis (A23, §4.11) ; `DraftChoiceLabels.getChoiceDescription` (`draft_choice_labels.dart:47-56`) de même. **En partie 2**, avec *Sagesse* mythique, la documentation d'`inPool` (`:170-181`) est réécrite : « exactement six tirables » (`:175-177`) devient cinq (D11), et ses « deux lecteurs » (`:179-181`), le tirage et la prose du tutoriel, en comptent un troisième, la fiche des probabilités (§5.1) |
 | `LevelUpRewardService.generateChoices` (`level_up_reward_service.dart:89-148`) | Gagne `hasRaisableRune` (défaut faux), passé au filtre (`:99-100`) ; `DraftChoice` gagne `isRuneCapOption` à côté d'`isCloneOption` (`:29`) |
 | `EventChoice`, `EventAction` (`lib/models/data/event_data.dart`) | `EventChoice` gagne `requiresHpBelowPercent` (`int?`, 1 à 100) ; `isSelectable` (`:66-92`) reçoit ce dont les conditions neuves ont besoin (§4.9) ; `EventAction.fromJson` (`:124-126`) refuse une valeur hors bornes pour les quatre types neufs |
 | `EventState` (`lib/models/event_state.dart`) | Gagne `tradedRelic` (`RelicData?`) |
@@ -749,10 +782,15 @@ carte bonus aujourd'hui (`:217-219`).
 
 **À l'écran** — `_presentNextReward` (`game_screen.dart:93-149`), au pas « or et XP » : **en partie 1**, une
 notification `rewardCardFound` par carte s'ajoute **à côté** de celle de la carte bonus (`:129-135`), qui dit encore la
-carte que donne le boss « XP » ; celle-ci disparaît **en partie 2**, avec `rolledBonusCard` (§4.6) (A10).
+carte que donne le boss « XP » ; celle-ci disparaît **en partie 2**, avec `rolledBonusCard` (§4.6) (A10). Aucun test
+ne monte `GameScreen` : une commande de contrôle garde ce lecteur dès la partie 1 (§8).
 
 Une carte trouvée est **commune**, donc **sans rune** : une commune n'en porte jamais (spec E2, §4.12). Les signatures,
-`unique`, n'en sont jamais (`isOfferableTo`, `card_data.dart:170-173`) — le pool est les 17 neutres.
+`unique`, n'en sont jamais (`isOfferableTo`, `card_data.dart:170-173`) — le pool est les 17 neutres. **Ce que lit un
+test de la trouvaille** : la rareté passée à l'instance remplace celle de la donnée (`card_instance.dart:14-17`), si
+bien que `card.rarity` vaut `common` pour toute carte trouvée, signature comprise ; un test qui garde le filtre lit donc
+la donnée de la carte — `card.data.rarity`, `card.data.heroClass`, `card.data.id` —, et l'assertion « toutes
+communes » sur `card.rarity` garde, elle, la construction (§8).
 
 ### 4.2. Les règles de run des reliques
 
@@ -820,7 +858,7 @@ termes, l'`ExpectedPower` et le budget ne changent pas.
 | `handleVictory` | Le triple d'XP et d'or (`:89-91`, `:99-101`) reste ; **la carte bonus (`:186-194`) disparaît** (D42(a)) ; `sharpenedRunes` vaut une liste vide sur un boss « XP », `null` sur tout autre nœud — le discriminant de l'écran |
 | `collectGoldAndXp` | Après l'or et l'XP, sur un boss « XP » : `GameConstants.bossXpRuneSharpens + RunState.extraBossRuneSharpens` tirages ; chacun prend une paire au hasard parmi `ForgeRuneRules.sharpenablePairs(deck, catalogue, capBonus)` — les paires (carte, rune) dont la rune monte encore — et la monte d'un niveau par `DeckNotifier.raiseRuneLevel` (A13, A14) ; les paires montées remplissent `RewardState.sharpenedRunes` |
 | L'écran | `_presentNextReward` lit l'état dans une copie prise **avant** `collectGoldAndXp` (`game_screen.dart:95`, `:121`) : pour les runes montées, il **relit** `ref.read(rewardProvider)` après l'appel. `sharpenedRunes` nul : rien ; une notification `restCampSnackbarSharpen` par entrée — `{cardName}` lu dans le deck par `cardUniqueId`, `{runeName}` dans le catalogue des runes par `runeId`, selon la locale, `{level}` le niveau atteint (§3.8) ; liste vide — un boss « XP » sans paire affûtable — : `restCampSharpenNone` (A5). Les cartes trouvées, tirées par `handleVictory`, se lisent sur la copie |
-| L'infobulle (`map_node_widget.dart:59-61`) | Titre `legendBossXp`, description `tooltipBossXpDesc` (A25) |
+| L'infobulle (`map_node_widget.dart:59-61`) | Titre `legendBossXp`, description `tooltipBossXpDesc` (A25) — à la place de `tooltipBossDesc`, que lit aujourd'hui la branche du boss « XP » (`:61`) ; aucun test ne monte `MapNodeWidget`, une commande de contrôle garde la description (§8) |
 
 Le boss « XP » reste l'un des trois boss de chaque acte (`map_node_generator.dart:57`) : ni pool `draft`, ni boutique,
 ni quatrième type (D42).
@@ -851,7 +889,7 @@ plafond reste sans plafond. `RunController.raiseRuneCap(id)` l'augmente de 1.
 | La borne | `ForgeUpgradeData.boundLevel` (`forge_upgrade_data.dart:326-330`) | `capBonus` ajouté au plafond |
 | La fusion | `ForgeRuneRules.consolidate` (`:21-31`, par `_bounded`, `:41-42`), appelé par `DeckNotifier.mergeCards` (`deck_controller.dart:314`) | `RunState.runeCapBonus`, passé par l'écran de deck |
 | Les pré-forgées | `ShopController._rollRandomUpgrade` (`shop_controller.dart:72`) | idem |
-| L'affûtage au feu | `canSharpen` (`forge_rune_rules.dart:144-145`), `hasSharpenableRune` (`:150-157`) — lus par `GoldManager` (`gold_manager.dart:34`), l'option du feu (`rest_screen.dart:128-131`), la sélection (`rest_card_selection_screen.dart:118-124`) et le dialogue (`sharpen_rune_dialog.dart:34`) | idem |
+| L'affûtage au feu | `canSharpen` (`forge_rune_rules.dart:144-145`), `hasSharpenableRune` (`:150-157`) — lus par `GoldManager` (`gold_manager.dart:34`), l'option du feu (`rest_screen.dart:128-131`), la sélection (`rest_card_selection_screen.dart:118-124`) et le dialogue (`sharpen_rune_dialog.dart:34`), ces deux derniers dans leurs deux modes, le feu et le *Rémouleur* (§4.9) ; et par la condition du *Rémouleur*, `EventChoice.isSelectable`, que l'écran appelle (`event_screen.dart:528`) | idem |
 | Le Puits | `wellLevel` (`:185-186`), lu par `GoldManager.exchangeRune` (`gold_manager.dart:86`) et l'écran (`forge_fusion_screen.dart:250`) | idem |
 | Les sources neuves | `raiseRuneLevel`, `sharpenablePairs` (§4.6, §4.7, §4.9) | idem |
 
@@ -889,16 +927,21 @@ choix :
 
 `requiresHpBelowPercent: p` sur un choix : sélectionnable si `PV courants × 100 < PV max × p`. Les arrondis sont ceux du
 script (`.round()`, `:3084`, `:3095`). Le texte du choix, écrit dans la donnée, dit les pourcentages ; les badges
-(`_buildActionBadge`, `event_screen.dart:84-140`, et `_buildCompactActionBadge`, `:218-274`) disent les montants calculés
-et le nom de la relique (§5.1).
+(les `switch` de `_buildActionBadge`, `event_screen.dart:84-140`, et de `_buildCompactActionBadge`, `:218-274` — ce
+dernier sur les boutons de choix, avant tout choix, `:534-536`) disent les montants calculés
+et le nom de la relique (§5.1). **Sans relique visée**, le badge de chaque action `trade_relic` dit
+`eventNoRelicToGive`, « Aucune relique à céder » — sur les deux choix d'échange du *Colporteur*, avant tout choix —, et
+ces choix restent inactifs : leur condition, une relique visée, n'est pas remplie (arbitrage du propriétaire, n° 5,
+§1.2).
 
 **La relique visée** (A20) — `initializeEvent` et `setEvent` (`:16-42`) : si l'événement porte une action
 `trade_relic` et que l'inventaire n'est pas vide, la relique de plus petite `RelicRarity.index`, tirée au hasard parmi
-les ex æquo — les trois reliques neuves comprises, comme à l'Autel, qui n'en distingue aucune.
+les ex æquo — les trois reliques neuves comprises, comme à l'Autel, qui n'en distingue aucune ; sinon nulle.
 
 **Le choix de la rune** (A21) — `_handleChoice` (`event_screen.dart:32-68`) : un choix qui porte `sharpen_rune` pousse
 d'abord la sélection du feu en mode affûtage (`RestCardSelectionScreen`, `isSharpen`), **sans or** : les cartes sans
-rune affûtable grisées comme au feu, puis `SharpenRuneDialog`, dont le bouton dit `fusionRuneChoose` « Choisir », sans
+rune affûtable — plafond effectif compris, le bonus de la run lu comme au feu (§4.8) — grisées comme au feu, puis
+`SharpenRuneDialog`, dont le bouton dit `fusionRuneChoose` « Choisir », sans
 coût ni condition d'or, et **n'écrit rien** — il rend la rune choisie, la sélection rend la paire. Paire rendue :
 `selectChoice` résout le choix — la perte de PV, puis l'affûtage de cette paire. `null` (Annuler, retour) : rien n'est
 résolu, le joueur revient aux choix. La forme du mode — un paramètre, une valeur d'énumération — est au plan ; l'écran
@@ -906,7 +949,7 @@ du feu garde son comportement.
 
 **Le retour système** (A22) — `EventScreen` passe à `ScreenScaffold` `canPop: false` et un `onPopInvokedWithResult` qui
 ne fait rien si `didPop` est vrai, appelle `_leave` si le choix est fait (`isResolved`), et ne fait rien sinon — le
-mécanisme de `RestScreen` (`rest_screen.dart:133-140`), `screen_scaffold.dart` inchangé.
+mécanisme de `RestScreen` (`rest_screen.dart:139-142`), `screen_scaffold.dart` inchangé.
 
 Les deux événements entrent dans le tirage uniforme des événements (`initializeEvent`, `:26-27`) : sept, chacun
 une fois sur sept — ce que joue le script après le retrait de D29 (§9).
@@ -999,13 +1042,30 @@ Déclarées dans `app_en.arb` (gabarit) et `app_fr.arb` ; `flutter gen-l10n` ré
 | Clé | Français | English | Partie |
 |:---|:---|:---|:---:|
 | `rewardCardFound` (`{cardName}`) | `🃏 Carte trouvée : {cardName}` | `🃏 Card found: {cardName}` | 1 |
+| `tooltipEliteDesc` *(réécrite ; `app_fr.arb:60`, `app_en.arb:105`, lue par `map_node_widget.dart:39`)* | `Un combat bien plus rude : une relique garantie, et une carte — parfois deux.` | `A much tougher fight: a guaranteed relic, and a card — sometimes two.` | 1 |
 | `tooltipBossXpDesc` | `Le triple d'XP et d'or, et une rune de votre deck gagne un niveau.` | `Triple XP and gold, and one rune in your deck gains a level.` | 2 |
 | `eventTradeRelic` (`{relic}`, `{amount}`) | `Cède {relic} : +{amount} Or` | `Give up {relic}: +{amount} Gold` | 2 |
 | `eventGiveRelic` (`{relic}`) | `Cède {relic}` | `Give up {relic}` | 2 |
+| `eventNoRelicToGive` | `Aucune relique à céder` | `No relic to give up` | 2 |
 | `eventSharpenRune` (`{amount}`) | `+{amount} niveau de rune` | `+{amount} rune level` | 2 |
 | `runeCapTitle` | `Choisissez la rune dont le plafond monte` | `Choose the rune whose cap rises` | 2 |
 | `runeCapLine` (`{from}`, `{to}`) | `Niveau maximal {from} → {to}` | `Max level {from} → {to}` | 2 |
 | `runeCapRaised` (`{runeName}`, `{level}`) | `{runeName} peut désormais monter jusqu'au niveau {level}.` | `{runeName} can now reach level {level}.` | 2 |
+| `luckLevelRewardSubtitle` (`{mythicNames}`) | `Chances d'obtenir chaque rareté d'option lors de la montée de niveau ({mythicNames})` | `Chances of getting each option rarity when leveling up ({mythicNames})` | 2 |
+
+**`eventNoRelicToGive`** est le badge d'une action `trade_relic` quand aucune relique n'est visée (§4.9) ;
+`eventTradeRelic` et `eventGiveRelic` la nomment sinon.
+
+**La fiche des probabilités** (`ProbabilitiesDialog`, carte du monde) nomme aujourd'hui les mythiques en dur, dans le
+sous-titre de sa section « Récompense de niveau » : « … (Trèfle / Miroir) » · "… (Clover / Mirror)"
+(`probabilities_dialog.dart:244-245`, en ligne). En partie 2, quand *Sagesse* et *Transcendance* deviennent mythiques,
+ce sous-titre passe par `luckLevelRewardSubtitle` (arbitrage du propriétaire, n° 7, §1.2) : `build` lit les
+récompenses sur le chargeur, `ref.watch(gameDataLoaderProvider).value`, comme la fiche des stats
+(`stats_dialog.dart:36`) — jamais `GameDataRegistry.instance` (A9) —, prend
+`LevelUpRewardData.inPool(rewards, RewardPool.mythic)`, dans l'ordre de `displayOrder`, et passe à `{mythicNames}`
+leurs noms dans la locale, joints par « / » comme aujourd'hui (C3.2) ; aucune autre logique dans le widget. Sur le
+catalogue de la fin de la vague : « (Sagesse / Trèfle à 4 feuilles / Miroir / Transcendance) » · "(Wisdom / 4-Leaf Clover / Mirror /
+Transcendence)". Le titre de la section reste en ligne, comme le reste de la fiche.
 
 **Reprises sans changement de texte** : `restCampSnackbarSharpen` et `restCampSharpenNone` (le boss « XP »),
 `restCampSharpenTitle`, `restCampSharpenSubtitle`, `sharpenNothingOnCard` (la sélection de l'événement),
@@ -1046,6 +1106,12 @@ Miroir et Transcendance ». Le tutoriel garde sa convention de textes en ligne.
 
 Les noms et descriptions des runes, des cartes, des cinq événements livrés, des vingt-cinq reliques livrées ; `legendBossXp`.
 
+Les chiffres de la section « Récompense de niveau » de la fiche des probabilités : elle affiche
+`calculateDraftProbabilities(luck, true)` (`probabilities_dialog.dart:105-106`), une répartition par rareté qui n'est
+pas le jet mythique réel — 0,5 % plus 0,15 % par point de Chance, un jet par mythique
+(`level_up_reward_service.dart:50-58`). L'écart est antérieur à E3 et hors du lot : E3 ne remplit que la parenthèse des
+noms (§5.1).
+
 ---
 
 ## 6. L'éditeur de contenu
@@ -1079,7 +1145,7 @@ sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de cela n'est testé 
 | Sujet | Fichier | Ce qu'il verrouille | Partie |
 |:---|:---|:---|:---:|
 | Le tirage de la trouvaille | `test/unit/card_drops_test.dart` *(nouveau)* | Combat : 1 ; avec `extraGuaranteed` 1 : 2 ; élite à jet gagnant : 2, perdant : 1, sur un `Random` dont le premier tirage est connu ; `firstExtraBonus` 75 : toujours 2 ; une règle absente (boss) : 0 ; l'arrêt au premier raté sur une règle à deux jets | 1 |
-| La trouvaille dans la récompense | `test/unit/reward_controller_test.dart` | `foundCards` : une carte en combat, une ou deux en élite, aucune au boss ; toutes communes, sans rune ; `collectGoldAndXp` les ajoute au deck une fois ; les cas qui disent « aucune carte » d'un combat normal (`:127`) parlent des clones du boss (`rolledCards`) et gagnent l'attente de la carte trouvée. **Un cas neuf garde le filtre de la trouvaille**, sur une fixture de cartes de plusieurs classes et d'une `unique` : 200 tirages, jamais une carte d'une autre classe ni une `unique`, les cartes de la classe du joueur admises. **Le cas `:284`**, qui garde le filtre de classe de la carte bonus — encore vivante en partie 1 —, **ne change pas**. **Les bonus des reliques, lus par `handleVictory`** (§4.1), sur un `Random` dont les tirages sont connus : (1) après `addRelic` de la *Sacoche du glaneur* (C), un combat normal donne **2** cartes, et une élite au jet perdant en donne **1** — C ne touche pas l'élite ; (2) après trois `addRelic` du *Registre des primes* (A, 75 points), une élite au jet qui perdait à 25 % donne **2** cartes, et un combat normal en donne **1** — A ne touche pas le combat normal ; (3) aucun des deux ne fait trouver une carte au boss | 1 |
+| La trouvaille dans la récompense | `test/unit/reward_controller_test.dart` | `foundCards` : une carte en combat, une ou deux en élite, aucune au boss ; toutes communes, sans rune ; `collectGoldAndXp` les ajoute au deck une fois ; les cas qui disent « aucune carte » d'un combat normal (`:127`) parlent des clones du boss (`rolledCards`) et gagnent l'attente de la carte trouvée. **Un cas neuf garde le filtre de la trouvaille**, sur une fixture de cartes de plusieurs classes et d'une `unique` **de la classe du joueur** : 200 tirages, aucune carte trouvée dont `card.data.heroClass` est une autre classe que celle de la run, ni dont `card.data.rarity` vaut `unique` — la donnée de la carte, jamais `card.rarity`, que l'instance porte `common` (§4.1) et sur laquelle l'assertion ne garderait rien —, les cartes de la classe du joueur admises. **Le cas `:284`**, qui garde le filtre de classe de la carte bonus — encore vivante en partie 1 —, **ne change pas**. **Les bonus des reliques, lus par `handleVictory`** (§4.1), sur un `Random` dont les tirages sont connus : (1) après `addRelic` de la *Sacoche du glaneur* (C), un combat normal donne **2** cartes, et une élite au jet perdant en donne **1** — C ne touche pas l'élite ; (2) après trois `addRelic` du *Registre des primes* (A, 75 points), une élite au jet qui perdait à 25 % donne **2** cartes, et un combat normal en donne **1** — A ne touche pas le combat normal ; (3) aucun des deux ne fait trouver une carte au boss | 1 |
 | Les règles de run des reliques | `test/unit/relic_exchange_test.dart` | Chaque `effectType` neuf : `addRelic` monte la règle, `exchangeRelics` la rend ; deux exemplaires s'additionnent | 1 (A, C), 2 (D42(a)) |
 | La borne de la main | `test/unit/hand_size_bound_test.dart` *(nouveau)* | `RunState.maxHandSize` à **7** (une valeur qui n'est pas la constante) : la main s'arrête à 7 par chacun des six chemins de §4.3 — la main d'ouverture à 9 cartes par tour, la pioche du tour, une carte `draw`, une carte portant `quick:1`, *Frénésie* sur une main pleine, `DebugActions.drawCards` ; la conservation des piles tient. **L'écrivain** : `startNewRun` pose `startingMaxHandSize` — après une run à 7, la suivante repart à 10 | 1 |
 | La stat de la main | `test/unit/run_state_persistence_test.dart` | `maxHandSize`, `extraCombatCards`, `eliteCardChanceBonus`, `extraBossRuneSharpens`, `runeCapBonus` aller-retour ; absents : leurs défauts | 1, 2 (`extraBossRuneSharpens`, `runeCapBonus`) |
@@ -1093,22 +1159,48 @@ sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de cela n'est testé 
 | La DDA | `test/encounter_system_test.dart` | `deckFusionRanks` remplace `playerCardsCount` (`:122`, `:139`, `:157`, `:175`, `:322`) ; `:536-575` : 10 rangs → +20 de `PlayerPower`, un deck de communes → 0 | 1 |
 | La somme des rangs | `test/unit/deck_controller_test.dart` | `fusionRankSum` : 0 pour des communes et des `unique`, 1 · 2 · 3 · 4 de peu commune à légendaire, additionnés | 1 |
 | Le journal de debug | `test/unit/combat_debug_logger_test.dart:28`, `:57` | Le paramètre renommé. Les deux cas n'affirment aujourd'hui que `returnsNormally` (`:44`, `:73`) : pour garder le texte, le cas `:28` capture la sortie en surchargeant `debugPrint` (rendu en `addTearDown`) — le journal écrit par `debugPrint` (`combat_debug_logger.dart:123`) — et y trouve « Σ rangs » et « 2 × Σ rangs », plus « Cards » ni « cardsCount » | 1 |
-| La transition E3 → E4 | `test/unit/signature_cards_transition_test.dart` *(nouveau)* | Sur le registre réel, pour chaque classe : aucune signature dans la trouvaille — **par `handleVictory` lui-même**, sur un nœud de combat, `allCards` le registre réel, 200 victoires sur un `Random` connu : aucune carte trouvée de rareté `unique` (`card_offer_filter_test.dart:24-57` garde déjà `isOfferableTo` seul ; la clause garde la trouvaille) ; une signature n'a aucune rune offerte (`drawRunes` vide) ; un deck des deux signatures et de communes vaut `fusionRankSum` 0 ; **en partie 2**, le boss « XP » ne monte jamais une rune de signature — aucune n'en porte | 1, 2 |
-| Le tutoriel | `test/tutorial/tutorial_engine_test.dart:391-402`, `:406-413`, `:415-421`, `:697-699` ; `test/tutorial/tutorial_prose_test.dart` | Le palier est 115 à l'acte 1, à chaque niveau, lu par le getter `TutorialEngine.xpThreshold` (§4.4) : `:391-402` — trois gains de 35 (105 XP) ne font plus de niveau, quatre (140) donnent le niveau 2 et 25 XP ; son titre (`:391`, « … au-delà de xpToNextLevel ») devient « … au-delà du palier de l'acte » ; `:406-413` — 115 puis 115 ; `:415-421` — `gainXp(260)` donne le niveau 3, 30 XP, 2 drafts ; `:697-699` — `gainXp(115)` à la place de `gainXp(100)`. `{xpAct1}` → 115, `{xpAct2}` → 200 ; aucun placeholder ne survit dans l'étape XP ; **en partie 2**, cinq tirables et quatre mythiques nommées (`:13-27`, `:29-53`, `:63-74`) | 1, 2 |
+| La transition E3 → E4 | `test/unit/signature_cards_transition_test.dart` *(nouveau)* | Sur le registre réel, pour chaque classe : aucune signature dans la trouvaille — **par `handleVictory` lui-même**, sur un nœud de combat, `allCards` le registre réel, 200 victoires sur un `Random` connu : aucune carte trouvée dont `card.data.rarity` vaut `unique`, ni dont `card.data.heroClass` est une autre classe que celle de la run, **et** aucun `card.data.id` parmi les six signatures du registre — lues dans le registre réel, `registry.heroes.expand((h) => h.skills)` (`HeroData.skills`, `hero_data.dart:44`, que `referential_integrity_test.dart:211-229` égale au contenu de chaque dossier `classes/<id>/cards/`), un ensemble dont le test vérifie d'abord qu'il compte six ids, pour qu'un ensemble vide ne rende pas la clause vraie d'office (C3.1). Jamais `card.rarity`, que l'instance porte `common` (§4.1) : l'assertion ne garderait rien (`card_offer_filter_test.dart:24-57` garde déjà `isOfferableTo` seul ; la clause garde la trouvaille) ; une signature n'a aucune rune offerte (`drawRunes` vide) ; un deck des deux signatures et de communes vaut `fusionRankSum` 0 ; **en partie 2**, le boss « XP » ne monte jamais une rune de signature — aucune n'en porte | 1, 2 |
+| Le tutoriel | `test/tutorial/tutorial_engine_test.dart:391-403`, `:407-414`, `:416-422`, `:697-699` ; `test/tutorial/tutorial_prose_test.dart` | Le palier est 115 à l'acte 1, à chaque niveau, lu par le getter `TutorialEngine.xpThreshold` (§4.4) : `:391-403` — trois gains de 35 (105 XP) ne font plus de niveau, quatre (140) donnent le niveau 2 et 25 XP ; son titre (`:391`, « … au-delà de xpToNextLevel ») devient « … au-delà du palier de l'acte » ; `:407-414` — 115 puis 115 ; `:416-422` — `gainXp(260)` donne le niveau 3, 30 XP, 2 drafts ; `:697-699` — `gainXp(115)` à la place de `gainXp(100)`. `{xpAct1}` → 115, `{xpAct2}` → 200 ; aucun placeholder ne survit dans l'étape XP ; **en partie 2**, cinq tirables et quatre mythiques nommées (`:13-27`, `:29-53`, `:63-74`) | 1, 2 |
 | Le boss « XP » | `test/unit/reward_controller_test.dart:349-374`, `:399-415` *(réécrits)* ; `:284-347` *(supprimé)* ; `:146` | Plus de carte ; `1 + extraBossRuneSharpens` runes montées d'un niveau, tirées parmi les paires sous leur plafond effectif ; une rune au plafond jamais choisie ; aucune paire : `sharpenedRunes` vide ; hors d'un boss « XP », `sharpenedRunes` nul (§4.6). **La *Meule*, lue par la récompense** : après `addRelic` de la *Meule*, un boss « XP » monte **deux** runes (deux entrées, chacune au niveau atteint) ; sur un boss « cartes », un boss « relique » ou un combat, elle ne monte rien. **Le bonus de plafond, lu par le tirage** : un deck dont la seule rune est `eco:1` n'offre aucune paire (`sharpenedRunes` vide) ; après `raiseRuneCap('eco')`, il monte `eco:2` ; le triple d'XP et d'or (`:149-161`) inchangé. Avec `rolledBonusCard` disparaissent ses deux autres lecteurs : le cas `:284-347`, supprimé — le filtre de classe qu'il gardait est gardé depuis la partie 1 par le cas neuf de la trouvaille —, et l'assertion `:146`, remplacée par `sharpenedRunes` nul sur un combat normal (`git grep -n rolledBonusCard -- test` : `:146`, `:341`, `:359`, `:373`) | 2 |
 | L'affûtage sans or | `test/unit/deck_controller_test.dart` ; `test/unit/run_controller_test.dart` | `raiseRuneLevel` : réécrit à sa place, borné par le plafond effectif, refuse sans rien toucher ; `sharpenRune` paie toujours `50 × n` et refuse au plafond **sans payer** | 2 |
-| Le bonus de plafond, lu par ses lecteurs | `test/unit/run_controller_test.dart` ; `test/unit/shop_controller_test.dart` ; `test/widget/deck_screen_test.dart` ; `test/widget/rest_screen_test.dart` ; `test/widget/sharpen_rune_dialog_test.dart` ; `test/widget/forge_fusion_screen_test.dart` | Chaque écrivain de niveau de §4.8 lit **`RunState.runeCapBonus`**, et pas seulement le paramètre de sa fonction pure : un `eco:1` sans bonus, puis après `raiseRuneCap('eco')`. `sharpenRune` (par `GoldManager`) : refusé, puis `eco:2` contre 50 or. `exchangeRune` d'un `sharp:3` contre `eco` sur une rare : reçue à `eco:1`, puis `eco:2` (`wellLevel(3)` = 2). Les pré-forgées, sur le motif de `shop_controller_test.dart:344-389` — un catalogue réduit à une rune plafonnée à 1, 200 boutiques à l'acte 3, la boutique n'ayant pas de couture `Random` (`shop_controller.dart:156`) — : `{capped:1}` sans bonus, `{capped:1, capped:2}` avec, jamais `capped:3`. La fusion de trois rares portant `eco:1`, lancée depuis l'écran de deck : une épique à `eco:1`, puis `eco:2` — l'écran passe le bonus de la run à `mergeCards`. L'option « AFFÛTER » du feu, sur un deck dont la seule rune est `eco:1` : inactive, puis active ; le dialogue d'affûtage dit « Niveau maximal », puis « Niveau 1 → 2 ». L'écran du Puits (`forge_fusion_screen.dart:250`), pour un `sharp:3` donné contre `eco`, dit « Reçue au niveau 1 », puis « Reçue au niveau 2 » | 2 |
+| Le bonus de plafond, lu par ses lecteurs | `test/unit/run_controller_test.dart` ; `test/unit/shop_controller_test.dart` ; `test/widget/deck_screen_test.dart` ; `test/widget/rest_screen_test.dart` ; `test/widget/rest_card_selection_screen_test.dart` ; `test/widget/sharpen_rune_dialog_test.dart` ; `test/widget/forge_fusion_screen_test.dart` | Chaque écrivain de niveau de §4.8 lit **`RunState.runeCapBonus`**, et pas seulement le paramètre de sa fonction pure : un `eco:1` sans bonus, puis après `raiseRuneCap('eco')`. `sharpenRune` (par `GoldManager`) : refusé, puis `eco:2` contre 50 or. `exchangeRune` d'un `sharp:3` contre `eco` sur une rare : reçue à `eco:1`, puis `eco:2` (`wellLevel(3)` = 2). Les pré-forgées, sur le motif de `shop_controller_test.dart:344-389` — un catalogue réduit à une rune plafonnée à 1, 200 boutiques à l'acte 3, la boutique n'ayant pas de couture `Random` (`shop_controller.dart:156`) — : `{capped:1}` sans bonus, `{capped:1, capped:2}` avec, jamais `capped:3`. La fusion de trois rares portant `eco:1`, lancée depuis l'écran de deck : une épique à `eco:1`, puis `eco:2` — l'écran passe le bonus de la run à `mergeCards`. L'option « AFFÛTER » du feu, sur un deck dont la seule rune est `eco:1` : inactive, puis active ; le dialogue d'affûtage dit « Niveau maximal », puis « Niveau 1 → 2 ». **La sélection d'affûtage** (`rest_card_selection_screen.dart:118-124`, `:44-50`), sur le modèle du cas `rest_card_selection_screen_test.dart:86` et sur un deck dont la seule rune est `eco:1`, **dans ses deux modes**, avec or (le feu) et sans or (le *Rémouleur*) : la carte est grisée, et la toucher n'ouvre pas le dialogue et notifie `sharpenNothingOnCard` ; après `raiseRuneCap('eco')`, elle n'est plus grisée, et la toucher ouvre `SharpenRuneDialog` sur « Niveau 1 → 2 » — la sélection lit le bonus de la run, et non le seul plafond de la rune. L'écran du Puits (`forge_fusion_screen.dart:250`), pour un `sharp:3` donné contre `eco`, dit « Reçue au niveau 1 », puis « Reçue au niveau 2 » | 2 |
 | Le bonus de plafond | `test/unit/forge_rune_rules_test.dart` ; `test/unit/forge_upgrade_data_test.dart` ; `test/unit/shop_controller_test.dart` | `boundLevel` avec `capBonus` ; `consolidate` : `eco:1` × 3 → `eco:2` sous un bonus de 1, `eco:1` sans ; `canSharpen`, `hasSharpenableRune`, `wellLevel` ; une pré-forgée bornée par le plafond effectif ; `raisableCaps` : à leur plafond, sans les binaires, sans les runes sans plafond ; `sharpenablePairs` ; `binary` lu, refusé avec `maxLevel` 2 ; `nameAt(2)` d'une rune de plafond 1 écrit le niveau ; l'ensemble exact des clés de `toJson` (`forge_upgrade_data_test.dart:312-329`) gagne `binary`, écrit toujours, comme `requiresExhaust` | 2 |
-| Les runes livrées | `test/unit/forge_upgrades_catalog_test.dart` | `enduring` et `cheap` binaires, les neuf autres non ; l'ensemble `read` des clés lues par le modèle (`:238-257`) gagne `binary` | 2 |
+| Les runes livrées | `test/unit/forge_upgrades_catalog_test.dart` | `enduring` et `cheap` binaires, les neuf autres non ; l'ensemble `read` des clés lues par le modèle (`:239-258`) gagne `binary` | 2 |
 | Le gabarit de rune de l'éditeur | `test/unit/content_editor/entity_descriptor_test.dart:260-273` | L'ensemble exact des clés du gabarit `forgeUpgrade` gagne `binary` (§6) | 2 |
-| La mythique | `test/unit/level_up_reward_data_test.dart` ; `test/unit/level_up_reward_requirement_test.dart` ; `test/widget/draft_screen_test.dart` | `raiseRuneCap` et `raisableRune` lus ; `isAvailableWith` : *Transcendance* exclue sans candidate, *Affinité* inchangée ; **la condition, lue par le service** : `generateChoices` sous `forceLegendary` sort *Transcendance* avec `hasRaisableRune: true`, jamais sans. Les cas existants qui changent : `level_up_reward_requirement_test.dart:56-60` (« aucune autre récompense n'exige quoi que ce soit ») exclut aussi `transcendence`, qui exige `raisableRune` ; `:62-77` — `wisdom`, devenue mythique, sort des ensembles de tirables (`tirees` ne garde que le pool `draft`, `:44`) : cinq, puis quatre sans *Affinité*. `draft_screen_test.dart:207-220` : sous `forceLegendary`, chaque mythique sort (`level_up_reward_service.dart:44-47`, `:130-145`) — **six** rouleaux, *Sagesse*, *Trèfle* et *Miroir* en plus des trois, *Transcendance* exclue faute de rune à son plafond dans le deck du test. **La condition, lue par l'écran** (`draft_screen.dart:105-110`), un cas neuf sous `forceLegendary` : un deck portant une rare à `eco:1` donne **sept** rouleaux, *Transcendance* comprise ; la modale liste `eco`, « Niveau maximal 1 → 2 » ; le toucher fait `runeCapBonus['eco']` = 1, notifie `runeCapRaised` et termine le draft. Le même deck après `raiseRuneCap('eco')` — `eco:1` est alors sous son plafond effectif, 2 — redonne six rouleaux, sans *Transcendance* : l'écran lit le deck **et** le bonus de la run | 2 |
+| La mythique | `test/unit/level_up_reward_data_test.dart` ; `test/unit/level_up_reward_requirement_test.dart` ; `test/widget/draft_screen_test.dart` | `raiseRuneCap` et `raisableRune` lus ; `isAvailableWith` : *Transcendance* exclue sans candidate, *Affinité* inchangée ; **la condition, lue par le service** : `generateChoices` sous `forceLegendary` sort *Transcendance* avec `hasRaisableRune: true`, jamais sans. Les cas existants qui changent : `level_up_reward_requirement_test.dart:56-60` (« aucune autre récompense n'exige quoi que ce soit ») exclut aussi `transcendence`, qui exige `raisableRune` ; `:62-77` — `wisdom`, devenue mythique, sort des ensembles de tirables (`tirees` ne garde que le pool `draft`, `:45`) : cinq, puis quatre sans *Affinité*. `draft_screen_test.dart:207-220` : sous `forceLegendary`, chaque mythique sort (`level_up_reward_service.dart:44-47`, `:130-145`) — **six** rouleaux, *Sagesse*, *Trèfle* et *Miroir* en plus des trois, *Transcendance* exclue faute de rune à son plafond dans le deck du test. **La condition, lue par l'écran** (`draft_screen.dart:105-110`), un cas neuf sous `forceLegendary` : un deck portant une rare à `eco:1` donne **sept** rouleaux, *Transcendance* comprise ; la modale liste `eco`, « Niveau maximal 1 → 2 » ; le toucher fait `runeCapBonus['eco']` = 1, notifie `runeCapRaised` et termine le draft. Le même deck après `raiseRuneCap('eco')` — `eco:1` est alors sous son plafond effectif, 2 — redonne six rouleaux, sans *Transcendance* : l'écran lit le deck **et** le bonus de la run | 2 |
 | Le catalogue des récompenses | `test/unit/level_up_rewards_catalog_test.dart:64-131` ; `test/unit/level_up_reward_values_test.dart` ; `test/unit/level_up_reward_apply_test.dart:86-95` | Neuf récompenses ; cinq tirables à leurs tables d'aujourd'hui, *Sagesse* hors de `attendu` (et de `_attendu` dans `level_up_reward_values_test`, avec son exception de plateau) ; quatre mythiques, `[wisdom, lucky_clover, mirror, transcendence]` par `displayOrder`, *Sagesse* à `mythic: 1` ; rangs 1 à 9 sans trou ; les cinq tirables atteignables (`level_up_reward_values_test.dart:173`). « Sagesse monte le mana max » (`level_up_reward_apply_test.dart:86-95`) l'applique à `RewardRarity.mythic` : +1, et non plus +4 en légendaire, palier que sa table ne déclare plus | 2 |
+| La fiche des probabilités | `test/widget/probabilities_dialog_test.dart` *(nouveau — aucun test n'ouvre la fiche, `git grep -n ProbabilitiesDialog -- test` est vide)* | Le sous-titre de la section « Récompense de niveau » nomme les mythiques de la donnée (§5.1) : le conteneur surcharge le chargeur et le résout avant le premier `pump` (le motif de `draft_screen_test.dart:76-79`). Sur le registre réel, il dit en français « … (Sagesse / Trèfle à 4 feuilles / Miroir / Transcendance) », en anglais « … (Wisdom / 4-Leaf Clover / Mirror / Transcendence) » ; sur un registre dont la seule mythique est une fixture, la parenthèse ne nomme qu'elle — la fiche lit la donnée, et non une liste écrite | 2 |
 | Les événements | `test/unit/event_controller_test.dart` | `tradedRelic` : la plus faible, au hasard parmi les ex æquo ; nul sans action `trade_relic`, nul sur un inventaire vide ; `trade_relic` 40 : la relique quitte l'inventaire, son effet `startOfRun` défait, 40 × (rang + 1) or — **céder la *Sacoche du glaneur*** remet `extraCombatCards` à 0, la règle de run défaite par `loseRelic` ; 0 : pas d'or ; `heal_percent`, `lose_hp_percent` : les arrondis ; `sharpen_rune` : la paire montée, aucun or dépensé ; **le bonus de plafond, lu par l'action et sa condition** : sur un deck dont la seule rune est `eco:1`, le choix n'est pas sélectionnable, puis, après `raiseRuneCap('eco')`, il l'est et monte `eco:2` ; `isSelectable` : sans relique, sans rune affûtable, PV ≤ coût — refusés ; **`requiresHpBelowPercent`, lu dans la donnée** : un choix construit à 30, et non aux 50 du fichier livré — sur 100 PV max, 29 PV sélectionnable, 30 refusé —, la même valeur lue par `fromJson`, 0 et 101 refusés ; bornes des valeurs refusées au chargement ; **les deux événements livrés**, sur le registre réel : leurs actions, et la condition `requiresHpBelowPercent: 50` du second choix du *Colporteur* (§3.4) | 2 |
-| L'écran d'événement | `test/widget/event_screen_test.dart` *(nouveau — aucun test n'ouvre `EventScreen` aujourd'hui, `git grep -l EventScreen -- test` est vide)* | **Le retour système** (A22), sur le précédent de `rest_screen_test.dart:182-186` : après un choix, `maybePop()` ferme l'écran et le nœud courant est `isCompleted` ; avant tout choix, l'écran reste ouvert ; l'affûtage annulé ne résout rien, les PV ne baissent pas. **Le montage** : `initState` tire, dans une micro-tâche, un événement au hasard parmi `gameData.events`, par `requireValue` (`event_screen.dart:24-29`) — le test résout le chargeur avant le premier `pump` (le motif de `draft_screen_test.dart:76-79`) et lui donne un registre dont `events` ne porte **que** l'événement visé : un `setEvent` posé avant le `pump` serait écrasé, et le registre réel tirerait un événement sur sept. **Les conditions, lues par l'écran** (`event_screen.dart:528`, qui passe la run à `isSelectable`) : une relique portée, le choix des remèdes du *Colporteur* est inactif à PV pleins, actif à 40 % ; le choix du *Rémouleur* est inactif sur un deck sans rune affûtable. **L'affûtage de bout en bout** : le choix du *Rémouleur*, puis la sélection — les cartes sans rune affûtable grisées —, puis le dialogue, bouton « Choisir », sans coût : la rune monte d'un niveau, 10 % des PV max sont perdus, l'or ne bouge pas | 2 |
-| La sélection sans or | `test/widget/rest_card_selection_screen_test.dart` ; `test/widget/sharpen_rune_dialog_test.dart` | En mode sans or : pas de coût, pas de condition d'or, le dialogue n'écrit rien et rend la rune ; le mode du feu inchangé | 2 |
+| L'écran d'événement | `test/widget/event_screen_test.dart` *(nouveau — aucun test n'ouvre `EventScreen` aujourd'hui, `git grep -l EventScreen -- test` est vide)* | **Le retour système** (A22), sur le précédent de `rest_screen_test.dart:185-188` : après un choix, `maybePop()` ferme l'écran et le nœud courant est `isCompleted` ; avant tout choix, l'écran reste ouvert ; l'affûtage annulé ne résout rien, les PV ne baissent pas. **Le montage** : `initState` tire, dans une micro-tâche, un événement au hasard parmi `gameData.events`, par `requireValue` (`event_screen.dart:24-29`) — le test résout le chargeur avant le premier `pump` (le motif de `draft_screen_test.dart:76-79`) et lui donne un registre dont `events` ne porte **que** l'événement visé : un `setEvent` posé avant le `pump` serait écrasé, et le registre réel tirerait un événement sur sept. **Les conditions, lues par l'écran** (`event_screen.dart:528`, qui passe la run à `isSelectable`) : une relique portée, le choix des remèdes du *Colporteur* est inactif à PV pleins, actif à 40 % ; le choix du *Rémouleur* est inactif sur un deck sans rune affûtable ; **le bonus de plafond, lu par la condition** : sur un deck dont la seule rune est `eco:1`, le choix du *Rémouleur* est inactif, puis actif après `raiseRuneCap('eco')` — l'écran passe le bonus de la run à `isSelectable`. **Les badges du *Colporteur*** (§4.9, §5.1), en français : avec une seule relique portée, une commune, le badge du premier choix dit « Cède <nom> : +40 Or » et celui du second « Cède <nom> », `<nom>` le nom de la relique dans la locale ; sur un inventaire vide, l'écran s'ouvre sans exception (`tester.takeException()` nul), les deux choix d'échange sont inactifs, et chacun porte le badge « Aucune relique à céder » (deux occurrences). **L'affûtage de bout en bout** : le choix du *Rémouleur*, puis la sélection — les cartes sans rune affûtable grisées —, puis le dialogue, bouton « Choisir », sans coût : la rune monte d'un niveau, 10 % des PV max sont perdus, l'or ne bouge pas | 2 |
+| La sélection sans or | `test/widget/rest_card_selection_screen_test.dart` ; `test/widget/sharpen_rune_dialog_test.dart` | En mode sans or : pas de coût, pas de condition d'or, le dialogue n'écrit rien et rend la rune ; le mode du feu inchangé ; le bonus de plafond, lu dans les deux modes, est gardé par « Le bonus de plafond, lu par ses lecteurs » | 2 |
 | Les passifs | `test/unit/passive_data_test.dart:144-157`, `:160-220` ; `test/unit/passives_mage_test.dart:59-70`, `:327-356` ; `test/unit/passives_paladin_test.dart:45-56`, `:140-182` | `floor` : lu, refusé avec un `perPoint` positif ou au-dessus de la base ; `withMastery` le respecte. Le groupe `PassiveMastery.describe` (`passive_data_test.dart:144-157`), qui appelle la méthode retirée, passe sur `PassiveData.describeMastery`, qui dit l'écart effectif ; de même le cas `:202-215`, dont l'assertion `:214` (`passive.mastery!.describe('fr', 2)`) passe sur `passive.describeMastery('fr', from: 0, to: 2)` et vaut toujours « -2 Competence a reunir » — ce passif n'a pas de plancher —, et dont le commentaire `:200-201` (« Borner le résultat est l'affaire de la stratégie qui le lit ») est réécrit : le plancher vit dans `withMastery` (A23). *Flux* : le gabarit `manaFlux()` (`passives_mage_test.dart:59-70`) gagne `floor: 2` dans son bloc `mastery`, comme `mana_flux.json` — sans lui, 3 − 2 = 1 et une Compétence suffirait encore ; à Maîtrise 2, **deux** Compétences (le cas `:327-334` réécrit) ; « jamais sous une Compétence » (`:343-356`) devient « jamais sous son plancher » — à Maîtrise 9, une seule Compétence ne donne rien, deux en donnent —, et son commentaire `:336-342`, qui disait le plancher sans effet observable, est réécrit. *Bénédiction* : le gabarit `blessing()` (`passives_paladin_test.dart:45-56`), sans seuil — donc à 0, qui ne soigne plus rien sous A24 —, gagne `threshold: 5`, et les quatre cas `:140-182` gardent leurs attentes ; un cas neuf : une tranche de 4 sur un passif construit à `threshold: 4` ; `threshold: 0`, rien et aucune exception | 2 |
 | Les passifs livrés | `test/unit/passives_paladin_test.dart` ou `passives_mage_test.dart`, groupe « le catalogue » | `blessing.json` : `threshold` 5, Maîtrise sur `value`, sans plancher ; `mana_flux.json` : `floor` 2 | 2 |
 | Les textes de la Maîtrise | `test/unit/draft_choice_labels_test.dart:57-100` ; `test/unit/level_up_reward_data_test.dart:169-203` ; `test/unit/level_up_rewards_catalog_test.dart:115-116` ; `test/widget/class_selection_screen_test.dart` ; `test/widget/draft_screen_test.dart` ; `test/widget/stats_dialog_test.dart` *(nouveau)* | Les appels existants passent `currentMastery`, devenu requis ; *Affinité* sur *Flux* : l'écart effectif depuis la Maîtrise passée, puis le repli « sans effet » au plancher ; les autres passifs inchangés. **La Maîtrise de la run, lue par l'écran de draft** (`draft_screen.dart:250`, `:343`, `:469`) : un registre dont la seule récompense tirable est *Affinité* — les trois emplacements tirent avec remise parmi les tirables (`level_up_reward_service.dart:119`) —, une run de mage sous *Flux* : à Maîtrise effective 1, les rouleaux disent le repli « … sans effet sur votre passif » ; à 0, « Flux de Mana : -1 Compétence à réunir » — quel que soit le montant tiré, le plancher 2 étant atteint dès le premier point. **La fiche des stats** (`stats_dialog.dart:57-60`), qu'aucun test n'ouvre (`git grep -n StatsDialog -- test` est vide) : *Flux* à Maîtrise 9 dit « -1 Compétence à réunir », et non « -9 » ; à Maîtrise 0, aucune ligne | 2 |
+
+**Les titres suivent les attentes.** Un test existant dont l'attente change prend un titre qui la dit, dans la partie
+qui change l'attente ; un cas réécrit (`xp_scaling_test.dart:37-84`, `reward_controller_test.dart:349-374`, `:399-415`)
+aussi. Outre ceux que le tableau nomme déjà (`tutorial_engine_test.dart:391`, `passives_mage_test.dart:343`), les
+titres qui deviendraient faux sans cela :
+
+| Titre | Aujourd'hui | Devient | Partie |
+|:---|:---|:---|:---:|
+| `tutorial_engine_test.dart:407` | « le palier suit 100 x 1,5^(niveau-1) » | « le palier est celui de l'acte, à chaque niveau » | 1 |
+| `entity_id_convention_test.dart:64` | « il y a bien 88 fichiers d entite » | « … 90 … », puis « … 94 … » | 1, 2 |
+| `real_bundle_load_test.dart:24` | « le manifeste declare les 85 fichiers d entite, par categorie » — faux dès aujourd'hui : ses attentes en comptent 88 | « … 90 … », puis « … 94 … » | 1, 2 |
+| `encounter_system_test.dart:536` | « calculateBudget includes playerCardsCount in playerPower … » — que la première commande de contrôle désigne aussi | le terme de deck dit par `deckFusionRanks` | 1 |
+| `encounter_system_test.dart:563` | « calculateBudget matches the zero-cards, act-1 baseline … » | la base à zéro rang de fusion | 1 |
+| `reward_controller_test.dart:127` | « … no relic/cards on a normal combat node » | ni relique ni clone du boss, une carte trouvée | 1 |
+| `level_up_rewards_catalog_test.dart:64` | « les huit récompenses se chargent depuis le vrai bundle » | « les neuf … » | 2 |
+| `level_up_rewards_catalog_test.dart:74` | « les six récompenses tirables portent la table d aujourd hui » | « les cinq … » | 2 |
+| `level_up_rewards_catalog_test.dart:92` | « les deux mythiques sont hors du tirage des trois emplacements » | « les quatre … » | 2 |
+| `level_up_rewards_catalog_test.dart:104` | « les huit récompenses portent leurs deux langues » | « les neuf … » | 2 |
+| `level_up_reward_values_test.dart:127` | « la table est respectée sur les 30 combinaisons » | « … 25 … » (cinq tirables × cinq paliers) | 2 |
+| `level_up_reward_values_test.dart:173` | « les six récompenses tirables sont toutes atteignables » | « les cinq … » | 2 |
+| `level_up_reward_requirement_test.dart:62` | « un passif avec Maitrise laisse les six types tirables » | « … les cinq … » | 2 |
+
+**Et les commentaires**, de même : `real_bundle_load_test.dart:70` (« Les deux documents de configuration restent a
+plat ») en compte trois avec `xp_curve.json`, en partie 1 ; `level_up_reward_requirement_test.dart:72` (« Les cinq
+autres restent ») en compte quatre sans *Sagesse*, devenue mythique, en partie 2.
 
 **Les tests qui suivent sans changer ce qu'ils vérifient**, tous en partie 1 :
 
@@ -1116,8 +1208,9 @@ sauvegardes ne se transfèrent pas avant la `1.0.0` : rien de cela n'est testé 
   ils prennent `startingMaxHandSize` ; `passives_berserker_test.dart:233` passe le littéral 10 et ne change pas ;
 - **les tests qui lisent le palier sans courbe** (A27) — tous reçoivent une courbe de test, soit en surchargeant
   `xpCurveProvider`, soit en donnant une `xpCurve` au registre qu'ils injectent :
-  - qui appellent `gainXp`, directement ou par `collectGoldAndXp` : `xp_scaling_test.dart:45`, `:59`, `:76` ;
-    `reward_controller_test.dart:388`, `:394`, `:410`, `:427`, `:453`, `:478`, `:506` ;
+  - qui appellent `gainXp` par `collectGoldAndXp` : `reward_controller_test.dart:388`, `:394`, `:410`, `:427`, `:453`,
+    `:478`, `:506` — `xp_scaling_test.dart`, dont « Le palier dérivé » réécrit les cas `:37-84`, n'est pas de ceux-ci ;
+    seul son conteneur nu (`:28`) est cité, au piège du montage ;
   - qui montent la barre d'XP de la carte du monde (`HeroMiniStatsPanel`, `map_screen.dart:299`) :
     `test/widget/map_screen_test.dart`, ses cinq conteneurs nus (`:49`, `:115`, `:162`, `:209`, `:276`) ; et
     `test/widget/starter_deck_draft_screen_test.dart`, dont le registre `mockRegistry` (`:192-200`), sans courbe, sert
@@ -1147,17 +1240,25 @@ gagne le sien en partie 1 — exactement un niveau, au palier de l'acte courant,
 **Les commandes de contrôle** — résultat vide attendu à la fin de la vague :
 
 ```
-git grep -n -e "GameConstants.maxHandSize" -e cardsCount -e rolledBonusCard -e "pow(1.5" -- lib test
+git grep -n -e "GameConstants.maxHandSize" -e playerCardsCount -e cardsCount -e rolledBonusCard -e "pow(1.5" -- lib test
 git grep -n -e xpToNextLevel -e _armorPerTranche -e "XP & Or x2" -e "2x XP" -- lib test
 ```
 
-**Et trois sur l'écran de combat**, pour deux lecteurs qu'il porte, qu'aucun test ne monte
-(`git grep -n "GameScreen(" -- test` est vide) et dont `dart analyze` ne verrait pas la faute :
+`git grep` distingue la casse : `-e cardsCount` trouve la formule écrite en clair du journal
+(`combat_debug_logger.dart:69`), `-e playerCardsCount` le nom du paramètre, que le renommage en `deckFusionRanks` retire
+de `calculateBudget`, `generateEnemiesForLevel`, `CombatController.initializeCombat`, `CombatDebugLogger`, de l'appel
+de `game_screen.dart:262` et des tests (§3.8) — 22 lignes aujourd'hui.
+
+**Et cinq sur l'écran de combat et la carte du monde**, pour quatre lecteurs qu'aucun test ne monte
+(`git grep -n "GameScreen(" -- test` et `git grep -n MapNodeWidget -- test` sont vides) et dont `dart analyze` ne
+verrait pas la faute :
 
 ```
 git grep -n fusionRankSum -- lib/ui/screens/game_screen.dart        # une ligne
 git grep -n sharpenedRunes -- lib/ui/screens/game_screen.dart       # au moins une ligne
 git grep -n "rewardState.sharpenedRunes" -- lib                     # vide
+git grep -n rewardCardFound -- lib/ui/screens/game_screen.dart      # au moins une ligne, dès la partie 1
+git grep -n tooltipBossXpDesc -- lib/ui/widgets/map/map_node_widget.dart   # une ligne, en partie 2
 ```
 
 La première rend l'argument `deckFusionRanks:` de l'appel de la DDA (`game_screen.dart:262` aujourd'hui), qui lit
@@ -1165,6 +1266,11 @@ La première rend l'argument `deckFusionRanks:` de l'appel de la DDA (`game_scre
 (`combat_controller.dart:49`), laisserait passer un oubli. Les deux suivantes gardent la relecture de §4.6 : la copie
 `rewardState` est prise avant `collectGoldAndXp` (`game_screen.dart:95`, `:121`), quand `sharpenedRunes` n'est encore
 qu'une liste vide ; la lire là afficherait « aucune rune » à chaque boss « XP ». L'écran relit `ref.read(rewardProvider)`.
+La quatrième garde la notification de la trouvaille (§4.1, A10) : oubliée, la carte entrerait au deck sans que rien ne
+le dise, et une clé ARB que rien ne lit ne fait rougir ni l'analyseur ni la suite. La cinquième garde la description de
+l'infobulle du boss « XP » (§4.6, A25), que la commande sur « XP & Or x2 » ne garde pas : celle-ci prouve que l'ancien
+titre est parti, pas que la description a changé — la branche lit aujourd'hui `tooltipBossDesc`
+(`map_node_widget.dart:61`).
 
 `dart analyze` propre et suite verte à la fin de chaque tâche, comme chaque lot du programme.
 
@@ -1259,6 +1365,7 @@ sont **les dernières à toucher le script**, et aucune tâche qui touche `asset
 | L'échange : PV sous 50 %, or sinon | `:3083-3087` | Politique : le jeu offre les deux sous la moitié des PV, l'or seul au-dessus (A2) |
 | *Sagesse* prise d'office quand elle est offerte ; la mythique de D42(c) prise sur la rune la plus fréquente | `:2669-2693` | Politique : le joueur choisit (A15) |
 | Le script sort les signatures du deck (D49) ; le jeu les y garde jusqu'en `0.5.6` | — | Rang 0 pour la DDA, hors de la trouvaille : sans effet sur ce que la mesure compte (§4.13) |
+| Le script gagne la relique d'élite avant de tirer les cartes de la même élite — un *Registre des primes* compte dès sa propre élite —, et, au boss « XP », résout la montée de niveau, récompense prise sur-le-champ, *Transcendance* comprise, avant l'affûtage ; le jeu fait l'inverse : `handleVictory` tire les cartes à la victoire, avant le carrousel de la relique, et l'affûtage se fait dans `collectGoldAndXp`, quand le draft de niveau attend la carte du monde (`game_screen.dart:97-121` ; `pendingDrafts`, `player_stats_manager.dart:139`) | `:2808-2812` ; `:2829-2834` (`rewardFoes` → `gainXp`, `:2794`, → `levelUp`, `:2603`, puis `sharpenRandom`) | Ordre de modélisation, pas une politique du joueur, et sans effet mesurable : A est indiscernable de 15 à 50 % (D57), une mythique sort à 0,5 % par niveau (D62) ; le jeu garde son ordre |
 
 **Ce qu'E3 confirme de ce que le script joue** : une carte garantie en combat, une garantie et 25 % en élite
 (`:2809-2822`) ; A à +25 points par exemplaire, C à +1 par exemplaire ; le boss « XP » sans carte, `1 + exemplaires`
@@ -1285,7 +1392,7 @@ l'orchestrateur de la vague 2).
 - la courbe d'XP : `xp_curve.json`, `XpCurveData`, `loadDocument`, le registre, `xpCurveProvider`, `gainXp`, la
   suppression d'`EntityStats.xpToNextLevel` et de ses lecteurs, le tutoriel (moteur et prose XP), `CLAUDE.md` ;
 - la DDA : `fusionRankSum`, `deckFusionRanks`, le journal de debug ;
-- la prose du tutoriel pour le combat et l'élite (§5.3) ;
+- la prose du tutoriel pour le combat et l'élite (§5.3) ; l'infobulle d'élite, `tooltipEliteDesc`, réécrite (§5.1) ;
 - `signature_cards_transition_test`, sans sa clause du boss « XP ».
 
 *Entre les deux parties* : le boss « XP » donne encore sa carte bonus, et sa notification la nomme, en plus de l'XP et
@@ -1299,8 +1406,11 @@ de l'or triplés ; jouable, jamais livré ainsi — la vague sort en une version
   supprimées, l'affûtage aléatoire,
   `GameConstants.bossXpRuneSharpens`, `extraBossRuneSharpens`, `sharpenedRunes`, la relique D42(a), l'infobulle, la
   prose du tutoriel (§4.6, §5.3) ;
-- les deux événements, les actions neuves, `tradedRelic`, `loseRelic`, la sélection sans or, le retour système (§4.9) ;
-- *Sagesse* et *Transcendance* : les deux fichiers, `raiseRuneCap`, `raisableRune`, la modale (§4.8, §4.10) ;
+- les deux événements, les actions neuves, `tradedRelic`, `loseRelic`, les badges — `eventNoRelicToGive` sans relique
+  visée —, la sélection sans or, le retour système (§4.9, §5.1) ;
+- *Sagesse* et *Transcendance* : les deux fichiers, `raiseRuneCap`, `raisableRune`, la modale (§4.8, §4.10) ; la
+  documentation d'`inPool` réécrite (§3.8) ; la fiche des probabilités, qui nomme les mythiques depuis la donnée par
+  `luckLevelRewardSubtitle` (§5.1) ;
 - les seuils : `threshold` de *Bénédiction*, `floor` de *Flux*, `describeMastery` et ses trois lecteurs (§4.11) ;
 - la simulation : le réalignement (premier temps), puis les trois tâches du second temps (§9) — les dernières de la
   vague.
@@ -1379,50 +1489,103 @@ des options d'un arbitrage.
 
 ---
 
-## 13. Vérification — état à l'arrêt (03/10/2026)
+## 13. Vérification
 
-Écrit par l'orchestrateur de la vague 3. Trois tours de vérification, chacun par un panel neuf — trois vérificateurs
-indépendants, un par angle (le code ; les décisions et la fiche ; les transitions, les tests, le découpage et la
-simulation), puis un consolidateur qui rend une seule table. Entre les tours, deux corrections par le rédacteur, repris
-avec son contexte. Les arbitrages sont tous en §1.2 : A1 à A28, puis les deux tableaux « Tranchés par
-l'orchestrateur » des deux corrections.
+Écrit par l'orchestrateur de la vague 3, complété à la correction du troisième tour, puis au quatrième. Quatre tours
+de vérification, chacun par un panel neuf — trois vérificateurs indépendants, un par angle (le code ; les décisions et la fiche ; les
+transitions, les tests, le découpage et la simulation), puis un consolidateur qui rend une seule table. Après le
+premier tour et après le deuxième, deux corrections par le rédacteur, repris avec son contexte ; après le troisième,
+l'arrêt, puis sa levée et une correction par un correcteur neuf. Les arbitrages sont tous en §1.2 : A1 à
+A28, les deux tableaux « Tranchés par l'orchestrateur » des deux premières corrections, puis, pour la troisième, le
+tableau « Tranchés par le propriétaire » et celui des questions qu'elle a fait apparaître (C3.1, C3.2).
 
 | Tour | Constats | Suite |
 |:---|:---|:---|
 | 1 | 6 moyens, 13 mineurs, 3 de rédaction | Corrigés ; A8 à A28 confirmés, A1 et A7 reconsignés ; quatre arbitrages de la correction confirmés (`sharpenedRunes` nullable, `currentMastery` requis, `binary` toujours écrit, A7 par le filtre 5) |
 | 2 | 2 moyens (aucun test ne reliait les reliques A et C à la trouvaille ; `loadDocument` sans `cache: false`), 10 mineurs, 3 de rédaction | Corrigés, avec une passe ciblée sur les liaisons non testées et les pièges de test ; six arbitrages de la correction confirmés |
-| 3 | **3 moyens**, 8 mineurs, 2 de rédaction | **Non corrigés : la troisième vérification qui rend un constat moyen arrête la vague** (orchestration §3.3, §6) |
+| 3 | **3 moyens**, 8 mineurs, 2 de rédaction | **Non corrigés à l'arrêt : la troisième vérification qui rend un constat moyen arrête la vague** (orchestration §3.3, §6). L'arrêt levé par le propriétaire le 03/10, les treize corrigés (ci-dessous) |
+| 4 | **2 moyens**, 9 mineurs, 1 de rédaction — les trois vérificateurs rendent « prête » ; le consolidateur, qui vérifie lui-même chaque constat qu'il garde moyen, en remonte deux de mineur à moyen | **Non corrigés : la levée n'autorisait la suite que sur un « prête »** — la vague s'arrête de nouveau (ci-dessous) |
 
-**Les constats ouverts du tour 3**, tels que le consolidateur les a rendus — preuves relues sur `9282513` ; les lignes
-sont désignées par section, celles du code et du script par `fichier:ligne` :
+**Les constats du tour 3**, tels que le consolidateur les a rendus — preuves relues sur `9282513` ; les lignes sont
+désignées par section, celles du code et du script par `fichier:ligne`. Ces dernières sont celles du vérificateur ;
+la correction les a re-mesurées là où elle les écrit. La colonne « Suite » dit où chacun est corrigé :
 
-| # | Gravité | Où | Constat | Correction proposée par le vérificateur |
-|:---|:---|:---|:---|:---|
-| 1 | **moyen** | §8, « La transition E3 → E4 » et « La trouvaille dans la récompense » ; §4.1 | Les deux tests qui gardent « pas de signature dans la trouvaille » lisent la rareté de l'**instance** trouvée ; or §4.1 la construit par `CardInstance(data: c, rarity: CardRarity.common)`, et la rareté passée remplace celle de la donnée (`card_instance.dart:14-17`) : l'assertion vaut toujours vrai, même sur un pool construit sans `rarity.isAcquirable` (`card_data.dart:170-173`). Le test exigé par la fiche ne garderait rien | La clause lit la donnée : aucune carte trouvée dont `card.data.rarity` vaut `unique`, ni dont `card.data.heroClass` est une autre classe — ou aucun `card.data.id` parmi les six signatures du registre ; l'assertion « toutes communes » sur `card.rarity` reste |
-| 2 | **moyen** | §8, « Le bonus de plafond, lu par ses lecteurs », « L'écran d'événement », « La sélection sans or » ; §4.8, §4.9 | La sélection d'affûtage (`rest_card_selection_screen.dart:118-119`, `:44-49`) lit le bonus de plafond — elle grise et refuse une carte sans rune affûtable —, et la condition du *Rémouleur* passe par `event_screen.dart:528` ; aucun cas ne prouve qu'elles lisent `RunState.runeCapBonus`, et `capBonus` n'est pas requis (A17) : un oubli laisserait la suite verte, et *Transcendance* sans effet au feu comme à l'événement | Sur le modèle de `rest_card_selection_screen_test.dart:86` : un deck dont la seule rune est `eco:1` — carte grisée et refusée, puis, après `raiseRuneCap('eco')`, dialogue ouvert sur « Niveau 1 → 2 », dans les deux modes (avec or, sans or) ; et le choix du *Rémouleur* inactif sur ce deck, puis actif après `raiseRuneCap('eco')` |
-| 3 | **moyen** | §8, commandes de contrôle « sur l'écran de combat » ; §4.1, A10 ; §4.6, A25 | Deux lecteurs neufs d'écrans qu'aucun test ne monte n'ont ni test ni commande : la notification `rewardCardFound` de `GameScreen` (partie 1) — oubliée, la carte entre sans que rien ne le dise, ce qu'A10 écarte — et la description `tooltipBossXpDesc` de `map_node_widget.dart:61` (partie 2), que la commande sur « XP & Or x2 » ne garde pas | Deux commandes de plus : `git grep -n rewardCardFound -- lib/ui/screens/game_screen.dart` (au moins une ligne, partie 1) et `git grep -n tooltipBossXpDesc -- lib/ui/widgets/map/map_node_widget.dart` (une ligne, partie 2) |
-| 4 | mineur | §8, première commande ; §3.8 `EncounterSystem` | La correction du tour 2 a remplacé `playerCardsCount` par `cardsCount` ; `git grep` distingue la casse : la commande ne garde plus le renommage de `combat_controller.dart:49`, `:62`, `:103`, `:116`, `encounter_system.dart:220`, `:235`, `game_screen.dart:262` | `-e playerCardsCount -e cardsCount` |
-| 5 | mineur | §4.9, §5.1, §8 « L'écran d'événement » ; A20 | Le badge `trade_relic` sans relique visée n'est pas fixé (`tradedRelic` est nul sur un inventaire vide, le cas courant à l'acte 1) ; le test d'écran ne vérifie ni le nom ni le montant affichés | Fixer le badge sans relique visée ; deux cas : une commune portée — « Cède <nom> : +40 Or » et « Cède <nom> » ; un inventaire vide — l'écran s'ouvre sans exception, les deux choix d'échange inactifs |
-| 6 | mineur | §9, table des écarts consignés | Le script gagne la relique d'élite avant de tirer les cartes de la même élite (`d26_economy_sim.dart:2808-2812`) et résout la montée de niveau du boss « XP » avant son affûtage (`:2829-2832`) ; le jeu fait l'inverse (`game_screen.dart:97-121`, `pendingDrafts`). Effet indiscernable (D57, D62), mais l'écart n'est pas une politique du joueur et n'est pas consigné | Une ligne de plus à la table des écarts, sans relance : ordre de modélisation, sans effet mesurable |
-| 7 | mineur | §5.1 | La fiche des probabilités nomme les mythiques en dur, « (Trèfle / Miroir) » (`probabilities_dialog.dart:244-245`) : faux dès que *Sagesse* et *Transcendance* sont mythiques | La remplir depuis `LevelUpRewardData.inPool(rewards, RewardPool.mythic)`, ou la retirer, ou la consigner hors d'E3 au §5.4 |
-| 8 | mineur | §5.1, §5.4 ; §5.3 | L'infobulle d'élite (`tooltipEliteDesc`, `app_fr.arb:60`, `app_en.arb:105`) ne dit que la relique, quand le tutoriel dira « une Relique et une carte — parfois deux » | La réécrire en partie 1 : « Un combat bien plus rude : une relique garantie, et une carte — parfois deux. » / "A much tougher fight: a guaranteed relic, and a card — sometimes two." |
-| 9 | mineur | §3.8 `LevelUpRewardData` | La documentation d'`inPool` (`level_up_reward_data.dart:175-177`) dit « exactement six tirables » ; il en reste cinq | La faire réécrire |
-| 10 | mineur | §3.8 `DeckNotifier`, `ForgeUpgradeData`, `ForgeRuneRules` ; A17 | La spec ne dit pas que `capBonus` est **optionnel**, avec un défaut, sur `consolidate`, `canSharpen`, `hasSharpenableRune`, `wellLevel`, `boundLevel` et `mergeCards` ; requis, il casserait 36 appels de test qu'aucune ligne du §8 ne nomme | Écrire les signatures : `{Map<String, int> capBonus = const {}}`, `{int capBonus = 0}` sur `boundLevel` |
-| 11 | mineur | §8 ; §4.9 | Quatre références voisines de la bonne | `level_up_reward_requirement_test.dart:45`, `forge_upgrades_catalog_test.dart:239-258`, `rest_screen.dart:139-142`, `rest_screen_test.dart:185-188` |
-| 12 | rédaction | §8, « Les tests qui suivent sans changer » | `xp_scaling_test.dart:45`, `:59`, `:76` y sont rangés alors que « Le palier dérivé » réécrit `:37-84` | Les retirer de cette liste |
-| 13 | rédaction | §8 | Des titres de tests existants deviennent faux (`tutorial_engine_test.dart:407`, `entity_id_convention_test.dart:64`, `level_up_rewards_catalog_test.dart:64`, `:74`, `:92`, `:104`, `level_up_reward_values_test.dart:173`, `level_up_reward_requirement_test.dart:62`) | Dire que les titres suivent les attentes |
+| # | Gravité | Où | Constat | Correction proposée par le vérificateur | Suite |
+|:---|:---|:---|:---|:---|:---|
+| 1 | **moyen** | §8, « La transition E3 → E4 » et « La trouvaille dans la récompense » ; §4.1 | Les deux tests qui gardent « pas de signature dans la trouvaille » lisent la rareté de l'**instance** trouvée ; or §4.1 la construit par `CardInstance(data: c, rarity: CardRarity.common)`, et la rareté passée remplace celle de la donnée (`card_instance.dart:14-17`) : l'assertion vaut toujours vrai, même sur un pool construit sans `rarity.isAcquirable` (`card_data.dart:170-173`). Le test exigé par la fiche ne garderait rien | La clause lit la donnée : aucune carte trouvée dont `card.data.rarity` vaut `unique`, ni dont `card.data.heroClass` est une autre classe — ou aucun `card.data.id` parmi les six signatures du registre ; l'assertion « toutes communes » sur `card.rarity` reste | Corrigé, les deux formes ensemble — §4.1 ; §8, « La trouvaille dans la récompense » et « La transition E3 → E4 » ; §1.2, propriétaire n° 1 et C3.1 |
+| 2 | **moyen** | §8, « Le bonus de plafond, lu par ses lecteurs », « L'écran d'événement », « La sélection sans or » ; §4.8, §4.9 | La sélection d'affûtage (`rest_card_selection_screen.dart:118-119`, `:44-49`) lit le bonus de plafond — elle grise et refuse une carte sans rune affûtable —, et la condition du *Rémouleur* passe par `event_screen.dart:528` ; aucun cas ne prouve qu'elles lisent `RunState.runeCapBonus`, et `capBonus` n'est pas requis (A17) : un oubli laisserait la suite verte, et *Transcendance* sans effet au feu comme à l'événement | Sur le modèle de `rest_card_selection_screen_test.dart:86` : un deck dont la seule rune est `eco:1` — carte grisée et refusée, puis, après `raiseRuneCap('eco')`, dialogue ouvert sur « Niveau 1 → 2 », dans les deux modes (avec or, sans or) ; et le choix du *Rémouleur* inactif sur ce deck, puis actif après `raiseRuneCap('eco')` | Corrigé — §4.8 (« L'affûtage au feu ») ; §4.9 (« Le choix de la rune ») ; §8, « Le bonus de plafond, lu par ses lecteurs », « L'écran d'événement », « La sélection sans or » ; partie 2 |
+| 3 | **moyen** | §8, commandes de contrôle « sur l'écran de combat » ; §4.1, A10 ; §4.6, A25 | Deux lecteurs neufs d'écrans qu'aucun test ne monte n'ont ni test ni commande : la notification `rewardCardFound` de `GameScreen` (partie 1) — oubliée, la carte entre sans que rien ne le dise, ce qu'A10 écarte — et la description `tooltipBossXpDesc` de `map_node_widget.dart:61` (partie 2), que la commande sur « XP & Or x2 » ne garde pas | Deux commandes de plus : `git grep -n rewardCardFound -- lib/ui/screens/game_screen.dart` (au moins une ligne, partie 1) et `git grep -n tooltipBossXpDesc -- lib/ui/widgets/map/map_node_widget.dart` (une ligne, partie 2) | Corrigé — §8, commandes de contrôle (cinq sur l'écran de combat et la carte du monde) ; §4.1 ; §4.6 |
+| 4 | mineur | §8, première commande ; §3.8 `EncounterSystem` | La correction du tour 2 a remplacé `playerCardsCount` par `cardsCount` ; `git grep` distingue la casse : la commande ne garde plus le renommage de `combat_controller.dart:49`, `:62`, `:103`, `:116`, `encounter_system.dart:220`, `:235`, `game_screen.dart:262` | `-e playerCardsCount -e cardsCount` | Corrigé — §8, première commande |
+| 5 | mineur | §4.9, §5.1, §8 « L'écran d'événement » ; A20 | Le badge `trade_relic` sans relique visée n'est pas fixé (`tradedRelic` est nul sur un inventaire vide, le cas courant à l'acte 1) ; le test d'écran ne vérifie ni le nom ni le montant affichés | Fixer le badge sans relique visée ; deux cas : une commune portée — « Cède <nom> : +40 Or » et « Cède <nom> » ; un inventaire vide — l'écran s'ouvre sans exception, les deux choix d'échange inactifs | Corrigé, le badge `eventNoRelicToGive` — A20 ; §4.9 ; §5.1 ; §8, « L'écran d'événement » ; §10 ; §1.2, propriétaire n° 5 |
+| 6 | mineur | §9, table des écarts consignés | Le script gagne la relique d'élite avant de tirer les cartes de la même élite (`d26_economy_sim.dart:2808-2812`) et résout la montée de niveau du boss « XP » avant son affûtage (`:2829-2832`) ; le jeu fait l'inverse (`game_screen.dart:97-121`, `pendingDrafts`). Effet indiscernable (D57, D62), mais l'écart n'est pas une politique du joueur et n'est pas consigné | Une ligne de plus à la table des écarts, sans relance : ordre de modélisation, sans effet mesurable | Corrigé — §9, table des écarts consignés (le boss « XP » re-mesuré `:2829-2834`) |
+| 7 | mineur | §5.1 | La fiche des probabilités nomme les mythiques en dur, « (Trèfle / Miroir) » (`probabilities_dialog.dart:244-245`) : faux dès que *Sagesse* et *Transcendance* sont mythiques | La remplir depuis `LevelUpRewardData.inPool(rewards, RewardPool.mythic)`, ou la retirer, ou la consigner hors d'E3 au §5.4 | Corrigé, remplie depuis la donnée par `luckLevelRewardSubtitle` — §3.8 ; §5.1 ; §8, « La fiche des probabilités » ; §10 ; §1.2, propriétaire n° 7 et C3.2 |
+| 8 | mineur | §5.1, §5.4 ; §5.3 | L'infobulle d'élite (`tooltipEliteDesc`, `app_fr.arb:60`, `app_en.arb:105`) ne dit que la relique, quand le tutoriel dira « une Relique et une carte — parfois deux » | La réécrire en partie 1 : « Un combat bien plus rude : une relique garantie, et une carte — parfois deux. » / "A much tougher fight: a guaranteed relic, and a card — sometimes two." | Corrigé, en partie 1 — §5.1 ; §10 ; §1.2, propriétaire n° 8. §5.4 ne la nommait pas |
+| 9 | mineur | §3.8 `LevelUpRewardData` | La documentation d'`inPool` (`level_up_reward_data.dart:175-177`) dit « exactement six tirables » ; il en reste cinq | La faire réécrire | Corrigé, en partie 2, avec ses « deux lecteurs » devenus trois — §3.8 ; §10 |
+| 10 | mineur | §3.8 `DeckNotifier`, `ForgeUpgradeData`, `ForgeRuneRules` ; A17 | La spec ne dit pas que `capBonus` est **optionnel**, avec un défaut, sur `consolidate`, `canSharpen`, `hasSharpenableRune`, `wellLevel`, `boundLevel` et `mergeCards` ; requis, il casserait 36 appels de test qu'aucune ligne du §8 ne nomme | Écrire les signatures : `{Map<String, int> capBonus = const {}}`, `{int capBonus = 0}` sur `boundLevel` | Corrigé — A17 et son récapitulatif ; §3.8, `DeckNotifier`, `ForgeUpgradeData`, `ForgeRuneRules` |
+| 11 | mineur | §8 ; §4.9 | Quatre références voisines de la bonne | `level_up_reward_requirement_test.dart:45`, `forge_upgrades_catalog_test.dart:239-258`, `rest_screen.dart:139-142`, `rest_screen_test.dart:185-188` | Corrigé — §8, « La mythique », « Les runes livrées », « L'écran d'événement » ; §4.9, « Le retour système » |
+| 12 | rédaction | §8, « Les tests qui suivent sans changer » | `xp_scaling_test.dart:45`, `:59`, `:76` y sont rangés alors que « Le palier dérivé » réécrit `:37-84` | Les retirer de cette liste | Corrigé — §8, « Les tests qui suivent sans changer » |
+| 13 | rédaction | §8 | Des titres de tests existants deviennent faux (`tutorial_engine_test.dart:407`, `entity_id_convention_test.dart:64`, `level_up_rewards_catalog_test.dart:64`, `:74`, `:92`, `:104`, `level_up_reward_values_test.dart:173`, `level_up_reward_requirement_test.dart:62`) | Dire que les titres suivent les attentes | Corrigé — §8, « Les titres suivent les attentes », avec cinq titres de plus trouvés à la re-mesure |
 
 **Aucun constat n'exige d'amender une décision acquise, ni ne change une valeur mesurée** : les trois moyens sont des
-trous de test, la correction de chacun est écrite ci-dessus. **Ce que l'orchestrateur recommande pour lever l'arrêt**,
-sans l'avoir appliqué — c'est au propriétaire d'en décider :
+trous de test.
 
-- **n° 1 à 4, 6, 9 à 13** : les corrections proposées par le vérificateur, telles quelles. Pour le n° 1, les deux
-  formes ensemble — la donnée de la carte trouvée (`card.data.rarity`, `card.data.heroClass`) et, pour la transition
-  E3 → E4, aucun id parmi les six signatures du registre.
-- **n° 5** : un badge qui dit qu'il n'y a rien à céder — une clé ARB neuve, « Aucune relique à céder » / "No relic to
-  give up" —, plutôt que pas de badge : le choix est inactif, et le joueur lit pourquoi (filtre 6).
-- **n° 7** : la parenthèse remplie depuis les mythiques en donnée, sur le modèle de `fillRewardPlaceholders` : le filtre
-  5 ne départage pas (la retirer supprime aussi le doublon), le filtre 6 retient la forme qui dit au joueur quelles
-  options sont mythiques.
-- **n° 8** : l'infobulle réécrite en partie 1, avec la trouvaille (filtre 6).
-- **Puis un quatrième tour de vérification**, par un panel neuf, qui reçoit les arbitrages des trois tours.
+**La levée de l'arrêt (03/10).** Le propriétaire a levé l'arrêt en acceptant les recommandations de l'orchestrateur :
+pour les n° 1 à 4, 6 et 9 à 13, les corrections du vérificateur telles quelles — le n° 1 sous ses deux formes
+ensemble ; pour les n° 5, 7 et 8, les options que l'orchestrateur retenait. Les treize constats sont corrigés par un
+correcteur neuf, qui n'a pas écrit la spec ; la colonne « Suite » dit où. Les arbitrages du propriétaire sont en
+§1.2, comme les deux questions que la correction a fait apparaître (C3.1, C3.2), tranchées par l'arbre de décision et
+soumises à la relecture de l'orchestrateur. Le propriétaire demande ensuite un quatrième tour de vérification, par un
+panel neuf.
+
+### Le quatrième tour — état à l'arrêt (03/10/2026)
+
+Un panel neuf, de même forme, qui a reçu tous les arbitrages de §1.2 (A1 à A28, C1, C2, la levée de l'arrêt, C3) et les
+tables des trois tours. **Les trois vérificateurs rendent « prête »** (4, 5 et 5 constats, aucun moyen) ; le
+consolidateur fusionne les doublons, vérifie par une commande chaque constat qu'il garde moyen, et **remonte deux
+constats de mineur à moyen** — tous deux trouvés par le vérificateur des tests et du découpage, qui les classait
+mineurs. Son verdict, « à corriger », est celui du tour, comme aux trois premiers ; l'orchestrateur a relu les deux
+moyens sur le code et le texte, ils sont exacts. **La levée n'autorisait la suite du cycle que sur un « prête »** : la
+vague s'arrête de nouveau, constats non corrigés. Les lignes « l. » sont celles de la spec à ce commit.
+
+| # | Gravité | Où | Constat | Correction proposée par le consolidateur |
+|:---|:---|:---|:---|:---|
+| 1 | **moyen** | §8, « Le journal de debug » (l. 1161) contre la première commande de contrôle (l. 1240-1247) | L'assertion d'absence prévue dans `combat_debug_logger_test.dart:28` (« plus … cardsCount ») écrit le littéral `cardsCount` dans `test/` ; la première commande cherche `-e cardsCount` dans `lib test` et attend un résultat vide, et `git grep` distingue la casse : la barrière de fin de vague ne peut pas être vide | Sortir `-e cardsCount` dans une commande à part, limitée à `-- lib`, résultat vide ; garder `-e playerCardsCount` sur `lib test` — ou dire que la seule ligne attendue est l'assertion d'absence |
+| 2 | **moyen** | §8, « Le catalogue des récompenses » (l. 1171), `level_up_rewards_catalog_test.dart:64-131`, partie 2 | La ligne donne l'ordre neuf des mythiques, `[wisdom, lucky_clover, mirror, transcendence]`, sans dire ce que deviennent `:101` (`mythiques.last.effect` attendu `cloneCard` — `last` devient *Transcendance*, `raiseRuneCap`) ni `:68-71` (l'ensemble `{...attendu.keys, 'lucky_clover', 'mirror'}` perd `wisdom` et n'a pas `transcendence` : sept ids pour neuf récompenses) : la suite resterait rouge | `:100-101` lisent les mythiques par id — *Sagesse* et *Trèfle* à `amountFor(mythic)` 1, *Miroir* à `cloneCard`, *Transcendance* à `raiseRuneCap` ; l'ensemble de `:68-71` gagne `wisdom` et `transcendence` |
+| 3 | mineur | §8, « Et les commentaires » | La liste des commentaires qu'E3 rend faux se dit complète et n'en nomme que deux ; dix autres deviennent faux — partie 1 : `entity_id_convention_test.dart:21`, `tutorial_engine.dart:510-511`, `tutorial_engine_test.dart:417` ; partie 2 : `passive_data.dart:133`, `passive_strategies.dart:136`, `level_up_reward_service.dart:27-28`, `player_stats_manager.dart:74`, `level_up_reward_data.dart:45-49`, `level_up_rewards_catalog_test.dart:16-18`, `draft_screen_test.dart:35-38` et `:194-196` | Compléter la liste, chaque ligne dans sa partie ; ou une règle générale : tout commentaire ou documentation que le lot rend faux est réécrit dans la partie qui le rend faux |
+| 4 | mineur | §9, premier temps, les commentaires rafraîchis ; second temps, relance 3 | Quatre commentaires du script relèvent du critère que la puce pose et n'y sont pas — `:156-157` et `:1189-1191` (la DDA « actuelle », cartes × 2), `:2646` (*Sagesse* « sans valeur `mythic` en donnée »), `:2155` (la tranche de 5, rangé à tort parmi les dérives) ; et trois libellés imprimés, `:2046`, `:3733`, `:3745`, appelleront « actuelle » dans la référence recommitée ce que le jeu n'a plus | Rafraîchir les quatre commentaires au premier temps ; garder les trois libellés au premier temps (diff vide) et les renommer « d'avant E3 » dans la relance 3, l'écart de libellé expliqué au compte rendu |
+| 5 | mineur | §3.8, `LevelUpRewardData` (l. 747) | La documentation d'`inPool` réécrite garde « ce qui préserve le tirage d'origine », faux dès que D11 change ce tirage | Réécrire la parenthèse entière : « le tirage est uniforme parmi les tirables, cinq depuis que *Sagesse* est mythique (D11), compte verrouillé par un test » |
+| 6 | mineur | §5.1, `tooltipBossXpDesc` (l. 1046) ; §5.3 (l. 1092, l. 1095) ; §11 (l. 1455-1456) ; A5 | Trois textes joueur promettent sans condition qu'une rune monte au boss « XP », quand A5 tranche que rien ne monte sans paire sous son plafond — fréquent en début de run | La réserve d'A5 dans les textes : « … et une rune de votre deck, si l'une peut encore monter, gagne un niveau » · "… and one rune in your deck gains a level, if any still can" ; de même en §5.3 et §11 |
+| 7 | mineur | §5.1, `luckLevelRewardSubtitle` (l. 1054-1068) ; propriétaire n° 7 | Le libellé de la parenthèse ne porte pas le motif du n° 7 (dire au joueur quelles options sont mythiques) : sous le titre des raretés d'option, elle se lit comme la liste des options dont le tableau donne la rareté | `(options mythiques, tirées à part : {mythicNames})` · `(mythic options, rolled separately: {mythicNames})`, et les attentes de `probabilities_dialog_test.dart` alignées |
+| 8 | mineur | §5.4 et §5.1, la fiche des probabilités | La section « Draft standard de récompenses » (`probabilities_dialog.dart:200-205`, `:102-103`) annonce une rareté de carte en fin de combat standard qu'aucun mécanisme ne lit ; avec E3, la carte trouvée y est toujours commune (D1) : la fiche contredira une règle que le lot rend visible, et la spec ne dit rien de cette section | La consigner en §5.4, hors du lot, comme la section « Récompense de niveau » ; ou réécrire son sous-titre en partie 1 |
+| 9 | mineur | §3.8, `RunController` (l. 736) | Le wrapper `RunController.applyRunRuleModifier` gagnerait trois accumulateurs qu'aucun appelant de production ni aucun test du §8 ne passe (`run_controller.dart:297-299` ; production : `player_stats_manager.dart:303`, `:454`) : trois paramètres sans lecteur | Ne les donner qu'à `PlayerStatsManager.applyRunRuleModifier` et retirer la mention du wrapper — ou nommer un test qui passe par lui |
+| 10 | mineur | §4.8 (l. 892) ; §3.8, `EventChoice` (l. 749) ; §8, « L'écran d'événement » | `EventChoice.isSelectable` (`lib/models/data/event_data.dart:66-92`) appellerait `ForgeRuneRules.hasSharpenableRune` (`lib/game/services/`) : le premier import de `lib/models` vers `lib/game`, à rebours des couches | `isSelectable` reçoit des faits calculés (`bool hasTradedRelic`, `bool hasSharpenableRune`) ; l'écran et le contrôleur les calculent avec le bonus de la run ; les tests du §8 restent valables |
+| 11 | mineur | §4.6 (l. 861) ; §8, « Et cinq sur l'écran de combat et la carte du monde » | « Aucun test ne monte `MapNodeWidget` » est inexact : `map_screen_test.dart` le monte par `MapScreen` (`:73`, `map_screen.dart:261`) ; aucun ne lit son infobulle, la commande de contrôle reste justifiée | « aucun test ne lit l'infobulle de `MapNodeWidget` (`map_screen_test.dart` le monte par `MapScreen` sans la déclencher) » |
+| 12 | rédaction | §11, « trois corrections » (l. 1467-1469) ; A18 | Le nom d'une rune montée au-delà de son plafond d'origine n'est pas une correction : avant E3, aucun écrivain de niveau ne dépassait le plafond — c'est un comportement neuf de *Transcendance* | Le retirer des corrections (il en reste deux) et le rattacher à la puce de *Transcendance* : « … et leur nom affiche leur niveau » |
+
+**Aucun constat n'exige d'amender une décision acquise, ni ne change une valeur mesurée** ; les deux moyens sont deux
+attentes de test que la spec ne pose pas — une barrière de contrôle qui se contredit, un test existant qu'aucune
+ligne ne réécrit en entier. **Ce que l'orchestrateur recommande pour lever l'arrêt**, sans l'avoir appliqué — c'est au
+propriétaire d'en décider :
+
+- **n° 1, 2, 5, 6, 7, 11, 12** : les corrections du consolidateur, telles quelles — pour le n° 1, la première forme,
+  la commande à part sur `lib` seul (filtre 8 : l'assertion du test reste celle que §8 prescrit) ;
+- **n° 3** : les deux formes ensemble — la règle générale, puis les dix lignes comme un minimum, chacune dans sa
+  partie (filtre 4 : la règle plutôt que le cas ; la liste guide le plan) ;
+- **n° 4** : la correction du consolidateur, en deux temps (D73 : le premier temps garde le diff vide, le libellé
+  imprimé change au second, dans la relance 3) ;
+- **n° 8** : une troisième option, que le consolidateur ne propose pas — **retirer la section en partie 1**. Le filtre 6
+  passe avant le filtre 7 : la consigner hors du lot laisse le joueur lire, à côté d'une carte toujours commune, cinq
+  chances de rareté qu'aucun mécanisme ne tire (`probabilities_dialog.dart:102-103`, `:200-240`, seule lectrice de
+  `calculateDraftProbabilities(luck, false)`) ; réécrire son seul sous-titre laisse ces cinq lignes sous une phrase qui
+  les dément. Retirée, la fiche ne dit plus rien de faux sur la trouvaille, que l'infobulle d'élite et le tutoriel
+  disent déjà ; `calculateDraftProbabilities` perd sa branche `isLevelReward: false`, et un test de widget garde
+  l'absence de la section ;
+- **n° 9** : la première forme, le wrapper sans accumulateur neuf (filtre 5 : pas de code sans lecteur) ;
+- **n° 10** : la correction du consolidateur, des faits calculés passés à `isSelectable` (filtre 5 : les couches de
+  `CLAUDE.md`) ;
+- **puis un cinquième tour** : les quatre tours ont rendu 22, 15, 13 et 12 constats, dont 6, 2, 3 et 2 moyens — tous
+  des trous de test ou des incohérences de texte, aucun ne touchant une décision ; le quatrième n'a trouvé ses deux
+  moyens qu'au consolidateur. Un vérificateur neuf, centré sur les douze corrections et ce qu'elles touchent, suffit à
+  dire si elles tiennent ; un panel entier reprend toute la spec et trouve chaque fois de nouveaux mineurs. Le
+  propriétaire choisit la forme du tour ; la suite du cycle, s'il rend « prête », est inchangée (commit avec la ligne
+  de `docs/INDEX.md`, puis le plan de la partie 1).
