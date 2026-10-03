@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 // `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
 // les reexporte : pas d import `dart:typed_data`, comme dans
@@ -321,6 +322,17 @@ void main() {
       expect(
         () => loader.throwIfFailed(),
         throwsA(predicate((e) => e.toString().contains('curve.json'))),
+      );
+    });
+
+    test('le demarrage du jeu refuse un registre sans xp_curve.json', () async {
+      // Aucune entite : seule l erreur du document doit remonter. Si la
+      // lecture de la courbe glissait apres `throwIfFailed`, le registre
+      // naitrait avec `xpCurve: null` et le jeu planterait au premier gain
+      // d XP.
+      await expectLater(
+        loadGameDataRegistry(FakeBundle(const {})),
+        throwsA(predicate((e) => e.toString().contains('xp_curve.json'))),
       );
     });
   });

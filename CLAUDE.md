@@ -73,7 +73,8 @@ The codebase strictly separates three layers — never mix them:
 
 ```
 assets/data/
-├── audio.json, patch_notes.json, xp_curve.json    # flat: single configuration documents, not catalogues
+├── audio.json, patch_notes.json,   # flat: single configuration documents, not catalogues
+│   xp_curve.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
 ├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
