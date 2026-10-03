@@ -10,7 +10,6 @@ import '../deck_controller.dart';
 import 'status_effect_processor.dart';
 import '../../systems/stat_gains.dart';
 import '../../services/damage_pipeline.dart';
-import '../../game_constants.dart';
 import '../../../services/audio/audio_providers.dart';
 import '../../../services/audio/game_moment.dart';
 
@@ -37,7 +36,7 @@ class TurnPhaseManager {
     runController.startCombat();
     deckController.startCombat(
       handSize: runController.currentState.cardsPerTurn,
-      maxHandSize: GameConstants.maxHandSize,
+      maxHandSize: runController.currentState.maxHandSize,
     );
   }
 
@@ -53,7 +52,7 @@ class TurnPhaseManager {
     runController.startTurn();
     ref.read(deckProvider.notifier).drawCards(
           runController.currentState.cardsPerTurn,
-          maxHandSize: GameConstants.maxHandSize,
+          maxHandSize: runController.currentState.maxHandSize,
         );
   }
 

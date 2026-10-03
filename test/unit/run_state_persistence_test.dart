@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/missing_save_item.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
@@ -72,6 +73,20 @@ void main() {
       final legacy = Map<String, dynamic>.from(json)..remove('cardsPerTurn');
       final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
       expect(restoredLegacy.cardsPerTurn, 5);
+    });
+
+    // La main maximale, stat de run (spec P-43 E3, §4.3, §8).
+    test('maxHandSize round-trip et vaut la main de depart quand la cle '
+        'manque', () {
+      final json = buildRunState().copyWith(maxHandSize: 7).toJson();
+      expect(json['maxHandSize'], 7);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.maxHandSize, 7);
+
+      final legacy = Map<String, dynamic>.from(json)..remove('maxHandSize');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.maxHandSize, GameConstants.startingMaxHandSize);
     });
 
     test('leaves activePassive null and reports a missing passive', () {

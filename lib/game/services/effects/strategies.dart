@@ -9,7 +9,6 @@ import '../../systems/stat_gains.dart';
 import '../../systems/power_rules.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
-import '../../game_constants.dart';
 import '../../../services/audio/audio_providers.dart';
 import '../../../services/audio/game_moment.dart';
 import 'effect_strategy.dart';
@@ -149,7 +148,12 @@ class DrawEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    deckController.drawCards(scaledValue, maxHandSize: GameConstants.maxHandSize);
+    // La carte `draw` et la rune `quick` (un `addEffect draw`) passent toutes
+    // deux ici : la borne est la stat de run (spec P-43 E3, §4.3).
+    deckController.drawCards(
+      scaledValue,
+      maxHandSize: runController.currentState.maxHandSize,
+    );
   }
 }
 

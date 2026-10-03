@@ -9,6 +9,7 @@ import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
 import '../../services/map_generator_service.dart';
+import '../game_constants.dart';
 import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
 import '../systems/trait_system.dart';
@@ -34,6 +35,13 @@ class RunState {
   /// Règle de run propre au joueur : elle n'a pas sa place sur `EntityStats`,
   /// qui est partagé avec les ennemis.
   final int cardsPerTurn;
+
+  /// La main maximale (spec P-43 E3, §4.3 ; D2, D25) : toute pioche s'arrête
+  /// à elle. Une stat de run, propre au joueur comme [cardsPerTurn] :
+  /// `GameConstants.startingMaxHandSize` au départ, par le défaut du
+  /// constructeur — `startNewRun` construit une run neuve —, et le menu de
+  /// debug l'écrit. Aucune relique ne la modifie encore (A11).
+  final int maxHandSize;
 
   /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
   /// que `cardsPerTurn` : un ennemi n'en a jamais.
@@ -71,6 +79,7 @@ class RunState {
     this.activePassive,
     this.pendingDrafts = 0,
     this.cardsPerTurn = 5,
+    this.maxHandSize = GameConstants.startingMaxHandSize,
     this.statRules = const [],
   });
 
@@ -85,6 +94,7 @@ class RunState {
     PassiveData? activePassive,
     int? pendingDrafts,
     int? cardsPerTurn,
+    int? maxHandSize,
     List<StatRule>? statRules,
   }) {
     return RunState(
@@ -99,6 +109,7 @@ class RunState {
       activePassive: activePassive ?? this.activePassive,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
       cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
+      maxHandSize: maxHandSize ?? this.maxHandSize,
       statRules: statRules ?? this.statRules,
     );
   }
@@ -115,6 +126,7 @@ class RunState {
         'activePassiveNameEn': activePassive?.nameEn,
         'pendingDrafts': pendingDrafts,
         'cardsPerTurn': cardsPerTurn,
+        'maxHandSize': maxHandSize,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -150,6 +162,8 @@ class RunState {
       activePassive: activePassive,
       pendingDrafts: json['pendingDrafts'] as int? ?? 0,
       cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
+      maxHandSize:
+          json['maxHandSize'] as int? ?? GameConstants.startingMaxHandSize,
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
       // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
       // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas

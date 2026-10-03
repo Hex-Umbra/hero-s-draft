@@ -3,7 +3,6 @@ import '../../../models/status_effect.dart';
 import '../../controllers/combat_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/run_controller.dart';
-import '../../game_constants.dart';
 import '../../services/effect_resolver.dart';
 import '../stat_gains.dart';
 import 'passive_counters.dart';
@@ -216,7 +215,7 @@ class FrenzyPassive extends PassiveStrategy {
     if (passive.draw > 0) {
       run.ref
           .read(deckProvider.notifier)
-          .drawCards(passive.draw, maxHandSize: GameConstants.maxHandSize);
+          .drawCards(passive.draw, maxHandSize: run.currentState.maxHandSize);
     }
   }
 }

@@ -11,7 +11,6 @@ import '../controllers/debug_run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/inventory_controller.dart';
 import '../controllers/run_controller.dart';
-import '../game_constants.dart';
 
 /// Mutations d'etat reservees au menu de debug.
 ///
@@ -89,7 +88,7 @@ class DebugActions {
     if (!_allowed(read)) return;
     read(
       deckProvider.notifier,
-    ).drawCards(amount, maxHandSize: GameConstants.maxHandSize);
+    ).drawCards(amount, maxHandSize: read(runProvider).maxHandSize);
   }
 
   static void discardHand(RefReader read) {

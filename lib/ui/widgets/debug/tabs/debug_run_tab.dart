@@ -56,6 +56,14 @@ class DebugRunTab extends ConsumerWidget {
             (s) => s.copyWith(cardsPerTurn: v),
           ),
         ),
+        DebugNumberField(
+          label: 'Main max',
+          value: run.maxHandSize,
+          onSubmitted: (v) => DebugActions.updateRun(
+            ref.read,
+            (s) => s.copyWith(maxHandSize: v),
+          ),
+        ),
         TextButton(
           onPressed: () {
             DebugActions.advanceToNextAct(ref.read);

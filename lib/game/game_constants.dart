@@ -31,9 +31,12 @@ class GameConstants {
   };
 
   // --- DECK RULES ---
-  /// Nombre maximum de cartes en main. Au-delà, la pioche s'interrompt sans
-  /// consommer de carte ni déclencher de remélange (règle « arrêt net »).
-  static const int maxHandSize = 10;
+  /// La main maximale au début d'une run (D25) : la stat vit sur
+  /// `RunState.maxHandSize`, que lisent les six chemins de pioche — au-delà,
+  /// la pioche s'interrompt sans consommer de carte ni déclencher de
+  /// remélange (règle « arrêt net »). Aucun chemin de pioche ne lit cette
+  /// valeur-ci.
+  static const int startingMaxHandSize = 10;
 
   // --- COMBAT TIMINGS (ms) ---
   /// Délai du dash du héros avant d'appliquer les dégâts d'une compétence.
