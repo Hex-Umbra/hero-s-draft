@@ -1,6 +1,10 @@
 import 'package:flame/components.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 
+/// Une règle de trouvaille : [guaranteed] cartes garanties, puis des jets
+/// successifs, en pourcentage — le premier raté arrête.
+typedef CardDropRule = ({int guaranteed, List<int> extraChances});
+
 class GameConstants {
   // --- Z-INDEX PRIORITIES ---
   static const int priorityBackground = -100;
@@ -28,6 +32,14 @@ class GameConstants {
     MapNodeType.rest: (min: 3, max: 6),
     MapNodeType.shop: (min: 2, max: 5),
     MapNodeType.event: (min: 4, max: 9),
+  };
+
+  // --- TROUVAILLE (D1, D31, D57) ---
+  /// Les cartes trouvées après un combat, par type de nœud. Un type absent
+  /// n'en donne aucune : le boss garde sa récompense (D1).
+  static const Map<MapNodeType, CardDropRule> cardDrops = {
+    MapNodeType.combat: (guaranteed: 1, extraChances: []),
+    MapNodeType.elite: (guaranteed: 1, extraChances: [25]),
   };
 
   // --- DECK RULES ---

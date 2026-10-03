@@ -5,6 +5,8 @@ import '../../models/data/card_data.dart';
 import '../../models/card_instance.dart';
 import '../../models/map_node.dart';
 import '../../models/enemy_instance.dart';
+import '../game_constants.dart';
+import '../systems/card_drops.dart';
 import 'inventory_controller.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
@@ -23,6 +25,11 @@ class RewardState {
   final bool isResolved;
   final CardData? rolledBonusCard;
 
+  /// Les cartes trouvées à la victoire (spec P-43 E3, §4.1 ; D1) : tirées
+  /// par `handleVictory`, toujours communes, elles rejoignent le deck à
+  /// `collectGoldAndXp`, sans refus.
+  final List<CardInstance> foundCards;
+
   const RewardState({
     this.goldGained = 0,
     this.xpGained = 0,
@@ -35,6 +42,7 @@ class RewardState {
     this.selectedCards = const [],
     this.isResolved = false,
     this.rolledBonusCard,
+    this.foundCards = const [],
   });
 
   RewardState copyWith({
@@ -49,6 +57,7 @@ class RewardState {
     List<CardInstance>? selectedCards,
     bool? isResolved,
     CardData? rolledBonusCard,
+    List<CardInstance>? foundCards,
   }) {
     return RewardState(
       goldGained: goldGained ?? this.goldGained,
@@ -62,6 +71,7 @@ class RewardState {
       selectedCards: selectedCards ?? this.selectedCards,
       isResolved: isResolved ?? this.isResolved,
       rolledBonusCard: rolledBonusCard ?? this.rolledBonusCard,
+      foundCards: foundCards ?? this.foundCards,
     );
   }
 }
@@ -72,6 +82,10 @@ class RewardController extends Notifier<RewardState> {
     return const RewardState();
   }
 
+  /// [random] : le tirage de la trouvaille — combien de cartes, lesquelles.
+  /// Passé par les tests pour connaître ses jets (spec P-43 E3, §4.1) ; en
+  /// jeu, un `Random` neuf. Les autres tirages de la victoire n'en dépendent
+  /// pas.
   void handleVictory({
     required List<EnemyInstance> defeatedEnemies,
     required MapNode currentNode,
@@ -79,6 +93,7 @@ class RewardController extends Notifier<RewardState> {
     required List<CardData> allCards,
     required int luck,
     required int act,
+    Random? random,
   }) {
     // 1. Calculate XP from defeated enemies
     int totalXp = 0;
@@ -183,6 +198,28 @@ class RewardController extends Notifier<RewardState> {
       }
     }
 
+    // 5. La trouvaille (spec P-43 E3, §4.1 ; D1, D31) : des cartes tirées
+    // uniformément, avec remise, parmi celles que la classe peut recevoir —
+    // le prédicat de la carte bonus (ADR-101) —, toujours communes, donc sans
+    // rune. Pool vide : aucune carte, sans repli (ADR-101 D4).
+    final run = ref.read(runProvider);
+    final rng = random ?? Random();
+    final offerable =
+        allCards.where((c) => c.isOfferableTo(run.heroClassId)).toList();
+    final foundCards = <CardInstance>[];
+    if (offerable.isNotEmpty) {
+      final count = CardDrops.roll(
+        GameConstants.cardDrops[currentNode.type],
+        rng: rng,
+      );
+      for (var i = 0; i < count; i++) {
+        foundCards.add(CardInstance(
+          data: offerable[rng.nextInt(offerable.length)],
+          rarity: CardRarity.common,
+        ));
+      }
+    }
+
     CardData? rolledBonusCard;
     if (currentNode.bossRewardType == BossRewardType.doubleXp) {
       final heroClassId = ref.read(runProvider).heroClassId;
@@ -205,6 +242,7 @@ class RewardController extends Notifier<RewardState> {
       selectedCards: const [],
       isResolved: false,
       rolledBonusCard: rolledBonusCard,
+      foundCards: foundCards,
     );
   }
 
@@ -216,6 +254,12 @@ class RewardController extends Notifier<RewardState> {
 
     if (state.rolledBonusCard != null) {
       ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: state.rolledBonusCard!));
+    }
+
+    // Les cartes trouvées rejoignent le deck, sans refus (spec P-43 E3, §4.1).
+    final deck = ref.read(deckProvider.notifier);
+    for (final card in state.foundCards) {
+      deck.addCardToMasterDeck(card);
     }
 
     state = state.copyWith(isGoldXpCollected: true);

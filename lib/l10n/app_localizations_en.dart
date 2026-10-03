@@ -95,6 +95,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get combatReward => 'COMBAT REWARD';
 
   @override
+  String rewardCardFound(String cardName) {
+    return '🃏 Card found: $cardName';
+  }
+
+  @override
   String get chooseUpgrade => 'Choose an upgrade for your hero';
 
   @override
@@ -198,7 +203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipEliteDesc =>
-      'A much tougher fight, but guarantees a relic reward.';
+      'A much tougher fight: a guaranteed relic, and a card — sometimes two.';
 
   @override
   String get tooltipShopTitle => 'Merchant Shop';

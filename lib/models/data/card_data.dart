@@ -157,7 +157,7 @@ class CardData implements AudioSource {
       locale == 'fr' ? descriptionFr : descriptionEn;
 
   /// Cette carte peut-elle être proposée au héros de classe [heroClassId] par
-  /// un pool d'offre — boutique, bonus de boss ?
+  /// un pool d'offre — boutique, bonus de boss, trouvaille ?
   ///
   /// Une carte de signature n'appartient qu'à sa classe : sans ce filtre, un
   /// mage pouvait acheter une carte de paladin. Seul `heroClass` est testé, et

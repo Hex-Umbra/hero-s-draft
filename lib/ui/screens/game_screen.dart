@@ -134,6 +134,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         );
       }
 
+      // Une notification par carte trouvée, qui la nomme (spec P-43 E3,
+      // §4.1, A10) : elle entre au deck sans refus. Tirées par
+      // `handleVictory`, elles se lisent sur la copie prise plus haut.
+      final l10n = AppLocalizations.of(context)!;
+      for (final card in rewardState.foundCards) {
+        context.showNotification(
+          l10n.rewardCardFound(card.data.getName(locale)),
+          type: NotificationType.success,
+        );
+      }
+
       if (leveledUp) {
         context.showNotification(
           '🎉 LEVEL UP !',

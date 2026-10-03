@@ -71,8 +71,9 @@ const List<TutorialStep> kTutorialSteps = [
     titleFr: 'Types de Rencontres',
     bodyEn:
         'Eight kinds of node share the map:\n'
-        '• ⚔️ Combat: a standard fight, for gold and XP.\n'
-        '• 👑 Elite: a hard fight that rewards a Relic.\n'
+        '• ⚔️ Combat: a standard fight, for gold, XP and a card.\n'
+        '• 👑 Elite: a hard fight that rewards a Relic and a card — sometimes '
+        'two.\n'
         '• 🏪 Shop: buy cards, reroll the stock, buy a potion, purge a card, '
         'expand the stock, clone a card or buy a copy of one of yours. No '
         'relics.\n'
@@ -87,8 +88,9 @@ const List<TutorialStep> kTutorialSteps = [
         'reward.',
     bodyFr:
         'Huit types de nœuds se partagent la carte :\n'
-        '• ⚔️ Combat : affrontement standard, pour l\'or et l\'XP.\n'
-        '• 👑 Élite : combat difficile qui récompense par une Relique.\n'
+        '• ⚔️ Combat : affrontement standard, pour l\'or, l\'XP et une carte.\n'
+        '• 👑 Élite : combat difficile qui récompense par une Relique et une '
+        'carte — parfois deux.\n'
         '• 🏪 Boutique : acheter des cartes, relancer le stock, prendre une '
         'potion, purger une carte, agrandir le stock, cloner ou acheter la '
         'copie d\'une de vos cartes. Aucune relique.\n'

@@ -95,6 +95,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get combatReward => 'RÉCOMPENSE DE COMBAT';
 
   @override
+  String rewardCardFound(String cardName) {
+    return '🃏 Carte trouvée : $cardName';
+  }
+
+  @override
   String get chooseUpgrade => 'Choisissez une amélioration pour votre héros';
 
   @override
@@ -198,7 +203,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tooltipEliteDesc =>
-      'Un combat bien plus rude, mais garantit l\'obtention d\'une relique.';
+      'Un combat bien plus rude : une relique garantie, et une carte — parfois deux.';
 
   @override
   String get tooltipShopTitle => 'Boutique du Marchand';

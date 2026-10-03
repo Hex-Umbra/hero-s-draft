@@ -48,6 +48,12 @@
   },
   "leaveShop": "Leave Shop",
   "combatReward": "COMBAT REWARD",
+  "rewardCardFound": "🃏 Card found: {cardName}",
+  "@rewardCardFound": {
+    "placeholders": {
+      "cardName": { "type": "String" }
+    }
+  },
   "chooseUpgrade": "Choose an upgrade for your hero",
   "select": "Select",
   "nextAction": "Next action",
@@ -102,7 +108,7 @@
   "tooltipCombatTitle": "Normal Combat",
   "tooltipCombatDesc": "Face a standard monster to earn cards and gold.",
   "tooltipEliteTitle": "Elite Combat",
-  "tooltipEliteDesc": "A much tougher fight, but guarantees a relic reward.",
+  "tooltipEliteDesc": "A much tougher fight: a guaranteed relic, and a card — sometimes two.",
   "tooltipShopTitle": "Merchant Shop",
   "tooltipShopDesc": "Spend your hard-earned gold to buy cards and potions.",
   "tooltipRestTitle": "Rest Camp",

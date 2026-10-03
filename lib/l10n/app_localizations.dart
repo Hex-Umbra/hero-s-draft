@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'COMBAT REWARD'**
   String get combatReward;
 
+  /// No description provided for @rewardCardFound.
+  ///
+  /// In en, this message translates to:
+  /// **'🃏 Card found: {cardName}'**
+  String rewardCardFound(String cardName);
+
   /// No description provided for @chooseUpgrade.
   ///
   /// In en, this message translates to:
@@ -431,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @tooltipEliteDesc.
   ///
   /// In en, this message translates to:
-  /// **'A much tougher fight, but guarantees a relic reward.'**
+  /// **'A much tougher fight: a guaranteed relic, and a card — sometimes two.'**
   String get tooltipEliteDesc;
 
   /// No description provided for @tooltipShopTitle.
