@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
+import '../../../../game/services/level_up_reward_service.dart';
+import '../../../../models/reward_rarity.dart';
 
 class ProbabilitiesDialog extends ConsumerWidget {
   const ProbabilitiesDialog({super.key});
@@ -25,43 +27,6 @@ class ProbabilitiesDialog extends ConsumerWidget {
         );
       },
     );
-  }
-
-  static Map<String, double> calculateDraftProbabilities(
-    int luck,
-    bool isLevelReward,
-  ) {
-    double legendaryChance = isLevelReward ? 0.5 + luck * 0.5 : 1.0 + luck * 0.5;
-    double epicChance = isLevelReward ? 4.5 + luck * 1.5 : 5.0 + luck * 1.5;
-    double rareChance = isLevelReward ? 15.0 + luck * 3.0 : 14.0 + luck * 3.0;
-    double uncommonChance = 20.0 + luck * 4.0;
-
-    legendaryChance = legendaryChance.clamp(0.0, 100.0);
-    epicChance = epicChance.clamp(0.0, 100.0);
-    rareChance = rareChance.clamp(0.0, 100.0);
-    uncommonChance = uncommonChance.clamp(0.0, 100.0);
-
-    double pLeg = legendaryChance;
-    double pEpic = epicChance;
-    double pRare = rareChance;
-    double pUncommon = uncommonChance;
-
-    double sum = pLeg;
-    pEpic = pEpic.clamp(0.0, 100.0 - sum);
-    sum += pEpic;
-    pRare = pRare.clamp(0.0, 100.0 - sum);
-    sum += pRare;
-    pUncommon = pUncommon.clamp(0.0, 100.0 - sum);
-    sum += pUncommon;
-    double pCommon = (100.0 - sum).clamp(0.0, 100.0);
-
-    return {
-      'legendary': pLeg,
-      'epic': pEpic,
-      'rare': pRare,
-      'uncommon': pUncommon,
-      'common': pCommon,
-    };
   }
 
   static Map<String, double> calculateRelicProbabilities(int luck) {
@@ -99,11 +64,11 @@ class ProbabilitiesDialog extends ConsumerWidget {
     final runState = ref.watch(runProvider);
     final int luck = runState.heroStats.luck;
 
-    final baseDraftStd = calculateDraftProbabilities(0, false);
-    final curDraftStd = calculateDraftProbabilities(luck, false);
-
-    final baseDraftLeg = calculateDraftProbabilities(0, true);
-    final curDraftLeg = calculateDraftProbabilities(luck, true);
+    // Les chances d'un des trois emplacements de la montée de niveau, lues
+    // sur le tirage lui-même : une seule table de poids, que `rollRarity`
+    // partage (spec P-43 E3, §5.1, C4.7).
+    final baseSlot = LevelUpRewardService.slotRarityChances(0);
+    final curSlot = LevelUpRewardService.slotRarityChances(luck);
 
     final baseRelics = calculateRelicProbabilities(0);
     final curRelics = calculateRelicProbabilities(luck);
@@ -197,48 +162,6 @@ class ProbabilitiesDialog extends ConsumerWidget {
                 child: Column(
                   children: [
                     _buildProbabilitySectionCard(
-                      title: locale == 'fr'
-                          ? 'Draft standard de récompenses'
-                          : 'Standard Reward Draft',
-                      subtitle: locale == 'fr'
-                          ? "Chances d'obtenir chaque rareté de carte/stat en fin de combat standard"
-                          : "Chances of getting each card/stat rarity at the end of standard combat",
-                      icon: Icons.style_outlined,
-                      accentColor: Colors.cyanAccent,
-                      rows: [
-                        _buildProbabilityRow(
-                          rarityName: l10n.rarityLegendary,
-                          color: Colors.amber,
-                          basePercent: baseDraftStd['legendary']!,
-                          currentPercent: curDraftStd['legendary']!,
-                        ),
-                        _buildProbabilityRow(
-                          rarityName: l10n.rarityEpic,
-                          color: Colors.purpleAccent,
-                          basePercent: baseDraftStd['epic']!,
-                          currentPercent: curDraftStd['epic']!,
-                        ),
-                        _buildProbabilityRow(
-                          rarityName: l10n.rarityRare,
-                          color: Colors.blueAccent,
-                          basePercent: baseDraftStd['rare']!,
-                          currentPercent: curDraftStd['rare']!,
-                        ),
-                        _buildProbabilityRow(
-                          rarityName: l10n.rarityUncommon,
-                          color: Colors.greenAccent,
-                          basePercent: baseDraftStd['uncommon']!,
-                          currentPercent: curDraftStd['uncommon']!,
-                        ),
-                        _buildProbabilityRow(
-                          rarityName: l10n.rarityCommon,
-                          color: Colors.grey,
-                          basePercent: baseDraftStd['common']!,
-                          currentPercent: curDraftStd['common']!,
-                        ),
-                      ],
-                    ),
-                    _buildProbabilitySectionCard(
                       title: locale == 'fr' ? 'Récompense de niveau' : 'Level Reward',
                       subtitle: locale == 'fr'
                           ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
@@ -249,32 +172,32 @@ class ProbabilitiesDialog extends ConsumerWidget {
                         _buildProbabilityRow(
                           rarityName: l10n.rarityLegendary,
                           color: Colors.amber,
-                          basePercent: baseDraftLeg['legendary']!,
-                          currentPercent: curDraftLeg['legendary']!,
+                          basePercent: baseSlot[RewardRarity.legendary]!,
+                          currentPercent: curSlot[RewardRarity.legendary]!,
                         ),
                         _buildProbabilityRow(
                           rarityName: l10n.rarityEpic,
                           color: Colors.purpleAccent,
-                          basePercent: baseDraftLeg['epic']!,
-                          currentPercent: curDraftLeg['epic']!,
+                          basePercent: baseSlot[RewardRarity.epic]!,
+                          currentPercent: curSlot[RewardRarity.epic]!,
                         ),
                         _buildProbabilityRow(
                           rarityName: l10n.rarityRare,
                           color: Colors.blueAccent,
-                          basePercent: baseDraftLeg['rare']!,
-                          currentPercent: curDraftLeg['rare']!,
+                          basePercent: baseSlot[RewardRarity.rare]!,
+                          currentPercent: curSlot[RewardRarity.rare]!,
                         ),
                         _buildProbabilityRow(
                           rarityName: l10n.rarityUncommon,
                           color: Colors.greenAccent,
-                          basePercent: baseDraftLeg['uncommon']!,
-                          currentPercent: curDraftLeg['uncommon']!,
+                          basePercent: baseSlot[RewardRarity.uncommon]!,
+                          currentPercent: curSlot[RewardRarity.uncommon]!,
                         ),
                         _buildProbabilityRow(
                           rarityName: l10n.rarityCommon,
                           color: Colors.grey,
-                          basePercent: baseDraftLeg['common']!,
-                          currentPercent: curDraftLeg['common']!,
+                          basePercent: baseSlot[RewardRarity.common]!,
+                          currentPercent: curSlot[RewardRarity.common]!,
                         ),
                       ],
                     ),
