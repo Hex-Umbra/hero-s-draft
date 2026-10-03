@@ -57,7 +57,8 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
   Widget build(BuildContext context) {
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
     final state = widget.engine.mockState;
-    final progress = (state.playerXp / state.xpToNextLevel).clamp(0.0, 1.0);
+    final threshold = widget.engine.xpThreshold;
+    final progress = (state.playerXp / threshold).clamp(0.0, 1.0);
     // L'XP du Gobelin vient du registre (`assets/data/enemies/`) : jamais
     // recopiée en dur ici.
     final goblinXp = widget.engine.fixtures.goblin.xp;
@@ -118,7 +119,7 @@ class _TutorialXpWidgetState extends State<TutorialXpWidget> {
                             ),
                           ),
                           Text(
-                            '${state.playerXp}/${state.xpToNextLevel} XP',
+                            '${state.playerXp}/$threshold XP',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,

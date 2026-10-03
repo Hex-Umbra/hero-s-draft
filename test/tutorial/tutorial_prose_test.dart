@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_data.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_prose.dart';
@@ -93,5 +94,39 @@ void main() {
     const corps = 'Les reliques donnent des bonus passifs.';
 
     expect(fillRewardPlaceholders(corps, rewards, isFrench: true), corps);
+  });
+
+  // Les paliers de l'étape « L'Expérience » se lisent sur la courbe (spec
+  // P-43 E3, §5.3, A26).
+  test('les paliers de l acte 1 et de l acte 2 sont lus sur la courbe',
+      () async {
+    final curve = (await loadGameDataRegistry(rootBundle)).xpCurve!;
+
+    expect(fillXpPlaceholders('{xpAct1} puis {xpAct2}', curve), '115 puis 200');
+    // Une autre courbe, d'autres nombres : la prose ne recopie rien.
+    expect(
+      fillXpPlaceholders('{xpAct1} puis {xpAct2}', const XpCurveData([70, 90])),
+      '70 puis 90',
+    );
+  });
+
+  test('aucun placeholder ne survit dans l étape XP', () async {
+    final data = await loadGameDataRegistry(rootBundle);
+    final etape =
+        kTutorialSteps.firstWhere((s) => s.type == TutorialStepType.xp);
+
+    for (final corps in [etape.bodyFr, etape.bodyEn]) {
+      final rendu = fillXpPlaceholders(
+        fillRewardPlaceholders(
+          corps,
+          data.levelUpRewards,
+          isFrench: corps == etape.bodyFr,
+        ),
+        data.xpCurve!,
+      );
+      expect(rendu, isNot(contains('{')));
+      expect(rendu, contains('115'));
+      expect(rendu, contains('200'));
+    }
   });
 }
