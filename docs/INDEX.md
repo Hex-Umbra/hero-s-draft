@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-10-03
+**Dernière mise à jour** : 2026-10-04
 
 ---
 
@@ -67,6 +67,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | 📐🔨 | [P-43 E2 — Fusion = forge](superpowers/specs/2026-10-02-p43-e2-fusion-forge-design.md) · [plan, partie 1](superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-1.md) · [plan, partie 2](superpowers/plans/2026-10-02-p43-e2-fusion-forge-partie-2.md) *(vague 2, `0.5.4` ; D3, D5, D6, D13, D14, D20, D22, D28, D39, D46, D48, D63, D65, D68 ; deux parties)* | 02/10/2026 |
 | 📝 | [Compte rendu de la vague 2 — `0.5.4`, E2](superpowers/reports/2026-10-02-economie-et-catalogue-vague-2-compte-rendu.md) *(arbitrages de la spec et des plans, décisions d'exécution, cahier de test manuel, simulation, statistiques de la session)* | 02/10/2026 |
 | 📐🔨 | [P-43 E3 — Trouvaille et progression](superpowers/specs/2026-10-03-p43-e3-trouvaille-et-progression-design.md) · [plan, partie 1](superpowers/plans/2026-10-03-p43-e3-trouvaille-et-progression-partie-1.md) *(vague 3, `0.5.5` ; D1, D2, D11, D23, D24, D25, D31, D42, D43, D47, D57, D58, D59, D60, D62, D63, D67 ; deux parties)* | 03/10/2026 |
+| 📝 | [Compte rendu de la vague 3 — `0.5.5`, E3](superpowers/reports/2026-10-04-economie-et-catalogue-vague-3-compte-rendu.md) *(arbitrages de la spec et des plans, décisions d'exécution, cahier de test manuel, simulation, statistiques de la session)* | 04/10/2026 |
 | 🗄️ | [Documentation des classes](archives/classes_documentation.md) · [Système de passifs](archives/système_de_passifs.md) · [Bilan changement compétences](archives/bilan_changement_competences.md) | — |
 | 🗄️ | [Analyse d'équilibrage des cartes](archives/card_balancing_analysis_01-06-2026.md) | 01/06/2026 |
 | 🗄️ | [Refactoring & équilibrage unifié des cartes](implementation_plans/done/unified_cards_refactoring_and_balancing.md) · [Refonte des raretés](implementation_plans/done/implementation_plan_cards_rarity_refactoring.md) · [Ajustements d'équilibrage](implementation_plans/done/22_card_balance_adjustments.md) | — |
