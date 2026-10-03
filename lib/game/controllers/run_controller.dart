@@ -312,8 +312,8 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.applyRunRuleModifier(cardsPerTurnAcc: cardsPerTurnAcc);
   }
 
-  /// Ajoute de l'Expérience au joueur.
-  /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Ajoute de l'Expérience au joueur, au palier de l'acte courant ; voir
+  /// `PlayerStatsManager.gainXp`.
   /// Retourne [true] si au moins un niveau a été gagné.
   bool gainXp(int amount) {
     return _playerStatsManager.gainXp(amount);

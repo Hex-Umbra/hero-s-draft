@@ -12,6 +12,8 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:flame/extensions.dart';
 
 void main() {
@@ -111,7 +113,14 @@ void main() {
     ];
 
     setUp(() {
-      container = ProviderContainer();
+      // `collectGoldAndXp` appelle `gainXp`, qui lit le palier : un conteneur
+      // nu reçoit la courbe surchargée (spec P-43 E3, §8, « Le piège du
+      // montage »).
+      container = ProviderContainer(
+        overrides: [
+          xpCurveProvider.overrideWithValue(const XpCurveData([115, 200])),
+        ],
+      );
       rewardController = container.read(rewardProvider.notifier);
       runController = container.read(runProvider.notifier);
       inventoryController = container.read(inventoryProvider.notifier);

@@ -5,6 +5,7 @@ import '../../models/combat_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
+import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
 import '../controllers/combat_controller.dart';
 import '../controllers/debug_run_controller.dart';
@@ -63,14 +64,17 @@ class DebugActions {
 
   /// Fait gagner exactement un niveau, par le **vrai** chemin.
   ///
-  /// Ecrire `level` a la main ne fait qu'ecraser une statistique : ni le seuil
-  /// d'XP ne se recalcule, ni le draft de recompense ne s'ouvre. `gainXp` fait
-  /// les trois, dont l'incrementation de `pendingDrafts` — c'est elle qui fait
-  /// apparaitre l'overlay de montee de niveau sur la carte.
+  /// Ecrire `level` a la main ne fait qu'ecraser une statistique : l'XP
+  /// accumulee n'est pas consommee et le draft de recompense ne s'ouvre pas.
+  /// `gainXp` fait les deux, dont l'incrementation de `pendingDrafts` —
+  /// c'est elle qui fait apparaitre l'overlay de montee de niveau sur la
+  /// carte. Le palier est celui de l'acte courant, lu sur la courbe (spec
+  /// P-43 E3, §4.4).
   static void gainLevel(RefReader read) {
     if (!_allowed(read)) return;
-    final stats = read(runProvider).heroStats;
-    final missing = stats.xpToNextLevel - stats.xp;
+    final run = read(runProvider);
+    final threshold = read(xpCurveProvider).thresholdFor(run.act);
+    final missing = threshold - run.heroStats.xp;
     read(runProvider.notifier).gainXp(missing > 0 ? missing : 1);
   }
 

@@ -67,9 +67,10 @@ void main() {
     // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'cartes de classe');
 
-    // Les deux documents de configuration restent a plat.
+    // Les trois documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
     expect(json, contains('assets/data/patch_notes.json'));
+    expect(json, contains('assets/data/xp_curve.json'));
   });
 
   test('les images d entites sont declarees, pas seulement presentes', () async {
@@ -108,5 +109,16 @@ void main() {
     // d ordre.
     final ids = registry.relics.map((r) => r.id).toList();
     expect(ids, orderedEquals(List<String>.of(ids)..sort()));
+  });
+
+  // La table de D67, valeur par valeur (spec P-43 E3, §3.2, §8).
+  test('la courbe d XP livree est celle de D67', () async {
+    final registry = await loadGameDataRegistry(rootBundle);
+
+    expect(registry.xpCurve, isNotNull);
+    expect(registry.xpCurve!.xpPerLevelByAct, [
+      115, 200, 310, 480, 590, 775, 955, 1100, //
+      1040, 1185, 1370, 1370, 1300, 1375, 1015,
+    ]);
   });
 }

@@ -7,6 +7,8 @@ import 'package:roguelike_card_game/ui/screens/map_screen.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 // Mock data provider to bypass actual json loading
 final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
@@ -22,6 +24,16 @@ final mockGameDataLoaderProvider = FutureProvider<GameDataRegistry>((
     forgeUpgrades: [],
   );
 });
+
+/// Le panneau du héros lit le palier d'XP dès la première image
+/// (`map_screen.dart:299`) : chaque conteneur, nu, reçoit une courbe surchargée
+/// — lire le provider d'origine lancerait le vrai chargeur (spec P-43 E3, §8,
+/// « Le piège du montage »).
+ProviderContainer _container() => ProviderContainer(
+      overrides: [
+        xpCurveProvider.overrideWithValue(const XpCurveData([115, 200])),
+      ],
+    );
 
 // MapScreen's dash-line animation repeats forever, so pumpAndSettle() never
 // terminates here; pump a fixed duration instead to let transitions finish.
@@ -46,7 +58,7 @@ void main() {
       maxMana: 3,
     );
 
-    final container = ProviderContainer();
+    final container = _container();
     addTearDown(container.dispose);
     final runNotifier = container.read(runProvider.notifier);
 
@@ -112,7 +124,7 @@ void main() {
       maxMana: 3,
     );
 
-    final container = ProviderContainer();
+    final container = _container();
     addTearDown(container.dispose);
     container.read(runProvider.notifier).startNewRun(hero);
 
@@ -159,7 +171,7 @@ void main() {
       maxMana: 3,
     );
 
-    final container = ProviderContainer();
+    final container = _container();
     addTearDown(container.dispose);
     container.read(runProvider.notifier).startNewRun(hero);
 
@@ -206,7 +218,7 @@ void main() {
         maxMana: 3,
       );
 
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
       container.read(runProvider.notifier).startNewRun(hero);
 
@@ -273,7 +285,7 @@ void main() {
         maxMana: 3,
       );
 
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
       container.read(runProvider.notifier).startNewRun(hero);
 
@@ -318,4 +330,49 @@ void main() {
       expect(find.text('Open Map'), findsOneWidget);
     },
   );
+
+  // Le palier est celui de l'acte courant (spec P-43 E3, §4.4, §8).
+  testWidgets('la barre d XP lit le palier de l acte courant', (
+    WidgetTester tester,
+  ) async {
+    final container = _container();
+    addTearDown(container.dispose);
+    final runNotifier = container.read(runProvider.notifier);
+    runNotifier.startNewRun(
+      const HeroData(
+        id: 'test_hero',
+        nameEn: 'Test',
+        nameFr: 'Test',
+        descriptionEn: 'Test',
+        descriptionFr: 'Test',
+        classCard: 'test',
+        maxHp: 10,
+        maxMana: 3,
+      ),
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [Locale('en', ''), Locale('fr', '')],
+          home: MapScreen(),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    expect(find.text('XP: 0/115'), findsOneWidget);
+
+    runNotifier.updateState(runNotifier.currentState.copyWith(act: 2));
+    await _settle(tester);
+
+    expect(find.text('XP: 0/200'), findsOneWidget);
+  });
 }

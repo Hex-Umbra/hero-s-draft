@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
@@ -9,6 +8,7 @@ import '../inventory_controller.dart';
 import '../run_controller.dart';
 import '../checkpoint_controller.dart';
 import '../../../services/audio/audio_providers.dart';
+import '../../../services/game_data_service.dart';
 import '../../../services/audio/game_moment.dart';
 
 class PlayerStatsManager {
@@ -109,38 +109,34 @@ class PlayerStatsManager {
 
   /// Ajoute de l'Expérience au joueur.
   /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Le palier est celui de l'acte courant, lu sur la courbe d'XP et relu à
+  /// chaque niveau (spec P-43 E3, §4.4, A8) : il n'est stocké nulle part. Un
+  /// palier qui a baissé sous l'XP accumulée — de l'acte 8 à l'acte 9 —
+  /// donne donc le niveau au gain suivant.
   /// Retourne [true] si au moins un niveau a été gagné.
   bool gainXp(int amount) {
     if (amount <= 0) return false;
 
-    var currentStats = controller.currentState.heroStats;
-    int newXp = currentStats.xp + amount;
-    int currentLevel = currentStats.level;
-    int currentXpToNext = currentStats.xpToNextLevel;
-    bool leveledUp = false;
-    int levelsGained = 0;
+    final curve = ref.read(xpCurveProvider);
+    final run = controller.currentState;
+    var xp = run.heroStats.xp + amount;
+    var level = run.heroStats.level;
+    var levelsGained = 0;
 
-    while (newXp >= currentXpToNext) {
-      newXp -= currentXpToNext;
-      currentLevel++;
-      // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
-      currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
-      leveledUp = true;
+    while (xp >= curve.thresholdFor(run.act)) {
+      xp -= curve.thresholdFor(run.act);
+      level++;
       levelsGained++;
     }
 
     controller.updateState(
-      controller.currentState.copyWith(
-        heroStats: currentStats.copyWith(
-          level: currentLevel,
-          xp: newXp,
-          xpToNextLevel: currentXpToNext,
-        ),
-        pendingDrafts: controller.currentState.pendingDrafts + levelsGained,
+      run.copyWith(
+        heroStats: run.heroStats.copyWith(level: level, xp: xp),
+        pendingDrafts: run.pendingDrafts + levelsGained,
       ),
     );
 
-    return leveledUp;
+    return levelsGained > 0;
   }
 
   void decrementPendingDrafts() {

@@ -11,6 +11,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/draft/card_draft_layout.dart';
 
@@ -189,6 +190,9 @@ void main() {
     value: 2,
   );
 
+  // Le draft fini, l'écran pousse la carte du monde, dont le panneau du
+  // héros lit le palier d'XP : le registre porte une courbe (spec P-43 E3,
+  // §8, « Le piège du montage » — le chargeur est résolu à ce moment-là).
   final mockRegistry = GameDataRegistry(
     enemies: [],
     heroes: [mockHero],
@@ -197,6 +201,7 @@ void main() {
     passives: [mockPassive],
     relics: [],
     forgeUpgrades: [],
+    xpCurve: const XpCurveData([115, 200]),
   );
 
   testWidgets('StarterDeckDraftScreen allows independent duplicate card selection', (

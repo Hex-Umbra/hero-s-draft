@@ -5,6 +5,7 @@ import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
 import '../../../../models/entity_stats.dart';
 import '../../../../models/might_target.dart';
+import '../../../../services/game_data_service.dart';
 import '../../../theme/app_spacing.dart';
 import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
@@ -20,6 +21,7 @@ class DebugHeroTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final run = ref.watch(runProvider);
     final stats = run.heroStats;
+    final xpThreshold = ref.watch(xpCurveProvider).thresholdFor(run.act);
 
     return ListView(
       children: [
@@ -139,13 +141,14 @@ class DebugHeroTab extends ConsumerWidget {
           ),
         ),
         DebugNumberField(
-          label: 'XP  (seuil ${stats.xpToNextLevel})',
+          label: 'XP  (seuil $xpThreshold)',
           value: stats.xp,
           onSubmitted: (v) =>
               DebugActions.updateHeroStats(ref.read, (s) => s.copyWith(xp: v)),
         ),
         // Le champ ci-dessus n'ecrase qu'une statistique. Ce bouton emprunte le
-        // vrai chemin : seuil d'XP recalcule et draft de recompense ouvert.
+        // vrai chemin : l'XP portee au palier de l'acte, et le draft de
+        // recompense ouvert.
         TextButton(
           onPressed: () {
             DebugActions.gainLevel(ref.read);

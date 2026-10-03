@@ -250,4 +250,78 @@ void main() {
       loader.throwIfFailed();
     });
   });
+
+  // Un document plat, comme `xp_curve.json` (spec P-43 E3, §3.2) : ni motif,
+  // ni injection, ni id — et son erreur fait echouer le chargement avec
+  // celles des entites.
+  group('GameDataLoader — document plat', () {
+    test('un document present est lu, sans erreur', () async {
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/curve.json': '{"id":"curve","label":"Courbe"}',
+      }));
+
+      final thing =
+          await loader.loadDocument('assets/data/curve.json', Thing.fromJson);
+
+      loader.throwIfFailed();
+      expect(thing?.label, 'Courbe');
+    });
+
+    test('un document absent rend null, et son erreur remonte avec celles '
+        'des entites, en une fois', () async {
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/things/casse.json': '{ pas du json',
+      }));
+
+      await loader.loadAll<Thing>([
+        EntitySource('assets/data/things/*.json', Thing.fromJson),
+      ]);
+      final missing =
+          await loader.loadDocument('assets/data/curve.json', Thing.fromJson);
+
+      expect(missing, isNull);
+      expect(
+        () => loader.throwIfFailed(),
+        throwsA(predicate((e) {
+          final message = e.toString();
+          return message.contains('2 erreur(s)') &&
+              message.contains('curve.json') &&
+              message.contains('casse.json');
+        })),
+      );
+    });
+
+    test('un document illisible rend null et son erreur est accumulee',
+        () async {
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/curve.json': '{ ceci n est pas du json',
+      }));
+
+      final thing =
+          await loader.loadDocument('assets/data/curve.json', Thing.fromJson);
+
+      expect(thing, isNull);
+      expect(
+        () => loader.throwIfFailed(),
+        throwsA(predicate((e) => e.toString().contains('curve.json'))),
+      );
+    });
+
+    test('un fromJson qui leve rend null et son erreur est accumulee',
+        () async {
+      // `Thing.fromJson` exige un `label` : son absence leve.
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/curve.json': '{"id":"curve"}',
+      }));
+
+      final thing =
+          await loader.loadDocument('assets/data/curve.json', Thing.fromJson);
+
+      expect(thing, isNull);
+      expect(
+        () => loader.throwIfFailed(),
+        throwsA(predicate((e) => e.toString().contains('curve.json'))),
+      );
+    });
+  });
 }

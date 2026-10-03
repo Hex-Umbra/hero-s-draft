@@ -15,7 +15,6 @@ class EntityStats {
   final int luck;
   final int level;
   final int xp;
-  final int xpToNextLevel;
   final int critChance;
   final double critMultiplier;
   final List<StatusEffect> statuses;
@@ -33,7 +32,6 @@ class EntityStats {
     this.luck = 0,
     this.level = 1,
     this.xp = 0,
-    this.xpToNextLevel = 100,
     this.critChance = 0,
     this.critMultiplier = 1.5,
     List<StatusEffect> statuses = const [],
@@ -52,7 +50,6 @@ class EntityStats {
     int? luck,
     int? level,
     int? xp,
-    int? xpToNextLevel,
     int? critChance,
     double? critMultiplier,
     List<StatusEffect>? statuses,
@@ -70,7 +67,6 @@ class EntityStats {
       luck: luck ?? this.luck,
       level: level ?? this.level,
       xp: xp ?? this.xp,
-      xpToNextLevel: xpToNextLevel ?? this.xpToNextLevel,
       critChance: critChance ?? this.critChance,
       critMultiplier: critMultiplier ?? this.critMultiplier,
       statuses: statuses ?? this.statuses,
@@ -100,7 +96,6 @@ class EntityStats {
       luck: json['luck'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       xp: json['xp'] as int? ?? 0,
-      xpToNextLevel: json['xpToNextLevel'] as int? ?? 100,
       critChance: json['critChance'] as int? ?? 0,
       critMultiplier: (json['critMultiplier'] as num?)?.toDouble() ?? 1.5,
       statuses: parsedStatuses,
@@ -123,7 +118,6 @@ class EntityStats {
     'luck': luck,
     'level': level,
     'xp': xp,
-    'xpToNextLevel': xpToNextLevel,
     'critChance': critChance,
     'critMultiplier': critMultiplier,
     'statuses': statuses.map((s) => s.toJson()).toList(),

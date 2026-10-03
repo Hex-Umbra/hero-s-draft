@@ -12,6 +12,7 @@ import '../models/data/forge_upgrade_data.dart';
 import '../models/data/level_up_reward_data.dart';
 import '../models/data/game_data_registry.dart';
 import '../models/data/audio_data.dart';
+import '../models/data/xp_curve_data.dart';
 import 'game_data_loader.dart';
 
 /// Charge `audio.json`. Contrairement au chargement des entites, cette
@@ -48,8 +49,8 @@ Future<AudioData> loadAudioData(String path) async {
   }
 }
 
-/// Construit le registre complet : les entites depuis [bundle], l audio
-/// depuis `rootBundle`.
+/// Construit le registre complet : les entites et la courbe d XP depuis
+/// [bundle], l audio depuis `rootBundle`.
 ///
 /// **Unique declaration des neuf sources du jeu.** Le provider de production
 /// et le registre des tests du tutoriel passent tous deux par ici : une
@@ -131,6 +132,13 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
         inject: (c) => {'id': c[0]}),
   ]);
 
+  // La courbe d XP (spec P-43 E3, §3.2 ; D24) : un document plat, a cote
+  // d `audio.json` — mais, a sa difference, elle fait echouer le demarrage.
+  final xpCurve = await loader.loadDocument(
+    'assets/data/xp_curve.json',
+    XpCurveData.fromJson,
+  );
+
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
   // remontees ensemble. Corriger une faute par cycle de rebuild, fichier par
   // fichier, serait invivable.
@@ -149,6 +157,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     relics: relics,
     forgeUpgrades: forgeUpgrades,
     levelUpRewards: levelUpRewards,
+    xpCurve: xpCurve,
     audio: audio,
   );
 }
@@ -160,3 +169,22 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
 final gameDataLoaderProvider = FutureProvider<GameDataRegistry>(
   (ref) => loadGameDataRegistry(rootBundle),
 );
+
+/// La courbe d XP du registre charge (spec P-43 E3, §3.2, A9) : un provider,
+/// et non `GameDataRegistry.instance`, pour qu un test la surcharge
+/// (`overrideWithValue`) sans dependre d un registre statique reste d un
+/// autre test.
+///
+/// Un registre construit a la main peut ne pas la porter (A27) : la lire
+/// alors est une faute de montage, signalee comme telle.
+final xpCurveProvider = Provider<XpCurveData>((ref) {
+  final curve = ref.watch(gameDataLoaderProvider).requireValue.xpCurve;
+  if (curve == null) {
+    throw StateError(
+      'xpCurveProvider : le registre charge ne porte pas de courbe d XP '
+      '(assets/data/xp_curve.json). Un registre de test qui lit le palier '
+      'doit en recevoir une, ou le test doit surcharger xpCurveProvider.',
+    );
+  }
+  return curve;
+});
