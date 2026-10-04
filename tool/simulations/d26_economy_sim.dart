@@ -2114,7 +2114,6 @@ class Fight {
 const metricDefs = <(String, String, int)>[
   ('deck', 'Taille du deck', 0),
   ('fusions', 'Fusions de 3 copies (cumul)', 0),
-  ('fusionsEvent', 'Fusions par l’événement D29 (cumul)', 0),
   ('exchanges', 'Échanges 3 → 1 (cumul)', 0),
   ('bestRank', 'Rang de la meilleure carte (0 = commune)', 0),
   ('runes', 'Runes portées par le deck', 0),
@@ -2476,7 +2475,7 @@ class Run {
     }
   }
 
-  /// Trois cartes de même rang, les moins utiles, hors paires (D29, D8).
+  /// Trois cartes de même rang, les moins utiles, hors paires (D8).
   List<CardInst>? pickThree() {
     final counts = groupCounts();
     for (var r = 0; r < 4; r++) {
@@ -3072,14 +3071,11 @@ class Run {
     inc('events');
     final ids = [
       for (final e in data.events) e.id,
-      'd29_fusion',
       eventD23,
       eventD42b,
       if (p.exchange == 'event') 'exchange',
     ];
     switch (ids[rng.nextInt(ids.length)]) {
-      case 'd29_fusion':
-        _eventFusion();
       case eventD23:
         _eventRelicTrade();
       case eventD42b:
@@ -3147,23 +3143,6 @@ class Run {
           gainRelic(drawRelic(rollRelicRarity()));
       }
     }
-  }
-
-  /// D29 (Q18, DÉFAUT validé) : 10 % des PV max + 30 or × rang visé ; trois
-  /// cartes de même rareté, la gagnante tirée, les runes héritées (D13).
-  void _eventFusion() {
-    if (deck.length < 12) return;
-    final three = pickThree();
-    if (three == null) return;
-    final hpCost = (maxHp * 0.10).round();
-    final goldCost = 30 * (three.first.rank + 1);
-    if (gold < goldCost || hp <= hpCost + 1) return;
-    if (passive.id != 'rage' && hp < maxHp * 0.3) return;
-    spend(goldCost);
-    hp -= hpCost;
-    fuseInto(three, three[rng.nextInt(3)].def);
-    inc('fusionsEvent');
-    fuseAll();
   }
 
   /// D23 (Q15, DÉFAUT validé) : la relique la plus faible contre 40 or par
@@ -3641,7 +3620,7 @@ String firstCell(List<double> s) {
 
 /// Les mesures des tables par classe × lot : celles que la mission demande.
 const annexMetrics = {
-  'deck', 'fusions', 'fusionsEvent', 'bestRank', 'runes', 'runeSum', 'runeMax',
+  'deck', 'fusions', 'bestRank', 'runes', 'runeSum', 'runeMax',
   'ecoQuick', 'fires', 'rests', 'forgets', 'sharpens', 'sharpBoss', 'sharpEvent',
   'goldGained', 'goldSpent', 'gold', 'level', 'levelsAct', 'evolutions', 'relics',
   'power', 'budget', 'enemies', 'enemyHp', 'encounterHp', 'dmgTurn', 'turns',
@@ -3652,7 +3631,6 @@ const annexMetrics = {
 const shortLabels = {
   'deck': 'Deck',
   'fusions': 'Fusions',
-  'fusionsEvent': 'Fusions D29',
   'exchanges': 'Échanges 3→1',
   'bestRank': 'Meilleur rang',
   'runes': 'Runes',
@@ -3969,7 +3947,7 @@ Future<void> main(List<String> args) async {
       '${data.neutrals.length} neutres (noyau de ${coreNeutralIds.length}), '
       '${data.relics.length} reliques (+ 3 du brainstorm), '
       '${data.rewards.length} récompenses de niveau, ${data.runes.length} runes, '
-      '${data.events.length} événements (+ 3 du brainstorm).');
+      '${data.events.length} événements (+ 2 du brainstorm).');
   out.writeln();
 
   out.writeln('## Calibration de la courbe d’XP (Q17)');
