@@ -317,12 +317,14 @@ class ForgeUpgradeData {
     return costAt(carried) - costAt(carried + level);
   }
 
-  /// Le nom de la rune au niveau [level] : le niveau ne s'écrit que si la
-  /// rune en a plus d'un (`maxLevel` autre que 1). La règle des infobulles
-  /// (spec P-43 E1, §5.2), que suivent aussi la ligne de rune et le dialogue
-  /// de fusion (spec P-43 E2, §4.11).
-  String nameAt(int level, String locale) =>
-      maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
+  /// Le nom de la rune au niveau [level] : le niveau s'écrit dès que la rune
+  /// en a plus d'un (`maxLevel` autre que 1) ou qu'elle dépasse 1 — montée
+  /// au-delà de son plafond de base par le bonus de *Transcendance* (spec
+  /// P-43 E3, A18). La règle des infobulles (spec P-43 E1, §5.2), que suivent
+  /// aussi la ligne de rune et le dialogue de fusion (spec P-43 E2, §4.11).
+  String nameAt(int level, String locale) => maxLevel == 1 && level <= 1
+      ? getName(locale)
+      : '${getName(locale)} $level';
 
   /// La ligne de la rune dans l'infobulle d'une carte, au niveau [level] que
   /// joue le moteur — le total de ses exemplaires (spec P-43 E1, §5.2) :

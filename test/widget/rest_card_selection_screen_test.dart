@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -144,4 +145,38 @@ void main() {
     expect(find.text('Choisir'), findsOneWidget);
     expect(find.textContaining('Affûter —'), findsNothing);
   });
+
+  // Transcendance, lue par la sélection dans ses deux modes — le feu et le
+  // Rémouleur (spec P-43 E3, §4.8, §8 ; A17 ; constat n° 2 du tour 3).
+  for (final isFree in [false, true]) {
+    testWidgets('${isFree ? 'sans or' : 'au feu'}, une rune plafonnee se '
+        'grise, puis ouvre le dialogue sur Niveau 1 -> 2 sous un plafond '
+        'releve', (tester) async {
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['eco:1'],
+      );
+      final container =
+          await _pumpSharpenSelection(tester, card, isFree: isFree);
+
+      expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isTrue);
+      await tester.tap(find.byType(UiCard));
+      await tester.pumpAndSettle();
+      expect(find.byType(SharpenRuneDialog), findsNothing);
+      expect(container.read(notificationProvider).last.message,
+          'Aucune rune de cette carte ne peut gagner de niveau.');
+
+      container.read(runProvider.notifier).raiseRuneCap('eco');
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isFalse);
+      await tester.tap(find.byType(UiCard));
+      await tester.pumpAndSettle();
+      expect(find.byType(SharpenRuneDialog), findsOneWidget);
+      expect(find.text('Niveau 1 → 2'), findsOneWidget);
+
+      await _settleNotifications(tester);
+    });
+  }
 }

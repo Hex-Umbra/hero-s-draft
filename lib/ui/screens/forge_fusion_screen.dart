@@ -247,7 +247,12 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
   ) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final level = ForgeRuneRules.wellLevel(received, givenLevel);
+    // Sous le plafond effectif de la run (spec P-43 E3, §4.8, A17).
+    final level = ForgeRuneRules.wellLevel(
+      received,
+      givenLevel,
+      capBonus: ref.watch(runProvider).runeCapBonus,
+    );
     final cost = ForgeRuneRules.wellCost(givenLevel);
     return ForgeSlotRow(
       rune: received,

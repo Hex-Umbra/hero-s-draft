@@ -466,14 +466,17 @@ void main() {
   });
 
   // La regle des infobulles, que suivent la ligne de rune et le dialogue de
-  // fusion (spec P-43 E2, §4.11).
-  test('nameAt n ecrit le niveau que d une rune a plusieurs niveaux', () {
+  // fusion (spec P-43 E2, §4.11) ; une rune de plafond 1 montee au-dela par
+  // Transcendance ecrit son niveau (spec P-43 E3, A18).
+  test('nameAt ecrit le niveau d une rune a plusieurs niveaux, ou montee '
+      'au-dela de 1', () {
     final sharp = ForgeUpgradeData.fromJson(_json({'name_fr': 'Tranchant'}));
     final eco = ForgeUpgradeData.fromJson(
         _json({'name_fr': 'Économe', 'maxLevel': 1}));
     expect(sharp.nameAt(1, 'fr'), 'Tranchant 1');
     expect(sharp.nameAt(3, 'fr'), 'Tranchant 3');
     expect(eco.nameAt(1, 'fr'), 'Économe');
+    expect(eco.nameAt(2, 'fr'), 'Économe 2');
   });
 
   group('eligibilite', () {

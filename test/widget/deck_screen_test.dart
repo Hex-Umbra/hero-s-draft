@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/deck_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
@@ -361,6 +362,35 @@ void main() {
     expect(find.byType(UiCard), findsNWidgets(2));
     expect(messagesOf(container),
         ['Fusion réussie : Frappe est maintenant Niveau 2 !']);
+    await settle(tester);
+  });
+
+  // Transcendance, lue par la fusion de l'écran de deck (spec P-43 E3, §4.8,
+  // §8 ; A17) : sans le bonus de la run, la somme serait bornée à 1.
+  testWidgets('trois rares a Econome 1 fusionnent en epique a Econome 2 sous '
+      'le plafond releve de la run', (WidgetTester tester) async {
+    largeView(tester);
+    final container = deckOf([
+      for (var i = 0; i < 3; i++)
+        CardInstance(
+          data: shippedCard('strike_basic'),
+          rarity: CardRarity.rare,
+          forgeUpgrades: const ['eco:1'],
+        ),
+    ]);
+    container.read(runProvider.notifier).raiseRuneCap('eco');
+
+    await tester.pumpWidget(buildApp(container));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('FUSIONNER (3)'));
+    await tester.pumpAndSettle();
+    // L'offre de la carte fusionnée — Tranchant au moins s'y offre.
+    await tester.tap(find.text('Choisir').first);
+    await tester.pumpAndSettle();
+
+    final merged = container.read(deckProvider).masterDeck.single;
+    expect(merged.rarity, CardRarity.epic);
+    expect(ForgeUpgradeData.levelsOf(merged.forgeUpgrades)['eco'], 2);
     await settle(tester);
   });
 }

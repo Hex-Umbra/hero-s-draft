@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -175,5 +176,19 @@ void main() {
 
     expect(_button(tester, 'Niveau maximal').onPressed, isNull);
     expect(find.text('Choisir'), findsNothing);
+  });
+
+  // Transcendance, lue par le dialogue (spec P-43 E3, §4.8, §8 ; A17).
+  testWidgets('une rune plafonnee dit Niveau maximal, puis Niveau 1 -> 2 '
+      'sous un plafond releve', (tester) async {
+    final container =
+        await _openDialog(tester, _rareStrike(const ['eco:1']), gold: 1000);
+    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
+
+    container.read(runProvider.notifier).raiseRuneCap('eco');
+    await tester.pump();
+
+    expect(find.text('Niveau 1 → 2'), findsOneWidget);
+    expect(_button(tester, 'Affûter — 50 or').onPressed, isNotNull);
   });
 }

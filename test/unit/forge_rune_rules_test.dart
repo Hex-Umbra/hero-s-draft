@@ -91,6 +91,17 @@ void main() {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
     });
 
+    // Le bonus de plafond de Transcendance (spec P-43 E3, §4.8, A17).
+    test('un bonus de plafond borne la somme au plafond effectif', () {
+      expect(ForgeRuneRules.consolidate(['eco:1', 'eco:1', 'eco:1']),
+          ['eco:1']);
+      expect(
+        ForgeRuneRules.consolidate(['eco:1', 'eco:1', 'eco:1'],
+            capBonus: {'eco': 1}),
+        ['eco:2'],
+      );
+    });
+
     test('ignore une reference mal formee ou de tier nul', () {
       expect(
         ForgeRuneRules.consolidate(['sharp', 'sharp:0', 'sharp:x', 'hardened:2']),

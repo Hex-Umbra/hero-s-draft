@@ -293,11 +293,15 @@ class DeckNotifier extends Notifier<DeckState> {
   /// Fusionne trois exemplaires d'une même carte, à une même rareté, en une
   /// carte de la rareté suivante, qui garde toutes leurs runes (D13 ; spec
   /// P-43 E2, §4.6) : `ForgeRuneRules.consolidate` additionne les niveaux
-  /// d'une même rune, bornés par son plafond, et écarte une rune exclue par
-  /// une rune gardée avant elle ; aucun plafond de runes par carte. Rend la
-  /// carte créée — l'écran de deck tire sur elle l'offre de runes (§4.5) —,
-  /// ou `null` si la fusion est refusée.
-  CardInstance? mergeCards(List<String> selectedIds) {
+  /// d'une même rune, bornés par son plafond effectif — [capBonus], le bonus
+  /// de la run que passe l'écran de deck (spec P-43 E3, A17) —, et écarte une
+  /// rune exclue par une rune gardée avant elle ; aucun plafond de runes par
+  /// carte. Rend la carte créée — l'écran de deck tire sur elle l'offre de
+  /// runes (§4.5) —, ou `null` si la fusion est refusée.
+  CardInstance? mergeCards(
+    List<String> selectedIds, {
+    Map<String, int> capBonus = const {},
+  }) {
     if (selectedIds.length != 3) return null;
     final selectedCards = [
       for (final id in selectedIds)
@@ -319,6 +323,7 @@ class DeckNotifier extends Notifier<DeckState> {
       rarity: nextRarity,
       forgeUpgrades: ForgeRuneRules.consolidate(
         selectedCards.expand((card) => card.forgeUpgrades),
+        capBonus: capBonus,
       ),
     );
     // Retire les 3 exemplaires ; la carte fusionnée rejoint la fin du deck.

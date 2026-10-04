@@ -212,6 +212,33 @@ void main() {
     expect(find.text('SE REPOSER'), findsOneWidget);
   });
 
+  // Transcendance, lue par l'option du feu (spec P-43 E3, §4.8, §8 ; A17).
+  testWidgets('AFFUTER s active sur une rune plafonnee quand la run releve '
+      'son plafond', (WidgetTester tester) async {
+    final container = await pumpRestScreen(
+      tester,
+      registry: shippedRegistry(),
+      deck: [
+        CardInstance(
+          data: shippedCard('strike_basic'),
+          rarity: CardRarity.rare,
+          forgeUpgrades: const ['eco:1'],
+        ),
+      ],
+    );
+    expect(find.text('Aucune rune de votre deck ne peut gagner de niveau.'),
+        findsOneWidget);
+
+    container.read(runProvider.notifier).raiseRuneCap('eco');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aucune rune de votre deck ne peut gagner de niveau.'),
+        findsNothing);
+    await tester.tap(find.text('AFFÛTER'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RestCardSelectionScreen), findsOneWidget);
+  });
+
   testWidgets(
     'Tapping Heal restores 30% of max HP and shows a success notification',
     (WidgetTester tester) async {

@@ -40,9 +40,12 @@ class SharpenRuneDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final gold = ref.watch(inventoryProvider).gold;
+    // Le plafond effectif de la run (spec P-43 E3, §4.8, A17).
+    final capBonus = ref.watch(runProvider).runeCapBonus;
 
     Widget row(ForgeUpgradeData rune, int level) {
-      final sharpenable = ForgeRuneRules.canSharpen(rune, level);
+      final sharpenable =
+          ForgeRuneRules.canSharpen(rune, level, capBonus: capBonus);
       final cost = ForgeRuneRules.sharpenCost(level);
       final String actionLabel;
       final VoidCallback? onAction;

@@ -22,20 +22,24 @@ class ForgeRuneRules {
   const ForgeRuneRules._();
 
   /// Réunit les runes de même id, dans l'ordre de leur première apparition :
-  /// leurs niveaux s'additionnent, bornés par son `maxLevel` — le surplus se
-  /// perd, une rune de plafond 1 reste au niveau 1 (spec P-43 E1, A9 ; spec
-  /// P-43 E2, §4.6). Une référence mal formée ou de niveau nul est
-  /// ignorée. Deux runes qui s'excluent (`excludesRunes`, dans un sens ou
-  /// l'autre) ne sont jamais réunies : la première arrivée est gardée, car la
-  /// fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
-  static List<String> consolidate(Iterable<String> runes) {
+  /// leurs niveaux s'additionnent, bornés par son plafond effectif —
+  /// `maxLevel` plus [capBonus] pour son id (spec P-43 E3, A17) — : le
+  /// surplus se perd, une rune de plafond 1 sans bonus reste au niveau 1
+  /// (spec P-43 E1, A9 ; spec P-43 E2, §4.6). Une référence mal formée ou de
+  /// niveau nul est ignorée. Deux runes qui s'excluent (`excludesRunes`, dans
+  /// un sens ou l'autre) ne sont jamais réunies : la première arrivée est
+  /// gardée, car la fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
+  static List<String> consolidate(
+    Iterable<String> runes, {
+    Map<String, int> capBonus = const {},
+  }) {
     final kept = <String>[];
     final result = <String>[];
     for (final MapEntry(key: id, value: tier)
         in ForgeUpgradeData.levelsOf(runes).entries) {
       if (kept.any((other) => _exclude(id, other))) continue;
       kept.add(id);
-      result.add('$id:${_bounded(id, tier)}');
+      result.add('$id:${_bounded(id, tier, capBonus[id] ?? 0)}');
     }
     return result;
   }
@@ -46,10 +50,11 @@ class ForgeRuneRules {
       (ForgeUpgradeData.getById(a)?.excludesRunes.contains(b) ?? false) ||
       (ForgeUpgradeData.getById(b)?.excludesRunes.contains(a) ?? false);
 
-  /// [tier] borné par le plafond de la rune [id] (D72) ; une rune absente du
-  /// registre n'en a pas.
-  static int _bounded(String id, int tier) =>
-      ForgeUpgradeData.getById(id)?.boundLevel(tier) ?? tier;
+  /// [tier] borné par le plafond effectif de la rune [id] (D72, A17) ; une
+  /// rune absente du registre n'en a pas.
+  static int _bounded(String id, int tier, int capBonus) =>
+      ForgeUpgradeData.getById(id)?.boundLevel(tier, capBonus: capBonus) ??
+      tier;
 
   /// La rune [rune] peut-elle s'offrir à [card] ? Le prédicat unique de
   /// l'éligibilité (D3, D44, D48, D51, D61 ; spec P-43 E1, A3, §4.6 ; spec

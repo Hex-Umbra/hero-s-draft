@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/controllers/run_controller.dart';
 import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
@@ -242,6 +243,8 @@ class _MergeDialogState extends State<_MergeDialog> {
               .where((c) => _selectedCardIds.contains(c.uniqueId))
               .map((c) => c.uniqueId)
               .toList(),
+          // Le plafond effectif de la run (spec P-43 E3, §4.8, A17).
+          capBonus: widget.ref.read(runProvider).runeCapBonus,
         );
     Navigator.of(context).pop(merged);
   }

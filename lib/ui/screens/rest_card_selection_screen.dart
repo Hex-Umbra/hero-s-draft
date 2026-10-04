@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/controllers/run_controller.dart';
 import '../../game/services/forge_rune_rules.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/game_data_registry.dart';
@@ -74,6 +75,9 @@ class RestCardSelectionScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final deck = ref.watch(deckProvider).masterDeck;
     final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
+    // Le plafond effectif de la run (spec P-43 E3, §4.8, A17), au feu comme
+    // au *Rémouleur*.
+    final capBonus = ref.watch(runProvider).runeCapBonus;
 
     final appBar = PageHeader(
       title: title,
@@ -123,7 +127,11 @@ class RestCardSelectionScreen extends ConsumerWidget {
                       itemBuilder: (_, index) {
                         final card = deck[index];
                         final sharpenable = isSharpen &&
-                            ForgeRuneRules.hasSharpenableRune(card, catalog);
+                            ForgeRuneRules.hasSharpenableRune(
+                              card,
+                              catalog,
+                              capBonus: capBonus,
+                            );
                         return UiCard.fromInstance(
                           card: card,
                           locale: locale,
