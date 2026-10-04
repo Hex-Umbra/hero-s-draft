@@ -72,7 +72,8 @@ class PlayerStatsManager {
   /// main.
   void applyLevelUpReward(DraftChoice choice) {
     final stat = choice.data.stat;
-    // Le Miroir : il ouvre une modale de clonage, il ne monte rien.
+    // Le Miroir et *Transcendance* ouvrent chacun leur modale : aucun ne
+    // monte de stat.
     if (stat == null) return;
 
     final amount = choice.amount;

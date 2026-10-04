@@ -56,6 +56,12 @@ class RunState {
   /// `GameConstants.bossXpRuneSharpens`, +1 par exemplaire.
   final int extraBossRuneSharpens;
 
+  /// Le bonus de plafond de rune de la run (spec P-43 E3, §4.8 ; D42(c),
+  /// A15, A17) : par id de rune, les niveaux que *Transcendance* ajoute à son
+  /// `maxLevel`, sur toutes les cartes. Vide au départ ; écrit par
+  /// `RunController.raiseRuneCap`.
+  final Map<String, int> runeCapBonus;
+
   /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
   /// que `cardsPerTurn` : un ennemi n'en a jamais.
   ///
@@ -96,6 +102,7 @@ class RunState {
     this.extraCombatCards = 0,
     this.eliteCardChanceBonus = 0,
     this.extraBossRuneSharpens = 0,
+    this.runeCapBonus = const {},
     this.statRules = const [],
   });
 
@@ -114,6 +121,7 @@ class RunState {
     int? extraCombatCards,
     int? eliteCardChanceBonus,
     int? extraBossRuneSharpens,
+    Map<String, int>? runeCapBonus,
     List<StatRule>? statRules,
   }) {
     return RunState(
@@ -133,6 +141,7 @@ class RunState {
       eliteCardChanceBonus: eliteCardChanceBonus ?? this.eliteCardChanceBonus,
       extraBossRuneSharpens:
           extraBossRuneSharpens ?? this.extraBossRuneSharpens,
+      runeCapBonus: runeCapBonus ?? this.runeCapBonus,
       statRules: statRules ?? this.statRules,
     );
   }
@@ -153,6 +162,7 @@ class RunState {
         'extraCombatCards': extraCombatCards,
         'eliteCardChanceBonus': eliteCardChanceBonus,
         'extraBossRuneSharpens': extraBossRuneSharpens,
+        'runeCapBonus': runeCapBonus,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -193,6 +203,12 @@ class RunState {
       extraCombatCards: json['extraCombatCards'] as int? ?? 0,
       eliteCardChanceBonus: json['eliteCardChanceBonus'] as int? ?? 0,
       extraBossRuneSharpens: json['extraBossRuneSharpens'] as int? ?? 0,
+      runeCapBonus: {
+        for (final MapEntry(:key, :value)
+            in (json['runeCapBonus'] as Map<String, dynamic>? ?? const {})
+                .entries)
+          key: value as int,
+      },
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
       // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
       // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas
@@ -428,6 +444,15 @@ class RunController extends Notifier<RunState> {
   void loseRelic(RelicData relic) {
     removeRelicEffect(relic);
     ref.read(inventoryProvider.notifier).removeRelics([relic.id]);
+  }
+
+  /// Relève de 1 le plafond du type de rune [runeId], sur toutes les cartes,
+  /// pour toute la run — *Transcendance* (spec P-43 E3, §4.8 ; D42(c), A15).
+  void raiseRuneCap(String runeId) {
+    state = state.copyWith(runeCapBonus: {
+      ...state.runeCapBonus,
+      runeId: (state.runeCapBonus[runeId] ?? 0) + 1,
+    });
   }
 
   void startCombat() {

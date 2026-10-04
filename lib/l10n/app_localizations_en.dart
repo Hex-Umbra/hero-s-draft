@@ -615,6 +615,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseCardToClone => 'Choose a card to clone';
 
   @override
+  String get runeCapTitle => 'Choose the rune whose cap rises';
+
+  @override
+  String runeCapLine(int from, int to) {
+    return 'Max level $from → $to';
+  }
+
+  @override
+  String runeCapRaised(String runeName, int level) {
+    return '$runeName can now reach level $level.';
+  }
+
+  @override
   String get cardCloned => 'Card cloned!';
 
   @override

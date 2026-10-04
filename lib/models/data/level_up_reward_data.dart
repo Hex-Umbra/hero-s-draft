@@ -10,6 +10,10 @@ enum RewardEffect {
 
   /// Elle ouvre le clonage d'une carte — le Miroir. Aucune stat.
   cloneCard,
+
+  /// Elle relève de 1 le plafond d'un type de rune, pour la run —
+  /// *Transcendance* (spec P-43 E3, §4.8 ; D42(c)). Aucune stat.
+  raiseRuneCap,
 }
 
 /// La stat qu'une récompense [RewardEffect.stat] fait monter.
@@ -37,6 +41,11 @@ enum RewardRequirement {
   /// Le passif actif doit déclarer un bloc `mastery` : sans lui, un point de
   /// Maîtrise n'augmente rien (spec P-49, §3.3).
   passiveMastery,
+
+  /// Une rune du deck doit être à son plafond effectif, ni sans plafond ni
+  /// binaire : sans elle, *Transcendance* n'aurait rien à relever (spec
+  /// P-43 E3, §4.8, A15).
+  raisableRune,
 }
 
 /// Une récompense de niveau, telle que son fichier la déclare
@@ -45,8 +54,8 @@ enum RewardRequirement {
 /// Avant ce chantier, les huit récompenses étaient huit valeurs d'énumération,
 /// un `rng.nextInt(6)`, deux `switch` de valeurs et des libellés en ARB,
 /// recopiés à la main dans la prose du tutoriel et dans le rouleau du
-/// carrousel. Elles sont désormais huit fichiers sous
-/// `assets/data/level_up_rewards/`.
+/// carrousel. Elles sont désormais des fichiers sous
+/// `assets/data/level_up_rewards/` — neuf depuis *Transcendance* (P-43 E3).
 @immutable
 class LevelUpRewardData {
   final String id;
@@ -160,11 +169,16 @@ class LevelUpRewardData {
   }
 
   /// Cette récompense peut-elle être tirée dans une run dont le passif actif
-  /// est [passive] ? Un passif absent ne déclare aucune Maîtrise : la
-  /// récompense serait tout aussi inerte (décision 2 du plan).
-  bool isAvailableWith(PassiveData? passive) => switch (requires) {
+  /// est [passive], et dont le deck porte une rune à relever si
+  /// [hasRaisableRune] ? Un passif absent ne déclare aucune Maîtrise : la
+  /// récompense serait tout aussi inerte (décision 2 du plan). Le fait de la
+  /// rune vient de l'appelant, qui lit le deck et la run (spec P-43 E3,
+  /// §4.8, C2.4) ; faux par défaut, comme dans `generateChoices`.
+  bool isAvailableWith(PassiveData? passive, {bool hasRaisableRune = false}) =>
+      switch (requires) {
         null => true,
         RewardRequirement.passiveMastery => passive?.mastery != null,
+        RewardRequirement.raisableRune => hasRaisableRune,
       };
 
   /// Les récompenses d'un [pool], triées par `displayOrder` puis par `id` à

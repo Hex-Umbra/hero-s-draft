@@ -322,9 +322,37 @@ void main() {
       'requiresExhaust',
       'requiresMinCost',
       'maxLevel',
+      'binary',
       'deltas',
       'weight',
       'emoji',
+    });
+  });
+
+  // A16 : une rune binaire n'a qu'un niveau qui compte (spec P-43 E3, §3.8).
+  group('binary', () {
+    test('lu ; faux s il est absent ; toujours ecrit par toJson', () {
+      expect(ForgeUpgradeData.fromJson(_json()).binary, isFalse);
+      expect(ForgeUpgradeData.fromJson(_json()).toJson(),
+          containsPair('binary', false));
+      final cheap =
+          ForgeUpgradeData.fromJson(_json({'maxLevel': 1, 'binary': true}));
+      expect(cheap.binary, isTrue);
+      expect(ForgeUpgradeData.fromJson(cheap.toJson()).binary, isTrue);
+    });
+
+    test('refuse une rune binaire de plafond autre que 1, et une valeur non '
+        'booleenne', () {
+      for (final maxLevel in [null, 2]) {
+        expect(
+          () => ForgeUpgradeData.fromJson(
+              _json({'maxLevel': maxLevel, 'binary': true})),
+          _refused('binary'),
+          reason: '$maxLevel',
+        );
+      }
+      expect(() => ForgeUpgradeData.fromJson(_json({'binary': 'oui'})),
+          _refused('binary'));
     });
   });
 

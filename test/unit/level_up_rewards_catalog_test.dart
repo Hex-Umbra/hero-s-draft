@@ -55,13 +55,13 @@ void main() {
     },
   };
 
-  test('les huit récompenses se chargent depuis le vrai bundle', () async {
+  test('les neuf récompenses se chargent depuis le vrai bundle', () async {
     final registry = await loadGameDataRegistry(rootBundle);
 
-    expect(registry.levelUpRewards, hasLength(8));
+    expect(registry.levelUpRewards, hasLength(9));
     expect(
       registry.levelUpRewards.map((r) => r.id).toSet(),
-      {...attendu.keys, 'wisdom', 'lucky_clover', 'mirror'},
+      {...attendu.keys, 'wisdom', 'lucky_clover', 'mirror', 'transcendence'},
     );
   });
 
@@ -83,23 +83,25 @@ void main() {
     }
   });
 
-  test('les trois mythiques sont hors du tirage des trois emplacements', () async {
+  test('les quatre mythiques sont hors du tirage des trois emplacements', () async {
     final registry = await loadGameDataRegistry(rootBundle);
     final mythiques = registry.levelUpRewards
         .where((r) => r.pool == RewardPool.mythic)
         .toList()
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
-    expect(mythiques.map((r) => r.id), ['wisdom', 'lucky_clover', 'mirror']);
+    expect(mythiques.map((r) => r.id),
+        ['wisdom', 'lucky_clover', 'mirror', 'transcendence']);
     // Par id, et non par place : la place change avec le catalogue.
     final byId = {for (final r in mythiques) r.id: r};
     expect(byId['wisdom']!.stat, RewardStat.maxMana);
     expect(byId['wisdom']!.amountFor(RewardRarity.mythic), 1);
     expect(byId['lucky_clover']!.amountFor(RewardRarity.mythic), 1);
     expect(byId['mirror']!.effect, RewardEffect.cloneCard);
+    expect(byId['transcendence']!.effect, RewardEffect.raiseRuneCap);
   });
 
-  test('les huit récompenses portent leurs deux langues', () async {
+  test('les neuf récompenses portent leurs deux langues', () async {
     // La règle de `CLAUDE.md`, vérifiée sur les vrais fichiers : les libellés
     // quittent les ARB, les traductions les suivent. `fromJson` refuse déjà un
     // `_fr` sans son `_en` ; ce test-ci vérifie que le catalogue livré n'a pas
@@ -125,6 +127,6 @@ void main() {
     // L'ancien `rng.nextInt(6)` tirait un index : l'ordre des valeurs de
     // l'enum EN ETAIT la sémantique. En donnée, ce rang doit être déclaré,
     // pas hérité de l'ordre de lecture du disque.
-    expect(rangs, [1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(rangs, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 }

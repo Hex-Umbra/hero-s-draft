@@ -80,6 +80,26 @@ void main() {
   );
 
   group('lecture', () {
+    // Transcendance (spec P-43 E3, §3.5, §3.8 ; D42(c), A15).
+    test('une récompense qui relève un plafond de rune se lit, avec son '
+        'exigence', () {
+      final transcendence = LevelUpRewardData.fromJson({
+        'id': 'transcendence',
+        'name_fr': 'Transcendance',
+        'name_en': 'Transcendence',
+        'description_fr': 'Plafond de rune +1',
+        'description_en': 'Rune cap +1',
+        'effect': 'raiseRuneCap',
+        'requires': 'raisableRune',
+        'pool': 'mythic',
+        'values': <String, dynamic>{},
+      });
+
+      expect(transcendence.effect, RewardEffect.raiseRuneCap);
+      expect(transcendence.stat, isNull);
+      expect(transcendence.requires, RewardRequirement.raisableRune);
+    });
+
     test('une récompense de stat porte sa table par rareté', () {
       final vitality = LevelUpRewardData.fromJson(vitalityJson());
 

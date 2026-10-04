@@ -1070,6 +1070,24 @@ abstract class AppLocalizations {
   /// **'Choose a card to clone'**
   String get chooseCardToClone;
 
+  /// No description provided for @runeCapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the rune whose cap rises'**
+  String get runeCapTitle;
+
+  /// No description provided for @runeCapLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Max level {from} → {to}'**
+  String runeCapLine(int from, int to);
+
+  /// No description provided for @runeCapRaised.
+  ///
+  /// In en, this message translates to:
+  /// **'{runeName} can now reach level {level}.'**
+  String runeCapRaised(String runeName, int level);
+
   /// No description provided for @cardCloned.
   ///
   /// In en, this message translates to:

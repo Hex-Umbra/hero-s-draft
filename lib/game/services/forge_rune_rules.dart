@@ -11,6 +11,9 @@ typedef SharpenablePair = ({
   int level,
 });
 
+/// Une rune que *Transcendance* peut relever, à son plafond effectif [cap].
+typedef RaisableCap = ({ForgeUpgradeData rune, int cap});
+
 /// Les règles des runes de forge, notées `id:niveau` : l'héritage de la
 /// fusion 3→1 (D13), son offre, l'affûtage au feu de camp et l'échange au
 /// Puits (spec P-43 E2). Les références se lisent par l'analyseur unique du
@@ -136,6 +139,34 @@ class ForgeRuneRules {
       drawn.add(pool.removeAt(index).id);
     }
     return drawn;
+  }
+
+  /// Les runes de [deck] que *Transcendance* peut relever (spec P-43 E3,
+  /// §4.8 ; D42(c), A15, A16) : celles qu'une carte porte à leur plafond
+  /// effectif — `maxLevel` plus [capBonus] pour leur id —, ni sans plafond
+  /// ni `binary`, une fois chacune, dans l'ordre du [catalog], avec ce
+  /// plafond. Lues par l'écran de draft, pour la condition `raisableRune`
+  /// et pour la modale.
+  static List<RaisableCap> raisableCaps(
+    Iterable<CardInstance> deck,
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) {
+    final carried = <String, int>{};
+    for (final card in deck) {
+      for (final MapEntry(key: id, value: level)
+          in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries) {
+        carried[id] = max(carried[id] ?? 0, level);
+      }
+    }
+    return [
+      for (final rune in catalog)
+        if (rune.maxLevel case final maxLevel?
+            when !rune.binary &&
+                (carried[rune.id] ?? 0) >=
+                    maxLevel + (capBonus[rune.id] ?? 0))
+          (rune: rune, cap: maxLevel + (capBonus[rune.id] ?? 0)),
+    ];
   }
 
   /// `b`, le coût d'un niveau d'affûtage par niveau porté (D63 ; spec P-43

@@ -12,6 +12,7 @@ import 'shipped_data.dart';
 ForgeUpgradeData _rune(
   String id, {
   int? maxLevel,
+  bool binary = false,
   int minFusionRank = 1,
   int weight = 10,
 }) =>
@@ -25,6 +26,7 @@ ForgeUpgradeData _rune(
       color: '',
       minFusionRank: minFusionRank,
       maxLevel: maxLevel,
+      binary: binary,
       weight: weight,
     );
 
@@ -235,6 +237,49 @@ void main() {
         ],
         [(first.uniqueId, 'sharp', 2), (last.uniqueId, 'sharp', 1)],
       );
+    });
+  });
+
+  // Les candidates de Transcendance (spec P-43 E3, §4.8 ; A15, A16).
+  group('raisableCaps', () {
+    final catalog = [
+      _rune('sharp'),
+      _rune('enduring', maxLevel: 1, binary: true),
+      _rune('eco', maxLevel: 1),
+      _rune('capped', maxLevel: 2),
+    ];
+
+    List<(String, int)> candidatesOf(
+      List<CardInstance> deck, {
+      Map<String, int> capBonus = const {},
+    }) =>
+        [
+          for (final (:rune, :cap)
+              in ForgeRuneRules.raisableCaps(deck, catalog, capBonus: capBonus))
+            (rune.id, cap),
+        ];
+
+    test('les runes portees a leur plafond, sans les binaires ni les runes '
+        'sans plafond, une fois chacune, dans l ordre du catalogue', () {
+      expect(
+        candidatesOf([
+          _cardWith(['capped:2', 'sharp:9']),
+          _cardWith(['eco:1', 'enduring:1']),
+          _cardWith(['eco:1', 'capped:1']),
+        ]),
+        [('eco', 1), ('capped', 2)],
+      );
+    });
+
+    test('le plafond effectif compte : une rune relevee n est plus candidate '
+        'avant d y remonter', () {
+      expect(
+        candidatesOf([_cardWith(['eco:1']), _cardWith(['capped:2'])],
+            capBonus: {'eco': 1}),
+        [('capped', 2)],
+      );
+      expect(candidatesOf([_cardWith(['eco:2'])], capBonus: {'eco': 1}),
+          [('eco', 2)]);
     });
   });
 

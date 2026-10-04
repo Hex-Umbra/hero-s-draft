@@ -22,8 +22,9 @@ void main() {
     expect(
       fillRewardPlaceholders(gabarit, rewards, isFrench: true),
       'Trois options sont tirées parmi cinq types — Vitalité, Aiguisage, '
-      'Affinité, Précision, Férocité — et jusqu\'à trois options Mythiques '
-      'peuvent s\'y ajouter : Sagesse, Trèfle à 4 feuilles et Miroir.',
+      'Affinité, Précision, Férocité — et jusqu\'à quatre options Mythiques '
+      'peuvent s\'y ajouter : Sagesse, Trèfle à 4 feuilles, Miroir et '
+      'Transcendance.',
     );
   });
 
@@ -45,11 +46,11 @@ void main() {
     );
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: true),
-      'Sagesse, Trèfle à 4 feuilles et Miroir',
+      'Sagesse, Trèfle à 4 feuilles, Miroir et Transcendance',
     );
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
-      'Wisdom, 4-Leaf Clover and Mirror',
+      'Wisdom, 4-Leaf Clover, Mirror and Transcendence',
     );
   });
 
@@ -66,7 +67,7 @@ void main() {
 
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
-      'Wisdom, 4-Leaf Clover and Mirror',
+      'Wisdom, 4-Leaf Clover, Mirror and Transcendence',
     );
     expect(
       fillRewardPlaceholders('{rollableCount}', rewards, isFrench: false),

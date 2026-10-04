@@ -145,7 +145,7 @@ void main() {
     expect(
       find.text("Chances d'obtenir chaque rareté d'option lors de la montée "
           'de niveau (options mythiques, tirées à part : Sagesse / Trèfle à '
-          '4 feuilles / Miroir)'),
+          '4 feuilles / Miroir / Transcendance)'),
       findsOneWidget,
     );
 
@@ -155,7 +155,7 @@ void main() {
     expect(
       find.text('Chances of getting each option rarity when leveling up '
           '(mythic options, rolled separately: Wisdom / 4-Leaf Clover / '
-          'Mirror)'),
+          'Mirror / Transcendence)'),
       findsOneWidget,
     );
   });

@@ -270,6 +270,20 @@ void main() {
     });
   });
 
+  // Transcendance (spec P-43 E3, §4.8 ; D42(c), A15).
+  test('raiseRuneCap monte de 1 le plafond d un type de rune, pour la run',
+      () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final run = container.read(runProvider.notifier);
+
+    run.raiseRuneCap('eco');
+    run.raiseRuneCap('eco');
+    run.raiseRuneCap('quick');
+
+    expect(container.read(runProvider).runeCapBonus, {'eco': 2, 'quick': 1});
+  });
+
   // Payer et ecrire, ou rien (spec P-43 E2, §4.7, A16).
   group('RunController.sharpenRune', () {
     late ProviderContainer container;

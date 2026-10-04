@@ -267,6 +267,7 @@ void main() {
         'requiresExhaust',
         'requiresMinCost',
         'maxLevel',
+        'binary',
         'deltas',
         'weight',
         'emoji',

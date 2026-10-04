@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/game_constants.dart';
@@ -123,6 +125,22 @@ void main() {
         ..remove('extraBossRuneSharpens');
       final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
       expect(restoredLegacy.extraBossRuneSharpens, 0);
+    });
+
+    // Le bonus de plafond de Transcendance (spec P-43 E3, §3.8, §8).
+    test('runeCapBonus round-trip et vaut vide quand la cle manque', () {
+      final json = buildRunState()
+          .copyWith(runeCapBonus: {'eco': 1, 'quick': 2})
+          .toJson();
+      expect(json['runeCapBonus'], {'eco': 1, 'quick': 2});
+
+      final (restored, _) =
+          RunState.fromJsonWithReport(jsonDecode(jsonEncode(json)));
+      expect(restored.runeCapBonus, {'eco': 1, 'quick': 2});
+
+      final legacy = Map<String, dynamic>.from(json)..remove('runeCapBonus');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.runeCapBonus, isEmpty);
     });
 
     test('leaves activePassive null and reports a missing passive', () {

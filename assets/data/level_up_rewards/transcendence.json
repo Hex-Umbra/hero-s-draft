@@ -1,0 +1,14 @@
+{
+  "id": "transcendence",
+  "name_fr": "Transcendance",
+  "name_en": "Transcendence",
+  "description_fr": "Le niveau maximal d'un type de rune de votre deck monte de 1, sur toutes vos cartes, pour toute la run",
+  "description_en": "One rune type in your deck can climb one level higher on every card, for the rest of the run",
+  "shortDescription_fr": "Plafond de rune +1",
+  "shortDescription_en": "Rune cap +1",
+  "effect": "raiseRuneCap",
+  "requires": "raisableRune",
+  "pool": "mythic",
+  "displayOrder": 9,
+  "values": {}
+}

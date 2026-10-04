@@ -24,9 +24,12 @@ class DraftChoice {
     required this.amount,
   });
 
-  /// Le Miroir : la seule récompense qui ouvre une modale au lieu de monter
-  /// une stat.
+  /// Le Miroir : il ouvre la modale de clonage au lieu de monter une stat.
   bool get isCloneOption => data.effect == RewardEffect.cloneCard;
+
+  /// *Transcendance* : elle ouvre la modale des plafonds de rune au lieu de
+  /// monter une stat (spec P-43 E3, §4.8).
+  bool get isRuneCapOption => data.effect == RewardEffect.raiseRuneCap;
 }
 
 /// Tire les choix de récompense offerts à la montée de niveau, depuis le
@@ -133,13 +136,19 @@ class LevelUpRewardService {
     required int luck,
     bool forceLegendary = false,
     PassiveData? activePassive,
+    bool hasRaisableRune = false,
   }) {
     final rng = Random();
     // Le filtre s'applique à la table des trois emplacements comme aux
     // mythiques : une exigence est une propriété de la récompense, pas du
-    // groupe de tirage (spec P-41, §8.2).
-    final eligible =
-        rewards.where((reward) => reward.isAvailableWith(activePassive)).toList();
+    // groupe de tirage (spec P-41, §8.2). [hasRaisableRune] : le deck porte
+    // une rune à son plafond effectif (spec P-43 E3, §4.8, A15).
+    final eligible = rewards
+        .where((reward) => reward.isAvailableWith(
+              activePassive,
+              hasRaisableRune: hasRaisableRune,
+            ))
+        .toList();
     final draftable = LevelUpRewardData.inPool(eligible, RewardPool.draft);
     // Un registre sans récompense tirable : aucun choix à générer, liste
     // vide — pas d'exception au milieu d'une montée de niveau. L'écran de

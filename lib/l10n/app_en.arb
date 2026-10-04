@@ -426,6 +426,21 @@
   "chooseCardToPurge": "Choose a card to purge",
   "cardPurged": "Card purged!",
   "chooseCardToClone": "Choose a card to clone",
+  "runeCapTitle": "Choose the rune whose cap rises",
+  "runeCapLine": "Max level {from} → {to}",
+  "@runeCapLine": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "runeCapRaised": "{runeName} can now reach level {level}.",
+  "@runeCapRaised": {
+    "placeholders": {
+      "runeName": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
   "cardCloned": "Card cloned!",
   "noCardsInStock": "Out of stock!",
   "levelLabel": "Lvl {level}",
