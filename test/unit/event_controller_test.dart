@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/event_controller.dart';
@@ -6,8 +7,14 @@ import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/event_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
+
+import 'shipped_data.dart';
 
 void main() {
+  // Le registre réel, pour les événements livrés.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('EventController Unit Tests', () {
     late ProviderContainer container;
     late EventController eventController;
@@ -178,6 +185,198 @@ void main() {
       expect(chosen!.rarity, RelicRarity.common);
       expect(chosen.id, 'r_common');
       expect(inventoryController.state.relics.contains(chosen), true);
+    });
+  });
+
+  // Le Colporteur (spec P-43 E3, §3.4, §4.9 ; D23, D63, A2, A19, A20) et les
+  // faits que reçoit `EventChoice.isSelectable` (C4.4, C4.5).
+  group('le Colporteur', () {
+    late ProviderContainer container;
+    late EventController events;
+    late RunController run;
+    late InventoryController inventory;
+    late EventData peddler;
+
+    const paladin = HeroData(
+      id: 'paladin',
+      classCard: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+    );
+
+    RelicData relic(String id, RelicRarity rarity) => RelicData(
+          id: id,
+          nameEn: id,
+          nameFr: id,
+          trigger: RelicTrigger.startOfCombat,
+          effectType: 'gain_armor',
+          value: 1,
+          rarity: rarity,
+          emoji: '⬜',
+        );
+
+    setUpAll(() async {
+      peddler = (await loadGameDataRegistry(rootBundle))
+          .events
+          .singleWhere((e) => e.id == 'relic_peddler');
+    });
+
+    setUp(() {
+      container = ProviderContainer();
+      addTearDown(container.dispose);
+      events = container.read(eventProvider.notifier);
+      run = container.read(runProvider.notifier);
+      inventory = container.read(inventoryProvider.notifier);
+      run.startNewRun(paladin);
+    });
+
+    EventChoice sale() => peddler.choices[0];
+    EventChoice remedies() => peddler.choices[1];
+
+    test('la relique visee est la plus faible, au hasard parmi les ex aequo',
+        () {
+      inventory.addRelic(relic('rare', RelicRarity.rare));
+      inventory.addRelic(relic('first', RelicRarity.common));
+      inventory.addRelic(relic('second', RelicRarity.common));
+
+      final seen = <String>{};
+      for (var i = 0; i < 50; i++) {
+        events.setEvent(peddler);
+        seen.add(events.state.tradedRelic!.id);
+      }
+      expect(seen, {'first', 'second'});
+    });
+
+    test('aucune relique visee sur un inventaire vide, ni sans action '
+        'trade_relic', () {
+      events.setEvent(peddler);
+      expect(events.state.tradedRelic, isNull);
+
+      inventory.addRelic(relic('common', RelicRarity.common));
+      events.setEvent(EventData(id: 'other', choices: [
+        EventChoice(actions: [EventAction(type: 'gain_gold', value: 10)]),
+      ]));
+      expect(events.state.tradedRelic, isNull);
+    });
+
+    test('vendre cede la relique visee contre 40 or par rang, et defait sa '
+        'regle de run', () {
+      // La Sacoche du glaneur, rare (rang 2) : 40 × 3 or ; `loseRelic`
+      // défait sa règle de run.
+      inventory.addRelic(shippedRelic('gleaners_pouch'));
+      expect(run.currentState.extraCombatCards, 1);
+      final goldBefore = inventory.state.gold;
+      events.setEvent(peddler);
+
+      events.selectChoice(sale(), const []);
+
+      expect(inventory.state.relics, isEmpty);
+      expect(run.currentState.extraCombatCards, 0);
+      expect(inventory.state.gold, goldBefore + 120);
+    });
+
+    test('les remedes cedent la relique sans or et soignent 20 % des PV max, '
+        'arrondis', () {
+      // 87 PV max : 20 % font 17,4, arrondis à 17 (`.round()`).
+      run.applyHeroStatModifier(maxPvAcc: -13);
+      run.takeDamage(50);
+      expect(run.currentState.heroStats.currentPv, 37);
+      inventory.addRelic(relic('common', RelicRarity.common));
+      final goldBefore = inventory.state.gold;
+      events.setEvent(peddler);
+
+      events.selectChoice(remedies(), const []);
+
+      expect(inventory.state.relics, isEmpty);
+      expect(inventory.state.gold, goldBefore);
+      expect(run.currentState.heroStats.currentPv, 37 + 17);
+    });
+
+    test('isChoiceSelectable : la vente suit la relique visee', () {
+      events.setEvent(peddler);
+      expect(events.isChoiceSelectable(sale()), isFalse);
+
+      inventory.addRelic(relic('common', RelicRarity.common));
+      events.setEvent(peddler);
+      expect(events.isChoiceSelectable(sale()), isTrue);
+    });
+
+    // L'or, lu sur l'inventaire (n° 1 du tour 5) : avec le cas des remèdes de
+    // l'écran, il épingle les trois entiers positionnels d'`isSelectable`.
+    test('isChoiceSelectable lit l or de l inventaire', () {
+      final offering = EventChoice(
+        actions: [EventAction(type: 'spend_gold', value: 40)],
+      );
+      events.setEvent(EventData(id: 'altar', choices: [offering]));
+
+      inventory.reset(initialGold: 39);
+      expect(events.isChoiceSelectable(offering), isFalse);
+
+      inventory.reset(initialGold: 40);
+      expect(events.isChoiceSelectable(offering), isTrue);
+    });
+
+    test('isSelectable : un choix trade_relic suit le fait hasTradedRelic', () {
+      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: false), isFalse);
+      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: true), isTrue);
+    });
+
+    test('requiresHpBelowPercent se lit dans la donnee : sur 100 PV max, 29 '
+        'passe a 30 %, 30 non', () {
+      final choice = EventChoice.fromJson({
+        'text_fr': 'Boire',
+        'requiresHpBelowPercent': 30,
+        'actions': <dynamic>[],
+      });
+      expect(choice.requiresHpBelowPercent, 30);
+      expect(choice.isSelectable(29, 0, 100, hasTradedRelic: false), isTrue);
+      expect(choice.isSelectable(30, 0, 100, hasTradedRelic: false), isFalse);
+
+      for (final bad in <Object>[0, 101, '50']) {
+        expect(
+          () => EventChoice.fromJson({
+            'requiresHpBelowPercent': bad,
+            'actions': <dynamic>[],
+          }),
+          throwsFormatException,
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('les valeurs de trade_relic et heal_percent sont bornees au '
+        'chargement', () {
+      for (final (type, bad) in <(String, Object)>[
+        ('trade_relic', -1),
+        ('trade_relic', '40'),
+        ('heal_percent', 0),
+        ('heal_percent', 101),
+      ]) {
+        expect(
+          () => EventAction.fromJson({'type': type, 'value': bad}),
+          throwsFormatException,
+          reason: '$type $bad',
+        );
+      }
+      expect(
+          EventAction.fromJson({'type': 'trade_relic', 'value': 0}).value, 0);
+      expect(
+          EventAction.fromJson({'type': 'heal_percent', 'value': 100}).value,
+          100);
+    });
+
+    test('le Colporteur livre : ses actions, et la moitie des PV pour les '
+        'remedes', () {
+      List<(String, Object?)> actionsOf(EventChoice choice) =>
+          [for (final a in choice.actions) (a.type, a.value)];
+
+      expect(peddler.choices, hasLength(3));
+      expect(actionsOf(sale()), [('trade_relic', 40)]);
+      expect(sale().requiresHpBelowPercent, isNull);
+      expect(actionsOf(remedies()),
+          [('trade_relic', 0), ('heal_percent', 20)]);
+      expect(remedies().requiresHpBelowPercent, 50);
+      expect(peddler.choices[2].actions, isEmpty);
     });
   });
 }

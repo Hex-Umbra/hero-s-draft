@@ -675,6 +675,20 @@
     }
   },
   "eventGainRelic": "+1 Relic",
+  "eventTradeRelic": "Give up {relic}: +{amount} Gold",
+  "@eventTradeRelic": {
+    "placeholders": {
+      "relic": { "type": "String" },
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGiveRelic": "Give up {relic}",
+  "@eventGiveRelic": {
+    "placeholders": {
+      "relic": { "type": "String" }
+    }
+  },
+  "eventNoRelicToGive": "No relic to give up",
 
   "settingsTitle": "Settings",
   "quitGame": "Quit",

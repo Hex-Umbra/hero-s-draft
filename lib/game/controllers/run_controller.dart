@@ -423,6 +423,13 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.exchangeRelics(sacrificed, gained);
   }
 
+  /// Cède une relique de l'inventaire (spec P-43 E3, §4.9 ; D23) : sa règle
+  /// de run défaite, puis la relique retirée — la symétrie de l'Autel.
+  void loseRelic(RelicData relic) {
+    removeRelicEffect(relic);
+    ref.read(inventoryProvider.notifier).removeRelics([relic.id]);
+  }
+
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
     // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)

@@ -29,6 +29,7 @@ class EventController extends Notifier<EventState> {
       activeEvent: chosen,
       selectedChoice: null,
       isResolved: false,
+      tradedRelic: _drawTradedRelic(chosen),
     );
   }
 
@@ -38,6 +39,39 @@ class EventController extends Notifier<EventState> {
       activeEvent: event,
       selectedChoice: null,
       isResolved: false,
+      tradedRelic: _drawTradedRelic(event),
+    );
+  }
+
+  /// La relique que vise l'échange (spec P-43 E3, §4.9, A20) : tirée une
+  /// fois, à l'ouverture, parmi celles de plus petite rareté — au hasard
+  /// parmi les ex æquo, les reliques d'E3 comprises, comme à l'Autel —, si
+  /// l'événement porte une action `trade_relic` et que l'inventaire n'est
+  /// pas vide ; `null` sinon.
+  RelicData? _drawTradedRelic(EventData event) {
+    final trades = event.choices.any(
+        (choice) => choice.actions.any((a) => a.type == 'trade_relic'));
+    final relics = ref.read(inventoryProvider).relics;
+    if (!trades || relics.isEmpty) return null;
+    final lowest = relics.map((r) => r.rarity.index).reduce(min);
+    final weakest = [
+      for (final r in relics)
+        if (r.rarity.index == lowest) r,
+    ];
+    return weakest[Random().nextInt(weakest.length)];
+  }
+
+  /// Ce choix peut-il être pris ? (spec P-43 E3, §4.9 ; C4.4) Le seul
+  /// calcul des faits que reçoit `EventChoice.isSelectable` — les PV et l'or
+  /// lus sur la run et l'inventaire, `hasTradedRelic` sur la relique visée.
+  /// L'écran l'appelle pour chaque bouton de choix.
+  bool isChoiceSelectable(EventChoice choice) {
+    final hero = ref.read(runProvider).heroStats;
+    return choice.isSelectable(
+      hero.currentPv,
+      ref.read(inventoryProvider).gold,
+      hero.maxPv,
+      hasTradedRelic: state.tradedRelic != null,
     );
   }
 
@@ -75,6 +109,19 @@ class EventController extends Notifier<EventState> {
           break;
         case 'gain_might':
           runController.applyHeroStatModifier(mightAcc: action.value as int);
+          break;
+        // La relique visée à l'ouverture (A20) quitte l'inventaire, sa règle
+        // de run défaite, contre `value` or par rang de rareté.
+        case 'trade_relic':
+          final relic = state.tradedRelic;
+          if (relic != null) {
+            runController.loseRelic(relic);
+            inventoryController.gainGold(action.tradeGoldFor(relic.rarity));
+          }
+          break;
+        case 'heal_percent':
+          runController.heal(action
+              .hpPercentOf(runController.currentState.heroStats.maxPv));
           break;
         case 'gain_relic':
           if (allRelics.isNotEmpty) {

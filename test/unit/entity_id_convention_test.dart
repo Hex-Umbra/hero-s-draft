@@ -64,13 +64,13 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('il y a bien 91 fichiers d entite', () {
+  test('il y a bien 92 fichiers d entite', () {
     // 17 cartes neutres + 28 reliques (dont le Registre des primes, la
-    // Sacoche du glaneur et la Meule, P-43 E3) + 5 evenements + 11
-    // ameliorations de forge + 9 passifs + 8 recompenses de niveau + 3
-    // class.json + 6 cartes de classe + 4 enemy.json.
-    expect(_entityFiles().length, 91,
-        reason: '17 cartes neutres + 28 reliques + 5 evenements + 11 '
+    // Sacoche du glaneur et la Meule, P-43 E3) + 6 evenements (dont le
+    // Colporteur) + 11 ameliorations de forge + 9 passifs + 8 recompenses de
+    // niveau + 3 class.json + 6 cartes de classe + 4 enemy.json.
+    expect(_entityFiles().length, 92,
+        reason: '17 cartes neutres + 28 reliques + 6 evenements + 11 '
             'ameliorations de forge + 9 passifs + 8 recompenses de niveau + '
             '3 class.json + 6 cartes de classe + 4 enemy.json');
   });

@@ -21,7 +21,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 91 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 92 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -34,7 +34,7 @@ void main() {
 
     expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
     expect(countUnder('assets/data/relics/', 4), 28, reason: 'reliques');
-    expect(countUnder('assets/data/events/', 4), 5, reason: 'evenements');
+    expect(countUnder('assets/data/events/', 4), 6, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 11, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
     expect(countUnder('assets/data/level_up_rewards/', 4), 8,
@@ -94,7 +94,7 @@ void main() {
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
     expect(registry.cards, hasLength(23)); // 17 neutres + 6 de classe
     expect(registry.relics, hasLength(28));
-    expect(registry.events, hasLength(5));
+    expect(registry.events, hasLength(6));
     expect(registry.forgeUpgrades, hasLength(11));
     expect(
       registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),

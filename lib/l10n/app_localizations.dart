@@ -1580,6 +1580,24 @@ abstract class AppLocalizations {
   /// **'+1 Relic'**
   String get eventGainRelic;
 
+  /// No description provided for @eventTradeRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up {relic}: +{amount} Gold'**
+  String eventTradeRelic(String relic, int amount);
+
+  /// No description provided for @eventGiveRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up {relic}'**
+  String eventGiveRelic(String relic);
+
+  /// No description provided for @eventNoRelicToGive.
+  ///
+  /// In en, this message translates to:
+  /// **'No relic to give up'**
+  String get eventNoRelicToGive;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

@@ -253,6 +253,9 @@
   "eventGainMaxHp": "+{amount} PV Max",
   "eventGainMight": "+{amount} Puissance",
   "eventGainRelic": "+1 Relique",
+  "eventTradeRelic": "Cède {relic} : +{amount} Or",
+  "eventGiveRelic": "Cède {relic}",
+  "eventNoRelicToGive": "Aucune relique à céder",
 
   "settingsTitle": "Réglages",
   "quitGame": "Quitter",

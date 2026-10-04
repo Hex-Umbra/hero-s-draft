@@ -1,0 +1,45 @@
+{
+  "id": "relic_peddler",
+  "title_en": "The Peddler",
+  "title_fr": "Le Colporteur",
+  "description_en": "A sharp-eyed peddler weighs your relics. 'I'll take the least precious one — for gold, or for my remedies if you need them.'",
+  "description_fr": "Un colporteur au regard vif soupèse vos reliques. « Je prends la moins précieuse — contre de l'or, ou contre mes remèdes si vous en avez besoin. »",
+  "choices": [
+    {
+      "text_en": "Sell your weakest relic (+40 to +200 Gold depending on its rarity)",
+      "text_fr": "Vendre votre relique la plus faible (+40 à +200 Or selon sa rareté)",
+      "result_text_en": "The peddler weighs the relic, nods, and counts out his coins.",
+      "result_text_fr": "Le colporteur soupèse la relique, hoche la tête et vous compte ses pièces.",
+      "actions": [
+        {
+          "type": "trade_relic",
+          "value": 40
+        }
+      ]
+    },
+    {
+      "text_en": "Trade it for remedies (+20% max HP, if your HP is below half)",
+      "text_fr": "L'échanger contre des remèdes (+20 % des PV max, si vos PV sont sous la moitié)",
+      "result_text_en": "He takes the relic and hands you a bitter vial. Your wounds close.",
+      "result_text_fr": "Il emporte la relique et vous tend une fiole amère. Vos blessures se referment.",
+      "requiresHpBelowPercent": 50,
+      "actions": [
+        {
+          "type": "trade_relic",
+          "value": 0
+        },
+        {
+          "type": "heal_percent",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "text_en": "Move on (Nothing)",
+      "text_fr": "Passer votre chemin (Rien)",
+      "result_text_en": "The peddler shrugs and goes on his way.",
+      "result_text_fr": "Le colporteur hausse les épaules et reprend sa route.",
+      "actions": []
+    }
+  ]
+}

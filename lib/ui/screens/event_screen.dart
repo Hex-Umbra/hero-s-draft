@@ -72,6 +72,22 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     Navigator.of(context).pop();
   }
 
+  /// Le badge d'une action `trade_relic` (spec P-43 E3, §4.9, §5.1) : la
+  /// relique visée et son prix, ou qu'il n'y a rien à céder.
+  String _tradeRelicText(AppLocalizations l10n, EventAction action) {
+    final relic = ref.read(eventProvider).tradedRelic;
+    if (relic == null) return l10n.eventNoRelicToGive;
+    final name = relic.getName(Localizations.localeOf(context).languageCode);
+    final gold = action.tradeGoldFor(relic.rarity);
+    return gold > 0
+        ? l10n.eventTradeRelic(name, gold)
+        : l10n.eventGiveRelic(name);
+  }
+
+  /// Le montant d'une action en pourcentage des PV max du héros.
+  int _hpPercent(EventAction action) =>
+      action.hpPercentOf(ref.read(runProvider).heroStats.maxPv);
+
   Widget _buildActionBadge(BuildContext context, EventAction action) {
     IconData icon;
     Color iconColor;
@@ -130,6 +146,20 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         textColor = Colors.purpleAccent;
         bgColor = Colors.purple.withValues(alpha: 0.12);
         text = l10n.eventGainRelic;
+        break;
+      case 'trade_relic':
+        icon = Icons.swap_horiz;
+        iconColor = Colors.amber;
+        textColor = Colors.amberAccent;
+        bgColor = Colors.amber.withValues(alpha: 0.12);
+        text = _tradeRelicText(l10n, action);
+        break;
+      case 'heal_percent':
+        icon = Icons.favorite;
+        iconColor = Colors.greenAccent;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withValues(alpha: 0.12);
+        text = l10n.eventGainHp(_hpPercent(action));
         break;
       default:
         icon = Icons.help_outline;
@@ -265,6 +295,20 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         bgColor = Colors.purple.withValues(alpha: 0.08);
         text = l10n.eventGainRelic;
         break;
+      case 'trade_relic':
+        icon = Icons.swap_horiz;
+        iconColor = Colors.amber;
+        textColor = Colors.amberAccent;
+        bgColor = Colors.amber.withValues(alpha: 0.08);
+        text = _tradeRelicText(l10n, action);
+        break;
+      case 'heal_percent':
+        icon = Icons.favorite;
+        iconColor = Colors.greenAccent;
+        textColor = Colors.greenAccent;
+        bgColor = Colors.green.withValues(alpha: 0.08);
+        text = l10n.eventGainHp(_hpPercent(action));
+        break;
       default:
         icon = Icons.help_outline;
         iconColor = Colors.white54;
@@ -320,7 +364,15 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.dark,
-      canPop: eventState.isResolved,
+      // Le retour système n'est jamais un pop direct (spec P-43 E3, §4.9,
+      // A22) : avant tout choix il reste bloqué ; après, il résout le nœud par
+      // le chemin de « Continuer », comme au feu et au Puits — sans quoi la
+      // carte laisserait rentrer dans le nœud et tirer un second événement.
+      // Le pop de `_leave` repasse ici avec `didPop` vrai : rien à refaire.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && eventState.isResolved) _leave();
+      },
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
         child: Column(
@@ -525,7 +577,11 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             if (!eventState.isResolved)
               ...activeEvent.choices.map(
                 (choice) {
-                  final isSelectable = choice.isSelectable(currentPv, gold, maxPv);
+                  // Les faits de la condition, calculés par le contrôleur
+                  // (spec P-43 E3, §4.9 ; C4.4).
+                  final isSelectable = ref
+                      .read(eventProvider.notifier)
+                      .isChoiceSelectable(choice);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _EventOptionButton(

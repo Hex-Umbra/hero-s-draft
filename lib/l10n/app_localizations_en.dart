@@ -937,6 +937,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventGainRelic => '+1 Relic';
 
   @override
+  String eventTradeRelic(String relic, int amount) {
+    return 'Give up $relic: +$amount Gold';
+  }
+
+  @override
+  String eventGiveRelic(String relic) {
+    return 'Give up $relic';
+  }
+
+  @override
+  String get eventNoRelicToGive => 'No relic to give up';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
