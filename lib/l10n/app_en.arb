@@ -94,6 +94,12 @@
       "luck": { "type": "int" }
     }
   },
+  "luckLevelRewardSubtitle": "Chances of getting each option rarity when leveling up (mythic options, rolled separately: {mythicNames})",
+  "@luckLevelRewardSubtitle": {
+    "placeholders": {
+      "mythicNames": { "type": "String" }
+    }
+  },
 
   "legendTitle": "LEGEND",
   "legendCombat": "Normal Combat",

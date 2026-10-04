@@ -83,15 +83,15 @@ void main() {
     expect(container.read(runProvider).heroStats.mastery, avant + 7);
   });
 
-  test('Sagesse monte le mana max', () {
+  test('Sagesse, mythique, monte le mana max de 1', () {
     final container = freshRun();
     final avant = container.read(runProvider).heroStats.maxMana;
 
     container
         .read(runProvider.notifier)
-        .applyLevelUpReward(choice('wisdom', RewardRarity.legendary)); // +4
+        .applyLevelUpReward(choice('wisdom', RewardRarity.mythic)); // +1
 
-    expect(container.read(runProvider).heroStats.maxMana, avant + 4);
+    expect(container.read(runProvider).heroStats.maxMana, avant + 1);
   });
 
   test('Précision monte la chance de critique', () {

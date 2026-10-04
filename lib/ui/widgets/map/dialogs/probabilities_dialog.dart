@@ -5,7 +5,9 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/level_up_reward_service.dart';
+import '../../../../models/data/level_up_reward_data.dart';
 import '../../../../models/reward_rarity.dart';
+import '../../../../services/game_data_service.dart';
 
 class ProbabilitiesDialog extends ConsumerWidget {
   const ProbabilitiesDialog({super.key});
@@ -62,6 +64,13 @@ class ProbabilitiesDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final runState = ref.watch(runProvider);
+    // Les mythiques se nomment depuis la donnée (spec P-43 E3, §5.1 ;
+    // propriétaire n° 7, C3.2) : le chargeur, comme la fiche des stats —
+    // jamais le registre global (A9).
+    final gameData = ref.watch(gameDataLoaderProvider).value;
+    if (gameData == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final int luck = runState.heroStats.luck;
 
     // Les chances d'un des trois emplacements de la montée de niveau, lues
@@ -75,6 +84,11 @@ class ProbabilitiesDialog extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
+    final mythicNames = [
+      for (final reward in LevelUpRewardData.inPool(
+          gameData.levelUpRewards, RewardPool.mythic))
+        reward.getName(locale),
+    ].join(' / ');
 
     return GameDialog(
       glowColor: Colors.amberAccent,
@@ -163,9 +177,7 @@ class ProbabilitiesDialog extends ConsumerWidget {
                   children: [
                     _buildProbabilitySectionCard(
                       title: locale == 'fr' ? 'Récompense de niveau' : 'Level Reward',
-                      subtitle: locale == 'fr'
-                          ? "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (Trèfle / Miroir)"
-                          : "Chances of getting each option rarity when leveling up (Clover / Mirror)",
+                      subtitle: l10n.luckLevelRewardSubtitle(mythicNames),
                       icon: Icons.auto_awesome_outlined,
                       accentColor: Colors.lightGreenAccent,
                       rows: [

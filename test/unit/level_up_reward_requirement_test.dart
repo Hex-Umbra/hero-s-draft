@@ -59,20 +59,20 @@ void main() {
     }
   });
 
-  test('un passif avec Maitrise laisse les six types tirables', () {
+  test('un passif avec Maitrise laisse les cinq types tirables', () {
     expect(
       tirees(activePassive: passif(mastery: bloc)),
-      {'vitality', 'sharpening', 'affinity', 'wisdom', 'precision', 'ferocity'},
+      {'vitality', 'sharpening', 'affinity', 'precision', 'ferocity'},
     );
   });
 
   test('un passif sans Maitrise retire l Affinite de la table', () {
     final vues = tirees(activePassive: passif());
     expect(vues, isNot(contains('affinity')));
-    // Les cinq autres restent : la table rétrécit, elle ne se vide pas.
+    // Les quatre autres restent : la table rétrécit, elle ne se vide pas.
     expect(
       vues,
-      {'vitality', 'sharpening', 'wisdom', 'precision', 'ferocity'},
+      {'vitality', 'sharpening', 'precision', 'ferocity'},
     );
   });
 

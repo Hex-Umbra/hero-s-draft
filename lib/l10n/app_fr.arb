@@ -44,6 +44,7 @@
   "emptyInventory": "Votre inventaire est vide",
   "luckPercentageTitle": "Taux d'obtention des Raretés",
   "currentLuck": "Votre Chance : {luck}",
+  "luckLevelRewardSubtitle": "Chances d'obtenir chaque rareté d'option lors de la montée de niveau (options mythiques, tirées à part : {mythicNames})",
 
   "legendTitle": "LÉGENDE",
   "legendCombat": "Combat Normal",

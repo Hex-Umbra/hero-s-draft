@@ -171,14 +171,16 @@ class LevelUpRewardData {
   /// rang égal.
   ///
   /// Le tri est porteur : il fixe l'ordre d'apparition des mythiques et
-  /// l'ordre des noms dans la prose du tutoriel — pas celui du tirage, qui
-  /// est uniforme et donc indifférent à l'ordre de la liste (ce qui
-  /// préserve le tirage d'origine, c'est qu'il y ait exactement six
-  /// tirables, verrouillé par un test).
+  /// l'ordre des noms dans la prose du tutoriel et dans la fiche des
+  /// probabilités — pas celui du tirage, qui est uniforme et donc
+  /// indifférent à l'ordre de la liste (le tirage est uniforme parmi les
+  /// tirables, cinq depuis que *Sagesse* est mythique (D11), compte
+  /// verrouillé par un test).
   ///
-  /// **Deux lecteurs** passent par ici, le tirage (`LevelUpRewardService`)
-  /// et la prose du tutoriel (`tutorial_prose.dart`) : un filtre ajouté à
-  /// l'un doit l'être ici, pour les deux.
+  /// **Trois lecteurs** passent par ici, le tirage (`LevelUpRewardService`),
+  /// la prose du tutoriel (`tutorial_prose.dart`) et la fiche des
+  /// probabilités (`probabilities_dialog.dart`) : un filtre ajouté à l'un
+  /// doit l'être ici, pour les trois.
   static List<LevelUpRewardData> inPool(
     List<LevelUpRewardData> rewards,
     RewardPool pool,

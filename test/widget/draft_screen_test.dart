@@ -32,14 +32,25 @@ Future<void> _advance(
   }
 }
 
-/// Pins the hero's luck stat very low so the two "level-up" mythic rolls
-/// (Trèfle à 4 feuilles / Miroir) can never trigger, keeping tests that
+/// Pins the hero's luck stat very low so the level-up mythic rolls — one per
+/// mythic reward of the catalogue — can never trigger, keeping tests that
 /// don't care about the mythic flow deterministic (mythicChance = 0.5 +
 /// luck * 0.15, which is guaranteed negative here).
 void _setLuck(ProviderContainer container, int luck) {
   final notifier = container.read(runProvider.notifier);
   final state = container.read(runProvider);
   notifier.updateState(state.copyWith(heroStats: state.heroStats.copyWith(luck: luck)));
+}
+
+/// Une vue large (spec P-43 E3, §4.10) : les mythiques se révèlent dans la
+/// même rangée que les trois emplacements — six rouleaux depuis que *Sagesse*
+/// est mythique, sept avec *Transcendance* —, que la surface de test par
+/// défaut (800 × 600) ne tient pas.
+void _largeView(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1600, 900);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
 
 Widget _wrap(ProviderContainer container, Widget child, {String locale = 'fr'}) {
@@ -181,6 +192,7 @@ void main() {
   testWidgets(
     'DraftScreen reveals mythic bonus choices and only allows selection once resolved',
     (WidgetTester tester) async {
+      _largeView(tester);
       final container = ProviderContainer(
         overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
       );
@@ -191,8 +203,8 @@ void main() {
 
       bool draftCompleted = false;
 
-      // forceLegendary guarantees both extra "level-up" rolls come back
-      // mythic (see DraftScreen._rollRarity), so the mythic reveal flow is
+      // forceLegendary guarantees every mythic roll comes back mythic (see
+      // LevelUpRewardService.rollRarity), so the mythic reveal flow is
       // deterministic regardless of the hero's luck stat.
       await tester.pumpWidget(
         _wrap(
@@ -213,11 +225,12 @@ void main() {
       // (1.5s). Budget generously.
       await _advance(tester, const Duration(milliseconds: 13000));
 
-      // Mythic choices ("Trèfle à 4 feuilles" and "Miroir") are now revealed
-      // alongside the base 3 in the main grid.
+      // The three mythic choices (Sagesse, Trèfle à 4 feuilles, Miroir) are
+      // now revealed alongside the base 3 in the main grid.
+      expect(find.text('Sagesse'), findsOneWidget);
       expect(find.text('Trèfle à 4 feuilles'), findsOneWidget);
       expect(find.text('Miroir'), findsOneWidget);
-      expect(find.byType(DraftCardReel), findsNWidgets(5));
+      expect(find.byType(DraftCardReel), findsNWidgets(6));
 
       final statsBefore = container.read(runProvider).heroStats;
 
@@ -238,6 +251,7 @@ void main() {
   testWidgets(
     'Le Miroir de montee de niveau ne propose jamais de copier une carte unique',
     (WidgetTester tester) async {
+      _largeView(tester);
       final container = ProviderContainer(
         overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
       );

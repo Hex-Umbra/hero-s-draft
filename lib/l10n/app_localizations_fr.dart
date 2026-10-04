@@ -165,6 +165,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String luckLevelRewardSubtitle(String mythicNames) {
+    return 'Chances d\'obtenir chaque rareté d\'option lors de la montée de niveau (options mythiques, tirées à part : $mythicNames)';
+  }
+
+  @override
   String get legendTitle => 'LÉGENDE';
 
   @override

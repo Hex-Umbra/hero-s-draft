@@ -21,9 +21,9 @@ void main() {
 
     expect(
       fillRewardPlaceholders(gabarit, rewards, isFrench: true),
-      'Trois options sont tirées parmi six types — Vitalité, Aiguisage, '
-      'Affinité, Sagesse, Précision, Férocité — et jusqu\'à deux options '
-      'Mythiques peuvent s\'y ajouter : Trèfle à 4 feuilles et Miroir.',
+      'Trois options sont tirées parmi cinq types — Vitalité, Aiguisage, '
+      'Affinité, Précision, Férocité — et jusqu\'à trois options Mythiques '
+      'peuvent s\'y ajouter : Sagesse, Trèfle à 4 feuilles et Miroir.',
     );
   });
 
@@ -37,19 +37,19 @@ void main() {
     // refusionner derriere le meme join sans faire rougir la suite.
     expect(
       fillRewardPlaceholders('{rollableNames}', rewards, isFrench: true),
-      'Vitalité, Aiguisage, Affinité, Sagesse, Précision, Férocité',
+      'Vitalité, Aiguisage, Affinité, Précision, Férocité',
     );
     expect(
       fillRewardPlaceholders('{rollableNames}', rewards, isFrench: false),
-      'Vitality, Sharpening, Affinity, Wisdom, Precision, Ferocity',
+      'Vitality, Sharpening, Affinity, Precision, Ferocity',
     );
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: true),
-      'Trèfle à 4 feuilles et Miroir',
+      'Sagesse, Trèfle à 4 feuilles et Miroir',
     );
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
-      '4-Leaf Clover and Mirror',
+      'Wisdom, 4-Leaf Clover and Mirror',
     );
   });
 
@@ -66,11 +66,11 @@ void main() {
 
     expect(
       fillRewardPlaceholders('{mythicNames}', rewards, isFrench: false),
-      '4-Leaf Clover and Mirror',
+      'Wisdom, 4-Leaf Clover and Mirror',
     );
     expect(
       fillRewardPlaceholders('{rollableCount}', rewards, isFrench: false),
-      'six',
+      'five',
     );
   });
 

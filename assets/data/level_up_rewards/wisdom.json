@@ -6,13 +6,9 @@
   "description_en": "+{amount} Max Mana",
   "effect": "stat",
   "stat": "maxMana",
-  "pool": "draft",
+  "pool": "mythic",
   "displayOrder": 4,
   "values": {
-    "common": 1,
-    "uncommon": 2,
-    "rare": 2,
-    "epic": 3,
-    "legendary": 4
+    "mythic": 1
   }
 }

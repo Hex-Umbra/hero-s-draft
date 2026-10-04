@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Your Luck: {luck}'**
   String currentLuck(int luck);
 
+  /// No description provided for @luckLevelRewardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chances of getting each option rarity when leveling up (mythic options, rolled separately: {mythicNames})'**
+  String luckLevelRewardSubtitle(String mythicNames);
+
   /// No description provided for @legendTitle.
   ///
   /// In en, this message translates to:

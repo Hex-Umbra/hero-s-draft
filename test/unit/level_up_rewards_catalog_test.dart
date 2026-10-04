@@ -13,9 +13,10 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  /// La table d'aujourd'hui, à valeurs identiques (spec §8.1 : « à valeurs
-  /// identiques »). Le plateau de Sagesse entre `uncommon` et `rare` est
-  /// assumé et appartient à P-16 (§8.4).
+  /// La table des cinq récompenses tirables, à valeurs identiques (spec
+  /// P-41, §8.1 : « à valeurs identiques »). *Sagesse* n'en est plus :
+  /// mythique depuis D11, son plateau a disparu avec ses paliers (spec P-43
+  /// E3, §3.5).
   const attendu = <String, Map<RewardRarity, int>>{
     'vitality': {
       RewardRarity.common: 5,
@@ -37,13 +38,6 @@ void main() {
       RewardRarity.rare: 3,
       RewardRarity.epic: 5,
       RewardRarity.legendary: 7,
-    },
-    'wisdom': {
-      RewardRarity.common: 1,
-      RewardRarity.uncommon: 2,
-      RewardRarity.rare: 2,
-      RewardRarity.epic: 3,
-      RewardRarity.legendary: 4,
     },
     'precision': {
       RewardRarity.common: 1,
@@ -67,11 +61,11 @@ void main() {
     expect(registry.levelUpRewards, hasLength(8));
     expect(
       registry.levelUpRewards.map((r) => r.id).toSet(),
-      {...attendu.keys, 'lucky_clover', 'mirror'},
+      {...attendu.keys, 'wisdom', 'lucky_clover', 'mirror'},
     );
   });
 
-  test('les six récompenses tirables portent la table d aujourd hui', () async {
+  test('les cinq récompenses tirables portent la table d aujourd hui', () async {
     final registry = await loadGameDataRegistry(rootBundle);
     final byId = {for (final r in registry.levelUpRewards) r.id: r};
 
@@ -89,16 +83,20 @@ void main() {
     }
   });
 
-  test('les deux mythiques sont hors du tirage des trois emplacements', () async {
+  test('les trois mythiques sont hors du tirage des trois emplacements', () async {
     final registry = await loadGameDataRegistry(rootBundle);
     final mythiques = registry.levelUpRewards
         .where((r) => r.pool == RewardPool.mythic)
         .toList()
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
-    expect(mythiques.map((r) => r.id), ['lucky_clover', 'mirror']);
-    expect(mythiques.first.amountFor(RewardRarity.mythic), 1);
-    expect(mythiques.last.effect, RewardEffect.cloneCard);
+    expect(mythiques.map((r) => r.id), ['wisdom', 'lucky_clover', 'mirror']);
+    // Par id, et non par place : la place change avec le catalogue.
+    final byId = {for (final r in mythiques) r.id: r};
+    expect(byId['wisdom']!.stat, RewardStat.maxMana);
+    expect(byId['wisdom']!.amountFor(RewardRarity.mythic), 1);
+    expect(byId['lucky_clover']!.amountFor(RewardRarity.mythic), 1);
+    expect(byId['mirror']!.effect, RewardEffect.cloneCard);
   });
 
   test('les huit récompenses portent leurs deux langues', () async {
