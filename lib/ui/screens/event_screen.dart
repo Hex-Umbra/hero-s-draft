@@ -113,6 +113,19 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         : l10n.eventGiveRelic(name);
   }
 
+  /// Le badge d'une action `sharpen_rune` : le gain, ou — tant que le choix
+  /// n'est pas pris — qu'aucune rune du deck ne peut monter. Une fois pris,
+  /// la rune a pu atteindre son plafond : le gain reste ce qu'il fut.
+  String _sharpenRuneText(AppLocalizations l10n, EventAction action) {
+    final noRune = !ref.read(eventProvider).isResolved &&
+        !ref.read(eventProvider.notifier).hasSharpenableRune(
+              ref.read(gameDataLoaderProvider).requireValue.forgeUpgrades,
+            );
+    return noRune
+        ? l10n.eventNoRuneToSharpen
+        : l10n.eventSharpenRune(action.value as int);
+  }
+
   /// Le montant d'une action en pourcentage des PV max du héros.
   int _hpPercent(EventAction action) =>
       action.hpPercentOf(ref.read(runProvider).heroStats.maxPv);
@@ -202,7 +215,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         iconColor = Colors.amberAccent;
         textColor = Colors.amberAccent;
         bgColor = Colors.amber.withValues(alpha: 0.12);
-        text = l10n.eventSharpenRune(action.value as int);
+        text = _sharpenRuneText(l10n, action);
         break;
       default:
         icon = Icons.help_outline;
@@ -364,7 +377,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         iconColor = Colors.amberAccent;
         textColor = Colors.amberAccent;
         bgColor = Colors.amber.withValues(alpha: 0.08);
-        text = l10n.eventSharpenRune(action.value as int);
+        text = _sharpenRuneText(l10n, action);
         break;
       default:
         icon = Icons.help_outline;

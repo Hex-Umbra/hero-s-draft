@@ -319,7 +319,7 @@ void main() {
   // Transcendance (spec P-43 E3, §4.8, §8 ; A15) : l'écran lit le deck et le
   // bonus de plafond de la run.
   // Sept rouleaux, dont quatre dans la révélation : la vue large du fichier
-  // (`_largeView`, Task 6).
+  // (`_largeView`, défini plus haut dans ce fichier).
   group('Transcendance', () {
     /// Un conteneur sur le registre réel, résolu, dont le deck porte une
     /// Frappe rare à Économe 1 — à son plafond.

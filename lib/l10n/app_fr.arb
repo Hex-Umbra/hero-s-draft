@@ -261,6 +261,7 @@
   "eventGiveRelic": "Cède {relic}",
   "eventNoRelicToGive": "Aucune relique à céder",
   "eventSharpenRune": "+{amount} niveau de rune",
+  "eventNoRuneToSharpen": "Aucune rune à affûter",
 
   "settingsTitle": "Réglages",
   "quitGame": "Quitter",

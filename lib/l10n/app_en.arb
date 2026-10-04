@@ -710,6 +710,7 @@
     }
   },
   "eventNoRelicToGive": "No relic to give up",
+  "eventNoRuneToSharpen": "No rune to sharpen",
   "eventSharpenRune": "+{amount} rune level",
   "@eventSharpenRune": {
     "placeholders": {

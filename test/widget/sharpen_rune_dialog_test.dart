@@ -169,6 +169,20 @@ void main() {
         ['sharp:2', 'eco:1']);
   });
 
+  testWidgets('sans or, le solde n est pas affiche : rien n est paye',
+      (tester) async {
+    await _openDialog(tester, _rareStrike(const ['sharp:2']),
+        gold: 0, isFree: true);
+
+    expect(find.byType(GoldIndicator), findsNothing);
+  });
+
+  testWidgets('dans le mode du feu, le solde est affiche', (tester) async {
+    await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 1000);
+
+    expect(find.byType(GoldIndicator), findsOneWidget);
+  });
+
   testWidgets('sans or, une rune a son plafond dit Niveau maximal, inactive',
       (tester) async {
     await _openDialog(tester, _rareStrike(const ['eco:1']),

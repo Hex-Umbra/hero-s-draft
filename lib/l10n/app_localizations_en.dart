@@ -968,6 +968,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventNoRelicToGive => 'No relic to give up';
 
   @override
+  String get eventNoRuneToSharpen => 'No rune to sharpen';
+
+  @override
   String eventSharpenRune(int amount) {
     return '+$amount rune level';
   }

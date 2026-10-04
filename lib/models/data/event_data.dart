@@ -179,7 +179,7 @@ class EventAction {
     'trade_relic': (min: 0, max: null),
     'heal_percent': (min: 1, max: 100),
     'lose_hp_percent': (min: 1, max: 100),
-    'sharpen_rune': (min: 1, max: null),
+    'sharpen_rune': (min: 1, max: 1),
   };
 
   factory EventAction.fromJson(Map<String, dynamic> json) {

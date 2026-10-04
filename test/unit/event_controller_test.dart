@@ -495,6 +495,7 @@ void main() {
         ('lose_hp_percent', 0),
         ('lose_hp_percent', 101),
         ('sharpen_rune', 0),
+        ('sharpen_rune', 2),
         ('sharpen_rune', '1'),
       ]) {
         expect(

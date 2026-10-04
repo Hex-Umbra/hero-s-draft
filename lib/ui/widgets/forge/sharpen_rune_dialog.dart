@@ -86,7 +86,7 @@ class SharpenRuneDialog extends ConsumerWidget {
       title: Row(
         children: [
           Expanded(child: Text(card.data.getName(locale))),
-          const GoldIndicator(),
+          if (!isFree) const GoldIndicator(),
         ],
       ),
       content: Material(

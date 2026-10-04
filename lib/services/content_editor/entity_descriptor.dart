@@ -369,11 +369,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
     // pas monter une rune sans fin (spec P-43 E1, §6). `binary` y vaut false :
     // une rune binaire le declare, avec `maxLevel: 1` (spec P-43 E3, A16).
-    // `minFusionRank` y vaut
-    // 1 : la rune s'offre des la premiere fusion ; `eco` et `quick` en
-    // demandent 2 (spec P-43 E2, D48). `eligibleEffects` y porte l'exemple du
-    // delta, `damage` ; `excludesRunes` n'y figure pas : absente, elle vaut
-    // « aucune », comme `classes` d'un passif.
+    // `minFusionRank` y vaut 1 : la rune s'offre des la premiere fusion ;
+    // `eco` et `quick` en demandent 2 (spec P-43 E2, D48). `eligibleEffects`
+    // y porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
+    // absente, elle vaut « aucune », comme `classes` d'un passif.
     template: '''
 {
   "icon": "flash_on_rounded",

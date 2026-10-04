@@ -261,7 +261,22 @@ void main() {
       expect(enabled(tester, handRune), isFalse);
       expect(enabled(tester, leave), isTrue);
       expect(find.text('-10 PV'), findsOneWidget);
-      expect(find.text('+1 niveau de rune'), findsOneWidget);
+      // Le choix s'explique : ce n'est pas une affaire de PV. Le badge du
+      // gain cède sa place, comme celui de la relique du Colporteur.
+      expect(find.text('Aucune rune à affûter'), findsOneWidget);
+      expect(find.text('+1 niveau de rune'), findsNothing);
+    });
+
+    testWidgets('avec une rune affutable, le badge Aucune rune a affuter '
+        'n y est pas', (tester) async {
+      await pumpEvent(
+        tester,
+        eventOf('wandering_grinder'),
+        deck: [sharpStrike()],
+      );
+
+      expect(enabled(tester, handRune), isTrue);
+      expect(find.text('Aucune rune à affûter'), findsNothing);
     });
 
     testWidgets('il affute la rune choisie, sans or, contre 10 % des PV max',

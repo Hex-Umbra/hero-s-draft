@@ -75,21 +75,28 @@ class EventController extends Notifier<EventState> {
     EventChoice choice,
     Iterable<ForgeUpgradeData> runeCatalog,
   ) {
-    final run = ref.read(runProvider);
-    final hero = run.heroStats;
+    final hero = ref.read(runProvider).heroStats;
     return choice.isSelectable(
       hero.currentPv,
       ref.read(inventoryProvider).gold,
       hero.maxPv,
       hasTradedRelic: state.tradedRelic != null,
-      hasSharpenableRune: ref.read(deckProvider).masterDeck.any(
-            (card) => ForgeRuneRules.hasSharpenableRune(
-              card,
-              runeCatalog,
-              capBonus: run.runeCapBonus,
-            ),
-          ),
+      hasSharpenableRune: hasSharpenableRune(runeCatalog),
     );
+  }
+
+  /// Une rune du deck peut-elle encore monter ? (spec P-43 E3, §4.9) Lu sur
+  /// le deck et [runeCatalog], sous le plafond effectif de la run (A17) ;
+  /// l'écran le demande pour nommer l'inactivité du *Rémouleur*.
+  bool hasSharpenableRune(Iterable<ForgeUpgradeData> runeCatalog) {
+    final capBonus = ref.read(runProvider).runeCapBonus;
+    return ref.read(deckProvider).masterDeck.any(
+          (card) => ForgeRuneRules.hasSharpenableRune(
+            card,
+            runeCatalog,
+            capBonus: capBonus,
+          ),
+        );
   }
 
   /// Gère la sélection et la résolution d'un choix d'événement
