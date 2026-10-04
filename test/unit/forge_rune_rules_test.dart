@@ -218,6 +218,24 @@ void main() {
         isTrue,
       );
     });
+
+    // Les paires que tire le boss « XP » (spec P-43 E3, §4.6, A14).
+    test('sharpenablePairs : les paires sous leur plafond, dans l ordre du '
+        'deck puis des runes de chaque carte', () {
+      final catalog = [_rune('sharp'), _rune('eco', maxLevel: 1)];
+      final first = _cardWith(['eco:1', 'sharp:2']);
+      final bare = _cardWith([]);
+      final last = _cardWith(['sharp:1', 'absente:1']);
+
+      expect(
+        [
+          for (final pair in ForgeRuneRules.sharpenablePairs(
+              [first, bare, last], catalog))
+            (pair.card.uniqueId, pair.rune.id, pair.level),
+        ],
+        [(first.uniqueId, 'sharp', 2), (last.uniqueId, 'sharp', 1)],
+      );
+    });
   });
 
   // Le Puits d'echange (spec P-43 E2, A5, A6, §4.8).

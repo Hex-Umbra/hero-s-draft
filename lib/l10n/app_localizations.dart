@@ -488,6 +488,12 @@ abstract class AppLocalizations {
   /// **'Defeat the guardian of this floor to complete the act!'**
   String get tooltipBossDesc;
 
+  /// No description provided for @tooltipBossXpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple XP and gold, and one rune in your deck gains a level, if any still can.'**
+  String get tooltipBossXpDesc;
+
   /// No description provided for @actLevel.
   ///
   /// In en, this message translates to:

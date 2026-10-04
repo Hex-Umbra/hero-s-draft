@@ -117,6 +117,7 @@
   "tooltipEventDesc": "Who knows what surprises or dangers await here?",
   "tooltipBossTitle": "Boss Combat",
   "tooltipBossDesc": "Defeat the guardian of this floor to complete the act!",
+  "tooltipBossXpDesc": "Triple XP and gold, and one rune in your deck gains a level, if any still can.",
 
   "actLevel": "Act {act} - Level: {level}",
   "@actLevel": {

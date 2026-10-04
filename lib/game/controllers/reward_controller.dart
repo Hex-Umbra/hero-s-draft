@@ -2,14 +2,21 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/forge_upgrade_data.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../models/card_instance.dart';
 import '../../models/map_node.dart';
 import '../../models/enemy_instance.dart';
 import '../game_constants.dart';
+import '../services/forge_rune_rules.dart';
 import '../systems/card_drops.dart';
 import 'inventory_controller.dart';
 import 'run_controller.dart';
 import 'deck_controller.dart';
+
+/// Une rune montée par le boss « XP » : l'exemplaire qui la porte, son id, et
+/// le niveau qu'elle atteint (spec P-43 E3, §3.8).
+typedef SharpenedRune = ({String cardUniqueId, String runeId, int level});
 
 class RewardState {
   final int goldGained;
@@ -23,12 +30,18 @@ class RewardState {
   final bool isCardsProcessed;
   final List<CardInstance> selectedCards;
   final bool isResolved;
-  final CardData? rolledBonusCard;
 
   /// Les cartes trouvées à la victoire (spec P-43 E3, §4.1 ; D1) : tirées
   /// par `handleVictory`, toujours communes, elles rejoignent le deck à
   /// `collectGoldAndXp`, sans refus.
   final List<CardInstance> foundCards;
+
+  /// Les runes que le boss « XP » a montées (spec P-43 E3, §4.6 ; D42(a),
+  /// C1.1), une entrée par rune, au niveau atteint, écrites par
+  /// `collectGoldAndXp`. `null` hors d'un boss « XP » ; vide pour un boss
+  /// « XP » dont aucune rune ne pouvait monter (A5) — le discriminant que lit
+  /// l'écran.
+  final List<SharpenedRune>? sharpenedRunes;
 
   const RewardState({
     this.goldGained = 0,
@@ -41,8 +54,8 @@ class RewardState {
     this.isCardsProcessed = false,
     this.selectedCards = const [],
     this.isResolved = false,
-    this.rolledBonusCard,
     this.foundCards = const [],
+    this.sharpenedRunes,
   });
 
   RewardState copyWith({
@@ -56,8 +69,8 @@ class RewardState {
     bool? isCardsProcessed,
     List<CardInstance>? selectedCards,
     bool? isResolved,
-    CardData? rolledBonusCard,
     List<CardInstance>? foundCards,
+    List<SharpenedRune>? sharpenedRunes,
   }) {
     return RewardState(
       goldGained: goldGained ?? this.goldGained,
@@ -70,8 +83,8 @@ class RewardState {
       isCardsProcessed: isCardsProcessed ?? this.isCardsProcessed,
       selectedCards: selectedCards ?? this.selectedCards,
       isResolved: isResolved ?? this.isResolved,
-      rolledBonusCard: rolledBonusCard ?? this.rolledBonusCard,
       foundCards: foundCards ?? this.foundCards,
+      sharpenedRunes: sharpenedRunes ?? this.sharpenedRunes,
     );
   }
 }
@@ -200,7 +213,7 @@ class RewardController extends Notifier<RewardState> {
 
     // 5. La trouvaille (spec P-43 E3, §4.1 ; D1, D31) : des cartes tirées
     // uniformément, avec remise, parmi celles que la classe peut recevoir —
-    // le prédicat de la carte bonus (ADR-101) —, toujours communes, donc sans
+    // le prédicat d'offre unique (ADR-101) —, toujours communes, donc sans
     // rune. Pool vide : aucune carte, sans repli (ADR-101 D4).
     final run = ref.read(runProvider);
     final rng = random ?? Random();
@@ -227,16 +240,6 @@ class RewardController extends Notifier<RewardState> {
       }
     }
 
-    CardData? rolledBonusCard;
-    if (currentNode.bossRewardType == BossRewardType.doubleXp) {
-      final heroClassId = ref.read(runProvider).heroClassId;
-      final validCards =
-          allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
-      if (validCards.isNotEmpty) {
-        rolledBonusCard = validCards[Random().nextInt(validCards.length)];
-      }
-    }
-
     state = RewardState(
       goldGained: totalGold,
       xpGained: totalXp,
@@ -248,8 +251,12 @@ class RewardController extends Notifier<RewardState> {
       isCardsProcessed: false,
       selectedCards: const [],
       isResolved: false,
-      rolledBonusCard: rolledBonusCard,
       foundCards: foundCards,
+      // Le boss « XP » monte ses runes à la collecte : une liste vide ici le
+      // désigne (C1.1).
+      sharpenedRunes: currentNode.bossRewardType == BossRewardType.doubleXp
+          ? const []
+          : null,
     );
   }
 
@@ -259,20 +266,49 @@ class RewardController extends Notifier<RewardState> {
     ref.read(inventoryProvider.notifier).gainGold(state.goldGained);
     final leveledUp = ref.read(runProvider.notifier).gainXp(state.xpGained);
 
-    if (state.rolledBonusCard != null) {
-      ref.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(data: state.rolledBonusCard!));
-    }
-
     // Les cartes trouvées rejoignent le deck, sans refus (spec P-43 E3, §4.1).
     final deck = ref.read(deckProvider.notifier);
     for (final card in state.foundCards) {
       deck.addCardToMasterDeck(card);
     }
 
-    state = state.copyWith(isGoldXpCollected: true);
+    state = state.copyWith(
+      isGoldXpCollected: true,
+      sharpenedRunes:
+          state.sharpenedRunes == null ? null : _sharpenRandomRunes(),
+    );
     _checkResolution();
 
     return leveledUp;
+  }
+
+  /// La récompense du boss « XP » (spec P-43 E3, §4.6 ; D42(a), A5, A14) :
+  /// [GameConstants.bossXpRuneSharpens] tirages, chacun une paire (carte,
+  /// rune) au hasard parmi celles du deck dont la rune peut encore monter,
+  /// montée d'un niveau, sans or ; chaque tirage voit le précédent. Sans
+  /// paire, rien ne monte.
+  List<SharpenedRune> _sharpenRandomRunes() {
+    final deck = ref.read(deckProvider.notifier);
+    final catalog = GameDataRegistry.instance?.forgeUpgrades ??
+        const <ForgeUpgradeData>[];
+    final rng = Random();
+    final sharpened = <SharpenedRune>[];
+    for (var i = 0; i < GameConstants.bossXpRuneSharpens; i++) {
+      final pairs = ForgeRuneRules.sharpenablePairs(
+        ref.read(deckProvider).masterDeck,
+        catalog,
+      );
+      if (pairs.isEmpty) break;
+      final pair = pairs[rng.nextInt(pairs.length)];
+      if (deck.raiseRuneLevel(pair.card.uniqueId, pair.rune.id)) {
+        sharpened.add((
+          cardUniqueId: pair.card.uniqueId,
+          runeId: pair.rune.id,
+          level: pair.level + 1,
+        ));
+      }
+    }
+    return sharpened;
   }
 
   void collectRelic() {

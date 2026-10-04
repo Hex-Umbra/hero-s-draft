@@ -126,14 +126,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         type: NotificationType.success,
       );
 
-      if (rewardState.rolledBonusCard != null) {
-        final bonusCardName = locale == 'fr' ? rewardState.rolledBonusCard!.nameFr : rewardState.rolledBonusCard!.nameEn;
-        context.showNotification(
-          '🎁 ${locale == 'fr' ? 'Carte Bonus obtenue : $bonusCardName' : 'Bonus Card obtained: $bonusCardName'}',
-          type: NotificationType.success,
-        );
-      }
-
       // Une notification par carte trouvée, qui la nomme (spec P-43 E3,
       // §4.1, A10) : elle entre au deck sans refus. Tirées par
       // `handleVictory`, elles se lisent sur la copie prise plus haut.
@@ -143,6 +135,36 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           l10n.rewardCardFound(card.data.getName(locale)),
           type: NotificationType.success,
         );
+      }
+
+      // Les runes du boss « XP » (spec P-43 E3, §4.6, A5) : montées par
+      // `collectGoldAndXp`, après la copie prise plus haut — l'écran relit
+      // l'état. `null` hors d'un boss « XP » ; vide, aucune rune ne pouvait
+      // monter.
+      final sharpened = ref.read(rewardProvider).sharpenedRunes;
+      if (sharpened != null) {
+        if (sharpened.isEmpty) {
+          context.showNotification(l10n.restCampSharpenNone);
+        }
+        final deck = ref.read(deckProvider).masterDeck;
+        final runes =
+            ref.read(gameDataLoaderProvider).requireValue.forgeUpgrades;
+        for (final rune in sharpened) {
+          final card =
+              deck.where((c) => c.uniqueId == rune.cardUniqueId).firstOrNull;
+          context.showNotification(
+            l10n.restCampSnackbarSharpen(
+              runes
+                      .where((r) => r.id == rune.runeId)
+                      .firstOrNull
+                      ?.getName(locale) ??
+                  rune.runeId,
+              rune.level,
+              card?.data.getName(locale) ?? '',
+            ),
+            type: NotificationType.success,
+          );
+        }
       }
 
       if (leveledUp) {

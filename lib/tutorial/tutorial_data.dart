@@ -84,8 +84,8 @@ const List<TutorialStep> kTutorialSteps = [
         '• 🧩 Exchange Well: swap one of a card\'s runes for another, for '
         'gold — every third act.\n'
         '• 💀 Boss: three at the summit, one reward each — cards, triple XP '
-        'and gold, or an improved relic. Choosing the Boss is choosing the '
-        'reward.',
+        'and gold with one rune raised a level if any still can, or an '
+        'improved relic. Choosing the Boss is choosing the reward.',
     bodyFr:
         'Huit types de nœuds se partagent la carte :\n'
         '• ⚔️ Combat : affrontement standard, pour l\'or, l\'XP et une carte.\n'
@@ -101,7 +101,8 @@ const List<TutorialStep> kTutorialSteps = [
         '• 🧩 Puits d\'échange : échanger une rune d\'une carte contre une '
         'autre, contre de l\'or — tous les trois actes.\n'
         '• 💀 Boss : trois au sommet, une récompense chacun — des cartes, le '
-        'triple d\'XP et d\'or, ou une relique améliorée. Choisir le Boss, '
+        'triple d\'XP et d\'or avec une rune montée d\'un niveau si l\'une '
+        'peut encore monter, ou une relique améliorée. Choisir le Boss, '
         'c\'est choisir la récompense.',
     type: TutorialStepType.nodeTypes,
   ),

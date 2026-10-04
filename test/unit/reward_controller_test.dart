@@ -172,7 +172,8 @@ void main() {
       expect(rewardController.state.goldGained, 22);
       expect(rewardController.state.rolledRelic, isNull);
       expect(rewardController.state.rolledCards, isEmpty);
-      expect(rewardController.state.rolledBonusCard, isNull);
+      // Hors d'un boss « XP », aucune rune ne monte (spec P-43 E3, §4.6).
+      expect(rewardController.state.sharpenedRunes, isNull);
       // La trouvaille (spec P-43 E3, §4.1) : `c_normal`, la seule carte que
       // le paladin puisse recevoir — `c_status` est un statut, `c_unique`
       // une signature.
@@ -317,86 +318,20 @@ void main() {
       );
     });
 
-    test('le bonus de boss d un mage ne tire jamais la signature d une autre classe', () {
-      const mageHero = HeroData(
-        id: 'mage',
-        nameEn: 'Mage',
-        nameFr: 'Mage',
-        classCard: 'mage.png',
-        maxHp: 80,
-        maxMana: 4,
+    test('le boss XP ne donne plus de carte : sa victoire attend la collecte '
+        'pour monter une rune, et rien ne monte hors de lui', () {
+      rewardController.handleVictory(
+        defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
+        currentNode: makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.doubleXp),
+        allRelics: allRelics,
+        allCards: allCards,
         luck: 0,
-        mastery: 0,
+        act: 1,
       );
-      runController.startNewRun(mageHero);
-
-      const mixedCards = [
-        ...allCards,
-        CardData(
-          id: 'signature_mage',
-          cost: 2,
-          type: CardType.attack,
-          category: CardCategory.characterSpecific,
-          heroClass: 'mage',
-          rarity: CardRarity.rare,
-          target: CardTarget.singleEnemy,
-          effects: [],
-        ),
-        CardData(
-          id: 'signature_paladin',
-          cost: 2,
-          type: CardType.attack,
-          category: CardCategory.characterSpecific,
-          heroClass: 'paladin',
-          rarity: CardRarity.rare,
-          target: CardTarget.singleEnemy,
-          effects: [],
-        ),
-        CardData(
-          id: 'signature_berserker',
-          cost: 2,
-          type: CardType.attack,
-          category: CardCategory.characterSpecific,
-          heroClass: 'berserker',
-          rarity: CardRarity.rare,
-          target: CardTarget.singleEnemy,
-          effects: [],
-        ),
-      ];
-
-      final rolled = <String>{};
-      for (var i = 0; i < 200; i++) {
-        rewardController.handleVictory(
-          defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
-          currentNode: makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.doubleXp),
-          allRelics: allRelics,
-          allCards: mixedCards,
-          luck: 0,
-          act: 1,
-        );
-        rolled.add(rewardController.state.rolledBonusCard!.id);
-      }
-
-      expect(rolled, isNot(contains('signature_paladin')));
-      expect(rolled, isNot(contains('signature_berserker')));
-      expect(rolled, contains('signature_mage'));
-    });
-
-    test('handleVictory rolls a bonus card excluding status/unique cards, only for a doubleXp boss node', () {
-      for (var i = 0; i < 30; i++) {
-        rewardController.handleVictory(
-          defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
-          currentNode: makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.doubleXp),
-          allRelics: allRelics,
-          allCards: allCards,
-          luck: 0,
-          act: 1,
-        );
-        final bonus = rewardController.state.rolledBonusCard;
-        expect(bonus, isNotNull);
-        expect(bonus!.type, isNot(CardType.status));
-        expect(bonus.rarity, isNot(CardRarity.unique));
-      }
+      expect(rewardController.state.foundCards, isEmpty);
+      expect(rewardController.state.rolledCards, isEmpty);
+      // Vide, et non nulle : le discriminant d'un boss « XP » (C1.1).
+      expect(rewardController.state.sharpenedRunes, isEmpty);
 
       rewardController.handleVictory(
         defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
@@ -406,7 +341,7 @@ void main() {
         luck: 0,
         act: 1,
       );
-      expect(rewardController.state.rolledBonusCard, isNull);
+      expect(rewardController.state.sharpenedRunes, isNull);
     });
 
     test('collectGoldAndXp applies gold/xp once, resolves immediately with nothing else pending, and is idempotent', () {
@@ -432,7 +367,8 @@ void main() {
       expect(inventoryController.state.gold, initialGold + 15);
     });
 
-    test('collectGoldAndXp reports whether the player leveled up and adds the bonus card', () {
+    test('collectGoldAndXp reports whether the player leveled up, and the XP '
+        'boss adds no card', () {
       rewardController.handleVictory(
         defeatedEnemies: [makeEnemy(xp: 500, gold: 0)],
         currentNode: makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.doubleXp),
@@ -447,7 +383,7 @@ void main() {
 
       expect(leveledUp, isTrue);
       expect(container.read(runProvider).heroStats.level, greaterThan(1));
-      expect(container.read(deckProvider).masterDeck.length, deckSizeBefore + 1);
+      expect(container.read(deckProvider).masterDeck.length, deckSizeBefore);
     });
 
     test('resolution stays pending until the rolled relic is collected or skipped', () {
@@ -733,6 +669,96 @@ void main() {
             reason: reward.name,
           );
         }
+      });
+    });
+
+    // Le boss « XP » : plus de carte, une rune du deck monte d'un niveau, sans
+    // or (spec P-43 E3, §4.6, §8 ; D42(a), A5, A14).
+    group('le boss XP', () {
+      setUp(() {
+        shippedRuneRegistry(const ['eco', 'sharp']);
+      });
+
+      final xpBoss = makeNode(
+        type: MapNodeType.boss,
+        bossRewardType: BossRewardType.doubleXp,
+      );
+
+      /// Une Frappe rare portant [runes], posée dans le deck.
+      CardInstance seedRare(List<String> runes) {
+        final card = CardInstance(
+          data: shippedCard('strike_basic'),
+          rarity: CardRarity.rare,
+          forgeUpgrades: runes,
+        );
+        deckNotifier.addCardToMasterDeck(card);
+        return card;
+      }
+
+      List<String> runesOf(CardInstance card) => container
+          .read(deckProvider)
+          .masterDeck
+          .singleWhere((c) => c.uniqueId == card.uniqueId)
+          .forgeUpgrades;
+
+      /// Une victoire sur [node], puis l'or et l'XP collectés.
+      void winAndCollect(MapNode node) {
+        rewardController.handleVictory(
+          defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
+          currentNode: node,
+          allRelics: allRelics,
+          allCards: allCards,
+          luck: 0,
+          act: 1,
+        );
+        rewardController.collectGoldAndXp();
+      }
+
+      test('une rune sous son plafond monte d un niveau, jamais une rune '
+          'plafonnee', () {
+        final capped = seedRare(const ['eco:1']);
+        final sharp = seedRare(const ['sharp:1']);
+
+        // Chaque tirage voit le précédent : Tranchant monte à chaque boss.
+        for (var i = 0; i < 5; i++) {
+          winAndCollect(xpBoss);
+          expect(rewardController.state.sharpenedRunes, [
+            (cardUniqueId: sharp.uniqueId, runeId: 'sharp', level: i + 2),
+          ]);
+        }
+
+        expect(runesOf(sharp), ['sharp:6']);
+        expect(runesOf(capped), ['eco:1']);
+      });
+
+      // A5 : fréquent en début de run, le deck n'a pas de rune affûtable.
+      test('sans rune qui puisse monter, rien ne monte, et la liste vide le '
+          'dit', () {
+        final capped = seedRare(const ['eco:1']);
+
+        winAndCollect(xpBoss);
+
+        expect(rewardController.state.sharpenedRunes, isEmpty);
+        expect(runesOf(capped), ['eco:1']);
+      });
+
+      test('hors du boss XP, aucune rune ne monte', () {
+        final sharp = seedRare(const ['sharp:1']);
+
+        for (final node in [
+          makeNode(),
+          makeNode(type: MapNodeType.elite),
+          makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.cards),
+          makeNode(
+            type: MapNodeType.boss,
+            bossRewardType: BossRewardType.improvedRelic,
+          ),
+        ]) {
+          winAndCollect(node);
+          expect(rewardController.state.sharpenedRunes, isNull,
+              reason: '${node.type.name} ${node.bossRewardType?.name}');
+        }
+        expect(runesOf(sharp), ['sharp:1']);
       });
     });
   });

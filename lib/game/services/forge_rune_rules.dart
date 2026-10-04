@@ -4,6 +4,13 @@ import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/effective_card.dart';
 
+/// Une rune d'une carte du deck, au niveau [level] que la carte porte.
+typedef SharpenablePair = ({
+  CardInstance card,
+  ForgeUpgradeData rune,
+  int level,
+});
+
 /// Les règles des runes de forge, notées `id:niveau` : l'héritage de la
 /// fusion 3→1 (D13), son offre, l'affûtage au feu de camp et l'échange au
 /// Puits (spec P-43 E2). Les références se lisent par l'analyseur unique du
@@ -155,6 +162,27 @@ class ForgeRuneRules {
         final rune = catalog.where((r) => r.id == entry.key).firstOrNull;
         return rune != null && canSharpen(rune, entry.value);
       });
+
+  /// Les paires (carte, rune) de [deck] dont la rune peut encore monter d'un
+  /// niveau — celles que tire le boss « XP » (spec P-43 E3, §4.6, A14) —,
+  /// dans l'ordre du deck puis des runes de chaque carte. Une rune absente du
+  /// [catalog] ne se monte pas.
+  static List<SharpenablePair> sharpenablePairs(
+    Iterable<CardInstance> deck,
+    Iterable<ForgeUpgradeData> catalog,
+  ) {
+    final pairs = <SharpenablePair>[];
+    for (final card in deck) {
+      for (final MapEntry(key: id, value: level)
+          in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries) {
+        final rune = catalog.where((r) => r.id == id).firstOrNull;
+        if (rune != null && canSharpen(rune, level)) {
+          pairs.add((card: card, rune: rune, level: level));
+        }
+      }
+    }
+    return pairs;
+  }
 
   /// [refs] où la référence de la rune [runeId] cède la place à
   /// [replacement], à sa place (spec P-43 E2, §4.7, §4.8) : l'affûtage la

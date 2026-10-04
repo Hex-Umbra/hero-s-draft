@@ -234,6 +234,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Battez le gardien de cet étage pour compléter l\'acte !';
 
   @override
+  String get tooltipBossXpDesc =>
+      'Le triple d\'XP et d\'or, et une rune de votre deck, si l\'une peut encore monter, gagne un niveau.';
+
+  @override
   String actLevel(int act, int level) {
     return 'Acte $act - Niveau : $level';
   }

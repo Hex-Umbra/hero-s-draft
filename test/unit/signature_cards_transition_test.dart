@@ -16,11 +16,8 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// La transition E3 → E4 (spec P-43 E3, §4.13, §8) : jusqu'à E4, les
 /// signatures restent des cartes du deck — exclues de la trouvaille par
-/// `unique`, sans rune offerte, au rang 0 pour la difficulté. Sur le
-/// registre réel.
-///
-/// La clause du boss « XP » — il ne monte jamais une rune de signature —
-/// vient en partie 2, avec le boss.
+/// `unique`, sans rune offerte, au rang 0 pour la difficulté, et jamais
+/// montées par le boss « XP », faute de rune. Sur le registre réel.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -103,6 +100,67 @@ void main() {
           CardInstance(data: card, rarity: CardRarity.common),
       ]);
       expect(deck.fusionRankSum, 0, reason: hero.id);
+    }
+  });
+
+  test('le boss XP ne monte jamais une rune de signature : aucune n en '
+      'porte', () {
+    final xpBoss = MapNode(
+      id: 'node_9_0',
+      floor: 9,
+      type: MapNodeType.boss,
+      connections: const [],
+      position: Vector2.zero(),
+      bossRewardType: BossRewardType.doubleXp,
+    );
+
+    for (final hero in registry.heroes) {
+      final container = ProviderContainer(
+        overrides: [xpCurveProvider.overrideWithValue(registry.xpCurve!)],
+      );
+      addTearDown(container.dispose);
+      container.read(runProvider.notifier).startNewRun(hero);
+      final deck = container.read(deckProvider.notifier);
+      final signatures = [
+        for (final id in hero.skills)
+          CardInstance(data: registry.cards.singleWhere((c) => c.id == id)),
+      ];
+      for (final card in signatures) {
+        deck.addCardToMasterDeck(card);
+      }
+      // Une carte qui porte une rune : sans elle, le boss ne monterait rien
+      // d'office, et la clause ne prouverait rien.
+      deck.addCardToMasterDeck(CardInstance(
+        data: registry.cards.singleWhere((c) => c.id == 'strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: const ['sharp:1'],
+      ));
+      final rewards = container.read(rewardProvider.notifier);
+
+      for (var i = 0; i < 20; i++) {
+        rewards.handleVictory(
+          defeatedEnemies: const [],
+          currentNode: xpBoss,
+          allRelics: registry.relics,
+          allCards: registry.cards,
+          luck: 0,
+          act: 1,
+        );
+        rewards.collectGoldAndXp();
+        final sharpened = rewards.state.sharpenedRunes!;
+        expect(sharpened, hasLength(1), reason: hero.id);
+        expect(
+          signatures.map((c) => c.uniqueId),
+          isNot(contains(sharpened.single.cardUniqueId)),
+          reason: hero.id,
+        );
+      }
+      for (final card in container.read(deckProvider).masterDeck) {
+        if (signatureIds.contains(card.data.id)) {
+          expect(card.forgeUpgrades, isEmpty,
+              reason: '${hero.id} : ${card.data.id}');
+        }
+      }
     }
   });
 }

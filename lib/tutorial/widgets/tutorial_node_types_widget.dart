@@ -100,8 +100,9 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.cyanAccent,
       titleEn: 'Boss (3× XP & Gold)',
       titleFr: 'Boss (XP & Or ×3)',
-      descEn: 'Rewards triple XP and gold.',
-      descFr: 'Offre le triple d\'XP et d\'or.',
+      descEn: 'Rewards triple XP and gold, and raises a rune if any still can.',
+      descFr: 'Offre le triple d\'XP et d\'or, et monte une rune si l\'une '
+          'peut encore monter.',
     ),
     NodeTypeInfo(
       icon: Icons.diamond,

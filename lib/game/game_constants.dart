@@ -42,6 +42,12 @@ class GameConstants {
     MapNodeType.elite: (guaranteed: 1, extraChances: [25]),
   };
 
+  // --- BOSS « XP » (D42) ---
+  /// Les runes que la récompense du boss « XP » monte d'un niveau (D42(a)),
+  /// tirées parmi les paires (carte, rune) du deck dont la rune peut encore
+  /// monter.
+  static const int bossXpRuneSharpens = 1;
+
   // --- DECK RULES ---
   /// La main maximale au début d'une run (D25) : la stat vit sur
   /// `RunState.maxHandSize`, que lisent les six chemins de pioche — au-delà,

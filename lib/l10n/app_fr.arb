@@ -67,6 +67,7 @@
   "tooltipEventDesc": "Qui sait quelles surprises ou dangers vous attendent ici ?",
   "tooltipBossTitle": "Combat de Boss",
   "tooltipBossDesc": "Battez le gardien de cet étage pour compléter l'acte !",
+  "tooltipBossXpDesc": "Le triple d'XP et d'or, et une rune de votre deck, si l'une peut encore monter, gagne un niveau.",
 
   "actLevel": "Acte {act} - Niveau : {level}",
   "playerEffects": "Effets du Joueur",
