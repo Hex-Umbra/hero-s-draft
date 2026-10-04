@@ -285,25 +285,31 @@ class RewardController extends Notifier<RewardState> {
   /// La récompense du boss « XP » (spec P-43 E3, §4.6 ; D42(a), A5, A14) :
   /// [GameConstants.bossXpRuneSharpens] tirages, plus un par *Meule*
   /// (`RunState.extraBossRuneSharpens`, A3), chacun une paire (carte, rune)
-  /// au hasard parmi celles du deck dont la rune peut encore monter, montée
-  /// d'un niveau, sans or ; chaque tirage voit le précédent. Sans paire,
-  /// rien ne monte.
+  /// au hasard parmi celles du deck dont la rune est sous son plafond
+  /// effectif — le bonus de la run compris (A17) —, montée d'un niveau, sans
+  /// or ; chaque tirage voit le précédent. Sans paire, rien ne monte.
   List<SharpenedRune> _sharpenRandomRunes() {
     final deck = ref.read(deckProvider.notifier);
     final catalog = GameDataRegistry.instance?.forgeUpgrades ??
         const <ForgeUpgradeData>[];
     final rng = Random();
     final sharpened = <SharpenedRune>[];
-    final draws = GameConstants.bossXpRuneSharpens +
-        ref.read(runProvider).extraBossRuneSharpens;
+    final run = ref.read(runProvider);
+    final draws =
+        GameConstants.bossXpRuneSharpens + run.extraBossRuneSharpens;
     for (var i = 0; i < draws; i++) {
       final pairs = ForgeRuneRules.sharpenablePairs(
         ref.read(deckProvider).masterDeck,
         catalog,
+        capBonus: run.runeCapBonus,
       );
       if (pairs.isEmpty) break;
       final pair = pairs[rng.nextInt(pairs.length)];
-      if (deck.raiseRuneLevel(pair.card.uniqueId, pair.rune.id)) {
+      if (deck.raiseRuneLevel(
+        pair.card.uniqueId,
+        pair.rune.id,
+        capBonus: run.runeCapBonus,
+      )) {
         sharpened.add((
           cardUniqueId: pair.card.uniqueId,
           runeId: pair.rune.id,

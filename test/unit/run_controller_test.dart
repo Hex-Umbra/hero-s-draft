@@ -360,6 +360,20 @@ void main() {
       expect(container.read(inventoryProvider).gold, 1000);
       expect(runesOf(card), ['legacy:1']);
     });
+
+    // Transcendance, lue par le feu (spec P-43 E3, §4.8, §8 ; A17).
+    test('un plafond releve laisse affuter une rune plafonnee, au prix du feu',
+        () {
+      final card = seed(const ['eco:1'], gold: 100);
+      expect(run.sharpenRune(card.uniqueId, 'eco'), isFalse);
+      expect(container.read(inventoryProvider).gold, 100);
+
+      run.raiseRuneCap('eco');
+      expect(run.sharpenRune(card.uniqueId, 'eco'), isTrue);
+
+      expect(container.read(inventoryProvider).gold, 50);
+      expect(runesOf(card), ['eco:2']);
+    });
   });
 
   // Le Puits : payer et ecrire, ou rien (spec P-43 E2, §4.8, A16).
@@ -431,6 +445,20 @@ void main() {
 
       expect(container.read(inventoryProvider).gold, 1000);
       expect(runesOf(card), ['sharp:3']);
+    });
+
+    // Transcendance, lue par le Puits (spec P-43 E3, §4.8, §8 ; A17) : les
+    // deux tiers de 3 font 2.
+    test('la rune recue entre au plafond effectif : Econome 1 sans bonus, 2 '
+        'avec', () {
+      final first = seed(const ['sharp:3'], gold: 1000);
+      expect(run.exchangeRune(first.uniqueId, 'sharp', 'eco'), isTrue);
+      expect(runesOf(first), ['eco:1']);
+
+      run.raiseRuneCap('eco');
+      final second = seed(const ['sharp:3'], gold: 1000);
+      expect(run.exchangeRune(second.uniqueId, 'sharp', 'eco'), isTrue);
+      expect(runesOf(second), ['eco:2']);
     });
   });
 }

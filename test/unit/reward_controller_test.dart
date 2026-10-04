@@ -776,6 +776,21 @@ void main() {
         expect(runesOf(sharp), ['sharp:3']);
       });
 
+      // Transcendance, lue par le tirage (spec P-43 E3, §4.8, §8 ; A17).
+      test('un plafond releve rend une rune plafonnee de nouveau tirable', () {
+        final capped = seedRare(const ['eco:1']);
+
+        winAndCollect(xpBoss);
+        expect(rewardController.state.sharpenedRunes, isEmpty);
+
+        runController.raiseRuneCap('eco');
+        winAndCollect(xpBoss);
+        expect(rewardController.state.sharpenedRunes, [
+          (cardUniqueId: capped.uniqueId, runeId: 'eco', level: 2),
+        ]);
+        expect(runesOf(capped), ['eco:2']);
+      });
+
       test('la Meule ne monte rien hors du boss XP', () {
         inventoryController.addRelic(shippedRelic('grindstone'));
         final sharp = seedRare(const ['sharp:1']);

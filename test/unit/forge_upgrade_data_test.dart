@@ -572,6 +572,15 @@ void main() {
     test('jamais negatif', () {
       expect(capped.boundLevel(1, carried: 3), 0);
     });
+
+    // Le plafond effectif (spec P-43 E3, §4.8, A17).
+    test('le bonus de plafond s ajoute au plafond, et rien a une rune sans '
+        'plafond', () {
+      expect(capped.boundLevel(3, capBonus: 1), 3);
+      expect(capped.boundLevel(1, carried: 2, capBonus: 1), 1);
+      expect(capped.boundLevel(1, carried: 3, capBonus: 1), 0);
+      expect(uncapped.boundLevel(3, carried: 5, capBonus: 1), 3);
+    });
   });
 
   group('references id:niveau', () {

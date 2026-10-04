@@ -346,12 +346,14 @@ class ForgeUpgradeData {
       ];
 
   /// La borne de niveau (D72, D75) : [requested] sans plafond ; sinon ce
-  /// qu'il reste sous `maxLevel` une fois comptés les [carried] niveaux que la
-  /// carte porte déjà — jamais négatif (spec P-43 E1, §4.7).
-  int boundLevel(int requested, {int carried = 0}) {
+  /// qu'il reste sous le plafond effectif — `maxLevel` plus le [capBonus] de
+  /// la run pour cette rune (spec P-43 E3, §4.8, A17) — une fois comptés les
+  /// [carried] niveaux que la carte porte déjà ; jamais négatif (spec P-43
+  /// E1, §4.7).
+  int boundLevel(int requested, {int carried = 0, int capBonus = 0}) {
     final cap = maxLevel;
     if (cap == null) return requested;
-    return max(0, min(requested, cap - carried));
+    return max(0, min(requested, cap + capBonus - carried));
   }
 
   /// Lit **une** référence `id:niveau` : `(id, niveau)`, ou `null` si elle est

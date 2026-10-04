@@ -178,37 +178,47 @@ class ForgeRuneRules {
   static int sharpenCost(int level) => sharpenBaseCost * level;
 
   /// La rune [rune], portée au niveau [level], peut-elle monter d'un niveau ?
-  /// Son `maxLevel` le dit, par la borne (D72).
-  static bool canSharpen(ForgeUpgradeData rune, int level) =>
-      rune.boundLevel(1, carried: level) >= 1;
+  /// Son plafond effectif le dit — `maxLevel` plus [capBonus] pour son id —,
+  /// par la borne (D72 ; spec P-43 E3, A17).
+  static bool canSharpen(
+    ForgeUpgradeData rune,
+    int level, {
+    Map<String, int> capBonus = const {},
+  }) =>
+      rune.boundLevel(1, carried: level, capBonus: capBonus[rune.id] ?? 0) >=
+      1;
 
-  /// [card] porte-t-elle une rune que l'affûtage peut monter ? Une rune
-  /// absente du [catalog] ne se monte pas. Lu par l'option du feu, par sa
-  /// sélection (spec P-43 E2, A4) et par la condition du *Rémouleur*,
+  /// [card] porte-t-elle une rune que l'affûtage peut monter, sous son
+  /// plafond effectif ([capBonus], spec P-43 E3, A17) ? Une rune absente du
+  /// [catalog] ne se monte pas. Lu par l'option du feu, par sa sélection
+  /// (spec P-43 E2, A4) et par la condition du *Rémouleur*,
   /// `EventController.isChoiceSelectable` (spec P-43 E3, §4.9).
   static bool hasSharpenableRune(
     CardInstance card,
-    Iterable<ForgeUpgradeData> catalog,
-  ) =>
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) =>
       ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries.any((entry) {
         final rune = catalog.where((r) => r.id == entry.key).firstOrNull;
-        return rune != null && canSharpen(rune, entry.value);
+        return rune != null &&
+            canSharpen(rune, entry.value, capBonus: capBonus);
       });
 
   /// Les paires (carte, rune) de [deck] dont la rune peut encore monter d'un
-  /// niveau — celles que tire le boss « XP » (spec P-43 E3, §4.6, A14) —,
-  /// dans l'ordre du deck puis des runes de chaque carte. Une rune absente du
-  /// [catalog] ne se monte pas.
+  /// niveau sous son plafond effectif ([capBonus], A17) — celles que tire le
+  /// boss « XP » (spec P-43 E3, §4.6, A14) —, dans l'ordre du deck puis des
+  /// runes de chaque carte. Une rune absente du [catalog] ne se monte pas.
   static List<SharpenablePair> sharpenablePairs(
     Iterable<CardInstance> deck,
-    Iterable<ForgeUpgradeData> catalog,
-  ) {
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) {
     final pairs = <SharpenablePair>[];
     for (final card in deck) {
       for (final MapEntry(key: id, value: level)
           in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries) {
         final rune = catalog.where((r) => r.id == id).firstOrNull;
-        if (rune != null && canSharpen(rune, level)) {
+        if (rune != null && canSharpen(rune, level, capBonus: capBonus)) {
           pairs.add((card: card, rune: rune, level: level));
         }
       }
@@ -241,9 +251,17 @@ class ForgeRuneRules {
   /// Le niveau auquel [received] entre au Puits contre une rune de niveau
   /// [givenLevel] (D39) : les deux tiers, arrondis au plus proche — deux
   /// tiers d'un entier ne tombent jamais sur une demie —, au moins 1 dès le
-  /// niveau 1, puis bornés par le plafond de [received] (D72).
-  static int wellLevel(ForgeUpgradeData received, int givenLevel) =>
-      received.boundLevel((2 * givenLevel + 1) ~/ 3);
+  /// niveau 1, puis bornés par le plafond effectif de [received] — son
+  /// `maxLevel` plus [capBonus] pour son id (D72 ; spec P-43 E3, A17).
+  static int wellLevel(
+    ForgeUpgradeData received,
+    int givenLevel, {
+    Map<String, int> capBonus = const {},
+  }) =>
+      received.boundLevel(
+        (2 * givenLevel + 1) ~/ 3,
+        capBonus: capBonus[received.id] ?? 0,
+      );
 
   /// Les runes du [catalog] qui peuvent remplacer la rune [givenId] de
   /// [card] au Puits (spec P-43 E2, A5, §4.8) : toutes celles que le

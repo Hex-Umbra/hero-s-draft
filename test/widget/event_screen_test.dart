@@ -294,6 +294,29 @@ void main() {
       expect(find.text('CONTINUER'), findsOneWidget);
     });
 
+    // Le bonus de plafond, lu par la condition que l'écran demande au
+    // contrôleur (spec P-43 E3, §4.8, §4.9 ; A17).
+    testWidgets('le bonus de plafond de la run rend le choix actif sur une '
+        'rune plafonnee', (tester) async {
+      final container = await pumpEvent(
+        tester,
+        eventOf('wandering_grinder'),
+        deck: [
+          CardInstance(
+            data: shippedCard('strike_basic'),
+            rarity: CardRarity.rare,
+            forgeUpgrades: const ['eco:1'],
+          ),
+        ],
+      );
+      expect(enabled(tester, handRune), isFalse);
+
+      container.read(runProvider.notifier).raiseRuneCap('eco');
+      await tester.pump();
+
+      expect(enabled(tester, handRune), isTrue);
+    });
+
     testWidgets('annuler la selection ne resout rien, ne coute rien',
         (tester) async {
       final container = await pumpEvent(

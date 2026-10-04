@@ -647,5 +647,21 @@ void main() {
       expect(runesOf(low), ['precise:3']);
       expect(runesOf(high), ['precise:10']);
     });
+
+    // Le plafond effectif (spec P-43 E3, §4.7, §4.8 ; A17).
+    test('monte une rune plafonnee sous un bonus de plafond, jusqu au plafond '
+        'effectif', () {
+      final card = seed(const ['eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'eco'), isFalse);
+      expect(
+          notifier.raiseRuneLevel(card.uniqueId, 'eco', capBonus: {'eco': 1}),
+          isTrue);
+      expect(runesOf(card), ['eco:2']);
+      expect(
+          notifier.raiseRuneLevel(card.uniqueId, 'eco', capBonus: {'eco': 1}),
+          isFalse);
+      expect(runesOf(card), ['eco:2']);
+    });
   });
 }

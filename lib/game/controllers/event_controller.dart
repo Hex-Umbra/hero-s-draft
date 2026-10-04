@@ -67,21 +67,28 @@ class EventController extends Notifier<EventState> {
   /// Ce choix peut-il être pris ? (spec P-43 E3, §4.9 ; C4.4) Le seul
   /// calcul des faits que reçoit `EventChoice.isSelectable` — les PV et l'or
   /// lus sur la run et l'inventaire, `hasTradedRelic` sur la relique visée,
-  /// `hasSharpenableRune` sur le deck et [runeCatalog], comme l'option du feu
-  /// (`rest_screen.dart`). L'écran l'appelle pour chaque bouton de choix,
-  /// avec le catalogue des runes du registre.
+  /// `hasSharpenableRune` sur le deck et [runeCatalog], sous le plafond
+  /// effectif de la run (A17), comme l'option du feu (`rest_screen.dart`).
+  /// L'écran l'appelle pour chaque bouton de choix, avec le catalogue des
+  /// runes du registre.
   bool isChoiceSelectable(
     EventChoice choice,
     Iterable<ForgeUpgradeData> runeCatalog,
   ) {
-    final hero = ref.read(runProvider).heroStats;
+    final run = ref.read(runProvider);
+    final hero = run.heroStats;
     return choice.isSelectable(
       hero.currentPv,
       ref.read(inventoryProvider).gold,
       hero.maxPv,
       hasTradedRelic: state.tradedRelic != null,
       hasSharpenableRune: ref.read(deckProvider).masterDeck.any(
-          (card) => ForgeRuneRules.hasSharpenableRune(card, runeCatalog)),
+            (card) => ForgeRuneRules.hasSharpenableRune(
+              card,
+              runeCatalog,
+              capBonus: run.runeCapBonus,
+            ),
+          ),
     );
   }
 
@@ -148,6 +155,7 @@ class EventController extends Notifier<EventState> {
                   sharpenTarget.cardId,
                   sharpenTarget.runeId,
                   levels: action.value as int,
+                  capBonus: runController.currentState.runeCapBonus,
                 );
           }
           break;

@@ -238,6 +238,32 @@ void main() {
         [(first.uniqueId, 'sharp', 2), (last.uniqueId, 'sharp', 1)],
       );
     });
+
+    test('canSharpen, hasSharpenableRune et sharpenablePairs lisent le bonus '
+        'de plafond, par id de rune', () {
+      final eco = _rune('eco', maxLevel: 1);
+      final card = _cardWith(['eco:1']);
+
+      expect(ForgeRuneRules.canSharpen(eco, 1), isFalse);
+      expect(ForgeRuneRules.canSharpen(eco, 1, capBonus: {'eco': 1}), isTrue);
+      expect(ForgeRuneRules.canSharpen(eco, 2, capBonus: {'eco': 1}), isFalse);
+      expect(
+          ForgeRuneRules.canSharpen(eco, 1, capBonus: {'quick': 1}), isFalse);
+      expect(ForgeRuneRules.hasSharpenableRune(card, [eco]), isFalse);
+      expect(
+        ForgeRuneRules.hasSharpenableRune(card, [eco], capBonus: {'eco': 1}),
+        isTrue,
+      );
+      expect(ForgeRuneRules.sharpenablePairs([card], [eco]), isEmpty);
+      expect(
+        [
+          for (final pair in ForgeRuneRules.sharpenablePairs([card], [eco],
+              capBonus: {'eco': 1}))
+            (pair.rune.id, pair.level),
+        ],
+        [('eco', 1)],
+      );
+    });
   });
 
   // Les candidates de Transcendance (spec P-43 E3, §4.8 ; A15, A16).
@@ -303,6 +329,16 @@ void main() {
     test('wellLevel : borne par le plafond de la rune recue — Tranchant 9 '
         'contre Econome 1', () {
       expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 9), 1);
+    });
+
+    test('wellLevel : borne par le plafond effectif — Tranchant 3 contre '
+        'Econome, 2 sous un bonus de 1', () {
+      expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 3), 1);
+      expect(
+        ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 3,
+            capBonus: {'eco': 1}),
+        2,
+      );
     });
 
     // Les runes livrees, par une liste fixe : le cas ne bouge pas quand une

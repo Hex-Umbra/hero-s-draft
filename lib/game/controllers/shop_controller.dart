@@ -60,7 +60,8 @@ class ShopController extends Notifier<ShopState> {
   /// une parmi celles que le prédicat accepte au rang de la carte, pondérées
   /// par `weight` — le tirage de la fusion (spec P-43 E2, A12, §4.9). `null`
   /// s'il ne lui en reste aucune : la carte en reçoit une de moins. Son niveau
-  /// est tiré 80 · 15 · 5 %, puis borné par le plafond de la rune (D72) ; la
+  /// est tiré 80 · 15 · 5 %, puis borné par le plafond effectif de la rune —
+  /// son `maxLevel` plus le bonus de la run (D72 ; spec P-43 E3, A17) ; la
   /// carte n'en porte aucun niveau, le prédicat refusant une rune portée.
   String? _rollRandomUpgrade(CardInstance card, Random rng) {
     final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
@@ -69,7 +70,8 @@ class ShopController extends Notifier<ShopState> {
     final rune = catalog.firstWhere((r) => r.id == drawn.single);
     final roll = rng.nextInt(100);
     final tier = roll < 80 ? 1 : (roll < 95 ? 2 : 3);
-    return '${rune.id}:${rune.boundLevel(tier)}';
+    final capBonus = ref.read(runProvider).runeCapBonus[rune.id] ?? 0;
+    return '${rune.id}:${rune.boundLevel(tier, capBonus: capBonus)}';
   }
 
   /// Helper pour tirer la rareté finale d'une carte selon l'acte

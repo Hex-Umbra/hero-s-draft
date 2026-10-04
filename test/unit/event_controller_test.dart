@@ -511,6 +511,24 @@ void main() {
           1);
     });
 
+    // Transcendance, lue par la condition et par l'action (spec P-43 E3,
+    // §4.8, §4.9 ; A17).
+    test('le bonus de plafond rend le Remouleur possible sur une rune '
+        'plafonnee, et l action la monte', () {
+      final card = seedRare(const ['eco:1']);
+      expect(events.isChoiceSelectable(hand(), runes), isFalse);
+
+      run.raiseRuneCap('eco');
+      expect(events.isChoiceSelectable(hand(), runes), isTrue);
+
+      events.selectChoice(
+        hand(),
+        const [],
+        sharpenTarget: (cardId: card.uniqueId, runeId: 'eco'),
+      );
+      expect(runesOf(card), ['eco:2']);
+    });
+
     test('le Remouleur livre : ses actions', () {
       expect(grinder.choices, hasLength(2));
       expect(
