@@ -575,4 +575,61 @@ void main() {
       expect(notifier.state.exhaustPile, [card]);
     });
   });
+
+  // L'affûtage sans or, l'écriture que partagent le feu et les sources d'E3
+  // (spec P-43 E3, §4.7, A13).
+  group('DeckNotifier.raiseRuneLevel', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      shippedRuneRegistry(const ['burning', 'eco', 'sharp']);
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    /// Une Frappe rare portant [runes], posée dans le deck.
+    CardInstance seed(List<String> runes) {
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: runes,
+      );
+      notifier.addCardToMasterDeck(card);
+      return card;
+    }
+
+    List<String> runesOf(CardInstance card) => notifier.state.masterDeck
+        .singleWhere((c) => c.uniqueId == card.uniqueId)
+        .forgeUpgrades;
+
+    test('reecrit id:n en id:n+1 a sa place', () {
+      final card = seed(const ['burning:1', 'sharp:2', 'eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'sharp'), isTrue);
+
+      expect(runesOf(card), ['burning:1', 'sharp:3', 'eco:1']);
+    });
+
+    test('refuse une rune a son plafond, sans rien toucher', () {
+      final card = seed(const ['sharp:2', 'eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'eco'), isFalse);
+
+      expect(runesOf(card), ['sharp:2', 'eco:1']);
+    });
+
+    test('refuse une carte absente, une rune non portee ou absente du '
+        'registre, sans rien toucher', () {
+      final card = seed(const ['sharp:2', 'legacy:1']);
+
+      expect(notifier.raiseRuneLevel('absente', 'sharp'), isFalse);
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'burning'), isFalse);
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'legacy'), isFalse);
+
+      expect(runesOf(card), ['sharp:2', 'legacy:1']);
+    });
+  });
 }

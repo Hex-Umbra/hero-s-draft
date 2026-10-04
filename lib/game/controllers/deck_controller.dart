@@ -361,6 +361,35 @@ class DeckNotifier extends Notifier<DeckState> {
     );
   }
 
+  /// Monte d'un niveau la rune [runeId] de la carte [cardId] du master deck,
+  /// sans or (spec P-43 E3, §4.7, A13) : l'écriture que partagent le feu —
+  /// `GoldManager.sharpenRune`, qui paie d'abord — et les sources d'E3. Le
+  /// niveau est borné par le plafond de la rune (D72). Refuse — sans rien
+  /// toucher — si la carte n'est pas dans le deck, ne porte pas la rune, si
+  /// la rune est absente du registre, ou si son plafond ne la laisse pas
+  /// monter ; sinon réécrit `id:n` en `id:n+1` à sa place. Rend vrai si la
+  /// rune a monté.
+  bool raiseRuneLevel(String cardId, String runeId) {
+    final card =
+        state.masterDeck.where((c) => c.uniqueId == cardId).firstOrNull;
+    final level = card == null
+        ? null
+        : ForgeUpgradeData.levelsOf(card.forgeUpgrades)[runeId];
+    final rune = ForgeUpgradeData.getById(runeId);
+    if (card == null || level == null || rune == null) return false;
+    final raised = rune.boundLevel(1, carried: level);
+    if (raised == 0) return false;
+    setForgeUpgrades(
+      cardId,
+      ForgeRuneRules.replaceRune(
+        card.forgeUpgrades,
+        runeId,
+        '$runeId:${level + raised}',
+      ),
+    );
+    return true;
+  }
+
   /// Retire une carte spécifique du Master Deck (ex: Boutique)
   void removeCardFromMasterDeck(CardInstance cardToRemove) {
     removeCardById(cardToRemove.uniqueId);

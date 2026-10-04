@@ -16,7 +16,9 @@ class GoldManager {
   /// Affûte la rune [runeId] de la carte [cardId] du deck : un niveau de plus
   /// (D4), contre `ForgeRuneRules.sharpenCost(niveau)` or (D20). Refuse —
   /// sans rien toucher — si la carte ne porte pas la rune, si la rune est
-  /// absente du registre ou à son plafond, ou si l'or manque. Rend vrai si
+  /// absente du registre ou à son plafond, ou si l'or manque : l'écriture
+  /// refusée ne coûte rien. L'écriture est celle des sources sans or,
+  /// `DeckNotifier.raiseRuneLevel` (spec P-43 E3, §4.7, A13). Rend vrai si
   /// l'affûtage a eu lieu.
   bool sharpenRune(String cardId, String runeId) {
     final card = ref
@@ -39,15 +41,9 @@ class GoldManager {
         .spendGold(ForgeRuneRules.sharpenCost(level))) {
       return false;
     }
-    ref.read(deckProvider.notifier).setForgeUpgrades(
-          cardId,
-          ForgeRuneRules.replaceRune(
-            card.forgeUpgrades,
-            runeId,
-            '$runeId:${level + 1}',
-          ),
-        );
-    return true;
+    // `canSharpen` vient de dire ce que `raiseRuneLevel` vérifie : payée,
+    // l'écriture a lieu.
+    return ref.read(deckProvider.notifier).raiseRuneLevel(cardId, runeId);
   }
 
   /// Échange au Puits la rune [givenId] de la carte [cardId] du deck contre
