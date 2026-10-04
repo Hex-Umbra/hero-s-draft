@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.3.
 **Branche** : `feat/v0.5.5-p43-e3-trouvaille`, ouverte le 03/10/2026 depuis `main` à `bca35c5` (fusion de la vague 2).
 **Ouvert le** : 04/10/2026, à la fin du plan de la partie 1 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : **en cours** — les deux parties sont implémentées, la simulation relancée et sa référence recommitée ; restent la note de version et la mémoire.
+**État** : **livrée sur la branche** le 04/10/2026 — en attente du test, de la PR, de la fusion et du tag du propriétaire.
 
 ---
 
@@ -16,6 +16,10 @@
 | Spec E3 | Convergée au sixième tour, `2c1d8f4` |
 | E3, partie 1 | Plan `7a4f0d7` ; sept commits de code `3d58c2f`..`83cf7c7` et un correctif de la revue d'ensemble `9b0e2e5` ; **1535 tests** (+55), `dart analyze` propre |
 | E3, partie 2 | Plan `a7e0635` ; dix commits de code `d6924f7`..`7e29709`, quatre commits du script de simulation `ca0ba2f`..`d8b2aef` et un correctif de la revue d'ensemble `8fc7da5` ; **1625 tests** (+90), `dart analyze` propre |
+| Simulation (3.6) | Quatre mesures complètes, une par commit du script ; le réalignement au diff vide ; la référence recommitée sur la sortie de `d8b2aef` (`11410f3`) — §4 |
+| Note de version (3.7) | « Le Temps des Trouvailles », `0.5.5` (`b6abcb5`) ; les trois porteurs de version concordent (`verify_version.sh 0.5.5`), le site n'écrit plus `0.5.4`, `node --test` 20 verts, `test_scripts.sh` 57 verts |
+| Mémoire (3.7) | `memory-bank-sync` (`80a040b`) : ADR-107 « trouvaille et progression », qui amende ADR-078 D3 et complète huit ADR ; une trentaine de fiches `_rules` et `_patterns` ; la clôture de la vague 2 notée |
+| Fin de vague | **1625 tests**, tous verts, sur une base de 1480 ; `dart analyze` propre ; la branche compte 36 commits ; rien de poussé |
 
 ---
 
@@ -227,6 +231,74 @@ Mineurs différés pendant les revues de tâche, **tous laissés** après le tri
 
 ---
 
+## 3. Le cahier de test manuel
+
+Une partie neuve à chaque série : les sauvegardes ne passent pas d'une version à l'autre avant la `1.0.0`. Le menu de debug donne les reliques, l'or, l'XP, la Chance et la Maîtrise ; le journal de debug d'un combat dit la difficulté. Jouer chacune des trois classes au moins une fois.
+
+### 3.1. Une carte après chaque combat
+
+- Gagner un combat normal : un message « Carte trouvée : <nom> » s'affiche, la carte est dans le deck, **commune**, et c'est une carte que la classe peut recevoir — une neutre ou une carte de sa classe, jamais celle d'une autre classe ni une carte de classe de départ.
+- Gagner une élite : une carte toujours, une seconde environ une fois sur quatre, et la relique garantie.
+- Battre un boss : pas de carte trouvée, sa récompense habituelle.
+- Sur une dizaine de combats, les doublons arrivent : une fusion de trois devient possible dès l'acte 2 ou 3.
+- L'infobulle d'élite de la carte du monde dit « une relique garantie, et une carte — parfois deux ».
+
+### 3.2. Le *Registre des primes* et la *Sacoche du glaneur*
+
+- Avec la *Sacoche du glaneur* (menu de debug) : **deux** cartes après chaque combat normal ; en élite, rien de plus.
+- Avec le *Registre des primes* : la seconde carte d'élite devient bien plus fréquente (50 % avec un exemplaire, toujours à partir de trois) ; jamais plus de deux cartes par élite.
+- Céder la *Sacoche* au *Colporteur* (§3.7) : le combat normal suivant ne donne plus qu'une carte.
+
+### 3.3. Les niveaux
+
+- À l'acte 1, la barre d'XP du héros se lit sur 115 ; à l'acte 2, sur 200 ; à l'acte 9, sur 1040. Environ deux niveaux par acte.
+- « Gagner un niveau » du menu de debug donne exactement un niveau, au prix de l'acte courant.
+- Le tutoriel annonce 115 XP au premier palier et 200 au suivant, et sa barre d'XP suit.
+
+### 3.4. La difficulté
+
+- Le journal de debug d'un combat écrit « Σ rangs : N » et la formule « 2 × Σ rangs » à la place du nombre de cartes.
+- Un deck de 20 cartes communes affronte des combats de la même difficulté qu'un deck de 10 cartes communes ; un deck qui a beaucoup fusionné, des combats plus durs.
+
+### 3.5. La main
+
+- Le champ « Main max » du menu de debug règle la main maximale de la run (10 par défaut) : la pioche du tour, une carte qui pioche, la rune *Véloce* et *Frénésie* du Berserker s'arrêtent à cette borne, sans perdre de carte ; une main déjà au-delà ne pioche rien et ne perd rien.
+
+### 3.6. Le boss d'XP et la *Meule*
+
+- La carte du monde : l'infobulle du boss d'XP dit le triple d'XP et d'or, et qu'une rune du deck, si l'une peut encore monter, gagne un niveau.
+- Le battre avec un deck qui porte des runes sous leur plafond : pas de carte bonus ; une rune monte d'un niveau, et un message dit laquelle et sur quelle carte.
+- Le battre avec un deck sans rune affûtable (aucune rune, ou toutes à leur plafond, comme *Économe 1*) : rien ne monte, et le message « Aucune rune de votre deck ne peut gagner de niveau. » le dit.
+- Avec la *Meule* : deux runes montent — deux messages. Avec deux *Meules*, trois.
+- Une élite à seconde carte avec un passage de niveau empile cinq messages : aucun ne disparaît avant d'avoir été vu.
+
+### 3.7. Les deux événements
+
+- **Le *Rémouleur*** : choisir de monter une rune ouvre la sélection des cartes — celles sans rune affûtable sont grisées —, puis le dialogue de la rune, **sans prix ni solde d'or** ; « Choisir » monte la rune d'un niveau, retire 10 % des PV max, l'or ne bouge pas. Annuler la sélection ou le dialogue ne coûte rien et laisse l'événement ouvert. Sur un deck sans rune affûtable, le choix est grisé et dit « Aucune rune à affûter ».
+- **Le *Colporteur*** : ses offres nomment la relique la plus faible portée (« Cède <nom> : +40 Or » pour une commune, jusqu'à +200 pour une légendaire) ; l'offre de soins n'est active que sous la moitié des PV, et rend 20 % des PV max. Sans relique : les deux offres sont grisées et disent « Aucune relique à céder ». Céder une relique qui changeait la run (la *Sacoche*, le *Registre*, la *Meule*) défait son effet.
+- À un événement, après un choix, le retour système ferme l'écran et termine la visite : on ne rejoue pas un événement dans le même nœud. Avant tout choix, le retour ne résout rien.
+
+### 3.8. *Sagesse*, *Transcendance* et la fiche des probabilités
+
+- *Sagesse* n'apparaît plus parmi les trois options ordinaires d'une montée de niveau ; quand elle sort, à part, comme mythique, elle donne +1 Mana max.
+- *Transcendance* n'est offerte que si une rune du deck est à son plafond — *Économe 1*, *Véloce 1*, *Congelant 1*… —, jamais pour *Allégé* ni *Persistant* ; la prendre ouvre une fenêtre qui fait choisir la sorte de rune, sans pouvoir la fermer autrement. Ensuite : *Économe* s'affûte au feu jusqu'au niveau 2, s'appelle « Économe 2 », et le boss d'XP, le *Rémouleur* et la fusion la portent eux aussi jusqu'à 2 ; le Puits, qui échange une rune, la reçoit jusqu'à 2.
+- La fiche « Taux d'obtention des Raretés » : plus de section « Draft standard de récompenses » ; à Chance 0, la commune d'une montée de niveau à 52 %, la légendaire à 2 % ; la parenthèse nomme les options mythiques — Sagesse, Trèfle à 4 feuilles, Miroir, Transcendance. La section « Butin de Reliques » ne change pas (son écart avec les tirages part à la file, §5).
+
+### 3.9. Les passifs
+
+- **Mage, *Flux de Mana*** : à Maîtrise 0, trois Compétences rendent 1 Mana ; chaque point de Maîtrise en retire une, **jamais sous deux**. La fiche « Statistiques du Héros » et l'option *Affinité* disent l'effet réel — au plancher, l'*Affinité* s'annonce sans effet sur le passif.
+- **Paladin, *Bénédiction*** : le soin par tranche de 5 d'Armure ne change pas.
+- **Berserker** : rien de neuf hors des règles communes ; vérifier *Frénésie* sur une main pleine (§3.5).
+
+### 3.10. Ce qui doit rester inchangé
+
+- Le feu de camp : repos, affûtage payant (50 or × niveau) et oubli, un seul par visite ; le Puits d'échange ; la boutique et son étal ; la fusion de trois cartes et sa rune au choix.
+- Les autres événements et reliques, leurs textes ; la section « Butin de Reliques » de la fiche des probabilités.
+- Les cartes de classe de départ restent dans le deck, sans rune, et ne sont jamais trouvées après un combat (elles en sortent à la vague suivante).
+- Le tutoriel se joue jusqu'au bout.
+
+---
+
 ## 4. La simulation
 
 `tool/simulations/d26_economy_sim.dart`, relancé en deux temps (§3.6, D73), chaque fois par l'orchestrateur sur une extraction hors du dépôt du commit mesuré (`git archive <commit> tool/simulations assets/data`, spec §9), sortie vers `.superpowers/`, comparée par `git diff --no-index`. Les quatre mesures sont complètes (300 runs par configuration, 200 par levier) ; chacune a pris de 381 à 415 s.
@@ -275,3 +347,163 @@ Mineurs différés pendant les revues de tâche, **tous laissés** après le tri
 - `DebugActions.gainLevel` peut donner deux niveaux quand le champ « XP » du menu de debug porte déjà plus de deux paliers moins un (antérieur, debug seul) ;
 - une garde dans l'action `sharpen_rune` qui refuserait le choix entier, avant la perte de PV, si la cible donnée n'est pas affûtable — inatteignable aujourd'hui, l'écran pousse toujours la sélection, qui ne propose que des cibles affûtables (S13) ;
 - un placeholder `{floor}` dans les descriptions de passif : *Flux de Mana* écrit « jamais sous 2 » en dur, juste tant que son `floor` vaut 2 (S13).
+- **pour la méthode** (orchestration §3.8) : les transcriptions de Claude Code n'enregistrent pas toujours la sortie finale d'un message — 149 appels de cette vague écrivent 1,09 million de caractères pour 2 132 jetons de sortie enregistrés —, si bien que la sortie mesurée, et son coût, sont des minimums (§6). Les vagues 1 et 2 se mesuraient de la même manière ; à dire dans le modèle des statistiques, ou à mesurer autrement.
+
+---
+
+## 6. Les statistiques de la session
+
+**Mesurées, pas estimées** (orchestration §3.8). Elles viennent des transcriptions de Claude Code : `~/.claude/projects/<projet>/<id de session>.jsonl` pour l'orchestrateur, un fichier par sous-agent sous `…/<id de session>/subagents/` — y compris ceux des workflows (`subagents/workflows/`), qui ont porté les panels de vérification des deux premières sessions. Chaque appel au modèle est compté une fois par identifiant de message, au maximum de ses lignes. Le script de mesure est resté dans le dossier temporaire de la session.
+
+**La vague a eu quatre sessions** :
+- l'ouverture, arrêtée au troisième tour de la spec (`b21776e8-2c14-4e35-9bb4-bc6e1c692baf`) ;
+- la première reprise, arrêtée au quatrième tour (`078209a6-8bb7-4601-a005-c948374f33b0`) ;
+- la deuxième reprise, arrêtée au cinquième tour (`16918c25-844a-42bc-a57e-4e2307c5e64c`) ;
+- la troisième reprise, qui l'a menée jusqu'ici (`2d8ca500-2027-47d1-8129-e1bb92a3d40b`).
+
+Les quatre sont comptées, séparément puis ensemble. Les heures sont locales (UTC+2) ; les jalons viennent des commits de la branche. La mesure est faite le 04/10 à 06:48, juste avant le commit de §3.8 : ce qui suit — la fin de cette section et le commit — n'y est pas compté.
+
+**Une limite de la mesure, constatée en la faisant** : les transcriptions n'enregistrent pas toujours la sortie finale d'un message. 149 appels y écrivent ensemble 1,09 million de caractères — les gros `Write` des plans et de la spec, 25 à 50 Ko chacun — pour 2 132 jetons de sortie enregistrés. **Les jetons de sortie ci-dessous sont donc un minimum**, et le coût de sortie avec eux ; les autres catégories (entrée, cache) ne sont pas touchées. La vague 2 se mesurait de la même manière (§5).
+
+### 6.1. Le temps
+
+| | |
+|:---|:---|
+| Début | **03/10/2026 à 01:53** — le prompt de lancement de l'ouverture |
+| Premier arrêt | **04:36** — la spec non convergée au troisième tour est commitée (`0a4eaa0`) |
+| Première reprise | **20:31** → **21:29**, le quatrième tour, le deuxième arrêt (`cf61ff8`) |
+| Deuxième reprise | **21:37** → **22:31**, le cinquième tour, le troisième arrêt (`84ff409`) |
+| Troisième reprise | **22:33** → le 04/10 à **06:48**, la mesure |
+| Durée | **28 h 55** de bout en bout, dont **12 h 57 de travail** — 2 h 43, 1 h 04, 55 min et 8 h 15 — et 15 h 55 d'arrêt avant la première reprise |
+| Temps actif des orchestrateurs | environ **4 h 32** (21, 16, 16 puis 219 min) — leurs tours de travail, en comptant les attentes de moins de dix minutes : ce temps chevauche en partie celui des agents |
+| Temps actif cumulé des sous-agents | environ **14 h 10** (262, 89, 47 puis 452 min) — lancés l'un après l'autre, sauf les panels de vérification des deux premières sessions et les mesures de simulation, que l'orchestrateur a fait tourner pendant la fin de la partie 2 |
+
+| Étape | De | À | Durée |
+|:---|:---|:---|---:|
+| Porte d'entrée et branche (3.1, 3.2) | 01:53 | 01:57 | 4 min |
+| Spec — rédaction, trois tours, premier arrêt (3.3) | 01:57 | 04:36 | 2 h 39 |
+| Spec — correction, quatrième tour, deuxième arrêt (3.3) | 20:31 | 21:29 | 58 min |
+| Spec — correction, cinquième tour, troisième arrêt (3.3) | 21:37 | 22:31 | 54 min |
+| Spec — correction, sixième tour (3.3) | 22:33 | 23:00 | 27 min |
+| Plan de la partie 1 — un tour (3.4) | 23:00 | 00:18 | 1 h 18 |
+| Partie 1 — huit tâches, revue d'ensemble, ouverture du compte rendu (3.5) | 00:18 | 01:13 | 55 min |
+| Plan de la partie 2 — deux tours (3.4) | 01:13 | 04:13 | 3 h 00 |
+| Partie 2 — quinze tâches, revue d'ensemble (3.5) | 04:13 | 06:09 | 1 h 56 |
+| Simulation, quatre mesures complètes de 386, 397, 415 et 381 s (3.6) | 05:22 | 06:10 | pendant la partie 2 |
+| Note de version et mémoire (3.7) | 06:10 | 06:45 | 35 min |
+| Compte rendu, suivi, journal (3.8) | 06:45 | — | non compté |
+
+La spec prend 4 h 58 en quatre sessions, les deux plans 4 h 18 ; l'implémentation des deux parties, 2 h 51.
+
+### 6.2. Les agents
+
+**81 agents** : quatre orchestrateurs, et **77 sous-agents** lancés par eux — 13, 5, 2 puis 57. Aucun sous-agent n'en a lancé d'autre.
+
+Quatre ont été repris avec leur contexte, par message, **cinq fois** en tout : le rédacteur de la spec, deux fois, dans l'ouverture ; le correcteur de la première reprise et celui de la deuxième, une fois chacun ; le rédacteur du plan de la partie 2, une fois. Deux sous-agents ont épuisé leur contexte et ont été compactés en cours de travail : le rédacteur de la spec et celui du plan de la partie 2.
+
+| Rôle | Ouverture | Reprise 1 | Reprise 2 | Reprise 3 | Modèle |
+|:---|---:|---:|---:|---:|:---|
+| Orchestrateurs | 1 | 1 | 1 | 1 | Opus 5.5 |
+| Rédacteurs et correcteurs de la spec, rédacteurs des plans | 1 | 1 | 1 | 3 | Opus 5.5 |
+| Vérificateurs de la spec (dont quatre consolidateurs) et des plans | 12 | 4 | 1 | 4 | Opus 5.5 |
+| Implémenteurs (8 tâches et correctifs en partie 1, 15 en partie 2) | — | — | — | 23 | Sonnet 5.5 |
+| Relecteurs de tâche | — | — | — | 21 | Sonnet 5.5, sauf un sur Opus 5.5 (Task 7 de la partie 2) |
+| Revues ciblées des correctifs | — | — | — | 2 | Sonnet 5.5 |
+| Revues d'ensemble des deux plans | — | — | — | 2 | Opus 5.5 |
+| Skills de fin de vague (`patch-notes-writer`, `memory-bank-sync`) | — | — | — | 2 | Opus 5.5 |
+| **Sous-agents** | **13** | **5** | **2** | **57** — 12 Opus 5.5, 45 Sonnet 5.5 | |
+
+Appels au modèle : **4 446** en tout — 460 pour les orchestrateurs (65, 47, 48 puis 300), 3 569 pour les sous-agents sur Opus, 417 sur Sonnet.
+
+### 6.3. Les jetons
+
+| | Ouverture (Opus) | Reprise 1 (Opus) | Reprise 2 (Opus) | Reprise 3, orchestrateur (Opus) | Reprise 3, sous-agents Opus | Reprise 3, sous-agents Sonnet | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| Entrée hors cache | 3 150 | 1 208 | 462 | 718 | 2 670 | 836 | **9 044** |
+| Écriture en cache | 7 731 436 | 1 968 703 | 960 644 | 1 159 400 | 6 377 618 | 2 983 492 | **21 181 293** |
+| Lecture du cache | 474 858 328 | 159 048 465 | 53 843 413 | 132 906 170 | 437 574 938 | 29 722 820 | **1 287 954 134** |
+| Sortie (minimum) | 331 003 | 138 592 | 127 850 | 249 724 | 340 619 | 190 522 | **1 378 310** |
+| **Total traité** | 482 923 917 | 161 156 968 | 54 932 369 | 134 316 012 | 444 295 845 | 32 897 670 | **1 310 522 781** |
+
+- **Environ 1,31 milliard de jetons traités**, dont 98,3 % relus depuis le cache. Hors lecture du cache, il en reste **22,6 millions**, dont au moins **1,38 million** de sortie.
+- **La spec pèse 52 % du total** (682 millions, orchestrateurs non compris) : six tours, dont quatre par un panel de trois vérificateurs et un consolidateur, chacun relisant la spec entière et le code qu'elle cite.
+- **Les deux plans en font 24 %** (310 millions) : chacun rejoué tâche par tâche hors du dépôt par ses vérificateurs.
+- **L'implémentation n'en fait que 5 %** (70 millions), pour 48 agents en deux parties.
+
+| Étape | Sous-agents | Temps actif | Jetons traités | Dont sortie |
+|:---|---:|---:|---:|---:|
+| Spec — rédaction, trois tours (ouverture) | 13 | 262 min | 467,6 M | 257 865 |
+| Spec — correction, quatrième tour (reprise 1) | 5 | 89 min | 151,5 M | 81 808 |
+| Spec — correction, cinquième tour (reprise 2) | 2 | 47 min | 45,3 M | 70 869 |
+| Spec — correction, sixième tour (reprise 3) | 2 | 21 min | 17,6 M | 31 860 |
+| Plan de la partie 1 | 2 | 75 min | 116,9 M | 138 061 |
+| Partie 1 — implémentation | 17 | 44 min | 22,6 M | 66 566 |
+| Plan de la partie 2 | 3 | 176 min | 193,4 M | 48 806 |
+| Partie 2 — implémentation | 31 | 100 min | 47,4 M | 167 187 |
+| Fin de vague — skills | 2 | 34 min | 79,3 M | 78 661 |
+| Orchestrateurs | — | ≈ 272 min | 169,0 M | 436 627 |
+
+### 6.4. Le coût au tarif de l'API
+
+C'est ce que la vague aurait coûté facturée au tarif public de l'API Claude. Ce n'est pas une facture réelle, ni celle de l'abonnement du propriétaire.
+
+**Méthode** :
+- chaque catégorie de jetons est multipliée par son prix, modèle par modèle ;
+- les écritures en cache sont comptées au prix de leur durée, que les transcriptions ventilent : les orchestrateurs écrivent leur cache pour une heure, les sous-agents pour cinq minutes ;
+- les jetons de réflexion sont comptés dans la sortie, comme l'API les facture ;
+- les prix sont ceux de la [page des tarifs](https://platform.claude.com/docs/en/about-claude/pricing), lus le 04/10/2026, en dollars — inchangés depuis la vague 2 ;
+- la conversion se fait au dernier taux de référence de la BCE, celui du 02/10/2026 (le 04/10 est un dimanche), **1 € = 1,1225 $**.
+
+**Aucun supplément ne s'applique**, vérifié dans chaque `usage` : aucune recherche web (`server_tool_use` vide), vitesse standard (`speed`), aucun routage aux États-Unis (`inference_geo` à `not_available`), palier standard.
+
+| Prix, $ par million de jetons | Entrée | Écriture en cache, 5 min | Écriture en cache, 1 h | Lecture du cache | Sortie |
+|:---|---:|---:|---:|---:|---:|
+| Claude Opus 5.5 | 4,00 | 5,00 | 8,00 | 0,20 | 20,00 |
+| Claude Sonnet 5.5 | 2,00 | 2,50 | 4,00 | 0,20 | 10,00 |
+
+| | Dollars | **Euros** |
+|:---|---:|---:|
+| Ouverture — orchestrateur | 9,70 $ | **8,64 €** |
+| Ouverture — sous-agents Opus 5.5 (13) | 132,56 $ | **118,09 €** |
+| Reprise 1 — orchestrateur | 5,22 $ | **4,65 €** |
+| Reprise 1 — sous-agents Opus 5.5 (5) | 40,04 $ | **35,67 €** |
+| Reprise 2 — orchestrateur | 4,92 $ | **4,38 €** |
+| Reprise 2 — sous-agents Opus 5.5 (2) | 13,93 $ | **12,41 €** |
+| Reprise 3 — orchestrateur | 40,85 $ | **36,40 €** |
+| Reprise 3 — sous-agents Opus 5.5 (12) | 126,23 $ | **112,45 €** |
+| Reprise 3 — sous-agents Sonnet 5.5 (45) | 15,31 $ | **13,64 €** |
+| **Total de la vague** | **388,75 $** | **346,33 €** |
+
+**Par catégorie** :
+- la lecture du cache : 66 % du coût (257,59 $, 229,48 €) ;
+- l'écriture en cache : 27 % (105,46 $, 93,96 €) ;
+- la sortie, au minimum : 7 % (25,66 $, 22,86 €) ;
+- l'entrée hors cache : trois centimes.
+
+| Étape | Sous-agents | Dollars | Euros |
+|:---|---:|---:|---:|
+| Spec — rédaction, trois tours (ouverture) | 13 | 132,56 $ | 118,09 € |
+| Spec — correction, quatrième tour | 5 | 40,04 $ | 35,67 € |
+| Spec — correction, cinquième tour | 2 | 13,93 $ | 12,41 € |
+| Spec — correction, sixième tour | 2 | 6,46 $ | 5,76 € |
+| Plan de la partie 1 | 2 | 34,28 $ | 30,54 € |
+| Partie 1 — implémentation | 17 | 9,23 $ | 8,22 € |
+| Plan de la partie 2 | 3 | 51,37 $ | 45,77 € |
+| Partie 2 — implémentation | 31 | 19,20 $ | 17,11 € |
+| Fin de vague — skills | 2 | 20,99 $ | 18,70 € |
+| Orchestrateurs | — | 60,69 $ | 54,07 € |
+
+**Par rôle** :
+
+| Rôle | Dollars | Euros |
+|:---|---:|---:|
+| Vérificateurs | 156,04 $ | 139,01 € |
+| Rédacteurs et correcteurs de la spec et des plans | 122,60 $ | 109,22 € |
+| Orchestrateurs | 60,69 $ | 54,07 € |
+| Les deux skills de fin de vague | 20,99 $ | 18,70 € |
+| Relecteurs, revues ciblées et revues d'ensemble | 17,52 $ | 15,61 € |
+| Implémenteurs | 10,91 $ | 9,72 € |
+
+La spec fait 50 % du coût (193,00 $, ses quatre sessions de sous-agents), les deux plans 22 % (85,65 $) ; l'implémentation des deux parties, 7 % (28,43 $).
+
+**Contre la vague 2** (272,90 $, 243,12 €), la vague 3 coûte 42 % de plus. L'écart vient de **la spec** : six tours, quatre sessions, et des panels de trois vérificateurs et d'un consolidateur aux quatre premiers tours — 193,00 $ à elle seule, contre 96,40 $ pour la spec de la vague 2. Les deux plans, rejoués hors du dépôt par leurs vérificateurs, coûtent à peu près ce que coûtaient ceux de la vague 2 (85,65 $ contre 98,83 $), et l'implémentation reste bon marché : une fiche par tâche, sur Sonnet 5.5.
