@@ -51,6 +51,11 @@ class RunState {
   final int extraCombatCards;
   final int eliteCardChanceBonus;
 
+  /// La règle de run de la *Meule* (spec P-43 E3, §4.2, §4.6 ; D42(a), A3) :
+  /// les runes que le boss « XP » monte en plus de
+  /// `GameConstants.bossXpRuneSharpens`, +1 par exemplaire.
+  final int extraBossRuneSharpens;
+
   /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
   /// que `cardsPerTurn` : un ennemi n'en a jamais.
   ///
@@ -90,6 +95,7 @@ class RunState {
     this.maxHandSize = GameConstants.startingMaxHandSize,
     this.extraCombatCards = 0,
     this.eliteCardChanceBonus = 0,
+    this.extraBossRuneSharpens = 0,
     this.statRules = const [],
   });
 
@@ -107,6 +113,7 @@ class RunState {
     int? maxHandSize,
     int? extraCombatCards,
     int? eliteCardChanceBonus,
+    int? extraBossRuneSharpens,
     List<StatRule>? statRules,
   }) {
     return RunState(
@@ -124,6 +131,8 @@ class RunState {
       maxHandSize: maxHandSize ?? this.maxHandSize,
       extraCombatCards: extraCombatCards ?? this.extraCombatCards,
       eliteCardChanceBonus: eliteCardChanceBonus ?? this.eliteCardChanceBonus,
+      extraBossRuneSharpens:
+          extraBossRuneSharpens ?? this.extraBossRuneSharpens,
       statRules: statRules ?? this.statRules,
     );
   }
@@ -143,6 +152,7 @@ class RunState {
         'maxHandSize': maxHandSize,
         'extraCombatCards': extraCombatCards,
         'eliteCardChanceBonus': eliteCardChanceBonus,
+        'extraBossRuneSharpens': extraBossRuneSharpens,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -182,6 +192,7 @@ class RunState {
           json['maxHandSize'] as int? ?? GameConstants.startingMaxHandSize,
       extraCombatCards: json['extraCombatCards'] as int? ?? 0,
       eliteCardChanceBonus: json['eliteCardChanceBonus'] as int? ?? 0,
+      extraBossRuneSharpens: json['extraBossRuneSharpens'] as int? ?? 0,
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
       // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
       // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas

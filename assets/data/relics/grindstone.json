@@ -1,0 +1,12 @@
+{
+  "id": "grindstone",
+  "name_en": "Grindstone",
+  "name_fr": "Meule",
+  "description_en": "The XP Boss reward raises one more rune by a level, if any still can.",
+  "description_fr": "La récompense du Boss d'XP fait gagner un niveau à une rune de plus, si l'une peut encore monter.",
+  "trigger": "startOfRun",
+  "effectType": "increase_boss_rune_sharpens",
+  "value": 1,
+  "rarity": "legendary",
+  "emoji": "⚙️"
+}

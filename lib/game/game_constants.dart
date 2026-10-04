@@ -45,7 +45,8 @@ class GameConstants {
   // --- BOSS « XP » (D42) ---
   /// Les runes que la récompense du boss « XP » monte d'un niveau (D42(a)),
   /// tirées parmi les paires (carte, rune) du deck dont la rune peut encore
-  /// monter.
+  /// monter ; la *Meule* en ajoute une par exemplaire
+  /// (`RunState.extraBossRuneSharpens`).
   static const int bossXpRuneSharpens = 1;
 
   // --- DECK RULES ---

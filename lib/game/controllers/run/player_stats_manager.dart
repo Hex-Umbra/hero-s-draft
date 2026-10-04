@@ -99,13 +99,14 @@ class PlayerStatsManager {
   /// Applique un modificateur aux règles de run propres au joueur.
   /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
   /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
-  /// Le seul à recevoir les deux règles de trouvaille : seules les reliques
-  /// les écrivent, par `applyRelicEffect` et `removeRelicEffect` (spec P-43
-  /// E3, §3.8, §4.2).
+  /// Le seul à recevoir les deux règles de trouvaille et celle de la
+  /// *Meule* : seules les reliques les écrivent, par `applyRelicEffect` et
+  /// `removeRelicEffect` (spec P-43 E3, §3.8, §4.2).
   void applyRunRuleModifier({
     int cardsPerTurnAcc = 0,
     int extraCombatCardsAcc = 0,
     int eliteCardChanceAcc = 0,
+    int extraBossRuneSharpensAcc = 0,
   }) {
     final run = controller.currentState;
     controller.updateState(
@@ -113,6 +114,8 @@ class PlayerStatsManager {
         cardsPerTurn: run.cardsPerTurn + cardsPerTurnAcc,
         extraCombatCards: run.extraCombatCards + extraCombatCardsAcc,
         eliteCardChanceBonus: run.eliteCardChanceBonus + eliteCardChanceAcc,
+        extraBossRuneSharpens:
+            run.extraBossRuneSharpens + extraBossRuneSharpensAcc,
       ),
     );
   }
@@ -301,7 +304,7 @@ class PlayerStatsManager {
       case 'heal':
         heal(relic.value);
         break;
-      // Ces trois effectTypes n'ont de sens qu'en `startOfRun` : une variante
+      // Ces quatre effectTypes n'ont de sens qu'en `startOfRun` : une variante
       // par combat ou par tour cumulerait indéfiniment. Aucune garde n'est
       // posée ici, le contrat étant porté par la donnée (`assets/data/relics/`)
       // et par les `case` symétriques de `removeRelicEffect`.
@@ -315,6 +318,10 @@ class PlayerStatsManager {
         break;
       case 'increase_elite_card_chance':
         applyRunRuleModifier(eliteCardChanceAcc: relic.value);
+        break;
+      // La *Meule* (spec P-43 E3, §4.2) : une rune de plus au boss « XP ».
+      case 'increase_boss_rune_sharpens':
+        applyRunRuleModifier(extraBossRuneSharpensAcc: relic.value);
         break;
       case 'charge_mastery_combat':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'kunai_charge');
@@ -472,6 +479,9 @@ class PlayerStatsManager {
           break;
         case 'increase_elite_card_chance':
           applyRunRuleModifier(eliteCardChanceAcc: -relic.value);
+          break;
+        case 'increase_boss_rune_sharpens':
+          applyRunRuleModifier(extraBossRuneSharpensAcc: -relic.value);
           break;
       }
     }

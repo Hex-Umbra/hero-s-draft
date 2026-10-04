@@ -110,6 +110,21 @@ void main() {
       expect(restoredLegacy.eliteCardChanceBonus, 0);
     });
 
+    // La règle de run de la *Meule* (spec P-43 E3, §3.8, §8).
+    test('extraBossRuneSharpens round-trip et vaut 0 quand la cle manque', () {
+      final json =
+          buildRunState().copyWith(extraBossRuneSharpens: 2).toJson();
+      expect(json['extraBossRuneSharpens'], 2);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.extraBossRuneSharpens, 2);
+
+      final legacy = Map<String, dynamic>.from(json)
+        ..remove('extraBossRuneSharpens');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.extraBossRuneSharpens, 0);
+    });
+
     test('leaves activePassive null and reports a missing passive', () {
       final json = buildRunState().toJson();
       json['activePassiveId'] = 'removed_passive';

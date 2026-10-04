@@ -20,6 +20,17 @@ class GameNotification {
 }
 
 class NotificationNotifier extends StateNotifier<List<GameNotification>> {
+  /// Les notifications visibles à la fois, au plus. L'étape « or et XP » de
+  /// la victoire (`GameScreen._presentNextReward`) empile les siennes dans la
+  /// même image (spec P-43 E3, §4.1, §4.6 ; A10) : la relique d'une élite,
+  /// poussée juste avant, « VICTOIRE », une « Carte trouvée » par carte, une
+  /// notification par rune que monte le boss « XP », « LEVEL UP ». Cinq au
+  /// plus dans un cas réaliste — une élite à seconde carte avec un passage
+  /// de niveau, un combat normal sous deux *Sacoches du glaneur*, un boss
+  /// « XP » sous deux *Meules* — ; un message laissé par la fin du combat,
+  /// déjà lu, part le premier.
+  static const int maxVisible = 5;
+
   final Map<String, Timer> _timers = {};
   static final Random _random = Random();
 
@@ -32,8 +43,8 @@ class NotificationNotifier extends StateNotifier<List<GameNotification>> {
       message: message,
       type: type,
     );
-    // Supprime la plus ancienne si le stack dépasse 4 notifications actives
-    if (state.length >= 4) {
+    // Au-delà de [maxVisible], la plus ancienne part.
+    if (state.length >= maxVisible) {
       state = [...state.sublist(1), notification];
     } else {
       state = [...state, notification];

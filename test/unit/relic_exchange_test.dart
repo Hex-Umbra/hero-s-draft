@@ -196,5 +196,29 @@ void main() {
       runController.exchangeRelics([ledger], gained);
       expect(runController.state.eliteCardChanceBonus, 25);
     });
+
+    // La *Meule* (spec P-43 E3, §4.2) : la même symétrie.
+    test('increase_boss_rune_sharpens s applique, s additionne et se retire',
+        () {
+      const gained = RelicData(
+        id: 'gained',
+        nameEn: 'Gained',
+        trigger: RelicTrigger.startOfCombat,
+        effectType: 'gain_armor',
+        value: 1,
+        rarity: RelicRarity.common,
+        emoji: '⬜',
+      );
+      final grindstone = shippedRelic('grindstone');
+      expect(grindstone.rarity, RelicRarity.legendary);
+      expect(runController.state.extraBossRuneSharpens, 0);
+
+      inventoryController.addRelic(grindstone);
+      inventoryController.addRelic(grindstone);
+      expect(runController.state.extraBossRuneSharpens, 2);
+
+      runController.exchangeRelics([grindstone], gained);
+      expect(runController.state.extraBossRuneSharpens, 1);
+    });
   });
 }

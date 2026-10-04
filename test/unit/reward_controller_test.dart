@@ -760,6 +760,40 @@ void main() {
         }
         expect(runesOf(sharp), ['sharp:1']);
       });
+
+      // La *Meule*, lue par la récompense (spec P-43 E3, §4.6, §8 ; A3).
+      test('la Meule monte une rune de plus au boss XP', () {
+        inventoryController.addRelic(shippedRelic('grindstone'));
+        final sharp = seedRare(const ['sharp:1']);
+
+        winAndCollect(xpBoss);
+
+        // Deux tirages, le second voit le premier.
+        expect(rewardController.state.sharpenedRunes, [
+          (cardUniqueId: sharp.uniqueId, runeId: 'sharp', level: 2),
+          (cardUniqueId: sharp.uniqueId, runeId: 'sharp', level: 3),
+        ]);
+        expect(runesOf(sharp), ['sharp:3']);
+      });
+
+      test('la Meule ne monte rien hors du boss XP', () {
+        inventoryController.addRelic(shippedRelic('grindstone'));
+        final sharp = seedRare(const ['sharp:1']);
+
+        for (final node in [
+          makeNode(),
+          makeNode(type: MapNodeType.boss, bossRewardType: BossRewardType.cards),
+          makeNode(
+            type: MapNodeType.boss,
+            bossRewardType: BossRewardType.improvedRelic,
+          ),
+        ]) {
+          winAndCollect(node);
+          expect(rewardController.state.sharpenedRunes, isNull,
+              reason: '${node.type.name} ${node.bossRewardType?.name}');
+        }
+        expect(runesOf(sharp), ['sharp:1']);
+      });
     });
   });
 }

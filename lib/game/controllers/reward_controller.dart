@@ -283,17 +283,20 @@ class RewardController extends Notifier<RewardState> {
   }
 
   /// La récompense du boss « XP » (spec P-43 E3, §4.6 ; D42(a), A5, A14) :
-  /// [GameConstants.bossXpRuneSharpens] tirages, chacun une paire (carte,
-  /// rune) au hasard parmi celles du deck dont la rune peut encore monter,
-  /// montée d'un niveau, sans or ; chaque tirage voit le précédent. Sans
-  /// paire, rien ne monte.
+  /// [GameConstants.bossXpRuneSharpens] tirages, plus un par *Meule*
+  /// (`RunState.extraBossRuneSharpens`, A3), chacun une paire (carte, rune)
+  /// au hasard parmi celles du deck dont la rune peut encore monter, montée
+  /// d'un niveau, sans or ; chaque tirage voit le précédent. Sans paire,
+  /// rien ne monte.
   List<SharpenedRune> _sharpenRandomRunes() {
     final deck = ref.read(deckProvider.notifier);
     final catalog = GameDataRegistry.instance?.forgeUpgrades ??
         const <ForgeUpgradeData>[];
     final rng = Random();
     final sharpened = <SharpenedRune>[];
-    for (var i = 0; i < GameConstants.bossXpRuneSharpens; i++) {
+    final draws = GameConstants.bossXpRuneSharpens +
+        ref.read(runProvider).extraBossRuneSharpens;
+    for (var i = 0; i < draws; i++) {
       final pairs = ForgeRuneRules.sharpenablePairs(
         ref.read(deckProvider).masterDeck,
         catalog,
