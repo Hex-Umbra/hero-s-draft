@@ -1598,6 +1598,12 @@ abstract class AppLocalizations {
   /// **'No relic to give up'**
   String get eventNoRelicToGive;
 
+  /// No description provided for @eventSharpenRune.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} rune level'**
+  String eventSharpenRune(int amount);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

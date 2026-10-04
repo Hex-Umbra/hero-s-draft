@@ -19,10 +19,21 @@ import 'forge_slot_row.dart';
 /// `RunController.sharpenRune`, puis ferme le dialogue sur son id : un seul
 /// affûtage par visite (D14). Annuler, ou la croix, le ferme sur `null` et
 /// ramène à la sélection.
+///
+/// Sans or ([isFree] — le *Rémouleur*, spec P-43 E3, §4.9, A21) : le bouton
+/// dit « Choisir », sans coût ni condition d'or, et n'écrit rien — il ferme
+/// le dialogue sur l'id de la rune, que l'événement monte lui-même.
 class SharpenRuneDialog extends ConsumerWidget {
   final CardInstance card;
 
-  const SharpenRuneDialog({super.key, required this.card});
+  /// Vrai au *Rémouleur* : choisir, sans payer ni écrire.
+  final bool isFree;
+
+  const SharpenRuneDialog({
+    super.key,
+    required this.card,
+    this.isFree = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,6 +44,26 @@ class SharpenRuneDialog extends ConsumerWidget {
     Widget row(ForgeUpgradeData rune, int level) {
       final sharpenable = ForgeRuneRules.canSharpen(rune, level);
       final cost = ForgeRuneRules.sharpenCost(level);
+      final String actionLabel;
+      final VoidCallback? onAction;
+      if (!sharpenable) {
+        actionLabel = l10n.runeMaxLevel;
+        onAction = null;
+      } else if (isFree) {
+        actionLabel = l10n.fusionRuneChoose;
+        onAction = () => Navigator.of(context).pop(rune.id);
+      } else {
+        actionLabel = l10n.sharpenAction(cost);
+        onAction = gold >= cost
+            ? () {
+                if (ref
+                    .read(runProvider.notifier)
+                    .sharpenRune(card.uniqueId, rune.id)) {
+                  Navigator.of(context).pop(rune.id);
+                }
+              }
+            : null;
+      }
       return ForgeSlotRow(
         rune: rune,
         title: rune.getName(locale),
@@ -41,17 +72,8 @@ class SharpenRuneDialog extends ConsumerWidget {
         detail: sharpenable ? l10n.sharpenLevel(level, level + 1) : null,
         description: rune.getDescription(1, locale, card.data, card.rarity,
             carried: level),
-        actionLabel:
-            sharpenable ? l10n.sharpenAction(cost) : l10n.runeMaxLevel,
-        onAction: sharpenable && gold >= cost
-            ? () {
-                if (ref
-                    .read(runProvider.notifier)
-                    .sharpenRune(card.uniqueId, rune.id)) {
-                  Navigator.of(context).pop(rune.id);
-                }
-              }
-            : null,
+        actionLabel: actionLabel,
+        onAction: onAction,
       );
     }
 

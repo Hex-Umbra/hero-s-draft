@@ -72,7 +72,8 @@ class EventChoice {
 
   /// Le choix peut-il être pris ? Les PV, l'or et les PV max, lus par
   /// l'appelant ; [hasTradedRelic], qu'une relique est visée par l'échange
-  /// (A20) — un fait que le modèle reçoit calculé : ce fichier n'importe rien
+  /// (A20), et [hasSharpenableRune], qu'une rune du deck peut encore monter
+  /// — deux faits que le modèle reçoit calculés : ce fichier n'importe rien
   /// de `lib/game/` (spec P-43 E3, §4.9 ; C4.4, C4.5). Son appelant de jeu
   /// est `EventController.isChoiceSelectable`.
   bool isSelectable(
@@ -80,6 +81,7 @@ class EventChoice {
     int currentGold,
     int currentMaxHp, {
     required bool hasTradedRelic,
+    required bool hasSharpenableRune,
   }) {
     final hpCap = requiresHpBelowPercent;
     if (hpCap != null && currentHp * 100 >= currentMaxHp * hpCap) {
@@ -109,6 +111,11 @@ class EventChoice {
         }
       } else if (action.type == 'trade_relic') {
         if (!hasTradedRelic) return false;
+      } else if (action.type == 'lose_hp_percent') {
+        // La règle de `take_damage` : le choix ne tue pas.
+        if (currentHp <= action.hpPercentOf(currentMaxHp)) return false;
+      } else if (action.type == 'sharpen_rune') {
+        if (!hasSharpenableRune) return false;
       }
     }
     return true;
@@ -157,7 +164,8 @@ class EventAction {
 
   EventAction({required this.type, required this.value});
 
-  /// Le montant d'une action en pourcentage des PV max — `heal_percent` —,
+  /// Le montant d'une action en pourcentage des PV max — `heal_percent`,
+  /// `lose_hp_percent` —,
   /// arrondi comme le script de simulation (`.round()` ; spec P-43 E3, §4.9).
   int hpPercentOf(int maxHp) => (maxHp * (value as int) / 100).round();
 
@@ -170,6 +178,8 @@ class EventAction {
   static const Map<String, ({int min, int? max})> _bounds = {
     'trade_relic': (min: 0, max: null),
     'heal_percent': (min: 1, max: 100),
+    'lose_hp_percent': (min: 1, max: 100),
+    'sharpen_rune': (min: 1, max: null),
   };
 
   factory EventAction.fromJson(Map<String, dynamic> json) {

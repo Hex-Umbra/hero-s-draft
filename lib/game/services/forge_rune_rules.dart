@@ -152,8 +152,9 @@ class ForgeRuneRules {
       rune.boundLevel(1, carried: level) >= 1;
 
   /// [card] porte-t-elle une rune que l'affûtage peut monter ? Une rune
-  /// absente du [catalog] ne se monte pas. Lu par l'option du feu et par sa
-  /// sélection (spec P-43 E2, A4).
+  /// absente du [catalog] ne se monte pas. Lu par l'option du feu, par sa
+  /// sélection (spec P-43 E2, A4) et par la condition du *Rémouleur*,
+  /// `EventController.isChoiceSelectable` (spec P-43 E3, §4.9).
   static bool hasSharpenableRune(
     CardInstance card,
     Iterable<ForgeUpgradeData> catalog,

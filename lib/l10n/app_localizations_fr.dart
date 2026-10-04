@@ -960,6 +960,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get eventNoRelicToGive => 'Aucune relique à céder';
 
   @override
+  String eventSharpenRune(int amount) {
+    return '+$amount niveau de rune';
+  }
+
+  @override
   String get settingsTitle => 'Réglages';
 
   @override

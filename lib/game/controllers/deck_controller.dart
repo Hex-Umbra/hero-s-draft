@@ -361,15 +361,16 @@ class DeckNotifier extends Notifier<DeckState> {
     );
   }
 
-  /// Monte d'un niveau la rune [runeId] de la carte [cardId] du master deck,
-  /// sans or (spec P-43 E3, §4.7, A13) : l'écriture que partagent le feu —
-  /// `GoldManager.sharpenRune`, qui paie d'abord — et les sources d'E3. Le
-  /// niveau est borné par le plafond de la rune (D72). Refuse — sans rien
-  /// toucher — si la carte n'est pas dans le deck, ne porte pas la rune, si
-  /// la rune est absente du registre, ou si son plafond ne la laisse pas
-  /// monter ; sinon réécrit `id:n` en `id:n+1` à sa place. Rend vrai si la
+  /// Monte de [levels] niveaux — un par défaut — la rune [runeId] de la
+  /// carte [cardId] du master deck, sans or (spec P-43 E3, §4.7, A13) :
+  /// l'écriture que partagent le feu — `GoldManager.sharpenRune`, qui paie
+  /// d'abord — et les sources d'E3. Les niveaux montés sont bornés par le
+  /// plafond de la rune (D72). Refuse — sans rien toucher — si la carte n'est
+  /// pas dans le deck, ne porte pas la rune, si la rune est absente du
+  /// registre, ou si son plafond ne la laisse pas monter ; sinon réécrit
+  /// `id:n` en `id:n+k` à sa place, `k` le nombre borné. Rend vrai si la
   /// rune a monté.
-  bool raiseRuneLevel(String cardId, String runeId) {
+  bool raiseRuneLevel(String cardId, String runeId, {int levels = 1}) {
     final card =
         state.masterDeck.where((c) => c.uniqueId == cardId).firstOrNull;
     final level = card == null
@@ -377,7 +378,7 @@ class DeckNotifier extends Notifier<DeckState> {
         : ForgeUpgradeData.levelsOf(card.forgeUpgrades)[runeId];
     final rune = ForgeUpgradeData.getById(runeId);
     if (card == null || level == null || rune == null) return false;
-    final raised = rune.boundLevel(1, carried: level);
+    final raised = rune.boundLevel(levels, carried: level);
     if (raised == 0) return false;
     setForgeUpgrades(
       cardId,

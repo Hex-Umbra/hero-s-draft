@@ -23,11 +23,13 @@ CardInstance _rareStrike(List<String> runes) => CardInstance(
 
 /// Ouvre le dialogue d'affûtage sur [card], posée dans le deck, avec [gold]
 /// or, par `showDialog` au-dessus d'une page — comme la sélection du feu ;
-/// [onClosed] reçoit ce sur quoi il se ferme.
+/// [isFree] : le mode sans or du *Rémouleur* ; [onClosed] reçoit ce sur quoi
+/// il se ferme.
 Future<ProviderContainer> _openDialog(
   WidgetTester tester,
   CardInstance card, {
   required int gold,
+  bool isFree = false,
   ValueChanged<String?>? onClosed,
 }) async {
   tester.view.physicalSize = const Size(1600, 1200);
@@ -59,7 +61,7 @@ Future<ProviderContainer> _openDialog(
               onPressed: () async {
                 final sharpened = await showDialog<String>(
                   context: context,
-                  builder: (_) => SharpenRuneDialog(card: card),
+                  builder: (_) => SharpenRuneDialog(card: card, isFree: isFree),
                 );
                 onClosed?.call(sharpened);
               },
@@ -141,5 +143,37 @@ void main() {
     expect(container.read(inventoryProvider).gold, 900);
     expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
         ['sharp:3', 'eco:1']);
+  });
+
+  // Le Rémouleur (spec P-43 E3, §4.9, A21) : choisir, sans payer ni écrire.
+  testWidgets('sans or, Choisir rend la rune sans rien ecrire ni payer',
+      (tester) async {
+    String? closedOn;
+    final container = await _openDialog(
+      tester,
+      _rareStrike(const ['sharp:2', 'eco:1']),
+      gold: 0,
+      isFree: true,
+      onClosed: (id) => closedOn = id,
+    );
+
+    expect(find.text('Niveau 2 → 3'), findsOneWidget);
+    await tester.tap(find.text('Choisir'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SharpenRuneDialog), findsNothing);
+    expect(closedOn, 'sharp');
+    expect(container.read(inventoryProvider).gold, 0);
+    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        ['sharp:2', 'eco:1']);
+  });
+
+  testWidgets('sans or, une rune a son plafond dit Niveau maximal, inactive',
+      (tester) async {
+    await _openDialog(tester, _rareStrike(const ['eco:1']),
+        gold: 0, isFree: true);
+
+    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
+    expect(find.text('Choisir'), findsNothing);
   });
 }

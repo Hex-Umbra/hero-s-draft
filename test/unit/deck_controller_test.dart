@@ -631,5 +631,21 @@ void main() {
 
       expect(runesOf(card), ['sharp:2', 'legacy:1']);
     });
+
+    // Le Rémouleur monte de `value` niveaux (spec P-43 E3, §4.9).
+    test('monte de levels niveaux, bornes par le plafond de la rune', () {
+      shippedRuneRegistry(const ['precise']);
+      final low = seed(const ['precise:1']);
+      final high = seed(const ['precise:9']);
+
+      expect(notifier.raiseRuneLevel(low.uniqueId, 'precise', levels: 2),
+          isTrue);
+      expect(notifier.raiseRuneLevel(high.uniqueId, 'precise', levels: 3),
+          isTrue);
+
+      // Précis plafonne à 10 (D72).
+      expect(runesOf(low), ['precise:3']);
+      expect(runesOf(high), ['precise:10']);
+    });
   });
 }

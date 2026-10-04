@@ -13,8 +13,8 @@ import '../widgets/forge/sharpen_rune_dialog.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 
-/// La sélection d'une carte du deck, au feu de camp : pour en affûter une
-/// rune, ou pour l'oublier.
+/// La sélection d'une carte du deck : au feu de camp, pour en affûter une
+/// rune ou pour l'oublier ; au *Rémouleur*, pour en affûter une sans or.
 class RestCardSelectionScreen extends ConsumerWidget {
   final String title;
   final String subtitle;
@@ -22,14 +22,21 @@ class RestCardSelectionScreen extends ConsumerWidget {
   /// Vrai pour l'affûtage (spec P-43 E2, A4, §4.7) : une carte sans rune
   /// affûtable est grisée et refusée au toucher, avec son motif ; une autre
   /// ouvre le dialogue d'affûtage, et l'écran se ferme sur la carte et la
-  /// rune affûtée. Faux pour l'oubli : l'écran se ferme sur la carte touchée.
+  /// rune choisie. Faux pour l'oubli : l'écran se ferme sur la carte touchée.
   final bool isSharpen;
+
+  /// Vrai pour l'affûtage sans or du *Rémouleur* (spec P-43 E3, §4.9, A21) :
+  /// le dialogue rend la rune choisie, sans coût ni condition d'or, et
+  /// n'écrit rien — l'événement la monte. Faux au feu, qui paie. Sans effet
+  /// hors de l'affûtage.
+  final bool isFree;
 
   const RestCardSelectionScreen({
     super.key,
     required this.title,
     required this.subtitle,
     required this.isSharpen,
+    this.isFree = false,
   });
 
   void _onCardTapped(
@@ -51,7 +58,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
 
     final runeId = await showDialog<String>(
       context: context,
-      builder: (context) => SharpenRuneDialog(card: card),
+      builder: (context) => SharpenRuneDialog(card: card, isFree: isFree),
     );
     if (runeId != null && context.mounted) {
       Navigator.of(context).pop((card, runeId));

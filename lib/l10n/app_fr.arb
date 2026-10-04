@@ -256,6 +256,7 @@
   "eventTradeRelic": "Cède {relic} : +{amount} Or",
   "eventGiveRelic": "Cède {relic}",
   "eventNoRelicToGive": "Aucune relique à céder",
+  "eventSharpenRune": "+{amount} niveau de rune",
 
   "settingsTitle": "Réglages",
   "quitGame": "Quitter",

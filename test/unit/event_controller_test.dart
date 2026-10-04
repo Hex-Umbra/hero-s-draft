@@ -1,10 +1,14 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/event_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/event_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
@@ -294,11 +298,11 @@ void main() {
 
     test('isChoiceSelectable : la vente suit la relique visee', () {
       events.setEvent(peddler);
-      expect(events.isChoiceSelectable(sale()), isFalse);
+      expect(events.isChoiceSelectable(sale(), const []), isFalse);
 
       inventory.addRelic(relic('common', RelicRarity.common));
       events.setEvent(peddler);
-      expect(events.isChoiceSelectable(sale()), isTrue);
+      expect(events.isChoiceSelectable(sale(), const []), isTrue);
     });
 
     // L'or, lu sur l'inventaire (n° 1 du tour 5) : avec le cas des remèdes de
@@ -310,15 +314,15 @@ void main() {
       events.setEvent(EventData(id: 'altar', choices: [offering]));
 
       inventory.reset(initialGold: 39);
-      expect(events.isChoiceSelectable(offering), isFalse);
+      expect(events.isChoiceSelectable(offering, const []), isFalse);
 
       inventory.reset(initialGold: 40);
-      expect(events.isChoiceSelectable(offering), isTrue);
+      expect(events.isChoiceSelectable(offering, const []), isTrue);
     });
 
     test('isSelectable : un choix trade_relic suit le fait hasTradedRelic', () {
-      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: false), isFalse);
-      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: true), isTrue);
+      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: false, hasSharpenableRune: false), isFalse);
+      expect(sale().isSelectable(100, 0, 100, hasTradedRelic: true, hasSharpenableRune: false), isTrue);
     });
 
     test('requiresHpBelowPercent se lit dans la donnee : sur 100 PV max, 29 '
@@ -329,8 +333,8 @@ void main() {
         'actions': <dynamic>[],
       });
       expect(choice.requiresHpBelowPercent, 30);
-      expect(choice.isSelectable(29, 0, 100, hasTradedRelic: false), isTrue);
-      expect(choice.isSelectable(30, 0, 100, hasTradedRelic: false), isFalse);
+      expect(choice.isSelectable(29, 0, 100, hasTradedRelic: false, hasSharpenableRune: false), isTrue);
+      expect(choice.isSelectable(30, 0, 100, hasTradedRelic: false, hasSharpenableRune: false), isFalse);
 
       for (final bad in <Object>[0, 101, '50']) {
         expect(
@@ -377,6 +381,143 @@ void main() {
           [('trade_relic', 0), ('heal_percent', 20)]);
       expect(remedies().requiresHpBelowPercent, 50);
       expect(peddler.choices[2].actions, isEmpty);
+    });
+  });
+
+  // Le Rémouleur (spec P-43 E3, §3.4, §4.9 ; D42(b), A4, A19, A21).
+  group('le Remouleur', () {
+    late ProviderContainer container;
+    late EventController events;
+    late RunController run;
+    late InventoryController inventory;
+    late List<ForgeUpgradeData> runes;
+    late EventData grinder;
+
+    const paladin = HeroData(
+      id: 'paladin',
+      classCard: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+    );
+
+    setUpAll(() async {
+      grinder = (await loadGameDataRegistry(rootBundle))
+          .events
+          .singleWhere((e) => e.id == 'wandering_grinder');
+    });
+
+    setUp(() {
+      // Les runes livrées, que `raiseRuneLevel` lit dans le registre.
+      runes = shippedRuneRegistry(shippedRuneIds()).forgeUpgrades;
+      container = ProviderContainer();
+      addTearDown(container.dispose);
+      events = container.read(eventProvider.notifier);
+      run = container.read(runProvider.notifier);
+      inventory = container.read(inventoryProvider.notifier);
+      run.startNewRun(paladin);
+      events.setEvent(grinder);
+    });
+
+    EventChoice hand() => grinder.choices[0];
+
+    /// Une Frappe rare portant [carried], posée dans le deck.
+    CardInstance seedRare(List<String> carried) {
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: carried,
+      );
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
+      return card;
+    }
+
+    List<String> runesOf(CardInstance card) => container
+        .read(deckProvider)
+        .masterDeck
+        .singleWhere((c) => c.uniqueId == card.uniqueId)
+        .forgeUpgrades;
+
+    test('confier une rune perd 10 % des PV max, arrondis, et monte la paire '
+        'choisie, sans or', () {
+      // 87 PV max : 10 % font 8,7, arrondis à 9 (`.round()`).
+      run.applyHeroStatModifier(maxPvAcc: -13);
+      final card = seedRare(const ['sharp:1']);
+      final goldBefore = inventory.state.gold;
+
+      events.selectChoice(
+        hand(),
+        const [],
+        sharpenTarget: (cardId: card.uniqueId, runeId: 'sharp'),
+      );
+
+      expect(run.currentState.heroStats.currentPv, 87 - 9);
+      expect(runesOf(card), ['sharp:2']);
+      expect(inventory.state.gold, goldBefore);
+    });
+
+    test('isChoiceSelectable : le Remouleur suit les runes du deck qui '
+        'peuvent monter', () {
+      seedRare(const ['eco:1']);
+      expect(events.isChoiceSelectable(hand(), runes), isFalse);
+
+      seedRare(const ['sharp:1']);
+      expect(events.isChoiceSelectable(hand(), runes), isTrue);
+    });
+
+    test('isSelectable : sharpen_rune suit hasSharpenableRune ; '
+        'lose_hp_percent refuse des PV au plus egaux a son cout', () {
+      expect(
+        hand().isSelectable(100, 0, 100,
+            hasTradedRelic: false, hasSharpenableRune: false),
+        isFalse,
+      );
+      expect(
+        hand().isSelectable(100, 0, 100,
+            hasTradedRelic: false, hasSharpenableRune: true),
+        isTrue,
+      );
+      // 10 % de 100 PV max : à 10 PV le choix tuerait, à 11 non.
+      expect(
+        hand().isSelectable(10, 0, 100,
+            hasTradedRelic: false, hasSharpenableRune: true),
+        isFalse,
+      );
+      expect(
+        hand().isSelectable(11, 0, 100,
+            hasTradedRelic: false, hasSharpenableRune: true),
+        isTrue,
+      );
+    });
+
+    test('les valeurs de lose_hp_percent et sharpen_rune sont bornees au '
+        'chargement', () {
+      for (final (type, bad) in <(String, Object)>[
+        ('lose_hp_percent', 0),
+        ('lose_hp_percent', 101),
+        ('sharpen_rune', 0),
+        ('sharpen_rune', '1'),
+      ]) {
+        expect(
+          () => EventAction.fromJson({'type': type, 'value': bad}),
+          throwsFormatException,
+          reason: '$type $bad',
+        );
+      }
+      expect(
+          EventAction.fromJson({'type': 'lose_hp_percent', 'value': 100})
+              .value,
+          100);
+      expect(EventAction.fromJson({'type': 'sharpen_rune', 'value': 1}).value,
+          1);
+    });
+
+    test('le Remouleur livre : ses actions', () {
+      expect(grinder.choices, hasLength(2));
+      expect(
+        [for (final a in hand().actions) (a.type, a.value)],
+        [('lose_hp_percent', 10), ('sharpen_rune', 1)],
+      );
+      expect(grinder.choices[1].actions, isEmpty);
     });
   });
 }

@@ -4,14 +4,20 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/event_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/event_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/event_screen.dart';
+import 'package:roguelike_card_game/ui/screens/rest_card_selection_screen.dart';
+import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 
 import '../unit/shipped_data.dart';
 
@@ -32,6 +38,7 @@ void main() {
   const remedies = "L'échanger contre des remèdes (+20 % des PV max, si vos "
       'PV sont sous la moitié)';
   const leave = 'Passer votre chemin (Rien)';
+  const handRune = 'Lui confier une rune (-10 % des PV max, +1 niveau de rune)';
 
   late GameDataRegistry shipped;
   setUpAll(() async {
@@ -44,11 +51,12 @@ void main() {
   /// Une run neuve, au premier nœud de sa carte, sur un registre dont le
   /// seul événement est [event] : `initState` en tire un au hasard parmi
   /// `events` (`event_screen.dart:24-29`), et un `setEvent` posé avant le
-  /// premier pump serait écrasé. [prepare] agit avant l'ouverture —
-  /// l'échange vise sa relique à l'ouverture (A20).
+  /// premier pump serait écrasé. Le deck reçoit [deck] ; [prepare] agit
+  /// avant l'ouverture — l'échange vise sa relique à l'ouverture (A20).
   Future<ProviderContainer> startRun(
     WidgetTester tester,
     EventData event, {
+    List<CardInstance> deck = const [],
     void Function(ProviderContainer container)? prepare,
   }) async {
     tester.view.physicalSize = const Size(1200, 1600);
@@ -76,6 +84,9 @@ void main() {
     final run = container.read(runProvider.notifier);
     run.startNewRun(hero);
     run.travelToNode(container.read(runProvider).mapNodes.first.id);
+    for (final card in deck) {
+      container.read(deckProvider.notifier).addCardToMasterDeck(card);
+    }
     prepare?.call(container);
     return container;
   }
@@ -100,9 +111,11 @@ void main() {
   Future<ProviderContainer> pumpEvent(
     WidgetTester tester,
     EventData event, {
+    List<CardInstance> deck = const [],
     void Function(ProviderContainer container)? prepare,
   }) async {
-    final container = await startRun(tester, event, prepare: prepare);
+    final container =
+        await startRun(tester, event, deck: deck, prepare: prepare);
     await tester.pumpWidget(app(container, const EventScreen()));
     await tester.pumpAndSettle();
     return container;
@@ -226,6 +239,81 @@ void main() {
       await tester.pump();
 
       expect(enabled(tester, remedies), isTrue);
+    });
+  });
+
+  group('le Remouleur', () {
+    /// Une Frappe rare portant Tranchant 1 : la rune peut monter.
+    CardInstance sharpStrike() => CardInstance(
+          data: shippedCard('strike_basic'),
+          rarity: CardRarity.rare,
+          forgeUpgrades: const ['sharp:1'],
+        );
+
+    testWidgets('inactif sur un deck sans rune affutable, ses badges disent '
+        'le prix et le gain', (tester) async {
+      await pumpEvent(
+        tester,
+        eventOf('wandering_grinder'),
+        deck: [CardInstance(data: shippedCard('defend_basic'))],
+      );
+
+      expect(enabled(tester, handRune), isFalse);
+      expect(enabled(tester, leave), isTrue);
+      expect(find.text('-10 PV'), findsOneWidget);
+      expect(find.text('+1 niveau de rune'), findsOneWidget);
+    });
+
+    testWidgets('il affute la rune choisie, sans or, contre 10 % des PV max',
+        (tester) async {
+      final container = await pumpEvent(
+        tester,
+        eventOf('wandering_grinder'),
+        deck: [sharpStrike(), CardInstance(data: shippedCard('defend_basic'))],
+      );
+      final goldBefore = container.read(inventoryProvider).gold;
+
+      await tester.tap(find.text(handRune));
+      await tester.pumpAndSettle();
+
+      // La sélection du feu, sans or : la carte sans rune est grisée.
+      final cards = find.byType(UiCard);
+      expect(cards, findsNWidgets(2));
+      expect(tester.widget<UiCard>(cards.at(1)).isGrayedOut, isTrue);
+
+      await tester.tap(cards.first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Choisir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RestCardSelectionScreen), findsNothing);
+      expect(container.read(deckProvider).masterDeck.first.forgeUpgrades,
+          ['sharp:2']);
+      expect(container.read(runProvider).heroStats.currentPv, 90);
+      expect(container.read(inventoryProvider).gold, goldBefore);
+      expect(find.text('CONTINUER'), findsOneWidget);
+    });
+
+    testWidgets('annuler la selection ne resout rien, ne coute rien',
+        (tester) async {
+      final container = await pumpEvent(
+        tester,
+        eventOf('wandering_grinder'),
+        deck: [sharpStrike()],
+      );
+
+      await tester.tap(find.text(handRune));
+      await tester.pumpAndSettle();
+      expect(find.byType(RestCardSelectionScreen), findsOneWidget);
+
+      await pressBack(tester);
+
+      expect(find.byType(RestCardSelectionScreen), findsNothing);
+      expect(container.read(runProvider).heroStats.currentPv, 100);
+      expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+          ['sharp:1']);
+      expect(container.read(eventProvider).isResolved, isFalse);
+      expect(enabled(tester, handRune), isTrue);
     });
   });
 }

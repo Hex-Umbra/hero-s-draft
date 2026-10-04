@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/event_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
+import '../../models/card_instance.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../services/game_data_service.dart';
@@ -11,6 +13,7 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
+import 'rest_card_selection_screen.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
@@ -29,7 +32,32 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     });
   }
 
-  void _handleChoice(EventChoice choice) {
+  /// La paire (carte, rune) que le joueur confie au *Rémouleur* (spec P-43
+  /// E3, §4.9, A21) : la sélection du feu, sans or ; `null` s'il annule.
+  Future<({String cardId, String runeId})?> _pickSharpenTarget() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await Navigator.of(context).push<(CardInstance, String)>(
+      MaterialPageRoute(
+        builder: (_) => RestCardSelectionScreen(
+          title: l10n.restCampSharpenTitle,
+          subtitle: l10n.restCampSharpenSubtitle,
+          isSharpen: true,
+          isFree: true,
+        ),
+      ),
+    );
+    if (picked == null) return null;
+    final (card, runeId) = picked;
+    return (cardId: card.uniqueId, runeId: runeId);
+  }
+
+  Future<void> _handleChoice(EventChoice choice) async {
+    // Annuler la sélection n'engage rien : le choix n'est pas pris, les PV
+    // ne sont pas payés (A21).
+    final sharpens = choice.actions.any((a) => a.type == 'sharpen_rune');
+    final sharpenTarget = sharpens ? await _pickSharpenTarget() : null;
+    if (!mounted || (sharpens && sharpenTarget == null)) return;
+
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
     final chosenRelic = ref
@@ -37,6 +65,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         .selectChoice(
           choice,
           gameData.relics,
+          sharpenTarget: sharpenTarget,
         );
 
     if (chosenRelic != null) {
@@ -160,6 +189,20 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         textColor = Colors.greenAccent;
         bgColor = Colors.green.withValues(alpha: 0.12);
         text = l10n.eventGainHp(_hpPercent(action));
+        break;
+      case 'lose_hp_percent':
+        icon = Icons.favorite_border;
+        iconColor = Colors.redAccent;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withValues(alpha: 0.12);
+        text = l10n.eventLoseHp(_hpPercent(action));
+        break;
+      case 'sharpen_rune':
+        icon = Icons.auto_fix_high;
+        iconColor = Colors.amberAccent;
+        textColor = Colors.amberAccent;
+        bgColor = Colors.amber.withValues(alpha: 0.12);
+        text = l10n.eventSharpenRune(action.value as int);
         break;
       default:
         icon = Icons.help_outline;
@@ -309,6 +352,20 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         bgColor = Colors.green.withValues(alpha: 0.08);
         text = l10n.eventGainHp(_hpPercent(action));
         break;
+      case 'lose_hp_percent':
+        icon = Icons.favorite_border;
+        iconColor = Colors.redAccent;
+        textColor = Colors.redAccent;
+        bgColor = Colors.red.withValues(alpha: 0.08);
+        text = l10n.eventLoseHp(_hpPercent(action));
+        break;
+      case 'sharpen_rune':
+        icon = Icons.auto_fix_high;
+        iconColor = Colors.amberAccent;
+        textColor = Colors.amberAccent;
+        bgColor = Colors.amber.withValues(alpha: 0.08);
+        text = l10n.eventSharpenRune(action.value as int);
+        break;
       default:
         icon = Icons.help_outline;
         iconColor = Colors.white54;
@@ -357,6 +414,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     final locale = Localizations.localeOf(context).languageCode;
     final runState = ref.watch(runProvider);
     final inventoryState = ref.watch(inventoryProvider);
+    // Le bouton du *Rémouleur* suit le deck (spec P-43 E3, §4.9).
+    ref.watch(deckProvider);
+    final runeCatalog =
+        ref.read(gameDataLoaderProvider).requireValue.forgeUpgrades;
     final heroStats = runState.heroStats;
     final currentPv = heroStats.currentPv;
     final maxPv = heroStats.maxPv;
@@ -581,7 +642,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   // (spec P-43 E3, §4.9 ; C4.4).
                   final isSelectable = ref
                       .read(eventProvider.notifier)
-                      .isChoiceSelectable(choice);
+                      .isChoiceSelectable(choice, runeCatalog);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _EventOptionButton(

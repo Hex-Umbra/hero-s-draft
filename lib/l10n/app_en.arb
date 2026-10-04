@@ -689,6 +689,12 @@
     }
   },
   "eventNoRelicToGive": "No relic to give up",
+  "eventSharpenRune": "+{amount} rune level",
+  "@eventSharpenRune": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
 
   "settingsTitle": "Settings",
   "quitGame": "Quit",
