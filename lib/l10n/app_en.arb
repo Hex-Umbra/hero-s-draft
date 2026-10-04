@@ -48,6 +48,12 @@
   },
   "leaveShop": "Leave Shop",
   "combatReward": "COMBAT REWARD",
+  "rewardCardFound": "🃏 Card found: {cardName}",
+  "@rewardCardFound": {
+    "placeholders": {
+      "cardName": { "type": "String" }
+    }
+  },
   "chooseUpgrade": "Choose an upgrade for your hero",
   "select": "Select",
   "nextAction": "Next action",
@@ -88,6 +94,12 @@
       "luck": { "type": "int" }
     }
   },
+  "luckLevelRewardSubtitle": "Chances of getting each option rarity when leveling up (mythic options, rolled separately: {mythicNames})",
+  "@luckLevelRewardSubtitle": {
+    "placeholders": {
+      "mythicNames": { "type": "String" }
+    }
+  },
 
   "legendTitle": "LEGEND",
   "legendCombat": "Normal Combat",
@@ -102,7 +114,7 @@
   "tooltipCombatTitle": "Normal Combat",
   "tooltipCombatDesc": "Face a standard monster to earn cards and gold.",
   "tooltipEliteTitle": "Elite Combat",
-  "tooltipEliteDesc": "A much tougher fight, but guarantees a relic reward.",
+  "tooltipEliteDesc": "A much tougher fight: a guaranteed relic, and a card — sometimes two.",
   "tooltipShopTitle": "Merchant Shop",
   "tooltipShopDesc": "Spend your hard-earned gold to buy cards and potions.",
   "tooltipRestTitle": "Rest Camp",
@@ -111,6 +123,7 @@
   "tooltipEventDesc": "Who knows what surprises or dangers await here?",
   "tooltipBossTitle": "Boss Combat",
   "tooltipBossDesc": "Defeat the guardian of this floor to complete the act!",
+  "tooltipBossXpDesc": "Triple XP and gold, and one rune in your deck gains a level, if any still can.",
 
   "actLevel": "Act {act} - Level: {level}",
   "@actLevel": {
@@ -413,6 +426,21 @@
   "chooseCardToPurge": "Choose a card to purge",
   "cardPurged": "Card purged!",
   "chooseCardToClone": "Choose a card to clone",
+  "runeCapTitle": "Choose the rune whose cap rises",
+  "runeCapLine": "Max level {from} → {to}",
+  "@runeCapLine": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "runeCapRaised": "{runeName} can now reach level {level}.",
+  "@runeCapRaised": {
+    "placeholders": {
+      "runeName": { "type": "String" },
+      "level": { "type": "int" }
+    }
+  },
   "cardCloned": "Card cloned!",
   "noCardsInStock": "Out of stock!",
   "levelLabel": "Lvl {level}",
@@ -668,6 +696,27 @@
     }
   },
   "eventGainRelic": "+1 Relic",
+  "eventTradeRelic": "Give up {relic}: +{amount} Gold",
+  "@eventTradeRelic": {
+    "placeholders": {
+      "relic": { "type": "String" },
+      "amount": { "type": "int" }
+    }
+  },
+  "eventGiveRelic": "Give up {relic}",
+  "@eventGiveRelic": {
+    "placeholders": {
+      "relic": { "type": "String" }
+    }
+  },
+  "eventNoRelicToGive": "No relic to give up",
+  "eventNoRuneToSharpen": "No rune to sharpen",
+  "eventSharpenRune": "+{amount} rune level",
+  "@eventSharpenRune": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
 
   "settingsTitle": "Settings",
   "quitGame": "Quit",

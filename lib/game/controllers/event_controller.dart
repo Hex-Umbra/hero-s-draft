@@ -2,7 +2,10 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/event_state.dart';
 import '../../models/data/event_data.dart';
+import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/relic_data.dart';
+import '../services/forge_rune_rules.dart';
+import 'deck_controller.dart';
 import 'run_controller.dart';
 import 'inventory_controller.dart';
 
@@ -29,6 +32,7 @@ class EventController extends Notifier<EventState> {
       activeEvent: chosen,
       selectedChoice: null,
       isResolved: false,
+      tradedRelic: _drawTradedRelic(chosen),
     );
   }
 
@@ -38,17 +42,75 @@ class EventController extends Notifier<EventState> {
       activeEvent: event,
       selectedChoice: null,
       isResolved: false,
+      tradedRelic: _drawTradedRelic(event),
     );
+  }
+
+  /// La relique que vise l'échange (spec P-43 E3, §4.9, A20) : tirée une
+  /// fois, à l'ouverture, parmi celles de plus petite rareté — au hasard
+  /// parmi les ex æquo, les reliques d'E3 comprises, comme à l'Autel —, si
+  /// l'événement porte une action `trade_relic` et que l'inventaire n'est
+  /// pas vide ; `null` sinon.
+  RelicData? _drawTradedRelic(EventData event) {
+    final trades = event.choices.any(
+        (choice) => choice.actions.any((a) => a.type == 'trade_relic'));
+    final relics = ref.read(inventoryProvider).relics;
+    if (!trades || relics.isEmpty) return null;
+    final lowest = relics.map((r) => r.rarity.index).reduce(min);
+    final weakest = [
+      for (final r in relics)
+        if (r.rarity.index == lowest) r,
+    ];
+    return weakest[Random().nextInt(weakest.length)];
+  }
+
+  /// Ce choix peut-il être pris ? (spec P-43 E3, §4.9 ; C4.4) Le seul
+  /// calcul des faits que reçoit `EventChoice.isSelectable` — les PV et l'or
+  /// lus sur la run et l'inventaire, `hasTradedRelic` sur la relique visée,
+  /// `hasSharpenableRune` sur le deck et [runeCatalog], sous le plafond
+  /// effectif de la run (A17), comme l'option du feu (`rest_screen.dart`).
+  /// L'écran l'appelle pour chaque bouton de choix, avec le catalogue des
+  /// runes du registre.
+  bool isChoiceSelectable(
+    EventChoice choice,
+    Iterable<ForgeUpgradeData> runeCatalog,
+  ) {
+    final hero = ref.read(runProvider).heroStats;
+    return choice.isSelectable(
+      hero.currentPv,
+      ref.read(inventoryProvider).gold,
+      hero.maxPv,
+      hasTradedRelic: state.tradedRelic != null,
+      hasSharpenableRune: hasSharpenableRune(runeCatalog),
+    );
+  }
+
+  /// Une rune du deck peut-elle encore monter ? (spec P-43 E3, §4.9) Lu sur
+  /// le deck et [runeCatalog], sous le plafond effectif de la run (A17) ;
+  /// l'écran le demande pour nommer l'inactivité du *Rémouleur*.
+  bool hasSharpenableRune(Iterable<ForgeUpgradeData> runeCatalog) {
+    final capBonus = ref.read(runProvider).runeCapBonus;
+    return ref.read(deckProvider).masterDeck.any(
+          (card) => ForgeRuneRules.hasSharpenableRune(
+            card,
+            runeCatalog,
+            capBonus: capBonus,
+          ),
+        );
   }
 
   /// Gère la sélection et la résolution d'un choix d'événement
   ///
   /// Retourne la relique obtenue si le choix comprenait une action 'gain_relic', sinon null.
+  /// [sharpenTarget] : la carte et la rune qu'une action `sharpen_rune`
+  /// monte — le joueur les a choisies dans la sélection sans or, avant
+  /// l'appel (spec P-43 E3, §4.9, A21).
   RelicData? selectChoice(
     EventChoice choice,
     List<RelicData> allRelics, {
     double? mockRoll, // Permet d'injecter un jet de dé fixe pour les tests
     int? mockRelicIndex, // Permet d'injecter l'index de sélection de relique pour les tests
+    ({String cardId, String runeId})? sharpenTarget,
   }) {
     state = state.copyWith(selectedChoice: choice, isResolved: true);
 
@@ -75,6 +137,34 @@ class EventController extends Notifier<EventState> {
           break;
         case 'gain_might':
           runController.applyHeroStatModifier(mightAcc: action.value as int);
+          break;
+        // La relique visée à l'ouverture (A20) quitte l'inventaire, sa règle
+        // de run défaite, contre `value` or par rang de rareté.
+        case 'trade_relic':
+          final relic = state.tradedRelic;
+          if (relic != null) {
+            runController.loseRelic(relic);
+            inventoryController.gainGold(action.tradeGoldFor(relic.rarity));
+          }
+          break;
+        case 'heal_percent':
+          runController.heal(action
+              .hpPercentOf(runController.currentState.heroStats.maxPv));
+          break;
+        case 'lose_hp_percent':
+          runController.takeDamage(action
+              .hpPercentOf(runController.currentState.heroStats.maxPv));
+          break;
+        // La paire que le joueur a choisie (A21), montée sans or.
+        case 'sharpen_rune':
+          if (sharpenTarget != null) {
+            ref.read(deckProvider.notifier).raiseRuneLevel(
+                  sharpenTarget.cardId,
+                  sharpenTarget.runeId,
+                  levels: action.value as int,
+                  capBonus: runController.currentState.runeCapBonus,
+                );
+          }
           break;
         case 'gain_relic':
           if (allRelics.isNotEmpty) {

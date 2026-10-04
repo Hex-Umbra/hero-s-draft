@@ -252,6 +252,7 @@ void main() {
       'requiresMinCost',
       'excludesRunes',
       'maxLevel',
+      'binary',
       'deltas',
       'weight',
       'emoji',
@@ -265,6 +266,18 @@ void main() {
             if (!read.contains(key)) '${file.path} : $key',
     ];
     expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
+  test('enduring et cheap sont binaires, les neuf autres non', () {
+    expect(registry.forgeUpgrades, hasLength(11));
+    expect(
+      {
+        for (final rune in registry.forgeUpgrades)
+          if (rune.binary) rune.id,
+      },
+      {'enduring', 'cheap'},
+    );
   });
 
   test('la matrice couvre les 23 cartes livrees', () {

@@ -24,9 +24,12 @@ class DraftChoice {
     required this.amount,
   });
 
-  /// Le Miroir : la seule récompense qui ouvre une modale au lieu de monter
-  /// une stat.
+  /// Le Miroir : il ouvre la modale de clonage au lieu de monter une stat.
   bool get isCloneOption => data.effect == RewardEffect.cloneCard;
+
+  /// *Transcendance* : elle ouvre la modale des plafonds de rune au lieu de
+  /// monter une stat (spec P-43 E3, §4.8).
+  bool get isRuneCapOption => data.effect == RewardEffect.raiseRuneCap;
 }
 
 /// Tire les choix de récompense offerts à la montée de niveau, depuis le
@@ -48,18 +51,14 @@ class LevelUpRewardService {
     }
     final rng = Random();
     double mythicChance = isLevelReward ? 0.5 : 0.0;
-    double legendaryChance = 2.0;
-    double epicChance = 6.0;
-    double rareChance = 16.0;
-    double uncommonChance = 24.0;
-
     if (isLevelReward) {
       mythicChance += luck * 0.15;
     }
-    legendaryChance += luck * 0.5;
-    epicChance += luck * 1.5;
-    rareChance += luck * 3.0;
-    uncommonChance += luck * 4.0;
+    final weights = _slotWeights(luck);
+    final legendaryChance = weights.legendary;
+    final epicChance = weights.epic;
+    final rareChance = weights.rare;
+    final uncommonChance = weights.uncommon;
 
     double roll = rng.nextDouble() * 100;
 
@@ -86,18 +85,70 @@ class LevelUpRewardService {
     return RewardRarity.common;
   }
 
+  /// Les poids, en pourcentage, des quatre raretés au-delà de la commune pour
+  /// une Chance donnée : la seule table que lisent le tirage ([rollRarity]) et
+  /// la fiche des probabilités ([slotRarityChances]) — sa copie dans la
+  /// fiche est précisément ce qui avait divergé (spec P-43 E3, §3.8, C4.7).
+  static ({double legendary, double epic, double rare, double uncommon})
+      _slotWeights(int luck) => (
+            legendary: 2.0 + luck * 0.5,
+            epic: 6.0 + luck * 1.5,
+            rare: 16.0 + luck * 3.0,
+            uncommon: 24.0 + luck * 4.0,
+          );
+
+  /// Les chances, en pourcentage, de chaque rareté d'un des trois
+  /// emplacements de la montée de niveau — la distribution de
+  /// `rollRarity(luck, isLevelReward: false)` —, cinq clés de somme 100, sans
+  /// `mythic`, qu'un emplacement ne tire jamais (spec P-43 E3, §3.8, C4.7).
+  ///
+  /// La troncature suit la cascade de [rollRarity] : de la légendaire à la
+  /// peu commune, chaque rareté prend son poids borné entre 0 et ce qui reste
+  /// de 100, la commune le reste. Les deux coïncident dès que les quatre
+  /// poids sont positifs ou nuls — toute Chance ≥ −4, donc toute Chance d'une
+  /// run ; en dessous, que seul le menu de debug atteint, la fiche affiche 0
+  /// là où le tirage laisse un poids négatif mordre sur les raretés suivantes.
+  /// Lue par la fiche des probabilités.
+  static Map<RewardRarity, double> slotRarityChances(int luck) {
+    final weights = _slotWeights(luck);
+    var remaining = 100.0;
+    double take(double weight) {
+      final chance = weight.clamp(0.0, remaining);
+      remaining -= chance;
+      return chance;
+    }
+
+    final legendary = take(weights.legendary);
+    final epic = take(weights.epic);
+    final rare = take(weights.rare);
+    final uncommon = take(weights.uncommon);
+    return {
+      RewardRarity.common: remaining,
+      RewardRarity.uncommon: uncommon,
+      RewardRarity.rare: rare,
+      RewardRarity.epic: epic,
+      RewardRarity.legendary: legendary,
+    };
+  }
+
   static List<DraftChoice> generateChoices({
     required List<LevelUpRewardData> rewards,
     required int luck,
     bool forceLegendary = false,
     PassiveData? activePassive,
+    bool hasRaisableRune = false,
   }) {
     final rng = Random();
     // Le filtre s'applique à la table des trois emplacements comme aux
     // mythiques : une exigence est une propriété de la récompense, pas du
-    // groupe de tirage (spec P-41, §8.2).
-    final eligible =
-        rewards.where((reward) => reward.isAvailableWith(activePassive)).toList();
+    // groupe de tirage (spec P-41, §8.2). [hasRaisableRune] : le deck porte
+    // une rune à son plafond effectif (spec P-43 E3, §4.8, A15).
+    final eligible = rewards
+        .where((reward) => reward.isAvailableWith(
+              activePassive,
+              hasRaisableRune: hasRaisableRune,
+            ))
+        .toList();
     final draftable = LevelUpRewardData.inPool(eligible, RewardPool.draft);
     // Un registre sans récompense tirable : aucun choix à générer, liste
     // vide — pas d'exception au milieu d'une montée de niveau. L'écran de

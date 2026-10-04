@@ -54,6 +54,12 @@ class DeckState {
   List<CardInstance> get copyableCards =>
       masterDeck.where((card) => card.rarity.isAcquirable).toList();
 
+  /// La somme des rangs de fusion du master deck — 0 pour une commune comme
+  /// pour une signature `unique` : la difficulté en lit le double, à la place
+  /// du nombre de cartes (spec P-43 E3, §4.5, A12 ; D47, D59).
+  int get fusionRankSum =>
+      masterDeck.fold(0, (sum, card) => sum + card.rarity.fusionRank);
+
   Map<String, dynamic> toJson() => {
         'masterDeck': masterDeck.map((c) => c.toJson()).toList(),
         'drawPile': drawPile.map((c) => c.toJson()).toList(),
@@ -287,11 +293,15 @@ class DeckNotifier extends Notifier<DeckState> {
   /// Fusionne trois exemplaires d'une même carte, à une même rareté, en une
   /// carte de la rareté suivante, qui garde toutes leurs runes (D13 ; spec
   /// P-43 E2, §4.6) : `ForgeRuneRules.consolidate` additionne les niveaux
-  /// d'une même rune, bornés par son plafond, et écarte une rune exclue par
-  /// une rune gardée avant elle ; aucun plafond de runes par carte. Rend la
-  /// carte créée — l'écran de deck tire sur elle l'offre de runes (§4.5) —,
-  /// ou `null` si la fusion est refusée.
-  CardInstance? mergeCards(List<String> selectedIds) {
+  /// d'une même rune, bornés par son plafond effectif — [capBonus], le bonus
+  /// de la run que passe l'écran de deck (spec P-43 E3, A17) —, et écarte une
+  /// rune exclue par une rune gardée avant elle ; aucun plafond de runes par
+  /// carte. Rend la carte créée — l'écran de deck tire sur elle l'offre de
+  /// runes (§4.5) —, ou `null` si la fusion est refusée.
+  CardInstance? mergeCards(
+    List<String> selectedIds, {
+    Map<String, int> capBonus = const {},
+  }) {
     if (selectedIds.length != 3) return null;
     final selectedCards = [
       for (final id in selectedIds)
@@ -313,6 +323,7 @@ class DeckNotifier extends Notifier<DeckState> {
       rarity: nextRarity,
       forgeUpgrades: ForgeRuneRules.consolidate(
         selectedCards.expand((card) => card.forgeUpgrades),
+        capBonus: capBonus,
       ),
     );
     // Retire les 3 exemplaires ; la carte fusionnée rejoint la fin du deck.
@@ -353,6 +364,42 @@ class DeckNotifier extends Notifier<DeckState> {
         return c;
       }).toList(),
     );
+  }
+
+  /// Monte de [levels] niveaux — un par défaut — la rune [runeId] de la
+  /// carte [cardId] du master deck, sans or (spec P-43 E3, §4.7, A13) :
+  /// l'écriture que partagent le feu — `GoldManager.sharpenRune`, qui paie
+  /// d'abord — et les sources d'E3. Les niveaux montés sont bornés par le
+  /// plafond effectif de la rune — `maxLevel` plus [capBonus] pour son id
+  /// (D72, A17). Refuse — sans rien toucher — si la carte n'est pas dans le
+  /// deck, ne porte pas la rune, si la rune est absente du registre, ou si
+  /// son plafond ne la laisse pas monter ; sinon réécrit `id:n` en `id:n+k`
+  /// à sa place, `k` le nombre borné. Rend vrai si la rune a monté.
+  bool raiseRuneLevel(
+    String cardId,
+    String runeId, {
+    int levels = 1,
+    Map<String, int> capBonus = const {},
+  }) {
+    final card =
+        state.masterDeck.where((c) => c.uniqueId == cardId).firstOrNull;
+    final level = card == null
+        ? null
+        : ForgeUpgradeData.levelsOf(card.forgeUpgrades)[runeId];
+    final rune = ForgeUpgradeData.getById(runeId);
+    if (card == null || level == null || rune == null) return false;
+    final raised = rune.boundLevel(levels,
+        carried: level, capBonus: capBonus[runeId] ?? 0);
+    if (raised == 0) return false;
+    setForgeUpgrades(
+      cardId,
+      ForgeRuneRules.replaceRune(
+        card.forgeUpgrades,
+        runeId,
+        '$runeId:${level + raised}',
+      ),
+    );
+    return true;
   }
 
   /// Retire une carte spécifique du Master Deck (ex: Boutique)

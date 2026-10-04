@@ -178,7 +178,8 @@ class ClassPassiveList extends StatelessWidget {
   Widget _buildOption(int i, AppLocalizations l10n) {
     final passive = passives[i];
     final bool selected = i == selectedIndex;
-    final mastery = passive.mastery;
+    // Ce qu'un point de Maîtrise change au passif (spec P-43 E3, §4.11, A23).
+    final masteryEffect = passive.describeMastery(locale, from: 0, to: 1);
 
     return _PassiveTile(
         // Repliée, la tuile est un affichage et non un choix — le seul
@@ -237,7 +238,7 @@ class ClassPassiveList extends StatelessWidget {
                         height: 1.25,
                       ),
                     ),
-                    if (mastery != null) ...[
+                    if (masteryEffect != null) ...[
                       const SizedBox(height: 3),
                       // La valeur de départ de la classe accompagne
                       // l'effet : deux classes sur trois démarrent à 0 et
@@ -247,7 +248,7 @@ class ClassPassiveList extends StatelessWidget {
                       Text(
                         l10n.passiveMasteryAtStart(
                           classMastery,
-                          mastery.describe(locale, 1),
+                          masteryEffect,
                         ),
                         style: TextStyle(
                           fontSize: isMobile ? 9 : 10,

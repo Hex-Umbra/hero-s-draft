@@ -13,13 +13,16 @@ import 'package:flutter_test/flutter_test.dart';
 /// pour git sous Windows.
 const _pattern = r'^[a-z0-9_]+$';
 
+/// Les trois documents de configuration, a plat dans `assets/data/` : ce ne
+/// sont pas des entites (spec P-43 E3, §3.2, §8).
+const _configDocuments = {'patch_notes.json', 'audio.json', 'xp_curve.json'};
+
 Iterable<File> _entityFiles() sync* {
   for (final entity in Directory('assets/data').listSync(recursive: true)) {
     if (entity is! File) continue;
     if (!entity.path.endsWith('.json')) continue;
     final name = entity.uri.pathSegments.last;
-    // Les deux documents de configuration ne sont pas des entites.
-    if (name == 'patch_notes.json' || name == 'audio.json') continue;
+    if (_configDocuments.contains(name)) continue;
     yield entity;
   }
 }
@@ -61,13 +64,15 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('il y a bien 88 fichiers d entite', () {
-    // 17 cartes neutres + 25 reliques + 5 evenements + 11 ameliorations de
-    // forge + 9 passifs + 8 recompenses de niveau + 3 class.json + 6 cartes
+  test('il y a bien 94 fichiers d entite', () {
+    // 17 cartes neutres + 28 reliques (dont le Registre des primes, la
+    // Sacoche du glaneur et la Meule, P-43 E3) + 7 evenements (dont le
+    // Colporteur et le Remouleur) + 11 ameliorations de forge + 9 passifs +
+    // 9 recompenses de niveau (dont Transcendance) + 3 class.json + 6 cartes
     // de classe + 4 enemy.json.
-    expect(_entityFiles().length, 88,
-        reason: '17 cartes neutres + 25 reliques + 5 evenements + 11 '
-            'ameliorations de forge + 9 passifs + 8 recompenses de niveau + '
+    expect(_entityFiles().length, 94,
+        reason: '17 cartes neutres + 28 reliques + 7 evenements + 11 '
+            'ameliorations de forge + 9 passifs + 9 recompenses de niveau + '
             '3 class.json + 6 cartes de classe + 4 enemy.json');
   });
 }

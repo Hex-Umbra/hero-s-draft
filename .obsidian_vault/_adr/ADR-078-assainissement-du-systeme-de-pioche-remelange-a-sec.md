@@ -3,6 +3,10 @@
 ✅ **Livré le 2026-08-06** — branche `feat/p02-assainissement-pioche`, 8 commits TDD.
 Chantier **P-02** de `docs/ROADMAP.md` (Tier S). Conception :
 `docs/superpowers/specs/2026-08-04-p02-assainissement-pioche-design.md`.
+**D3 amendée le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3,
+livré sur la branche de la vague 3, en attente du propriétaire) : `maxHandSize` devient une stat de
+run, `RunState.maxHandSize`, que lisent les six chemins de pioche ; la « pioche infinie » rapportée
+n'a pas été reproduite. D1, D2 et D4 à D7 ne changent pas.
 
 ### Contexte
 

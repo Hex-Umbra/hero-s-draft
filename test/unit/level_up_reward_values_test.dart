@@ -45,16 +45,6 @@ const Map<String, Map<RewardRarity, int>> _attendu = {
     RewardRarity.epic: 5,
     RewardRarity.legendary: 7,
   },
-  // Sagesse plafonne à 2 sur deux paliers consécutifs : `round(1 × 1,5)` et
-  // `round(1 × 2,0)` donnaient tous deux 2. Comportement existant, recopié
-  // dans `wisdom.json` tel quel plutôt que corrigé au passage (spec §8.4).
-  'wisdom': {
-    RewardRarity.common: 1,
-    RewardRarity.uncommon: 2,
-    RewardRarity.rare: 2,
-    RewardRarity.epic: 3,
-    RewardRarity.legendary: 4,
-  },
   'precision': {
     RewardRarity.common: 1,
     RewardRarity.uncommon: 2,
@@ -124,11 +114,11 @@ void main() {
   });
 
   group('Valeurs de récompense par palier de rareté', () {
-    test('la table est respectée sur les 30 combinaisons', () {
+    test('la table est respectée sur les 25 combinaisons', () {
       // `generateChoices` tire sa récompense et sa rareté au hasard. On balaie
-      // assez large pour voir les 30 combinaisons : la plus rare est un
-      // légendaire d'une récompense donnée, à environ 0,33 % par choix à
-      // chance 0, soit ~100 occurrences attendues sur 30 000 tirages.
+      // assez large pour voir les 25 combinaisons : la plus rare est un
+      // légendaire d'une récompense donnée, à environ 0,4 % par choix à
+      // chance 0, soit ~120 occurrences attendues sur 30 000 tirages.
       final observe = <String, Map<RewardRarity, Set<int>>>{};
 
       for (var i = 0; i < 10000; i++) {
@@ -170,7 +160,7 @@ void main() {
       }
     });
 
-    test('les six récompenses tirables sont toutes atteignables', () {
+    test('les cinq récompenses tirables sont toutes atteignables', () {
       // L'ancien `rng.nextInt(6)` garantissait ce compte par construction.
       // En donnée, une récompense mal rangée le briserait en silence.
       final tirees = <String>{};
@@ -200,15 +190,12 @@ void main() {
       ];
 
       for (final id in _attendu.keys) {
-        // Sagesse a un plateau assumé entre peu commun et rare.
-        final strict = id != 'wisdom';
-
         for (var i = 1; i < ordre.length; i++) {
           final precedent = observedValues[id]![ordre[i - 1]]!.single;
           final courant = observedValues[id]![ordre[i]]!.single;
           expect(
             courant,
-            strict ? greaterThan(precedent) : greaterThanOrEqualTo(precedent),
+            greaterThan(precedent),
             reason:
                 '$id : ${ordre[i].name} ($courant) ne devrait pas '
                 'être sous ${ordre[i - 1].name} ($precedent)',
@@ -253,11 +240,13 @@ void main() {
   });
 
   group('Les mythiques restent une surprise', () {
-    // Ce que le passage en donnée ne doit surtout pas changer : le Trèfle et
-    // le Miroir n'entrent jamais dans la table des trois emplacements, et
-    // chacun a son propre jet, à 0,5 % à chance nulle. Avant ce chantier, les
-    // deux étaient construits hors du tirage, ce qui le garantissait par
-    // construction ; en donnée, c'est `pool` qui le garantit — donc un test.
+    // Ce que le passage en donnée ne doit surtout pas changer : les
+    // mythiques — le Trèfle, le Miroir, et *Sagesse* depuis D11 (spec P-43
+    // E3, §4.10) — n'entrent jamais dans la table des trois emplacements, et
+    // chacune a son propre jet, à 0,5 % à chance nulle (D62). Avant P-41, le
+    // Trèfle et le Miroir étaient construits hors du tirage, ce qui le
+    // garantissait par construction ; en donnée, c'est `pool` qui le garantit
+    // — donc un test.
 
     test('les trois emplacements ne contiennent jamais un mythique', () {
       for (var i = 0; i < 5000; i++) {
@@ -278,7 +267,7 @@ void main() {
       // la précision statistique mais une dérive d'un ordre de grandeur : un
       // mythique versé dans la table des trois, ou un jet perdu.
       const tirages = 20000;
-      final comptes = <String, int>{'lucky_clover': 0, 'mirror': 0};
+      final comptes = <String, int>{'wisdom': 0, 'lucky_clover': 0, 'mirror': 0};
 
       for (var i = 0; i < tirages; i++) {
         for (final c in LevelUpRewardService.generateChoices(

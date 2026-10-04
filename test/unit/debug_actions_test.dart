@@ -13,6 +13,8 @@ import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 const paladin = HeroData(
   id: 'paladin',
@@ -27,9 +29,18 @@ const paladin = HeroData(
   mastery: 0,
 );
 
+/// La courbe de D67 : `gainLevel` lit le palier de l'acte courant (spec P-43
+/// E3, §4.4).
+const _d67 = XpCurveData([
+  115, 200, 310, 480, 590, 775, 955, 1100, //
+  1040, 1185, 1370, 1370, 1300, 1375, 1015,
+]);
+
 /// Une run *debug*, seule dans laquelle `DebugActions` accepte d'agir.
 ProviderContainer _startedRun() {
-  final container = ProviderContainer();
+  final container = ProviderContainer(
+    overrides: [xpCurveProvider.overrideWithValue(_d67)],
+  );
   container.read(debugRunProvider.notifier).requestDebugRun();
   container.read(runProvider.notifier).startNewRun(paladin);
   return container;
@@ -85,6 +96,24 @@ void main() {
       expect(container.read(runProvider).act, 2);
       expect(container.read(runProvider).mapNodes, isNot(same(mapBefore)));
       expect(container.read(runProvider).currentNodeId, isNull);
+    });
+
+    test('gainLevel fait gagner exactement un niveau, au palier de l acte '
+        'courant', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+
+      DebugActions.gainLevel(container.read);
+      expect(container.read(runProvider).heroStats.level, 2);
+      expect(container.read(runProvider).heroStats.xp, 0);
+      expect(container.read(runProvider).pendingDrafts, 1);
+
+      // A l'acte 9, le palier vaut 1040 : un niveau, ni moins, ni plus.
+      DebugActions.updateRun(container.read, (s) => s.copyWith(act: 9));
+      DebugActions.gainLevel(container.read);
+      expect(container.read(runProvider).heroStats.level, 3);
+      expect(container.read(runProvider).heroStats.xp, 0);
+      expect(container.read(runProvider).pendingDrafts, 2);
     });
   });
 

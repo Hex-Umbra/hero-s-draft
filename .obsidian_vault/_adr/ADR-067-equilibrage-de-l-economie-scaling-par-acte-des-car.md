@@ -2,8 +2,7 @@
 
 ### Statut
 ✅ Accepté & Implémenté (v0.2.9)
-**Point 5 amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, livré
-sur branche, en attente du propriétaire) : le Miroir ne repart plus — options neuves, 150 or — à
+**Point 5 amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, fusionné dans `main` le 2026-10-03 par la PR #48) : le Miroir ne repart plus — options neuves, 150 or — à
 chaque sortie de la boutique, mais avec tout l'étal, au nœud courant suivant.
 
 ### Contexte

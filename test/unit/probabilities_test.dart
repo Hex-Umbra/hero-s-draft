@@ -125,4 +125,53 @@ void main() {
       expect(sum, closeTo(100.0, 0.01));
     });
   });
+
+  // Les chances qu'affiche la fiche des probabilités, lues sur le tirage
+  // lui-même — les poids que visent les deux premiers cas d'échantillonnage
+  // ci-dessus (spec P-43 E3, §3.8, C4.7).
+  group('LevelUpRewardService.slotRarityChances', () {
+    double sumOf(Map<RewardRarity, double> chances) =>
+        chances.values.reduce((a, b) => a + b);
+
+    test('a Chance 0 : 2 / 6 / 16 / 24 / 52, de la legendaire a la commune',
+        () {
+      final chances = LevelUpRewardService.slotRarityChances(0);
+
+      expect(chances, {
+        RewardRarity.legendary: 2.0,
+        RewardRarity.epic: 6.0,
+        RewardRarity.rare: 16.0,
+        RewardRarity.uncommon: 24.0,
+        RewardRarity.common: 52.0,
+      });
+      expect(sumOf(chances), 100.0);
+    });
+
+    test('a Chance 5 : 4,5 / 13,5 / 31 / 44 / 7', () {
+      final chances = LevelUpRewardService.slotRarityChances(5);
+
+      expect(chances, {
+        RewardRarity.legendary: 4.5,
+        RewardRarity.epic: 13.5,
+        RewardRarity.rare: 31.0,
+        RewardRarity.uncommon: 44.0,
+        RewardRarity.common: 7.0,
+      });
+      expect(sumOf(chances), 100.0);
+    });
+
+    test('a Chance 20, la cascade tronque : 12 / 36 / 52 / 0 / 0', () {
+      final chances = LevelUpRewardService.slotRarityChances(20);
+
+      expect(chances, {
+        RewardRarity.legendary: 12.0,
+        RewardRarity.epic: 36.0,
+        RewardRarity.rare: 52.0,
+        RewardRarity.uncommon: 0.0,
+        RewardRarity.common: 0.0,
+      });
+      expect(chances.keys, isNot(contains(RewardRarity.mythic)));
+      expect(sumOf(chances), 100.0);
+    });
+  });
 }

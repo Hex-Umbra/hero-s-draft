@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
@@ -9,6 +8,7 @@ import '../inventory_controller.dart';
 import '../run_controller.dart';
 import '../checkpoint_controller.dart';
 import '../../../services/audio/audio_providers.dart';
+import '../../../services/game_data_service.dart';
 import '../../../services/audio/game_moment.dart';
 
 class PlayerStatsManager {
@@ -72,7 +72,8 @@ class PlayerStatsManager {
   /// main.
   void applyLevelUpReward(DraftChoice choice) {
     final stat = choice.data.stat;
-    // Le Miroir : il ouvre une modale de clonage, il ne monte rien.
+    // Le Miroir et *Transcendance* ouvrent chacun leur modale : aucun ne
+    // monte de stat.
     if (stat == null) return;
 
     final amount = choice.amount;
@@ -99,48 +100,57 @@ class PlayerStatsManager {
   /// Applique un modificateur aux règles de run propres au joueur.
   /// Distinct d'`applyHeroStatModifier`, qui opère sur `EntityStats` — lequel
   /// est partagé avec les ennemis et n'a donc pas à porter de notion de deck.
-  void applyRunRuleModifier({int cardsPerTurnAcc = 0}) {
+  /// Le seul à recevoir les deux règles de trouvaille et celle de la
+  /// *Meule* : seules les reliques les écrivent, par `applyRelicEffect` et
+  /// `removeRelicEffect` (spec P-43 E3, §3.8, §4.2).
+  void applyRunRuleModifier({
+    int cardsPerTurnAcc = 0,
+    int extraCombatCardsAcc = 0,
+    int eliteCardChanceAcc = 0,
+    int extraBossRuneSharpensAcc = 0,
+  }) {
+    final run = controller.currentState;
     controller.updateState(
-      controller.currentState.copyWith(
-        cardsPerTurn: controller.currentState.cardsPerTurn + cardsPerTurnAcc,
+      run.copyWith(
+        cardsPerTurn: run.cardsPerTurn + cardsPerTurnAcc,
+        extraCombatCards: run.extraCombatCards + extraCombatCardsAcc,
+        eliteCardChanceBonus: run.eliteCardChanceBonus + eliteCardChanceAcc,
+        extraBossRuneSharpens:
+            run.extraBossRuneSharpens + extraBossRuneSharpensAcc,
       ),
     );
   }
 
   /// Ajoute de l'Expérience au joueur.
   /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Le palier est celui de l'acte courant, lu sur la courbe d'XP et relu à
+  /// chaque niveau (spec P-43 E3, §4.4, A8) : il n'est stocké nulle part. Un
+  /// palier qui a baissé sous l'XP accumulée — de l'acte 8 à l'acte 9 —
+  /// donne donc le niveau au gain suivant.
   /// Retourne [true] si au moins un niveau a été gagné.
   bool gainXp(int amount) {
     if (amount <= 0) return false;
 
-    var currentStats = controller.currentState.heroStats;
-    int newXp = currentStats.xp + amount;
-    int currentLevel = currentStats.level;
-    int currentXpToNext = currentStats.xpToNextLevel;
-    bool leveledUp = false;
-    int levelsGained = 0;
+    final curve = ref.read(xpCurveProvider);
+    final run = controller.currentState;
+    var xp = run.heroStats.xp + amount;
+    var level = run.heroStats.level;
+    var levelsGained = 0;
 
-    while (newXp >= currentXpToNext) {
-      newXp -= currentXpToNext;
-      currentLevel++;
-      // Formule d'XP requise pour le nouveau niveau: 100 * (1.5 ^ (level - 1))
-      currentXpToNext = (100 * pow(1.5, currentLevel - 1)).round();
-      leveledUp = true;
+    while (xp >= curve.thresholdFor(run.act)) {
+      xp -= curve.thresholdFor(run.act);
+      level++;
       levelsGained++;
     }
 
     controller.updateState(
-      controller.currentState.copyWith(
-        heroStats: currentStats.copyWith(
-          level: currentLevel,
-          xp: newXp,
-          xpToNextLevel: currentXpToNext,
-        ),
-        pendingDrafts: controller.currentState.pendingDrafts + levelsGained,
+      run.copyWith(
+        heroStats: run.heroStats.copyWith(level: level, xp: xp),
+        pendingDrafts: run.pendingDrafts + levelsGained,
       ),
     );
 
-    return leveledUp;
+    return levelsGained > 0;
   }
 
   void decrementPendingDrafts() {
@@ -295,12 +305,24 @@ class PlayerStatsManager {
       case 'heal':
         heal(relic.value);
         break;
-      // Cet effectType n'a de sens qu'en `startOfRun` : une variante par combat
-      // ou par tour cumulerait indéfiniment. Aucune garde n'est posée ici, le
-      // contrat étant porté par la donnée (`assets/data/relics/`) et par le `case`
-      // symétrique de `removeRelicEffect`.
+      // Ces quatre effectTypes n'ont de sens qu'en `startOfRun` : une variante
+      // par combat ou par tour cumulerait indéfiniment. Aucune garde n'est
+      // posée ici, le contrat étant porté par la donnée (`assets/data/relics/`)
+      // et par les `case` symétriques de `removeRelicEffect`.
       case 'increase_cards_per_turn':
         applyRunRuleModifier(cardsPerTurnAcc: relic.value);
+        break;
+      // Les deux règles de trouvaille (spec P-43 E3, §4.2) : la *Sacoche du
+      // glaneur* et le *Registre des primes*.
+      case 'increase_combat_card_drops':
+        applyRunRuleModifier(extraCombatCardsAcc: relic.value);
+        break;
+      case 'increase_elite_card_chance':
+        applyRunRuleModifier(eliteCardChanceAcc: relic.value);
+        break;
+      // La *Meule* (spec P-43 E3, §4.2) : une rune de plus au boss « XP ».
+      case 'increase_boss_rune_sharpens':
+        applyRunRuleModifier(extraBossRuneSharpensAcc: relic.value);
         break;
       case 'charge_mastery_combat':
         final existing = controller.currentState.heroStats.statuses.where((s) => s.id == 'kunai_charge');
@@ -452,6 +474,15 @@ class PlayerStatsManager {
           break;
         case 'increase_cards_per_turn':
           applyRunRuleModifier(cardsPerTurnAcc: -relic.value);
+          break;
+        case 'increase_combat_card_drops':
+          applyRunRuleModifier(extraCombatCardsAcc: -relic.value);
+          break;
+        case 'increase_elite_card_chance':
+          applyRunRuleModifier(eliteCardChanceAcc: -relic.value);
+          break;
+        case 'increase_boss_rune_sharpens':
+          applyRunRuleModifier(extraBossRuneSharpensAcc: -relic.value);
           break;
       }
     }

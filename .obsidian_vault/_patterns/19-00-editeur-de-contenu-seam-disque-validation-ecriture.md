@@ -67,8 +67,14 @@ trois clés optionnelles d'une récompense de niveau (`requires`, `fallbackDescr
 > et le descripteur de rune **n'exige aucune clé** (`requiredKeys` vide) depuis que `pools` a
 > disparu ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Le gabarit de rune porte
 > `"maxLevel": 1`, valeur prudente — un plafond oublié ne laisse pas monter une rune sans fin —, et
-> `"minFusionRank": 1` ; il ne porte plus ni `pools` ni `stackable`. Le gabarit de carte a perdu
-> `baseMaxForgeUpgrades`. `color` et `icon` d'une rune sont des noms que `runeColors` et `runeIcons`
+> `"minFusionRank": 1` ; il ne porte plus ni `pools` ni `stackable`. Sur la branche de la vague 3,
+> il gagne `"binary": false`, refusé à vrai avec un `maxLevel` autre que 1 par le modèle ; les
+> bornes neuves d'E3 vivent elles aussi au modèle — `mastery.floor` (`PassiveData.fromJson`),
+> `requiresHpBelowPercent` et les valeurs des quatre actions d'événement (`EventChoice.fromJson`,
+> `EventAction.fromJson`) —, et les trois `effectType` de relique, les quatre types d'action,
+> `raiseRuneCap` et `raisableRune` entrent par les vocabulaires, sans code
+> ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) ; `xp_curve.json` reste hors de
+> l'éditeur, comme `audio.json`. Le gabarit de carte a perdu `baseMaxForgeUpgrades`. `color` et `icon` d'une rune sont des noms que `runeColors` et `runeIcons`
 > (`lib/ui/widgets/forge/rune_style.dart`) traduisent ; un nom inconnu y retombe sur du gris.
 
 ### 19.3. Le pipeline de validation

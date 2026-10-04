@@ -56,3 +56,16 @@ Les reliques inspirées des deckbuilders classiques accumulent des charges repr�
 | **Shuriken** (`shuriken`) | `shuriken_charge` | 3 | 1 (par tour) | +1 Puissance pour le combat (`might`, durée 99, source `relic:shuriken`) |
 | **Plume de scribe** (`pen_nib`) | `pen_nib_charge` | 5 | 99 (persistant) | +3 Puissance pour le tour en cours (`might`, durée 1, source `relic:pen_nib` — [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)) |
 | **Encensoir** (`incense_burner`) | `incense_charge` | 4 | 99 (persistant) | +8 points d'Armure |
+
+### 11.3. Reliques à règle de run — application et retrait symétriques
+
+Une relique `startOfRun` qui change une **règle de run** du joueur — et non une stat d'`EntityStats`,
+partagé avec les ennemis — passe par `PlayerStatsManager.applyRunRuleModifier`, un accumulateur par
+règle, posé par `applyRelicEffect` et **défait par le `case` symétrique de `removeRelicEffect`** :
+c'est ce qui garde l'Autel, et sur la branche de la vague 3 le *Colporteur* (`RunController.loseRelic`),
+de toute fuite. Quatre règles : `cardsPerTurn` (*Besace de l'Érudit*,
+[ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md)) et, sur la branche
+de la vague 3 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)), `extraCombatCards`
+(*Sacoche du glaneur*), `eliteCardChanceBonus` (*Registre des primes*) et `extraBossRuneSharpens`
+(*Meule*), sur le modèle exact de la première. Le retrait par le menu de debug reste asymétrique.
+Règles de jeu : [`_rules/03-5`](../_rules/03-5-systeme-de-reliques.md).

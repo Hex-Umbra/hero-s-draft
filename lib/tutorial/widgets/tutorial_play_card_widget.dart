@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
+import '../../game/game_constants.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/enemy_instance.dart';
@@ -739,8 +740,10 @@ class _TutorialPlayCardWidgetState extends State<TutorialPlayCardWidget> {
                   // Discreet reminder of the turn cycle's shape.
                   Text(
                     isFrench
-                        ? 'Pioche : 5 cartes par tour · Main max : 10'
-                        : 'Draw: 5 cards per turn · Max hand: 10',
+                        ? 'Pioche : 5 cartes par tour · Main max : '
+                            '${GameConstants.startingMaxHandSize}'
+                        : 'Draw: 5 cards per turn · Max hand: '
+                            '${GameConstants.startingMaxHandSize}',
                     style: TextStyle(
                       color: Colors.grey.shade500,
                       fontSize: 9 * scale,

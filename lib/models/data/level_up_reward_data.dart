@@ -10,6 +10,10 @@ enum RewardEffect {
 
   /// Elle ouvre le clonage d'une carte — le Miroir. Aucune stat.
   cloneCard,
+
+  /// Elle relève de 1 le plafond d'un type de rune, pour la run —
+  /// *Transcendance* (spec P-43 E3, §4.8 ; D42(c)). Aucune stat.
+  raiseRuneCap,
 }
 
 /// La stat qu'une récompense [RewardEffect.stat] fait monter.
@@ -37,6 +41,11 @@ enum RewardRequirement {
   /// Le passif actif doit déclarer un bloc `mastery` : sans lui, un point de
   /// Maîtrise n'augmente rien (spec P-49, §3.3).
   passiveMastery,
+
+  /// Une rune du deck doit être à son plafond effectif, ni sans plafond ni
+  /// binaire : sans elle, *Transcendance* n'aurait rien à relever (spec
+  /// P-43 E3, §4.8, A15).
+  raisableRune,
 }
 
 /// Une récompense de niveau, telle que son fichier la déclare
@@ -45,8 +54,8 @@ enum RewardRequirement {
 /// Avant ce chantier, les huit récompenses étaient huit valeurs d'énumération,
 /// un `rng.nextInt(6)`, deux `switch` de valeurs et des libellés en ARB,
 /// recopiés à la main dans la prose du tutoriel et dans le rouleau du
-/// carrousel. Elles sont désormais huit fichiers sous
-/// `assets/data/level_up_rewards/`.
+/// carrousel. Elles sont désormais des fichiers sous
+/// `assets/data/level_up_rewards/` — neuf depuis *Transcendance* (P-43 E3).
 @immutable
 class LevelUpRewardData {
   final String id;
@@ -132,21 +141,33 @@ class LevelUpRewardData {
   /// La description affichée sur la carte de draft.
   ///
   /// Un gabarit qui nomme `{passive}` ou `{effect}` a besoin d'un passif actif
-  /// **qui déclare une Maîtrise** : sans lui, c'est [fallbackDescriptionFr] qui
+  /// **dont la Maîtrise change quelque chose** : `{effect}` dit ce que
+  /// [amount] points ajoutés à la Maîtrise effective [currentMastery]
+  /// changent vraiment, plancher compris (spec P-43 E3, §4.11, A23) ; sans
+  /// passif à Maîtrise, ou sans changement, c'est [fallbackDescriptionFr] qui
   /// sert. C'est la règle, unique, qui remplace la branche `case affinity` de
   /// l'ancien `DraftChoiceLabels`.
-  String describe(String locale, {required int amount, PassiveData? passive}) {
+  String describe(
+    String locale, {
+    required int amount,
+    PassiveData? passive,
+    required int currentMastery,
+  }) {
     final isFr = locale == 'fr';
     final main = isFr ? descriptionFr : descriptionEn;
     final fallback = isFr ? fallbackDescriptionFr : fallbackDescriptionEn;
-    final mastery = passive?.mastery;
+    final effect = passive?.describeMastery(
+      locale,
+      from: currentMastery,
+      to: currentMastery + amount,
+    );
     final needsPassive = main.contains('{passive}') || main.contains('{effect}');
-    final template = needsPassive && mastery == null ? fallback ?? main : main;
+    final template = needsPassive && effect == null ? fallback ?? main : main;
 
     return template
         .replaceAll('{amount}', '$amount')
         .replaceAll('{passive}', passive?.getName(locale) ?? '')
-        .replaceAll('{effect}', mastery?.describe(locale, amount) ?? '');
+        .replaceAll('{effect}', effect ?? '');
   }
 
   /// La ligne courte du rouleau. Aucun `{passive}` ni `{effect}` n'y survit :
@@ -160,25 +181,32 @@ class LevelUpRewardData {
   }
 
   /// Cette récompense peut-elle être tirée dans une run dont le passif actif
-  /// est [passive] ? Un passif absent ne déclare aucune Maîtrise : la
-  /// récompense serait tout aussi inerte (décision 2 du plan).
-  bool isAvailableWith(PassiveData? passive) => switch (requires) {
+  /// est [passive], et dont le deck porte une rune à relever si
+  /// [hasRaisableRune] ? Un passif absent ne déclare aucune Maîtrise : la
+  /// récompense serait tout aussi inerte (décision 2 du plan). Le fait de la
+  /// rune vient de l'appelant, qui lit le deck et la run (spec P-43 E3,
+  /// §4.8, C2.4) ; faux par défaut, comme dans `generateChoices`.
+  bool isAvailableWith(PassiveData? passive, {bool hasRaisableRune = false}) =>
+      switch (requires) {
         null => true,
         RewardRequirement.passiveMastery => passive?.mastery != null,
+        RewardRequirement.raisableRune => hasRaisableRune,
       };
 
   /// Les récompenses d'un [pool], triées par `displayOrder` puis par `id` à
   /// rang égal.
   ///
   /// Le tri est porteur : il fixe l'ordre d'apparition des mythiques et
-  /// l'ordre des noms dans la prose du tutoriel — pas celui du tirage, qui
-  /// est uniforme et donc indifférent à l'ordre de la liste (ce qui
-  /// préserve le tirage d'origine, c'est qu'il y ait exactement six
-  /// tirables, verrouillé par un test).
+  /// l'ordre des noms dans la prose du tutoriel et dans la fiche des
+  /// probabilités — pas celui du tirage, qui est uniforme et donc
+  /// indifférent à l'ordre de la liste (le tirage est uniforme parmi les
+  /// tirables, cinq depuis que *Sagesse* est mythique (D11), compte
+  /// verrouillé par un test).
   ///
-  /// **Deux lecteurs** passent par ici, le tirage (`LevelUpRewardService`)
-  /// et la prose du tutoriel (`tutorial_prose.dart`) : un filtre ajouté à
-  /// l'un doit l'être ici, pour les deux.
+  /// **Trois lecteurs** passent par ici, le tirage (`LevelUpRewardService`),
+  /// la prose du tutoriel (`tutorial_prose.dart`) et la fiche des
+  /// probabilités (`probabilities_dialog.dart`) : un filtre ajouté à l'un
+  /// doit l'être ici, pour les trois.
   static List<LevelUpRewardData> inPool(
     List<LevelUpRewardData> rewards,
     RewardPool pool,

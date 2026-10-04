@@ -147,10 +147,13 @@ class _TutorialScreenState extends State<TutorialScreen> {
             final stepTitle = isFrench
                 ? currentStep.titleFr
                 : currentStep.titleEn;
-            final stepBody = fillRewardPlaceholders(
-              isFrench ? currentStep.bodyFr : currentStep.bodyEn,
-              widget.data.levelUpRewards,
-              isFrench: isFrench,
+            final stepBody = fillXpPlaceholders(
+              fillRewardPlaceholders(
+                isFrench ? currentStep.bodyFr : currentStep.bodyEn,
+                widget.data.levelUpRewards,
+                isFrench: isFrench,
+              ),
+              widget.data.xpCurve!,
             );
             final isComplete = _isStepActionComplete(_engine);
 

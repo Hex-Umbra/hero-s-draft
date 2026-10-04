@@ -40,7 +40,7 @@ The codebase strictly separates three layers — never mix them:
   - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
   - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
-- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
+- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`, `xp_curve_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
 
 - **Services** — `lib/services/`
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
@@ -73,7 +73,8 @@ The codebase strictly separates three layers — never mix them:
 
 ```
 assets/data/
-├── audio.json, patch_notes.json    # flat: single configuration documents, not catalogues
+├── audio.json, patch_notes.json,   # flat: single configuration documents, not catalogues
+│   xp_curve.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
 ├── classes/<id>/{class.json, <id>.png, cards/<id>.json}

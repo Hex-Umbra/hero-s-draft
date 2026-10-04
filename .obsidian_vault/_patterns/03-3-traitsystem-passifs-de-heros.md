@@ -12,6 +12,16 @@ Strategy d'[ADR-061](../_adr/ADR-061-strategy-pattern-pour-la-resolution-des-eff
 3. Applique la Maîtrise au passif : `passive.withMastery(run.currentState.heroStats.effectiveMastery)`
    (`PassiveData.withMastery`, `lib/models/data/passive_data.dart`) — augmente le paramètre que
    désigne le bloc `mastery` du passif (`field`, `perPoint`), ou le rend tel quel sans `mastery`.
+   **Le bloc gagne `floor`** sur la branche de la vague 3 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md),
+   A23, qui complète ADR-096) : le paramètre visé vaut `max(floor, base + perPoint × points)` —
+   *Flux de Mana* à `floor: 2`. `PassiveMastery.fromJson` refuse un `floor` sur un `perPoint` qui
+   n'est pas négatif, `PassiveData.fromJson` un `floor` au-dessus de la valeur de base. Le texte de
+   la Maîtrise passe de `PassiveMastery.describe(points)`, supprimé, à
+   **`PassiveData.describeMastery(locale, {from, to})`** : `{amount}` y vaut l'écart **effectif** du
+   paramètre entre deux nombres de points, plancher compris, et `null` quand rien ne change. Ses
+   trois lecteurs : la fiche des stats, l'écran de sélection de classe et
+   `LevelUpRewardData.describe`, la carte d'*Affinité*, qui reçoit la Maîtrise effective
+   (`currentMastery`, requis — comme sur `DraftChoiceLabels.getChoiceDescription`).
 4. Délègue à la stratégie de l'`effectType` du passif augmenté.
 
 **Le registre `PassiveStrategies.byEffectType`** (`lib/game/systems/passives/passive_strategies.dart`)
@@ -21,13 +31,13 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 |:---|:---|:---|
 | `gain_armor` | `GainArmorPassive` | Accorde `value` d'armure |
 | `fervor` | `FervorPassive` | `value` Puissance pendant `duration`, si l'armure a réellement absorbé |
-| `blessing` | `BlessingPassive` | `(armure survivante ~/ 5) × value` PV |
+| `blessing` | `BlessingPassive` | `(armure survivante ~/ threshold) × value` PV — `threshold` lu en donnée (5) sur la branche de la vague 3, à la place de la constante `_armorPerTranche` ; rien sous 1 (A24) |
 | `rage` | `RagePassive` | `value × (1 + PV manquants ~/ 10)` Puissance pour `duration` |
 | `bloodthirst` | `BloodthirstPassive` | Arme le Vol de vie `duration` tours, valeur croissant par quart de PV manquants |
-| `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** |
+| `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** — la pioche bornée par `RunState.maxHandSize` sur la branche de la vague 3 |
 | `channeling` | `ChannelingPassive` | `mana non dépensé × value` armure |
 | `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
-| `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat |
+| `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat — le seuil arrive Maîtrise appliquée, plancher compris ; le plancher codé `threshold < 1 ? 1 : …`, inerte, a disparu sur la branche de la vague 3 |
 
 La Puissance que posent *Ferveur*, *Rage* et *Frénésie* passe par une fabrique locale qui lui donne
 la source `passive:<id du passif>` : elle fusionne avec elle-même d'un déclenchement à l'autre,

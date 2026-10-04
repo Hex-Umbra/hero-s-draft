@@ -9,6 +9,7 @@ import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
 import '../../services/map_generator_service.dart';
+import '../game_constants.dart';
 import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
 import '../systems/trait_system.dart';
@@ -34,6 +35,32 @@ class RunState {
   /// Règle de run propre au joueur : elle n'a pas sa place sur `EntityStats`,
   /// qui est partagé avec les ennemis.
   final int cardsPerTurn;
+
+  /// La main maximale (spec P-43 E3, §4.3 ; D2, D25) : toute pioche s'arrête
+  /// à elle. Une stat de run, propre au joueur comme [cardsPerTurn] :
+  /// `GameConstants.startingMaxHandSize` au départ, par le défaut du
+  /// constructeur — `startNewRun` construit une run neuve —, et le menu de
+  /// debug l'écrit. Aucune relique ne la modifie encore (A11).
+  final int maxHandSize;
+
+  /// Les deux règles de trouvaille que portent les reliques (spec P-43 E3,
+  /// §4.1, §4.2 ; D31, D57) : [extraCombatCards] cartes garanties de plus
+  /// après un combat normal (la *Sacoche du glaneur*, +1 par exemplaire), et
+  /// [eliteCardChanceBonus] points de pourcentage de plus au jet de la
+  /// seconde carte d'élite (le *Registre des primes*, +25 par exemplaire).
+  final int extraCombatCards;
+  final int eliteCardChanceBonus;
+
+  /// La règle de run de la *Meule* (spec P-43 E3, §4.2, §4.6 ; D42(a), A3) :
+  /// les runes que le boss « XP » monte en plus de
+  /// `GameConstants.bossXpRuneSharpens`, +1 par exemplaire.
+  final int extraBossRuneSharpens;
+
+  /// Le bonus de plafond de rune de la run (spec P-43 E3, §4.8 ; D42(c),
+  /// A15, A17) : par id de rune, les niveaux que *Transcendance* ajoute à son
+  /// `maxLevel`, sur toutes les cartes. Vide au départ ; écrit par
+  /// `RunController.raiseRuneCap`.
+  final Map<String, int> runeCapBonus;
 
   /// Les règles de stat de la classe (spec P-41, §7.1), pour la même raison
   /// que `cardsPerTurn` : un ennemi n'en a jamais.
@@ -71,6 +98,11 @@ class RunState {
     this.activePassive,
     this.pendingDrafts = 0,
     this.cardsPerTurn = 5,
+    this.maxHandSize = GameConstants.startingMaxHandSize,
+    this.extraCombatCards = 0,
+    this.eliteCardChanceBonus = 0,
+    this.extraBossRuneSharpens = 0,
+    this.runeCapBonus = const {},
     this.statRules = const [],
   });
 
@@ -85,6 +117,11 @@ class RunState {
     PassiveData? activePassive,
     int? pendingDrafts,
     int? cardsPerTurn,
+    int? maxHandSize,
+    int? extraCombatCards,
+    int? eliteCardChanceBonus,
+    int? extraBossRuneSharpens,
+    Map<String, int>? runeCapBonus,
     List<StatRule>? statRules,
   }) {
     return RunState(
@@ -99,6 +136,12 @@ class RunState {
       activePassive: activePassive ?? this.activePassive,
       pendingDrafts: pendingDrafts ?? this.pendingDrafts,
       cardsPerTurn: cardsPerTurn ?? this.cardsPerTurn,
+      maxHandSize: maxHandSize ?? this.maxHandSize,
+      extraCombatCards: extraCombatCards ?? this.extraCombatCards,
+      eliteCardChanceBonus: eliteCardChanceBonus ?? this.eliteCardChanceBonus,
+      extraBossRuneSharpens:
+          extraBossRuneSharpens ?? this.extraBossRuneSharpens,
+      runeCapBonus: runeCapBonus ?? this.runeCapBonus,
       statRules: statRules ?? this.statRules,
     );
   }
@@ -115,6 +158,11 @@ class RunState {
         'activePassiveNameEn': activePassive?.nameEn,
         'pendingDrafts': pendingDrafts,
         'cardsPerTurn': cardsPerTurn,
+        'maxHandSize': maxHandSize,
+        'extraCombatCards': extraCombatCards,
+        'eliteCardChanceBonus': eliteCardChanceBonus,
+        'extraBossRuneSharpens': extraBossRuneSharpens,
+        'runeCapBonus': runeCapBonus,
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -150,6 +198,17 @@ class RunState {
       activePassive: activePassive,
       pendingDrafts: json['pendingDrafts'] as int? ?? 0,
       cardsPerTurn: json['cardsPerTurn'] as int? ?? 5,
+      maxHandSize:
+          json['maxHandSize'] as int? ?? GameConstants.startingMaxHandSize,
+      extraCombatCards: json['extraCombatCards'] as int? ?? 0,
+      eliteCardChanceBonus: json['eliteCardChanceBonus'] as int? ?? 0,
+      extraBossRuneSharpens: json['extraBossRuneSharpens'] as int? ?? 0,
+      runeCapBonus: {
+        for (final MapEntry(:key, :value)
+            in (json['runeCapBonus'] as Map<String, dynamic>? ?? const {})
+                .entries)
+          key: value as int,
+      },
       // Relues de la classe, jamais de la sauvegarde. Registre absent ou
       // classe inconnue : aucune règle — `state_sync_system.dart` traite déjà
       // un `heroClassId` inconnu comme un bug de sauvegarde, pas comme un cas
@@ -298,8 +357,8 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.applyRunRuleModifier(cardsPerTurnAcc: cardsPerTurnAcc);
   }
 
-  /// Ajoute de l'Expérience au joueur.
-  /// Gère les montées de niveaux successives avec conservation de l'XP excédentaire (carry-over).
+  /// Ajoute de l'Expérience au joueur, au palier de l'acte courant ; voir
+  /// `PlayerStatsManager.gainXp`.
   /// Retourne [true] si au moins un niveau a été gagné.
   bool gainXp(int amount) {
     return _playerStatsManager.gainXp(amount);
@@ -380,6 +439,22 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.exchangeRelics(sacrificed, gained);
   }
 
+  /// Cède une relique de l'inventaire (spec P-43 E3, §4.9 ; D23) : sa règle
+  /// de run défaite, puis la relique retirée — la symétrie de l'Autel.
+  void loseRelic(RelicData relic) {
+    removeRelicEffect(relic);
+    ref.read(inventoryProvider.notifier).removeRelics([relic.id]);
+  }
+
+  /// Relève de 1 le plafond du type de rune [runeId], sur toutes les cartes,
+  /// pour toute la run — *Transcendance* (spec P-43 E3, §4.8 ; D42(c), A15).
+  void raiseRuneCap(String runeId) {
+    state = state.copyWith(runeCapBonus: {
+      ...state.runeCapBonus,
+      runeId: (state.runeCapBonus[runeId] ?? 0) + 1,
+    });
+  }
+
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
     // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
@@ -456,14 +531,21 @@ class RunController extends Notifier<RunState> {
   }
 
   /// Affûte une rune d'une carte du deck, contre de l'or (spec P-43 E2,
-  /// §4.7) ; voir `GoldManager.sharpenRune`.
+  /// §4.7), sous le plafond effectif de la run (spec P-43 E3, A17) ; voir
+  /// `GoldManager.sharpenRune`.
   bool sharpenRune(String cardId, String runeId) =>
-      _goldManager.sharpenRune(cardId, runeId);
+      _goldManager.sharpenRune(cardId, runeId, capBonus: state.runeCapBonus);
 
   /// Échange au Puits une rune d'une carte du deck contre une autre, contre
-  /// de l'or (spec P-43 E2, §4.8) ; voir `GoldManager.exchangeRune`.
+  /// de l'or (spec P-43 E2, §4.8), sous le plafond effectif de la run (spec
+  /// P-43 E3, A17) ; voir `GoldManager.exchangeRune`.
   bool exchangeRune(String cardId, String givenId, String receivedId) =>
-      _goldManager.exchangeRune(cardId, givenId, receivedId);
+      _goldManager.exchangeRune(
+        cardId,
+        givenId,
+        receivedId,
+        capBonus: state.runeCapBonus,
+      );
 }
 
 final runProvider = NotifierProvider<RunController, RunState>(RunController.new);

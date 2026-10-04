@@ -71,8 +71,9 @@ const List<TutorialStep> kTutorialSteps = [
     titleFr: 'Types de Rencontres',
     bodyEn:
         'Eight kinds of node share the map:\n'
-        '• ⚔️ Combat: a standard fight, for gold and XP.\n'
-        '• 👑 Elite: a hard fight that rewards a Relic.\n'
+        '• ⚔️ Combat: a standard fight, for gold, XP and a card.\n'
+        '• 👑 Elite: a hard fight that rewards a Relic and a card — sometimes '
+        'two.\n'
         '• 🏪 Shop: buy cards, reroll the stock, buy a potion, purge a card, '
         'expand the stock, clone a card or buy a copy of one of yours. No '
         'relics.\n'
@@ -83,12 +84,13 @@ const List<TutorialStep> kTutorialSteps = [
         '• 🧩 Exchange Well: swap one of a card\'s runes for another, for '
         'gold — every third act.\n'
         '• 💀 Boss: three at the summit, one reward each — cards, triple XP '
-        'and gold, or an improved relic. Choosing the Boss is choosing the '
-        'reward.',
+        'and gold with one rune raised a level if any still can, or an '
+        'improved relic. Choosing the Boss is choosing the reward.',
     bodyFr:
         'Huit types de nœuds se partagent la carte :\n'
-        '• ⚔️ Combat : affrontement standard, pour l\'or et l\'XP.\n'
-        '• 👑 Élite : combat difficile qui récompense par une Relique.\n'
+        '• ⚔️ Combat : affrontement standard, pour l\'or, l\'XP et une carte.\n'
+        '• 👑 Élite : combat difficile qui récompense par une Relique et une '
+        'carte — parfois deux.\n'
         '• 🏪 Boutique : acheter des cartes, relancer le stock, prendre une '
         'potion, purger une carte, agrandir le stock, cloner ou acheter la '
         'copie d\'une de vos cartes. Aucune relique.\n'
@@ -99,7 +101,8 @@ const List<TutorialStep> kTutorialSteps = [
         '• 🧩 Puits d\'échange : échanger une rune d\'une carte contre une '
         'autre, contre de l\'or — tous les trois actes.\n'
         '• 💀 Boss : trois au sommet, une récompense chacun — des cartes, le '
-        'triple d\'XP et d\'or, ou une relique améliorée. Choisir le Boss, '
+        'triple d\'XP et d\'or avec une rune montée d\'un niveau si l\'une '
+        'peut encore monter, ou une relique améliorée. Choisir le Boss, '
         'c\'est choisir la récompense.',
     type: TutorialStepType.nodeTypes,
   ),
@@ -302,8 +305,9 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Experience & Leveling Up',
     titleFr: 'L\'Expérience & le Level Up',
     bodyEn:
-        'Defeating enemies grants XP. Each level costs more than the last: '
-        '100, then 150, then 225, and so on.\n\n'
+        'Defeating enemies grants XP. A level\'s price depends on the act: '
+        '{xpAct1} XP in act 1, {xpAct2} in act 2, and so on — about two '
+        'levels per act.\n\n'
         'Overflow XP carries into the next level, and if you gain several '
         'levels at once the rewards stack — **the world map stays locked until '
         'you have drafted them all**.\n\n'
@@ -313,8 +317,9 @@ const List<TutorialStep> kTutorialSteps = [
         'counters: the second is the one a victory advances, and it tracks '
         'your progress across the map.',
     bodyFr:
-        'Vaincre des ennemis rapporte de l\'XP. Chaque niveau coûte plus cher '
-        'que le précédent : 100, puis 150, puis 225, et ainsi de suite.\n\n'
+        'Vaincre des ennemis rapporte de l\'XP. Le prix d\'un niveau dépend de '
+        'l\'acte : {xpAct1} XP à l\'acte 1, {xpAct2} à l\'acte 2, et ainsi de '
+        'suite — de quoi gagner deux niveaux par acte.\n\n'
         'L\'XP excédentaire est reportée sur le niveau suivant, et si vous '
         'gagnez plusieurs niveaux d\'un coup les récompenses s\'empilent — **la '
         'carte du monde reste verrouillée tant que vous ne les avez pas toutes '

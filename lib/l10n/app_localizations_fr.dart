@@ -95,6 +95,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get combatReward => 'RÉCOMPENSE DE COMBAT';
 
   @override
+  String rewardCardFound(String cardName) {
+    return '🃏 Carte trouvée : $cardName';
+  }
+
+  @override
   String get chooseUpgrade => 'Choisissez une amélioration pour votre héros';
 
   @override
@@ -160,6 +165,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String luckLevelRewardSubtitle(String mythicNames) {
+    return 'Chances d\'obtenir chaque rareté d\'option lors de la montée de niveau (options mythiques, tirées à part : $mythicNames)';
+  }
+
+  @override
   String get legendTitle => 'LÉGENDE';
 
   @override
@@ -198,7 +208,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tooltipEliteDesc =>
-      'Un combat bien plus rude, mais garantit l\'obtention d\'une relique.';
+      'Un combat bien plus rude : une relique garantie, et une carte — parfois deux.';
 
   @override
   String get tooltipShopTitle => 'Boutique du Marchand';
@@ -227,6 +237,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tooltipBossDesc =>
       'Battez le gardien de cet étage pour compléter l\'acte !';
+
+  @override
+  String get tooltipBossXpDesc =>
+      'Le triple d\'XP et d\'or, et une rune de votre deck, si l\'une peut encore monter, gagne un niveau.';
 
   @override
   String actLevel(int act, int level) {
@@ -604,6 +618,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chooseCardToClone => 'Choisissez une carte à cloner';
 
   @override
+  String get runeCapTitle => 'Choisissez la rune dont le plafond monte';
+
+  @override
+  String runeCapLine(int from, int to) {
+    return 'Niveau maximal $from → $to';
+  }
+
+  @override
+  String runeCapRaised(String runeName, int level) {
+    return '$runeName peut désormais monter jusqu\'au niveau $level.';
+  }
+
+  @override
   String get cardCloned => 'Carte clonée !';
 
   @override
@@ -936,6 +963,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get eventGainRelic => '+1 Relique';
+
+  @override
+  String eventTradeRelic(String relic, int amount) {
+    return 'Cède $relic : +$amount Or';
+  }
+
+  @override
+  String eventGiveRelic(String relic) {
+    return 'Cède $relic';
+  }
+
+  @override
+  String get eventNoRelicToGive => 'Aucune relique à céder';
+
+  @override
+  String get eventNoRuneToSharpen => 'Aucune rune à affûter';
+
+  @override
+  String eventSharpenRune(int amount) {
+    return '+$amount niveau de rune';
+  }
 
   @override
   String get settingsTitle => 'Réglages';

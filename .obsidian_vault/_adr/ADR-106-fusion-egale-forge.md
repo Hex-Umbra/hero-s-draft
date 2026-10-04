@@ -15,7 +15,15 @@ en attente du test, de la PR, de la fusion et du tag du propriétaire.** Spec `9
 quatrième tour de vérification après un arrêt levé par le propriétaire ; plans `7a071b6` (partie 1)
 et `017aa4c` (partie 2) ; code `3eafb5e`..`d6e6cd5` et le correctif de revue `1407e2e` (partie 1),
 `bcc5b36`..`bff3078` et le correctif `0010ca2` (partie 2) ; référence de simulation recommitée
-`cba147c`.
+`cba147c`. **Fusionné dans `main` le 2026-10-03 par la PR #48** (commit de fusion `bca35c5`),
+tagué sur ce commit, CI/CD verte — `release.yml` run `37078474537` vert —, release publiée en
+pré-release le même jour ; constaté par la porte d'entrée de la vague 3 (`9282513`) et re-vérifié
+par `gh` le 2026-10-04.
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
+sur la branche de la vague 3, en attente du propriétaire) : `boundLevel` et ses lecteurs — la
+fusion, les pré-forgées, l'affûtage, le Puits — gagnent le bonus de plafond ; `nameAt` écrit le
+niveau dès qu'il dépasse 1 ; l'écriture de l'affûtage devient `DeckNotifier.raiseRuneLevel`,
+partagée par le feu et les trois sources sans or. Aucune décision ci-dessous n'est amendée.
 **Amende** [ADR-074](ADR-074-introduction-de-la-forge-de-fusion-procedurale-et.md),
 [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md) (D1 à D5),
 [ADR-105](ADR-105-moteur-de-runes-data-driven.md) (D1, D3, D7, D8, D10) et

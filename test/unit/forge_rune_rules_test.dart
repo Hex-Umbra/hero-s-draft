@@ -12,6 +12,7 @@ import 'shipped_data.dart';
 ForgeUpgradeData _rune(
   String id, {
   int? maxLevel,
+  bool binary = false,
   int minFusionRank = 1,
   int weight = 10,
 }) =>
@@ -25,6 +26,7 @@ ForgeUpgradeData _rune(
       color: '',
       minFusionRank: minFusionRank,
       maxLevel: maxLevel,
+      binary: binary,
       weight: weight,
     );
 
@@ -87,6 +89,17 @@ void main() {
 
     test('une rune absente du registre n a pas de plafond', () {
       expect(ForgeRuneRules.consolidate(['legacy:1', 'legacy:1']), ['legacy:2']);
+    });
+
+    // Le bonus de plafond de Transcendance (spec P-43 E3, §4.8, A17).
+    test('un bonus de plafond borne la somme au plafond effectif', () {
+      expect(ForgeRuneRules.consolidate(['eco:1', 'eco:1', 'eco:1']),
+          ['eco:1']);
+      expect(
+        ForgeRuneRules.consolidate(['eco:1', 'eco:1', 'eco:1'],
+            capBonus: {'eco': 1}),
+        ['eco:2'],
+      );
     });
 
     test('ignore une reference mal formee ou de tier nul', () {
@@ -218,6 +231,93 @@ void main() {
         isTrue,
       );
     });
+
+    // Les paires que tire le boss « XP » (spec P-43 E3, §4.6, A14).
+    test('sharpenablePairs : les paires sous leur plafond, dans l ordre du '
+        'deck puis des runes de chaque carte', () {
+      final catalog = [_rune('sharp'), _rune('eco', maxLevel: 1)];
+      final first = _cardWith(['eco:1', 'sharp:2']);
+      final bare = _cardWith([]);
+      final last = _cardWith(['sharp:1', 'absente:1']);
+
+      expect(
+        [
+          for (final pair in ForgeRuneRules.sharpenablePairs(
+              [first, bare, last], catalog))
+            (pair.card.uniqueId, pair.rune.id, pair.level),
+        ],
+        [(first.uniqueId, 'sharp', 2), (last.uniqueId, 'sharp', 1)],
+      );
+    });
+
+    test('canSharpen, hasSharpenableRune et sharpenablePairs lisent le bonus '
+        'de plafond, par id de rune', () {
+      final eco = _rune('eco', maxLevel: 1);
+      final card = _cardWith(['eco:1']);
+
+      expect(ForgeRuneRules.canSharpen(eco, 1), isFalse);
+      expect(ForgeRuneRules.canSharpen(eco, 1, capBonus: {'eco': 1}), isTrue);
+      expect(ForgeRuneRules.canSharpen(eco, 2, capBonus: {'eco': 1}), isFalse);
+      expect(
+          ForgeRuneRules.canSharpen(eco, 1, capBonus: {'quick': 1}), isFalse);
+      expect(ForgeRuneRules.hasSharpenableRune(card, [eco]), isFalse);
+      expect(
+        ForgeRuneRules.hasSharpenableRune(card, [eco], capBonus: {'eco': 1}),
+        isTrue,
+      );
+      expect(ForgeRuneRules.sharpenablePairs([card], [eco]), isEmpty);
+      expect(
+        [
+          for (final pair in ForgeRuneRules.sharpenablePairs([card], [eco],
+              capBonus: {'eco': 1}))
+            (pair.rune.id, pair.level),
+        ],
+        [('eco', 1)],
+      );
+    });
+  });
+
+  // Les candidates de Transcendance (spec P-43 E3, §4.8 ; A15, A16).
+  group('raisableCaps', () {
+    final catalog = [
+      _rune('sharp'),
+      _rune('enduring', maxLevel: 1, binary: true),
+      _rune('eco', maxLevel: 1),
+      _rune('capped', maxLevel: 2),
+    ];
+
+    List<(String, int)> candidatesOf(
+      List<CardInstance> deck, {
+      Map<String, int> capBonus = const {},
+    }) =>
+        [
+          for (final (:rune, :cap)
+              in ForgeRuneRules.raisableCaps(deck, catalog, capBonus: capBonus))
+            (rune.id, cap),
+        ];
+
+    test('les runes portees a leur plafond, sans les binaires ni les runes '
+        'sans plafond, une fois chacune, dans l ordre du catalogue', () {
+      expect(
+        candidatesOf([
+          _cardWith(['capped:2', 'sharp:9']),
+          _cardWith(['eco:1', 'enduring:1']),
+          _cardWith(['eco:1', 'capped:1']),
+        ]),
+        [('eco', 1), ('capped', 2)],
+      );
+    });
+
+    test('le plafond effectif compte : une rune relevee n est plus candidate '
+        'avant d y remonter', () {
+      expect(
+        candidatesOf([_cardWith(['eco:1']), _cardWith(['capped:2'])],
+            capBonus: {'eco': 1}),
+        [('capped', 2)],
+      );
+      expect(candidatesOf([_cardWith(['eco:2'])], capBonus: {'eco': 1}),
+          [('eco', 2)]);
+    });
   });
 
   // Le Puits d'echange (spec P-43 E2, A5, A6, §4.8).
@@ -240,6 +340,16 @@ void main() {
     test('wellLevel : borne par le plafond de la rune recue — Tranchant 9 '
         'contre Econome 1', () {
       expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 9), 1);
+    });
+
+    test('wellLevel : borne par le plafond effectif — Tranchant 3 contre '
+        'Econome, 2 sous un bonus de 1', () {
+      expect(ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 3), 1);
+      expect(
+        ForgeRuneRules.wellLevel(_rune('eco', maxLevel: 1), 3,
+            capBonus: {'eco': 1}),
+        2,
+      );
     });
 
     // Les runes livrees, par une liste fixe : le cas ne bouge pas quand une

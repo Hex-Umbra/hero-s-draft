@@ -11,16 +11,24 @@ static List<EnemyData> generateEnemiesForLevel(
   int playerLevel = 1,
   int act = 1,
   int playerMaxHp = 100,
-  int playerAttaque = 0,
+  int playerMight = 0,
   int playerMaxMana = 3,
   int playerRelicsCount = 0,
-  int playerCardsCount = 0,
+  int deckFusionRanks = 0,
+  String? bossEnemyId,
 })
 ```
 
+Signature relue le 2026-10-04 : `playerAttaque`, que cette fiche écrivait, est `playerMight` depuis
+ADR-097 ; `playerCardsCount` est devenu **`deckFusionRanks`** sur la branche de la vague 3
+([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A12, D47, D59), de même sur
+`calculateBudget`, `CombatController.initializeCombat` et `CombatDebugLogger`. L'écran de combat
+passe `ref.read(deckProvider).fusionRankSum` ; `EncounterSystem` reste une fonction pure sur des
+entiers.
+
 **Logique de Dimensionnement et Algorithme d'Équilibrage** :
-1. **Évaluation de la Puissance Réelle du Joueur (`PlayerPower`)** :
-   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerAttaque} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0) + (\text{playerCardsCount} \times 2.0)$$
+1. **Évaluation de la Puissance Réelle du Joueur (`PlayerPower`)** — le terme de deck lit sa qualité, non sa taille :
+   $$\text{PlayerPower} = \text{playerMaxHp} + (\text{playerMight} \times 10.0) + (\text{playerMaxMana} \times 15.0) + (\text{playerRelicsCount} \times 5.0) + (\text{deckFusionRanks} \times 2.0)$$
 2. **Puissance Théorique Attendue (`ExpectedPower`)** :
    $$\text{ExpectedPower} = 145.0 + ((\text{playerLevel} - 1) \times 15.0) + ((\text{act} - 1) \times 20.0)$$
 3. **Budget de Base théorique (`BaseBudget`)** :

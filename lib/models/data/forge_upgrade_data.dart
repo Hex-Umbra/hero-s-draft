@@ -46,6 +46,12 @@ class ForgeUpgradeData {
   /// tests une rune sans plafond.
   final int? maxLevel;
 
+  /// La rune n'a qu'un niveau qui compte : un second ne lui ajouterait rien
+  /// — `enduring`, `cheap` (spec P-43 E3, §3.7, A16). Son plafond ne monte
+  /// jamais : *Transcendance* ne la propose pas. Absente du fichier, fausse ;
+  /// vraie, elle exige `maxLevel: 1`.
+  final bool binary;
+
   /// Ce que fait la rune : des sortes de delta, déclarées par niveau (spec
   /// P-43 E1, A1, §4.1). Obligatoire et non vide dans le fichier ; le
   /// constructeur en laisse aux tests une liste vide, qui ne fait rien.
@@ -69,6 +75,7 @@ class ForgeUpgradeData {
     this.requiresMinCost = 0,
     this.excludesRunes = const [],
     this.maxLevel,
+    this.binary = false,
     this.deltas = const [],
     this.weight = 10,
     this.emoji = '🔮',
@@ -76,6 +83,7 @@ class ForgeUpgradeData {
 
   factory ForgeUpgradeData.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String;
+    final maxLevel = _readMaxLevel(id, json);
     return ForgeUpgradeData(
       id: id,
       nameEn: json['name_en'] as String? ?? '',
@@ -96,7 +104,8 @@ class ForgeUpgradeData {
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       requiresMinCost: _readMinCost(id, json['requiresMinCost']),
       excludesRunes: _readExcludedRunes(id, json),
-      maxLevel: _readMaxLevel(id, json),
+      maxLevel: maxLevel,
+      binary: _readBinary(id, json['binary'], maxLevel),
       deltas: _readDeltas(id, json['deltas']),
       weight: json['weight'] as int? ?? 10,
       emoji: json['emoji'] as String? ?? '🔮',
@@ -169,6 +178,21 @@ class ForgeUpgradeData {
     return value;
   }
 
+  /// `binary` : absente, fausse ; sinon un booléen, vrai seulement avec
+  /// `maxLevel: 1` — une rune binaire n'a qu'un niveau (spec P-43 E3, A16).
+  static bool _readBinary(String id, Object? raw, int? maxLevel) {
+    if (raw == null) return false;
+    if (raw is! bool) {
+      throw FormatException('$id : binary vaut true ou false — reçu : $raw');
+    }
+    if (raw && maxLevel != 1) {
+      throw FormatException(
+        '$id : une rune binary a maxLevel 1 — reçu : $maxLevel',
+      );
+    }
+    return raw;
+  }
+
   /// La clé est obligatoire (spec P-43 E2, A8) : un entier d'au moins 1.
   /// Facultative, elle laisserait une rune neuve s'offrir dès la première
   /// fusion faute de l'avoir dit — le précédent de `maxLevel`.
@@ -214,6 +238,7 @@ class ForgeUpgradeData {
       'requiresMinCost': requiresMinCost,
       if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
       'maxLevel': maxLevel,
+      'binary': binary,
       'deltas': [for (final delta in deltas) delta.toJson()],
       'weight': weight,
       'emoji': emoji,
@@ -292,12 +317,14 @@ class ForgeUpgradeData {
     return costAt(carried) - costAt(carried + level);
   }
 
-  /// Le nom de la rune au niveau [level] : le niveau ne s'écrit que si la
-  /// rune en a plus d'un (`maxLevel` autre que 1). La règle des infobulles
-  /// (spec P-43 E1, §5.2), que suivent aussi la ligne de rune et le dialogue
-  /// de fusion (spec P-43 E2, §4.11).
-  String nameAt(int level, String locale) =>
-      maxLevel == 1 ? getName(locale) : '${getName(locale)} $level';
+  /// Le nom de la rune au niveau [level] : le niveau s'écrit dès que la rune
+  /// en a plus d'un (`maxLevel` autre que 1) ou qu'elle dépasse 1 — montée
+  /// au-delà de son plafond de base par le bonus de *Transcendance* (spec
+  /// P-43 E3, A18). La règle des infobulles (spec P-43 E1, §5.2), que suivent
+  /// aussi la ligne de rune et le dialogue de fusion (spec P-43 E2, §4.11).
+  String nameAt(int level, String locale) => maxLevel == 1 && level <= 1
+      ? getName(locale)
+      : '${getName(locale)} $level';
 
   /// La ligne de la rune dans l'infobulle d'une carte, au niveau [level] que
   /// joue le moteur — le total de ses exemplaires (spec P-43 E1, §5.2) :
@@ -321,12 +348,14 @@ class ForgeUpgradeData {
       ];
 
   /// La borne de niveau (D72, D75) : [requested] sans plafond ; sinon ce
-  /// qu'il reste sous `maxLevel` une fois comptés les [carried] niveaux que la
-  /// carte porte déjà — jamais négatif (spec P-43 E1, §4.7).
-  int boundLevel(int requested, {int carried = 0}) {
+  /// qu'il reste sous le plafond effectif — `maxLevel` plus le [capBonus] de
+  /// la run pour cette rune (spec P-43 E3, §4.8, A17) — une fois comptés les
+  /// [carried] niveaux que la carte porte déjà ; jamais négatif (spec P-43
+  /// E1, §4.7).
+  int boundLevel(int requested, {int carried = 0, int capBonus = 0}) {
     final cap = maxLevel;
     if (cap == null) return requested;
-    return max(0, min(requested, cap - carried));
+    return max(0, min(requested, cap + capBonus - carried));
   }
 
   /// Lit **une** référence `id:niveau` : `(id, niveau)`, ou `null` si elle est

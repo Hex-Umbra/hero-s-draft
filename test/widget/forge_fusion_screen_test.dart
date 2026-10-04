@@ -190,6 +190,25 @@ void main() {
     expect(find.text('Reçue au niveau 1'), findsOneWidget);
   });
 
+  // Transcendance, lue par le Puits (spec P-43 E3, §4.8, §8 ; A17).
+  testWidgets('sous un plafond releve, Econome est recue au niveau 2',
+      (tester) async {
+    final container =
+        await pumpWell(tester, deck: [strike(const ['sharp:3'])]);
+    container.read(runProvider.notifier).raiseRuneCap('eco');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(UiCard));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tranchant 3'));
+    await tester.pumpAndSettle();
+
+    // Brûlant et Économe aux deux tiers de 3 : 2 l'une et l'autre, Économe
+    // sous son plafond effectif.
+    expect(find.text('Reçue au niveau 2'), findsNWidgets(2));
+    expect(find.text('Reçue au niveau 1'), findsNothing);
+  });
+
   testWidgets('un echange par visite : le Puits echange, puis ne propose plus '
       'que la sortie', (tester) async {
     final card = strike(const ['sharp:3']);

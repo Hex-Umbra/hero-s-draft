@@ -388,7 +388,8 @@ void main() {
       expect(engine.mockState.mergeOffer, isEmpty);
     });
 
-    test('gainXp déclenche un passage de niveau au-delà de xpToNextLevel', () {
+    test('gainXp déclenche un passage de niveau au-delà du palier de l\'acte',
+        () {
       expect(engine.mockState.playerLevel, 1);
       expect(engine.mockState.playerXp, 0);
 
@@ -397,27 +398,35 @@ void main() {
       engine.gainXp(35);
       expect(engine.mockState.playerXp, 70);
       engine.gainXp(35);
+      // 105 XP : sous le palier de l'acte 1, 115 — pas encore de niveau.
+      expect(engine.mockState.playerLevel, 1);
+      expect(engine.mockState.playerXp, 105);
+
+      engine.gainXp(35);
 
       expect(engine.mockState.playerLevel, 2);
-      expect(engine.mockState.playerXp, 5); // 105 - 100
+      expect(engine.mockState.playerXp, 25); // 140 - 115
     });
   });
 
   group('Progression d\'XP', () {
-    test('le palier suit 100 x 1,5^(niveau-1)', () {
-      expect(engine.mockState.xpToNextLevel, 100);
+    // Le palier est lu sur la courbe du registre, à l'acte 1 (spec P-43 E3,
+    // §4.4) : le même à chaque niveau.
+    test('le palier est celui de l\'acte, à chaque niveau', () {
+      expect(engine.xpThreshold, 115);
 
-      engine.gainXp(100);
+      engine.gainXp(115);
 
       expect(engine.mockState.playerLevel, 2);
-      expect(engine.mockState.xpToNextLevel, 150);
+      expect(engine.mockState.playerXp, 0);
+      expect(engine.xpThreshold, 115);
     });
 
     test('l\'XP excédentaire est reportée et les drafts s\'empilent', () {
-      engine.gainXp(260); // 100 -> niv.2, 150 -> niv.3, reste 10
+      engine.gainXp(260); // 115 -> niv.2, 115 -> niv.3, reste 30
 
       expect(engine.mockState.playerLevel, 3);
-      expect(engine.mockState.playerXp, 10);
+      expect(engine.mockState.playerXp, 30);
       expect(engine.pendingDrafts, 2);
     });
   });
@@ -694,7 +703,7 @@ void main() {
       // réapparaissait) sans jamais purger l'ancien draft, et regagner un
       // niveau l'empilait indéfiniment (1, 2, 3...) au lieu de repartir de
       // zéro comme `playerLevel` lui-même.
-      engine.gainXp(100);
+      engine.gainXp(115);
       expect(engine.pendingDrafts, 1);
       expect(engine.mockState.playerLevel, 2);
 

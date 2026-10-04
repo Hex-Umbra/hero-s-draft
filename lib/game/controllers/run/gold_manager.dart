@@ -16,9 +16,16 @@ class GoldManager {
   /// Affûte la rune [runeId] de la carte [cardId] du deck : un niveau de plus
   /// (D4), contre `ForgeRuneRules.sharpenCost(niveau)` or (D20). Refuse —
   /// sans rien toucher — si la carte ne porte pas la rune, si la rune est
-  /// absente du registre ou à son plafond, ou si l'or manque. Rend vrai si
+  /// absente du registre ou à son plafond effectif — `maxLevel` plus
+  /// [capBonus] pour son id (A17) —, ou si l'or manque : l'écriture refusée
+  /// ne coûte rien. L'écriture est celle des sources sans or,
+  /// `DeckNotifier.raiseRuneLevel` (spec P-43 E3, §4.7, A13). Rend vrai si
   /// l'affûtage a eu lieu.
-  bool sharpenRune(String cardId, String runeId) {
+  bool sharpenRune(
+    String cardId,
+    String runeId, {
+    required Map<String, int> capBonus,
+  }) {
     final card = ref
         .read(deckProvider)
         .masterDeck
@@ -31,7 +38,7 @@ class GoldManager {
     if (card == null ||
         level == null ||
         rune == null ||
-        !ForgeRuneRules.canSharpen(rune, level)) {
+        !ForgeRuneRules.canSharpen(rune, level, capBonus: capBonus)) {
       return false;
     }
     if (!ref
@@ -39,25 +46,27 @@ class GoldManager {
         .spendGold(ForgeRuneRules.sharpenCost(level))) {
       return false;
     }
-    ref.read(deckProvider.notifier).setForgeUpgrades(
-          cardId,
-          ForgeRuneRules.replaceRune(
-            card.forgeUpgrades,
-            runeId,
-            '$runeId:${level + 1}',
-          ),
-        );
-    return true;
+    // `canSharpen` vient de dire ce que `raiseRuneLevel` vérifie : payée,
+    // l'écriture a lieu.
+    return ref
+        .read(deckProvider.notifier)
+        .raiseRuneLevel(cardId, runeId, capBonus: capBonus);
   }
 
   /// Échange au Puits la rune [givenId] de la carte [cardId] du deck contre
   /// [receivedId] (D6, D39 ; spec P-43 E2, A5, §4.8) : la rune reçue prend
-  /// sa place, au niveau `ForgeRuneRules.wellLevel`, contre
+  /// sa place, au niveau `ForgeRuneRules.wellLevel` sous son plafond
+  /// effectif ([capBonus], spec P-43 E3, A17), contre
   /// `ForgeRuneRules.wellCost(niveau donné)` or. Refuse — sans rien toucher —
   /// si la carte ne porte pas la rune donnée, si la rune reçue n'est pas
   /// parmi `ForgeRuneRules.wellOptions`, ou si l'or manque. Rend vrai si
   /// l'échange a eu lieu.
-  bool exchangeRune(String cardId, String givenId, String receivedId) {
+  bool exchangeRune(
+    String cardId,
+    String givenId,
+    String receivedId, {
+    required Map<String, int> capBonus,
+  }) {
     final card = ref
         .read(deckProvider)
         .masterDeck
@@ -83,7 +92,8 @@ class GoldManager {
           ForgeRuneRules.replaceRune(
             card.forgeUpgrades,
             givenId,
-            '$receivedId:${ForgeRuneRules.wellLevel(received, level)}',
+            '$receivedId:'
+            '${ForgeRuneRules.wellLevel(received, level, capBonus: capBonus)}',
           ),
         );
     return true;

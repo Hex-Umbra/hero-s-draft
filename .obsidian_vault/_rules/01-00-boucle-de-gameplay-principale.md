@@ -29,7 +29,9 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
   └─► [Combat (GameScreen)]
         │
         ▼
-      [Récompenses de combat] (XP et or ; aucune carte hors boss — le boss donne la récompense de son type : cartes, XP ou relique)
+      [Récompenses de combat] (XP et or ; une carte trouvée en combat normal, une ou deux en élite — avec sa relique —,
+                               commune, ajoutée au deck sans choix ; le boss garde la récompense de son type :
+                               des clones, le triple d'XP et d'or avec une rune montée d'un niveau, ou une relique)
         │
         ▼
       [Évaluation Auto-Merge (3→1)] (Fusion 3× identiques → 1× de rareté supérieure)
@@ -37,3 +39,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
         ▼
       [Retour à la Carte (MapScreen)] (Si montée de niveau : pendingDrafts > 0)
 ```
+
+La carte trouvée après chaque combat, et le prix d'un niveau par acte, sont du lot E3 de P-43 —
+branche de la vague 3, en attente du propriétaire : règles en [`_rules/06-00`](06-00-economie-de-jeu.md)
+§6.4 et §6.5, décision en [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md).

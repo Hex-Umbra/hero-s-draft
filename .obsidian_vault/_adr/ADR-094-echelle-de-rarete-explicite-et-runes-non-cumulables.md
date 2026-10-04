@@ -13,7 +13,7 @@ dans `main` le 2026-10-02 par la PR #47) sur D1 (`forgeSlotBonus` devient `fusio
 d'éligibilité, la borne et l'analyseur de niveau) ; la conséquence « textes de runes codés en dur
 par id » est close.
 **Amendé de nouveau le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2,
-livré sur branche, en attente du propriétaire) sur D1 (`forgeCapacityAt` et `forgeCapacity`
+fusionné dans `main` le 2026-10-03 par la PR #48) sur D1 (`forgeCapacityAt` et `forgeCapacity`
 supprimés ; `fusionRank` comparé par `minFusionRank`, borne des pré-forgées), D2 (`copyableCards`
 sert quatre sources de copie, la copie du deck comprise), D3 (`stackable` supprimé), D4
 (`exhaustsOnPlay` lit aussi `addsExhaust` ; la conséquence du badge et des particules qui ignoraient

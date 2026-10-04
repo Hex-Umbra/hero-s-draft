@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-10-02 | commit: 82f902f -->
+<!-- last-sync: 2026-10-04 | commit: b6abcb5 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,25 +7,25 @@
 
 ## Focus courant
 
-**La vague 2 du programme P-43 → P-42 → P-44 lot 1 est livrée sur sa branche,
-`feat/v0.5.4-p43-e2-fusion-forge`, et attend le propriétaire** : son test manuel, la PR, la fusion
-dans `main`, puis le tag. Elle porte le troisième lot de P-43 « Économie unifiée », **E2 —
-« fusion = forge »** ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) : la fusion donne la rune,
-le feu de camp l'affûte, le Puits d'échange remplace la Forge de Fusion, la boutique vend la copie
-d'une carte du deck — **la boucle de jeu change**. **Rien n'en est fusionné ni publié** : `main`
-reste à `559df08`, et tout ce que le vault dit d'E2 n'y deviendra vrai qu'à la fusion. Le
-[compte rendu de la vague](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-2-compte-rendu.md)
+**La vague 3 du programme P-43 → P-42 → P-44 lot 1 est livrée sur sa branche,
+`feat/v0.5.5-p43-e3-trouvaille`, et attend le propriétaire** : son test manuel, la PR, la fusion
+dans `main`, puis le tag. Elle porte le quatrième des cinq lots de P-43 « Économie unifiée », **E3 —
+« trouvaille et progression »** ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : une
+carte après chaque combat, la main maximale en stat de run, le prix d'un niveau par acte en donnée,
+la difficulté adaptative sur la somme des rangs de fusion, l'affûtage hors du feu — **les fusions
+cessent d'être rares**. **Rien n'en est fusionné ni publié** : `main` reste à `bca35c5`, et tout ce
+que le vault dit d'E3 n'y deviendra vrai qu'à la fusion. Le
+[compte rendu de la vague](../../docs/superpowers/reports/2026-10-04-economie-et-catalogue-vague-3-compte-rendu.md)
 porte la table des arbitrages, que le propriétaire lit au moment de son test (§2) ; le cahier de
 test manuel et les statistiques de la session s'y ajoutent à la fin de la vague (orchestration
 §3.8). **Un arbitrage qu'il renverse se corrige sur la branche avant la fusion**, et ses documents
 — note de version, ADR — se rouvrent en place tant que la vague n'est pas taguée (orchestration
 §3.10).
 
-**La vague 1 est close** : fusionnée dans `main` le 2026-10-02 par la PR #47 (commit de fusion
-`559df08`), taguée sur ce commit, CI/CD verte — `release.yml` run `36987477053` vert, release
-publiée en pré-release le même jour —, constatée par la porte d'entrée de la vague 2 (`a9e2db6`)
-et re-vérifiée par `gh` à cette synchronisation. ADR-104 et ADR-105 sont désormais vrais sur
-`main`.
+**La vague 2 est close** : fusionnée dans `main` le 2026-10-03 par la PR #48 (commit de fusion
+`bca35c5`), taguée sur ce commit, CI/CD verte — `release.yml` run `37078474537` vert, release
+publiée en pré-release le même jour —, constatée par la porte d'entrée de la vague 3 (`9282513`)
+et re-vérifiée par `gh` à cette synchronisation. ADR-106 est désormais vrai sur `main`.
 
 **La méthode est celle d'[ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
 amendée par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)** :
@@ -41,18 +41,23 @@ qu'à la clôture d'une ligne — P-43 se clôt en vague 4.
 
 Réserves à ne pas perdre de vue :
 
-- **Ce que la vague 2 laisse ouvert**, consigné dans ADR-106 et au compte rendu §5 : **les fusions
-  restent rares jusqu'à la vague 3** — la forge du feu a disparu, la trouvaille n'existe pas
-  encore ; *Précis* au niveau 10 ajoute 50 points de critique, une carte du Berserker peut devenir
-  critique à coup sûr — à regarder au test ; *Spectral* sur une carte qui s'épuise déjà, et la
-  paire *Spectral* / *Persistant*, attendent les cartes de lot de la vague 5 ; le rendu Flame
-  recalcule le coût courant à chaque image ; le libellé anglais « SHARPEN » du feu côtoie la
-  récompense de niveau « Sharpening ».
+- **Ce que la vague 3 laisse ouvert**, consigné dans ADR-107 et au compte rendu §5 : le boss « XP »
+  ne monte rien en début de run, faute de rune affûtable — les textes le disent d'avance ; l'or
+  dort toujours (6 023 en médiane à l'acte 15 dans la simulation), constat de P-16 ; le bonus de
+  plafond est optionnel à défaut neutre sur les fonctions pures, l'analyseur ne désigne donc pas
+  l'écrivain de niveau neuf qui l'oublierait — les tests le gardent ; **à la file** : l'écart de la
+  section « Butin de Reliques » de la fiche des probabilités (antérieur), `DebugActions.gainLevel`
+  qui peut donner deux niveaux, une garde de `sharpen_rune` sans cible (inatteignable), un
+  placeholder `{floor}` — *Flux de Mana* écrit « jamais sous 2 » en dur.
+- **Ce que la vague 2 laisse ouvert**, consigné dans ADR-106 : *Précis* au niveau 10 ajoute 50
+  points de critique ; *Spectral* sur une carte qui s'épuise déjà, et la paire *Spectral* /
+  *Persistant*, attendent les cartes de lot de la vague 5 ; le rendu Flame recalcule le coût
+  courant à chaque image ; le libellé anglais « SHARPEN » du feu côtoie la récompense de niveau
+  « Sharpening ». Sa réserve « les fusions restent rares jusqu'à la vague 3 » est levée par E3.
 - **Ce que la vague 1 laisse ouvert**, consigné dans ADR-104 et ADR-105 : les icônes de statut
-  des ennemis supposent une entrée par `id` — une carte qui donnerait de la Puissance à un ennemi
-  casserait cet invariant ; l'éligibilité des runes élémentaires ne lit pas la cible de la carte ;
-  *Talisman de fer* et *Encensoir* ne donnent aucune Puissance au Berserker (défaut antérieur, à
-  ouvrir en ticket). Ses trois points « pour E2 » sont tenus par ADR-106.
+  des ennemis supposent une entrée par `id` ; l'éligibilité des runes élémentaires ne lit pas la
+  cible de la carte ; *Talisman de fer* et *Encensoir* ne donnent aucune Puissance au Berserker
+  (défaut antérieur, à ouvrir en ticket).
 - **Un test peut-être instable** : `test/widget/content_editor_screen_test.dart`, groupe des
   imports, a échoué une fois dans une suite complète pendant la vague 1 ; vert dans la suite
   complète de cette synchronisation. À surveiller.
@@ -63,9 +68,9 @@ Réserves à ne pas perdre de vue :
   toujours son passif de classe au chargement, signalé par un `MissingSaveItem`. La note de version
   reste le seul canal qui prévienne *avant*.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
-  `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 2, les trois porteurs de
-  version portent déjà la sienne (`4e4fa5c`), **ni taguée ni publiée** ; sur `main`, celle de la
-  vague 1, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
+  `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 3, les trois porteurs de
+  version portent déjà la sienne (`b6abcb5`), **ni taguée ni publiée** ; sur `main`, celle de la
+  vague 2, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Le
   2026-10-01, `gh` a échoué une fois à joindre l'API GitHub depuis la session, puis a répondu.
   Si cela se reproduit à une porte d'entrée, c'est le propriétaire qui confirme, et le journal
@@ -77,10 +82,39 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Vague 2 — P-43 lot E2 : la fusion donne la rune, le feu affûte, le Puits échange, la boutique
+1. **Vague 3 — P-43 lot E3 : une carte après chaque combat, la main en stat de run, l'XP par acte,
+   la difficulté sur les rangs, l'affûtage hors du feu** (2026-10-03 → 2026-10-04, branche
+   `feat/v0.5.5-p43-e3-trouvaille`, 34 commits `9282513` → `b6abcb5` sur `main` à `bca35c5` —
+   **livrée sur la branche, vague 3 du fichier d'orchestration, en attente du test, de la PR, de la
+   fusion et du tag du propriétaire**) — **chaque combat rapporte une carte, et les fusions cessent
+   d'être rares.** Après un combat normal, une carte commune tirée parmi celles que la classe peut
+   recevoir entre au deck sans choix ; en élite, une seconde à 25 % ; deux reliques rares, le
+   *Registre des primes* et la *Sacoche du glaneur*, le modulent. La carte bonus du boss « XP »
+   disparaît : il **monte une rune** du deck d'un niveau, deux avec la *Meule*, relique légendaire ;
+   le *Rémouleur*, un événement, en monte une contre 10 % des PV max ; une mythique,
+   ***Transcendance***, relève de 1 le plafond d'un type de rune pour la run — *Économe 2* devient
+   possible, et le nom dit le niveau. Le *Colporteur* échange la relique la plus faible contre de
+   l'or, ou contre des soins sous la moitié des PV. **La main maximale devient une stat de run**,
+   lue par les six chemins de pioche — la « pioche infinie » rapportée n'est pas reproduite après
+   15 920 contrôles, ADR-078 D3 est amendé ; **le prix d'un niveau est une table par acte** dans
+   `assets/data/xp_curve.json`, chargée par un `loadDocument` neuf, le palier dérivé de l'acte et
+   jamais stocké ; **la difficulté adaptative lit 2 × Σ des rangs de fusion**, plus le nombre de
+   cartes. *Sagesse* passe mythique ; *Bénédiction* et *Flux de Mana* lisent leurs seuils en
+   donnée, et la Maîtrise affichée dit ce qu'elle change vraiment. **Trois corrections** :
+   l'infobulle du boss d'XP disait « x2 » ; le retour système rejouait un événement dans le même
+   nœud ; la fiche des probabilités affichait des chances qu'aucun tirage n'utilise. **La spec n'a
+   convergé qu'au sixième tour** : trois arrêts de la vague, chacun levé par le propriétaire le
+   2026-10-03 ; deux parties, la boucle puis les sources. La simulation, relancée en deux temps :
+   réalignement à diff vide, puis la relique B, l'événement de D29 et la table d'XP du jeu relancés
+   chacun à part, écarts expliqués, référence recommitée (`11410f3`). Note de version écrite
+   (`b6abcb5`). **1625 tests** (+145 sur la base de **1480**, celle de la porte d'entrée), `dart
+   analyze` propre (**vérifié le 2026-10-04**) — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md),
+   qui amende ADR-078 D3 et complète ADR-096, ADR-097 D3, ADR-098, ADR-099 D1, ADR-101, ADR-105 D7
+   et ADR-106.
+2. **Vague 2 — P-43 lot E2 : la fusion donne la rune, le feu affûte, le Puits échange, la boutique
    copie** (2026-10-02, branche `feat/v0.5.4-p43-e2-fusion-forge`, 27 commits `a9e2db6` → `82f902f`
-   sur `main` à `559df08` — **livrée sur la branche, vague 2 du fichier d'orchestration, en attente
-   du test, de la PR, de la fusion et du tag du propriétaire**) — **la rune ne s'obtient plus au
+   sur `main` à `559df08` — **fusionnée dans `main` le 2026-10-03 par la PR #48, merge `bca35c5`,
+   taguée, CI/CD verte, release publiée**) — **la rune ne s'obtient plus au
    feu : elle naît de la fusion.** Chaque fusion 3 → 1 garde toutes les runes de ses trois
    exemplaires et en **offre une parmi trois**, au niveau 1, tirées au rang que la carte atteint ;
    une seule rune de chaque type par carte, *Véloce* et *Économe* à partir de la deuxième fusion
@@ -101,7 +135,7 @@ Réserves à ne pas perdre de vue :
    base de **1375**, celle de la porte d'entrée), `dart analyze` propre (**vérifié le
    2026-10-02**) — [ADR-106](../_adr/ADR-106-fusion-egale-forge.md), qui amende ADR-074, ADR-094,
    ADR-105 et ADR-067, et rend caducs ce qui restait d'ADR-025, ADR-039 D1 et D3, ADR-024 point 4.
-2. **Vague 1 — P-43 lots E0 et E1 : la Puissance par source, le `ratio`, et le moteur de runes en
+3. **Vague 1 — P-43 lots E0 et E1 : la Puissance par source, le `ratio`, et le moteur de runes en
    donnée** (2026-10-01 → 2026-10-02, branche `feat/v0.5.3-p43-e0-e1`, 22 commits `0f56cd4` →
    `52cba87` sur `main` à `0ccacce` — **fusionnée dans `main` le 2026-10-02 par la PR #47, merge
    `559df08`, taguée, CI/CD verte, release publiée**) — **la Puissance garde la
@@ -124,43 +158,15 @@ Réserves à ne pas perdre de vue :
    sur la base de **1187**, re-mesurée sur `main` à `0ccacce`), `dart analyze` propre (**vérifié le
    2026-10-02**) — [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md),
    [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md), qui amende ADR-094.
-3. **Le dossier du programme — brainstorm v3, revue, simulation, méthode par vagues**
-   (2026-09-22 → 2026-10-01, directement sur `main`, depuis `3cd743f` — les deux dernières passes
-   de revue entrent par le commit qui suit `25c36ba` —, **documentation et outillage seulement**)
-   — **le programme a désormais une conception entière et un déroulé.** Le
-   brainstorm v3 remplace celui du 05/08 : ses décisions acquises, D1 à D75, refondent l'économie
-   de deck — la fusion devient le moteur de progression et donne la rune, le feu de camp affûte, une
-   carte se trouve après chaque combat, les signatures quittent le deck pour devenir des
-   compétences de classe, chaque passif reçoit son lot de cartes. Sa
-   [revue](../../docs/possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
-   l'a vérifié contre le code puis relu quatre fois après chaque vague de décisions ; la quatrième
-   passe n'a trouvé aucune contradiction, et ses deux constats de fond sont venus de la lecture des
-   chemins de code, pas du document. **Un outil entre dans le dépôt** :
-   `tool/simulations/d26_economy_sim.dart`, qui a mesuré les valeurs d'économie retenues et
-   contredit six prémisses du brainstorm — dont celle d'un deck qui gonfle : la fusion en est le
-   puits ([rapport](../../docs/possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md),
-   [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md)). **La ROADMAP est
-   redécoupée** : P-43 « Économie unifiée » passe premier, P-42 devient le catalogue par lots de
-   passif, P-44 compte quatre lots dont le premier se livre avec P-42 ; P-18 perd ses deux derniers
-   points, P-16 hérite de cinq constats de la simulation. **Trois fiches de règles rattrapent le
-   code** au passage — `might` au lieu de `strength`, `eco` qui rend du mana à la pose, une boucle
-   qui ne promet plus de carte après un combat normal. **Aucun effet joueur, aucune note de
-   version.** **Une cinquième passe, le même jour, a relu le fichier d'orchestration lui-même**
-   avant de lancer la première vague : le fond tenait, le mode d'emploi a été corrigé. **Une
-   sixième a rejoué le fichier corrigé** — la porte d'entrée de la vague 1 passe, la simulation
-   relancée rend sa référence à l'identique — et trouvé une prémisse que le code dément : le
-   plafond de niveau d'une rune ne tient pas par la seule fusion de cartes, il se pose aux quatre
-   endroits qui écrivent un niveau.
-   **1187 tests**, inchangés, `dart analyze` propre (**vérifié le 2026-10-01**) —
-   [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
-   [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md).
 > [!NOTE]
-> **Rotations.** Sorties le 2026-10-02, dans `../_archive/` : `2026-10-02-activeContext-livraisons-2.md`
-> (le filtre de classe sur les pools d'offre) et `2026-10-02-activeContext-livraisons.md`
-> (P-41 lot D partie 2). Sortie le 2026-10-01 : `2026-10-01-activeContext-livraisons.md`
-> (P-41 lot D partie 1). Sortie le 2026-09-21 : `2026-09-21-activeContext-livraisons.md`
-> (P-41 lot C partie 2). Sorties le 2026-09-20 : `2026-09-20-activeContext-livraisons-3.md`
-> (P-41 lot C partie 1), `2026-09-20-activeContext-livraisons-2.md` (lot B partie 2) et
+> **Rotations.** Sortie le 2026-10-04, dans `../_archive/` : `2026-10-04-activeContext-livraisons.md`
+> (le dossier du programme — brainstorm v3, revue, simulation, méthode par vagues). Sorties le
+> 2026-10-02 : `2026-10-02-activeContext-livraisons-2.md` (le filtre de classe sur les pools
+> d'offre) et `2026-10-02-activeContext-livraisons.md` (P-41 lot D partie 2). Sortie le 2026-10-01 :
+> `2026-10-01-activeContext-livraisons.md` (P-41 lot D partie 1). Sortie le 2026-09-21 :
+> `2026-09-21-activeContext-livraisons.md` (P-41 lot C partie 2). Sorties le 2026-09-20 :
+> `2026-09-20-activeContext-livraisons-3.md` (P-41 lot C partie 1),
+> `2026-09-20-activeContext-livraisons-2.md` (lot B partie 2) et
 > `2026-09-20-activeContext-livraisons.md` (lot B partie 1, avec quatre réserves closes). Sorties
 > le 2026-09-18 : `2026-09-18-activeContext-livraisons-2.md` (P-49) et
 > `2026-09-18-activeContext-livraisons.md` (P-41 lot A). Les onze rotations précédentes portent le
@@ -168,22 +174,23 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire, sur la vague 2** : il joue le cahier de test du
-[compte rendu](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-2-compte-rendu.md),
+**D'abord le propriétaire, sur la vague 3** : il joue le cahier de test du
+[compte rendu](../../docs/superpowers/reports/2026-10-04-economie-et-catalogue-vague-3-compte-rendu.md),
 une fois la fin de vague écrite (orchestration §3.8), lit la table des arbitrages (§2), ouvre la PR
-de `feat/v0.5.4-p43-e2-fusion-forge`, la fusionne dans `main`, puis pose le tag sur le commit de
+de `feat/v0.5.5-p43-e3-trouvaille`, la fusionne dans `main`, puis pose le tag sur le commit de
 fusion (ADR-103 D1). Une correction demandée se fait sur la branche, avant la fusion.
 
-**Puis la vague 3 du fichier d'orchestration** : le lot E3 de P-43, « trouvaille et progression »
-— une carte après chaque combat, qui rend les fusions fréquentes, `maxHandSize`, l'XP, la difficulté
-adaptative sur la somme des rangs, les sources d'affûtage hors du feu. Elle se lance dans une
-session neuve, par le prompt unique du §0 de l'orchestration, et **sa porte d'entrée attend le tag
-de la vague 2** : tag ancêtre de `main`, CI/CD verte, constatée par `gh` — et c'est elle qui notera
-la vague 2 close. Elle hérite d'ADR-106 : `canSharpen`, `boundLevel` et la réécriture `id:n →
-id:n+1` pour les sources d'affûtage neuves ; `fusionRank`, que lisent le prédicat, G1 et la borne
-des pré-forgées, pour la difficulté adaptative. Côté simulation, le script lira la table d'XP du
-jeu, et l'écart « attendu d'avance » de la ligne « Données lues » est probablement nul (compte
-rendu de la vague 2, §5).
+**Puis la vague 4 du fichier d'orchestration** : le lot E4 de P-43, le dernier — **les signatures
+quittent le deck pour devenir des compétences de classe**, toujours disponibles, avec un temps de
+recharge (D49, D41, D53). Elle se lance dans une session neuve, par le prompt unique du §0 de
+l'orchestration, et **sa porte d'entrée attend le tag de la vague 3** : tag ancêtre de `main`,
+CI/CD verte, constatée par `gh` — et c'est elle qui notera la vague 3 close. Elle hérite
+d'ADR-107 : les signatures sont encore des cartes, exclues de la trouvaille par `unique`, sans rune
+— le boss « XP » n'en trouve aucune à monter —, au rang 0 pour la difficulté adaptative ;
+`signature_cards_transition_test.dart` le garde, et E4 les sort du deck sans que la trouvaille ni
+la difficulté n'en voient la différence. Côté simulation, le script se compare à la référence
+recommitée par la vague 3 (`11410f3`) ; son premier temps réaligne `classes/<id>/cards` →
+`skills`. **P-43 se clôt dans `docs/ROADMAP.md` à cette vague.**
 
 Une question reste tenue dans `docs/ROADMAP.md` §4, hors programme : la **Maîtrise dans l'onglet
 Héros du menu de debug**, laissée hors du lot D partie 2 de P-41 alors qu'elle pilote tout P-49.

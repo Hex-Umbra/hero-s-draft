@@ -53,26 +53,66 @@ void main() {
     expect(affinity.requires, RewardRequirement.passiveMastery);
   });
 
-  test('aucune autre récompense n exige quoi que ce soit', () {
-    for (final reward in rewards.where((r) => r.id != 'affinity')) {
+  test('hors d Affinite et de Transcendance, aucune récompense n exige quoi '
+      'que ce soit', () {
+    for (final reward in rewards
+        .where((r) => r.id != 'affinity' && r.id != 'transcendence')) {
       expect(reward.requires, isNull, reason: reward.id);
     }
   });
 
-  test('un passif avec Maitrise laisse les six types tirables', () {
+  // Transcendance (spec P-43 E3, §4.8 ; A15) : tirée seulement si une rune du
+  // deck est à son plafond effectif.
+  test('transcendence.json declare son exigence', () {
+    final transcendence = rewards.firstWhere((r) => r.id == 'transcendence');
+    expect(transcendence.requires, RewardRequirement.raisableRune);
+    expect(transcendence.effect, RewardEffect.raiseRuneCap);
+    expect(transcendence.pool, RewardPool.mythic);
+  });
+
+  test('isAvailableWith : Transcendance suit le fait de la rune, Affinite '
+      'n en depend pas', () {
+    final transcendence = rewards.firstWhere((r) => r.id == 'transcendence');
+    final affinity = rewards.firstWhere((r) => r.id == 'affinity');
+
+    expect(transcendence.isAvailableWith(null), isFalse);
+    expect(transcendence.isAvailableWith(null, hasRaisableRune: true), isTrue);
+    expect(affinity.isAvailableWith(passif(mastery: bloc)), isTrue);
+    expect(affinity.isAvailableWith(passif(), hasRaisableRune: true), isFalse);
+  });
+
+  test('generateChoices sous forceLegendary sort Transcendance avec une rune '
+      'a relever, jamais sans', () {
+    List<String> mythicsOf({required bool hasRaisableRune}) => [
+          for (final choice in LevelUpRewardService.generateChoices(
+            rewards: rewards,
+            luck: 0,
+            forceLegendary: true,
+            hasRaisableRune: hasRaisableRune,
+          ).skip(3))
+            choice.data.id,
+        ];
+
+    expect(mythicsOf(hasRaisableRune: true),
+        ['wisdom', 'lucky_clover', 'mirror', 'transcendence']);
+    expect(mythicsOf(hasRaisableRune: false),
+        ['wisdom', 'lucky_clover', 'mirror']);
+  });
+
+  test('un passif avec Maitrise laisse les cinq types tirables', () {
     expect(
       tirees(activePassive: passif(mastery: bloc)),
-      {'vitality', 'sharpening', 'affinity', 'wisdom', 'precision', 'ferocity'},
+      {'vitality', 'sharpening', 'affinity', 'precision', 'ferocity'},
     );
   });
 
   test('un passif sans Maitrise retire l Affinite de la table', () {
     final vues = tirees(activePassive: passif());
     expect(vues, isNot(contains('affinity')));
-    // Les cinq autres restent : la table rétrécit, elle ne se vide pas.
+    // Les quatre autres restent : la table rétrécit, elle ne se vide pas.
     expect(
       vues,
-      {'vitality', 'sharpening', 'wisdom', 'precision', 'ferocity'},
+      {'vitality', 'sharpening', 'precision', 'ferocity'},
     );
   });
 

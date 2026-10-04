@@ -33,7 +33,8 @@ enum CardRarity {
   /// de `common` à `legendary`, 0 pour `unique`, qui ne fusionne jamais
   /// (ADR-026). `minFusionRank` le compare (`ForgeRuneRules.isEligible`), G1
   /// compte ses paliers (`scaleValue`), il borne les runes d'une pré-forgée
-  /// (`ShopController`).
+  /// (`ShopController`), et la difficulté en somme le double
+  /// (`DeckState.fusionRankSum`).
   int get fusionRank => switch (this) {
         CardRarity.common || CardRarity.unique => 0,
         CardRarity.uncommon => 1,
@@ -156,7 +157,7 @@ class CardData implements AudioSource {
       locale == 'fr' ? descriptionFr : descriptionEn;
 
   /// Cette carte peut-elle être proposée au héros de classe [heroClassId] par
-  /// un pool d'offre — boutique, bonus de boss ?
+  /// un pool d'offre — boutique, trouvaille ?
   ///
   /// Une carte de signature n'appartient qu'à sa classe : sans ce filtre, un
   /// mage pouvait acheter une carte de paladin. Seul `heroClass` est testé, et

@@ -361,7 +361,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         expect(runController.currentState.heroStats.currentMana, 3);
@@ -508,7 +508,7 @@ void main() {
         );
 
         deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
         deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
 
         combatController.applyPlayerCardPlay(
@@ -701,7 +701,7 @@ void main() {
       runController.startNewRun(paladinHero);
       container.read(inventoryProvider.notifier).addRelic(ironTalisman);
       deckNotifier.initializeStarterDeck(List.generate(10, (i) => card('c$i')));
-      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
 
       combatController.startPlayerTurn();
 
@@ -723,7 +723,7 @@ void main() {
       runController.startNewRun(paladinHero);
       runController.applyRunRuleModifier(cardsPerTurnAcc: 1);
       deckNotifier.initializeStarterDeck(List.generate(10, (i) => card('c$i')));
-      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.maxHandSize);
+      deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
 
       combatController.startPlayerTurn();
 

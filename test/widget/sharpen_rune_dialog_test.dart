@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -23,11 +24,13 @@ CardInstance _rareStrike(List<String> runes) => CardInstance(
 
 /// Ouvre le dialogue d'affûtage sur [card], posée dans le deck, avec [gold]
 /// or, par `showDialog` au-dessus d'une page — comme la sélection du feu ;
-/// [onClosed] reçoit ce sur quoi il se ferme.
+/// [isFree] : le mode sans or du *Rémouleur* ; [onClosed] reçoit ce sur quoi
+/// il se ferme.
 Future<ProviderContainer> _openDialog(
   WidgetTester tester,
   CardInstance card, {
   required int gold,
+  bool isFree = false,
   ValueChanged<String?>? onClosed,
 }) async {
   tester.view.physicalSize = const Size(1600, 1200);
@@ -59,7 +62,7 @@ Future<ProviderContainer> _openDialog(
               onPressed: () async {
                 final sharpened = await showDialog<String>(
                   context: context,
-                  builder: (_) => SharpenRuneDialog(card: card),
+                  builder: (_) => SharpenRuneDialog(card: card, isFree: isFree),
                 );
                 onClosed?.call(sharpened);
               },
@@ -141,5 +144,65 @@ void main() {
     expect(container.read(inventoryProvider).gold, 900);
     expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
         ['sharp:3', 'eco:1']);
+  });
+
+  // Le Rémouleur (spec P-43 E3, §4.9, A21) : choisir, sans payer ni écrire.
+  testWidgets('sans or, Choisir rend la rune sans rien ecrire ni payer',
+      (tester) async {
+    String? closedOn;
+    final container = await _openDialog(
+      tester,
+      _rareStrike(const ['sharp:2', 'eco:1']),
+      gold: 0,
+      isFree: true,
+      onClosed: (id) => closedOn = id,
+    );
+
+    expect(find.text('Niveau 2 → 3'), findsOneWidget);
+    await tester.tap(find.text('Choisir'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SharpenRuneDialog), findsNothing);
+    expect(closedOn, 'sharp');
+    expect(container.read(inventoryProvider).gold, 0);
+    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
+        ['sharp:2', 'eco:1']);
+  });
+
+  testWidgets('sans or, le solde n est pas affiche : rien n est paye',
+      (tester) async {
+    await _openDialog(tester, _rareStrike(const ['sharp:2']),
+        gold: 0, isFree: true);
+
+    expect(find.byType(GoldIndicator), findsNothing);
+  });
+
+  testWidgets('dans le mode du feu, le solde est affiche', (tester) async {
+    await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 1000);
+
+    expect(find.byType(GoldIndicator), findsOneWidget);
+  });
+
+  testWidgets('sans or, une rune a son plafond dit Niveau maximal, inactive',
+      (tester) async {
+    await _openDialog(tester, _rareStrike(const ['eco:1']),
+        gold: 0, isFree: true);
+
+    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
+    expect(find.text('Choisir'), findsNothing);
+  });
+
+  // Transcendance, lue par le dialogue (spec P-43 E3, §4.8, §8 ; A17).
+  testWidgets('une rune plafonnee dit Niveau maximal, puis Niveau 1 -> 2 '
+      'sous un plafond releve', (tester) async {
+    final container =
+        await _openDialog(tester, _rareStrike(const ['eco:1']), gold: 1000);
+    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
+
+    container.read(runProvider.notifier).raiseRuneCap('eco');
+    await tester.pump();
+
+    expect(find.text('Niveau 1 → 2'), findsOneWidget);
+    expect(_button(tester, 'Affûter — 50 or').onPressed, isNotNull);
   });
 }

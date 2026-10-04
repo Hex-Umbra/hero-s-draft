@@ -387,6 +387,55 @@ void main() {
       expect(rolled, {'capped:1'});
     });
 
+    // Transcendance, lue par les pré-forgées (spec P-43 E3, §4.8, §8 ; A17).
+    test('une pre-forgee est bornee par le plafond effectif de la run', () {
+      addTearDown(
+        () => GameDataRegistry(
+          enemies: const [],
+          heroes: const [],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+        ),
+      );
+      GameDataRegistry(
+        enemies: const [],
+        heroes: const [],
+        cards: const [],
+        events: const [],
+        passives: const [],
+        relics: const [],
+        forgeUpgrades: const [
+          ForgeUpgradeData(
+            id: 'capped',
+            nameEn: 'Capped',
+            nameFr: 'Plafonnee',
+            descriptionEn: '',
+            descriptionFr: '',
+            icon: '',
+            color: '',
+            maxLevel: 1,
+          ),
+        ],
+      );
+      runController.updateState(container.read(runProvider).copyWith(act: 3));
+      runController.raiseRuneCap('capped');
+
+      // La boutique n'a pas de couture `Random` (`shop_controller.dart:156`) :
+      // 200 étals, où les tirages à 2 et 3 sont bornés au plafond effectif.
+      final rolled = <String>{};
+      for (var i = 0; i < 200; i++) {
+        shopController.initializeShop(testCardPool, 0);
+        for (final card in shopController.state.cardsForSale) {
+          rolled.addAll(card.forgeUpgrades);
+        }
+      }
+
+      expect(rolled, {'capped:1', 'capped:2'});
+    });
+
     test('une pre-forgee ne porte que des runes eligibles a ses runes deja '
         'tirees, jamais au-dela d un plafond (spec P-43 E1, A12)', () {
       addTearDown(

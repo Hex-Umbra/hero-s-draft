@@ -1,0 +1,32 @@
+{
+  "id": "wandering_grinder",
+  "title_en": "The Knife-Grinder",
+  "title_fr": "Le Rémouleur",
+  "description_en": "A knife-grinder turns his wheel by the roadside. He sharpens anything — but takes his fee in blood.",
+  "description_fr": "Un rémouleur fait tourner sa meule au bord du chemin. Il affûte tout — mais se paie en sang.",
+  "choices": [
+    {
+      "text_en": "Hand him a rune (-10% max HP, +1 rune level)",
+      "text_fr": "Lui confier une rune (-10 % des PV max, +1 niveau de rune)",
+      "result_text_en": "The wheel sings, a drop of your blood beads on the stone — and the rune glows brighter.",
+      "result_text_fr": "La meule chante, une goutte de votre sang perle sur la pierre — et la rune brille plus fort.",
+      "actions": [
+        {
+          "type": "lose_hp_percent",
+          "value": 10
+        },
+        {
+          "type": "sharpen_rune",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "text_en": "Move on (Nothing)",
+      "text_fr": "Passer votre chemin (Rien)",
+      "result_text_en": "You leave the knife-grinder to his wheel.",
+      "result_text_fr": "Vous laissez le rémouleur à sa meule.",
+      "actions": []
+    }
+  ]
+}

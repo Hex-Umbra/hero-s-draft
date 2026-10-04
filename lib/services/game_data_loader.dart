@@ -67,7 +67,8 @@ class _Entry<T> {
 }
 
 /// Charge les entites du jeu depuis un [AssetBundle], une categorie a la fois,
-/// en accumulant les erreurs plutot qu en levant a la premiere.
+/// et ses documents plats ([loadDocument]), en accumulant les erreurs plutot
+/// qu en levant a la premiere.
 ///
 /// Le [bundle] est un parametre et non `rootBundle` en dur : c est le seul
 /// point qui rend le chargeur testable sur une arborescence choisie.
@@ -101,7 +102,7 @@ class GameDataLoader {
 
     for (final source in sources) {
       final matches = _match(source.pattern);
-      final raws = await Future.wait(matches.map(_read));
+      final raws = await Future.wait(matches.map((match) => _read(match.key)));
 
       for (var i = 0; i < matches.length; i++) {
         final raw = raws[i];
@@ -158,7 +159,30 @@ class GameDataLoader {
     );
   }
 
-  Future<Map<String, dynamic>?> _read(_Match match) async {
+  /// Charge un document plat — un fichier de configuration, pas une
+  /// categorie d entites : ni motif, ni injection, ni id (spec P-43 E3, §3.2).
+  ///
+  /// Le fichier absent, un JSON illisible ou un [fromJson] qui leve rendent
+  /// `null` et accumulent leur faute avec celles des entites, que
+  /// [throwIfFailed] remonte en une fois. Lu par [_read], donc avec
+  /// `cache: false`, pour les memes raisons.
+  Future<T?> loadDocument<T>(
+    String path,
+    T Function(Map<String, dynamic>) fromJson,
+  ) async {
+    final raw = await _read(path);
+    if (raw == null) return null;
+    try {
+      return fromJson(raw);
+    } catch (e) {
+      _errors.add('$path : ${e.toString().replaceAll('\n', ' ')}');
+      return null;
+    }
+  }
+
+  /// Lit et decode un fichier JSON du bundle : une entite de [loadAll] ou un
+  /// document de [loadDocument].
+  Future<Map<String, dynamic>?> _read(String key) async {
     try {
       // `cache: false` : l'appelant fait son propre cache — c'est
       // `GameDataRegistry`, resolu une fois par `gameDataLoaderProvider`. Le SDK
@@ -168,16 +192,16 @@ class GameDataLoader {
       // sont pas retenus apres le demarrage ; (3) sous `flutter test`, un `Future`
       // mis en cache dans la zone d'un test termine ne se resout jamais depuis un
       // nouveau test — NE PAS retirer ce drapeau sans traiter les trois.
-      final decoded = jsonDecode(await bundle.loadString(match.key, cache: false));
+      final decoded = jsonDecode(await bundle.loadString(key, cache: false));
       if (decoded is! Map<String, dynamic>) {
         _errors.add(
-          '${match.key} : le fichier doit contenir un objet JSON, pas un ${decoded.runtimeType}',
+          '$key : le fichier doit contenir un objet JSON, pas un ${decoded.runtimeType}',
         );
         return null;
       }
       return decoded;
     } catch (e) {
-      _errors.add('${match.key} : ${e.toString().replaceAll('\n', ' ')}');
+      _errors.add('$key : ${e.toString().replaceAll('\n', ' ')}');
       return null;
     }
   }

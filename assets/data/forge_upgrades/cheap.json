@@ -12,6 +12,7 @@
     "eco"
   ],
   "maxLevel": 1,
+  "binary": true,
   "deltas": [
     {
       "type": "reduceCost",

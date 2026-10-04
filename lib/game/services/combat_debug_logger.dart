@@ -14,7 +14,7 @@ class CombatDebugLogger {
     required int playerMight,
     required int playerMaxMana,
     required int playerRelicsCount,
-    required int playerCardsCount,
+    required int deckFusionRanks,
     required double playerPower,
     required double expectedPower,
     required double baseBudget,
@@ -59,15 +59,15 @@ class CombatDebugLogger {
     // Player Stats Section
     buffer.writeln(buildLine('👤 PLAYER STATS:', prefix: '$bold$yellow', suffix: reset));
     buffer.writeln(buildLine('  • Level: ${playerLevel.toString().padRight(4)} Act: ${act.toString().padRight(4)} Node Type: ${nodeTypeString.padRight(36)}'));
-    buffer.writeln(buildLine('  • Max HP: ${playerMaxHp.toString().padRight(4)} Might: ${playerMight.toString().padRight(4)} Max Mana: ${playerMaxMana.toString().padRight(4)} Relics: ${playerRelicsCount.toString().padRight(4)} Cards: ${playerCardsCount.toString().padRight(4)}'));
+    buffer.writeln(buildLine('  • Max HP: ${playerMaxHp.toString().padRight(4)} Might: ${playerMight.toString().padRight(4)} Max Mana: ${playerMaxMana.toString().padRight(4)} Relics: ${playerRelicsCount.toString().padRight(4)} Σ rangs : ${deckFusionRanks.toString().padRight(4)}'));
     buffer.writeln(buildLine(''));
 
     // Formulas & Calculations Section
     buffer.writeln(buildLine('📊 FORMULAS & CALCULATIONS:', prefix: '$bold$yellow', suffix: reset));
     
     // PlayerPower
-    buffer.writeln(buildLine('  • PlayerPower formula: maxHP + (might * 10) + (maxMana * 15) + (relicsCount * 5) + (cardsCount * 2)'));
-    final pPowerCalc = '    $playerMaxHp + ($playerMight * 10) + ($playerMaxMana * 15) + ($playerRelicsCount * 5) + ($playerCardsCount * 2) = $playerPower';
+    buffer.writeln(buildLine('  • PlayerPower formula: maxHP + (might * 10) + (maxMana * 15) + (relicsCount * 5) + (2 × Σ rangs)'));
+    final pPowerCalc = '    $playerMaxHp + ($playerMight * 10) + ($playerMaxMana * 15) + ($playerRelicsCount * 5) + (2 × $deckFusionRanks) = $playerPower';
     buffer.writeln(buildLine(pPowerCalc, prefix: green, suffix: reset));
     
     // ExpectedPower

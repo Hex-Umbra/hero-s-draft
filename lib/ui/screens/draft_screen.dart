@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/ui/theme/app_spacing.dart';
 import 'package:roguelike_card_game/ui/widgets/game_dialog.dart';
 import '../../game/controllers/run_controller.dart';
 import '../../game/controllers/deck_controller.dart';
+import '../../game/services/forge_rune_rules.dart';
 import '../../game/services/level_up_reward_service.dart';
 import '../../models/card_instance.dart';
 import '../../models/reward_rarity.dart';
@@ -17,6 +18,7 @@ import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../../services/game_data_service.dart';
 import '../widgets/draft/draft_choice_labels.dart';
+import '../widgets/notification_overlay.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
 class DraftScreen extends ConsumerStatefulWidget {
@@ -102,11 +104,20 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
   @override
   void initState() {
     super.initState();
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
+    final run = ref.read(runProvider);
     _choices = LevelUpRewardService.generateChoices(
-      rewards: ref.read(gameDataLoaderProvider).requireValue.levelUpRewards,
-      luck: ref.read(runProvider).heroStats.luck,
+      rewards: gameData.levelUpRewards,
+      luck: run.heroStats.luck,
       forceLegendary: widget.forceLegendary,
-      activePassive: ref.read(runProvider).activePassive,
+      activePassive: run.activePassive,
+      // *Transcendance* n'est tirée que si une rune du deck est à son
+      // plafond effectif (spec P-43 E3, §4.8, A15).
+      hasRaisableRune: ForgeRuneRules.raisableCaps(
+        ref.read(deckProvider).masterDeck,
+        gameData.forgeUpgrades,
+        capBonus: run.runeCapBonus,
+      ).isNotEmpty,
     );
     _alertController = AnimationController(
       vsync: this,
@@ -135,6 +146,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final l10n = AppLocalizations.of(context)!;
     // Affinité se décrit par le passif actif (spec P-49, §6.5).
     final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
+    // La Maîtrise effective, d'où part l'effet d'*Affinité* (spec P-43 E3,
+    // §4.11, C1.2).
+    final currentMastery = ref.watch(
+        runProvider.select((s) => s.heroStats.effectiveMastery));
     // Le décor du rouleau : chaque récompense du catalogue, à sa valeur
     // `rare`. Une valeur arbitraire et assumée — les libellés écrits à la
     // main qu'elle remplace ne correspondaient à aucun palier cohérent (spec
@@ -251,6 +266,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 l10n,
                                                 choice,
                                                 passive: activePassive,
+                                                currentMastery: currentMastery,
                                               ),
                                               onTap: () {
                                                 if (_hasMythicChoices &&
@@ -344,6 +360,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               l10n,
                                               choice,
                                               passive: activePassive,
+                                              currentMastery: currentMastery,
                                             ),
                                             onTap: () {
                                               if (_hasMythicChoices &&
@@ -470,6 +487,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                           l10n,
                                           choice,
                                           passive: activePassive,
+                                          currentMastery: currentMastery,
                                         ),
                                         onTap: () {},
                                         rarity: DraftChoiceLabels.rarityToString(
@@ -648,6 +666,72 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     );
   }
 
+  /// La modale de *Transcendance* (spec P-43 E3, §4.8 ; D42(c), A15) : une
+  /// ligne par rune que le deck porte à son plafond effectif — son nom, son
+  /// plafond et le suivant —, non refermable ; le toucher relève ce plafond
+  /// pour la run, le notifie, puis termine le draft. Sans candidate —
+  /// impossible sous `requires: raisableRune` —, le draft se termine, comme
+  /// le clonage sans option.
+  void _showRuneCapModal(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final candidates = ForgeRuneRules.raisableCaps(
+      ref.read(deckProvider).masterDeck,
+      ref.read(gameDataLoaderProvider).requireValue.forgeUpgrades,
+      capBonus: ref.read(runProvider).runeCapBonus,
+    );
+
+    if (candidates.isEmpty) {
+      _finishDraft(ref);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return GameDialog(
+          showCloseButton: false,
+          title: Text(l10n.runeCapTitle),
+          content: Material(
+            color: Colors.transparent,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (:rune, :cap) in candidates)
+                    ListTile(
+                      leading: Text(
+                        rune.emoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                      title: Text(
+                        rune.getName(locale),
+                        style: const TextStyle(color: Colors.amber),
+                      ),
+                      subtitle: Text(
+                        l10n.runeCapLine(cap, cap + 1),
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      onTap: () {
+                        ref.read(runProvider.notifier).raiseRuneCap(rune.id);
+                        Navigator.of(ctx).pop();
+                        context.showNotification(
+                          l10n.runeCapRaised(rune.getName(locale), cap + 1),
+                          type: NotificationType.success,
+                        );
+                        _finishDraft(ref);
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _onChoiceSelected(
     DraftChoice choice,
     int index,
@@ -662,6 +746,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
       if (!mounted) return;
       if (choice.isCloneOption) {
         _showCloneModal(context, ref);
+        return;
+      }
+      if (choice.isRuneCapOption) {
+        _showRuneCapModal(context, ref);
         return;
       }
 

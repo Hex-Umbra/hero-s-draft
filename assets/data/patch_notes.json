@@ -1,5 +1,59 @@
 [
   {
+    "version": "0.5.5",
+    "date": "2026-10-04",
+    "title": "Le Temps des Trouvailles",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Chaque combat rapporte désormais une carte : après un combat normal, une carte commune, tirée au hasard parmi celles que votre classe peut recevoir, rejoint votre deck, annoncée par un message « Carte trouvée » ; après un combat d'élite, une carte, et 25 % de chance d'en trouver une seconde. Les boss gardent leur propre récompense. Les doublons s'accumulent vite : les fusions deviennent fréquentes.",
+          "Deux nouvelles reliques rares modulent ces trouvailles : le Registre des primes (+25 % de chance de trouver une seconde carte après un combat d'élite) et la Sacoche du glaneur (une carte de plus après chaque combat normal).",
+          "Le boss d'XP ne donne plus de carte : en plus du triple d'XP et d'or, une rune de votre deck, tirée au hasard parmi celles qui peuvent encore monter, gagne un niveau, et un message vous dit laquelle et sur quelle carte. Si aucune rune ne peut plus monter, rien ne monte, et le jeu vous le dit.",
+          "Nouvelle relique légendaire, la Meule : la récompense du boss d'XP fait gagner un niveau à une rune de plus, si l'une peut encore monter.",
+          "Nouvel événement, le Rémouleur : contre 10 % de vos PV max, une rune de votre choix gagne un niveau, sans or. Renoncer au choix de la rune ne vous coûte rien ; sans rune à affûter dans votre deck, le choix reste inactif et vous dit pourquoi : « Aucune rune à affûter ».",
+          "Nouvel événement, le Colporteur : il vous prend votre relique la plus faible — celle de plus basse rareté, nommée sur ses offres — contre 40 à 200 or selon sa rareté, ou, si vos PV sont sous la moitié, contre des soins de 20 % de vos PV max. Sans relique, ses offres restent inactives : « Aucune relique à céder ».",
+          "Nouvelle récompense mythique de montée de niveau, Transcendance : le niveau maximal d'un type de rune de votre choix monte de 1, sur toutes vos cartes, pour toute la run. Elle ne s'offre que si l'une de vos runes a atteint son niveau maximal, Allégé et Persistant exceptées. Économe ou Véloce au niveau 2 deviennent ainsi possibles, et leur nom affiche alors leur niveau, comme « Économe 2 »."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La carte du monde et le tutoriel suivent ces changements : l'infobulle d'un combat d'élite annonce désormais une relique garantie et une carte — parfois deux —, et le tutoriel présente la carte gagnée à chaque combat, la rune du boss d'XP et le nouveau prix des niveaux.",
+          "L'effet de la Maîtrise sur votre passif, tel que l'affichent la fiche « Statistiques du Héros » et l'option Affinité de la montée de niveau, dit désormais ce qu'elle change vraiment, limite comprise : sur Flux de Mana déjà au plus bas, l'option Affinité s'annonce « sans effet sur votre passif »."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Le prix d'un niveau ne grimpe plus à chaque niveau (100 XP, puis 150, puis 225…) : il dépend désormais de l'acte — 115 XP à l'acte 1, 200 à l'acte 2, 310 à l'acte 3… —, de quoi gagner environ deux niveaux par acte.",
+          "La difficulté des combats se règle désormais sur la force de votre deck — la rareté que ses fusions ont donnée à ses cartes — et non plus sur son nombre de cartes : les cartes trouvées après chaque combat ne rendent plus les combats plus durs.",
+          "Sagesse quitte les options ordinaires de la montée de niveau, où elle donnait de +1 à +4 Mana max selon sa rareté : elle devient une récompense mythique, qui donne +1 Mana max et a sa propre chance d'apparaître à chaque montée de niveau — 0,5 %, plus 0,15 % par point de Chance —, comme le Trèfle à 4 feuilles et le Miroir.",
+          "Flux de Mana : la Maîtrise abaisse toujours le nombre de Compétences à réunir, mais jamais sous 2 — elle pouvait auparavant le descendre à 1, soit 1 Mana à chaque Compétence jouée."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Sur la carte du monde, l'infobulle du boss d'XP annonçait « XP & Or x2 » : elle dit désormais le triple d'XP et d'or qu'il donne vraiment, et la rune qu'il fait monter.",
+          "À un événement, quitter l'écran par le retour après avoir fait votre choix termine désormais la visite, comme « Continuer » : on ne peut plus revenir dans le même lieu pour y jouer un second événement.",
+          "La fiche « Taux d'obtention des Raretés » ne montre plus la section « Draft standard de récompenses », dont aucune récompense ne tirait les chances — la carte trouvée après un combat est toujours commune —, et les chances qu'elle affiche pour la montée de niveau sont désormais celles du tirage réel. Elle nomme aussi toutes les options mythiques, tirées à part, Sagesse et Transcendance comprises."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "La taille maximale de la main devient une caractéristique de la run : elle reste de 10 cartes, et aucune relique ni aucun effet ne la change."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.4",
     "date": "2026-10-02",
     "title": "La Fusion Devient Forge",

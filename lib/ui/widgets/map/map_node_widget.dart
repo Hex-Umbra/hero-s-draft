@@ -57,8 +57,8 @@ class _MapNodeWidgetState extends State<MapNodeWidget> {
         if (widget.node.bossRewardType == BossRewardType.cards) {
           return (l10n.legendBossCards, l10n.tooltipBossDesc);
         } else if (widget.node.bossRewardType == BossRewardType.doubleXp) {
-          final isFr = Localizations.localeOf(context).languageCode == 'fr';
-          return (isFr ? "Boss (XP & Or x2)" : "Boss (2x XP & Gold)", l10n.tooltipBossDesc);
+          // Le triple, et la rune (spec P-43 E3, §4.6, A25).
+          return (l10n.legendBossXp, l10n.tooltipBossXpDesc);
         } else if (widget.node.bossRewardType == BossRewardType.improvedRelic) {
           return (l10n.legendBossRelic, l10n.tooltipBossDesc);
         }

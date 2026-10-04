@@ -52,11 +52,12 @@ class StatsDialog extends ConsumerWidget {
     final traitDesc = passive?.getDescription(locale) ?? '';
 
     final stats = runState.heroStats;
-    // L'effet de la Maîtrise acquise sur le passif actif, s'il en tire un
-    // (spec P-49, §6.5).
-    final mastery = passive?.mastery;
-    final masteryEffect = mastery != null && stats.effectiveMastery > 0
-        ? mastery.describe(locale, stats.effectiveMastery)
+    // Ce que la Maîtrise acquise change vraiment au passif actif, plancher
+    // compris (spec P-49, §6.5 ; spec P-43 E3, §4.11, A23) : si rien ne
+    // change, pas de ligne.
+    final masteryEffect = stats.effectiveMastery > 0
+        ? passive?.describeMastery(locale,
+            from: 0, to: stats.effectiveMastery)
         : null;
 
     return GameDialog(

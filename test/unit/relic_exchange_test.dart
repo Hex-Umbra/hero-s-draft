@@ -7,6 +7,8 @@ import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/services/map_generator_service.dart';
 
+import 'shipped_data.dart';
+
 void main() {
   group('Relic Exchange Map Generation Tests', () {
     test('No relicExchange nodes generated when act < 5', () {
@@ -146,6 +148,77 @@ void main() {
         inventoryController.state.relics.any((r) => r.id == 'scholars_satchel'),
         isFalse,
       );
+    });
+
+    // Les deux reliques de la trouvaille (spec P-43 E3, §4.2) : une règle de
+    // run posée à l'acquisition, rendue à l'échange, deux exemplaires
+    // additionnés.
+    test('increase_combat_card_drops s applique, s additionne et se retire',
+        () {
+      const gained = RelicData(
+        id: 'gained',
+        nameEn: 'Gained',
+        trigger: RelicTrigger.startOfCombat,
+        effectType: 'gain_armor',
+        value: 1,
+        rarity: RelicRarity.common,
+        emoji: '⬜',
+      );
+      final pouch = shippedRelic('gleaners_pouch');
+      expect(runController.state.extraCombatCards, 0);
+
+      inventoryController.addRelic(pouch);
+      inventoryController.addRelic(pouch);
+      expect(runController.state.extraCombatCards, 2);
+
+      runController.exchangeRelics([pouch], gained);
+      expect(runController.state.extraCombatCards, 1);
+    });
+
+    test('increase_elite_card_chance s applique, s additionne et se retire',
+        () {
+      const gained = RelicData(
+        id: 'gained',
+        nameEn: 'Gained',
+        trigger: RelicTrigger.startOfCombat,
+        effectType: 'gain_armor',
+        value: 1,
+        rarity: RelicRarity.common,
+        emoji: '⬜',
+      );
+      final ledger = shippedRelic('bounty_ledger');
+      expect(runController.state.eliteCardChanceBonus, 0);
+
+      inventoryController.addRelic(ledger);
+      inventoryController.addRelic(ledger);
+      expect(runController.state.eliteCardChanceBonus, 50);
+
+      runController.exchangeRelics([ledger], gained);
+      expect(runController.state.eliteCardChanceBonus, 25);
+    });
+
+    // La *Meule* (spec P-43 E3, §4.2) : la même symétrie.
+    test('increase_boss_rune_sharpens s applique, s additionne et se retire',
+        () {
+      const gained = RelicData(
+        id: 'gained',
+        nameEn: 'Gained',
+        trigger: RelicTrigger.startOfCombat,
+        effectType: 'gain_armor',
+        value: 1,
+        rarity: RelicRarity.common,
+        emoji: '⬜',
+      );
+      final grindstone = shippedRelic('grindstone');
+      expect(grindstone.rarity, RelicRarity.legendary);
+      expect(runController.state.extraBossRuneSharpens, 0);
+
+      inventoryController.addRelic(grindstone);
+      inventoryController.addRelic(grindstone);
+      expect(runController.state.extraBossRuneSharpens, 2);
+
+      runController.exchangeRelics([grindstone], gained);
+      expect(runController.state.extraBossRuneSharpens, 1);
     });
   });
 }

@@ -253,6 +253,46 @@ void main() {
 
       expect(DeckState(masterDeck: [strike, signature]).copyableCards, [strike]);
     });
+
+    // Le terme de deck de la difficulte (spec P-43 E3, §4.5, A12) : la somme
+    // des rangs de fusion, et non le nombre de cartes.
+    test('fusionRankSum additionne les rangs de fusion du master deck', () {
+      final signature = CardInstance(
+        data: const CardData(
+          id: 'holy_shield',
+          cost: 1,
+          type: CardType.skill,
+          category: CardCategory.characterSpecific,
+          rarity: CardRarity.unique,
+          target: CardTarget.self,
+          effects: [],
+        ),
+      );
+      CardInstance strikeAt(CardRarity rarity) =>
+          CardInstance(data: _card('strike').data, rarity: rarity);
+
+      expect(const DeckState().fusionRankSum, 0);
+      // Des communes et une signature `unique` : rang 0, quelle que soit la
+      // taille du deck.
+      expect(
+        DeckState(masterDeck: [
+          for (var i = 0; i < 20; i++) _card('c$i'),
+          signature,
+        ]).fusionRankSum,
+        0,
+      );
+      // 1 + 2 + 3 + 4, de peu commune a legendaire ; la commune ne compte pas.
+      expect(
+        DeckState(masterDeck: [
+          strikeAt(CardRarity.uncommon),
+          strikeAt(CardRarity.rare),
+          strikeAt(CardRarity.epic),
+          strikeAt(CardRarity.legendary),
+          _card('c'),
+        ]).fusionRankSum,
+        10,
+      );
+    });
   });
 
   group('DeckNotifier — aléatoire et compteur de remélange', () {
@@ -533,6 +573,95 @@ void main() {
       final card = cardWith(type: CardType.power, isExhaust: false, runes: const ['enduring:1']);
       play(card);
       expect(notifier.state.exhaustPile, [card]);
+    });
+  });
+
+  // L'affûtage sans or, l'écriture que partagent le feu et les sources d'E3
+  // (spec P-43 E3, §4.7, A13).
+  group('DeckNotifier.raiseRuneLevel', () {
+    late ProviderContainer container;
+    late DeckNotifier notifier;
+
+    setUp(() {
+      shippedRuneRegistry(const ['burning', 'eco', 'sharp']);
+      container = ProviderContainer();
+      notifier = container.read(deckProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    /// Une Frappe rare portant [runes], posée dans le deck.
+    CardInstance seed(List<String> runes) {
+      final card = CardInstance(
+        data: shippedCard('strike_basic'),
+        rarity: CardRarity.rare,
+        forgeUpgrades: runes,
+      );
+      notifier.addCardToMasterDeck(card);
+      return card;
+    }
+
+    List<String> runesOf(CardInstance card) => notifier.state.masterDeck
+        .singleWhere((c) => c.uniqueId == card.uniqueId)
+        .forgeUpgrades;
+
+    test('reecrit id:n en id:n+1 a sa place', () {
+      final card = seed(const ['burning:1', 'sharp:2', 'eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'sharp'), isTrue);
+
+      expect(runesOf(card), ['burning:1', 'sharp:3', 'eco:1']);
+    });
+
+    test('refuse une rune a son plafond, sans rien toucher', () {
+      final card = seed(const ['sharp:2', 'eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'eco'), isFalse);
+
+      expect(runesOf(card), ['sharp:2', 'eco:1']);
+    });
+
+    test('refuse une carte absente, une rune non portee ou absente du '
+        'registre, sans rien toucher', () {
+      final card = seed(const ['sharp:2', 'legacy:1']);
+
+      expect(notifier.raiseRuneLevel('absente', 'sharp'), isFalse);
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'burning'), isFalse);
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'legacy'), isFalse);
+
+      expect(runesOf(card), ['sharp:2', 'legacy:1']);
+    });
+
+    // Le Rémouleur monte de `value` niveaux (spec P-43 E3, §4.9).
+    test('monte de levels niveaux, bornes par le plafond de la rune', () {
+      shippedRuneRegistry(const ['precise']);
+      final low = seed(const ['precise:1']);
+      final high = seed(const ['precise:9']);
+
+      expect(notifier.raiseRuneLevel(low.uniqueId, 'precise', levels: 2),
+          isTrue);
+      expect(notifier.raiseRuneLevel(high.uniqueId, 'precise', levels: 3),
+          isTrue);
+
+      // Précis plafonne à 10 (D72).
+      expect(runesOf(low), ['precise:3']);
+      expect(runesOf(high), ['precise:10']);
+    });
+
+    // Le plafond effectif (spec P-43 E3, §4.7, §4.8 ; A17).
+    test('monte une rune plafonnee sous un bonus de plafond, jusqu au plafond '
+        'effectif', () {
+      final card = seed(const ['eco:1']);
+
+      expect(notifier.raiseRuneLevel(card.uniqueId, 'eco'), isFalse);
+      expect(
+          notifier.raiseRuneLevel(card.uniqueId, 'eco', capBonus: {'eco': 1}),
+          isTrue);
+      expect(runesOf(card), ['eco:2']);
+      expect(
+          notifier.raiseRuneLevel(card.uniqueId, 'eco', capBonus: {'eco': 1}),
+          isFalse);
+      expect(runesOf(card), ['eco:2']);
     });
   });
 }

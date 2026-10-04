@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/missing_save_item.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
@@ -72,6 +75,72 @@ void main() {
       final legacy = Map<String, dynamic>.from(json)..remove('cardsPerTurn');
       final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
       expect(restoredLegacy.cardsPerTurn, 5);
+    });
+
+    // La main maximale, stat de run (spec P-43 E3, §4.3, §8).
+    test('maxHandSize round-trip et vaut la main de depart quand la cle '
+        'manque', () {
+      final json = buildRunState().copyWith(maxHandSize: 7).toJson();
+      expect(json['maxHandSize'], 7);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.maxHandSize, 7);
+
+      final legacy = Map<String, dynamic>.from(json)..remove('maxHandSize');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.maxHandSize, GameConstants.startingMaxHandSize);
+    });
+
+    // Les deux règles de trouvaille des reliques (spec P-43 E3, §3.8, §8).
+    test('extraCombatCards et eliteCardChanceBonus round-trip et valent 0 '
+        'quand la cle manque', () {
+      final json = buildRunState()
+          .copyWith(extraCombatCards: 2, eliteCardChanceBonus: 50)
+          .toJson();
+      expect(json['extraCombatCards'], 2);
+      expect(json['eliteCardChanceBonus'], 50);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.extraCombatCards, 2);
+      expect(restored.eliteCardChanceBonus, 50);
+
+      final legacy = Map<String, dynamic>.from(json)
+        ..remove('extraCombatCards')
+        ..remove('eliteCardChanceBonus');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.extraCombatCards, 0);
+      expect(restoredLegacy.eliteCardChanceBonus, 0);
+    });
+
+    // La règle de run de la *Meule* (spec P-43 E3, §3.8, §8).
+    test('extraBossRuneSharpens round-trip et vaut 0 quand la cle manque', () {
+      final json =
+          buildRunState().copyWith(extraBossRuneSharpens: 2).toJson();
+      expect(json['extraBossRuneSharpens'], 2);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.extraBossRuneSharpens, 2);
+
+      final legacy = Map<String, dynamic>.from(json)
+        ..remove('extraBossRuneSharpens');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.extraBossRuneSharpens, 0);
+    });
+
+    // Le bonus de plafond de Transcendance (spec P-43 E3, §3.8, §8).
+    test('runeCapBonus round-trip et vaut vide quand la cle manque', () {
+      final json = buildRunState()
+          .copyWith(runeCapBonus: {'eco': 1, 'quick': 2})
+          .toJson();
+      expect(json['runeCapBonus'], {'eco': 1, 'quick': 2});
+
+      final (restored, _) =
+          RunState.fromJsonWithReport(jsonDecode(jsonEncode(json)));
+      expect(restored.runeCapBonus, {'eco': 1, 'quick': 2});
+
+      final legacy = Map<String, dynamic>.from(json)..remove('runeCapBonus');
+      final (restoredLegacy, _) = RunState.fromJsonWithReport(legacy);
+      expect(restoredLegacy.runeCapBonus, isEmpty);
     });
 
     test('leaves activePassive null and reports a missing passive', () {

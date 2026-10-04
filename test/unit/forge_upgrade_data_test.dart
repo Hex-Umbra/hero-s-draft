@@ -322,9 +322,37 @@ void main() {
       'requiresExhaust',
       'requiresMinCost',
       'maxLevel',
+      'binary',
       'deltas',
       'weight',
       'emoji',
+    });
+  });
+
+  // A16 : une rune binaire n'a qu'un niveau qui compte (spec P-43 E3, §3.8).
+  group('binary', () {
+    test('lu ; faux s il est absent ; toujours ecrit par toJson', () {
+      expect(ForgeUpgradeData.fromJson(_json()).binary, isFalse);
+      expect(ForgeUpgradeData.fromJson(_json()).toJson(),
+          containsPair('binary', false));
+      final cheap =
+          ForgeUpgradeData.fromJson(_json({'maxLevel': 1, 'binary': true}));
+      expect(cheap.binary, isTrue);
+      expect(ForgeUpgradeData.fromJson(cheap.toJson()).binary, isTrue);
+    });
+
+    test('refuse une rune binaire de plafond autre que 1, et une valeur non '
+        'booleenne', () {
+      for (final maxLevel in [null, 2]) {
+        expect(
+          () => ForgeUpgradeData.fromJson(
+              _json({'maxLevel': maxLevel, 'binary': true})),
+          _refused('binary'),
+          reason: '$maxLevel',
+        );
+      }
+      expect(() => ForgeUpgradeData.fromJson(_json({'binary': 'oui'})),
+          _refused('binary'));
     });
   });
 
@@ -438,14 +466,17 @@ void main() {
   });
 
   // La regle des infobulles, que suivent la ligne de rune et le dialogue de
-  // fusion (spec P-43 E2, §4.11).
-  test('nameAt n ecrit le niveau que d une rune a plusieurs niveaux', () {
+  // fusion (spec P-43 E2, §4.11) ; une rune de plafond 1 montee au-dela par
+  // Transcendance ecrit son niveau (spec P-43 E3, A18).
+  test('nameAt ecrit le niveau d une rune a plusieurs niveaux, ou montee '
+      'au-dela de 1', () {
     final sharp = ForgeUpgradeData.fromJson(_json({'name_fr': 'Tranchant'}));
     final eco = ForgeUpgradeData.fromJson(
         _json({'name_fr': 'Économe', 'maxLevel': 1}));
     expect(sharp.nameAt(1, 'fr'), 'Tranchant 1');
     expect(sharp.nameAt(3, 'fr'), 'Tranchant 3');
     expect(eco.nameAt(1, 'fr'), 'Économe');
+    expect(eco.nameAt(2, 'fr'), 'Économe 2');
   });
 
   group('eligibilite', () {
@@ -543,6 +574,15 @@ void main() {
     // plafond.
     test('jamais negatif', () {
       expect(capped.boundLevel(1, carried: 3), 0);
+    });
+
+    // Le plafond effectif (spec P-43 E3, §4.8, A17).
+    test('le bonus de plafond s ajoute au plafond, et rien a une rune sans '
+        'plafond', () {
+      expect(capped.boundLevel(3, capBonus: 1), 3);
+      expect(capped.boundLevel(1, carried: 2, capBonus: 1), 1);
+      expect(capped.boundLevel(1, carried: 3, capBonus: 1), 0);
+      expect(uncapped.boundLevel(3, carried: 5, capBonus: 1), 3);
     });
   });
 

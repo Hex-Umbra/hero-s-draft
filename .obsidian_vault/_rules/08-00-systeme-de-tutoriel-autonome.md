@@ -74,7 +74,11 @@ sur l'étape 01.
 5. **Types de Rencontres** : les 8 nœuds (Combat, Élite, Boutique, Repos, Événement, Autel des
    Reliques, Puits d'échange, Boss). Depuis le lot E2 de P-43, la Boutique dit la copie d'une carte
    du deck, le Repos l'affûtage d'une rune, et le Puits l'échange d'une rune contre de l'or, tous les
-   trois actes ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)).
+   trois actes ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Depuis le lot E3 (branche de la
+   vague 3, en attente du propriétaire — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)),
+   le Combat rapporte « l'or, l'XP et une carte », l'Élite « une Relique et une carte — parfois
+   deux », et le Boss d'XP « le triple d'XP et d'or, et monte une rune si l'une peut encore
+   monter » — dans la tuile comme dans la prose de l'étape des nœuds, qui le répète.
 6. **Combat — Vue d'ensemble** : maquette annotée de la disposition de l'écran (Héros/Ennemi
    au centre, main/mana/PV en bas, effets joueur + pioche à gauche, Fin de Tour/intentions/
    défausse à droite, boutons Deck/Pause en haut à droite). **Ne montre pas de
@@ -86,7 +90,9 @@ sur l'étape 01.
    armure remise à 0). Le texte flottant d'une Compétence **mesure le gain réel** de part et
    d'autre de `playCard` (`armure` et `effectiveMight` avant/après) au lieu de lire la valeur
    imprimée sur la carte : une classe qui convertit son Armure y lit sa Puissance. Le `else if`
-   y est délibéré — sans branche qui matche, l'étape ne dit rien plutôt que d'annoncer zéro.
+   y est délibéré — sans branche qui matche, l'étape ne dit rien plutôt que d'annoncer zéro. Le
+   bandeau « Main max : » lit `GameConstants.startingMaxHandSize`, la main de départ d'une run, et
+   non plus un `10` littéral.
 9. **Armure & Dégâts** : l'armure retombe toujours à 0 en début de tour, quelle que soit la
    classe ; le passif choisi à l'étape 02 et la Maîtrise sont montrés avec leurs vraies valeurs.
    La démo comparative se joue **en deux temps** — le gain de 4 Armure, puis le coup de 10 —
@@ -119,10 +125,20 @@ sur l'étape 01.
     et la valeur affichée passent par l'applicateur du jeu, `EffectiveCard` — aucune recopie
     ([ADR-081](../_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md),
     [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)).
-13. **Expérience & Level Up** *(niveau gagné)* : palier `100 × 1,5^(niveau-1)`, drafts qui
-    s'empilent si plusieurs niveaux tombent d'un coup.
+13. **Expérience & Level Up** *(niveau gagné)* : le palier est celui de l'acte 1 sur la courbe
+    du jeu — `TutorialEngine.xpThreshold`, `data.xpCurve!.thresholdFor(1)`, sur le registre du
+    tutoriel, qui porte toujours la courbe (branche de la vague 3 ; la formule
+    `100 × 1,5^(niveau-1)` et le champ `mockState.xpToNextLevel` ont disparu). La prose dit le prix
+    des actes 1 et 2 par deux placeholders, `{xpAct1}` et `{xpAct2}`, que remplit la fonction pure
+    `fillXpPlaceholders` de `tutorial_prose.dart`, et « de quoi gagner deux niveaux par acte » ;
+    les drafts s'empilent si plusieurs niveaux tombent d'un coup.
 14. **Draft de Récompenses** *(récompense choisie)* : `DraftChoiceCard` et
-    `LevelUpRewardService.generateChoices()` réels — les 6 types plus les Mythiques.
+    `LevelUpRewardService.generateChoices()` réels — les 5 types plus les Mythiques (6 types sur
+    `main`). La prose se réécrit d'elle-même par ses placeholders : « cinq types — Vitalité,
+    Aiguisage, Affinité, Précision, Férocité — et jusqu'à quatre options Mythiques : Sagesse,
+    Trèfle à 4 feuilles, Miroir et Transcendance ». Le tutoriel ne passe jamais `hasRaisableRune` :
+    *Transcendance* n'y est jamais tirée. La carte d'*Affinité* lit la Maîtrise effective de la
+    tranche persistante (`currentMastery`).
 15. **Reliques** : **carte statique** présentant une relique d'exemple (`iron_talisman`) et la
     légende des raretés — ce n'est pas un carrousel. Sources réelles (Élite, Boss à relique
     améliorée, Autel des Reliques) et les 7 déclencheurs effectivement utilisés par le

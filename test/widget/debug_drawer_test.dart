@@ -16,6 +16,8 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
+import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/theme/app_theme.dart';
 import 'package:roguelike_card_game/ui/widgets/debug/debug_drawer.dart';
 
@@ -128,7 +130,14 @@ ProviderContainer _debugRunContainer({
   HeroData hero = _paladin,
   PassiveData? activePassive,
 }) {
-  final container = ProviderContainer();
+  // Hors combat, le premier onglet, « Heros », lit le palier d'XP de l'acte
+  // (`debug_hero_tab.dart`) : la courbe est surchargée ici, pour tous les
+  // appelants (spec P-43 E3, §8, « Le piège du montage »).
+  final container = ProviderContainer(
+    overrides: [
+      xpCurveProvider.overrideWithValue(const XpCurveData([115, 200])),
+    ],
+  );
   container.read(debugRunProvider.notifier).requestDebugRun();
   container.read(runProvider.notifier).startNewRun(hero, activePassive);
   container
@@ -378,5 +387,21 @@ void main() {
       container.read(runProvider).heroStats.mightTargets,
       {MightTarget.attack, MightTarget.skill},
     );
+  });
+
+  testWidgets('l onglet Heros dit le palier d XP de l acte courant', (
+    tester,
+  ) async {
+    sizeScreen(tester);
+    final container = _debugRunContainer();
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container, inCombat: false));
+    await _openDrawer(tester);
+    await tester.tap(find.text('Heros'));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('XP  (seuil 115)'));
+    expect(find.text('XP  (seuil 115)'), findsOneWidget);
   });
 }

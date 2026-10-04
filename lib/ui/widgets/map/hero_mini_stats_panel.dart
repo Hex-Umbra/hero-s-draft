@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../game/controllers/run_controller.dart';
+import '../../../models/entity_stats.dart';
+import '../../../services/game_data_service.dart';
 import 'dialogs/probabilities_dialog.dart';
 import 'dialogs/stats_dialog.dart';
 
@@ -11,6 +13,8 @@ class HeroMiniStatsPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final runState = ref.watch(runProvider);
     final stats = runState.heroStats;
+    // Le palier de l'acte courant, dérivé de la courbe (spec P-43 E3, §4.4).
+    final xpThreshold = ref.watch(xpCurveProvider).thresholdFor(runState.act);
 
     final locale = Localizations.localeOf(context).languageCode;
 
@@ -160,16 +164,22 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           // Jauge d'XP
-          _buildXpBar(context, stats, locale),
+          _buildXpBar(context, stats, xpThreshold, locale),
         ],
       ),
     );
   }
 
-  Widget _buildXpBar(BuildContext context, dynamic stats, String locale) {
-    final double progress = stats.xpToNextLevel > 0
-        ? (stats.xp / stats.xpToNextLevel).clamp(0.0, 1.0)
-        : 0.0;
+  /// [stats] est typé : un `dynamic` laisserait passer à l'analyse la lecture
+  /// d'un champ disparu. [threshold] vaut au moins 1, la courbe le garantit
+  /// au chargement.
+  Widget _buildXpBar(
+    BuildContext context,
+    EntityStats stats,
+    int threshold,
+    String locale,
+  ) {
+    final double progress = (stats.xp / threshold).clamp(0.0, 1.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +189,7 @@ class HeroMiniStatsPanel extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'XP: ${stats.xp}/${stats.xpToNextLevel}',
+              'XP: ${stats.xp}/$threshold',
               style: const TextStyle(
                 color: Color(0xFFE8D5B5),
                 fontSize: 10,

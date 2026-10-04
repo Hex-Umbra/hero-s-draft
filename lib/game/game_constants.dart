@@ -1,6 +1,10 @@
 import 'package:flame/components.dart';
 import 'package:roguelike_card_game/models/map_node.dart';
 
+/// Une règle de trouvaille : [guaranteed] cartes garanties, puis des jets
+/// successifs, en pourcentage — le premier raté arrête.
+typedef CardDropRule = ({int guaranteed, List<int> extraChances});
+
 class GameConstants {
   // --- Z-INDEX PRIORITIES ---
   static const int priorityBackground = -100;
@@ -30,10 +34,28 @@ class GameConstants {
     MapNodeType.event: (min: 4, max: 9),
   };
 
+  // --- TROUVAILLE (D1, D31, D57) ---
+  /// Les cartes trouvées après un combat, par type de nœud. Un type absent
+  /// n'en donne aucune : le boss garde sa récompense (D1).
+  static const Map<MapNodeType, CardDropRule> cardDrops = {
+    MapNodeType.combat: (guaranteed: 1, extraChances: []),
+    MapNodeType.elite: (guaranteed: 1, extraChances: [25]),
+  };
+
+  // --- BOSS « XP » (D42) ---
+  /// Les runes que la récompense du boss « XP » monte d'un niveau (D42(a)),
+  /// tirées parmi les paires (carte, rune) du deck dont la rune peut encore
+  /// monter ; la *Meule* en ajoute une par exemplaire
+  /// (`RunState.extraBossRuneSharpens`).
+  static const int bossXpRuneSharpens = 1;
+
   // --- DECK RULES ---
-  /// Nombre maximum de cartes en main. Au-delà, la pioche s'interrompt sans
-  /// consommer de carte ni déclencher de remélange (règle « arrêt net »).
-  static const int maxHandSize = 10;
+  /// La main maximale au début d'une run (D25) : la stat vit sur
+  /// `RunState.maxHandSize`, que lisent les six chemins de pioche — au-delà,
+  /// la pioche s'interrompt sans consommer de carte ni déclencher de
+  /// remélange (règle « arrêt net »). Aucun chemin de pioche ne lit cette
+  /// valeur-ci.
+  static const int startingMaxHandSize = 10;
 
   // --- COMBAT TIMINGS (ms) ---
   /// Délai du dash du héros avant d'appliquer les dégâts d'une compétence.

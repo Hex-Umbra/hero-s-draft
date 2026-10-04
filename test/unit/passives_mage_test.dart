@@ -62,9 +62,11 @@ void main() {
         effectType: 'mana_flux',
         value: 1,
         threshold: threshold,
+        // Comme `mana_flux.json` : sans plancher, 3 − 2 points ferait 1.
         mastery: const PassiveMastery(
           field: 'threshold',
           perPoint: -1,
+          floor: 2,
           descriptionEn: '-{amount} Skill to gather',
           descriptionFr: '-{amount} Competence a reunir',
         ),
@@ -324,23 +326,21 @@ void main() {
       expect(stats().currentMana, 3, reason: 'le compteur a ete vide');
     });
 
-    test('la Maitrise fait baisser le seuil', () {
+    test('la Maitrise fait baisser le seuil, jusqu a son plancher', () {
       run.startNewRun(master, manaFlux(threshold: 3));
       seedEnemy();
 
-      // 3 − 2 points de Maitrise : une Compétence suffit.
+      // 3 − 2 points de Maitrise font 1, que le plancher porte à 2.
+      playSkills(1);
+      expect(stats().currentMana, 3, reason: 'une seule ne suffit plus');
+
       playSkills(1);
       expect(stats().currentMana, 3 + 1);
     });
 
-    // Ce test ne distingue pas le plancher de son absence : le declencheur
-    // ne se resout qu'au premier `onSkillPlayed`, ou le compteur vaut deja 1
-    // et `1 >= threshold` est vrai que `threshold` vaille 1 ou un negatif
-    // profond. Le plancher n'a d'effet observable qu'ailleurs (une future
-    // lecture de `passive.threshold` par l'UI, par exemple) ; ce test
-    // documente l'intention de la strategie, pas un comportement qu'il
-    // pourrait a lui seul faire echouer.
-    test('le seuil ne descend jamais sous une Competence', () {
+    // Le plancher vit dans `PassiveData.withMastery` (spec P-43 E3, A23) : à
+    // Maitrise 9, le seuil de 3 tomberait à −6, il reste à 2.
+    test('le seuil ne descend jamais sous son plancher', () {
       const veryMasterful = HeroData(
         id: 'mage',
         classCard: 'mage.png',
@@ -350,6 +350,9 @@ void main() {
       );
       run.startNewRun(veryMasterful, manaFlux(threshold: 3));
       seedEnemy();
+
+      playSkills(1);
+      expect(stats().currentMana, 3, reason: 'une Compétence ne suffit pas');
 
       playSkills(1);
       expect(stats().currentMana, 3 + 1);
@@ -363,6 +366,15 @@ void main() {
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
       expect(available, ['channeling', 'mage_mark', 'mana_flux']);
+    });
+
+    // D43, D60 (spec P-43 E3, §3.6).
+    test('mana_flux.json porte son plancher, 2', () async {
+      final registry = await loadGameDataRegistry(rootBundle);
+      final flux = registry.passives.singleWhere((p) => p.id == 'mana_flux');
+      expect(flux.threshold, 3);
+      expect(flux.mastery!.field, 'threshold');
+      expect(flux.mastery!.floor, 2);
     });
 
     test('les neuf passifs sont livres, et spell_armor n y est plus', () async {

@@ -14,11 +14,14 @@ en attente du test, de la PR, de la fusion et du tag du propriétaire.** Spec `2
 `5bd2f10`, huit commits de code `ae939e6`..`633fe24` et un correctif de la revue d'ensemble,
 `ee814e9`. **Fusionné dans `main` le 2026-10-02 par la PR #47** (commit de fusion `559df08`),
 tagué sur ce commit, CI/CD verte, release publiée — constaté par la porte d'entrée de la vague 2.
-**Amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, livré sur
-branche, en attente du propriétaire) sur D1 (six sortes de delta), D3 (`ForgeRuneRules` gagne
+**Amendé le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2, fusionné dans `main` le 2026-10-03 par la PR #48) sur D1 (six sortes de delta), D3 (`ForgeRuneRules` gagne
 `drawRunes`, l'affûtage et le Puits), D7 (`boundLevel` borne la fusion, les pré-forgées,
 l'affûtage et le Puits), D8 (le prédicat gagne le rang et « une rune par type », ses lecteurs
 changent) et D10 (l'héritage garde toutes les runes).
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
+sur la branche de la vague 3, en attente du propriétaire) sur D7 : `boundLevel` et tous ses lecteurs
+reçoivent le bonus de plafond de la run (`capBonus`), et `DeckNotifier.raiseRuneLevel` devient un
+écrivain de niveau de plus.
 **Amende [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)** sur ses
 décisions D1, D3, D4 et D5 ; **complète [ADR-061](ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md)** ;
 livre la décision D4 d'[ADR-104](ADR-104-un-statut-par-source-et-ratio-de-conversion.md).

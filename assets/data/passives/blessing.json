@@ -8,6 +8,7 @@
   "trigger": "startOfTurn",
   "effectType": "blessing",
   "value": 1,
+  "threshold": 5,
   "displayOrder": 3,
   "mastery": {
     "field": "value",

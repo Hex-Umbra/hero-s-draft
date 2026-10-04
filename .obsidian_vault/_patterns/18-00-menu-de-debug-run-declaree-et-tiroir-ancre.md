@@ -37,6 +37,15 @@ les méthodes **déjà publiques** des contrôleurs (`hydrate`, `gainXp`, `advan
 `cleanDeadEnemies`…). **Aucune méthode n'a été ajoutée à un contrôleur** : `SaveService.load()`
 avait déjà rendu cette surface publique. Chaque méthode sort d'emblée si `_allowed` est faux.
 
+**Ce que le lot E3 y change** (branche de la vague 3, en attente du propriétaire —
+[ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : « Gagner un niveau »
+(`DebugActions.gainLevel`) et le libellé « XP (seuil N) » de l'onglet Héros lisent le palier de
+l'acte courant sur `xpCurveProvider`, `xpToNextLevel` ayant disparu — ⚠️ `gainLevel` peut donner
+deux niveaux quand le champ « XP » porte déjà plus de deux paliers moins un, un défaut antérieur
+porté à la file ; « Piocher » (`DebugActions.drawCards`) borne la main par `RunState.maxHandSize`,
+l'un des six chemins de pioche ; l'onglet Run gagne le champ « Main max », son seul écrivain en
+cours de run. Le libellé reste en ligne, en français, comme les autres.
+
 ### 18.3. Le tiroir — aucune route poussée
 
 > [!IMPORTANT]
@@ -56,7 +65,8 @@ poignée « DEBUG » au bord gauche ouvre un panneau.
 Contenu des onglets : **Héros** — PV/mana max, Puissance **et ses cibles**, chance, critique,
 niveau, XP, « Gagner un niveau », plus l'**identité de la run en lecture seule** (voir 18.3 bis) ;
 **Run** — or, acte (sans régénérer la carte), niveau, drafts en attente, cartes par
-tour, « Acte suivant » — la ligne des forges bonus est partie avec `bonusForgeSlots`
+tour, « Main max » (`RunState.maxHandSize`, branche de la vague 3), « Acte suivant » — la ligne des
+forges bonus est partie avec `bonusForgeSlots`
 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) ; **Deck** — piocher 1, défausser la main, ajouter/retirer
 une carte ; **Reliques** — ajouter/retirer ; **Combat** — PV/mana/armure du héros, soin et mana
 complets, PV par ennemi ou « 0 PV », tous les ennemis à 0, gagner/perdre, sauter la phase ennemie.

@@ -5,8 +5,8 @@
 // importé par lib/, ni un test. Il n'importe rien de lib/ : Flame, donc
 // Flutter, refuse `dart run`. Les FORMULES du jeu y sont portées, chacune
 // avec son `fichier:ligne` ; les DONNÉES (ennemis, neutres, signatures,
-// reliques, récompenses de niveau, runes, passifs, classes) sont relues dans
-// assets/data/ à chaque lancement.
+// reliques, récompenses de niveau, runes, passifs, classes, courbe d'XP) sont
+// relues dans assets/data/ à chaque lancement.
 //
 // Les règles simulées sont les décisions D1-D49 du brainstorm
 // docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md
@@ -38,7 +38,7 @@ const shopPurgePrice = 75; // shop_screen.dart:429
 const shopMirrorBasePrice = 150; // shop_state.dart:16 (150 << achats)
 const restHealRatio = 0.3; // rest_screen.dart:29
 const startingGold = 50; // inventory_controller.dart:50
-const maxHandSize = 10; // game_constants.dart:36
+const maxHandSize = 10; // GameConstants.startingMaxHandSize ; une stat de run depuis E3 (RunState.maxHandSize)
 const baseCardsPerTurn = 5; // run_controller.dart:82
 const baseCritMultiplier = 1.5; // entity_stats.dart:38
 const floors = 10; // map_generator_service.dart:14
@@ -46,7 +46,7 @@ const maxWidth = 5; // map_generator_service.dart:14
 const middleFloor = floors ~/ 2; // map_generator_service.dart:15
 const maxActiveEnemies = 5; // combat_controller.dart:169
 
-/// Quotas de types de nœuds par carte — game_constants.dart:25-31, dans
+/// Quotas de types de nœuds par carte — game_constants.dart:29-35, dans
 /// l'ordre de déclaration (l'ordre compte : map_validator.dart:58, :125).
 const nodeQuotas = <String, List<int>>{
   'combat': [12, 22],
@@ -76,7 +76,6 @@ class Params {
     this.normalGuaranteed = 1,
     this.eliteExtra = 0.25,
     this.relicAEliteBonus = 0.25,
-    this.relicBPerCopy = 0.01,
     this.d31Relics = 'pool',
     this.mirrorPool = 'mythic',
     this.exchange = 'none',
@@ -108,13 +107,9 @@ class Params {
   /// DÉFAUT 0,25 — valeur laissée à la simulation par D31.
   final double relicAEliteBonus;
 
-  /// D31, relique B (épique) : +1 % par exemplaire d'une seconde carte en
-  /// combat normal et d'une troisième en élite.
-  final double relicBPerCopy;
-
-  /// Les trois reliques de D31 : 'pool' (dans la réserve de reliques, A et C
-  /// rares, B épique — DÉFAUT), 'forced' (tenues dès l'acte 1, borne haute),
-  /// 'absent'.
+  /// Les deux reliques de D31, A et C, rares — B, que D57 supprime, n'existe
+  /// plus : 'pool' (dans la réserve de reliques — DÉFAUT), 'forced' (tenues
+  /// dès l'acte 1, borne haute), 'absent'.
   final String d31Relics;
 
   /// Q3 : le Miroir (`cloneCard`) en pool 'mythic' (aujourd'hui) ou 'draft'.
@@ -142,7 +137,7 @@ class Params {
   /// 'beforeFusion' (affûter les cartes d'une paire avant leur fusion).
   final String sharpenStrategy;
 
-  /// Q17 : 'current' (100 × 1,5^(n−1), player_stats_manager.dart:127),
+  /// Q17 : 'current' (la courbe d'avant E3, 100 × 1,5^(n−1)),
   /// 'constant' (un palier constant par niveau), 'perAct' (un palier par acte
   /// — DÉFAUT : la forme constante diverge, voir la calibration).
   final String xpCurve;
@@ -153,8 +148,9 @@ class Params {
   /// `false` : variante qui retire ce bonus, pour tester un palier constant.
   final bool xpLevelScaling;
 
-  /// D47 : terme de deck de `PlayerPower`. < 0 = formule actuelle, cartes × 2
-  /// (encounter_system.dart:101) ; sinon k × Σ `fusionRank`. DÉFAUT k = 2 (D59 ;
+  /// D47 : terme de deck de `PlayerPower`. < 0 = la formule d'avant E3,
+  /// cartes × 2 ; sinon k × Σ `fusionRank`, la formule du jeu depuis E3
+  /// (encounter_system.dart:103, k = 2). DÉFAUT k = 2 (D59 ;
   /// la première passe du 30/09 tournait à k = 5, rapport §1.2 et §7).
   final double ddaK;
 
@@ -185,7 +181,6 @@ class Params {
     int? normalGuaranteed,
     double? eliteExtra,
     double? relicAEliteBonus,
-    double? relicBPerCopy,
     String? d31Relics,
     String? mirrorPool,
     String? exchange,
@@ -210,7 +205,6 @@ class Params {
         normalGuaranteed: normalGuaranteed ?? this.normalGuaranteed,
         eliteExtra: eliteExtra ?? this.eliteExtra,
         relicAEliteBonus: relicAEliteBonus ?? this.relicAEliteBonus,
-        relicBPerCopy: relicBPerCopy ?? this.relicBPerCopy,
         d31Relics: d31Relics ?? this.d31Relics,
         mirrorPool: mirrorPool ?? this.mirrorPool,
         exchange: exchange ?? this.exchange,
@@ -233,7 +227,7 @@ class Params {
       );
 
   String get key => [
-        normalGuaranteed, eliteExtra, relicAEliteBonus, relicBPerCopy,
+        normalGuaranteed, eliteExtra, relicAEliteBonus,
         d31Relics, mirrorPool, exchange, wellEvery, altar, sharpenB, wellBase,
         sharpenStrategy, xpCurve, xpConstant, xpTable.join(','), xpLevelScaling, ddaK,
         ecoQuickMinRank, maxLevelTable, blessingD43, onlyFind, mightBudget,
@@ -686,19 +680,46 @@ const starterNeutralPicks = {
   'mage': ['strike_basic', 'defend_basic', 'awakening'],
 };
 
-/// Synthèse des reliques ajoutées par le brainstorm, absentes des données.
-/// D31 : A « monte la chance de seconde carte en élite » (rareté DÉFAUT rare),
-/// B « une épique » (+1 %), C « une carte garantie de plus » (DÉFAUT rare).
-/// D42a : une légendaire porte au-delà de 1 le nombre de runes affûtées par
-/// la récompense de boss « XP ».
-const relicD31A = RelicDef('d31_a_elite', 2, 'special', 'd31a', 0);
-const relicD31B = RelicDef('d31_b_lucky', 3, 'special', 'd31b', 0);
-const relicD31C = RelicDef('d31_c_extra', 2, 'special', 'd31c', 0);
-const relicD42 = RelicDef('d42_whetstone', 4, 'special', 'd42', 1);
+/// Les reliques du brainstorm. D31 : A « monte la chance de seconde carte en
+/// élite » (rare), C « une carte garantie de plus » (rare) — B, que D57
+/// supprime, n'existe plus. D42a : une légendaire porte au-delà de 1 le
+/// nombre de runes affûtées par la récompense de boss « XP ». Toutes sont des
+/// fichiers depuis E3 (`brainstormRelicFiles`) : leurs définitions se
+/// construisent sur eux au chargement (`GameData.load`), à la place exacte
+/// de leur entrée en dur.
+RelicDef get relicD31A => data.relicD31A;
+RelicDef get relicD31C => data.relicD31C;
+RelicDef get relicD42 => data.relicD42;
+
+/// Les entrées du brainstorm que la donnée du jeu porte depuis E3 (spec P-43
+/// E3, §3.3 à §3.5, §9) : chaque fichier prend la place exacte de son entrée
+/// en dur — même liste, même position, même définition — et sort de la liste
+/// que lit le chargeur, tirée par index (D73). Chacune se reconnaît à ce
+/// qu'elle joue : un autre fichier qui le jouerait lève une erreur, comme la
+/// liste d'ordre des runes. Les reliques, par leur `effectType` :
+const brainstormRelicFiles = {
+  'increase_elite_card_chance': 'bounty_ledger', // D31, A
+  'increase_combat_card_drops': 'gleaners_pouch', // D31, C
+  'increase_boss_rune_sharpens': 'grindstone', // D42a
+};
+
+/// Les événements de D23 et de D42b, par le type d'action qui les désigne ;
+/// le script les résout toujours par `_eventRelicTrade` et `_eventSharpen`.
+const eventD23 = 'relic_peddler';
+const eventD42b = 'wandering_grinder';
+const brainstormEventFiles = {
+  'trade_relic': eventD23,
+  'sharpen_rune': eventD42b,
+};
+
+/// La mythique de D42c, d'effet `raiseRuneCap` : elle prend la place du
+/// `null` qui la jouait, en dernier des mythiques.
+const ceilingRewardId = 'transcendence';
 
 class GameData {
   GameData._(this.enemies, this.neutrals, this.relics, this.rewards,
-      this.classes, this.passives, this.runes, this.events);
+      this.classes, this.passives, this.runes, this.events, this.relicD31A,
+      this.relicD31C, this.relicD42, this.ceilingReward, this.xpCurve);
 
   final List<EnemyDef> enemies;
   final Map<String, CardDef> neutrals;
@@ -708,6 +729,17 @@ class GameData {
   final Map<String, PassiveDef> passives;
   final List<RuneDef> runes;
   final List<EventDef> events;
+
+  /// Les reliques A, C et D42a, construites sur leur fichier, et la mythique
+  /// de D42c (`brainstormRelicFiles`, `ceilingRewardId`).
+  final RelicDef relicD31A;
+  final RelicDef relicD31C;
+  final RelicDef relicD42;
+  final RewardDef ceilingReward;
+
+  /// La table d'XP par acte du jeu, `xpPerLevelByAct` de `xp_curve.json`
+  /// (D67) : la référence la joue (`main`) ; la calibration reste affichée.
+  final List<int> xpCurve;
 
   final Map<String, List<CardDef>> _lots = {};
   final Map<String, List<CardDef>> _pools = {};
@@ -748,34 +780,69 @@ class GameData {
       neutrals[c.id] = c;
     }
 
-    final relics = <RelicDef>[
-      for (final f in _jsonFiles('$root/relics'))
-        () {
-          final j = _json(f.path);
-          return RelicDef(
-            j['id'] as String,
-            relicRarities.indexOf(j['rarity'] as String),
-            j['trigger'] as String,
-            j['effectType'] as String,
-            j['value'] as int? ?? 0,
-          );
-        }(),
-    ];
+    // Les reliques : les fichiers triés, sauf ceux qui jouent une entrée du
+    // brainstorm, gardés à part pour prendre la place de leur entrée en dur,
+    // en queue de la réserve.
+    final relics = <RelicDef>[];
+    final brainstormRelics = <String, Map<String, dynamic>>{};
+    for (final f in _jsonFiles('$root/relics')) {
+      final j = _json(f.path);
+      final id = j['id'] as String;
+      final effect = j['effectType'] as String;
+      final entry = brainstormRelicFiles[effect];
+      if (entry != null || brainstormRelicFiles.containsValue(id)) {
+        if (entry != id) {
+          throw StateError('relique « $id » (${f.path}) : elle joue une entrée '
+              'du brainstorm sans y être rangée — brainstormRelicFiles');
+        }
+        brainstormRelics[id] = j;
+        continue;
+      }
+      relics.add(RelicDef(
+        id,
+        relicRarities.indexOf(j['rarity'] as String),
+        j['trigger'] as String,
+        effect,
+        j['value'] as int? ?? 0,
+      ));
+    }
+    // L'entrée en dur que remplace le fichier [id] : la rareté lue doit être
+    // la sienne ; l'effet et la valeur restent ceux que joue le script ;
+    // `trigger: 'special'`, comme l'entrée.
+    RelicDef placedRelic(String id, int rarity, String effect, int value) {
+      final j = brainstormRelics[id] ??
+          (throw StateError('relique « $id » : son fichier manque'));
+      final read = relicRarities.indexOf(j['rarity'] as String);
+      if (read != rarity) {
+        throw StateError('relique « $id » : rareté ${j['rarity']}, quand '
+            'l\'entrée en dur qu\'elle remplace est ${relicRarities[rarity]}');
+      }
+      return RelicDef(id, read, 'special', effect, value);
+    }
 
-    final rewards = <RewardDef>[
-      for (final f in _jsonFiles('$root/level_up_rewards'))
-        () {
-          final j = _json(f.path);
-          return RewardDef(
-            j['id'] as String,
-            j['effect'] as String,
-            j['stat'] as String? ?? '',
-            j['pool'] as String,
-            (j['values'] as Map<String, dynamic>? ?? const {})
-                .map((k, v) => MapEntry(k, v as int)),
-          );
-        }(),
-    ];
+    // Les récompenses : les fichiers triés, sauf la mythique de D42c.
+    final rewards = <RewardDef>[];
+    RewardDef? ceiling;
+    for (final f in _jsonFiles('$root/level_up_rewards')) {
+      final j = _json(f.path);
+      final reward = RewardDef(
+        j['id'] as String,
+        j['effect'] as String,
+        j['stat'] as String? ?? '',
+        j['pool'] as String,
+        (j['values'] as Map<String, dynamic>? ?? const {})
+            .map((k, v) => MapEntry(k, v as int)),
+      );
+      if (reward.effect == 'raiseRuneCap' || reward.id == ceilingRewardId) {
+        if (reward.id != ceilingRewardId) {
+          throw StateError('récompense « ${reward.id} » (${f.path}) : elle '
+              'joue la mythique de D42c sans y être rangée — ceilingRewardId');
+        }
+        ceiling = reward;
+        continue;
+      }
+      rewards.add(reward);
+    }
 
     final passives = <String, PassiveDef>{};
     for (final f in _jsonFiles('$root/passives')) {
@@ -880,22 +947,69 @@ class GameData {
             (throw StateError('rune « $id » : ni fichier ni entrée en dur')),
     ];
 
-    final events = <EventDef>[
-      for (final f in _jsonFiles('$root/events'))
-        () {
-          final j = _json(f.path);
-          return EventDef(j['id'] as String, [
-            for (final c in (j['choices'] as List))
-              [
-                for (final a in ((c as Map<String, dynamic>)['actions'] as List? ?? const []))
-                  ((a as Map<String, dynamic>)['type'] as String, a['value'] as int? ?? 0),
-              ],
-          ]);
-        }(),
+    // Les événements : les fichiers triés, sauf D23 et D42b, que la liste
+    // tirée range à la place de leur entrée en dur (`visitEvent`).
+    final events = <EventDef>[];
+    final brainstormEvents = <String>{};
+    for (final f in _jsonFiles('$root/events')) {
+      final j = _json(f.path);
+      final id = j['id'] as String;
+      final choices = [
+        for (final c in (j['choices'] as List))
+          [
+            for (final a in ((c as Map<String, dynamic>)['actions'] as List? ?? const []))
+              ((a as Map<String, dynamic>)['type'] as String, a['value'] as int? ?? 0),
+          ],
+      ];
+      final entries = {
+        for (final choice in choices)
+          for (final (type, _) in choice)
+            ?brainstormEventFiles[type],
+      };
+      if (entries.isNotEmpty || brainstormEventFiles.containsValue(id)) {
+        if (entries.length != 1 || entries.single != id) {
+          throw StateError('événement « $id » (${f.path}) : il joue une entrée '
+              'du brainstorm sans y être rangé — brainstormEventFiles');
+        }
+        brainstormEvents.add(id);
+        continue;
+      }
+      events.add(EventDef(id, choices));
+    }
+    for (final id in brainstormEventFiles.values) {
+      if (!brainstormEvents.contains(id)) {
+        throw StateError('événement « $id » : son fichier manque');
+      }
+    }
+
+    // La courbe d'XP (D67) : refusée comme le jeu la refuse
+    // (`XpCurveData.fromJson`) — une liste non vide d'entiers ≥ 1.
+    final xpCurve = [
+      for (final x in _json('$root/xp_curve.json')['xpPerLevelByAct'] as List)
+        x as int,
     ];
+    if (xpCurve.isEmpty || xpCurve.any((x) => x < 1)) {
+      throw StateError('xp_curve.json : xpPerLevelByAct doit être une liste '
+          'non vide d’entiers ≥ 1');
+    }
 
     return GameData._(
-        enemies, neutrals, relics, rewards, classes, passives, runes, events);
+      enemies,
+      neutrals,
+      relics,
+      rewards,
+      classes,
+      passives,
+      runes,
+      events,
+      placedRelic('bounty_ledger', 2, 'd31a', 0),
+      placedRelic('gleaners_pouch', 2, 'd31c', 0),
+      placedRelic('grindstone', 4, 'd42', 1),
+      ceiling ??
+          (throw StateError('récompense « $ceilingRewardId » : son fichier '
+              'manque')),
+      xpCurve,
+    );
   }
 }
 
@@ -1187,8 +1301,8 @@ double dmgMultFor(int eL, int act, bool boss, bool elite) => // :165-176
     (1 + 0.04 * (eL - 1)) * dmgActFactor(act) * _nodeMult(boss, elite);
 
 /// PlayerPower et budget final — encounter_system.dart:86-131 ; le terme de
-/// deck `deckTerm` est `cartes × 2` aujourd'hui (:101), `k × Σ fusionRank`
-/// sous D47.
+/// deck `deckTerm` est `k × Σ fusionRank` sous D47 — celui du jeu depuis E3
+/// (:103, k = 2) — ; `cartes × 2` était la formule d'avant E3.
 ({double power, double budget}) budgetFor({
   required int level,
   required int act,
@@ -2016,7 +2130,6 @@ class Fight {
 const metricDefs = <(String, String, int)>[
   ('deck', 'Taille du deck', 0),
   ('fusions', 'Fusions de 3 copies (cumul)', 0),
-  ('fusionsEvent', 'Fusions par l’événement D29 (cumul)', 0),
   ('exchanges', 'Échanges 3 → 1 (cumul)', 0),
   ('bestRank', 'Rang de la meilleure carte (0 = commune)', 0),
   ('runes', 'Runes portées par le deck', 0),
@@ -2043,7 +2156,7 @@ const metricDefs = <(String, String, int)>[
   ('d31Copies', 'Exemplaires des reliques de D31', 0),
   ('power', 'PlayerPower (DDA)', 0),
   ('budget', 'Budget ennemi d’un combat normal', 0),
-  ('budgetCur', 'Budget sous la DDA actuelle (cartes × 2)', 0),
+  ('budgetCur', 'Budget sous la DDA d’avant E3 (cartes × 2)', 0),
   ('budgetK2', 'Budget sous Σ rang × 2', 0),
   ('budgetK5', 'Budget sous Σ rang × 5', 0),
   ('budgetK10', 'Budget sous Σ rang × 10', 0),
@@ -2098,7 +2211,7 @@ class Run {
       deck.add(CardInst(byId[id]!, 0));
     }
     if (p.d31Relics == 'forced') {
-      for (final r in const [relicD31A, relicD31B, relicD31C]) {
+      for (final r in [relicD31A, relicD31C]) {
         gainRelic(r);
       }
     }
@@ -2152,8 +2265,9 @@ class Run {
   /// mana_flux.json : seuil 3, −1 par point de Maîtrise ; plancher 2 (D43).
   int fluxThreshold() => max(2, passive.threshold + passive.perPoint * mastery);
 
-  /// Bénédiction : tranche de 5 (passive_strategies.dart:146), ou D43 :
-  /// `threshold: 3`, Maîtrise sur le seuil, plancher 2.
+  /// Bénédiction : tranche de 5 — celle de `blessing.json`, `threshold: 5`
+  /// (D60), que le script joue en dur —, ou D43 : `threshold: 3`, Maîtrise
+  /// sur le seuil, plancher 2.
   int blessingThreshold() => p.blessingD43 ? max(2, 3 - mastery) : 5;
   int blessingValue() => p.blessingD43 ? passive.value : passiveValue();
 
@@ -2377,7 +2491,7 @@ class Run {
     }
   }
 
-  /// Trois cartes de même rang, les moins utiles, hors paires (D29, D8).
+  /// Trois cartes de même rang, les moins utiles, hors paires (D8).
   List<CardInst>? pickThree() {
     final counts = groupCounts();
     for (var r = 0; r < 4; r++) {
@@ -2505,7 +2619,7 @@ class Run {
 
   List<RelicDef> get relicPool => [
         ...data.relics,
-        if (p.d31Relics == 'pool') ...const [relicD31A, relicD31B, relicD31C],
+        if (p.d31Relics == 'pool') ...[relicD31A, relicD31C],
         relicD42,
       ];
 
@@ -2568,7 +2682,7 @@ class Run {
     if (r.trigger == 'startOfRun') _applyRunRelic(r, -1);
   }
 
-  /// player_stats_manager.dart:239-303 et :435-455.
+  /// player_stats_manager.dart:249-458 et :460-489.
   void _applyRunRelic(RelicDef r, int sign) {
     final v = sign * r.value;
     switch (r.effect) {
@@ -2590,7 +2704,7 @@ class Run {
   int xpNeed() => switch (p.xpCurve) {
         'constant' => p.xpConstant,
         'perAct' => p.xpTable[min(act, p.xpTable.length) - 1],
-        _ => (100 * pow(1.5, level - 1)).round(), // player_stats_manager.dart:127
+        _ => (100 * pow(1.5, level - 1)).round(), // la courbe d'avant E3
       };
 
   void gainXp(int amount) {
@@ -2636,43 +2750,45 @@ class Run {
   /// puis un jet indépendant par mythique ; D42c ajoute une mythique.
   void levelUp() {
     final draft = [for (final r in data.rewards) if (poolOf(r) == 'draft') r];
-    final offers = <(RewardDef?, int)>[];
+    final offers = <(RewardDef, int)>[];
     for (var i = 0; i < 3 && draft.isNotEmpty; i++) {
       final rarity = rollRewardRarity(levelReward: false);
       final r = draft[rng.nextInt(draft.length)];
       offers.add((r, r.values[rarity] ?? 0));
     }
-    // Les mythiques ; `null` est celle de D42c (+1 au `maxLevel` d'une rune).
-    // DÉFAUT : Sagesse mythique à +1 (D11, pas de valeur `mythic` en donnée).
-    final mythics = <RewardDef?>[
+    // Les mythiques ; la dernière est celle de D42c (+1 au `maxLevel` d'une
+    // rune), `transcendence.json`, à la place du `null` qui la jouait avant
+    // E3. Sagesse mythique à +1 (D11) : `wisdom.json` porte `values.mythic`
+    // 1, égal au repli `?? 1`.
+    final mythics = <RewardDef>[
       for (final r in data.rewards)
         if (poolOf(r) == 'mythic') r,
-      null,
+      data.ceilingReward,
     ];
     if (p.mythicMode == 'pool') {
       if (rollRewardRarity(levelReward: true) == 'mythic') {
         final r = mythics[rng.nextInt(mythics.length)];
-        offers.add((r, r?.values['mythic'] ?? 1));
+        offers.add((r, r.values['mythic'] ?? 1));
       }
     } else {
       for (final r in mythics) {
         if (rollRewardRarity(levelReward: true) == 'mythic') {
-          offers.add((r, r?.values['mythic'] ?? 1));
+          offers.add((r, r.values['mythic'] ?? 1));
         }
       }
     }
-    if (offers.any((o) => o.$1 == null)) inc('ceilingOffers');
+    if (offers.any((o) => o.$1.id == ceilingRewardId)) inc('ceilingOffers');
     _chooseReward(offers);
   }
 
-  void _chooseReward(List<(RewardDef?, int)> offers) {
+  void _chooseReward(List<(RewardDef, int)> offers) {
     for (final (r, amount) in offers) {
-      if (r?.id == 'wisdom') {
+      if (r.id == 'wisdom') {
         maxMana += amount;
         return;
       }
     }
-    if (offers.any((o) => o.$1 == null)) {
+    if (offers.any((o) => o.$1.id == ceilingRewardId)) {
       // Une rune binaire ne gagne rien à un niveau de plus.
       const binary = {'enduring', 'retain', 'cheap', 'transfusion'};
       final capped = <String, int>{};
@@ -2692,7 +2808,7 @@ class Run {
         return;
       }
     }
-    if (offers.any((o) => o.$1?.effect == 'cloneCard') && hasPair && !p.onlyFind) {
+    if (offers.any((o) => o.$1.effect == 'cloneCard') && hasPair && !p.onlyFind) {
       // Le Miroir : 1 clone parmi 3 cartes du deck, runes comprises (mirror.json).
       final opts = ([...deck]..shuffle(rng)).take(3).toList();
       if (opts.isNotEmpty) addCard(bestCloneOf(opts).copy(), 'mirrorCards');
@@ -2701,7 +2817,7 @@ class Run {
     (RewardDef, int)? best;
     var bestScore = double.negativeInfinity;
     for (final (r, amount) in offers) {
-      if (r == null || r.effect != 'stat') continue;
+      if (r.effect != 'stat') continue;
       final s = switch (r.stat) {
         'might' => targetsType(CType.attack) || targetsType(CType.skill) ? 4.0 * amount : 0.0,
         'maxHp' => 0.6 * amount,
@@ -2806,14 +2922,10 @@ class Run {
     if (res.stalemate) inc('stalemates');
     rewardFoes(foes, boss: false, elite: elite);
     if (elite) gainRelic(drawRelic(rollRelicRarity())); // :106-165
-    // D31 : la table `cardDrops`, puis les reliques A, B, C.
+    // D31 : la table `cardDrops`, puis les reliques A et C (D57).
     var n = elite ? 1 : p.normalGuaranteed + copies(relicD31C.id);
-    if (elite) {
-      if (rng.nextDouble() < p.eliteExtra + p.relicAEliteBonus * copies(relicD31A.id)) {
-        n++;
-        if (rng.nextDouble() < p.relicBPerCopy * copies(relicD31B.id)) n++;
-      }
-    } else if (rng.nextDouble() < p.relicBPerCopy * copies(relicD31B.id)) {
+    if (elite &&
+        rng.nextDouble() < p.eliteExtra + p.relicAEliteBonus * copies(relicD31A.id)) {
       n++;
     }
     for (var i = 0; i < n; i++) {
@@ -2975,17 +3087,14 @@ class Run {
     inc('events');
     final ids = [
       for (final e in data.events) e.id,
-      'd29_fusion',
-      'd23_relic',
-      'd42b_sharpen',
+      eventD23,
+      eventD42b,
       if (p.exchange == 'event') 'exchange',
     ];
     switch (ids[rng.nextInt(ids.length)]) {
-      case 'd29_fusion':
-        _eventFusion();
-      case 'd23_relic':
+      case eventD23:
         _eventRelicTrade();
-      case 'd42b_sharpen':
+      case eventD42b:
         _eventSharpen();
       case 'exchange':
         exchange3to1();
@@ -3050,23 +3159,6 @@ class Run {
           gainRelic(drawRelic(rollRelicRarity()));
       }
     }
-  }
-
-  /// D29 (Q18, DÉFAUT validé) : 10 % des PV max + 30 or × rang visé ; trois
-  /// cartes de même rareté, la gagnante tirée, les runes héritées (D13).
-  void _eventFusion() {
-    if (deck.length < 12) return;
-    final three = pickThree();
-    if (three == null) return;
-    final hpCost = (maxHp * 0.10).round();
-    final goldCost = 30 * (three.first.rank + 1);
-    if (gold < goldCost || hp <= hpCost + 1) return;
-    if (passive.id != 'rage' && hp < maxHp * 0.3) return;
-    spend(goldCost);
-    hp -= hpCost;
-    fuseInto(three, three[rng.nextInt(3)].def);
-    inc('fusionsEvent');
-    fuseAll();
   }
 
   /// D23 (Q15, DÉFAUT validé) : la relique la plus faible contre 40 or par
@@ -3308,8 +3400,7 @@ class Run {
       'xpAct': actXp,
       'evolutions': 2.0 * (level ~/ 5), // D19, D21 : tous les 5 niveaux
       'relics': relics.length.toDouble(),
-      'd31Copies': (copies(relicD31A.id) + copies(relicD31B.id) + copies(relicD31C.id))
-          .toDouble(),
+      'd31Copies': (copies(relicD31A.id) + copies(relicD31C.id)).toDouble(),
       'power': avg('power'),
       'budget': avg('budget'),
       'budgetCur': budgetUnder(deck.length * 2.0),
@@ -3545,7 +3636,7 @@ String firstCell(List<double> s) {
 
 /// Les mesures des tables par classe × lot : celles que la mission demande.
 const annexMetrics = {
-  'deck', 'fusions', 'fusionsEvent', 'bestRank', 'runes', 'runeSum', 'runeMax',
+  'deck', 'fusions', 'bestRank', 'runes', 'runeSum', 'runeMax',
   'ecoQuick', 'fires', 'rests', 'forgets', 'sharpens', 'sharpBoss', 'sharpEvent',
   'goldGained', 'goldSpent', 'gold', 'level', 'levelsAct', 'evolutions', 'relics',
   'power', 'budget', 'enemies', 'enemyHp', 'encounterHp', 'dmgTurn', 'turns',
@@ -3556,7 +3647,6 @@ const annexMetrics = {
 const shortLabels = {
   'deck': 'Deck',
   'fusions': 'Fusions',
-  'fusionsEvent': 'Fusions D29',
   'exchanges': 'Échanges 3→1',
   'bestRank': 'Meilleur rang',
   'runes': 'Runes',
@@ -3677,11 +3767,10 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'first:firstFusion', 'first:firstRare', 'first:firstEpic',
       ]),
       Lever('Reliques de trouvaille', 'D31', [
-        Variant('**A +25 %, B +1 %, dans la réserve** (réf.)', ref),
+        Variant('**A +25 %, dans la réserve** (réf.)', ref),
         Variant('A +15 %', ref.copyWith(relicAEliteBonus: 0.15)),
         Variant('A +50 %', ref.copyWith(relicAEliteBonus: 0.5)),
-        Variant('B +2 % par exemplaire', ref.copyWith(relicBPerCopy: 0.02)),
-        Variant('A, B, C tenues dès l’acte 1', ref.copyWith(d31Relics: 'forced')),
+        Variant('A et C tenues dès l’acte 1',ref.copyWith(d31Relics: 'forced')),
         Variant('Reliques absentes', ref.copyWith(d31Relics: 'absent')),
       ], [
         'd31Copies@5', 'd31Copies@15', 'found@15', 'deck@15', 'fusions@15',
@@ -3730,7 +3819,7 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'sharpens@15', 'gold@15',
       ]),
       Lever('Forme de la courbe d’XP', 'D24, Q17', [
-        Variant('actuelle, 100 × 1,5^(n−1)', ref.copyWith(xpCurve: 'current')),
+        Variant('d’avant E3, 100 × 1,5^(n−1)', ref.copyWith(xpCurve: 'current')),
         Variant('**table par acte, 2 niv./acte** (réf.)', ref),
         Variant('table par acte, 3 niv./acte', t3),
         Variant('palier constant (${k2.xpConstant} XP), calé sur l’acte 1', k2),
@@ -3742,7 +3831,7 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'level@15', 'nearDeaths@15',
       ]),
       Lever('Coefficient de la DDA', 'D47, encounter_system.dart:101', [
-        Variant('actuelle, cartes × 2', ref.copyWith(ddaK: -1)),
+        Variant('d’avant E3, cartes × 2', ref.copyWith(ddaK: -1)),
         Variant('**Σ rang × 2** (réf.)', ref),
         Variant('Σ rang × 5', ref.copyWith(ddaK: 5)),
         Variant('Σ rang × 10', ref.copyWith(ddaK: 10)),
@@ -3839,7 +3928,9 @@ Future<void> main(List<String> args) async {
   final k2 = await calibrate(base.copyWith(xpCurve: 'constant'), 2, calRuns);
   final k2flat = await calibrate(
       base.copyWith(xpCurve: 'constant', xpLevelScaling: false), 2, calRuns);
-  final ref = t2;
+  // La référence joue la table du jeu (D67) ; les tables calées restent
+  // affichées, et leurs variantes jouées par les leviers.
+  final ref = base.copyWith(xpCurve: 'perAct', xpTable: data.xpCurve);
 
   log('référence : ${configs.length} configurations × $refRuns runs');
   final refScenario = Scenario(ref, refRuns, allCfgs);
@@ -3872,15 +3963,16 @@ Future<void> main(List<String> args) async {
   out.writeln();
   out.writeln('Données lues : ${data.enemies.length} ennemis, '
       '${data.neutrals.length} neutres (noyau de ${coreNeutralIds.length}), '
-      '${data.relics.length} reliques (+ 4 du brainstorm), '
+      '${data.relics.length} reliques (+ 3 du brainstorm), '
       '${data.rewards.length} récompenses de niveau, ${data.runes.length} runes, '
-      '${data.events.length} événements (+ 3 du brainstorm).');
+      '${data.events.length} événements (+ 2 du brainstorm).');
   out.writeln();
 
   out.writeln('## Calibration de la courbe d’XP (Q17)');
   out.writeln();
-  table(out, ['Forme', 'Cible', 'Valeur calée'], [
-    ['Table par acte (réf.)', '2 niv./acte', t2.xpTable.join(' · ')],
+  table(out, ['Forme', 'Cible', 'Valeur'], [
+    ['Table par acte (réf., `xp_curve.json`)', 'D67', ref.xpTable.join(' · ')],
+    ['Table par acte, calée', '2 niv./acte', t2.xpTable.join(' · ')],
     ['Table par acte', '3 niv./acte', t3.xpTable.join(' · ')],
     ['Palier constant', '2 niv. à l’acte 1', '${k2.xpConstant} XP par niveau'],
     ['Palier constant, XP sans bonus de niveau', '2 niv. à l’acte 1', '${k2flat.xpConstant} XP par niveau'],

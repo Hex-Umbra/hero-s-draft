@@ -32,12 +32,24 @@ celle-ci est vide, y compris au milieu d'une pioche. Une carte « Piocher 3 » s
 pioche d'une seule carte tire cette carte, remélange, puis tire les deux suivantes.
 Il n'existe **aucun** appel manuel de remélange : la règle n'est pas optionnelle.
 
-**2. Arrêt net sur main pleine.** Quand la main atteint `GameConstants.maxHandSize`
-(**10**), la pioche s'interrompt immédiatement — **sans consommer de carte et sans
-déclencher de remélange**. Une main pleine sur pioche vide ne gaspille donc pas un cycle
-de deck entier pour ne rien donner au joueur.
+**2. Arrêt net sur main pleine.** Quand la main atteint la main maximale (**10** au départ d'une
+run), la pioche s'interrompt immédiatement — **sans consommer de carte et sans déclencher de
+remélange**. Une main pleine sur pioche vide ne gaspille donc pas un cycle de deck entier
+pour ne rien donner au joueur.
 
 L'ordre de ces deux tests d'arrêt compte : main pleine est évaluée **avant** pioche vide.
+
+**La main maximale est une stat de run** depuis le lot E3 de P-43 (branche de la vague 3,
+en attente du propriétaire — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), qui
+amende ADR-078 D3) : `RunState.maxHandSize`, sérialisée, vaut
+`GameConstants.startingMaxHandSize` (**10**) au départ de chaque run ; seul le champ
+« Main max » du menu de debug l'écrit — aucune relique ni récompense ne la modifie encore. Sur
+`main`, c'est encore la constante `GameConstants.maxHandSize`.
+**Les six chemins qui ajoutent une carte à la main la lisent**, tous par `_drawInto` : la
+main d'ouverture et la pioche du tour (`TurnPhaseManager`), l'effet `draw` d'une carte et la
+rune `quick` (`DrawEffectStrategy`), *Frénésie* (`FrenzyPassive`) et le menu de debug
+(`DebugActions.drawCards`) ; `test/unit/hand_size_bound_test.dart` en garde chacun, sur une
+main à 7.
 
 #### Combien de cartes, et quand
 
@@ -45,7 +57,7 @@ L'ordre de ces deux tests d'arrêt compte : main pleine est évaluée **avant** 
 |:---|:---|:---|
 | Main d'ouverture d'un combat | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerCombat()` |
 | Début de chaque tour joueur | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerTurn()` |
-| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet ; `quick` : 1 par niveau, plafonnée au niveau 1 | `DrawEffectStrategy`, pour l'une comme pour l'autre : la pioche de `quick` est un effet que la rune ajoute, résolu avant ceux de la carte par la même stratégie — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) |
+| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet ; `quick` : 1 par niveau, plafonnée au niveau 1 — au niveau 2 si *Transcendance* a relevé son plafond (branche de la vague 3, [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) | `DrawEffectStrategy`, pour l'une comme pour l'autre : la pioche de `quick` est un effet que la rune ajoute, résolu avant ceux de la carte par la même stratégie — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) |
 
 `cardsPerTurn` vaut **5** par défaut et se modifie par relique — voir
 [03-5-systeme-de-reliques.md](03-5-systeme-de-reliques.md), `scholars_satchel`.
@@ -58,4 +70,5 @@ distinct.
 à 0 par `startCombat()`, sérialisé, et vaut 0 sur toute sauvegarde antérieure au chantier.
 L'écran de combat l'observe pour afficher la notification « Défausse remélangée ».
 
-Conception complète — [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
+Conception complète — [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md),
+dont la D3 est amendée par [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md).

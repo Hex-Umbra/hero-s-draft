@@ -1,4 +1,5 @@
 import '../models/data/level_up_reward_data.dart';
+import '../models/data/xp_curve_data.dart';
 
 /// Les nombres que la prose du tutoriel écrit en toutes lettres. Au-delà,
 /// c'est le chiffre — le catalogue n'ira pas jusque-là de sitôt, et écrire
@@ -68,3 +69,14 @@ String fillRewardPlaceholders(
       .replaceAll('{mythicCount}', _count(mythic.length, isFrench: isFrench))
       .replaceAll('{mythicNames}', _join(mythic, isFrench: isFrench));
 }
+
+/// Remplit, dans [body], les deux paliers d'XP que la prose de l'étape
+/// « L'Expérience » laisse à la courbe (spec P-43 E3, §5.3, A26) :
+/// `{xpAct1}` et `{xpAct2}`, le prix d'un niveau à l'acte 1 et à l'acte 2.
+///
+/// Fonction **pure**, comme [fillRewardPlaceholders] : la courbe vient du
+/// registre du tutoriel (ADR-081). Un texte qui ne nomme aucun placeholder
+/// traverse inchangé.
+String fillXpPlaceholders(String body, XpCurveData curve) => body
+    .replaceAll('{xpAct1}', '${curve.thresholdFor(1)}')
+    .replaceAll('{xpAct2}', '${curve.thresholdFor(2)}');

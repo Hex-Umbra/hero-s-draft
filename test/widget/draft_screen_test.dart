@@ -9,6 +9,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/relic_carousel/draft_card_reel.dart';
 import 'package:roguelike_card_game/ui/widgets/draft/draft_choice_card.dart';
+import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
@@ -32,14 +33,25 @@ Future<void> _advance(
   }
 }
 
-/// Pins the hero's luck stat very low so the two "level-up" mythic rolls
-/// (Trèfle à 4 feuilles / Miroir) can never trigger, keeping tests that
+/// Pins the hero's luck stat very low so the level-up mythic rolls — one per
+/// mythic reward of the catalogue — can never trigger, keeping tests that
 /// don't care about the mythic flow deterministic (mythicChance = 0.5 +
 /// luck * 0.15, which is guaranteed negative here).
 void _setLuck(ProviderContainer container, int luck) {
   final notifier = container.read(runProvider.notifier);
   final state = container.read(runProvider);
   notifier.updateState(state.copyWith(heroStats: state.heroStats.copyWith(luck: luck)));
+}
+
+/// Une vue large (spec P-43 E3, §4.10) : les mythiques se révèlent dans la
+/// même rangée que les trois emplacements — six rouleaux depuis que *Sagesse*
+/// est mythique, sept avec *Transcendance* —, que la surface de test par
+/// défaut (800 × 600) ne tient pas.
+void _largeView(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1600, 900);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
 
 Widget _wrap(ProviderContainer container, Widget child, {String locale = 'fr'}) {
@@ -181,6 +193,7 @@ void main() {
   testWidgets(
     'DraftScreen reveals mythic bonus choices and only allows selection once resolved',
     (WidgetTester tester) async {
+      _largeView(tester);
       final container = ProviderContainer(
         overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
       );
@@ -191,8 +204,8 @@ void main() {
 
       bool draftCompleted = false;
 
-      // forceLegendary guarantees both extra "level-up" rolls come back
-      // mythic (see DraftScreen._rollRarity), so the mythic reveal flow is
+      // forceLegendary guarantees every mythic roll comes back mythic (see
+      // LevelUpRewardService.rollRarity), so the mythic reveal flow is
       // deterministic regardless of the hero's luck stat.
       await tester.pumpWidget(
         _wrap(
@@ -213,11 +226,13 @@ void main() {
       // (1.5s). Budget generously.
       await _advance(tester, const Duration(milliseconds: 13000));
 
-      // Mythic choices ("Trèfle à 4 feuilles" and "Miroir") are now revealed
-      // alongside the base 3 in the main grid.
+      // The three mythic choices (Sagesse, Trèfle à 4 feuilles, Miroir) are
+      // now revealed alongside the base 3 in the main grid. Transcendance
+      // stays out: no rune of this empty deck is at its cap.
+      expect(find.text('Sagesse'), findsOneWidget);
       expect(find.text('Trèfle à 4 feuilles'), findsOneWidget);
       expect(find.text('Miroir'), findsOneWidget);
-      expect(find.byType(DraftCardReel), findsNWidgets(5));
+      expect(find.byType(DraftCardReel), findsNWidgets(6));
 
       final statsBefore = container.read(runProvider).heroStats;
 
@@ -238,6 +253,7 @@ void main() {
   testWidgets(
     'Le Miroir de montee de niveau ne propose jamais de copier une carte unique',
     (WidgetTester tester) async {
+      _largeView(tester);
       final container = ProviderContainer(
         overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
       );
@@ -299,4 +315,152 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  // Transcendance (spec P-43 E3, §4.8, §8 ; A15) : l'écran lit le deck et le
+  // bonus de plafond de la run.
+  // Sept rouleaux, dont quatre dans la révélation : la vue large du fichier
+  // (`_largeView`, défini plus haut dans ce fichier).
+  group('Transcendance', () {
+    /// Un conteneur sur le registre réel, résolu, dont le deck porte une
+    /// Frappe rare à Économe 1 — à son plafond.
+    Future<ProviderContainer> ecoDeck() async {
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => registry)],
+      );
+      addTearDown(container.dispose);
+      await container.read(gameDataLoaderProvider.future);
+      container.read(deckProvider.notifier).addCardToMasterDeck(CardInstance(
+            data: registry.cards.singleWhere((c) => c.id == 'strike_basic'),
+            rarity: CardRarity.rare,
+            forgeUpgrades: const ['eco:1'],
+          ));
+      return container;
+    }
+
+    testWidgets('une rune a son plafond fait sortir Transcendance, dont la '
+        'modale releve le plafond, le notifie et termine le draft',
+        (WidgetTester tester) async {
+      _largeView(tester);
+      final container = await ecoDeck();
+      bool draftCompleted = false;
+
+      await tester.pumpWidget(_wrap(
+        container,
+        DraftScreen(
+          onDraftComplete: () => draftCompleted = true,
+          forceLegendary: true,
+        ),
+      ));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 15000));
+
+      expect(find.byType(DraftCardReel), findsNWidgets(7));
+      await tester.tap(find.text('Transcendance'));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 800));
+
+      expect(find.text('Choisissez la rune dont le plafond monte'),
+          findsOneWidget);
+      expect(find.text('Niveau maximal 1 → 2'), findsOneWidget);
+
+      await tester.tap(find.text('Économe'));
+      await tester.pump();
+
+      expect(container.read(runProvider).runeCapBonus, {'eco': 1});
+      expect(draftCompleted, isTrue);
+      expect(container.read(notificationProvider).last.message,
+          'Économe peut désormais monter jusqu\'au niveau 2.');
+
+      // Le minuteur de la notification expire avant le démontage.
+      await _advance(tester, const Duration(seconds: 4));
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('le plafond releve, la rune n y est plus : Transcendance ne '
+        'sort pas', (WidgetTester tester) async {
+      _largeView(tester);
+      final container = await ecoDeck();
+      container.read(runProvider.notifier).raiseRuneCap('eco');
+
+      await tester.pumpWidget(_wrap(
+        container,
+        DraftScreen(onDraftComplete: () {}, forceLegendary: true),
+      ));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 15000));
+
+      expect(find.byType(DraftCardReel), findsNWidgets(6));
+      expect(find.text('Transcendance'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+
+  // La Maîtrise de la run, lue par l'écran (spec P-43 E3, §4.11, §8 ; C1.2).
+  group('la Maitrise de la run', () {
+    /// Une run de mage sous *Flux de Mana*, à [mastery] points de Maîtrise,
+    /// sur un registre dont la seule récompense tirable est *Affinité* : les
+    /// trois emplacements la tirent, avec remise.
+    Future<ProviderContainer> fluxRun(int mastery) async {
+      final data = GameDataRegistry(
+        enemies: const [],
+        heroes: registry.heroes,
+        cards: registry.cards,
+        events: const [],
+        passives: registry.passives,
+        relics: const [],
+        forgeUpgrades: registry.forgeUpgrades,
+        levelUpRewards: [
+          registry.levelUpRewards.singleWhere((r) => r.id == 'affinity'),
+        ],
+      );
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => data)],
+      );
+      addTearDown(container.dispose);
+      await container.read(gameDataLoaderProvider.future);
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(
+        data.heroes.singleWhere((h) => h.id == 'mage'),
+        data.passives.singleWhere((p) => p.id == 'mana_flux'),
+      );
+      final state = container.read(runProvider);
+      run.updateState(state.copyWith(
+        heroStats: state.heroStats.copyWith(mastery: mastery),
+      ));
+      return container;
+    }
+
+    testWidgets('a Maitrise effective 1, les rouleaux disent le repli',
+        (WidgetTester tester) async {
+      final container = await fluxRun(1);
+
+      await tester.pumpWidget(
+          _wrap(container, DraftScreen(onDraftComplete: () {})));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 4500));
+
+      // Seuil 2 à Maîtrise 1 : tout gain bute sur le plancher.
+      expect(find.textContaining('sans effet sur votre passif'),
+          findsNWidgets(3));
+      expect(find.textContaining('Compétence à réunir'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a Maitrise effective 0, Flux de Mana : -1 Competence a '
+        'reunir, quel que soit le gain', (WidgetTester tester) async {
+      final container = await fluxRun(0);
+
+      await tester.pumpWidget(
+          _wrap(container, DraftScreen(onDraftComplete: () {})));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 4500));
+
+      expect(find.text('Flux de Mana : -1 Compétence à réunir'),
+          findsNWidgets(3));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 }

@@ -95,6 +95,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get combatReward => 'COMBAT REWARD';
 
   @override
+  String rewardCardFound(String cardName) {
+    return '🃏 Card found: $cardName';
+  }
+
+  @override
   String get chooseUpgrade => 'Choose an upgrade for your hero';
 
   @override
@@ -160,6 +165,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String luckLevelRewardSubtitle(String mythicNames) {
+    return 'Chances of getting each option rarity when leveling up (mythic options, rolled separately: $mythicNames)';
+  }
+
+  @override
   String get legendTitle => 'LEGEND';
 
   @override
@@ -198,7 +208,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipEliteDesc =>
-      'A much tougher fight, but guarantees a relic reward.';
+      'A much tougher fight: a guaranteed relic, and a card — sometimes two.';
 
   @override
   String get tooltipShopTitle => 'Merchant Shop';
@@ -226,6 +236,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tooltipBossDesc =>
       'Defeat the guardian of this floor to complete the act!';
+
+  @override
+  String get tooltipBossXpDesc =>
+      'Triple XP and gold, and one rune in your deck gains a level, if any still can.';
 
   @override
   String actLevel(int act, int level) {
@@ -601,6 +615,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseCardToClone => 'Choose a card to clone';
 
   @override
+  String get runeCapTitle => 'Choose the rune whose cap rises';
+
+  @override
+  String runeCapLine(int from, int to) {
+    return 'Max level $from → $to';
+  }
+
+  @override
+  String runeCapRaised(String runeName, int level) {
+    return '$runeName can now reach level $level.';
+  }
+
+  @override
   String get cardCloned => 'Card cloned!';
 
   @override
@@ -926,6 +953,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventGainRelic => '+1 Relic';
+
+  @override
+  String eventTradeRelic(String relic, int amount) {
+    return 'Give up $relic: +$amount Gold';
+  }
+
+  @override
+  String eventGiveRelic(String relic) {
+    return 'Give up $relic';
+  }
+
+  @override
+  String get eventNoRelicToGive => 'No relic to give up';
+
+  @override
+  String get eventNoRuneToSharpen => 'No rune to sharpen';
+
+  @override
+  String eventSharpenRune(int amount) {
+    return '+$amount rune level';
+  }
 
   @override
   String get settingsTitle => 'Settings';

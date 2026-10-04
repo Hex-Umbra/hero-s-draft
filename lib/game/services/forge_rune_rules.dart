@@ -4,6 +4,16 @@ import '../../models/card_instance.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/effective_card.dart';
 
+/// Une rune d'une carte du deck, au niveau [level] que la carte porte.
+typedef SharpenablePair = ({
+  CardInstance card,
+  ForgeUpgradeData rune,
+  int level,
+});
+
+/// Une rune que *Transcendance* peut relever, à son plafond effectif [cap].
+typedef RaisableCap = ({ForgeUpgradeData rune, int cap});
+
 /// Les règles des runes de forge, notées `id:niveau` : l'héritage de la
 /// fusion 3→1 (D13), son offre, l'affûtage au feu de camp et l'échange au
 /// Puits (spec P-43 E2). Les références se lisent par l'analyseur unique du
@@ -12,20 +22,24 @@ class ForgeRuneRules {
   const ForgeRuneRules._();
 
   /// Réunit les runes de même id, dans l'ordre de leur première apparition :
-  /// leurs niveaux s'additionnent, bornés par son `maxLevel` — le surplus se
-  /// perd, une rune de plafond 1 reste au niveau 1 (spec P-43 E1, A9 ; spec
-  /// P-43 E2, §4.6). Une référence mal formée ou de niveau nul est
-  /// ignorée. Deux runes qui s'excluent (`excludesRunes`, dans un sens ou
-  /// l'autre) ne sont jamais réunies : la première arrivée est gardée, car la
-  /// fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
-  static List<String> consolidate(Iterable<String> runes) {
+  /// leurs niveaux s'additionnent, bornés par son plafond effectif —
+  /// `maxLevel` plus [capBonus] pour son id (spec P-43 E3, A17) — : le
+  /// surplus se perd, une rune de plafond 1 sans bonus reste au niveau 1
+  /// (spec P-43 E1, A9 ; spec P-43 E2, §4.6). Une référence mal formée ou de
+  /// niveau nul est ignorée. Deux runes qui s'excluent (`excludesRunes`, dans
+  /// un sens ou l'autre) ne sont jamais réunies : la première arrivée est
+  /// gardée, car la fusion ne doit pas rouvrir ce que ferment D44, D51 et D61.
+  static List<String> consolidate(
+    Iterable<String> runes, {
+    Map<String, int> capBonus = const {},
+  }) {
     final kept = <String>[];
     final result = <String>[];
     for (final MapEntry(key: id, value: tier)
         in ForgeUpgradeData.levelsOf(runes).entries) {
       if (kept.any((other) => _exclude(id, other))) continue;
       kept.add(id);
-      result.add('$id:${_bounded(id, tier)}');
+      result.add('$id:${_bounded(id, tier, capBonus[id] ?? 0)}');
     }
     return result;
   }
@@ -36,10 +50,11 @@ class ForgeRuneRules {
       (ForgeUpgradeData.getById(a)?.excludesRunes.contains(b) ?? false) ||
       (ForgeUpgradeData.getById(b)?.excludesRunes.contains(a) ?? false);
 
-  /// [tier] borné par le plafond de la rune [id] (D72) ; une rune absente du
-  /// registre n'en a pas.
-  static int _bounded(String id, int tier) =>
-      ForgeUpgradeData.getById(id)?.boundLevel(tier) ?? tier;
+  /// [tier] borné par le plafond effectif de la rune [id] (D72, A17) ; une
+  /// rune absente du registre n'en a pas.
+  static int _bounded(String id, int tier, int capBonus) =>
+      ForgeUpgradeData.getById(id)?.boundLevel(tier, capBonus: capBonus) ??
+      tier;
 
   /// La rune [rune] peut-elle s'offrir à [card] ? Le prédicat unique de
   /// l'éligibilité (D3, D44, D48, D51, D61 ; spec P-43 E1, A3, §4.6 ; spec
@@ -131,6 +146,34 @@ class ForgeRuneRules {
     return drawn;
   }
 
+  /// Les runes de [deck] que *Transcendance* peut relever (spec P-43 E3,
+  /// §4.8 ; D42(c), A15, A16) : celles qu'une carte porte à leur plafond
+  /// effectif — `maxLevel` plus [capBonus] pour leur id —, ni sans plafond
+  /// ni `binary`, une fois chacune, dans l'ordre du [catalog], avec ce
+  /// plafond. Lues par l'écran de draft, pour la condition `raisableRune`
+  /// et pour la modale.
+  static List<RaisableCap> raisableCaps(
+    Iterable<CardInstance> deck,
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) {
+    final carried = <String, int>{};
+    for (final card in deck) {
+      for (final MapEntry(key: id, value: level)
+          in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries) {
+        carried[id] = max(carried[id] ?? 0, level);
+      }
+    }
+    return [
+      for (final rune in catalog)
+        if (rune.maxLevel case final maxLevel?
+            when !rune.binary &&
+                (carried[rune.id] ?? 0) >=
+                    maxLevel + (capBonus[rune.id] ?? 0))
+          (rune: rune, cap: maxLevel + (capBonus[rune.id] ?? 0)),
+    ];
+  }
+
   /// `b`, le coût d'un niveau d'affûtage par niveau porté (D63 ; spec P-43
   /// E2, §4.7).
   static const sharpenBaseCost = 50;
@@ -140,21 +183,53 @@ class ForgeRuneRules {
   static int sharpenCost(int level) => sharpenBaseCost * level;
 
   /// La rune [rune], portée au niveau [level], peut-elle monter d'un niveau ?
-  /// Son `maxLevel` le dit, par la borne (D72).
-  static bool canSharpen(ForgeUpgradeData rune, int level) =>
-      rune.boundLevel(1, carried: level) >= 1;
+  /// Son plafond effectif le dit — `maxLevel` plus [capBonus] pour son id —,
+  /// par la borne (D72 ; spec P-43 E3, A17).
+  static bool canSharpen(
+    ForgeUpgradeData rune,
+    int level, {
+    Map<String, int> capBonus = const {},
+  }) =>
+      rune.boundLevel(1, carried: level, capBonus: capBonus[rune.id] ?? 0) >=
+      1;
 
-  /// [card] porte-t-elle une rune que l'affûtage peut monter ? Une rune
-  /// absente du [catalog] ne se monte pas. Lu par l'option du feu et par sa
-  /// sélection (spec P-43 E2, A4).
+  /// [card] porte-t-elle une rune que l'affûtage peut monter, sous son
+  /// plafond effectif ([capBonus], spec P-43 E3, A17) ? Une rune absente du
+  /// [catalog] ne se monte pas. Lu par l'option du feu, par sa sélection
+  /// (spec P-43 E2, A4) et par la condition du *Rémouleur*,
+  /// `EventController.isChoiceSelectable` (spec P-43 E3, §4.9).
   static bool hasSharpenableRune(
     CardInstance card,
-    Iterable<ForgeUpgradeData> catalog,
-  ) =>
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) =>
       ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries.any((entry) {
         final rune = catalog.where((r) => r.id == entry.key).firstOrNull;
-        return rune != null && canSharpen(rune, entry.value);
+        return rune != null &&
+            canSharpen(rune, entry.value, capBonus: capBonus);
       });
+
+  /// Les paires (carte, rune) de [deck] dont la rune peut encore monter d'un
+  /// niveau sous son plafond effectif ([capBonus], A17) — celles que tire le
+  /// boss « XP » (spec P-43 E3, §4.6, A14) —, dans l'ordre du deck puis des
+  /// runes de chaque carte. Une rune absente du [catalog] ne se monte pas.
+  static List<SharpenablePair> sharpenablePairs(
+    Iterable<CardInstance> deck,
+    Iterable<ForgeUpgradeData> catalog, {
+    Map<String, int> capBonus = const {},
+  }) {
+    final pairs = <SharpenablePair>[];
+    for (final card in deck) {
+      for (final MapEntry(key: id, value: level)
+          in ForgeUpgradeData.levelsOf(card.forgeUpgrades).entries) {
+        final rune = catalog.where((r) => r.id == id).firstOrNull;
+        if (rune != null && canSharpen(rune, level, capBonus: capBonus)) {
+          pairs.add((card: card, rune: rune, level: level));
+        }
+      }
+    }
+    return pairs;
+  }
 
   /// [refs] où la référence de la rune [runeId] cède la place à
   /// [replacement], à sa place (spec P-43 E2, §4.7, §4.8) : l'affûtage la
@@ -181,9 +256,17 @@ class ForgeRuneRules {
   /// Le niveau auquel [received] entre au Puits contre une rune de niveau
   /// [givenLevel] (D39) : les deux tiers, arrondis au plus proche — deux
   /// tiers d'un entier ne tombent jamais sur une demie —, au moins 1 dès le
-  /// niveau 1, puis bornés par le plafond de [received] (D72).
-  static int wellLevel(ForgeUpgradeData received, int givenLevel) =>
-      received.boundLevel((2 * givenLevel + 1) ~/ 3);
+  /// niveau 1, puis bornés par le plafond effectif de [received] — son
+  /// `maxLevel` plus [capBonus] pour son id (D72 ; spec P-43 E3, A17).
+  static int wellLevel(
+    ForgeUpgradeData received,
+    int givenLevel, {
+    Map<String, int> capBonus = const {},
+  }) =>
+      received.boundLevel(
+        (2 * givenLevel + 1) ~/ 3,
+        capBonus: capBonus[received.id] ?? 0,
+      );
 
   /// Les runes du [catalog] qui peuvent remplacer la rune [givenId] de
   /// [card] au Puits (spec P-43 E2, A5, §4.8) : toutes celles que le

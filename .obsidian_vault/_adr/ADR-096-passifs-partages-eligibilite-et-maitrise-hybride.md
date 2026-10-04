@@ -5,6 +5,10 @@
 Prépare [P-13](../../docs/ROADMAP.md) (méta-progression) sans en construire aucune part. Précède le
 lot B de P-41 (spec [S2](../../docs/superpowers/specs/2026-08-07-s2-identite-de-classe-design.md)),
 qui en dépend.
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
+sur la branche de la vague 3, en attente du propriétaire) : le bloc `mastery` gagne `floor`, appliqué
+par `withMastery` ; le texte de la Maîtrise dit l'écart effectif (`describeMastery`) — aucune
+décision ci-dessous n'est amendée.
 
 ### Contexte
 

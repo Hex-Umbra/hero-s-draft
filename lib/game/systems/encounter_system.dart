@@ -90,15 +90,17 @@ class EncounterSystem {
     required int playerMight,
     required int playerMaxMana,
     required int playerRelicsCount,
-    required int playerCardsCount,
+    required int deckFusionRanks,
     required bool isBoss,
     required bool isElite,
   }) {
+    // Le terme de deck lit la qualité du deck, et non sa taille : deux fois
+    // la somme de ses rangs de fusion (spec P-43 E3, §4.5 ; D47, D59).
     final double playerPower = playerMaxHp +
         (playerMight * 10.0) +
         (playerMaxMana * 15.0) +
         (playerRelicsCount * 5.0) +
-        (playerCardsCount * 2.0);
+        (deckFusionRanks * 2.0);
 
     final double expectedPower =
         145.0 + ((playerLevel - 1) * 15.0) + ((act - 1) * 20.0);
@@ -217,7 +219,7 @@ class EncounterSystem {
     int playerMight = 0,
     int playerMaxMana = 3,
     int playerRelicsCount = 0,
-    int playerCardsCount = 0,
+    int deckFusionRanks = 0,
     String? bossEnemyId,
   }) {
     if (availableEnemies.isEmpty) return [];
@@ -232,7 +234,7 @@ class EncounterSystem {
       playerMight: playerMight,
       playerMaxMana: playerMaxMana,
       playerRelicsCount: playerRelicsCount,
-      playerCardsCount: playerCardsCount,
+      deckFusionRanks: deckFusionRanks,
       isBoss: isBoss,
       isElite: isElite,
     ).finalBudget;

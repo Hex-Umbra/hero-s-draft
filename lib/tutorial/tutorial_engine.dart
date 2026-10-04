@@ -35,7 +35,6 @@ class TutorialMockState {
   List<CardInstance> hand = [];
   EnemyInstance? enemy;
   int playerXp = 0;
-  int xpToNextLevel = 100;
   int playerLevel = 1;
   int pendingDrafts = 0;
   bool hasDrafted = false;
@@ -84,7 +83,6 @@ class TutorialMockState {
     hand = [];
     enemy = null;
     playerXp = 0;
-    xpToNextLevel = 100;
     playerLevel = 1;
     pendingDrafts = 0;
     hasDrafted = false;
@@ -507,26 +505,29 @@ class TutorialEngine extends ChangeNotifier {
   /// s'empilait indéfiniment à chaque nouveau passage de niveau.
   int get pendingDrafts => mockState.pendingDrafts;
 
-  /// Même formule que `PlayerStatsManager.gainXp` : report de l'excédent et
-  /// palier géométrique `100 × 1,5^(niveau-1)`.
+  /// Le palier d'XP du tutoriel : celui de l'acte 1 — le tutoriel s'y joue —,
+  /// lu sur la courbe de son registre (spec P-43 E3, §4.4 ; ADR-081). Le
+  /// registre du tutoriel passe toujours par `loadGameDataRegistry`, qui
+  /// porte la courbe (A27).
+  int get xpThreshold => data.xpCurve!.thresholdFor(1);
+
+  /// Même règle que `PlayerStatsManager.gainXp` : report de l'excédent, et
+  /// le palier de l'acte, le même à chaque niveau.
   void gainXp(int amount) {
     if (amount <= 0) return;
 
     var xp = mockState.playerXp + amount;
     var level = mockState.playerLevel;
-    var threshold = mockState.xpToNextLevel;
     var drafts = mockState.pendingDrafts;
 
-    while (xp >= threshold) {
-      xp -= threshold;
+    while (xp >= xpThreshold) {
+      xp -= xpThreshold;
       level++;
-      threshold = (100 * pow(1.5, level - 1)).round();
       drafts++;
     }
 
     mockState.playerXp = xp;
     mockState.playerLevel = level;
-    mockState.xpToNextLevel = threshold;
     mockState.pendingDrafts = drafts;
     notifyListeners();
   }

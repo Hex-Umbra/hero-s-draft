@@ -34,16 +34,16 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.white70,
       titleEn: 'Combat',
       titleFr: 'Combat',
-      descEn: 'Fight base monsters for gold & XP.',
-      descFr: 'Combattez des monstres pour de l\'or et XP.',
+      descEn: 'Fight base monsters for gold, XP and a card.',
+      descFr: 'Combattez des monstres pour de l\'or, de l\'XP et une carte.',
     ),
     NodeTypeInfo(
       icon: Icons.warning_amber_rounded,
       color: Colors.redAccent,
       titleEn: 'Elite',
       titleFr: 'Élite',
-      descEn: 'Difficult fight. Rewards a Relic.',
-      descFr: 'Combat difficile. Offre une Relique.',
+      descEn: 'Difficult fight. Rewards a Relic and a card.',
+      descFr: 'Combat difficile. Offre une Relique et une carte.',
     ),
     NodeTypeInfo(
       icon: Icons.shopping_cart_outlined,
@@ -100,8 +100,9 @@ class TutorialNodeTypesWidget extends StatelessWidget {
       color: Colors.cyanAccent,
       titleEn: 'Boss (3× XP & Gold)',
       titleFr: 'Boss (XP & Or ×3)',
-      descEn: 'Rewards triple XP and gold.',
-      descFr: 'Offre le triple d\'XP et d\'or.',
+      descEn: 'Rewards triple XP and gold, and raises a rune if any still can.',
+      descFr: 'Offre le triple d\'XP et d\'or, et monte une rune si l\'une '
+          'peut encore monter.',
     ),
     NodeTypeInfo(
       icon: Icons.diamond,

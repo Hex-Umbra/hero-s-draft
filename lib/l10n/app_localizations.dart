@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'COMBAT REWARD'**
   String get combatReward;
 
+  /// No description provided for @rewardCardFound.
+  ///
+  /// In en, this message translates to:
+  /// **'🃏 Card found: {cardName}'**
+  String rewardCardFound(String cardName);
+
   /// No description provided for @chooseUpgrade.
   ///
   /// In en, this message translates to:
@@ -356,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Your Luck: {luck}'**
   String currentLuck(int luck);
 
+  /// No description provided for @luckLevelRewardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chances of getting each option rarity when leveling up (mythic options, rolled separately: {mythicNames})'**
+  String luckLevelRewardSubtitle(String mythicNames);
+
   /// No description provided for @legendTitle.
   ///
   /// In en, this message translates to:
@@ -431,7 +443,7 @@ abstract class AppLocalizations {
   /// No description provided for @tooltipEliteDesc.
   ///
   /// In en, this message translates to:
-  /// **'A much tougher fight, but guarantees a relic reward.'**
+  /// **'A much tougher fight: a guaranteed relic, and a card — sometimes two.'**
   String get tooltipEliteDesc;
 
   /// No description provided for @tooltipShopTitle.
@@ -481,6 +493,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Defeat the guardian of this floor to complete the act!'**
   String get tooltipBossDesc;
+
+  /// No description provided for @tooltipBossXpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple XP and gold, and one rune in your deck gains a level, if any still can.'**
+  String get tooltipBossXpDesc;
 
   /// No description provided for @actLevel.
   ///
@@ -1052,6 +1070,24 @@ abstract class AppLocalizations {
   /// **'Choose a card to clone'**
   String get chooseCardToClone;
 
+  /// No description provided for @runeCapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the rune whose cap rises'**
+  String get runeCapTitle;
+
+  /// No description provided for @runeCapLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Max level {from} → {to}'**
+  String runeCapLine(int from, int to);
+
+  /// No description provided for @runeCapRaised.
+  ///
+  /// In en, this message translates to:
+  /// **'{runeName} can now reach level {level}.'**
+  String runeCapRaised(String runeName, int level);
+
   /// No description provided for @cardCloned.
   ///
   /// In en, this message translates to:
@@ -1567,6 +1603,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+1 Relic'**
   String get eventGainRelic;
+
+  /// No description provided for @eventTradeRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up {relic}: +{amount} Gold'**
+  String eventTradeRelic(String relic, int amount);
+
+  /// No description provided for @eventGiveRelic.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up {relic}'**
+  String eventGiveRelic(String relic);
+
+  /// No description provided for @eventNoRelicToGive.
+  ///
+  /// In en, this message translates to:
+  /// **'No relic to give up'**
+  String get eventNoRelicToGive;
+
+  /// No description provided for @eventNoRuneToSharpen.
+  ///
+  /// In en, this message translates to:
+  /// **'No rune to sharpen'**
+  String get eventNoRuneToSharpen;
+
+  /// No description provided for @eventSharpenRune.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} rune level'**
+  String eventSharpenRune(int amount);
 
   /// No description provided for @settingsTitle.
   ///

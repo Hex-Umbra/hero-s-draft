@@ -20,12 +20,12 @@ La progression des cartes s'effectue via des raretés dynamiques (`common` → `
   tous les effets sont gelés ne gagne à la fusion que sa rareté — et la rune que la fusion lui offre.
 - Le **coût en mana ne change jamais** avec la rareté ; seule la rune *Allégé* le baisse.
 
-La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds)`, qui rend la carte créée (`null` si la fusion est refusée) — depuis le lot E2 de P-43, [ADR-106](../_adr/ADR-106-fusion-egale-forge.md), branche de la vague 2, en attente du propriétaire :
+La fusion de cartes 3-en-1 est gérée par `DeckNotifier.mergeCards(selectedIds)`, qui rend la carte créée (`null` si la fusion est refusée) — depuis le lot E2 de P-43, [ADR-106](../_adr/ADR-106-fusion-egale-forge.md), vague 2, fusionnée dans `main` le 2026-10-03 :
 1. Le joueur sélectionne 3 exemplaires d'une même carte à une même rareté : l'écran de deck les groupe par id et rareté, et `mergeCards` refuse tout autre trio.
 2. Les 3 copies sont supprimées du `masterDeck`.
 3. Une nouvelle copie de la rareté suivante (`CardRarity.next`) est ajoutée au `masterDeck`.
 4. **Héritage : toutes les runes des trois exemplaires sont gardées** (`ForgeRuneRules.consolidate`, D13) — les runes de même id voient leurs niveaux additionnés (deux `sharp:1` donnent `sharp:2`). Deux règles bornent l'héritage — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) :
-   - **la somme est bornée par le `maxLevel` de la rune**, le surplus se perd : trois `eco:1` donnent `eco:1`, trois `sharp:1` donnent `sharp:3` ;
+   - **la somme est bornée par le `maxLevel` de la rune**, le surplus se perd : trois `eco:1` donnent `eco:1`, trois `sharp:1` donnent `sharp:3` — sur la branche de la vague 3, par son plafond effectif, le bonus de *Transcendance* compris : `eco:2` si son plafond a été relevé (`mergeCards(…, capBonus:)`, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) ;
    - **deux runes qui s'excluent ne sont jamais réunies** (`excludesRunes`, dans un sens ou dans l'autre) : **la première arrivée est gardée**, l'autre est perdue. Trois *Potions de Soin* portant *Persistant*, *Économe* et rien donnent une carte qui ne porte que *Persistant* — sans quoi la fusion rouvrait une carte qui rend du mana sans s'épuiser, que l'éligibilité ferme ([`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)).
 
    **Il n'y a plus de capacité ni de choix d'héritage** : aucune limite au nombre de runes d'une carte. Trois exemplaires runés différemment donnent une carte à plusieurs runes ; runés pareil, une rune haute — s'étaler ou concentrer est le choix du joueur.

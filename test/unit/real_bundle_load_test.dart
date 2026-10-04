@@ -21,7 +21,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 85 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 94 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -33,11 +33,11 @@ void main() {
         .length;
 
     expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
-    expect(countUnder('assets/data/relics/', 4), 25, reason: 'reliques');
-    expect(countUnder('assets/data/events/', 4), 5, reason: 'evenements');
+    expect(countUnder('assets/data/relics/', 4), 28, reason: 'reliques');
+    expect(countUnder('assets/data/events/', 4), 7, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 11, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
-    expect(countUnder('assets/data/level_up_rewards/', 4), 8,
+    expect(countUnder('assets/data/level_up_rewards/', 4), 9,
         reason: 'recompenses de niveau');
 
     expect(
@@ -67,9 +67,10 @@ void main() {
     // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'cartes de classe');
 
-    // Les deux documents de configuration restent a plat.
+    // Les trois documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
     expect(json, contains('assets/data/patch_notes.json'));
+    expect(json, contains('assets/data/xp_curve.json'));
   });
 
   test('les images d entites sont declarees, pas seulement presentes', () async {
@@ -92,8 +93,8 @@ void main() {
     // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
     expect(registry.cards, hasLength(23)); // 17 neutres + 6 de classe
-    expect(registry.relics, hasLength(25));
-    expect(registry.events, hasLength(5));
+    expect(registry.relics, hasLength(28));
+    expect(registry.events, hasLength(7));
     expect(registry.forgeUpgrades, hasLength(11));
     expect(
       registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),
@@ -108,5 +109,16 @@ void main() {
     // d ordre.
     final ids = registry.relics.map((r) => r.id).toList();
     expect(ids, orderedEquals(List<String>.of(ids)..sort()));
+  });
+
+  // La table de D67, valeur par valeur (spec P-43 E3, §3.2, §8).
+  test('la courbe d XP livree est celle de D67', () async {
+    final registry = await loadGameDataRegistry(rootBundle);
+
+    expect(registry.xpCurve, isNotNull);
+    expect(registry.xpCurve!.xpPerLevelByAct, [
+      115, 200, 310, 480, 590, 775, 955, 1100, //
+      1040, 1185, 1370, 1370, 1300, 1375, 1015,
+    ]);
   });
 }

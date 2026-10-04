@@ -1,0 +1,12 @@
+{
+  "id": "gleaners_pouch",
+  "name_en": "Gleaner's Pouch",
+  "name_fr": "Sacoche du glaneur",
+  "description_en": "After a normal fight, find one more card.",
+  "description_fr": "Après un combat normal, trouvez une carte de plus.",
+  "trigger": "startOfRun",
+  "effectType": "increase_combat_card_drops",
+  "value": 1,
+  "rarity": "rare",
+  "emoji": "👝"
+}

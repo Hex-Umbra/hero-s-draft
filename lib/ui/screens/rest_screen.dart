@@ -123,12 +123,16 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     final runState = ref.watch(runProvider);
     final heroStats = runState.heroStats;
     // L'option d'affûtage se montre inactive, avec son motif, quand aucune
-    // rune du deck ne peut monter (spec P-43 E2, A4).
+    // rune du deck ne peut monter (spec P-43 E2, A4) sous le plafond effectif
+    // de la run (spec P-43 E3, A17).
     final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
-    final canSharpen = ref
-        .watch(deckProvider)
-        .masterDeck
-        .any((card) => ForgeRuneRules.hasSharpenableRune(card, catalog));
+    final canSharpen = ref.watch(deckProvider).masterDeck.any(
+          (card) => ForgeRuneRules.hasSharpenableRune(
+            card,
+            catalog,
+            capBonus: runState.runeCapBonus,
+          ),
+        );
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.dark,
