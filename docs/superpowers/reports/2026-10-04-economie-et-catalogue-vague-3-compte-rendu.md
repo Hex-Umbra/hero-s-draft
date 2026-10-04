@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.3.
 **Branche** : `feat/v0.5.5-p43-e3-trouvaille`, ouverte le 03/10/2026 depuis `main` à `bca35c5` (fusion de la vague 2).
 **Ouvert le** : 04/10/2026, à la fin du plan de la partie 1 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : **en cours** — la partie 1 est implémentée, le plan de la partie 2 écrit et vérifié ; restent son implémentation, la simulation, la note de version et la mémoire.
+**État** : **en cours** — les deux parties sont implémentées ; restent la référence de la simulation, la note de version et la mémoire.
 
 ---
 
@@ -14,7 +14,8 @@
 | Porte d'entrée (03/10) | `main` propre et à jour à `bca35c5` (fusion de la vague 2) ; `v0.5.4` posé sur `main`, release publiée ; trois porteurs de version à `0.5.4` ; `dart analyze` propre ; **1480 tests** — la base de la vague (`9282513`) |
 | Trois arrêts et leurs levées | Spec non convergée au troisième tour (`0a4eaa0`), au quatrième (`cf61ff8`), au cinquième (`84ff409`) ; chaque arrêt levé par le propriétaire le 03/10, reprise sans `stash` (arbre propre, `dart analyze` propre, 1480 tests verts) |
 | Spec E3 | Convergée au sixième tour, `2c1d8f4` |
-| E3, partie 1 | Plan `7a4f0d7` ; sept commits de code `3d58c2f`..`83cf7c7` et un correctif de la revue d'ensemble ``9b0e2e5`` ; **1535 tests** (+55), `dart analyze` propre |
+| E3, partie 1 | Plan `7a4f0d7` ; sept commits de code `3d58c2f`..`83cf7c7` et un correctif de la revue d'ensemble `9b0e2e5` ; **1535 tests** (+55), `dart analyze` propre |
+| E3, partie 2 | Plan `a7e0635` ; dix commits de code `d6924f7`..`7e29709`, quatre commits du script de simulation `ca0ba2f`..`d8b2aef` et un correctif de la revue d'ensemble `8fc7da5` ; **1625 tests** (+90), `dart analyze` propre |
 
 ---
 
@@ -209,6 +210,21 @@ Quinze tâches, 1535 → 1622 tests : dix de code (l'affûtage sans or, le boss 
 
 Les précisions du plan sur la spec sont dans sa section « Ce que le plan précise ou corrige de la spec » ; aucune n'amende un arbitrage, aucune prémisse de la spec n'a été trouvée fausse — seuls des numéros de ligne déplacés par la partie 1. `capBonus` est **requis** sur `GoldManager.sharpenRune` et `exchangeRune`, leur seul appelant étant `RunController` : A17 ne le veut optionnel que sur `boundLevel`, `ForgeRuneRules` et `mergeCards`. Trois transitoires internes à la partie, jamais livrés : le tirage du boss qui ne lit que la constante entre les Tasks 2 et 3 ; *Transcendance* lue par `raisableCaps` et la modale seuls entre les Tasks 7 et 8 ; entre les Tasks 8 et 9, la fusion, le feu, la sélection d'affûtage, le dialogue et le Puits encore au plafond de base.
 
+### 2.5. Les décisions de SDD — exécution du plan de la partie 2
+
+Recopiées du registre de SDD avant la suppression de son espace de travail, dans l'ordre où elles ont été prises. Implémenteurs Sonnet, relecteurs Sonnet (Opus pour la Task 7, la plus grosse), revue d'ensemble Opus. Chaque revue de tâche a approuvé au premier passage : aucun tour de correction. La Task 15, qui n'écrit aucun code, a été jouée par l'orchestrateur : `dart analyze` propre, 1622 tests verts, `flutter gen-l10n` sans écart, chaque commande de contrôle de fin de vague conforme — les trois « vides à la fin de la vague » vides —, neuf fichiers sous `assets/`, les commits du script au-dessus des commits de donnée, `sync_assets --check` à 0. Les quatre mesures complètes de la simulation ont été lancées par l'orchestrateur, chacune sur son commit extrait hors du dépôt (§4).
+
+| # | Décision | Motif | Si elle est fausse |
+|:---|:---|:---|:---|
+| S8 | Contrôle préalable : aucun conflit entre tâches à trancher | Les fichiers partagés par plusieurs tâches le sont en série ; le second vérificateur du plan avait rejoué les quatorze tâches dans l'ordre, sans correctif local | — |
+| S9 | Revue d'ensemble, n° 1 : l'action `sharpen_rune` bornée à 1 au chargement — `8fc7da5` | A4 dit « +1 niveau », et le dialogue (« Niveau n → n+1 ») comme le badge ne savent montrer qu'un niveau : une donnée à 2 promettrait un niveau et en donnerait deux (filtre 6) | Un événement futur à +2 devra relever la borne et l'interface ensemble |
+| S10 | Revue d'ensemble, n° 2 : le *Rémouleur* grisé dit pourquoi, par un badge « Aucune rune à affûter » / "No rune to sharpen" (`eventNoRuneToSharpen`) sur le modèle de « Aucune relique à céder » — `8fc7da5` | Question apparue à la revue d'ensemble : sans badge, le choix grisé sous « -10 PV » laisse croire à une affaire de PV, et le cas est fréquent en début de run (A5) ; filtre 6, avant le 7 | Une clé ARB et un badge de plus |
+| S11 | Revue d'ensemble, n° 3 (un mineur différé de la Task 5) : le solde d'or masqué dans le dialogue d'affûtage en mode sans or — `8fc7da5` | Il suggérait un paiement qui n'a pas lieu (filtre 6) | Nul |
+| S12 | Revue d'ensemble, n° 4 : deux commentaires — un renvoi à « Task 6 » dans un test, un commentaire mal recoupé de l'éditeur — `8fc7da5` | Un numéro de plan ne dit plus rien après la fusion | Nul |
+| S13 | Les autres mineurs restent, triés par la revue d'ensemble ; deux partent à la file (§5) | Inatteignables par l'interface, antérieurs, ou imposés par le plan et justes aujourd'hui | Voir §5 |
+
+Mineurs différés pendant les revues de tâche, **tous laissés** après le tri de la revue d'ensemble, sauf le solde d'or (S11) : le tirage de runes du boss sur un `Random()` interne (imposé par le plan) ; l'écran de combat sans test d'écran (C2.5, gardé par les commandes de contrôle) ; le minuteur d'une notification évincée non annulé (antérieur, inoffensif) ; des `case` de badge dupliqués entre les deux variantes (motif existant) ; l'action `sharpen_rune` sans effet si aucune cible n'est donnée après la perte de PV — inatteignable, l'écran pousse toujours la sélection (à la file) ; l'état de chargement nu de la fiche des probabilités (inatteignable) ; le double appel de `raisableCaps` dans l'écran de draft ; sept rouleaux mythiques sur une fenêtre moyenne (trois jets à 0,5 % simultanés au moins) ; un test de boutique probabiliste ; la relecture du bonus par ligne au Puits ; « jamais sous 2 » écrit en dur dans *Flux de Mana* (juste aujourd'hui, à la file) ; des lignes longues, des littéraux et un `x as int` dans le script.
+
 ---
 
 ## 5. Trouvé périmé, et pour la file
@@ -217,11 +233,14 @@ Les précisions du plan sur la spec sont dans sa section « Ce que le plan préc
 
 **Ce que le plan de la partie 1 a précisé en re-mesurant** : `HeroMiniStatsPanel._buildXpBar` recevait `dynamic stats` — l'analyseur n'aurait pas vu `xpToNextLevel` survivre à sa suppression ; il est typé `EntityStats` ; `tutorial_play_card_widget.dart` écrivait un `10` littéral et non la constante ; « *Frénésie* sur une main pleine » ne s'obtient pas par une carte qui tue, qui quitte la main avant le décompte des morts — le test passe par `RunController.onEnemyKilled()`.
 
-**À reprendre dans le plan de la partie 2** :
-- le plafond de quatre notifications de l'étape « or et XP » (S6), avec la liste complète des messages que la partie 2 y ajoute ;
-- une rangée de plus gardée dans `probabilities_dialog_test.dart` (S7) ;
-- pour `memory-bank-sync`, constaté par le plan : `_rules/03-4` cite `GameConstants.maxHandSize`, devenu `startingMaxHandSize` ; `_patterns/02-1` le palier stocké, désormais dérivé ; `_patterns/17-00` le chargeur, qui gagne `loadDocument`.
+**Repris par la partie 2** : le plafond des notifications de l'étape « or et XP », porté à 5 (S6, §2.4 P8) ; une rangée de plus gardée dans `probabilities_dialog_test.dart` (S7).
+
+**Pour `memory-bank-sync`**, constaté par les plans :
+- par celui de la partie 2 : le plafond des notifications passe de quatre à cinq (`NotificationNotifier.maxVisible`) ; `GoldManager.sharpenRune` et `exchangeRune` prennent `capBonus` requis, et `sharpenRune` délègue l'écriture à `DeckNotifier.raiseRuneLevel` ; la sélection d'affûtage et son dialogue ont un mode sans or (`isFree`) ; l'en-tête du script de simulation compte la courbe d'XP parmi les données relues ;
+- par celui de la partie 1 : `_rules/03-4` cite `GameConstants.maxHandSize`, devenu `startingMaxHandSize` ; `_patterns/02-1` le palier stocké, désormais dérivé ; `_patterns/17-00` le chargeur, qui gagne `loadDocument`.
 
 **Pour la file** :
 - **l'écart de la section « Butin de Reliques » de la fiche des probabilités** (levée du troisième arrêt, n° 2 ; spec §5.4), antérieur à E3 et hors du lot : dès Chance 10, la fiche normalise ses quatre poids (5,71 / 14,29 / 32,38 / 47,62) quand la relique d'élite et celle de `gain_relic` se tirent en cascade sur les mêmes poids (6 / 15 / 34 / 45) ; la relique du boss « relique » se tire sur ses propres poids, qui suivent l'acte, quand le sous-titre de la section la range avec les élites et les événements ; et `probabilities_test.dart:104-126` verrouille la normalisation sur sa propre copie de la formule (`:26-54`), et non sur la fiche — à reprendre avec l'écart ;
-- `DebugActions.gainLevel` peut donner deux niveaux quand le champ « XP » du menu de debug porte déjà plus de deux paliers moins un (antérieur, debug seul).
+- `DebugActions.gainLevel` peut donner deux niveaux quand le champ « XP » du menu de debug porte déjà plus de deux paliers moins un (antérieur, debug seul) ;
+- une garde dans l'action `sharpen_rune` qui refuserait le choix entier, avant la perte de PV, si la cible donnée n'est pas affûtable — inatteignable aujourd'hui, l'écran pousse toujours la sélection, qui ne propose que des cibles affûtables (S13) ;
+- un placeholder `{floor}` dans les descriptions de passif : *Flux de Mana* écrit « jamais sous 2 » en dur, juste tant que son `floor` vaut 2 (S13).
