@@ -5,8 +5,8 @@
 // importé par lib/, ni un test. Il n'importe rien de lib/ : Flame, donc
 // Flutter, refuse `dart run`. Les FORMULES du jeu y sont portées, chacune
 // avec son `fichier:ligne` ; les DONNÉES (ennemis, neutres, signatures,
-// reliques, récompenses de niveau, runes, passifs, classes) sont relues dans
-// assets/data/ à chaque lancement.
+// reliques, récompenses de niveau, runes, passifs, classes, courbe d'XP) sont
+// relues dans assets/data/ à chaque lancement.
 //
 // Les règles simulées sont les décisions D1-D49 du brainstorm
 // docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md
@@ -719,7 +719,7 @@ const ceilingRewardId = 'transcendence';
 class GameData {
   GameData._(this.enemies, this.neutrals, this.relics, this.rewards,
       this.classes, this.passives, this.runes, this.events, this.relicD31A,
-      this.relicD31C, this.relicD42, this.ceilingReward);
+      this.relicD31C, this.relicD42, this.ceilingReward, this.xpCurve);
 
   final List<EnemyDef> enemies;
   final Map<String, CardDef> neutrals;
@@ -736,6 +736,10 @@ class GameData {
   final RelicDef relicD31C;
   final RelicDef relicD42;
   final RewardDef ceilingReward;
+
+  /// La table d'XP par acte du jeu, `xpPerLevelByAct` de `xp_curve.json`
+  /// (D67) : la référence la joue (`main`) ; la calibration reste affichée.
+  final List<int> xpCurve;
 
   final Map<String, List<CardDef>> _lots = {};
   final Map<String, List<CardDef>> _pools = {};
@@ -978,6 +982,17 @@ class GameData {
       }
     }
 
+    // La courbe d'XP (D67) : refusée comme le jeu la refuse
+    // (`XpCurveData.fromJson`) — une liste non vide d'entiers ≥ 1.
+    final xpCurve = [
+      for (final x in _json('$root/xp_curve.json')['xpPerLevelByAct'] as List)
+        x as int,
+    ];
+    if (xpCurve.isEmpty || xpCurve.any((x) => x < 1)) {
+      throw StateError('xp_curve.json : xpPerLevelByAct doit être une liste '
+          'non vide d’entiers ≥ 1');
+    }
+
     return GameData._(
       enemies,
       neutrals,
@@ -993,6 +1008,7 @@ class GameData {
       ceiling ??
           (throw StateError('récompense « $ceilingRewardId » : son fichier '
               'manque')),
+      xpCurve,
     );
   }
 }
@@ -2140,7 +2156,7 @@ const metricDefs = <(String, String, int)>[
   ('d31Copies', 'Exemplaires des reliques de D31', 0),
   ('power', 'PlayerPower (DDA)', 0),
   ('budget', 'Budget ennemi d’un combat normal', 0),
-  ('budgetCur', 'Budget sous la DDA actuelle (cartes × 2)', 0),
+  ('budgetCur', 'Budget sous la DDA d’avant E3 (cartes × 2)', 0),
   ('budgetK2', 'Budget sous Σ rang × 2', 0),
   ('budgetK5', 'Budget sous Σ rang × 5', 0),
   ('budgetK10', 'Budget sous Σ rang × 10', 0),
@@ -3803,7 +3819,7 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'sharpens@15', 'gold@15',
       ]),
       Lever('Forme de la courbe d’XP', 'D24, Q17', [
-        Variant('actuelle, 100 × 1,5^(n−1)', ref.copyWith(xpCurve: 'current')),
+        Variant('d’avant E3, 100 × 1,5^(n−1)', ref.copyWith(xpCurve: 'current')),
         Variant('**table par acte, 2 niv./acte** (réf.)', ref),
         Variant('table par acte, 3 niv./acte', t3),
         Variant('palier constant (${k2.xpConstant} XP), calé sur l’acte 1', k2),
@@ -3815,7 +3831,7 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'level@15', 'nearDeaths@15',
       ]),
       Lever('Coefficient de la DDA', 'D47, encounter_system.dart:101', [
-        Variant('actuelle, cartes × 2', ref.copyWith(ddaK: -1)),
+        Variant('d’avant E3, cartes × 2', ref.copyWith(ddaK: -1)),
         Variant('**Σ rang × 2** (réf.)', ref),
         Variant('Σ rang × 5', ref.copyWith(ddaK: 5)),
         Variant('Σ rang × 10', ref.copyWith(ddaK: 10)),
@@ -3912,7 +3928,9 @@ Future<void> main(List<String> args) async {
   final k2 = await calibrate(base.copyWith(xpCurve: 'constant'), 2, calRuns);
   final k2flat = await calibrate(
       base.copyWith(xpCurve: 'constant', xpLevelScaling: false), 2, calRuns);
-  final ref = t2;
+  // La référence joue la table du jeu (D67) ; les tables calées restent
+  // affichées, et leurs variantes jouées par les leviers.
+  final ref = base.copyWith(xpCurve: 'perAct', xpTable: data.xpCurve);
 
   log('référence : ${configs.length} configurations × $refRuns runs');
   final refScenario = Scenario(ref, refRuns, allCfgs);
@@ -3952,8 +3970,9 @@ Future<void> main(List<String> args) async {
 
   out.writeln('## Calibration de la courbe d’XP (Q17)');
   out.writeln();
-  table(out, ['Forme', 'Cible', 'Valeur calée'], [
-    ['Table par acte (réf.)', '2 niv./acte', t2.xpTable.join(' · ')],
+  table(out, ['Forme', 'Cible', 'Valeur'], [
+    ['Table par acte (réf., `xp_curve.json`)', 'D67', ref.xpTable.join(' · ')],
+    ['Table par acte, calée', '2 niv./acte', t2.xpTable.join(' · ')],
     ['Table par acte', '3 niv./acte', t3.xpTable.join(' · ')],
     ['Palier constant', '2 niv. à l’acte 1', '${k2.xpConstant} XP par niveau'],
     ['Palier constant, XP sans bonus de niveau', '2 niv. à l’acte 1', '${k2flat.xpConstant} XP par niveau'],
