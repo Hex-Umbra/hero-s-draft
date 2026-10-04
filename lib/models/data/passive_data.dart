@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'relic_data.dart';
 import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
@@ -23,22 +25,24 @@ class PassiveMastery {
   /// paramètre qui baisse avec la Maîtrise, comme un seuil.
   final int perPoint;
 
-  /// L'effet, avec `{amount}` à la place de la valeur.
+  /// La valeur sous laquelle la Maîtrise ne fait pas descendre le paramètre
+  /// — le seuil de *Flux de Mana*, jamais sous 2 (D43, D60 ; spec P-43 E3,
+  /// A23). `null` : aucun plancher. N'a de sens que sur un [perPoint]
+  /// négatif ; `PassiveData.withMastery` l'applique.
+  final int? floor;
+
+  /// L'effet, avec `{amount}` à la place de la valeur — que
+  /// `PassiveData.describeMastery` remplit.
   final String descriptionEn;
   final String descriptionFr;
 
   const PassiveMastery({
     required this.field,
     required this.perPoint,
+    this.floor,
     this.descriptionEn = '',
     this.descriptionFr = '',
   });
-
-  /// L'effet de [points] de Maîtrise : `{amount}` y devient
-  /// `|perPoint × points|`, le texte portant le sens (spec P-49, §6.5).
-  String describe(String locale, int points) =>
-      (locale == 'fr' ? descriptionFr : descriptionEn)
-          .replaceAll('{amount}', (perPoint * points).abs().toString());
 
   factory PassiveMastery.fromJson(Map<String, dynamic> json) {
     final field = json['field'] as String;
@@ -61,9 +65,17 @@ class PassiveMastery {
         throw FormatException('mastery.$key doit contenir {amount}');
       }
     }
+    final floor = json['floor'];
+    if (floor != null && (floor is! int || perPoint >= 0)) {
+      throw FormatException(
+        'mastery.floor vaut un entier, sur un perPoint négatif — reçu : floor '
+        '$floor, perPoint $perPoint',
+      );
+    }
     return PassiveMastery(
       field: field,
       perPoint: perPoint,
+      floor: floor as int?,
       descriptionEn: descriptionEn,
       descriptionFr: descriptionFr,
     );
@@ -87,8 +99,10 @@ class PassiveData {
   /// passif qui n'en pose pas.
   final int duration;
 
-  /// Le nombre d'occurrences à réunir avant que le passif agisse — le seuil de
-  /// *Flux de Mana*. 0 : aucun seuil, le passif agit à chaque déclenchement.
+  /// Un seuil, que lit la stratégie du passif (spec P-43 E3, A24) : les
+  /// Compétences à réunir avant que *Flux de Mana* agisse — 0 : à chaque
+  /// déclenchement — ; l'armure survivante d'une tranche de *Bénédiction* —
+  /// sous 1, aucune tranche.
   final int threshold;
 
   /// Les cartes que le passif fait piocher — *Frénésie*.
@@ -129,21 +143,51 @@ class PassiveData {
       locale == 'fr' ? descriptionFr : descriptionEn;
 
   /// Ce passif avec [points] de Maîtrise appliqués au paramètre que désigne
-  /// [mastery] (spec P-49, §6.2). Rendu tel quel sans [mastery] ou à 0 point.
-  /// Borner le résultat est l'affaire de la stratégie qui le lit.
+  /// [mastery] (spec P-49, §6.2), jamais sous son plancher s'il en déclare un
+  /// (spec P-43 E3, A23). Rendu tel quel sans [mastery] ou à 0 point.
   PassiveData withMastery(int points) {
     final m = mastery;
     if (m == null || points == 0) return this;
-    final delta = m.perPoint * points;
+    int mastered(int base) {
+      final raised = base + m.perPoint * points;
+      final floor = m.floor;
+      return floor == null ? raised : max(floor, raised);
+    }
+
     return switch (m.field) {
-      'value' => _copyWith(value: value + delta),
-      'duration' => _copyWith(duration: duration + delta),
-      'threshold' => _copyWith(threshold: threshold + delta),
+      'value' => _copyWith(value: mastered(value)),
+      'duration' => _copyWith(duration: mastered(duration)),
+      'threshold' => _copyWith(threshold: mastered(threshold)),
       // `fromJson` refuse tout autre champ ; un passif construit en code avec
       // un champ inconnu ignore sa Maîtrise plutôt que de lever en combat.
       _ => this,
     };
   }
+
+  /// L'effet de la Maîtrise qui passe de [from] à [to] points, dans le texte
+  /// du bloc `mastery` (spec P-43 E3, §4.11, A23) : `{amount}` y devient
+  /// l'écart du paramètre visé entre ces deux nombres de points, plancher
+  /// compris — ce que le joueur gagne vraiment, le texte portant le sens.
+  /// `null` sans bloc `mastery`, ou quand l'écart est nul : rien ne change.
+  String? describeMastery(String locale, {required int from, required int to}) {
+    final m = mastery;
+    if (m == null) return null;
+    final amount = (_parameterOf(withMastery(to), m.field) -
+            _parameterOf(withMastery(from), m.field))
+        .abs();
+    if (amount == 0) return null;
+    return (locale == 'fr' ? m.descriptionFr : m.descriptionEn)
+        .replaceAll('{amount}', '$amount');
+  }
+
+  /// Le paramètre [field] de [passive], parmi ceux qu'une Maîtrise peut viser.
+  static int _parameterOf(PassiveData passive, String field) =>
+      switch (field) {
+        'value' => passive.value,
+        'duration' => passive.duration,
+        'threshold' => passive.threshold,
+        _ => 0,
+      };
 
   PassiveData _copyWith({int? value, int? duration, int? threshold}) =>
       PassiveData(
@@ -184,7 +228,7 @@ class PassiveData {
     }
     final masteryJson = json['mastery'] as Map<String, dynamic>?;
 
-    return PassiveData(
+    final passive = PassiveData(
       id: json['id'] as String,
       nameEn: nEn,
       nameFr: nFr,
@@ -201,6 +245,19 @@ class PassiveData {
       mastery:
           masteryJson == null ? null : PassiveMastery.fromJson(masteryJson),
     );
+    // Un plancher au-dessus de la valeur de base mordrait sans Maîtrise
+    // (spec P-43 E3, A23).
+    final mastery = passive.mastery;
+    final floor = mastery?.floor;
+    if (mastery != null &&
+        floor != null &&
+        floor > _parameterOf(passive, mastery.field)) {
+      throw FormatException(
+        'mastery.floor ($floor) dépasse la valeur de base de '
+        '${mastery.field} (${_parameterOf(passive, mastery.field)})',
+      );
+    }
+    return passive;
   }
 
   static PassiveData? getById(String id) {

@@ -40,18 +40,22 @@ class DraftChoiceLabels {
 
   /// Description (avec la valeur du gain) affichée pour ce choix de draft.
   ///
-  /// [passive] est le passif actif : une récompense dont le gabarit nomme
-  /// `{passive}` ou `{effect}` se décrit par ce que la Maîtrise tirée lui
-  /// apporte — c'est le cas d'*Affinité* (spec P-49, §6.5). Les autres
-  /// l'ignorent, sans qu'aucune branche ne les distingue.
+  /// [passive] est le passif actif, [currentMastery] la Maîtrise effective du
+  /// héros : une récompense dont le gabarit nomme `{passive}` ou `{effect}`
+  /// se décrit par ce que la Maîtrise tirée change vraiment, à partir de
+  /// celle qu'il a — c'est le cas d'*Affinité* (spec P-49, §6.5 ; spec P-43
+  /// E3, §4.11, C1.2). Les autres l'ignorent, sans qu'aucune branche ne les
+  /// distingue.
   static String getChoiceDescription(
     AppLocalizations l10n,
     DraftChoice choice, {
     PassiveData? passive,
+    required int currentMastery,
   }) =>
       choice.data.describe(
         l10n.localeName,
         amount: choice.amount,
         passive: passive,
+        currentMastery: currentMastery,
       );
 }

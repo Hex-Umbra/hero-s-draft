@@ -141,21 +141,33 @@ class LevelUpRewardData {
   /// La description affichée sur la carte de draft.
   ///
   /// Un gabarit qui nomme `{passive}` ou `{effect}` a besoin d'un passif actif
-  /// **qui déclare une Maîtrise** : sans lui, c'est [fallbackDescriptionFr] qui
+  /// **dont la Maîtrise change quelque chose** : `{effect}` dit ce que
+  /// [amount] points ajoutés à la Maîtrise effective [currentMastery]
+  /// changent vraiment, plancher compris (spec P-43 E3, §4.11, A23) ; sans
+  /// passif à Maîtrise, ou sans changement, c'est [fallbackDescriptionFr] qui
   /// sert. C'est la règle, unique, qui remplace la branche `case affinity` de
   /// l'ancien `DraftChoiceLabels`.
-  String describe(String locale, {required int amount, PassiveData? passive}) {
+  String describe(
+    String locale, {
+    required int amount,
+    PassiveData? passive,
+    required int currentMastery,
+  }) {
     final isFr = locale == 'fr';
     final main = isFr ? descriptionFr : descriptionEn;
     final fallback = isFr ? fallbackDescriptionFr : fallbackDescriptionEn;
-    final mastery = passive?.mastery;
+    final effect = passive?.describeMastery(
+      locale,
+      from: currentMastery,
+      to: currentMastery + amount,
+    );
     final needsPassive = main.contains('{passive}') || main.contains('{effect}');
-    final template = needsPassive && mastery == null ? fallback ?? main : main;
+    final template = needsPassive && effect == null ? fallback ?? main : main;
 
     return template
         .replaceAll('{amount}', '$amount')
         .replaceAll('{passive}', passive?.getName(locale) ?? '')
-        .replaceAll('{effect}', mastery?.describe(locale, amount) ?? '');
+        .replaceAll('{effect}', effect ?? '');
   }
 
   /// La ligne courte du rouleau. Aucun `{passive}` ni `{effect}` n'y survit :

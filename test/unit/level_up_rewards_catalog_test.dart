@@ -112,8 +112,8 @@ void main() {
       expect(reward.nameFr, isNotEmpty, reason: reward.id);
       expect(reward.nameEn, isNotEmpty, reason: reward.id);
       expect(
-        reward.describe('fr', amount: 1),
-        isNot(reward.describe('en', amount: 1)),
+        reward.describe('fr', amount: 1, currentMastery: 0),
+        isNot(reward.describe('en', amount: 1, currentMastery: 0)),
         reason: '${reward.id} : la description anglaise n\'est pas traduite',
       );
     }

@@ -186,19 +186,21 @@ void main() {
     test('{amount} devient la valeur tirée', () {
       final vitality = LevelUpRewardData.fromJson(vitalityJson());
 
-      expect(vitality.describe('fr', amount: 15), '+15 PV Max');
-      expect(vitality.describe('en', amount: 15), '+15 Max HP');
+      expect(vitality.describe('fr', amount: 15, currentMastery: 0),
+          '+15 PV Max');
+      expect(vitality.describe('en', amount: 15, currentMastery: 0),
+          '+15 Max HP');
     });
 
     test('{passive} et {effect} composent avec le passif actif', () {
       final affinity = LevelUpRewardData.fromJson(affinityJson());
 
       expect(
-        affinity.describe('fr', amount: 2, passive: regen(mastery: masteryBlock)),
+        affinity.describe('fr', amount: 2, passive: regen(mastery: masteryBlock), currentMastery: 0),
         "Régénération d'Armure : +2 Armure en fin de tour",
       );
       expect(
-        affinity.describe('en', amount: 2, passive: regen(mastery: masteryBlock)),
+        affinity.describe('en', amount: 2, passive: regen(mastery: masteryBlock), currentMastery: 0),
         'Armor Regeneration: +2 Block at end of turn',
       );
     });
@@ -207,11 +209,42 @@ void main() {
       final affinity = LevelUpRewardData.fromJson(affinityJson());
 
       expect(
-        affinity.describe('fr', amount: 3),
+        affinity.describe('fr', amount: 3, currentMastery: 0),
         '+3 Maîtrise, sans effet sur votre passif',
       );
       expect(
-        affinity.describe('fr', amount: 3, passive: regen()),
+        affinity.describe('fr', amount: 3, passive: regen(), currentMastery: 0),
+        '+3 Maîtrise, sans effet sur votre passif',
+      );
+    });
+
+    // La Maîtrise effective (spec P-43 E3, §4.11, A23 ; C1.2).
+    test('{effect} part de la Maitrise effective : un gain qui ne change '
+        'rien rend le repli', () {
+      final affinity = LevelUpRewardData.fromJson(affinityJson());
+      const flux = PassiveData(
+        id: 'mana_flux',
+        nameFr: 'Flux de Mana',
+        nameEn: 'Mana Flux',
+        trigger: RelicTrigger.onSkillPlayed,
+        effectType: 'mana_flux',
+        value: 1,
+        threshold: 3,
+        mastery: PassiveMastery(
+          field: 'threshold',
+          perPoint: -1,
+          floor: 2,
+          descriptionEn: '-{amount} Skill to gather',
+          descriptionFr: '-{amount} Compétence à réunir',
+        ),
+      );
+
+      expect(
+        affinity.describe('fr', amount: 3, passive: flux, currentMastery: 0),
+        'Flux de Mana : -1 Compétence à réunir',
+      );
+      expect(
+        affinity.describe('fr', amount: 3, passive: flux, currentMastery: 1),
         '+3 Maîtrise, sans effet sur votre passif',
       );
     });
@@ -220,7 +253,7 @@ void main() {
       final vitality = LevelUpRewardData.fromJson(vitalityJson());
 
       expect(
-        vitality.describe('fr', amount: 5, passive: regen(mastery: masteryBlock)),
+        vitality.describe('fr', amount: 5, passive: regen(mastery: masteryBlock), currentMastery: 0),
         '+5 PV Max',
       );
     });

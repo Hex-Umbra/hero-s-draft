@@ -141,19 +141,28 @@ void main() {
     });
   });
 
-  group('PassiveMastery.describe', () {
-    test('{amount} vaut perPoint fois les points', () {
-      expect(regen().mastery!.describe('fr', 3), '+3 Armure en fin de tour');
-      expect(regen().mastery!.describe('en', 1), '+1 Block at end of turn');
+  // L'effet de la Maîtrise, dit par l'écart effectif du paramètre (spec P-43
+  // E3, §4.11, A23).
+  group('PassiveData.describeMastery', () {
+    test('{amount} vaut l ecart du parametre entre les deux nombres de points',
+        () {
+      expect(regen().describeMastery('fr', from: 0, to: 3),
+          '+3 Armure en fin de tour');
+      expect(regen().describeMastery('en', from: 2, to: 3),
+          '+1 Block at end of turn');
     });
 
     test('le signe est porte par le texte, pas par {amount}', () {
-      final mastery = PassiveMastery.fromJson({
-        ...masteryJson(),
-        'perPoint': -2,
-        'description_fr': 'Seuil -{amount}',
+      final passive = PassiveData.fromJson({
+        ...passiveJson(),
+        'mastery': {
+          ...masteryJson(),
+          'perPoint': -2,
+          'description_fr': 'Seuil -{amount}',
+        },
       });
-      expect(mastery.describe('fr', 2), 'Seuil -4');
+      // `value` 2 : deux points la portent à −2, un écart de 4.
+      expect(passive.describeMastery('fr', from: 0, to: 2), 'Seuil -4');
     });
   });
 
@@ -197,8 +206,9 @@ void main() {
       expect(passive.withMastery(2).value, passive.value);
     });
 
-    // `perPoint` negatif : un seuil baisse quand la Maitrise monte. Borner le
-    // resultat est l'affaire de la strategie qui le lit (spec P-49, §6.2).
+    // `perPoint` negatif : un seuil baisse quand la Maitrise monte. Un
+    // plancher, s'il est declare, vit dans `withMastery` (spec P-43 E3, A23) ;
+    // celui-ci n'en a pas.
     test('la Maitrise sait faire baisser un seuil', () {
       final passive = PassiveData.fromJson({
         ...passiveJson(),
@@ -211,11 +221,58 @@ void main() {
         },
       });
       expect(passive.withMastery(2).threshold, 1);
-      expect(passive.mastery!.describe('fr', 2), '-2 Competence a reunir');
+      expect(passive.describeMastery('fr', from: 0, to: 2),
+          '-2 Competence a reunir');
     });
 
     test('les trois parametres que la Maitrise peut viser sont declares', () {
       expect(PassiveMastery.fields, ['value', 'duration', 'threshold']);
+    });
+  });
+
+  // Le plancher de la Maîtrise (spec P-43 E3, §3.6, §4.11 ; D43, D60, A23).
+  group('le plancher', () {
+    Map<String, dynamic> fluxJson({int? floor = 2, int perPoint = -1}) => {
+          ...passiveJson(),
+          'threshold': 3,
+          'mastery': {
+            'field': 'threshold',
+            'perPoint': perPoint,
+            'floor': ?floor,
+            'description_en': '-{amount} Skill to gather',
+            'description_fr': '-{amount} Competence a reunir',
+          },
+        };
+
+    test('lu dans le bloc mastery ; absent, aucun plancher', () {
+      expect(PassiveData.fromJson(fluxJson()).mastery!.floor, 2);
+      expect(PassiveData.fromJson(fluxJson(floor: null)).mastery!.floor,
+          isNull);
+    });
+
+    test('refuse un plancher sur un perPoint qui n est pas negatif', () {
+      expect(() => PassiveData.fromJson(fluxJson(perPoint: 1)),
+          throwsFormatException);
+    });
+
+    test('refuse un plancher au-dessus de la valeur de base du parametre', () {
+      expect(() => PassiveData.fromJson(fluxJson(floor: 4)),
+          throwsFormatException);
+      expect(PassiveData.fromJson(fluxJson(floor: 3)).mastery!.floor, 3);
+    });
+
+    test('withMastery ne descend jamais sous le plancher', () {
+      final flux = PassiveData.fromJson(fluxJson());
+      expect(flux.withMastery(1).threshold, 2);
+      expect(flux.withMastery(9).threshold, 2);
+    });
+
+    test('describeMastery dit l ecart effectif, plancher compris, et rien '
+        'quand rien ne change', () {
+      final flux = PassiveData.fromJson(fluxJson());
+      expect(flux.describeMastery('fr', from: 0, to: 9),
+          '-1 Competence a reunir');
+      expect(flux.describeMastery('fr', from: 1, to: 2), isNull);
     });
   });
 }

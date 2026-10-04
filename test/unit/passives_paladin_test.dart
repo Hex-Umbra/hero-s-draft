@@ -42,11 +42,14 @@ void main() {
         ),
       );
 
-  PassiveData blessing({int value = 1}) => PassiveData(
+  // `threshold` comme `blessing.json` : sans lui, 0, la tranche ne soigne
+  // plus rien (spec P-43 E3, A24).
+  PassiveData blessing({int value = 1, int threshold = 5}) => PassiveData(
         id: 'blessing',
         trigger: RelicTrigger.startOfTurn,
         effectType: 'blessing',
         value: value,
+        threshold: threshold,
         mastery: const PassiveMastery(
           field: 'value',
           perPoint: 1,
@@ -178,6 +181,26 @@ void main() {
       // 2 tranches de 5, et (1 + 2) PV par tranche.
       expect(stats().currentPv, 50 + 2 * 3);
     });
+
+    // La tranche en donnée (spec P-43 E3, A24).
+    test('la tranche est le seuil du passif', () {
+      run.startNewRun(paladin, blessing(threshold: 4));
+      setHero(armure: 12, currentPv: 50);
+
+      run.startTurn();
+
+      // 12 d'armure, une tranche de 4 : 3 PV.
+      expect(stats().currentPv, 50 + 3);
+    });
+
+    test('un seuil sous 1 ne soigne rien, sans lever', () {
+      run.startNewRun(paladin, blessing(threshold: 0));
+      setHero(armure: 12, currentPv: 50);
+
+      run.startTurn();
+
+      expect(stats().currentPv, 50);
+    });
   });
 
   group('le catalogue', () {
@@ -187,6 +210,18 @@ void main() {
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
       expect(available, ['regen_armor', 'fervor', 'blessing']);
+    });
+
+    // D60 (spec P-43 E3, §3.6) : la tranche en donnée, la Maîtrise sur la
+    // valeur, sans plancher.
+    test('blessing.json porte sa tranche, 5, et sa Maitrise sur la valeur',
+        () async {
+      final registry = await loadGameDataRegistry(rootBundle);
+      final blessing =
+          registry.passives.singleWhere((p) => p.id == 'blessing');
+      expect(blessing.threshold, 5);
+      expect(blessing.mastery!.field, 'value');
+      expect(blessing.mastery!.floor, isNull);
     });
   });
 }

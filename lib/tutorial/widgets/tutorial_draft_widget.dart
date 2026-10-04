@@ -90,6 +90,9 @@ class _TutorialDraftWidgetState extends State<TutorialDraftWidget> {
                           l10n,
                           choice,
                           passive: widget.engine.mockState.activePassive,
+                          // Le moteur du tutoriel, sans provider (ADR-081).
+                          currentMastery: widget
+                              .engine.mockState.heroStats.effectiveMastery,
                         );
                         final rarity = DraftChoiceLabels.rarityToString(l10n, choice.rarity);
 

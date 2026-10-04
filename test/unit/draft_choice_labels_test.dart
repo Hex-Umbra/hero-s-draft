@@ -54,11 +54,13 @@ void main() {
   test('la description : le passif actif et l effet de la Maitrise tiree', () {
     final affinity = choice('affinity', RewardRarity.uncommon); // +2
     expect(
-      DraftChoiceLabels.getChoiceDescription(fr, affinity, passive: regen()),
+      DraftChoiceLabels.getChoiceDescription(fr, affinity,
+          passive: regen(), currentMastery: 0),
       "Régénération d'Armure : +2 Armure en fin de tour",
     );
     expect(
-      DraftChoiceLabels.getChoiceDescription(en, affinity, passive: regen()),
+      DraftChoiceLabels.getChoiceDescription(en, affinity,
+          passive: regen(), currentMastery: 0),
       'Armor Regeneration: +2 Block at end of turn',
     );
   });
@@ -70,6 +72,7 @@ void main() {
         fr,
         affinity,
         passive: regen(perPoint: 2),
+        currentMastery: 0,
       ),
       "Régénération d'Armure : +4 Armure en fin de tour",
     );
@@ -78,18 +81,22 @@ void main() {
   test('sans passif actif, le gabarit de repli est rendu', () {
     final affinity = choice('affinity', RewardRarity.rare); // +3
     expect(
-      DraftChoiceLabels.getChoiceDescription(fr, affinity),
+      DraftChoiceLabels.getChoiceDescription(fr, affinity, currentMastery: 0),
       '+3 Maîtrise, sans effet sur votre passif',
     );
   });
 
   test('une récompense de stat rend sa valeur tirée', () {
     expect(
-      DraftChoiceLabels.getChoiceDescription(fr, choice('vitality', RewardRarity.epic)),
+      DraftChoiceLabels.getChoiceDescription(
+          fr, choice('vitality', RewardRarity.epic),
+          currentMastery: 0),
       '+15 PV Max',
     );
     expect(
-      DraftChoiceLabels.getChoiceDescription(en, choice('ferocity', RewardRarity.legendary)),
+      DraftChoiceLabels.getChoiceDescription(
+          en, choice('ferocity', RewardRarity.legendary),
+          currentMastery: 0),
       '+50% Crit Damage',
     );
   });
@@ -105,9 +112,44 @@ void main() {
             amount: reward.amountFor(rarity),
           ),
           passive: regen(),
+          currentMastery: 0,
         );
         expect(rendu, isNot(contains('{')), reason: '${reward.id} / ${rarity.name}');
       }
     }
+  });
+
+  // Le plancher de Flux, lu depuis la Maîtrise effective (spec P-43 E3,
+  // §4.11, A23 ; C1.2).
+  test('Affinite sur Flux dit l ecart effectif depuis la Maitrise passee, '
+      'puis le repli au plancher', () {
+    const flux = PassiveData(
+      id: 'mana_flux',
+      nameFr: 'Flux de Mana',
+      nameEn: 'Mana Flux',
+      trigger: RelicTrigger.onSkillPlayed,
+      effectType: 'mana_flux',
+      value: 1,
+      threshold: 3,
+      mastery: PassiveMastery(
+        field: 'threshold',
+        perPoint: -1,
+        floor: 2,
+        descriptionEn: '-{amount} Skill to gather',
+        descriptionFr: '-{amount} Compétence à réunir',
+      ),
+    );
+    final affinity = choice('affinity', RewardRarity.uncommon); // +2
+
+    expect(
+      DraftChoiceLabels.getChoiceDescription(fr, affinity,
+          passive: flux, currentMastery: 0),
+      'Flux de Mana : -1 Compétence à réunir',
+    );
+    expect(
+      DraftChoiceLabels.getChoiceDescription(fr, affinity,
+          passive: flux, currentMastery: 1),
+      '+2 Maîtrise, sans effet sur votre passif',
+    );
   });
 }

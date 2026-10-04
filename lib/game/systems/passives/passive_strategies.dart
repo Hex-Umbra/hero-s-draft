@@ -103,13 +103,12 @@ class ManaFluxPassive extends PassiveStrategy {
 
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    // La Maîtrise fait baisser le seuil (`perPoint` négatif) : le borner est
-    // l'affaire de la stratégie qui le lit (spec P-49, §6.2). Une Compétence
-    // sur une, jamais moins.
-    final threshold = passive.threshold < 1 ? 1 : passive.threshold;
+    // Le seuil arrive Maîtrise appliquée, plancher compris
+    // (`PassiveData.withMastery`, spec P-43 E3, A23) ; le compteur vaut au
+    // moins 1 : un seuil de 0 agit à chaque Compétence.
     final count =
         PassiveCounters.bump(run, passive, scope: CounterScope.combat);
-    if (count < threshold) return;
+    if (count < passive.threshold) return;
 
     PassiveCounters.clear(run, passive);
     run.grant(StatGain(GainResource.mana, passive.value, GainSource.passive));
@@ -132,8 +131,9 @@ class FervorPassive extends PassiveStrategy {
   }
 }
 
-/// `blessing` : chaque tranche de 5 points d'armure survivante devient `value`
-/// PV.
+/// `blessing` : chaque tranche de `threshold` points d'armure survivante
+/// devient `value` PV — `blessing.json` en déclare 5 (D60 ; spec P-43 E3,
+/// A24).
 ///
 /// L'armure est remise à zéro au début de chaque tour (spec §1.1) : la valeur
 /// vient de `PassiveEvent.survivingArmor`, que `RunController.startTurn`
@@ -142,13 +142,11 @@ class FervorPassive extends PassiveStrategy {
 class BlessingPassive extends PassiveStrategy {
   const BlessingPassive();
 
-  /// L'armure qu'il faut pour une tranche. Valeur d'équilibrage : les gains
-  /// d'armure du jeu vont de 5 à 15 points.
-  static const int _armorPerTranche = 5;
-
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    final tranches = (event.survivingArmor ?? 0) ~/ _armorPerTranche;
+    // Un seuil sous 1 ne fait rien : pas d'exception en combat (A24).
+    if (passive.threshold < 1) return;
+    final tranches = (event.survivingArmor ?? 0) ~/ passive.threshold;
     if (tranches <= 0) return;
     // `heal` borne déjà le résultat aux PV max.
     run.heal(tranches * passive.value);

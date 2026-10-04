@@ -395,4 +395,72 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });
+
+  // La Maîtrise de la run, lue par l'écran (spec P-43 E3, §4.11, §8 ; C1.2).
+  group('la Maitrise de la run', () {
+    /// Une run de mage sous *Flux de Mana*, à [mastery] points de Maîtrise,
+    /// sur un registre dont la seule récompense tirable est *Affinité* : les
+    /// trois emplacements la tirent, avec remise.
+    Future<ProviderContainer> fluxRun(int mastery) async {
+      final data = GameDataRegistry(
+        enemies: const [],
+        heroes: registry.heroes,
+        cards: registry.cards,
+        events: const [],
+        passives: registry.passives,
+        relics: const [],
+        forgeUpgrades: registry.forgeUpgrades,
+        levelUpRewards: [
+          registry.levelUpRewards.singleWhere((r) => r.id == 'affinity'),
+        ],
+      );
+      final container = ProviderContainer(
+        overrides: [gameDataLoaderProvider.overrideWith((ref) => data)],
+      );
+      addTearDown(container.dispose);
+      await container.read(gameDataLoaderProvider.future);
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(
+        data.heroes.singleWhere((h) => h.id == 'mage'),
+        data.passives.singleWhere((p) => p.id == 'mana_flux'),
+      );
+      final state = container.read(runProvider);
+      run.updateState(state.copyWith(
+        heroStats: state.heroStats.copyWith(mastery: mastery),
+      ));
+      return container;
+    }
+
+    testWidgets('a Maitrise effective 1, les rouleaux disent le repli',
+        (WidgetTester tester) async {
+      final container = await fluxRun(1);
+
+      await tester.pumpWidget(
+          _wrap(container, DraftScreen(onDraftComplete: () {})));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 4500));
+
+      // Seuil 2 à Maîtrise 1 : tout gain bute sur le plancher.
+      expect(find.textContaining('sans effet sur votre passif'),
+          findsNWidgets(3));
+      expect(find.textContaining('Compétence à réunir'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a Maitrise effective 0, Flux de Mana : -1 Competence a '
+        'reunir, quel que soit le gain', (WidgetTester tester) async {
+      final container = await fluxRun(0);
+
+      await tester.pumpWidget(
+          _wrap(container, DraftScreen(onDraftComplete: () {})));
+      await tester.pump();
+      await _advance(tester, const Duration(milliseconds: 4500));
+
+      expect(find.text('Flux de Mana : -1 Compétence à réunir'),
+          findsNWidgets(3));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 }

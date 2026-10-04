@@ -146,6 +146,10 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
     final l10n = AppLocalizations.of(context)!;
     // Affinité se décrit par le passif actif (spec P-49, §6.5).
     final activePassive = ref.watch(runProvider.select((s) => s.activePassive));
+    // La Maîtrise effective, d'où part l'effet d'*Affinité* (spec P-43 E3,
+    // §4.11, C1.2).
+    final currentMastery = ref.watch(
+        runProvider.select((s) => s.heroStats.effectiveMastery));
     // Le décor du rouleau : chaque récompense du catalogue, à sa valeur
     // `rare`. Une valeur arbitraire et assumée — les libellés écrits à la
     // main qu'elle remplace ne correspondaient à aucun palier cohérent (spec
@@ -262,6 +266,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                                 l10n,
                                                 choice,
                                                 passive: activePassive,
+                                                currentMastery: currentMastery,
                                               ),
                                               onTap: () {
                                                 if (_hasMythicChoices &&
@@ -355,6 +360,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                               l10n,
                                               choice,
                                               passive: activePassive,
+                                              currentMastery: currentMastery,
                                             ),
                                             onTap: () {
                                               if (_hasMythicChoices &&
@@ -481,6 +487,7 @@ class _DraftScreenState extends ConsumerState<DraftScreen>
                                           l10n,
                                           choice,
                                           passive: activePassive,
+                                          currentMastery: currentMastery,
                                         ),
                                         onTap: () {},
                                         rarity: DraftChoiceLabels.rarityToString(
