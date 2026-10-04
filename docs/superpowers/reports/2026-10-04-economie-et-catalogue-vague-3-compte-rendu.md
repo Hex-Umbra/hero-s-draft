@@ -3,7 +3,7 @@
 **Chantier** : « Économie unifiée et catalogue » — déroulé par le [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche §8.3.
 **Branche** : `feat/v0.5.5-p43-e3-trouvaille`, ouverte le 03/10/2026 depuis `main` à `bca35c5` (fusion de la vague 2).
 **Ouvert le** : 04/10/2026, à la fin du plan de la partie 1 (§3.5). Complété à la fin de la vague (§3.8).
-**État** : **en cours** — les deux parties sont implémentées ; restent la référence de la simulation, la note de version et la mémoire.
+**État** : **en cours** — les deux parties sont implémentées, la simulation relancée et sa référence recommitée ; restent la note de version et la mémoire.
 
 ---
 
@@ -224,6 +224,37 @@ Recopiées du registre de SDD avant la suppression de son espace de travail, dan
 | S13 | Les autres mineurs restent, triés par la revue d'ensemble ; deux partent à la file (§5) | Inatteignables par l'interface, antérieurs, ou imposés par le plan et justes aujourd'hui | Voir §5 |
 
 Mineurs différés pendant les revues de tâche, **tous laissés** après le tri de la revue d'ensemble, sauf le solde d'or (S11) : le tirage de runes du boss sur un `Random()` interne (imposé par le plan) ; l'écran de combat sans test d'écran (C2.5, gardé par les commandes de contrôle) ; le minuteur d'une notification évincée non annulé (antérieur, inoffensif) ; des `case` de badge dupliqués entre les deux variantes (motif existant) ; l'action `sharpen_rune` sans effet si aucune cible n'est donnée après la perte de PV — inatteignable, l'écran pousse toujours la sélection (à la file) ; l'état de chargement nu de la fiche des probabilités (inatteignable) ; le double appel de `raisableCaps` dans l'écran de draft ; sept rouleaux mythiques sur une fenêtre moyenne (trois jets à 0,5 % simultanés au moins) ; un test de boutique probabiliste ; la relecture du bonus par ligne au Puits ; « jamais sous 2 » écrit en dur dans *Flux de Mana* (juste aujourd'hui, à la file) ; des lignes longues, des littéraux et un `x as int` dans le script.
+
+---
+
+## 4. La simulation
+
+`tool/simulations/d26_economy_sim.dart`, relancé en deux temps (§3.6, D73), chaque fois par l'orchestrateur sur une extraction hors du dépôt du commit mesuré (`git archive <commit> tool/simulations assets/data`, spec §9), sortie vers `.superpowers/`, comparée par `git diff --no-index`. Les quatre mesures sont complètes (300 runs par configuration, 200 par levier) ; chacune a pris de 381 à 415 s.
+
+**Premier temps — le réalignement seul** (`ca0ba2f`, Task 11 de la partie 2). Les six entrées du brainstorm qu'E3 écrit en fichiers — les reliques A, C et de D42(a) (*Registre des primes*, *Sacoche du glaneur*, *Meule*), les événements de D23 et de D42(b) (*Colporteur*, *Rémouleur*), la mythique de D42(c) (*Transcendance*) — prennent la place exacte de leurs entrées en dur, rareté vérifiée. Mesure complète en 386 s : **diff vide** contre la référence, ligne « Données lues » comprise — elle compte les listes chargées, dont ces fichiers sont écartés (spec §1.3). La fumée `--quick` de la tâche l'avait déjà montré contre une fumée sur la base `9282513`.
+
+**Second temps — trois changements voulus, une relance chacun** (A28). Chaque retrait d'une entrée tirée par index décale tous les tirages qui suivent (D73) : l'écart touche presque toutes les lignes, mais les grandeurs que les décisions mesurées supposent restent dans le bruit.
+
+| Mesure, acte 15 (médiane, toutes configurations) | Réalignement `ca0ba2f` (= référence) | Relique B retirée `8c558bc` | Événement D29 retiré `2acfa6c` | Table d'XP du jeu `d8b2aef` |
+|:---|---:|---:|---:|---:|
+| Deck | 35 | 35 | 36 | 36 |
+| Fusions | 45 | 45 | 46 | 46 |
+| Σ niveaux de rune | 71 | 72 | 71 | 71 |
+| Or en réserve | 5900 | 5936 | 6002 | 6023 |
+| Niveau du héros | 30 | 30 | 30 | 30 |
+| Dégâts / tour | 659 | 680 | 681 | 678 |
+| `PlayerPower` (DDA) | 791 | 796 | 802 | 805 |
+| Budget d'un combat normal | 786 | 788 | 791 | 791 |
+| Quasi-morts | 234 | 228 | 226 | 229 |
+| Lignes de la sortie qui changent | — | 497 sur 798 | 498 sur 797 | 479 sur 787 |
+
+1. **La relique B retirée** (D57 ; `8c558bc`, mesure en 397 s). B quitte la réserve, sa variante `forced`, ses deux jets d'élite et le compte des exemplaires ; la variante de référence devient « A +25 %, dans la réserve », « A et C tenues dès l'acte 1 », et la ligne « Données lues » dit « 25 reliques (+ 3 du brainstorm) ». La variante « B +2 % par exemplaire » disparaît (798 → 797 lignes).
+2. **L'événement de fusion de D29 retiré** (D56 ; `2acfa6c`, 415 s). Il quitte la liste des événements, avec sa résolution et la ligne « Fusions par l'événement D29 » des onze tables qui la portaient (797 → 787 lignes) ; « 5 événements (+ 2 du brainstorm) ». Il donnait une fusion par run en médiane : les fusions n'en perdent pas, la place qu'il occupait dans les tirages revient aux autres événements.
+3. **La table d'XP du jeu** (D24, D67 ; `d8b2aef`, 381 s). La référence joue désormais `xp_curve.json` — 115 · 200 · 310 · 480 · 590 · 775 · 955 · 1100 · 1040 · 1185 · 1370 · 1370 · 1300 · 1375 · 1015 — au lieu de la table que le script recalait à chaque lancement (115 · 200 · 310 · 475 · 590 · 770 · 955 · 1080 · 1050 · 1190 · 1410 · 1345 · 1275 · 1380 · 1040 dans la référence d'avant, à −25 à +40 XP de D67 selon l'acte). **La calibration reste affichée** : une ligne « Table par acte (réf., `xp_curve.json`) » écrit la table lue, la ligne « Table par acte, calée » la table que la mesure recale encore (110 · 200 · 315 · 485 · 590 · 780 · 975 · 1085 · 1045 · 1190 · 1385 · 1365 · 1300 · 1340 · 1050), à quelques dizaines d'XP de D67 : le palier du jeu donne toujours deux niveaux par acte, le héros finit niveau 30. **L'écart de libellé, dit d'avance** : les trois libellés qui appelaient « actuelle » la DDA en `cartes × 2` et la courbe en `100 × 1,5^(n−1)` disent « d'avant E3 » (sept lignes), l'en-tête de colonne « Valeur calée » devient « Valeur », et la table de calibration gagne sa ligne neuve (787 → 788 lignes).
+
+**Ce que les décisions mesurées supposent ne bouge pas.** Deck de 35 à 36 cartes et 45 à 46 fusions à l'acte 15 (D56, D67) ; héros niveau 30 ; la DDA à 2 × Σ `fusionRank` donne un budget de 791 à l'acte 15, contre 808 pour la formule d'avant E3 en `cartes × 2` (D59) ; les quasi-morts restent entre 226 et 234. L'or qui dort à l'acte 15 monte de 5 900 à 6 023 : le constat de P-16 sur le puits d'or se confirme, sans relance de plus.
+
+**La référence est recommitée** sur la sortie de `d8b2aef` : la vague 4 se comparera à elle.
 
 ---
 
