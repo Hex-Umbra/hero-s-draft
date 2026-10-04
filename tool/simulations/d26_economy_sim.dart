@@ -76,7 +76,6 @@ class Params {
     this.normalGuaranteed = 1,
     this.eliteExtra = 0.25,
     this.relicAEliteBonus = 0.25,
-    this.relicBPerCopy = 0.01,
     this.d31Relics = 'pool',
     this.mirrorPool = 'mythic',
     this.exchange = 'none',
@@ -108,13 +107,9 @@ class Params {
   /// DÉFAUT 0,25 — valeur laissée à la simulation par D31.
   final double relicAEliteBonus;
 
-  /// D31, relique B (épique) : +1 % par exemplaire d'une seconde carte en
-  /// combat normal et d'une troisième en élite.
-  final double relicBPerCopy;
-
-  /// Les trois reliques de D31 : 'pool' (dans la réserve de reliques, A et C
-  /// rares, B épique — DÉFAUT), 'forced' (tenues dès l'acte 1, borne haute),
-  /// 'absent'.
+  /// Les deux reliques de D31, A et C, rares — B, que D57 supprime, n'existe
+  /// plus : 'pool' (dans la réserve de reliques — DÉFAUT), 'forced' (tenues
+  /// dès l'acte 1, borne haute), 'absent'.
   final String d31Relics;
 
   /// Q3 : le Miroir (`cloneCard`) en pool 'mythic' (aujourd'hui) ou 'draft'.
@@ -186,7 +181,6 @@ class Params {
     int? normalGuaranteed,
     double? eliteExtra,
     double? relicAEliteBonus,
-    double? relicBPerCopy,
     String? d31Relics,
     String? mirrorPool,
     String? exchange,
@@ -211,7 +205,6 @@ class Params {
         normalGuaranteed: normalGuaranteed ?? this.normalGuaranteed,
         eliteExtra: eliteExtra ?? this.eliteExtra,
         relicAEliteBonus: relicAEliteBonus ?? this.relicAEliteBonus,
-        relicBPerCopy: relicBPerCopy ?? this.relicBPerCopy,
         d31Relics: d31Relics ?? this.d31Relics,
         mirrorPool: mirrorPool ?? this.mirrorPool,
         exchange: exchange ?? this.exchange,
@@ -234,7 +227,7 @@ class Params {
       );
 
   String get key => [
-        normalGuaranteed, eliteExtra, relicAEliteBonus, relicBPerCopy,
+        normalGuaranteed, eliteExtra, relicAEliteBonus,
         d31Relics, mirrorPool, exchange, wellEvery, altar, sharpenB, wellBase,
         sharpenStrategy, xpCurve, xpConstant, xpTable.join(','), xpLevelScaling, ddaK,
         ecoQuickMinRank, maxLevelTable, blessingD43, onlyFind, mightBudget,
@@ -688,14 +681,13 @@ const starterNeutralPicks = {
 };
 
 /// Les reliques du brainstorm. D31 : A « monte la chance de seconde carte en
-/// élite » (rare), B « une épique » (+1 %), C « une carte garantie de plus »
-/// (rare). D42a : une légendaire porte au-delà de 1 le nombre de runes
-/// affûtées par la récompense de boss « XP ». A, C et D42a sont des fichiers
-/// depuis E3 (`brainstormRelicFiles`) : leurs définitions se construisent sur
-/// eux au chargement (`GameData.load`), à la place exacte de leur entrée en
-/// dur ; B reste en dur.
+/// élite » (rare), C « une carte garantie de plus » (rare) — B, que D57
+/// supprime, n'existe plus. D42a : une légendaire porte au-delà de 1 le
+/// nombre de runes affûtées par la récompense de boss « XP ». Toutes sont des
+/// fichiers depuis E3 (`brainstormRelicFiles`) : leurs définitions se
+/// construisent sur eux au chargement (`GameData.load`), à la place exacte
+/// de leur entrée en dur.
 RelicDef get relicD31A => data.relicD31A;
-const relicD31B = RelicDef('d31_b_lucky', 3, 'special', 'd31b', 0);
 RelicDef get relicD31C => data.relicD31C;
 RelicDef get relicD42 => data.relicD42;
 
@@ -2204,7 +2196,7 @@ class Run {
       deck.add(CardInst(byId[id]!, 0));
     }
     if (p.d31Relics == 'forced') {
-      for (final r in [relicD31A, relicD31B, relicD31C]) {
+      for (final r in [relicD31A, relicD31C]) {
         gainRelic(r);
       }
     }
@@ -2612,7 +2604,7 @@ class Run {
 
   List<RelicDef> get relicPool => [
         ...data.relics,
-        if (p.d31Relics == 'pool') ...[relicD31A, relicD31B, relicD31C],
+        if (p.d31Relics == 'pool') ...[relicD31A, relicD31C],
         relicD42,
       ];
 
@@ -2915,14 +2907,10 @@ class Run {
     if (res.stalemate) inc('stalemates');
     rewardFoes(foes, boss: false, elite: elite);
     if (elite) gainRelic(drawRelic(rollRelicRarity())); // :106-165
-    // D31 : la table `cardDrops`, puis les reliques A, B, C.
+    // D31 : la table `cardDrops`, puis les reliques A et C (D57).
     var n = elite ? 1 : p.normalGuaranteed + copies(relicD31C.id);
-    if (elite) {
-      if (rng.nextDouble() < p.eliteExtra + p.relicAEliteBonus * copies(relicD31A.id)) {
-        n++;
-        if (rng.nextDouble() < p.relicBPerCopy * copies(relicD31B.id)) n++;
-      }
-    } else if (rng.nextDouble() < p.relicBPerCopy * copies(relicD31B.id)) {
+    if (elite &&
+        rng.nextDouble() < p.eliteExtra + p.relicAEliteBonus * copies(relicD31A.id)) {
       n++;
     }
     for (var i = 0; i < n; i++) {
@@ -3417,8 +3405,7 @@ class Run {
       'xpAct': actXp,
       'evolutions': 2.0 * (level ~/ 5), // D19, D21 : tous les 5 niveaux
       'relics': relics.length.toDouble(),
-      'd31Copies': (copies(relicD31A.id) + copies(relicD31B.id) + copies(relicD31C.id))
-          .toDouble(),
+      'd31Copies': (copies(relicD31A.id) + copies(relicD31C.id)).toDouble(),
       'power': avg('power'),
       'budget': avg('budget'),
       'budgetCur': budgetUnder(deck.length * 2.0),
@@ -3786,11 +3773,10 @@ List<Lever> buildLevers(Params ref, Params t3, Params k2, Params k2flat) => [
         'first:firstFusion', 'first:firstRare', 'first:firstEpic',
       ]),
       Lever('Reliques de trouvaille', 'D31', [
-        Variant('**A +25 %, B +1 %, dans la réserve** (réf.)', ref),
+        Variant('**A +25 %, dans la réserve** (réf.)', ref),
         Variant('A +15 %', ref.copyWith(relicAEliteBonus: 0.15)),
         Variant('A +50 %', ref.copyWith(relicAEliteBonus: 0.5)),
-        Variant('B +2 % par exemplaire', ref.copyWith(relicBPerCopy: 0.02)),
-        Variant('A, B, C tenues dès l’acte 1', ref.copyWith(d31Relics: 'forced')),
+        Variant('A et C tenues dès l’acte 1',ref.copyWith(d31Relics: 'forced')),
         Variant('Reliques absentes', ref.copyWith(d31Relics: 'absent')),
       ], [
         'd31Copies@5', 'd31Copies@15', 'found@15', 'deck@15', 'fusions@15',
@@ -3981,7 +3967,7 @@ Future<void> main(List<String> args) async {
   out.writeln();
   out.writeln('Données lues : ${data.enemies.length} ennemis, '
       '${data.neutrals.length} neutres (noyau de ${coreNeutralIds.length}), '
-      '${data.relics.length} reliques (+ 4 du brainstorm), '
+      '${data.relics.length} reliques (+ 3 du brainstorm), '
       '${data.rewards.length} récompenses de niveau, ${data.runes.length} runes, '
       '${data.events.length} événements (+ 3 du brainstorm).');
   out.writeln();
