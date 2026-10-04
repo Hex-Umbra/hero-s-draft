@@ -11,6 +11,10 @@ d'un champ `requires` sur le modèle qu'il a créé. Consomme le point d'accès 
 neuf passifs livrés par [ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md).
 Applique la règle d'[ADR-090](ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) :
 aucun écran ne compare un `hero.id`.
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
+sur la branche de la vague 3, en attente du propriétaire) sur D1 : une seconde exigence,
+`raisableRune` ; `isAvailableWith` reçoit `hasRaisableRune`, que l'écran de draft calcule sur le
+deck — le conditionnement reste un mécanisme de la donnée.
 
 ### Contexte
 

@@ -4,7 +4,7 @@
 
 **État (`ShopState`) — l'étal**, tiré une fois par nœud de boutique et retenu, achats compris,
 jusqu'à ce que le nœud courant de la run change ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md),
-P-43 E2, branche de la vague 2, en attente du propriétaire) :
+P-43 E2, vague 2, fusionnée dans `main` le 2026-10-03) :
 - `cardsForSale` : `List<CardInstance>` — les cartes en vente, pré-forgées et relancées comprises.
 - `purchasedHeal` : `bool` — le soin unique du nœud est-il acheté.
 - `cloneOptions` : `List<CardInstance>` — les trois choix du Miroir Magique, tirés à sa première ouverture.
@@ -35,8 +35,10 @@ P-43 E2, branche de la vague 2, en attente du propriétaire) :
   reste aucune rune éligible en reçoit moins.
 - `_rollRandomUpgrade(card, rng)` (privé) : une rune par `ForgeRuneRules.drawRunes(card, catalogue,
   rng, count: 1)` — le tirage de la fusion, sur la carte **avec les runes déjà tirées**, au rang de
-  la carte —, puis un niveau 1, 2 ou 3 à 80/15/5 %, **borné par `maxLevel`**. Une rune ne se repose
-  jamais deux fois sur une même pré-forgée.
+  la carte —, puis un niveau 1, 2 ou 3 à 80/15/5 %, **borné par `maxLevel`** — par le plafond
+  effectif sur la branche de la vague 3 : `boundLevel(tier, capBonus:)`, le bonus lu sur
+  `ref.read(runProvider).runeCapBonus` ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)).
+  Une rune ne se repose jamais deux fois sur une même pré-forgée.
 - `_drawDeckCopy(rng)` (privé) et `buyDeckCopy()` : la copie (D46) — une carte uniforme de
   `DeckState.copyableCards`, recréée `CardInstance(data, rarity)`, sans rune, identifiant neuf ;
   achetée au prix `getCardPrice` d'une carte sans rune de sa rareté, elle rejoint le deck et quitte

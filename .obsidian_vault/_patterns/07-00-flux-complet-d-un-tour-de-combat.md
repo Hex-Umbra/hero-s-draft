@@ -7,7 +7,7 @@
        │   ├→ Purge des statuts du combat précédent, mana = maxMana
        │   ├→ applyRelics(startOfCombat)
        │   └→ TraitSystem.onTurnStart(runController)   (ex: Berserker)
-       └→ DeckNotifier.startCombat(handSize: cardsPerTurn, maxHandSize: 10)
+       └→ DeckNotifier.startCombat(handSize: cardsPerTurn, maxHandSize: RunState.maxHandSize)
 
 1. DÉBUT TOUR JOUEUR
    └→ CombatController.startPlayerTurn()   [TurnPhaseManager]
@@ -17,7 +17,7 @@
        │   ├→ Process statuts: poison (dégâts), strength_regen (→strength), armor_regen (→armure)
        │   ├→ tickStatuses() (décrémente durées, supprime expirés)
        │   └→ TraitSystem.onTurnStart(runController)
-       └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: 10)
+       └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: RunState.maxHandSize)
            └→ remélange à sec si la pioche se vide en cours de route
 
 2. JOUEUR JOUE UNE CARTE
@@ -54,8 +54,10 @@
    └→ _cleanDeadEnemies() détecte 0 ennemis
        ├→ isCombatEnded = true, isVictory = true
        └→ onEnemiesDead callback → UI (GameScreen) délègue la gestion des récompenses à RewardController :
-           ├→ RewardController.handleVictory() : calcule l'XP et l'or de façon unifiée (scaling par niveau de monstre de +10% par niveau), et résout les tirages de reliques ou de cartes selon bossRewardType.
+           ├→ RewardController.handleVictory() : calcule l'XP et l'or de façon unifiée (scaling par niveau de monstre de +10% par niveau), et résout les tirages de reliques ou de cartes selon bossRewardType — et, branche de la vague 3, la trouvaille (foundCards) d'un combat normal ou d'une élite.
            ├→ Le joueur clique pour récupérer l'XP et l'or : RewardController.collectGoldAndXp()
+           │   └→ branche de la vague 3 : cartes trouvées ajoutées au deck ; boss « XP » : runes montées (sharpenedRunes) ;
+           │      une notification par carte et par rune, NotificationNotifier.maxVisible = 5 (4 avant)
            ├→ SI LEVEL UP : Déclenche l'affichage en plein écran de la bannière festive « LEVEL UP ! »
            │   └→ Redirection du joueur vers l'écran DraftScreen amélioré (sélection de récompense de niveau)
            ├→ SI BOSS/ELITE : Affichage séquentiel du carrousel de relique (collecte/skip gérés par RewardController)
@@ -68,4 +70,6 @@
 > ne fait qu'appeler les deux façades et animer le résultat. À l'intérieur de chacune,
 > l'ordre `RunController` **puis** `DeckNotifier` est un invariant : l'inverser décalerait
 > toute relique `startOfTurn` d'un tour entier. Voir
-> [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
+> [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). La borne de
+> main passée aux deux pioches est `RunState.maxHandSize` sur la branche de la vague 3, et non
+> plus la constante 10 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)).

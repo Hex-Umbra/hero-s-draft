@@ -4,8 +4,9 @@ Pour offrir un défi adapté aux choix stratégiques du joueur tout en évitant 
 
 1. **Mécanique de Difficulté Dynamique (DDA Hybride)** :
    La difficulté ajuste la composition des combats selon un budget de menace calculé en comparant la puissance réelle du joueur avec celle théoriquement attendue :
-   - **Puissance Réelle du Joueur (`PlayerPower`)** : Évaluée en agrégeant ses PV max, sa Puissance permanente (`might` — [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)), son mana maximum, son nombre de reliques, et le nombre de cartes dans son deck principal :
-     $$\text{PlayerPower} = \text{maxHP} + (\text{might} \times 10) + (\text{maxMana} \times 15) + (\text{relicsCount} \times 5) + (\text{playerCardsCount} \times 2.0)$$
+   - **Puissance Réelle du Joueur (`PlayerPower`)** : Évaluée en agrégeant ses PV max, sa Puissance permanente (`might` — [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)), son mana maximum, son nombre de reliques, et **la qualité de son deck principal — la somme des rangs de fusion de ses cartes**, et non plus leur nombre :
+     $$\text{PlayerPower} = \text{maxHP} + (\text{might} \times 10) + (\text{maxMana} \times 15) + (\text{relicsCount} \times 5) + (2 \times \Sigma\,\text{fusionRank})$$
+     `DeckState.fusionRankSum` somme `card.rarity.fusionRank` sur le master deck — 0 pour une commune comme pour une signature `unique`, puis 1 à 4 de la peu commune à la légendaire ; `EncounterSystem.calculateBudget` le reçoit en `deckFusionRanks`. Des cartes trouvées, toujours communes, ne rendent donc plus les combats plus durs ; leurs fusions, oui. Depuis le lot E3 de P-43 (D47, D59 — branche de la vague 3, en attente du propriétaire, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)), à la place de `playerCardsCount × 2`.
    - **Puissance Attendue (`ExpectedPower`)** : Modèle de progression théorique basé sur le niveau du joueur et l'acte en cours :
      $$\text{ExpectedPower} = 145 + [(\text{playerLevel} - 1) \times 15] + [(\text{act} - 1) \times 20]$$
    - **Ajustement Amorti (`PowerModifier`)** : Un ratio de puissance amorti à $0.5$ pour éviter les sauts brusques de difficulté :

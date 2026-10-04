@@ -1,6 +1,6 @@
 ### 3.5. 🎒 Système de Reliques
 
-**25 reliques**, un fichier par relique sous `assets/data/relics/` (au lieu de 14 initialement, équilibrant le pool commun), organisées par déclencheurs et types d'effets :
+**28 reliques**, un fichier par relique sous `assets/data/relics/` (au lieu de 14 initialement, équilibrant le pool commun) — re-compté le 2026-10-04 (`ls assets/data/relics | wc -l`) sur la branche de la vague 3, qui en ajoute trois (25 sur `main`) —, organisées par déclencheurs et types d'effets :
 
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|
@@ -29,6 +29,9 @@
 | `fortune_dice` | Dés de Fortune | Legendary | startOfRun | gain_luck | 2 | +2 Chance de manière permanente pour toute la run. |
 | `crown_kings` | Couronne des Rois | Legendary | startOfRun | gain_mana | 1 | Gagne 1 Mana Max de manière permanente au début de la run. |
 | `scholars_satchel` | Besace de l'Érudit | Legendary | startOfRun | increase_cards_per_turn | 1 | Pioche 1 carte supplémentaire au début de chaque tour, pour toute la run. |
+| `bounty_ledger` | Registre des primes | Rare | startOfRun | increase_elite_card_chance | 25 | Après un combat d'élite, +25 % de chance de trouver une seconde carte. |
+| `gleaners_pouch` | Sacoche du glaneur | Rare | startOfRun | increase_combat_card_drops | 1 | Après un combat normal, trouvez une carte de plus. |
+| `grindstone` | Meule | Legendary | startOfRun | increase_boss_rune_sharpens | 1 | La récompense du Boss d'XP fait gagner un niveau à une rune de plus, si l'une peut encore monter. |
 
 > [!NOTE]
 > **`increase_cards_per_turn` est le premier `effectType` qui touche au deck.** Il agit sur
@@ -39,8 +42,20 @@
 > qui modifie une règle de run plutôt qu'une statistique.
 > Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
 
+> [!NOTE]
+> **Trois règles de run de plus, sur le même modèle** (lot E3 de P-43 — branche de la vague 3, en
+> attente du propriétaire, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : le
+> *Registre des primes* et la *Sacoche du glaneur* (D31, D57, toutes deux rares) modulent la
+> trouvaille ([`_rules/06-00`](06-00-economie-de-jeu.md) §6.4), la *Meule* (D42(a), légendaire)
+> la récompense du boss « XP » ([`_rules/02-1`](02-1-generation-procedurale-de-carte.md)). Chacune
+> écrit un champ de `RunState` — `eliteCardChanceBonus`, `extraCombatCards`,
+> `extraBossRuneSharpens` — par `PlayerStatsManager.applyRunRuleModifier`, le seul à en recevoir
+> les accumulateurs, et le défait symétriquement dans `removeRelicEffect` : à l'Autel comme au
+> *Colporteur*, qui cède une relique par `RunController.loseRelic`. Plusieurs exemplaires
+> s'additionnent. Aucune n'est exclue du tirage de la relique que vise le *Colporteur*.
+
 **Cycle de vie des triggers** :
-- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`), et **retiré symétriquement** par `removeRelicEffect()` lors d'un sacrifice à l'Autel d'Échange.
+- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`), et **retiré symétriquement** par `removeRelicEffect()` lors d'un sacrifice à l'Autel d'Échange — ou, sur la branche de la vague 3, de la relique cédée au *Colporteur* (`RunController.loseRelic`).
 - `startOfCombat` : Via `RunController.startCombat()`.
 - `startOfTurn` / `endOfTurn` : Via `RunController.startTurn()` / `TraitSystem.onTurnEnd()`.
 - `onCardPlayed` : Via `CombatController.applyPlayerCardPlay()`.

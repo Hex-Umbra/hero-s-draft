@@ -6,7 +6,7 @@
 ### Statut
 ✅ Accepté & Implémenté (v3.1.0)
 ⚠️ **Amendé, et son point 2 rendu caduc, le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)**
-(P-43, lot E2, livré sur branche, en attente du propriétaire) : le nœud devient le Puits d'échange,
+(P-43, lot E2, fusionné dans `main` le 2026-10-03 par la PR #48) : le nœud devient le Puits d'échange,
 tous les trois actes au lieu de 25 %, au coût de `50 × niveau donné` au lieu de `80 × (N − 1)`, un
 échange par visite ; le cumul de plusieurs exemplaires d'une même rune sur une carte disparaît — une
 rune par type.

@@ -3,7 +3,7 @@
 ### Statut
 ✅ Accepté & Implémenté
 ⚠️ **Point 4 rendu caduc le 2026-10-02 par [ADR-106](ADR-106-fusion-egale-forge.md)** (P-43, lot E2,
-livré sur branche, en attente du propriétaire) : plus de capacité ni de choix d'héritage, la fusion
+fusionné dans `main` le 2026-10-03 par la PR #48) : plus de capacité ni de choix d'héritage, la fusion
 garde toutes les runes de ses trois exemplaires.
 
 ### Contexte

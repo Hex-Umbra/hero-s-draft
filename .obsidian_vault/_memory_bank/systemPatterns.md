@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 300 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-10-02** — 45 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-10-04** — 45 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -14,41 +14,41 @@
 |:---|:---|---:|
 | 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
 | 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 78 |
-| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 40 |
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 71 |
+| 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 41 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 75 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 94 |
-| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 133 |
-| 10. Architecture du Système de Runes et de Fusion de Cartes (Runes & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 130 |
-| 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 58 |
+| 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 146 |
+| 10. Architecture du Système de Runes et de Fusion de Cartes (Runes & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 171 |
+| 11. Système de Reliques Avancé : Déclencheurs de Cartes Spécifiques et Charges | [11-00-systeme-de-reliques-avance-declencheurs-de-ca.md](../_patterns/11-00-systeme-de-reliques-avance-declencheurs-de-ca.md) | 71 |
 | 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
 | 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
-| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 108 |
-| 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 114 |
-| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 131 |
+| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 125 |
+| 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 124 |
+| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 151 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`) | [02-00-role-des-controleurs-et-architecture-modulair.md](../_patterns/02-00-role-des-controleurs-et-architecture-modulair.md) | 5 |
-| 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 27 |
+| 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 39 |
 | 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 16 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 31 |
-| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 33 |
-| 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 49 |
-| 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 61 |
+| 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 35 |
+| 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 60 |
+| 2.5. `ShopController` (`shopProvider`) | [02-5-shopcontroller.md](../_patterns/02-5-shopcontroller.md) | 63 |
 | 2.5. Immutabilité Stricte des Modèles d'État | [02-5-immutabilite-stricte-des-modeles-d-etat.md](../_patterns/02-5-immutabilite-stricte-des-modeles-d-etat.md) | 4 |
 | 2.6. `InventoryController` (`inventoryProvider`) | [02-6-inventorycontroller.md](../_patterns/02-6-inventorycontroller.md) | 7 |
-| 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat | [02-8-rewardcontroller-pilote-des-recompenses-de-co.md](../_patterns/02-8-rewardcontroller-pilote-des-recompenses-de-co.md) | 32 |
+| 2.8. `RewardController` (`rewardProvider`) — Pilote des Récompenses de Combat | [02-8-rewardcontroller-pilote-des-recompenses-de-co.md](../_patterns/02-8-rewardcontroller-pilote-des-recompenses-de-co.md) | 34 |
 
 ### 3. Systèmes Transversaux (`lib/game/systems/`)
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage | [03-1-encountersystem-generateur-de-combats-courbes.md](../_patterns/03-1-encountersystem-generateur-de-combats-courbes.md) | 79 |
+| 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage | [03-1-encountersystem-generateur-de-combats-courbes.md](../_patterns/03-1-encountersystem-generateur-de-combats-courbes.md) | 87 |
 | 3.2. `MapGeneratorService` — Générateur de Graphe de Carte du Monde (DAG World Map) | [03-2-mapgeneratorservice-generateur-de-graphe-de-c.md](../_patterns/03-2-mapgeneratorservice-generateur-de-graphe-de-c.md) | 21 |
-| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 81 |
+| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 91 |
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 41 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 16 |
@@ -75,5 +75,5 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 159 |
+| 19. Éditeur de Contenu — Seam Disque, Validation, Écriture (P-30, lot 2) | [19-00-editeur-de-contenu-seam-disque-validation-ecriture.md](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) | 165 |
 | 19.5. Éditeur de Contenu — Interface : Formulaire Inféré et Habillage « Éditeur » | [19-5-editeur-de-contenu-interface.md](../_patterns/19-5-editeur-de-contenu-interface.md) | 90 |

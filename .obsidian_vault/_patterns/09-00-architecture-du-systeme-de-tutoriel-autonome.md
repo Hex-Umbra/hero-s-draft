@@ -77,6 +77,14 @@ une étape ne décale pas le câblage. `baseStatsForHero()` dérive les statisti
 la classe choisie (`maxHp`, `maxMana`, `mastery`, `luck`) et ne retombe sur les valeurs
 de repli 80 PV / 3 mana que tant que l'étape 02 n'a pas été franchie.
 
+**Le palier d'XP n'est plus un champ** (branche de la vague 3 —
+[ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A8, A27) : `mockState.xpToNextLevel`
+et sa formule géométrique ont disparu ; le getter **`TutorialEngine.xpThreshold`** rend
+`data.xpCurve!.thresholdFor(1)` — la fonction pure du jeu, sur le registre du tutoriel, qui passe
+toujours par `loadGameDataRegistry` et porte donc toujours la courbe. `gainXp` et
+`TutorialXpWidget` le lisent. Aucun provider n'entre : la courbe vient du registre reçu par
+constructeur, jamais de `xpCurveProvider`.
+
 > [!NOTE]
 > **Tout drapeau d'étape vit dans `TutorialMockState`, pas dans le moteur.** Trois fois
 > pendant P-45, un drapeau porté par `TutorialEngine` a été oublié à la réinitialisation et
@@ -113,7 +121,12 @@ invaliderait la classe et le deck déjà consommés en aval. Le test de bord est
 `TutorialData` porte les 15 étapes en paires bilingues (`titleFr`/`titleEn`,
 `bodyFr`/`bodyEn`), traduites à la volée selon la locale active **sans passer par
 `AppLocalizations`** — le module reste greffable sans toucher aux ARB. Le corps des étapes
-accepte `**gras**`, rendu par `parseBoldSegments` + `Text.rich` dans `TutorialScreen`. En
+accepte `**gras**`, rendu par `parseBoldSegments` + `Text.rich` dans `TutorialScreen`.
+**Les chiffres que la donnée porte passent par des placeholders**, remplis par des fonctions
+pures de `tutorial_prose.dart` que `TutorialScreen` enchaîne sur son registre :
+`fillRewardPlaceholders` (les récompenses de niveau, ADR-098 D7) puis, sur la branche de la
+vague 3, `fillXpPlaceholders(body, curve)` — `{xpAct1}`, `{xpAct2}`, le prix d'un niveau aux
+actes 1 et 2 (A26). En
 revanche les libellés de jeu (raretés, récompenses de draft, types de nœuds) ne sont pas
 réécrits : ils sont partagés avec les écrans de production.
 

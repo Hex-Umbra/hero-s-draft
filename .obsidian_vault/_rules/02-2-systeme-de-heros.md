@@ -84,15 +84,30 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 |:---:|:---|:---|:---|:---|:---|:---|
 | 1 | `regen_armor` | Paladin | `endOfTurn` | `gain_armor` | 2 | +2 armure à chaque fin de tour |
 | 2 | `fervor` | Paladin | `onDamageTaken` | `fervor` | 1, durée 2 | Quand l'armure encaisse des dégâts, +1 Puissance pendant 2 tours |
-| 3 | `blessing` | Paladin | `startOfTurn` | `blessing` | 1 | Chaque tranche de 5 d'**armure survivante** devient 1 PV |
+| 3 | `blessing` | Paladin | `startOfTurn` | `blessing` | 1, seuil 5 | Chaque tranche de 5 d'**armure survivante** devient 1 PV |
 | 1 | `rage` | Berserker | `startOfTurn` | `rage` | 1, durée 1 | +1 Puissance pour le tour, +1 par tranche de 10 PV manquants |
 | 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
 | 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
 | 1 | `channeling` | Mage | `endOfTurn` | `channeling` | 1 | Chaque Mana non dépensé devient 1 armure |
 | 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | 1, durée 2 | La **première** Attaque du tour rend sa cible Vulnérable 2 tours |
-| 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour |
+| 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3, plancher 2 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour ; la Maîtrise abaisse le seuil, jamais sous 2 |
 
 > [!NOTE]
 > Les valeurs ci-dessus sont des **valeurs d'équilibrage, pas de conception** : chaque fichier porte
 > la sienne et les changer ne demande aucun code. La Maîtrise augmente le paramètre que le bloc
 > `mastery` du passif désigne — `value`, `duration` ou `threshold`.
+
+**Deux seuils passent en donnée au lot E3 de P-43** (D43, D60 — branche de la vague 3, en attente
+du propriétaire, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) :
+- ***Bénédiction*** lit sa tranche dans `threshold` (5) au lieu d'une constante de sa stratégie ;
+  un seuil sous 1 ne fait rien, sans exception en combat. La Maîtrise monte toujours `value`, les
+  PV par tranche, sans plancher.
+- ***Flux de Mana*** gagne un **plancher** dans son bloc `mastery` : `floor: 2`, appliqué par
+  `PassiveData.withMastery` — le seuil vaut `max(2, 3 − Maîtrise)`. Le plancher codé dans la
+  stratégie, inerte, a disparu ; un `floor` n'est admis que sur un `perPoint` négatif, et jamais
+  au-dessus de la valeur de base du paramètre.
+- **L'effet affiché de la Maîtrise dit ce qu'elle change vraiment**, plancher compris :
+  `PassiveData.describeMastery(locale, from:, to:)` écrit l'écart du paramètre entre deux nombres
+  de points. La fiche des stats (de 0 à la Maîtrise effective, la ligne masquée quand l'écart est
+  nul), l'écran de sélection (de 0 à 1) et la carte d'*Affinité* (de la Maîtrise effective à la
+  même plus le gain, le repli « sans effet sur votre passif » quand rien ne change) le lisent.

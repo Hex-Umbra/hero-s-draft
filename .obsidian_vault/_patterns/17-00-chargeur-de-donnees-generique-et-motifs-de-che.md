@@ -13,7 +13,7 @@
 | Classe | Rôle |
 |:---|:---|
 | `EntitySource<T>` | Une catégorie : **où** trouver les fichiers (`pattern`), **comment** les construire (`fromJson`), et **ce que leur emplacement dit d'elles** (`inject`) |
-| `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes |
+| `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes. Sur la branche de la vague 3, il charge aussi les **documents plats** (§17.7) |
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
 déclaration des neuf sources du jeu**. Le provider de production et le registre des tests du
@@ -88,6 +88,23 @@ l'énumération du disque.
 L'audio reste **hors du chargeur** : `loadAudioData` ne lève jamais, fichier absent ou
 malformé valant catalogue désactivé. C'est le seul sous-système auquel il est interdit de
 faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-systeme-audio.md).
+
+### 17.7. Les documents plats — `loadDocument`
+
+*Branche de la vague 3, en attente du propriétaire —
+[ADR-107](../_adr/ADR-107-trouvaille-et-progression.md) (A1, A27).*
+`Future<T?> loadDocument<T>(String path, T Function(Map<String, dynamic>) fromJson)` charge **un
+document de configuration**, pas une catégorie d'entités : ni motif, ni injection, ni id. Il lit par
+le même `_read(key)` que les entités — généralisé d'un appariement à un chemin —, donc **avec
+`cache: false`**, pour les trois raisons de §17.5 : les tests de widget du tutoriel reconstruisent le
+registre à chaque `testWidgets`. Un fichier absent, un JSON illisible ou un `fromJson` qui lève
+rendent `null` et **accumulent leur faute avec celles des entités**, que `throwIfFailed` remonte en
+une fois. Un seul document passe par là : `assets/data/xp_curve.json`, que `loadGameDataRegistry`
+charge avant `throwIfFailed` — **à la différence de l'audio, la courbe d'XP fait échouer le
+démarrage** (`game_data_loader_test.dart` le garde). Le registre la porte en `xpCurve`,
+**optionnel** comme `levelUpRewards`, pour les dizaines de registres de test construits à la main :
+`loadGameDataRegistry` la renseigne toujours, et tout lecteur du palier lève sans elle —
+`xpCurveProvider` par une `StateError` explicite.
 
 ### 17.6. Ce qui garde la structure
 

@@ -10,7 +10,8 @@
 
 ```
 assets/data/
-├── audio.json, patch_notes.json    # à plat : documents de configuration, pas des catalogues
+├── audio.json, patch_notes.json,   # à plat : documents de configuration, pas des catalogues
+│   xp_curve.json
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
 ├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
@@ -21,7 +22,14 @@ assets/data/
 s'il est un document de configuration unique** — [ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md).
 `audio.json` est une table de résolution dont les entrées n'ont de sens que les unes par
 rapport aux autres ; dans `patch_notes.json`, l'ordre du tableau **est** la sémantique
-(index 0 = version courante) et six consommateurs hors du jeu en dépendent.
+(index 0 = version courante) et six consommateurs hors du jeu en dépendent. **`xp_curve.json`**
+(branche de la vague 3, en attente du propriétaire —
+[ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) porte une seule table,
+`xpPerLevelByAct` — le prix d'un niveau par acte ([`_rules/06-00`](06-00-economie-de-jeu.md)
+§6.5) —, lue par `XpCurveData` (`lib/models/data/xp_curve_data.dart`) : une liste non vide
+d'entiers d'au moins 1, refusée sinon. Comme `audio.json`, elle n'a ni id ni dossier et reste hors
+de l'éditeur de contenu ; **à sa différence, son absence ou sa faute fait échouer le démarrage**,
+avec les fautes des entités.
 
 Un dossier de classe ou d'ennemi est **auto-suffisant**, image comprise : l'ajouter, c'est
 créer un dossier, pas toucher quatre fichiers dispersés.
@@ -45,7 +53,9 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
 déclaration des neuf sources du jeu** ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
-en une fois, en nommant fichier et champ.
+en une fois, en nommant fichier et champ. Sur la branche de la vague 3, elle charge aussi la
+courbe d'XP, un document plat, par `GameDataLoader.loadDocument`, avant la levée ; le registre la
+porte en `xpCurve`, que lit `xpCurveProvider`.
 
 Mécanique complète du chargeur — [`_patterns/17-00`](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md).
 
@@ -63,6 +73,8 @@ EntityStats.statuses ────────────► List<StatusEffect>
 CombatState.enemies ─────────────► List<EnemyInstance>
 EventState.activeEvent ──────────► EventData
 EventState.selectedChoice ───────► EventChoice
+EventState.tradedRelic ──────────► RelicData (la relique que vise trade_relic, branche de la vague 3)
+RunState.runeCapBonus ───────────► ForgeUpgradeData.id (bonus de plafond par rune, branche de la vague 3)
 InventoryState.relics ───────────► List<RelicData>
 ShopState.cardsForSale ──────────► List<CardInstance>
 GameDataRegistry ────────────────► List<T> pour chaque type de données

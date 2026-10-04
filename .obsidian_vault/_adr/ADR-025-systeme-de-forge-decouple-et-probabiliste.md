@@ -6,7 +6,7 @@ le 2026-09-15** (P-40 bloc 2) : la capacité vaut `baseMaxForgeUpgrades + forgeS
 `+ rarityIndex`, pour qu'une carte `unique` n'ajoute aucun emplacement. Rien ne change pour les cinq
 raretés de l'échelle.
 ⚠️ **Caduc le 2026-10-02 pour tout ce qui en restait**, par [ADR-106](ADR-106-fusion-egale-forge.md)
-(P-43, lot E2, livré sur branche, en attente du propriétaire) : la capacité, les fentes tirées, les
+(P-43, lot E2, fusionné dans `main` le 2026-10-03 par la PR #48) : la capacité, les fentes tirées, les
 pools, la relance et le dialogue au feu disparaissent. Le tirage de niveau 80 · 15 · 5 % ne vit plus
 qu'en boutique, pour les cartes pré-forgées.
 
