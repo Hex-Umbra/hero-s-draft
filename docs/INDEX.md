@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-10-05
+**Dernière mise à jour** : 2026-10-06
 
 ---
 
@@ -171,7 +171,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | | Document | Date |
 |:---:|:---|:---|
 | 🔍 | [Audit — le développement assisté par IA, comparé à ce que font les autres](possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) — la chaîne brainstorm → revue → spec → plan → vagues, mesurée sur les trois vagues livrées et confrontée aux forums, aux frameworks (Superpowers, GSD, Spec Kit, BMAD…) et à la documentation d'Anthropic ; treize recommandations classées, un essai mesuré proposé sur la vague 4 ; **rien n'est tranché** | 05/10/2026 |
-| 🔍 | [Modèle — le fichier d'orchestration d'un chantier livré par vagues](possible_upgrades/05-10-2026_modele_orchestration_par_vagues.md) — le squelette à copier pour ouvrir un chantier, tiré du fichier d'orchestration en cours et des recommandations de l'audit ; gabarits d'agents, esquisses de hook, de script et de skill ; **proposition, non adoptée** | 05/10/2026 |
+| 🔍 | [Modèle — l'orchestration d'un chantier livré par vagues](possible_upgrades/05-10-2026_modele_orchestration_par_vagues.md) — cinq couches (agents, méthode, outillage, chantier, vague) et un répertoire par chantier, `docs/chantiers/<chantier>/` (`orchestration.md`, `etat.json`, `suivi.md`, un dossier par vague) ; fichiers à copier, gabarits d'agents, esquisses de hooks, de scripts et de skill ; plan de migration du chantier en cours, recommandé à sa clôture ; **proposition, non adoptée** — réorganisé le 06/10 | 05/10/2026 |
 | 📖 | [Modèle du suivi des vagues d'un chantier](suivi_vagues_chantier/_modele_suivi.md) — l'en-tête, l'organisation et la manière d'écrire que tout fichier de `suivi_vagues_chantier/` respecte ; squelette à copier à l'ouverture d'un chantier livré par vagues | 01/10/2026 |
 | 🔍 | [Revue du répertoire `possible_upgrades/` — état réel au 11/09, croisements, fraîcheur de la roadmap et de l'index, lots proposés](possible_upgrades/10-09-2026_revue_brainstorms_aout_et_lots.md) — 24 documents croisés avec la ROADMAP, l'index et le code ; regroupements P-49 à P-52 proposés | 10/09/2026 |
 | 📐🔨 | [Refonte de la documentation](superpowers/specs/2026-08-03-documentation-overhaul-design.md) · [plan](superpowers/plans/2026-08-03-documentation-overhaul.md) | 03/08/2026 |

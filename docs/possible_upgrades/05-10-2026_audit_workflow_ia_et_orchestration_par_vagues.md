@@ -241,7 +241,7 @@ Chaque recommandation donne le constat, ce que font les autres, la proposition e
 - *Proposition* :
   - un skill de projet `.claude/skills/orchestration-par-vagues/` : `SKILL.md` porte le cycle ; `references/` porte les gabarits ; `scripts/` porte R5 ;
   - des sous-agents dans `.claude/agents/` (rédacteur, vérificateur sans outil d'édition, correcteur, éclaireur), chacun avec ses outils et son modèle ;
-  - le fichier de chantier ne garde que l'en-tête, l'état, les vagues, le journal, la cohérence, les fiches et les rétrospectives : 200 à 300 lignes.
+  - le fichier de chantier ne garde que l'en-tête, les vagues, le journal, la cohérence et les leçons : 150 à 250 lignes. L'état passe dans un `etat.json`, et chaque vague a son dossier (fiche, specs, plans, compte rendu), sous un répertoire `docs/chantiers/<chantier>/` que le [modèle](05-10-2026_modele_orchestration_par_vagues.md) détaille (§1 et §2, ajoutés le 06/10).
 - *Coût* : une demi-journée, plus un ADR. **Pas pendant le chantier en cours** : on ne change pas de méthode entre la vague 4 et la vague 5 sans raison. À la clôture, ou à une vague 0 du chantier suivant.
 
 **R7. Un état lisible par machine en tête du fichier.**
