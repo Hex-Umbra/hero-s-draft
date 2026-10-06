@@ -337,7 +337,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 
 **R18. Être prévenu d'un arrêt ou d'une fin de vague.**
 - *Constat* : le premier arrêt de la vague 3 a eu lieu à 04:36 ; la reprise, à 20:31.
-- *Proposition* : un hook `Stop` qui lit `etat.json` et, si `arret_ouvert` est rempli ou si l'état passe à `livree_sur_branche`, envoie un message. Le dépôt a déjà de quoi le faire : la release poste sur Discord (`.github/scripts/discord_payload.sh`).
+- *Proposition* : un hook `Stop` qui lit `etat.json` et, si `arret_ouvert` est rempli ou si l'état passe à `livree_sur_branche`, envoie un message par un webhook dédié — Discord, Slack, ou tout service qui accepte du texte, comme ntfy. *Précisé le 06/10* : pas le webhook Discord des releases, pour ne pas mêler les alertes de travail aux annonces ; esquisse dans le modèle, §7.6.
 - *Coût* : une heure, plus un secret de webhook en local.
 
 **R19. Une barrière contre la dérive documentaire, dans la CI.**
@@ -414,6 +414,12 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 3. **À la clôture** : la migration vers `docs/chantiers/`, R6, R20, R25, R23.
 4. **En chantier de produit**, à planifier comme tel : R22.
 5. **Selon les résultats** : R26, R27, R28, R29, R30.
+
+**Où en sont les décisions du propriétaire, au 06/10** :
+- **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R25 ;
+- **écarté sous sa forme proposée** : R22 — le menu de debug garde sa raison d'être. Le besoin demeure, et passe par un compte rendu de tests manuels mieux structuré ;
+- **à l'état d'idées, en discussion** : R20, R21, R23, R24 ;
+- **pour plus tard** : R26 à R30.
 
 ---
 

@@ -627,12 +627,18 @@ exit 0
 
 ### 7.6. Prévenir le propriétaire ★R18
 
-Un hook `Stop`, qui ne parle que lorsqu'un chantier s'arrête ou livre, et une seule fois par événement. Il réutilise le webhook Discord que la release utilise déjà, lu dans une variable d'environnement locale :
+Un hook `Stop`, qui ne parle que lorsqu'un chantier s'arrête ou livre, et une seule fois par événement. **Il passe par un webhook dédié**, distinct de celui des releases, pour que les alertes de travail ne se mêlent pas aux annonces publiques. La messagerie est au choix, par deux variables d'environnement locales :
+
+| `ALERTE_FORMAT` | `ALERTE_URL` | Ce qui est envoyé |
+|:---|:---|:---|
+| `discord` | l'URL du webhook du salon | `{"content": "<message>"}` |
+| `slack` | l'URL de l'*incoming webhook* | `{"text": "<message>"}` |
+| `texte` | toute URL qui accepte du texte brut en POST — par exemple un sujet [ntfy](https://ntfy.sh), qui notifie le téléphone | le message seul |
 
 ```bash
 #!/usr/bin/env bash
 # .claude/hooks/prevenir.sh — hook Stop : prévient le propriétaire quand un chantier s'arrête ou livre.
-[ -n "${DISCORD_WEBHOOK_URL:-}" ] || exit 0
+[ -n "${ALERTE_URL:-}" ] || exit 0
 racine="${CLAUDE_PROJECT_DIR:-.}"
 mkdir -p "$racine/.superpowers"
 for f in "$racine"/docs/chantiers/*/etat.json; do
@@ -645,12 +651,17 @@ for f in "$racine"/docs/chantiers/*/etat.json; do
   vu="$racine/.superpowers/dernier_message_$(basename "$(dirname "$f")")"
   [ "$(cat "$vu" 2>/dev/null)" = "$msg" ] && continue
   printf '%s' "$msg" > "$vu"
-  jq -n --arg c "$msg" '{content: $c}' | curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK_URL" >/dev/null || true
+  case "${ALERTE_FORMAT:-texte}" in
+    discord) corps=$(jq -n --arg m "$msg" '{content: $m}'); type='application/json' ;;
+    slack)   corps=$(jq -n --arg m "$msg" '{text: $m}');    type='application/json' ;;
+    *)       corps="$msg";                                  type='text/plain; charset=utf-8' ;;
+  esac
+  printf '%s' "$corps" | curl -fsS -H "Content-Type: $type" --data-binary @- "$ALERTE_URL" >/dev/null || true
 done
 exit 0
 ```
 
-`.superpowers/` est déjà ignoré par git. Le hook ne bloque jamais la fin d'un tour : il sort toujours en 0.
+`.superpowers/` est déjà ignoré par git. Le hook ne bloque jamais la fin d'un tour : il sort toujours en 0. L'URL du webhook est un secret : elle reste dans l'environnement local, jamais dans le dépôt.
 
 ### 7.7. Le skill de méthode ★R6
 
