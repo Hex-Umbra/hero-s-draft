@@ -354,16 +354,16 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
   - **(c)** une fiche ne parle jamais de l'état d'une branche.
 - *Gain* : moins de fiches réécrites à chaque vague, et plus de valeur qui dérive.
 
-**R21. Relier chaque décision à ses tests.**
+**R21. Relier chaque décision à ses tests.** *Écarté le 06/10 par le propriétaire : le brainstorm reste un brainstorm, personne ne le rouvrira pour y lire quels tests gardent une décision.*
 - *Constat* : la couverture « décision → lot » se vérifie à la main (§7.1 de l'orchestration). La couverture « décision → test » ne se vérifie pas du tout, alors que R13 en a besoin.
 - *Proposition* : marquer les tests du numéro de la décision qu'ils gardent (`tags: ['D31']`, déclarés dans `dart_test.yaml`). Un script liste les décisions de la vague sans test, et `flutter test --tags D31` rejoue les tests d'une décision.
 
-**R22. Le cahier de test manuel, en scénarios chargeables.**
+**R22. Le cahier de test manuel, en scénarios chargeables.** *Retenu le 06/10 sous une autre forme : le menu de debug ne change pas ; le cahier devient un fichier de tests manuels d'interface que le propriétaire remplit — modèle, §4.6.*
 - *Constat* : ton test est la seule porte humaine, et l'étape qui attend le plus. Le cahier de la vague 3 compte dix sections, et pour chacune il faut d'abord amener une partie dans la bonne situation. Le menu de debug a cinq onglets (run, deck, héros, reliques, combat) mais ne sait pas charger une situation préparée.
 - *Proposition* : chaque entrée du cahier livre un scénario en donnée (classe, passif, deck, reliques, or, acte, nœud), que le menu de debug charge d'un geste. Les mêmes fichiers servent de point de départ aux tests de widget.
 - *Coût* : c'est un lot de produit (une extension de P-30), à planifier comme tel, pas un changement de méthode.
 
-**R23. Un banc d'essai pour la méthode.**
+**R23. Un banc d'essai pour la méthode.** *Précisé le 06/10 : « la méthode » est le workflow lui-même, résumé en trois graphes dans le modèle, §1 bis.*
 - *Constat* : les gabarits ont changé à chaque passe de revue, et R2 va changer le vérificateur. Rien ne dit si un changement de gabarit améliore la vérification ou la dégrade. Anthropic recommande de commencer par 20 à 50 cas tirés de vrais échecs, et que chaque incident devienne un cas ([evals](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)).
 - *Proposition* : cinq cas figés par commit :
   - la spec E3 avant son troisième tour, avec ses trois constats moyens connus ;
@@ -374,7 +374,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
   On y passe le gabarit du vérificateur et on compte les constats connus retrouvés, et les « moyens » inventés. On relance le banc à chaque changement de gabarit, de plugin (R14) ou de modèle.
 - *Coût* : une vérification par cas, à chaque relance.
 
-**R24. Mesurer l'amont.**
+**R24. Mesurer l'amont.** *Écarté le 06/10 par le propriétaire, comme toute estimation de coût à l'avance : la mesure consommerait des jetons sans servir une décision.*
 - *Constat* : les statistiques commencent à la vague 1. Le brainstorm (du 22/09 au 01/10), les six passes de revue et le contrôle ciblé, la simulation et l'écriture du fichier d'orchestration n'ont pas de coût connu.
 - *Proposition* : passer `mesure_session` (R5) sur ces sessions, si leurs transcriptions existent encore. Tu sauras ce que coûte un chantier entier, et ce qu'ont rapporté les passes 5 et 6 (26 et 26 constats, puis 15 au contrôle ciblé).
 
@@ -409,16 +409,16 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 
 ### 6.6. L'ordre, mis à jour
 
-1. **Avant la vague 4** : R14 (figer l'outillage), puis R1 corrigé (§6.1), R2 et R3. Ajouter R15, R16 et R18, peu coûteux et sans effet sur ce que l'essai mesure.
-2. **Pendant les vagues 4 à 7** : R4, R5, R19 ; R17 sur une vague, mesuré ; R21 ; R9 ; R8 ; R13.
+1. **Avant la vague 4** : R14 (figer l'outillage), puis R1 corrigé (§6.1), R2 et R3. Ajouter R15, R16, R18 et R22, peu coûteux et sans effet sur ce que l'essai mesure — R22 lui donne même sa mesure de qualité.
+2. **Pendant les vagues 4 à 7** : R4, R5, R19 ; R17 sur une vague, mesuré ; R9 ; R8 ; R13.
 3. **À la clôture** : la migration vers `docs/chantiers/`, R6, R20, R25, R23.
-4. **En chantier de produit**, à planifier comme tel : R22.
-5. **Selon les résultats** : R26, R27, R28, R29, R30.
+4. **Selon les résultats** : R26, R27, R28, R29, R30.
 
 **Où en sont les décisions du propriétaire, au 06/10** :
-- **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R25 ;
-- **écarté sous sa forme proposée** : R22 — le menu de debug garde sa raison d'être. Le besoin demeure, et passe par un compte rendu de tests manuels mieux structuré ;
-- **à l'état d'idées, en discussion** : R20, R21, R23, R24 ;
+- **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R22, sous la forme d'un fichier de tests manuels d'interface, sans toucher au menu de debug ; R25 ;
+- **écartés** : R21 ; R24, avec toute estimation de coût à l'avance ;
+- **précisé** : R23 — « la méthode » est le workflow, résumé en graphes dans le modèle (§1 bis) ; le banc d'essai reste une idée ;
+- **à l'état d'idée** : R20 ;
 - **pour plus tard** : R26 à R30.
 
 ---
