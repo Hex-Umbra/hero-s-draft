@@ -23,6 +23,7 @@
 6. **Tes garde-fous sont du texte**, recopié dans chaque gabarit. Claude Code sait les rendre déterministes : règles de permission, hooks. GitHub sait protéger `main` ; ADR-103 relève que ce n'est pas fait.
 7. **Il manque deux choses que tout le monde a ajoutées en 2026** : une boucle d'apprentissage d'une vague à l'autre (*compound*, rétrospective), et une cérémonie proportionnée au lot.
 8. **Rien de cela ne change l'ossature.** Le modèle compagnon garde ton cycle et y ajoute treize changements, classés en §4 par rapport gain / coût.
+9. **Une seconde passe, le 06/10 (§6)**, ajoute dix-sept points et corrige R1. Tes plans ont déjà la section que Superpowers a introduite en 6.4.1 : ce n'est pas la version du plugin qui impose la transcription du code, c'est ton gabarit de plan et le plan qu'il cite comme modèle.
 
 ---
 
@@ -185,7 +186,7 @@ Chaque recommandation donne le constat, ce que font les autres, la proposition e
 - *Constat* : les plans prennent 38 %, 37 % puis 24 % des jetons des trois vagues. Ils transcrivent le code (673 blocs dans un seul plan), et leurs rédacteurs comme leurs vérificateurs les rejouent dans un clone (§1.4, point 2).
 - *Ailleurs* : Superpowers v6.4.2 et QRSPI.
 - *Proposition* : par tâche, donner les fichiers, les signatures exactes, les valeurs de la spec, les tests nommés avec leur assertion clé, la commande de vérification et le total de tests attendu. Le code complet ne s'écrit que pour un algorithme imposé par la spec, ou pour une tâche marquée « à risque » par la fiche. Le plan ouvre sur une section *Review Focus* : les cinq modes d'échec au plus que la spec implique et qu'aucun test ne garde encore. Le vérificateur contrôle la cohérence et le décompte des tests ; il ne rejoue dans un clone que les tâches à risque. Ajouter un contrôle d'auto-revue : un plan plus de trois fois plus long que sa spec est une transcription.
-- *Coût* : réécrire les gabarits §4.3 et §4.4. Mettre Superpowers à jour en v6.4.2 ou plus apporte une partie du changement d'office.
+- *Coût* : réécrire les gabarits §4.3 et §4.4, **et changer le plan cité comme modèle de forme**. *Corrigé le 06/10 (§6.1)* : mettre Superpowers à jour n'y suffit pas, la version installée a déjà la section *Review Focus*.
 - *Gain attendu* : à mesurer. Superpowers annonce environ trois fois moins de jetons pour la planification.
 
 **R2. Une vérification de spec qui converge.**
@@ -290,9 +291,129 @@ Les vagues 6 et 7 (« moyen : une spec, un plan ») s'y prêtent, et une revue d
 Tu mesures déjà chaque vague : la vague 4 peut servir d'expérience au lieu d'un changement à l'aveugle.
 
 1. **Avant** : trancher R1, R2 et R3, et seulement eux. R4 et R5 sont de l'outillage, sans effet sur le contenu. Les écrire dans un ADR qui amende ADR-103, et dans le fichier d'orchestration (§3.3, §3.4, §4.2 à §4.4, §5, §6).
-2. **Ajouter la mesure qui manque** : le nombre de défauts remontés par ton test manuel et par une éventuelle session de correction, dans le compte rendu de la vague 4, et rétroactivement pour les vagues 1 à 3 (zéro, sauf erreur).
-3. **Comparer** la vague 4 aux vagues 1 à 3 : coût par lot, tours de vérification, arrêts, lignes de plan par ligne de code, défauts à ton test. Le compte rendu fait déjà la comparaison de coût avec la vague précédente.
-4. **Décider** à la vague 5 : garder, ajuster ou revenir en arrière. Un résultat à défauts constants et coût réduit valide l'essai ; une hausse des défauts le dément.
+2. **Figer l'outillage** (R14, §6) : noter, et si possible épingler, la version de Superpowers et de Claude Code avant la vague 4. Sinon une mise à jour du plugin pendant l'essai en brouille le résultat.
+3. **Ajouter la mesure qui manque** : le nombre de défauts remontés par ton test manuel et par une éventuelle session de correction, dans le compte rendu de la vague 4, et rétroactivement pour les vagues 1 à 3 (zéro, sauf erreur).
+4. **Comparer** la vague 4 aux vagues 1 à 3 : coût par lot, tours de vérification, arrêts, lignes de plan par ligne de code, défauts à ton test. Le compte rendu fait déjà la comparaison de coût avec la vague précédente.
+5. **Décider** à la vague 5 : garder, ajuster ou revenir en arrière. Un résultat à défauts constants et coût réduit valide l'essai ; une hausse des défauts le dément.
+
+---
+
+## 6. Seconde passe — 06/10 : ce que la première n'avait pas vu
+
+Même arbre (`0ec09ab`), relu cette fois du côté de ce que la première passe avait laissé de côté : la fin de vague, le vault, la forme des specs, ton test manuel, la CI et l'enchaînement des vagues. Trois pages de la documentation de Claude Code ont été lues directement le 06/10 : [code intelligence](https://code.claude.com/docs/en/plugins/code-intelligence), [routines](https://code.claude.com/docs/en/routines) et [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference).
+
+### 6.1. Une correction à R1
+
+Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de septembre n'a, que ni le fichier d'orchestration ni le plan modèle ne demandent, et que Superpowers a introduite en 6.4.1 (25/09). La version installée est donc récente. Pourtant, le plan E3 partie 2 fait 11 136 lignes et 673 blocs de code. **Ce qui impose la transcription, c'est ton gabarit.** §4.3 du fichier d'orchestration dit « Cite le code tel qu'il est sur la branche courante », et donne pour modèle de forme le plan de P-49 : 3 627 lignes, 249 blocs de code. R1 se règle donc dans le gabarit et dans le choix du plan modèle. Mettre le plugin à jour n'y changerait rien.
+
+### 6.2. Priorité 1 — peu coûteux, à faire avant ou pendant la vague 4
+
+**R14. Figer l'outillage du chantier.**
+- *Constat* : aucun compte rendu ne note la version de Superpowers ni celle de Claude Code. Or ta méthode s'appuie sur le comportement interne de SDD : le registre supprimé en fin de plan, les « *Rulings I made* », l'enchaînement vers `finishing-a-development-branch`, la base de la revue d'ensemble. Superpowers est passé de 5.0 à 6.4.2 en six mois, en changeant les relecteurs de SDD (6.0), son espace de travail (6.2) et la forme des plans (6.4).
+- *Proposition* :
+  - noter les versions dans `etat.json` et au §1 de chaque compte rendu, et les faire afficher par la porte d'entrée ;
+  - mieux : épingler Superpowers par une marketplace de projet, dont l'entrée pointe vers `obra/superpowers` avec un `sha` de commit. Claude Code accepte `ref` et `sha` sur une source `github` ;
+  - ne monter de version qu'entre deux chantiers, notes de version lues, en relançant le banc d'essai (R23).
+- *Coût* : une heure.
+
+**R15. Sortir l'historique de la spec.**
+- *Constat* : dans la spec E3, les arbitrages et leurs options écartées (§1.2, environ 470 lignes) et le journal des six tours de vérification (§13, 193 lignes) font plus du tiers des 1 878 lignes. Chaque vérificateur les relit à chaque tour. Le compte rendu en recopie ensuite un récapitulatif (§2.1).
+- *Proposition* : la spec ne garde que la décision retenue, en un paragraphe (le choix et sa raison). Les options écartées et le journal des tours partent dans un fichier voisin, `verifications-<lot>.md`, dans le dossier de la vague. Le vérificateur ne le lit qu'en mode différentiel ; le compte rendu y renvoie au lieu de recopier.
+- *Gain* : une spec d'un tiers plus courte à relire à chaque tour, et un fait à un seul endroit.
+
+**R16. Une page pour toi, en tête du compte rendu.**
+- *Constat* : les comptes rendus font 281, 439 et 509 lignes. Tu y lis les arbitrages au moment de ton test.
+- *Proposition* : un §0 d'au plus trente lignes :
+  - ce qu'il faut tester d'abord, classé par risque ;
+  - les arbitrages que le joueur verra ;
+  - ceux faits sans toi (autonomie *continu*, R3) ;
+  - les risques connus ;
+  - les trois commandes qui rejouent l'essentiel.
+
+**R17. Relayer l'orchestrateur à chaque fin de plan.**
+- *Constat* : l'orchestrateur de la dernière session de la vague 3 a fait 300 appels sur 8 h 15, pour 133 millions de jetons relus du cache et 40,85 $, son contexte grandissant à chaque appel. Anthropic constate qu'une remise à zéro avec un fichier de passation vaut mieux qu'une compaction ([harness design](https://www.anthropic.com/engineering/harness-design-long-running-apps)), et recommande une session neuve après un plan approuvé.
+- *Proposition* : à chaque « `3.5 · fait` », l'orchestrateur écrit une passation de dix lignes dans le compte rendu, met `etat.json` à jour et termine sa session. Le même prompt relance la suite : l'algorithme de reprise de §0.2 le permet déjà.
+- *Contrepartie* : un prompt de plus à coller par plan, tant que R27 ne l'automatise pas. À mesurer sur une vague.
+
+**R18. Être prévenu d'un arrêt ou d'une fin de vague.**
+- *Constat* : le premier arrêt de la vague 3 a eu lieu à 04:36 ; la reprise, à 20:31.
+- *Proposition* : un hook `Stop` qui lit `etat.json` et, si `arret_ouvert` est rempli ou si l'état passe à `livree_sur_branche`, envoie un message. Le dépôt a déjà de quoi le faire : la release poste sur Discord (`.github/scripts/discord_payload.sh`).
+- *Coût* : une heure, plus un secret de webhook en local.
+
+**R19. Une barrière contre la dérive documentaire, dans la CI.**
+- *Constat* : les liens de ces deux documents ont été vérifiés à la main aujourd'hui. Les fiches `_rules` et `_patterns` citent 33 `fichier.dart:ligne`, et les fiches de vague se disent « à revérifier, pas à croire ».
+- *Proposition* : un job de CI lance `verifier_references` (R5) et un contrôle des liens relatifs sur `docs/` et le vault, à chaque PR. Il échoue fermé, comme les tests du site. La documentation des routines d'Anthropic donne aussi l'exemple d'une routine hebdomadaire « *Docs drift* ».
+
+### 6.3. Priorité 2 — structurant
+
+**R20. Un vault qui renvoie au code au lieu de le recopier.**
+- *Constat* : `memory-bank-sync` a corrigé 21, puis 28, puis une trentaine de fiches `_rules` et `_patterns` par vague (13 hors de la liste de la spec en vague 2). Son commit de la vague 3 touche 58 fichiers, celui de la note de version six. Les deux skills de fin de vague passent de 44,6 à 55,2 puis 79,3 millions de jetons, et prennent 35 minutes en vague 3 ; `memory-bank-sync` en fait vraisemblablement l'essentiel, mais les comptes rendus ne les séparent pas. Les fiches recopient des valeurs qui vivent dans le code et la donnée : `_rules/02-4` donne les multiplicateurs de rareté (×1,2 à ×2,0) et des cartes en exemple, et parle d'un état « sur la branche de la vague 3 ».
+- *Proposition* :
+  - **(a)** une fiche énonce la règle et son invariant, puis renvoie au test qui la garde et au symbole qui la porte ;
+  - **(b)** les chiffres qui doivent y figurer sont générés depuis la donnée ou le code, entre deux marqueurs, par un script sous `tool/` que `memory-bank-sync` lance au lieu de réécrire à la main ;
+  - **(c)** une fiche ne parle jamais de l'état d'une branche.
+- *Gain* : moins de fiches réécrites à chaque vague, et plus de valeur qui dérive.
+
+**R21. Relier chaque décision à ses tests.**
+- *Constat* : la couverture « décision → lot » se vérifie à la main (§7.1 de l'orchestration). La couverture « décision → test » ne se vérifie pas du tout, alors que R13 en a besoin.
+- *Proposition* : marquer les tests du numéro de la décision qu'ils gardent (`tags: ['D31']`, déclarés dans `dart_test.yaml`). Un script liste les décisions de la vague sans test, et `flutter test --tags D31` rejoue les tests d'une décision.
+
+**R22. Le cahier de test manuel, en scénarios chargeables.**
+- *Constat* : ton test est la seule porte humaine, et l'étape qui attend le plus. Le cahier de la vague 3 compte dix sections, et pour chacune il faut d'abord amener une partie dans la bonne situation. Le menu de debug a cinq onglets (run, deck, héros, reliques, combat) mais ne sait pas charger une situation préparée.
+- *Proposition* : chaque entrée du cahier livre un scénario en donnée (classe, passif, deck, reliques, or, acte, nœud), que le menu de debug charge d'un geste. Les mêmes fichiers servent de point de départ aux tests de widget.
+- *Coût* : c'est un lot de produit (une extension de P-30), à planifier comme tel, pas un changement de méthode.
+
+**R23. Un banc d'essai pour la méthode.**
+- *Constat* : les gabarits ont changé à chaque passe de revue, et R2 va changer le vérificateur. Rien ne dit si un changement de gabarit améliore la vérification ou la dégrade. Anthropic recommande de commencer par 20 à 50 cas tirés de vrais échecs, et que chaque incident devienne un cas ([evals](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)).
+- *Proposition* : cinq cas figés par commit :
+  - la spec E3 avant son troisième tour, avec ses trois constats moyens connus ;
+  - la spec E3 avant son quatrième tour, où le panel disait « prête » et le consolidateur a remonté deux constats ;
+  - la spec E2 avant son troisième tour ;
+  - deux specs qui ont convergé, où aucun constat moyen n'est attendu.
+
+  On y passe le gabarit du vérificateur et on compte les constats connus retrouvés, et les « moyens » inventés. On relance le banc à chaque changement de gabarit, de plugin (R14) ou de modèle.
+- *Coût* : une vérification par cas, à chaque relance.
+
+**R24. Mesurer l'amont.**
+- *Constat* : les statistiques commencent à la vague 1. Le brainstorm (du 22/09 au 01/10), les six passes de revue et le contrôle ciblé, la simulation et l'écriture du fichier d'orchestration n'ont pas de coût connu.
+- *Proposition* : passer `mesure_session` (R5) sur ces sessions, si leurs transcriptions existent encore. Tu sauras ce que coûte un chantier entier, et ce qu'ont rapporté les passes 5 et 6 (26 et 26 constats, puis 15 au contrôle ciblé).
+
+**R25. Un agent `game-designer`.** Le rôle vit dans `.agents/skills/game_designer.md` (58 lignes), et les rédacteurs « prennent le rôle » par le prompt. En faire `.claude/agents/game-designer.md`, avec ses outils et son modèle, comme les autres rôles de R6. La ligne de `CLAUDE.md` sur `.agents/` suit.
+
+### 6.4. Priorité 3 — à essayer, ou qui dépend d'autre chose
+
+**R26. L'intelligence de code pour Dart.**
+- *Constat* : Anthropic ne publie pas de plugin Dart, mais un plugin peut déclarer un serveur LSP dans un fichier `.lsp.json`. Dart en fournit un : `dart language-server`.
+- *Proposition* : un plugin local dont le `.lsp.json` contient `{"dart": {"command": "dart", "args": ["language-server", "--protocol=lsp"], "extensionToLanguage": {".dart": "dart"}}}`. Deux gains attendus :
+  - les erreurs de l'analyseur apparaissent après chaque édition, sans attendre un `dart analyze` ;
+  - les vérificateurs, qui coûtent 40 % de la vague 3, naviguent par symbole au lieu de lire des fichiers entiers.
+- *Limites* : la documentation précise que les serveurs LSP ne démarrent pas dans les sessions cloud, et que l'indexation consomme de la mémoire. À mesurer sur une vague.
+
+**R27. Enchaîner les vagues sans coller de prompt.**
+- *Proposition* : une routine Claude Code déclenchée par GitHub. Sur `release.published` (ta release sort après le tag), elle lance la session de la vague suivante avec le prompt de lancement. Sur l'ouverture d'une PR depuis `feat/v*`, elle peut lancer l'éclaireur (R8).
+- *Prérequis* :
+  - un environnement cloud avec Flutter 3.41.6 installé par un script de setup — il est absent du conteneur de cette session ;
+  - les routines sont en aperçu, consomment ton abonnement et tournent sans demande de permission : les hooks de R4 deviennent indispensables.
+- *Alternative locale* : une tâche planifiée du bureau, ou `claude -p` lancé par un script qui surveille les tags.
+
+**R28. Des tests ciblés pendant une tâche, la suite complète aux jalons** — **à mesurer d'abord**. Si le temps de `flutter test` pèse dans les transcriptions, l'implémenteur lance les tests des fichiers touchés et `dart analyze`, et la suite complète tourne une fois par tâche, en fin de tâche. Le gain est borné : l'implémentation a pris 2 h 51 sur les 12 h 57 de travail de la vague 3.
+
+**R29. Le tag posé par la CI après ta fusion** — à ta décision, puisque ADR-102 te le réserve. Un workflow, sur un push dans `main` qui fusionne une branche `feat/v*`, lit la version de `pubspec.yaml`, lance `verify_version.sh` et pose le tag, qui déclenche la release. Tu gardes le test et la fusion ; le geste manuel et le risque d'un tag sur le mauvais commit disparaissent.
+
+**R30. Un budget par vague, qui prévient sans arrêter.** À chaque fin d'étape, l'orchestrateur lance `mesure_session`. Si le coût cumulé dépasse une fois et demie la médiane des vagues comparables, ou si la spec passe trois tours, il te prévient (R18) et continue.
+
+### 6.5. Écartés à la seconde passe
+
+- **Découper `CLAUDE.md` en règles par chemin** : il fait 126 lignes, sous les 200 que conseille la documentation. Le gain serait faible ; à revoir s'il grossit.
+- **Écrire la spec de la vague N+1 pendant ton test de la vague N** : si ton test renvoie la vague N en correction, la spec est à reprendre. L'éclaireur (R8) prend la part sans risque de ce gain.
+
+### 6.6. L'ordre, mis à jour
+
+1. **Avant la vague 4** : R14 (figer l'outillage), puis R1 corrigé (§6.1), R2 et R3. Ajouter R15, R16 et R18, peu coûteux et sans effet sur ce que l'essai mesure.
+2. **Pendant les vagues 4 à 7** : R4, R5, R19 ; R17 sur une vague, mesuré ; R21 ; R9 ; R8 ; R13.
+3. **À la clôture** : la migration vers `docs/chantiers/`, R6, R20, R25, R23.
+4. **En chantier de produit**, à planifier comme tel : R22.
+5. **Selon les résultats** : R26, R27, R28, R29, R30.
 
 ---
 
@@ -307,9 +428,10 @@ Tu mesures déjà chaque vague : la vague 4 peut servir d'expérience au lieu d'
 - [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) — 26/11/2025
 - [Building a C compiler with a team of parallel Claudes](https://www.anthropic.com/engineering/building-c-compiler) — 05/02/2026
 - [Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps) — 24/03/2026, **lu directement**
+- [Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — 09/01/2026
 - [How Anthropic runs large-scale code migrations with Claude Code](https://claude.com/blog/ai-code-migration) — 16/07/2026, **lu directement**
 - [The AI-native SDLC playbook](https://claude.com/blog/the-ai-native-sdlc-playbook) — 21/08/2026, **lu directement**
-- Documentation de Claude Code : [Best practices](https://code.claude.com/docs/en/best-practices) (**lu directement**), [sub-agents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks), [memory](https://code.claude.com/docs/en/memory), [`/goal`](https://code.claude.com/docs/en/goal), [workflows](https://code.claude.com/docs/en/workflows), [agent teams](https://code.claude.com/docs/en/agent-teams)
+- Documentation de Claude Code : [Best practices](https://code.claude.com/docs/en/best-practices), [code intelligence](https://code.claude.com/docs/en/plugins/code-intelligence), [routines](https://code.claude.com/docs/en/routines), [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference) (**lus directement**, les trois derniers le 06/10), [sub-agents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks), [memory](https://code.claude.com/docs/en/memory), [`/goal`](https://code.claude.com/docs/en/goal), [workflows](https://code.claude.com/docs/en/workflows), [agent teams](https://code.claude.com/docs/en/agent-teams)
 
 **Frameworks**
 - [obra/superpowers — RELEASE-NOTES](https://github.com/obra/superpowers/blob/main/RELEASE-NOTES.md) — v5.0.0 à v6.4.2 (25/09/2026), **lu directement**

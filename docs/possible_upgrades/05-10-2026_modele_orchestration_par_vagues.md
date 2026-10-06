@@ -2,7 +2,7 @@
 
 **Date** : 05/10/2026 — **réorganisé le 06/10** autour d'un répertoire par chantier, à la demande du propriétaire.
 **Rôle** : ce qu'il faut pour ouvrir et dérouler un chantier livré par vagues. On y trouve les couches, l'arborescence, les fichiers à copier, les changements de méthode, les agents, l'outillage, puis l'adoption et la migration du chantier en cours.
-**Origine** : le [fichier d'orchestration du chantier en cours](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), dont il garde l'ossature, et l'[audit du 05/10](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), dont il intègre les recommandations. **★Rn** marque ce qui diffère du fichier actuel et renvoie à la recommandation n de l'audit (§4). Le découpage en couches et en répertoires développe R6.
+**Origine** : le [fichier d'orchestration du chantier en cours](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), dont il garde l'ossature, et l'[audit du 05/10](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), dont il intègre les recommandations. **★Rn** marque ce qui diffère du fichier actuel et renvoie à la recommandation n de l'audit (§4). Le découpage en couches et en répertoires développe R6 ; R14 à R18 et la correction de R1 viennent de la seconde passe de l'audit (§6, 06/10).
 **Statut** : proposition. **Rien n'est adopté** : le fichier du chantier en cours reste la seule référence de ce chantier, et aucun des répertoires décrits ici n'existe encore. §8 dit comment adopter le modèle, en tout ou en partie.
 
 **Comment le lire** :
@@ -40,7 +40,7 @@ Le fichier actuel mêle, en 636 lignes, une méthode qui ne change pas d'un chan
 | Le chantier | Les §0 à §2 et §7 du fichier, dont un journal aux cellules de plus de 200 mots | `etat.json` (une quinzaine de lignes) et `orchestration.md`, au journal réduit aux jalons |
 | Les fiches | Les neuf fiches, environ 180 lignes | La seule fiche de sa vague |
 
-Le total devrait tomber à environ la moitié de ce qu'une session lit aujourd'hui. C'est une estimation, à vérifier par la mesure de session (§7.4). Surtout, chaque session ne lit plus que ce qui la concerne.
+Le total devrait tomber à environ la moitié de ce qu'une session lit aujourd'hui. C'est une estimation, à vérifier par la mesure de session (§7.4). Surtout, chaque session ne lit plus que ce qui la concerne. Le relais de l'orchestrateur à chaque fin de plan (★R17) empêche en plus son contexte de grandir pendant toute une vague.
 
 ---
 
@@ -75,6 +75,7 @@ docs/chantiers/
 │       │   ├── spec-p43-e2.md
 │       │   ├── plan-p43-e2-partie-1.md
 │       │   ├── plan-p43-e2-partie-2.md
+│       │   ├── verifications-p43-e2.md        # ★R15 options écartées, tours de vérification
 │       │   └── compte-rendu.md
 │       ├── …
 │       └── cloture/
@@ -90,6 +91,7 @@ docs/chantiers/
 - **Les specs et les plans** portent l'identifiant de leur lot : `spec-<lot>.md`, `plan-<lot>.md`, `plan-<lot>-partie-<k>.md`, par exemple `plan-p43-e3-partie-1.md`.
   - Ce nom est unique dans tout le dépôt, et ce n'est pas un détail : SDD range son registre sous `.superpowers/sdd/<nom du plan>/`, et deux plans de même nom pourraient partager un registre.
   - La date n'est plus dans le nom : elle est dans l'en-tête du document et dans l'historique git.
+- **Les vérifications** ★R15 : `verifications-<lot>.md` garde ce que la spec n'a pas à porter — les options écartées de chaque arbitrage, et le journal des tours de vérification de la spec et du plan. La spec ne garde que la décision retenue et sa raison.
 - **Le compte rendu** s'appelle `compte-rendu.md`, un par vague. Une session de correction y ajoute sa section, elle n'ouvre pas de fichier.
 
 **Ce qui reste hors du dossier d'un chantier**
@@ -110,6 +112,7 @@ docs/chantiers/
 | Dans quel ordre, et pourquoi ? Qu'est-ce qui a été livré, quand ? | `orchestration.md` |
 | Que doit faire la vague N, et qu'est-ce que le propriétaire a déjà tranché pour elle ? | `vagues/<NN>-…/fiche.md` |
 | Qu'a-t-elle décidé, livré, coûté ? Que faut-il tester ? | `vagues/<NN>-…/compte-rendu.md`, et ses specs |
+| Quelles options a-t-on écartées ? Comment la spec a-t-elle convergé ? | `vagues/<NN>-…/verifications-<lot>.md` |
 | Qu'apporte-t-elle au jeu ? | `suivi.md` |
 | Comment une vague se déroule-t-elle ? | le skill `orchestration-par-vagues` |
 | Pourquoi la méthode est-elle ainsi ? | les ADR de méthode |
@@ -297,6 +300,7 @@ L'état courant du chantier, pour les machines : le script de porte d'entrée, l
   "total_tests": 1625,
   "autonomie": "strict",
   "arret_ouvert": null,
+  "outillage": { "superpowers": null, "claude_code": null },
   "maj": "2026-10-04"
 }
 ```
@@ -309,6 +313,7 @@ L'état courant du chantier, pour les machines : le script de porte d'entrée, l
 | `autonomie` | `strict` · `continu` | Fixée par le prompt de lancement, recopiée ici pour une reprise ★R3 |
 | `arret_ouvert` | `null` · `"<JJ/MM> · <étape> · <classe> · <motif en une ligne>"` | Le détail est dans le compte rendu |
 | `chantier_clos` | `false` · `true` | Passé à `true` par la session de clôture, seule |
+| `outillage` | `{ "superpowers": "<version ou sha>", "claude_code": "<version>" }` | ★R14 Relevé à l'ouverture du chantier, affiché par la porte d'entrée, recopié au §1 de chaque compte rendu ; ne change qu'entre deux chantiers. `null` dans l'exemple : aucune vague ne l'a relevé à ce jour |
 
 **Les règles** :
 - seul l'orchestrateur l'écrit, à chaque étape, dans le commit du document que l'étape produit, sur la branche de la vague ;
@@ -356,11 +361,14 @@ Ouvert à la fin du premier plan, par sa table des arbitrages — SDD supprime s
 ~~~~markdown
 # Vague <N> — `<version>` — <lots> — compte rendu
 
-**Chantier** : [orchestration](../../orchestration.md) · **Fiche** : [fiche.md](fiche.md) · **Branche** : `<branche>`
+**Chantier** : [orchestration](../../orchestration.md) · **Fiche** : [fiche.md](fiche.md) · **Vérifications** : `verifications-<lot>.md` · **Branche** : `<branche>`
 
+## 0. Pour le propriétaire — une page ★R16
+<!-- trente lignes au plus : ce qu'il faut tester d'abord, par risque ; les arbitrages que le joueur verra ; ceux faits sans toi ; les risques connus ; les trois commandes qui rejouent l'essentiel -->
 ## 1. La branche et ses chiffres
+<!-- ★R14 avec les versions de l'outillage -->
 ## 2. La table des arbitrages
-<!-- par spec, par plan, puis les décisions de SDD, plan après plan ; ★R3 les arbitrages faits sans le propriétaire, en autonomie « continu », dans une sous-section à part -->
+<!-- par spec, par plan, puis les décisions de SDD, plan après plan — une ligne par arbitrage, le détail et les options écartées restant dans verifications-<lot>.md ★R15 ; ★R3 les arbitrages faits sans le propriétaire, en autonomie « continu », dans une sous-section à part ; ★R17 une passation de dix lignes à chaque fin de plan, si l'orchestrateur est relayé -->
 ## 3. Le cahier de test manuel
 ## 4. L'oracle
 ## 5. Trouvé périmé, et pour la file
@@ -389,10 +397,13 @@ Le cycle du fichier actuel (§3.1 à §3.10) devient le corps du skill `orchestr
 | **3.2 Branche** | Créer la branche ; journal à « en cours », précédente à « close » | Inchangé. Plus `etat.json` pointé sur la nouvelle vague, dans le même premier commit. Le dossier de la vague existe déjà depuis l'ouverture du chantier |
 | **3.3 Spec** | Rédiger → vérifier tout → corriger → revérifier tout, trois tours, puis arrêt ; écrite dans `docs/superpowers/specs/` | La spec s'écrit **dans le dossier de la vague**, `spec-<lot>.md`.<br>★R5 `tool/vagues/verifier_references` avant toute vérification.<br>★R2 Le premier tour vérifie tout, les suivants seulement les corrections et ce qu'elles touchent ; la grille de gravité a ses critères ; un trou de test descend au *Review Focus* du plan.<br>★R3 Après trois tours : en *strict*, l'arrêt ; en *continu*, la correction des constats de classe T, consignée, puis un dernier tour différentiel |
 | **3.4 Plan** | Le code de chaque tâche écrit en entier, rejoué dans un clone ; écrit dans `docs/superpowers/plans/` | Le plan s'écrit **dans le dossier de la vague**, `plan-<lot>[-partie-<k>].md`.<br>★R1 Il consigne des décisions : fichiers, signatures, valeurs, tests nommés et leur assertion, commande de vérification, total attendu. Le code n'est écrit en entier que pour les tâches à risque de la fiche.<br>Une section *Review Focus* en tête ; une auto-revue de longueur (au-delà du triple de la spec, c'est une transcription) |
+| **Historique de la spec** | Dans la spec : options écartées (§1.2), journal des tours (§13) | ★R15 Dans `verifications-<lot>.md` ; la spec ne garde que la décision retenue et sa raison, et le vérificateur ne lit ce fichier qu'en mode différentiel |
 | **3.5 Implémentation** | SDD ; dix contraintes recopiées à chaque agent | Inchangé sur le fond. ★R4 Les contraintes que le hook `garde_vague` garantit sortent des gabarits ; restent celles qu'aucun outil ne vérifie |
+| **Fin de plan** (`3.5 · fait`) | L'orchestrateur continue, son contexte grandit | ★R17 Passation de dix lignes au compte rendu, `etat.json` à jour, fin de session ; le même prompt relance la suite, par la reprise de §0 |
 | **3.6 bis Convergence** | — | ★R13 Un agent relit les décisions de chaque spec face au code de la branche ; ses écarts deviennent une tâche ou un constat consigné |
 | **3.8 Compte rendu** | Un fichier dans `docs/superpowers/reports/` ; les statistiques mesurées par un script réécrit à chaque vague | `compte-rendu.md` **dans le dossier de la vague**.<br>★R5 `tool/vagues/mesure_session` pour les statistiques.<br>★R9 La section « Leçons » ; la ligne de la vague au tableau de bord de `orchestration.md` |
 | **3.9 Porte de sortie** | L'arrêt | Inchangé, plus ★R8 : le propriétaire lance l'éclaireur de la vague suivante pendant qu'il teste |
+| **Arrêt, livraison** | Rien ne prévient le propriétaire | ★R18 Le hook `prevenir` lui envoie un message (§7.6) |
 | **Arbitrage** | Arbre à 8 filtres | ★R3 Une classe par question avant l'arbre : **T**, technique, tranchée par l'orchestrateur ; **P**, visible du joueur, tranchée par le propriétaire, de préférence dans la fiche avant la vague ; **D**, qui amende une décision acquise : arrêt |
 | **Garde-fous** | Texte | ★R4 `main` protégé sur GitHub ; le hook `garde_vague` ; ne restent en texte que les garde-fous de jugement |
 
@@ -456,7 +467,7 @@ Rends une table : numéro, où, constat, preuve, gravité, classe (T · P · D),
 ### 6.2. `redacteur-plan` ★R1
 
 ````
-Écris le plan d'implémentation de <lot ou partie> avec superpowers:writing-plans, depuis `<dossier de la vague>/spec-<lot>.md` <§ de la partie>, dans `<dossier de la vague>/plan-<lot>[-partie-<k>].md`. Modèle de forme : `<plan de référence>` — but, architecture, contraintes globales, carte des fichiers, tâches titrées `### Task N: …`.
+Écris le plan d'implémentation de <lot ou partie> avec superpowers:writing-plans, depuis `<dossier de la vague>/spec-<lot>.md` <§ de la partie>, dans `<dossier de la vague>/plan-<lot>[-partie-<k>].md`. Modèle de forme : `<plan de référence, lui-même un plan de décisions>` — but, architecture, contraintes globales, Review Focus, carte des fichiers, tâches titrées `### Task N: …`.
 
 Le plan consigne des décisions, il ne transcrit pas le code. Pour chaque tâche :
 - les fichiers touchés ;
@@ -472,6 +483,8 @@ Avant de rendre, compare la longueur du plan à celle de la spec : au-delà du t
 
 Le plan ne crée pas de branche, ne commite rien sur `main`, ne pousse rien, n'ouvre pas de PR, n'invoque aucun skill de livraison ni de synchronisation. Sa dernière tâche est la vérification finale. Rends le chemin du plan, sa carte des fichiers et sa longueur rapportée à celle de la spec.
 ````
+
+**Le plan de référence compte autant que le gabarit** (audit §6.1). Celui que le fichier actuel cite, le plan de P-49, transcrit le code : 3 627 lignes, 249 blocs. Le citer comme modèle imposerait la transcription quoi que dise le gabarit. Le premier plan écrit selon ce gabarit et jugé bon devient la référence des suivants.
 
 ### 6.3. `verificateur-plan` ★R1
 
@@ -612,7 +625,34 @@ done
 exit 0
 ```
 
-### 7.6. Le skill de méthode ★R6
+### 7.6. Prévenir le propriétaire ★R18
+
+Un hook `Stop`, qui ne parle que lorsqu'un chantier s'arrête ou livre, et une seule fois par événement. Il réutilise le webhook Discord que la release utilise déjà, lu dans une variable d'environnement locale :
+
+```bash
+#!/usr/bin/env bash
+# .claude/hooks/prevenir.sh — hook Stop : prévient le propriétaire quand un chantier s'arrête ou livre.
+[ -n "${DISCORD_WEBHOOK_URL:-}" ] || exit 0
+racine="${CLAUDE_PROJECT_DIR:-.}"
+mkdir -p "$racine/.superpowers"
+for f in "$racine"/docs/chantiers/*/etat.json; do
+  case "$f" in */_modele/*) continue ;; esac
+  [ -e "$f" ] || continue
+  msg=$(jq -r 'if .arret_ouvert then "Arrêt — \(.chantier), vague \(.vague) : \(.arret_ouvert)"
+               elif .etat == "livree_sur_branche" then "Livrée — \(.chantier), vague \(.vague), sur \(.branche) : à toi de tester"
+               else empty end' "$f")
+  [ -n "$msg" ] || continue
+  vu="$racine/.superpowers/dernier_message_$(basename "$(dirname "$f")")"
+  [ "$(cat "$vu" 2>/dev/null)" = "$msg" ] && continue
+  printf '%s' "$msg" > "$vu"
+  jq -n --arg c "$msg" '{content: $c}' | curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK_URL" >/dev/null || true
+done
+exit 0
+```
+
+`.superpowers/` est déjà ignoré par git. Le hook ne bloque jamais la fin d'un tour : il sort toujours en 0.
+
+### 7.7. Le skill de méthode ★R6
 
 ```
 .claude/skills/orchestration-par-vagues/
@@ -644,6 +684,11 @@ Les gains de coût ne dépendent pas des répertoires. L'audit (§5) propose un 
 | R9 — leçons et tableau de bord | §2, §3.8 |
 | R8 — éclaireur, à partir de la vague 5 | §0, §3.9, §4 |
 | R13 — convergence | entre §3.6 et §3.7 |
+| R14 — l'outillage figé et noté, **avant la vague 4** | §3.1 (la porte l'affiche), §3.8 (le compte rendu le note) |
+| R15 — l'historique hors de la spec | §3.3, §4.1, §4.2 |
+| R16 — une page pour le propriétaire | §3.8 |
+| R17 — le relais de l'orchestrateur, sur une vague, mesuré | §0, §3.5 |
+| R18 — le hook `prevenir` | `.claude/hooks/`, sans toucher au fichier |
 
 ### 8.2. L'arborescence : quand, et comment
 
