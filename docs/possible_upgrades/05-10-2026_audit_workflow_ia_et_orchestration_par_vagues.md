@@ -353,6 +353,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
   - **(b)** les chiffres qui doivent y figurer sont générés depuis la donnée ou le code, entre deux marqueurs, par un script sous `tool/` que `memory-bank-sync` lance au lieu de réécrire à la main ;
   - **(c)** une fiche ne parle jamais de l'état d'une branche.
 - *Gain* : moins de fiches réécrites à chaque vague, et plus de valeur qui dérive.
+- *Proposition détaillée, le 06/10* : [`06-10-2026_memory_bank_sync_adapte_aux_vagues.md`](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) — le `SKILL.md` adapté, une fiche réelle réécrite, et la migration.
 
 **R21. Relier chaque décision à ses tests.** *Écarté le 06/10 par le propriétaire : le brainstorm reste un brainstorm, personne ne le rouvrira pour y lire quels tests gardent une décision.*
 - *Constat* : la couverture « décision → lot » se vérifie à la main (§7.1 de l'orchestration). La couverture « décision → test » ne se vérifie pas du tout, alors que R13 en a besoin.
@@ -418,7 +419,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 - **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R22, sous la forme d'un fichier de tests manuels d'interface, sans toucher au menu de debug ; R25 ;
 - **écartés** : R21 ; R24, avec toute estimation de coût à l'avance ;
 - **précisé** : R23 — « la méthode » est le workflow, résumé en graphes dans le modèle (§1 bis) ; le banc d'essai reste une idée ;
-- **à l'état d'idée** : R20 ;
+- **à l'état d'idée** : R20, désormais détaillé par une [proposition de `memory-bank-sync` adapté](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) ;
 - **pour plus tard** : R26 à R30.
 
 ---
