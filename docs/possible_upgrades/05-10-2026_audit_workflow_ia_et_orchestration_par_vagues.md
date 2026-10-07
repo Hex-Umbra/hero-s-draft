@@ -2,7 +2,7 @@
 
 **Date** : 05/10/2026
 **Objet** : la chaîne brainstorm → revue → spec → plan → exécution, et sa forme la plus récente, le [fichier d'orchestration par vagues](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) (ADR-102, amendé par ADR-103). La comparer à ce que publient les développeurs qui travaillent de la même manière, et en tirer un modèle d'orchestration réutilisable.
-**Livrable compagnon** : [`05-10-2026_modele_orchestration_par_vagues.md`](05-10-2026_modele_orchestration_par_vagues.md) — le modèle, qui reprend ton cycle et y intègre les recommandations de §4.
+**Livrable compagnon** : [`05-10-2026_modele_orchestration_par_vagues.md`](05-10-2026_modele_orchestration_par_vagues.md) — le modèle, qui reprend ton cycle et y intègre les recommandations de §4. Le [guide du workflow](07-10-2026_guide_du_workflow_par_vagues.md), du 07/10, en décrit le déroulé pas à pas.
 **Méthode** :
 - le dépôt relevé à `0ec09ab` : le fichier d'orchestration, ADR-102 et ADR-103, les trois comptes rendus de vague (leurs §1 et §6), le brainstorm v3 et sa revue, les specs et les plans des vagues 1 à 3, et `git diff --shortstat` sur les trois commits de fusion ;
 - trois recherches web menées en parallèle le 05/10, chacune par un agent : les forums et les praticiens, les frameworks, la documentation officielle d'Anthropic ;
@@ -219,7 +219,7 @@ Chaque recommandation donne le constat, ce que font les autres, la proposition e
 - *Ailleurs* : Anthropic, les hooks sont « *deterministic* », `CLAUDE.md` est « *advisory* ».
 - *Proposition* :
   - **(a)** protéger `main` sur GitHub : PR obligatoire, CI verte ;
-  - **(b)** un hook `PreToolUse` qui bloque les gestes interdits, seulement quand la branche courante est une branche de vague (esquisse dans le modèle, §5.2). Une règle de permission globale ne convient pas : les sessions cloud, comme celle qui écrit cet audit, doivent pousser leur branche ;
+  - **(b)** un hook `PreToolUse` qui bloque les gestes interdits, seulement quand la branche courante est une branche de vague (esquisse dans le modèle, §7.2). Une règle de permission globale ne convient pas : les sessions cloud, comme celle qui écrit cet audit, doivent pousser leur branche ;
   - **(c)** une fois les garde-fous en place, retirer leur texte des gabarits : moins de consignes, mieux suivies.
 - *Coût* : environ une heure pour (a) et (b), à tester sur une branche jetable.
 
@@ -364,7 +364,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 - *Proposition* : chaque entrée du cahier livre un scénario en donnée (classe, passif, deck, reliques, or, acte, nœud), que le menu de debug charge d'un geste. Les mêmes fichiers servent de point de départ aux tests de widget.
 - *Coût* : c'est un lot de produit (une extension de P-30), à planifier comme tel, pas un changement de méthode.
 
-**R23. Un banc d'essai pour la méthode.** *Précisé le 06/10 : « la méthode » est le workflow lui-même, résumé en trois graphes dans le modèle, §1 bis.*
+**R23. Un banc d'essai pour la méthode.** *Précisé le 06/10 : « la méthode » est le workflow lui-même, résumé en graphes dans le [guide du workflow](07-10-2026_guide_du_workflow_par_vagues.md), §1.*
 - *Constat* : les gabarits ont changé à chaque passe de revue, et R2 va changer le vérificateur. Rien ne dit si un changement de gabarit améliore la vérification ou la dégrade. Anthropic recommande de commencer par 20 à 50 cas tirés de vrais échecs, et que chaque incident devienne un cas ([evals](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)).
 - *Proposition* : cinq cas figés par commit :
   - la spec E3 avant son troisième tour, avec ses trois constats moyens connus ;
@@ -418,7 +418,7 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 **Où en sont les décisions du propriétaire, au 06/10** :
 - **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R22, sous la forme d'un fichier de tests manuels d'interface, sans toucher au menu de debug ; R25 ; R31, le 07/10 (§6.7) ;
 - **écartés** : R21 ; R24, avec toute estimation de coût à l'avance ;
-- **précisé** : R23 — « la méthode » est le workflow, résumé en graphes dans le modèle (§1 bis) ; le banc d'essai reste une idée ;
+- **précisé** : R23 — « la méthode » est le workflow, résumé en graphes dans le guide du workflow (§1) ; le banc d'essai reste une idée ;
 - **à l'état d'idée** : R20, désormais détaillé par une [proposition de `memory-bank-sync` adapté](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) ;
 - **pour plus tard** : R26 à R30.
 
@@ -433,9 +433,9 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 
   Le brainstorm reste le *quoi*, cité par numéro de décision. GSD procède ainsi : les décisions de la phase, puis directement les plans.
 - *Où l'essayer* : aux vagues 6 et 7, que le fichier d'orchestration décrit déjà comme « moyen : une spec, un plan ». Pas en vague 4, qui est lourde et porte déjà l'essai de R1 à R3.
-- *Dans le modèle* : §3.3.
+- *Dans le guide du workflow* : §8.6 à §8.8.
 
-**Les phases du workflow.** Le [modèle](05-10-2026_modele_orchestration_par_vagues.md), au §3, découpe désormais le workflow en quatre phases :
+**Les phases du workflow.** Le workflow se découpe désormais en quatre phases, que le [guide du workflow](07-10-2026_guide_du_workflow_par_vagues.md) décrit pas à pas ; ce qui s'installe est dans le [modèle](05-10-2026_modele_orchestration_par_vagues.md) :
 - **0 — le brainstorm**, la tienne ;
 - **1 — l'ouverture d'un chantier**, par le skill `ouverture-de-chantier` : son `SKILL.md`, ses agents et son script de squelette sont en Annexe A ;
 - **2 — une vague**, par le skill `/vague` : une proposition, dont le squelette est en Annexe B ;
