@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-10-06
+**Dernière mise à jour** : 2026-10-07
 
 ---
 
@@ -171,7 +171,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | | Document | Date |
 |:---:|:---|:---|
 | 🔍 | [Audit — le développement assisté par IA, comparé à ce que font les autres](possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) — la chaîne brainstorm → revue → spec → plan → vagues, mesurée sur les trois vagues livrées et confrontée aux forums, aux frameworks (Superpowers, GSD, Spec Kit, BMAD…) et à la documentation d'Anthropic ; treize recommandations classées, un essai mesuré proposé sur la vague 4 ; §6, seconde passe du 06/10 : dix-sept points de plus (outillage figé, historique hors de la spec, relais de l'orchestrateur, vault généré, banc d'essai de la méthode…) et une correction à R1 ; **rien n'est tranché** | 05/10/2026 |
-| 🔍 | [Modèle — l'orchestration d'un chantier livré par vagues](possible_upgrades/05-10-2026_modele_orchestration_par_vagues.md) — cinq couches (agents, méthode, outillage, chantier, vague) et un répertoire par chantier, `docs/chantiers/<chantier>/` (`orchestration.md`, `etat.json`, `suivi.md`, un dossier par vague) ; fichiers à copier, gabarits d'agents, esquisses de hooks, de scripts et de skill ; plan de migration du chantier en cours, recommandé à sa clôture ; **proposition, non adoptée** — réorganisé le 06/10 | 05/10/2026 |
+| 🔍 | [Modèle — l'orchestration d'un chantier livré par vagues](possible_upgrades/05-10-2026_modele_orchestration_par_vagues.md) — cinq couches (agents, méthode, outillage, chantier, vague) et un répertoire par chantier, `docs/chantiers/<chantier>/` (`orchestration.md`, `etat.json`, `suivi.md`, un dossier par vague) ; fichiers à copier, gabarits d'agents, esquisses de hooks, de scripts et de skill ; plan de migration du chantier en cours, recommandé à sa clôture ; §3, ajouté le 07/10 : les quatre phases du workflow (brainstorm, ouverture d'un chantier, vague, clôture), le `SKILL.md` d'`ouverture-de-chantier` avec ses agents et son script de squelette testé, la phase 2 proposée et la variante sans spec (R31) ; **proposition, non adoptée** — réorganisé le 06/10 | 05/10/2026 |
 | 🔍 | [Proposition — `memory-bank-sync`, adapté au workflow par vagues](possible_upgrades/06-10-2026_memory_bank_sync_adapte_aux_vagues.md) — R20 de l'audit : des fiches qui pointent vers leurs porteurs et leurs tests au lieu de recopier, des valeurs générées depuis la donnée, aucun état de branche dans une fiche ni dans un ADR, un périmètre calculé depuis le diff ; mesures des trois synchronisations, une fiche réelle réécrite, le `SKILL.md` complet proposé et sa migration ; **proposition, le skill n'est pas modifié** | 06/10/2026 |
 | 📖 | [Modèle du suivi des vagues d'un chantier](suivi_vagues_chantier/_modele_suivi.md) — l'en-tête, l'organisation et la manière d'écrire que tout fichier de `suivi_vagues_chantier/` respecte ; squelette à copier à l'ouverture d'un chantier livré par vagues | 01/10/2026 |
 | 🔍 | [Revue du répertoire `possible_upgrades/` — état réel au 11/09, croisements, fraîcheur de la roadmap et de l'index, lots proposés](possible_upgrades/10-09-2026_revue_brainstorms_aout_et_lots.md) — 24 documents croisés avec la ROADMAP, l'index et le code ; regroupements P-49 à P-52 proposés | 10/09/2026 |

@@ -416,11 +416,30 @@ Les six plans d'octobre ont une section `## Review Focus`, qu'aucun plan de sept
 4. **Selon les résultats** : R26, R27, R28, R29, R30.
 
 **Où en sont les décisions du propriétaire, au 06/10** :
-- **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R22, sous la forme d'un fichier de tests manuels d'interface, sans toucher au menu de debug ; R25 ;
+- **retenus** : R14 à R17 ; R18, par un webhook de messagerie dédié ; R22, sous la forme d'un fichier de tests manuels d'interface, sans toucher au menu de debug ; R25 ; R31, le 07/10 (§6.7) ;
 - **écartés** : R21 ; R24, avec toute estimation de coût à l'avance ;
 - **précisé** : R23 — « la méthode » est le workflow, résumé en graphes dans le modèle (§1 bis) ; le banc d'essai reste une idée ;
 - **à l'état d'idée** : R20, désormais détaillé par une [proposition de `memory-bank-sync` adapté](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) ;
 - **pour plus tard** : R26 à R30.
+
+
+### 6.7. Ajouté le 07/10 — les phases, et la spec qui disparaît
+
+**R31. Plus de spec séparée pour un lot léger ou standard.** *Retenu le 07/10.*
+- *Constat* : avec des plans qui consignent des décisions (R1), spec et plan se recouvrent. Mais le brainstorm ne peut pas tenir lieu de spec. La spec E3 tranchait surtout le *comment* : 28 arbitrages, dont 21 apparus en l'écrivant, puis les données, le moteur et les textes joueur — ce que le brainstorm ne fait pas. Sa vérification coûtait la moitié de la vague 3.
+- *Proposition* : la cérémonie du lot décide de ses documents.
+  - **Léger ou standard** : la fiche, puis un plan qui ouvre par ses décisions de conception — une seule rédaction, une seule boucle de vérification.
+  - **Lourd** : une conception courte (200 à 300 lignes) pour le lot entier, puis un plan par partie. Le plan de la partie 2 s'écrit après l'implémentation de la partie 1 : les décisions du lot doivent être fixées avant.
+
+  Le brainstorm reste le *quoi*, cité par numéro de décision. GSD procède ainsi : les décisions de la phase, puis directement les plans.
+- *Où l'essayer* : aux vagues 6 et 7, que le fichier d'orchestration décrit déjà comme « moyen : une spec, un plan ». Pas en vague 4, qui est lourde et porte déjà l'essai de R1 à R3.
+- *Dans le modèle* : §3.3.
+
+**Les phases du workflow.** Le [modèle](05-10-2026_modele_orchestration_par_vagues.md), au §3, découpe désormais le workflow en quatre phases :
+- **0 — le brainstorm**, la tienne ;
+- **1 — l'ouverture d'un chantier**, par le skill `ouverture-de-chantier` : son `SKILL.md`, ses agents et son script de squelette sont en Annexe A ;
+- **2 — une vague**, par le skill `/vague` : une proposition, dont le squelette est en Annexe B ;
+- **3 — la clôture**, par le même skill.
 
 ---
 
