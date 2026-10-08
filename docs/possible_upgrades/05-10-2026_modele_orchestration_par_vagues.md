@@ -1,9 +1,10 @@
 # Modèle — l'orchestration d'un chantier livré par vagues
 
-**Date** : 05/10/2026 — **réorganisé le 06/10** autour d'un répertoire par chantier, **complété le 07/10** par le skill d'ouverture et le squelette du skill de vague ; le même jour, les graphes et le déroulé des phases sont passés dans le [guide du workflow](07-10-2026_guide_du_workflow_par_vagues.md), à la demande du propriétaire.
-**Rôle** : ce qui s'installe ou se copie pour ouvrir et dérouler un chantier livré par vagues : les couches, l'arborescence, les fichiers à copier, les changements de méthode, les gabarits des agents, l'outillage, les deux skills, puis l'adoption et la migration du chantier en cours. **Comment tout cela fonctionne, pas à pas** — les phases, les étapes, le rôle de chaque fichier et de chaque agent — **est dans le [guide du workflow](07-10-2026_guide_du_workflow_par_vagues.md)** ; ce modèle ne le répète pas.
-**Origine** : le [fichier d'orchestration du chantier en cours](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), dont il garde l'ossature, et l'[audit du 05/10](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), dont il intègre les recommandations. **★Rn** marque ce qui diffère du fichier actuel et renvoie à la recommandation n de l'audit (§4). Le découpage en couches et en répertoires développe R6 ; R14 à R18, R22 et la correction de R1 viennent de la seconde passe de l'audit (§6, 06/10) ; R31 et les phases, du 07/10.
-**Statut** : proposition. **Rien n'est adopté** : le fichier du chantier en cours reste la seule référence de ce chantier, et aucun des répertoires décrits ici n'existe encore. §8 dit comment adopter le modèle, en tout ou en partie.
+**Date** : 05/10/2026 ; réorganisé le 06/10 (un répertoire par chantier) ; complété le 07/10 (skills, annexes A et B). **Condensé le 08/10** : même numérotation, gabarits, scripts et skills inchangés, moins de récit.
+**Rôle** : ce qui s'installe ou se copie : couches, arborescence, fichiers à copier, changements de méthode, gabarits des agents, outillage, les deux skills, adoption et migration. **Comment tout cela fonctionne** est dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md) ; **pourquoi**, dans l'[audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), dont ★Rn cite les recommandations.
+**Qui le lit** : le propriétaire, et la session qui installera la méthode (elle copie les annexes et le §7). Aucun agent de vague n'a à le charger.
+**Origine** : le [fichier d'orchestration du chantier en cours](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), dont il garde l'ossature.
+**Statut** : proposition. **Rien n'est adopté** ; aucun des répertoires décrits n'existe. §8 dit comment adopter, en tout ou en partie.
 
 **Comment le lire** :
 
@@ -25,7 +26,7 @@
 
 ## 1. Les cinq couches ★R6
 
-Le fichier actuel mêle, en 636 lignes, une méthode qui ne change pas d'un chantier à l'autre, les gabarits des agents, l'état du chantier et les fiches de toutes ses vagues. Chaque session relit le tout. Le modèle range ces contenus en cinq couches, chacune à sa place.
+Le fichier actuel mêle en 636 lignes la méthode, les gabarits, l'état et les fiches de toutes les vagues ; chaque session relit le tout. Cinq couches, chacune à sa place :
 
 | Couche | Où | Ce qu'elle porte | Qui l'écrit | Quand elle change |
 |:---|:---|:---|:---|:---|
@@ -35,21 +36,13 @@ Le fichier actuel mêle, en 636 lignes, une méthode qui ne change pas d'un chan
 | **Chantier** | `docs/chantiers/<chantier>/` | L'ordre des vagues et sa raison, l'état, le journal, la cohérence, l'oracle, le récit non technique | La vague 0, puis chaque vague pour l'état et le journal | À l'ouverture, puis à chaque étape (l'état) ou à chaque jalon (le journal) |
 | **Vague** | `docs/chantiers/<chantier>/vagues/<NN>-…/` | La fiche, la conception d'un lot lourd, les plans, les vérifications, les tests manuels, le compte rendu | La vague 0 pour la fiche, l'éclaireur pour sa mise à jour, la vague elle-même pour le reste | Pendant la vague, puis plus jamais, sauf par une session de correction |
 
-**Ce qu'une session d'orchestrateur lit, avant et après** :
-
-| | Aujourd'hui | Avec les couches |
-|:---|:---|:---|
-| La méthode | Les §3 à §6 du fichier, environ 280 lignes, gabarits compris | Le `SKILL.md`, plus court : les gabarits partent dans les fichiers d'agents, que seuls les sous-agents lisent, et les garde-fous mécaniques dans les hooks |
-| Le chantier | Les §0 à §2 et §7 du fichier, dont un journal aux cellules de plus de 200 mots | `etat.json` (une quinzaine de lignes) et `orchestration.md`, au journal réduit aux jalons |
-| Les fiches | Les neuf fiches, environ 180 lignes | La seule fiche de sa vague |
-
-Le total devrait tomber à environ la moitié de ce qu'une session lit aujourd'hui. C'est une estimation, à vérifier par la mesure de session (§7.4). Surtout, chaque session ne lit plus que ce qui la concerne. Le relais de l'orchestrateur à chaque fin de plan (★R17) empêche en plus son contexte de grandir pendant toute une vague.
+**Ce qu'une session d'orchestrateur lit** : aujourd'hui, la méthode (§3 à §6, ≈ 280 lignes), le chantier (§0 à §2 et §7, journal aux cellules de plus de 200 mots) et les neuf fiches (≈ 180 lignes). Avec les couches : le `SKILL.md` (gabarits dans les fichiers d'agents, garde-fous dans les hooks), `etat.json` et un `orchestration.md` réduit aux jalons, la seule fiche de sa vague. Environ la moitié, à vérifier par la mesure de session (§7.4) ; le relais ★R17 empêche en plus le contexte de grandir sur toute une vague.
 
 ---
 
 ## 1 bis. Le workflow en graphes
 
-Les graphes du workflow — les phases, l'ouverture d'un chantier, les modes et les états d'une vague, son déroulé, la boucle de vérification, l'arbitrage — et la définition de « la méthode » ★R23 sont dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md) : §1, puis §7 à §10. Quand la méthode change, ils changent avec elle, dans le même commit.
+Les graphes et la définition de « la méthode » ★R23 sont dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md), §1 et §7 à §10. Quand la méthode change, ils changent dans le même commit.
 
 ---
 
@@ -95,17 +88,12 @@ docs/chantiers/
 
 **Les règles de nommage**
 
-- **Le dossier d'un chantier** : son nom en minuscules, sans accent, les mots séparés par des tirets, sans date — `economie-et-catalogue`. Il vit aussi longtemps que le chantier, puis reste en place comme historique.
-- **Le dossier d'une vague** : `<NN>-v<x.y.z>-<nom>`, où `NN` est le numéro de la vague sur deux chiffres. La clôture s'écrit `cloture`.
-  - La vague 0 n'a pas de dossier : c'est la phase 1 elle-même, sur sa branche `docs/ouverture-<chantier>` (guide, §7).
-  - Le numéro vient d'abord : il ne change jamais et garde l'ordre de tri. Une version peut se décaler si un correctif s'intercale entre deux vagues (c'est un cas d'arrêt du fichier actuel, §6) ; on renomme alors le dossier par `git mv`, et c'est le seul cas où un dossier de vague change de nom.
-- **Les conceptions et les plans** portent l'identifiant de leur lot : `conception-<lot>.md`, `plan-<lot>.md`, `plan-<lot>-partie-<k>.md`, par exemple `plan-p43-e3-partie-1.md`.
-  - Ce nom est unique dans tout le dépôt, et ce n'est pas un détail : SDD range son registre sous `.superpowers/sdd/<nom du plan>/`, et deux plans de même nom pourraient partager un registre.
-  - La date n'est plus dans le nom : elle est dans l'en-tête du document et dans l'historique git.
-- **La conception** ★R31 : `conception-<lot>.md`, pour un lot lourd seulement. Un lot léger ou standard n'a ni spec ni conception : son plan ouvre par ses décisions de conception (guide, §8.6). Les specs du chantier en cours gardent leur nom, `spec-<lot>.md`, à la migration.
-- **Les vérifications** ★R15 : `verifications-<lot>.md` garde ce que la conception et le plan n'ont pas à porter — les options écartées de chaque arbitrage, et le journal des tours de vérification. Le document ne garde que la décision retenue et sa raison.
-- **Les tests manuels** ★R22 : `tests-manuels.md`, un par vague — les tests d'interface que le propriétaire joue à la main, et leurs résultats, qu'il remplit lui-même (§4.6).
-- **Le compte rendu** s'appelle `compte-rendu.md`, un par vague. Une session de correction y ajoute sa section, elle n'ouvre pas de fichier.
+- **Chantier** : minuscules, sans accent, tirets, sans date (`economie-et-catalogue`) ; reste en place comme historique.
+- **Vague** : `<NN>-v<x.y.z>-<nom>` ; la clôture s'écrit `cloture` ; la vague 0 n'a pas de dossier (c'est la phase 1, sur `docs/ouverture-<chantier>`). Le numéro vient d'abord et ne change jamais ; un décalage de version (correctif intercalé) se règle par `git mv`, seul cas de renommage.
+- **Conceptions et plans** : `conception-<lot>.md`, `plan-<lot>.md`, `plan-<lot>-partie-<k>.md`. Nom unique dans le dépôt : SDD range son registre sous `.superpowers/sdd/<nom du plan>/`. Pas de date dans le nom.
+- **Conception** ★R31 : lot lourd seulement ; un lot léger ou standard n'a ni spec ni conception (guide §8.6). Les specs du chantier en cours gardent `spec-<lot>.md` à la migration.
+- **`verifications-<lot>.md`** ★R15 : options écartées et journal des tours ; le document ne garde que la décision et sa raison.
+- **`tests-manuels.md`** ★R22, un par vague, rempli par le propriétaire (§4.6). **`compte-rendu.md`**, un par vague ; une correction y ajoute sa section.
 
 **Ce qui reste hors du dossier d'un chantier**
 
@@ -135,7 +123,7 @@ docs/chantiers/
 
 ## 3. Les phases du workflow
 
-Le workflow a quatre phases : 0, le brainstorm, le tien ; 1, l'ouverture d'un chantier, par `/ouverture-de-chantier` ; 2, une vague, par `/vague`, une fois par version ; 3, la clôture, par le même skill. **Leur déroulé pas à pas est dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md)** : la phase 0 au §6, la phase 1 au §7, la phase 2 au §8, la boucle de vérification au §9, l'arbitrage au §10, la clôture au §11, les arrêts au §13. Ce qui s'installe est ici : le `SKILL.md` d'`ouverture-de-chantier`, ses agents et son script en Annexe A ; le squelette du `SKILL.md` de `vague` en Annexe B ; les gabarits des agents de la phase 2 au §6.
+Quatre phases : 0 brainstorm ; 1 ouverture, `/ouverture-de-chantier` ; 2 une vague, `/vague` ; 3 clôture, même skill. Déroulé dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md), §6 à §13. Ce qui s'installe est ici : annexe A (phase 1), annexe B (`vague`), §6 (agents de la phase 2).
 
 ---
 
@@ -314,7 +302,7 @@ L'état courant du chantier, pour les machines : le script de porte d'entrée, l
 
 ### 4.3. `vagues/<NN>-…/fiche.md`
 
-Écrite à l'ouverture du chantier, pour chaque vague. L'éclaireur la met à jour avant que la vague s'ouvre ★R8. Ensuite, plus personne n'y touche : ce que la vague a fait est dans son compte rendu.
+Écrite à l'ouverture du chantier ; mise à jour par l'éclaireur avant la vague ★R8 ; figée ensuite.
 
 ~~~~markdown
 # Vague <N> — `<version>` — <lots>
@@ -349,7 +337,7 @@ L'état courant du chantier, pour les machines : le script de porte d'entrée, l
 
 ### 4.4. `vagues/<NN>-…/compte-rendu.md`
 
-Son squelette est copié à l'ouverture de la vague ; il se remplit à la fin du premier plan, par sa table des arbitrages — SDD supprime son registre de décisions à la fin de chaque plan —, et se complète à la fin de la vague. Les sections sont celles des trois comptes rendus existants, plus deux ★.
+Squelette copié à `branche` ; rempli dès la fin du premier plan (SDD supprime son registre), complété en fin de vague. Les sections des trois comptes rendus existants, plus deux ★.
 
 ~~~~markdown
 # Vague <N> — `<version>` — <lots> — compte rendu
@@ -376,11 +364,11 @@ Son squelette est copié à l'ouverture de la vague ; il se remplit à la fin du
 
 ### 4.5. `suivi.md`
 
-Inchangé sur le fond : c'est le squelette de §5 de `docs/suivi_vagues_chantier/_modele_suivi.md`. Les règles d'écriture de ce modèle (§1 à §4) deviennent `docs/chantiers/_modele/suivi.md`. Deux retouches seulement : l'en-tête renvoie à `orchestration.md` du même dossier, et le fichier ne porte plus le nom du chantier, puisque son dossier le porte.
+Le squelette de §5 de `docs/suivi_vagues_chantier/_modele_suivi.md`, dont les règles (§1 à §4) deviennent `docs/chantiers/_modele/suivi.md`. Deux retouches : l'en-tête renvoie à `orchestration.md` du même dossier ; le nom du chantier sort du fichier.
 
 ### 4.6. `vagues/<NN>-…/tests-manuels.md` ★R22
 
-Les tests d'interface que le propriétaire joue à la main. `redacteur-tests-manuels` l'écrit en fin de vague, à la place de l'ancien « cahier de test manuel » du compte rendu. Le propriétaire le remplit pendant son test et le commite sur la branche ; ses ❌ ouvrent une session de correction, et leur nombre remplit la colonne « Défauts au test du propriétaire » du tableau de bord. Le menu de debug n'est pas modifié : un test dit seulement quels onglets existants utiliser, et avec quelles valeurs.
+Écrit par `redacteur-tests-manuels` à la place de l'ancien cahier du compte rendu ; rempli et commité par le propriétaire ; ses ❌ ouvrent une correction et remplissent la colonne « Défauts » du tableau de bord. Le menu de debug ne change pas.
 
 ~~~~markdown
 # Vague <N> — `<version>` — tests manuels
@@ -410,7 +398,7 @@ Les tests d'interface que le propriétaire joue à la main. `redacteur-tests-man
 
 ## 5. La méthode : ce qui change dans le cycle actuel
 
-Le cycle du fichier actuel (§3.1 à §3.10) devient le corps du skill `vague` (Annexe B). Ses étapes prennent un nom, que le guide fait correspondre aux numéros d'aujourd'hui (guide, Annexe A) ; voici ce qui change dans chacune.
+Le cycle actuel (§3.1 à §3.10) devient le corps du skill `vague` (annexe B) ; correspondance des noms dans le guide, annexe A.
 
 | Étape | Aujourd'hui | Avec le modèle |
 |:---|:---|:---|
@@ -434,11 +422,7 @@ Le cycle du fichier actuel (§3.1 à §3.10) devient le corps du skill `vague` (
 
 ## 6. Les gabarits des agents ★R6
 
-Chaque rôle devient un fichier de `.claude/agents/`. Sa partie fixe (mission, méthode, grille, format de sortie) vit dans le fichier ; sa partie variable (le lot, les chemins, les décisions, le mode) arrive par le message de l'orchestrateur. **Le catalogue des agents** — phase, étape, mission, ce que chacun lit, écrit et rend, ses outils, son modèle — **et leurs règles communes sont dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md), §4.3.** Cette section ne garde que leurs gabarits.
-
-★R31 : pour un lot léger ou standard, `redacteur-plan` écrit aussi les décisions de conception en tête du plan, et `verificateur-plan` les vérifie avec la grille de §6.1. Les agents de la phase 1 sont en Annexe A.2.
-
-Les gabarits du fichier actuel (§4.1, rédacteur de spec, base du `redacteur-conception` ; §4.5, skills de fin ; §4.6, correcteur) restent la base, avec les chemins du dossier de la vague. Les cinq qui suivent changent sur le fond.
+Un fichier par rôle dans `.claude/agents/` : partie fixe dans le fichier, partie variable dans le message. **Le catalogue et les règles communes sont dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md), §4.3** ; ici, les seuls gabarits qui changent sur le fond. Les gabarits actuels §4.1 (base du `redacteur-conception`), §4.5 et §4.6 restent la base, avec les chemins du dossier de la vague ; les agents de la phase 1 sont en annexe A.2. ★R31 : pour un lot léger ou standard, `redacteur-plan` écrit aussi les décisions de conception, et `verificateur-plan` les vérifie avec la grille de §6.1.
 
 ### 6.1. `verificateur-conception` ★R2 — ancien vérificateur de spec
 
@@ -494,7 +478,7 @@ Avant de rendre, compte les blocs de code hors des tâches à risque : il n'en r
 Le plan ne crée pas de branche, ne commite rien sur `main`, ne pousse rien, n'ouvre pas de PR, n'invoque aucun skill de livraison ni de synchronisation. Sa dernière tâche est la vérification finale. Rends le chemin du plan, sa carte des fichiers, le nombre de blocs de code hors des tâches à risque et, pour un lot lourd, sa longueur rapportée à celle de la conception.
 ````
 
-**Le plan de référence compte autant que le gabarit** (audit §6.1). Celui que le fichier actuel cite, le plan de P-49, transcrit le code : 3 627 lignes, 249 blocs. Le citer comme modèle imposerait la transcription quoi que dise le gabarit. Le premier plan écrit selon ce gabarit et jugé bon devient la référence des suivants.
+**Le plan de référence compte autant que le gabarit** (audit §6.1) : celui de P-49 transcrit (3 627 lignes, 249 blocs). Le premier plan écrit selon ce gabarit et jugé bon devient la référence.
 
 ### 6.3. `verificateur-plan` ★R1
 
@@ -532,7 +516,7 @@ Rends une table : décision ou critère, verdict, preuve, et pour chaque « part
 
 ## 7. L'outillage — des esquisses
 
-**Rien de cette section n'est installé.** Chaque esquisse s'adopte par une tâche de plan, avec ses tests, et se valide contre la documentation de Claude Code du jour ([hooks](https://code.claude.com/docs/en/hooks), [sub-agents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills)).
+**Rien n'est installé.** Chaque esquisse s'adopte par une tâche de plan avec ses tests, validée contre la documentation du jour ([hooks](https://code.claude.com/docs/en/hooks), [sub-agents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills)).
 
 ### 7.1. Un fichier d'agent
 
@@ -548,13 +532,11 @@ model: <le plus capable>
 <Le corps du gabarit §6.1, sans ses parties variables : elles arrivent par le message de l'orchestrateur.>
 ```
 
-Sans `Write` ni `Edit` dans `tools`, l'agent n'a plus d'outil d'édition. Il garde `Bash`, nécessaire à ses preuves par commande, et `Bash` peut écrire : une règle de permission ou un hook propre à l'agent ferme ce reste, si l'expérience montre qu'il le faut.
+Sans `Write` ni `Edit`, pas d'outil d'édition ; `Bash` reste pour les preuves, et peut écrire : un hook propre à l'agent fermerait ce reste si besoin.
 
 ### 7.2. Le hook `garde_vague` ★R4
 
-`.claude/hooks/garde_vague.sh` — testé le 05/10 sur un dépôt jetable, et retesté le 07/10 avec le motif `docs/ouverture-*` :
-- **bloqués** : `git push`, `git add .`, `git add -A`, `dart format`, `gh pr create`, `git reset --hard`, `git worktree add`, `git clean` ;
-- **laissés passer** : `git add <chemin>`, `git tag -l`, `dart analyze`, `gh pr view`, `git reset HEAD~1`, et tout ce qui se fait hors d'une branche de chantier — vague, ouverture ou clôture.
+`.claude/hooks/garde_vague.sh`, testé le 05/10 et le 07/10 sur un dépôt jetable. Bloqués : `git push`, `git add .`, `git add -A`, `dart format`, `gh pr create`, `git reset --hard`, `git worktree add`, `git clean`. Laissés passer : `git add <chemin>`, `git tag -l`, `dart analyze`, `gh pr view`, `git reset HEAD~1`, et tout hors d'une branche de chantier.
 
 ```bash
 #!/usr/bin/env bash
@@ -573,11 +555,11 @@ fi
 exit 0
 ```
 
-**Pourquoi par branche et non par règle de permission** : une règle `deny` sur `git push` dans les réglages du projet bloquerait aussi les sessions qui doivent pousser leur branche, comme les sessions cloud. Le hook ne mord que sur une branche de chantier. Il ne remplace pas la **protection de `main` sur GitHub** (PR obligatoire, CI verte), qui est le vrai verrou de « jamais sur `main` ».
+Par branche et non par règle de permission : un `deny` global bloquerait aussi les sessions cloud, qui doivent pousser. Il ne remplace pas la **protection de `main` sur GitHub**, vrai verrou de « jamais sur `main` ».
 
 ### 7.3. La porte d'entrée, qui lit `etat.json` ★R5
 
-Esquisse de `tool/vagues/porte_entree.sh`. Chaque ligne reprend une vérification de la table §3.1 du fichier actuel, plus deux qui viennent de l'arborescence.
+Esquisse : les vérifications de la table §3.1 du fichier actuel, plus deux venues de l'arborescence.
 
 ```bash
 #!/usr/bin/env bash
@@ -610,18 +592,18 @@ total=$(printf '%s\n' "$sortie" | tail -1 | grep -oE '\+[0-9]+' | head -1 | tr -
 exit "$echec"
 ```
 
-La version à écrire attend un run de CI `queued` ou `in_progress` au lieu d'échouer, et contrôle aussi la release du tag. Elle saute le contrôle du tag quand la vague précédente est la vague 0 d'un chantier qui démarre sur une version déjà publiée.
+La version à écrire attend un run `queued` ou `in_progress`, contrôle aussi la release, et saute le contrôle du tag après une vague 0.
 
 ### 7.4. Les autres scripts ★R5
 
-- `tool/vagues/mesure_session` — les statistiques de §3.8 du fichier actuel, calculées depuis les transcriptions de Claude Code : temps, agents, jetons comptés une fois par message, coût. Mêmes définitions pour toutes les vagues ; il sort la ligne du tableau de bord et la section 7 du compte rendu.
-- `tool/vagues/verifier_references` — chaque `chemin`, `chemin:ligne` et symbole `chemin › Classe.méthode` cité par un document existe sur la branche courante.
+- `tool/vagues/mesure_session` — les statistiques de §3.8, depuis les transcriptions : temps, agents, jetons comptés une fois par message, coût ; mêmes définitions à chaque vague ; sort la ligne du tableau de bord et le §7 du compte rendu.
+- `tool/vagues/verifier_references` — chaque `chemin`, `chemin:ligne` et `chemin › Classe.méthode` cité existe sur la branche.
 
-En Dart, sous `tool/`, ils passent `dart analyze` comme le script de simulation, et la section « Tooling » de `CLAUDE.md` les nomme.
+En Dart sous `tool/`, propres à `dart analyze`, nommés par la section « Tooling » de `CLAUDE.md`.
 
 ### 7.5. L'état à l'ouverture de session — facultatif
 
-Un hook `SessionStart` peut afficher l'état des chantiers ouverts, pour qu'une session sache où elle en est avant même de lire :
+Un hook `SessionStart` affiche l'état des chantiers ouverts :
 
 ```bash
 #!/usr/bin/env bash
@@ -637,7 +619,7 @@ exit 0
 
 ### 7.6. Prévenir le propriétaire ★R18
 
-Un hook `Stop`, qui ne parle que lorsqu'un chantier s'arrête, passe le relais ou livre, et une seule fois par événement. **Il passe par un webhook dédié**, distinct de celui des releases, pour que les alertes de travail ne se mêlent pas aux annonces publiques. La messagerie est au choix, par deux variables d'environnement locales :
+Un hook `Stop` qui ne parle qu'à un arrêt, un relais ou une livraison, une fois par événement, **par un webhook dédié**, distinct de celui des releases. Deux variables d'environnement locales :
 
 | `ALERTE_FORMAT` | `ALERTE_URL` | Ce qui est envoyé |
 |:---|:---|:---|
@@ -672,7 +654,7 @@ done
 exit 0
 ```
 
-`.superpowers/` est déjà ignoré par git. Le hook ne bloque jamais la fin d'un tour : il sort toujours en 0. L'URL du webhook est un secret : elle reste dans l'environnement local, jamais dans le dépôt.
+`.superpowers/` est ignoré par git. Le hook sort toujours en 0. L'URL est un secret, jamais dans le dépôt.
 
 ### 7.7. Les skills de méthode ★R6
 
@@ -686,14 +668,14 @@ exit 0
     └── compte-rendu.md        # la forme du compte rendu, et les définitions des statistiques
 ```
 
-- Les deux frontmatters portent `disable-model-invocation: true` : un chantier s'ouvre et une vague se lance par ta commande, jamais d'eux-mêmes.
-- Les gabarits ne sont pas dans le skill : ils sont dans les fichiers d'agents (§6), que l'orchestrateur n'a pas à lire.
-- La méthode porte un numéro de version, que `orchestration.md` et `etat.json` citent. En changer en cours de chantier est un amendement de méthode, consigné par un ADR.
+- `disable-model-invocation: true` sur les deux : lancés par ta commande seulement.
+- Les gabarits sont dans les fichiers d'agents (§6), pas dans le skill.
+- La méthode porte un numéro de version, cité par `orchestration.md` et `etat.json` ; en changer en cours de chantier est un amendement, par ADR.
 
 
 ### 7.8. L'enregistrement des hooks
 
-Les trois hooks s'enregistrent dans `.claude/settings.json`, que git suit ; l'URL du webhook, elle, reste dans l'environnement local. Esquisse, à valider contre la [documentation des hooks](https://code.claude.com/docs/en/hooks) le jour de l'adoption :
+Dans `.claude/settings.json`, suivi par git ; à valider contre la [documentation](https://code.claude.com/docs/en/hooks) à l'adoption :
 
 ```json
 {
@@ -718,14 +700,15 @@ Les trois hooks s'enregistrent dans `.claude/settings.json`, que git suit ; l'UR
 }
 ```
 
-Le `matcher` limite `garde_vague` aux commandes Bash. `etat_chantiers` est facultatif : son entrée peut manquer.
+`etat_chantiers` est facultatif.
+
 ---
 
 ## 8. L'adoption, et la migration du chantier en cours
 
 ### 8.1. Ce qui peut s'appliquer dès la vague 4, sans toucher à l'arborescence
 
-Les gains de coût ne dépendent pas des répertoires. L'audit (§5) propose un essai mesuré sur la vague 4, dans le fichier d'orchestration actuel :
+Les gains de coût ne dépendent pas des répertoires (audit §5) :
 
 | Changement | Où, dans le fichier actuel |
 |:---|:---|
@@ -755,12 +738,12 @@ Les gains de coût ne dépendent pas des répertoires. L'audit (§5) propose un 
 | **B — entre deux vagues**, après la fusion de la vague N et avant le lancement de N+1 | Les vagues restantes lisent déjà moins | Le prompt de lancement change de chemin en plein chantier ; une branche de documentation de plus à fusionner ; le risque d'oublier un lien dans un document que la vague suivante lit |
 | **C — seulement pour le prochain chantier** | Aucun déplacement de fichier | Deux rangements coexistent : l'ancien chantier dans `possible_upgrades/` et `superpowers/`, les suivants dans `docs/chantiers/` |
 
-**Jamais pendant qu'une branche de vague est ouverte** : elle modifie le fichier d'orchestration (son journal), et la migration le déplace.
+**Jamais pendant qu'une branche de vague est ouverte.**
 
-**La migration, en A ou en B :**
+**La migration :**
 
 1. Créer `docs/chantiers/_modele/` depuis §4, et `docs/chantiers/economie-et-catalogue/`.
-2. Déplacer par `git mv`, pour garder l'historique (`git log --follow`) :
+2. Déplacer par `git mv` :
 
    | Aujourd'hui | Demain |
    |:---|:---|
@@ -774,20 +757,13 @@ Les gains de coût ne dépendent pas des répertoires. L'audit (§5) propose un 
    | Ce modèle | réparti entre `docs/chantiers/_modele/`, les deux skills et leurs agents |
    | Le guide du workflow | `docs/chantiers/README.md`, à côté des chantiers qu'il explique |
 
-3. **Réécrire les liens.** Mesuré le 06/10 : **34 fichiers, 137 occurrences**, hors `_archive/` (qui n'en contient aucune). Ils se répartissent ainsi :
-   - les ADR 102 à 107 et la fiche `_patterns/20-00` ;
-   - `activeContext.md` et `progress.md` ;
-   - `CLAUDE.md`, `docs/INDEX.md`, `docs/ROADMAP.md` ;
-   - les specs, plans et comptes rendus eux-mêmes ;
-   - le brainstorm, la revue, le rapport de simulation, le fichier d'orchestration lui-même et ces deux documents.
-
-   Les retrouver : `grep -rlE "01-10-2026_orchestration_chantier|suivi_vagues_chantier/|superpowers/reports/|superpowers/specs/2026-10-0|superpowers/plans/2026-10-0" --include='*.md' .`
-4. **`CLAUDE.md`, table « Documentation Map »** : les deux lignes du chantier en cours (« The programme in progress, wave by wave » et « What each wave of a programme brought to the game ») sont remplacées par une seule, valable pour tous les chantiers. Par exemple :
+3. **Réécrire les liens** : 34 fichiers, 137 occurrences le 06/10 (ADR 102 à 107, `_patterns/20-00`, `activeContext.md`, `progress.md`, `CLAUDE.md`, `INDEX.md`, `ROADMAP.md`, les specs, plans, comptes rendus, le brainstorm, la revue, le rapport de simulation, le fichier d'orchestration, ces documents). Les retrouver : `grep -rlE "01-10-2026_orchestration_chantier|suivi_vagues_chantier/|superpowers/reports/|superpowers/specs/2026-10-0|superpowers/plans/2026-10-0" --include='*.md' .`
+4. **`CLAUDE.md`, « Documentation Map »** : les deux lignes du chantier en cours deviennent une seule, valable pour tous les chantiers :
    > | A programme delivered by waves | `docs/chantiers/<chantier>/` — `orchestration.md` (how and when), `etat.json` (where it stands), `suivi.md` (what each wave brings to the game, in plain language), `vagues/<NN>-v<x.y.z>-<name>/` (each wave's brief, design, plans, checks, manual tests and report). The method is the `ouverture-de-chantier` and `vague` skills, explained step by step in `docs/chantiers/README.md`; its agents live in `.claude/agents/` |
-5. **`docs/INDEX.md`** : les lignes du chantier (orchestration, suivi, specs, plans, comptes rendus des vagues 1 à 3) se réduisent à une ligne vers le dossier ; `docs/suivi_vagues_chantier/` disparaît de la légende.
-6. **Le skill `memory-bank-sync`** : vérifier qu'il ne cite aucun des anciens chemins (aucune occurrence le 06/10).
-7. **Contrôler** : la recherche de l'étape 3 ne rend plus rien hors de `_archive/` ; chaque lien relatif de `docs/` et du vault pointe vers un fichier existant ; `dart analyze` et `flutter test` sont inchangés, puisque rien sous `lib/`, `test/` ou `assets/` ne bouge.
-8. **Un ADR** consigne le tout. Il amende ADR-102 et ADR-103 sur la méthode (R1 à R13 retenus), et pose l'arborescence.
+5. **`docs/INDEX.md`** : une ligne vers le dossier ; `docs/suivi_vagues_chantier/` sort de la légende.
+6. **`memory-bank-sync`** ne cite aucun ancien chemin (vérifié le 06/10).
+7. **Contrôler** : la recherche de l'étape 3 vide hors `_archive/` ; liens relatifs résolus ; `dart analyze` et `flutter test` inchangés.
+8. **Un ADR** amende ADR-102 et ADR-103 et pose l'arborescence.
 
 ### 8.3. L'ordre recommandé
 
@@ -800,7 +776,7 @@ Les gains de coût ne dépendent pas des répertoires. L'audit (§5) propose un 
 
 ## Annexe A — La phase 1, prête à installer
 
-**Rien de cette annexe n'est installé.** Les fichiers s'adoptent tels quels, ou retouchés, par une tâche de plan ; le script s'accompagne de son test. Les modèles s'écrivent `<le plus capable>` et `<intermédiaire>` : à remplacer par les valeurs que la documentation de Claude Code accepte (`model:`) le jour de l'adoption. Le format des fichiers a été vérifié le 07/10 dans la documentation ([skills](https://code.claude.com/docs/en/skills), [sub-agents](https://code.claude.com/docs/en/sub-agents)).
+**Rien n'est installé.** À adopter par une tâche de plan, le script avec son test. `<le plus capable>` et `<intermédiaire>` sont à remplacer par les valeurs de `model:`. Format vérifié le 07/10 ([skills](https://code.claude.com/docs/en/skills), [sub-agents](https://code.claude.com/docs/en/sub-agents)).
 
 ### A.1. `.claude/skills/ouverture-de-chantier/SKILL.md`
 
@@ -911,7 +887,7 @@ Attends-les tous. Vérifie avec `git status` que chacun n'a écrit que son fichi
 
 ### A.2. Les agents de la phase 1
 
-Quatre fichiers en entier ; les quatre autres suivent la même forme, avec la mission que leur donne le guide, §4.3 et §7.
+Quatre fichiers en entier ; les quatre autres suivent la même forme, mission au guide §4.3 et §7.
 
 `.claude/agents/enqueteur-code.md` :
 
@@ -986,11 +962,11 @@ Tu vérifies un chantier que tu n'as pas écrit : `docs/chantiers/<chantier>/`. 
 Chaque constat se prouve par une commande ou une citation. Rends une table : numéro, où, constat, preuve, gravité (bloquant · moyen · mineur · rédaction), correction proposée. Puis « prêt » ou « à corriger ».
 ```
 
-Les quatre autres — `reviseur-brainstorm`, `redacteur-orchestration`, `redacteur-suivi`, `correcteur` — prennent la même forme : un nom, une description en anglais qui dit quand les utiliser, leurs outils et leur modèle (guide, §4.3), et en corps leur mission, ce qu'ils lisent, ce qu'ils écrivent et ce qu'ils rendent.
+`reviseur-brainstorm`, `redacteur-orchestration`, `redacteur-suivi`, `correcteur` : même forme, description en anglais, outils et modèle du guide §4.3, mission en corps.
 
 ### A.3. Le script de squelette, et le format du découpage
 
-`tool/chantiers/squelette.sh` — testé le 07/10 sur un dépôt jetable. Il crée trois dossiers de vague et un `etat.json` valide, et refuse de toucher à un chantier qui existe déjà :
+`tool/chantiers/squelette.sh`, testé le 07/10 sur un dépôt jetable :
 
 ```bash
 #!/usr/bin/env bash
@@ -1034,13 +1010,13 @@ Le JSON que rend `decoupeur`, et que le script lit :
 }
 ```
 
-Ce fichier ne vit que le temps de la phase 1, sous `.superpowers/`, que git ignore. Une fois le squelette créé, le découpage n'a qu'une source : la table du §1 de `orchestration.md`.
+Vit le temps de la phase 1 sous `.superpowers/` ; ensuite la table du §1 de `orchestration.md` est la seule source.
 
 ---
 
 ## Annexe B — Le squelette du `SKILL.md` de `/vague`
 
-Une proposition, à écrire en entier quand la phase 2 sera adoptée. Son déroulé détaillé est celui du guide, §8 à §13. Le corps reprend le cycle du fichier d'orchestration actuel (§3.1 à §3.10), avec les changements du §5 de ce modèle ; il doit tenir sous 500 lignes, les détails partant dans `references/`.
+À écrire en entier à l'adoption, depuis le guide §8 à §13 et le §5 de ce modèle ; sous 500 lignes, les détails dans `references/`.
 
 ~~~~markdown
 ---

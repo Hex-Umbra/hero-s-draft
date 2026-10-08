@@ -2,7 +2,8 @@
 
 **Date** : 06/10/2026
 **Objet** : la recommandation R20 de l'[audit du 05/10](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) (§6.3) — un vault qui renvoie au code au lieu de le recopier. Ce document propose une version adaptée du skill [`memory-bank-sync`](../../.claude/skills/memory-bank-sync/SKILL.md), son texte complet compris (§6).
-**Statut** : proposition. **Le skill en place n'est pas modifié.** L'adopter, c'est remplacer son `SKILL.md` par celui du §6, écrire un ADR qui précise ADR-102 D8 (où s'écrit l'état d'une livraison), et suivre la migration du §7.
+**Statut** : proposition. **Le skill en place n'est pas modifié.** L'adopter : remplacer son `SKILL.md` par le §6, un ADR qui précise ADR-102 D8, la migration du §7. **Condensé le 08/10** : le `SKILL.md` du §6 est inchangé.
+**Qui le lit** : le propriétaire, et la session qui remplacera le skill (elle copie le §6). Aucun agent de vague n'a à le charger.
 **Mesuré le 06/10**, sur `0ec09ab` : les trois commits de synchronisation des vagues (`c4de883`, `db52110`, `80a040b`), les 27 fiches `_rules`, les 45 fiches `_patterns` et les deux index.
 
 ---
@@ -35,7 +36,7 @@ Ce que montrent les fiches et les index :
 - **Les fiches recopient des valeurs.** 62 lignes de `_rules/` portent un taux, un décimal ou un multiplicateur. Exemples : `_rules/02-4` donne les multiplicateurs de rareté (×1,2 à ×2,0), et `_rules/03-7` dit « soigne 30 % » et « 50 or × son niveau ».
 - **Seules 16 fiches sur 72 citent un test.**
 
-**Ce qu'il faut en attendre, honnêtement.** Les retouches *uniquement* d'état sont rares : 1 fichier sur 36 en vague 2, 8 sur 47 en vague 3. Les autres portent du vrai contenu, où l'état est mélangé au texte. Retirer l'état allège donc les phrases, mais ne réduit pas beaucoup le nombre de fichiers. Le gain principal doit venir de fiches qui recopient moins : quand une valeur change, une fiche qui la cite par son porteur, ou la reçoit d'un bloc généré, n'a plus à être réécrite. C'est à mesurer, vague après vague, par la ligne « fichiers touchés par `memory-bank-sync` » du tableau de bord (audit, R9).
+**Ce qu'il faut en attendre.** Les retouches *uniquement* d'état sont rares (1 sur 36 en vague 2, 8 sur 47 en vague 3) : retirer l'état allège les phrases, pas le nombre de fichiers. Le gain doit venir de fiches qui recopient moins. À mesurer par la ligne « fichiers touchés par `memory-bank-sync` » du tableau de bord (audit R9).
 
 ---
 
@@ -134,10 +135,7 @@ Cette fiche a été retouchée en vague 2 pour dire « branche de la vague 2, en
 **Constats** — le soin du repos (30 % des PV maximum) n'a pas de porteur : il est écrit en dur deux fois dans `lib/ui/screens/rest_screen.dart`, et la même valeur revient une troisième fois, pour le soin vendu à la boutique, dans `lib/ui/screens/shop_screen.dart`. C'est de la logique de jeu dans la couche UI, ce que `CLAUDE.md` interdit. À router vers la ROADMAP.
 ```
 
-Ce que l'exemple montre :
-- **Le changement d'E3** (« le feu n'est plus la seule source d'affûtage ») ne se recopie plus ici. Il vit dans la fiche des sources d'affûtage et dans ADR-107 ; celle-ci y renvoie par « Pourquoi ».
-- **La date de fusion n'y figure plus** : git la connaît.
-- **En pointant, la fiche trouve un vrai défaut** que la paraphrase cachait : le 30 % sans porteur, écrit en dur dans l'interface, et répété pour la boutique.
+L'exemple montre : le changement d'E3 ne se recopie plus ici (ADR-107 par « Pourquoi ») ; la date de fusion disparaît (git la connaît) ; en pointant, la fiche trouve un vrai défaut, le 30 % en dur dans l'interface, répété pour la boutique.
 
 ---
 
@@ -155,7 +153,7 @@ Une valeur que ni l'une ni l'autre ne sait lire — un `0.3` en dur dans un écr
 
 ### 4.2. Exemple : la table des runes, générée depuis `assets/data/forge_upgrades/`
 
-Ce bloc irait dans `_rules/03-8`. La table ci-dessous a été produite le 06/10 depuis les onze fichiers du dossier. C'est un prototype de la vue, écrit en Python dans le scratchpad, parce que ce conteneur n'a pas le SDK Dart ; le vrai script serait en Dart, comme le reste de `tool/`.
+Pour `_rules/03-8` ; produite le 06/10 par un prototype Python (pas de SDK Dart dans ce conteneur), le vrai script sera en Dart.
 
 ```markdown
 <!-- genere:debut vue=runes source=assets/data/forge_upgrades -->
@@ -175,12 +173,7 @@ Ce bloc irait dans `_rules/03-8`. La table ci-dessous a été produite le 06/10 
 <!-- genere:fin -->
 ```
 
-Lu dans le code pour que la vue dise vrai :
-- une clé `eligibleCardTypes` absente signifie « tous les types » ;
-- `maxLevel: null` signifie « sans plafond » (`ForgeUpgradeData`, D27) ;
-- les exclusions (`excludesEffects`, `excludesRunes`, `requiresExhaust`) ne sont pas dans la table.
-
-La fiche nomme donc le prédicat complet comme porteur : `lib/game/services/forge_rune_rules.dart` › `ForgeRuneRules.isEligible`. Une vue montre des valeurs ; elle ne remplace pas la règle.
+Lu dans le code : `eligibleCardTypes` absent = tous les types ; `maxLevel: null` = sans plafond (D27) ; les exclusions (`excludesEffects`, `excludesRunes`, `requiresExhaust`) ne sont pas dans la table. La fiche nomme donc le prédicat complet comme porteur : `lib/game/services/forge_rune_rules.dart` › `ForgeRuneRules.isEligible`. Une vue montre des valeurs, elle ne remplace pas la règle.
 
 ### 4.3. Le script
 
@@ -464,7 +457,7 @@ Markdown structuré et sobre. Les panneaux `> [!IMPORTANT]` et `> [!NOTE]` sont 
 
 ## 8. Les risques
 
-- **Des fiches plus sèches à lire dans Obsidian.** La partie « Ce que voit le joueur » reste en prose, et les blocs générés gardent les chiffres visibles. Si le vault devient illisible pour toi, c'est un échec de la proposition, quoi que disent les compteurs.
-- **Le générateur est du code à maintenir.** Deux vues pour commencer ; une vue de plus seulement quand une fiche en a besoin.
-- **Le périmètre calculé rate ce qui change sans toucher un porteur cité.** Rejoué sur la vague 3 avec les fiches d'aujourd'hui, il en trouve 11 sur 36. Il ne vaut qu'à mesure que les fiches citent leurs porteurs par chemin. La liste de l'orchestrateur et la lecture du diff de `lib/` restent donc obligatoires (G11) : le périmètre calculé est un plancher, pas un plafond.
-- **Un renommage de test casse une fiche.** C'est voulu : la checklist le voit (« chaque test cité existe »). Sans ce lien, le même renommage passerait inaperçu.
+- **Des fiches plus sèches** : si le vault devient illisible pour toi, c'est un échec, quoi que disent les compteurs.
+- **Le générateur est du code à maintenir** : deux vues, une de plus seulement au besoin.
+- **Le périmètre calculé est un plancher** : 11 sur 36 sur la vague 3 ; la liste de l'orchestrateur et la lecture du diff restent obligatoires (G11).
+- **Un renommage de test casse une fiche**, et c'est voulu : la checklist le voit.
