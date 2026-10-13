@@ -5,7 +5,7 @@
 **Compagnons** : le [modèle](05-10-2026_modele_orchestration_par_vagues.md) (ce qui s'installe) et le [guide](07-10-2026_guide_du_workflow_par_vagues.md) (comment ça marche). Ce document dit *pourquoi*.
 **Qui le lit** : le propriétaire, pour décider. Aucun agent de vague n'a à le charger ; la méthode qu'ils suivent est dans le fichier d'orchestration, puis dans les skills.
 **Méthode** : dépôt à `0ec09ab` (orchestration, ADR-102/103, trois comptes rendus, brainstorm v3 et revue, specs et plans des vagues 1 à 3, `git diff --shortstat` des trois fusions) ; trois recherches web par agents le 05/10 ; sources clés relues directement (annexe A). Reddit et Hacker News inaccessibles ; les blogs marqués *(secondaire)* ne sont connus que par extraits.
-**Statut** : exploration. Adopter une recommandation amende ADR-102 et ADR-103 : décision du propriétaire, par un ADR et la correction du fichier d'orchestration. Les décisions déjà prises sont au §6.6.
+**Statut** : exploration, close par ADR-108 (13/10), qui adopte R1 à R3, R14 à R16, R22 et R31 pour les vagues 4 à 7 et retire la simulation du cycle ; §6.6 donne le statut de chaque recommandation.
 
 ---
 
@@ -276,7 +276,7 @@ Découper `CLAUDE.md` par chemin (126 lignes, sous le seuil) ; écrire la spec N
 | **À l'état d'idée** | R20, détaillée par la [proposition `memory-bank-sync`](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) |
 | **Pour plus tard** | R26 à R30 |
 
-Aucune de ces décisions n'est encore portée par un ADR.
+**Portées par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md) le 13/10**, qui retire en plus la simulation du cycle d'une vague et plafonne le compte rendu à 150 lignes : la vague 4 est l'essai mesuré.
 
 ### 6.7. Ajouté le 07/10 — les phases, et la spec qui disparaît
 

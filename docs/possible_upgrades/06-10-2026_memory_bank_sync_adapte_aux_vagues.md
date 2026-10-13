@@ -2,7 +2,7 @@
 
 **Date** : 06/10/2026
 **Objet** : la recommandation R20 de l'[audit du 05/10](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) (§6.3) — un vault qui renvoie au code au lieu de le recopier. Ce document propose une version adaptée du skill [`memory-bank-sync`](../../.claude/skills/memory-bank-sync/SKILL.md), son texte complet compris (§6).
-**Statut** : proposition. **Le skill en place n'est pas modifié.** L'adopter : remplacer son `SKILL.md` par le §6, un ADR qui précise ADR-102 D8, la migration du §7. **Condensé le 08/10** : le `SKILL.md` du §6 est inchangé.
+**Statut** : proposition, **différée à la clôture du chantier par ADR-108 (13/10)**. **Le skill en place n'est pas modifié.** L'adopter : remplacer son `SKILL.md` par le §6, un ADR qui précise ADR-102 D8, la migration du §7. **Condensé le 08/10** : le `SKILL.md` du §6 est inchangé.
 **Qui le lit** : le propriétaire, et la session qui remplacera le skill (elle copie le §6). Aucun agent de vague n'a à le charger.
 **Mesuré le 06/10**, sur `0ec09ab` : les trois commits de synchronisation des vagues (`c4de883`, `db52110`, `80a040b`), les 27 fiches `_rules`, les 45 fiches `_patterns` et les deux index.
 

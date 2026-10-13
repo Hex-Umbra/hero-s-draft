@@ -30,9 +30,14 @@ et re-vérifiée par `gh` à cette synchronisation. ADR-106 est désormais vrai 
 **La méthode est celle d'[ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
 amendée par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)** :
 une vague par version du jeu, une session par vague, un orchestrateur qui délègue et arbitre ; le
-propriétaire teste, fusionne, puis tague ; la simulation se compare à sa sortie de référence ;
-chaque vague laisse un compte rendu et une section non technique dans
-`docs/suivi_vagues_chantier/`. **Deux documents font foi, et ne se recopient pas** : le
+propriétaire teste, fusionne, puis tague ; chaque vague laisse un compte rendu et une section non
+technique dans `docs/suivi_vagues_chantier/`. **Calibrée le 2026-10-13 par
+[ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)**, après la mesure des trois vagues
+livrées : les plans consignent des décisions, la vérification est différentielle, chaque question
+a une classe T · P · D, **la simulation n'est plus relancée par une vague**, le compte rendu tient
+en 150 lignes et le cahier de test devient un fichier que le propriétaire remplit. **La vague 4
+est l'essai mesuré** de cette méthode ; les trois blueprints du workflow par vagues
+(`docs/possible_upgrades/`, 05 au 07/10) sont figés jusqu'à la clôture du chantier. **Deux documents font foi, et ne se recopient pas** : le
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
 pour le *déroulé* — vagues, versions, journal d'avancement — et le
 [brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)

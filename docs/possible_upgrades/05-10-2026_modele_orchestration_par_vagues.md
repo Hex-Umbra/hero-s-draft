@@ -4,6 +4,7 @@
 **Rôle** : ce qui s'installe ou se copie : couches, arborescence, fichiers à copier, changements de méthode, gabarits des agents, outillage, les deux skills, adoption et migration. **Comment tout cela fonctionne** est dans le [guide](07-10-2026_guide_du_workflow_par_vagues.md) ; **pourquoi**, dans l'[audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), dont ★Rn cite les recommandations.
 **Qui le lit** : le propriétaire, et la session qui installera la méthode (elle copie les annexes et le §7). Aucun agent de vague n'a à le charger.
 **Origine** : le [fichier d'orchestration du chantier en cours](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), dont il garde l'ossature.
+**Amendé par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md) le 13/10** : R1 à R3, R14 à R16, R22 et R31 sont adoptées pour les vagues 4 à 7, dans le fichier d'orchestration ; **l'étape `oracle` est retirée** — aucune vague ne relance la simulation — et **le compte rendu est plafonné à 150 lignes**. Ce document reste un blueprint figé : là où il dit autre chose, l'ADR a raison.
 **Statut** : proposition. **Rien n'est adopté** ; aucun des répertoires décrits n'existe. §8 dit comment adopter, en tout ou en partie.
 
 **Comment le lire** :

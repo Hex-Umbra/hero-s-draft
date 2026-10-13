@@ -12,7 +12,9 @@ décisions — D2 (le cycle), D5 (les gestes du propriétaire) et D8 (ce que la 
 complète sur la simulation et sur la clôture. **Décision de méthode, sans code** : `lib/`, `test/`
 et `assets/` sont inchangés. Vaut, comme ADR-102, pour le seul programme P-43 → P-42 → P-44
 lot 1 — **sauf le répertoire de suivi et son modèle (D6), posés pour tout chantier livré par
-vagues**.
+vagues**. **Amendé le 2026-10-13 par [ADR-108](ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)** : D5 est retirée — aucune vague ne relance la
+simulation — et D6 est précisée — le compte rendu tient en 150 lignes, le cahier de test manuel
+devient un fichier que le propriétaire remplit.
 
 ### Contexte
 

@@ -9,6 +9,7 @@
 | [Le modèle](05-10-2026_modele_orchestration_par_vagues.md) | **Ce qui s'installe ou se copie** : squelettes, `SKILL.md`, agents, scripts, hooks, migration |
 | [L'audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) | **Pourquoi** : mesures, comparaison, R1 à R31 et leur statut |
 
+**Amendé par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md) le 13/10** : R1 à R3, R14 à R16, R22 et R31 sont adoptées pour les vagues 4 à 7, dans le fichier d'orchestration ; **l'étape `oracle` est retirée** — aucune vague ne relance la simulation — et **le compte rendu est plafonné à 150 lignes**. Ce document reste un blueprint figé : là où il dit autre chose, l'ADR a raison.
 **Statut** : proposition. Rien n'est installé ; le chantier en cours reste conduit par son [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md). §16 donne l'état de chaque pièce. ★Rn renvoie à l'audit.
 
 | § | Contenu |

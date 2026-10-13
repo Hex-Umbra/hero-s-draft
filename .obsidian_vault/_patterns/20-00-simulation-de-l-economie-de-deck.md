@@ -1,13 +1,14 @@
 ## 20. Simulation de l'Économie de Deck (`tool/simulations/`)
 
 > [!IMPORTANT]
-> **Une valeur mesurée ne se change pas à la main.** Les valeurs d'économie que le brainstorm v3
-> a retenues — ses décisions D56 à D62 et D67 — sortent de ce script. Toute modification de l'une
-> d'elles demande de le relancer d'abord (brainstorm §12, ligne 1). Les valeurs de D63, et les
-> défauts que le script joue sans qu'une décision les fixe, sont des valeurs de spec : jouées, non
-> mesurées — elles se remplacent, en relançant. Et **le script lit `assets/data/` au lancement** :
-> le lot qui change un schéma ou un dossier qu'il parse le réaligne dans une tâche de son plan ;
-> c'est l'orchestrateur de la vague qui le relance et compare (§20.5).
+> **Instrument du brainstorm, figé depuis [ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md) (2026-10-13).**
+> Les valeurs d'économie que le brainstorm v3 a retenues — D56 à D62 et D67 — sortent de ce
+> script ; elles sont désormais des décisions acquises comme les autres, que seul le propriétaire
+> amende. **Aucune vague ne relance, ne réaligne ni ne compare le script** : lui et sa sortie de
+> référence restent tels que la vague 3 les a laissés (`d8b2aef`), et peuvent cesser de tourner
+> quand une vague change un schéma qu'ils lisent — le prochain brainstorm qui en aurait besoin
+> les réalignera. Ce qui suit décrit le script tel qu'il est ; §20.5 décrit la relance comparée
+> que les vagues 1 à 3 ont pratiquée, et qui n'a plus cours.
 
 `tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 4 053 lignes
 (**vérifié le 2026-10-04**, `wc -l`, sur la branche de la vague 3). Il n'est ni un test, ni un
