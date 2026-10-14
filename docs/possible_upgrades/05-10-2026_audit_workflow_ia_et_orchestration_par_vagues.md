@@ -261,22 +261,20 @@ Les six plans d'octobre ont déjà une section `## Review Focus` (Superpowers 6.
 
 Découper `CLAUDE.md` par chemin (126 lignes, sous le seuil) ; écrire la spec N+1 pendant le test de N (R8 en prend la part sans risque).
 
-### 6.6. L'ordre, et les décisions du propriétaire au 07/10
+### 6.6. L'ordre, et les décisions du propriétaire — tranchées par ADR-108 le 13/10
 
-1. **Avant la vague 4** : R14, R1 corrigé, R2, R3 ; R15, R16, R18, R22.
-2. **Vagues 4 à 7** : R4, R5, R19 ; R17 mesuré ; R9 ; R8 ; R13.
-3. **À la clôture** : migration vers `docs/chantiers/`, R6, R20, R25, R23.
-4. **Selon les résultats** : R26 à R30.
+1. **La vague 4, essai mesuré** : R1 corrigé, R2, R3 ; R14, R15, R16, R22.
+2. **Les vagues 6 et 7** : R31 à l'essai.
+3. **À la vague 5** : le propriétaire garde, ajuste ou revient en arrière, au vu de la vague 4.
+4. **À la clôture** : la migration vers `docs/chantiers/` et tout ce qui est différé ; R26 à R30 selon les résultats.
 
-| Statut | Recommandations |
+| Statut ([ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md), D8) | Recommandations |
 |:---|:---|
-| **Retenues** | R14, R15, R16, R17 ; R18 par un webhook dédié ; R22 en fichier de tests manuels, sans toucher au menu de debug ; R25 ; R31 |
+| **Adoptées**, vagues 4 à 7 | R1, R2, R3 ; R14, R15, R16 ; R22 en fichier de tests manuels, sans toucher au menu de debug ; R31, à l'essai aux vagues 6 et 7 |
 | **Écartées** | R21 ; R24 et toute estimation de coût à l'avance |
-| **Précisée** | R23 : la méthode est le workflow ; le banc reste une idée |
-| **À l'état d'idée** | R20, détaillée par la [proposition `memory-bank-sync`](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) |
-| **Pour plus tard** | R26 à R30 |
+| **Différées** à la clôture du chantier | R4 à R13 ; R17 à R20 — R18 par un webhook dédié, R20 détaillée par la [proposition `memory-bank-sync`](06-10-2026_memory_bank_sync_adapte_aux_vagues.md) ; R23, le banc d'essai de la méthode, qui est le workflow ; R25 ; R26 à R30 |
 
-**Portées par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md) le 13/10**, qui retire en plus la simulation du cycle d'une vague et plafonne le compte rendu à 150 lignes : la vague 4 est l'essai mesuré.
+**Ce qui a bougé depuis le 07/10** : R1 à R3, alors à décider, sont adoptées ; R17, R18 et R25, alors retenues, sont différées. ADR-108 retire en plus la simulation du cycle d'une vague et plafonne le compte rendu à 150 lignes.
 
 ### 6.7. Ajouté le 07/10 — les phases, et la spec qui disparaît
 

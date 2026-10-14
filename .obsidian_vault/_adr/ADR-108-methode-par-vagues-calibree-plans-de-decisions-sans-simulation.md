@@ -6,7 +6,7 @@ description: Amends ADR-102 and ADR-103 after measuring three delivered waves �
 
 ### Statut
 
-✅ Accepté — 2026-10-13, par le propriétaire, sur l'[audit du workflow](../../docs/possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) et ses recommandations R1 à R3, R14 à R16, R22, R24 et R31 (§6.6).
+✅ Accepté — 2026-10-13, par le propriétaire, sur l'[audit du workflow](../../docs/possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) et ses recommandations R1 à R3, R14 à R16, R22 et R31 (§6.6), qu'il adopte ; R21 et R24 sont écartées (D8).
 **Amende [ADR-102](ADR-102-chantier-par-vagues-une-version-par-vague.md)** sur D2 (la forme des plans, le cycle), D3 (la boucle de vérification) et D4 (l'arbitrage, la valeur mesurée) ; **amende [ADR-103](ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)** : D5 retirée, D6 précisée. **Décision de méthode, sans code** : `lib/`, `test/` et `assets/` sont inchangés. Vaut pour les vagues 4 à 7 du programme P-43 → P-42 → P-44 lot 1, la vague 4 étant l'essai mesuré (D8).
 
 ### Contexte
