@@ -110,6 +110,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 | ⚠️🗄️ | [Analyse d'équilibrage du jeu](possible_upgrades/_archives/6_analyse_game_balance.md) — **source des deux constats faux de P-17** (`Attaque Rapide` gratuite, Paladin à 20 armure) | — |
 | 🗄️ | [Système de récompenses & de luck](archives/reward_and_luck_system.md) · [plan](implementation_plans/done/23_reward_rarity_and_luck_system.md) | — |
 | 🗄️ | [Refonte du système de mana](implementation_plans/done/19_mana_system_rework.md) · [Rééquilibrage de l'armure de base](implementation_plans/done/20_base_armor_rebalance.md) | — |
+| 📊 | [Toutes les probabilités du jeu](tableurs/2026-10-13_probabilites_du_jeu.xlsx) *(classeur Excel, un onglet par système de tirage : carte, niveau, reliques, trouvaille, boutique, runes, critique, rencontres, événements, pioche, boss, Chance ; formules relues dans le code de `0.5.5`)* | 13/10/2026 |
+| 📊 | [Les systèmes et leurs calculs](tableurs/2026-10-13_systemes_et_calculs.xlsx) *(classeur Excel : difficulté par acte, ennemis et budget de combat, courbe d'XP, or, cartes et rareté, runes, dégâts et statuts, passifs, héros et récompenses, pioche)* | 13/10/2026 |
 
 ## 6. Carte du monde & progression de run
 
