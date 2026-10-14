@@ -119,7 +119,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 | Sa CI/CD est verte | `gh run list --branch main --limit 1` · à partir de la vague 2 : `gh run list --workflow release.yml --limit 3` · `gh release view v<version précédente>` (en vague 1 : `v0.5.2`) | Le run CI **du commit de tête de `main`** est `success` — un run `cancelled`, remplacé par un push plus récent, ne compte pas ; le run Release du tag est vert et la release existe. **Un run `queued` ou `in_progress` s'attend** (`gh run watch <id>` — la CI dure trois à quatre minutes, la release huit à neuf) : il n'arrête pas la session, seul son échec le fait. **Si `gh` ne joint pas l'API** : demande au propriétaire de le confirmer, et note dans le journal que c'est lui qui l'a dit |
 | Les trois porteurs de version concordent | `bash .github/scripts/verify_version.sh <version précédente>` — `pubspec.yaml` (`version:`), la première entrée de `assets/data/patch_notes.json`, l'entrée `current` de `site/_site/versions.json` | Tous trois à la version précédente |
 | `main` est sain | `dart analyze` · `flutter test` | `No issues found!` · tout vert — **le total est la base de tests de la vague**, à écrire au journal |
-| L'outillage est relevé *(ADR-108 D7)* | `claude --version` · la version de Superpowers (son `plugin.json` sous `~/.claude/plugins/`, ou `/plugin`) | Notées, pour le §1 du compte rendu ; aucune montée de version pendant le chantier |
+| L'outillage est relevé *(ADR-108 D7)* | `claude --version` · `claude plugin list` — Superpowers, et son commit dans `~/.claude/plugins/installed_plugins.json` (`gitCommitSha`) | Superpowers **7.0.0**, `bb92a77`, depuis `superpowers-marketplace` — un écart arrête la vague ; Claude Code noté. Les deux pour le §1 du compte rendu |
 
 ### 3.2. La branche
 
@@ -296,6 +296,8 @@ En tête du plan, une section « Review Focus » : au plus cinq modes d'échec q
 Avant de rendre, compte les blocs de code hors des tâches à risque : il n'en reste aucun, sauf un algorithme imposé — remplace les autres par leurs signatures et leurs assertions. Compare aussi la longueur du plan à celle de la spec : au-delà du triple, c'est une transcription, raccourcis.
 
 Ce que le plan ne contient PAS : ni « Task 0 » de documentation ou de branche, ni tâche de livraison. Le plan ne crée pas de branche — il s'exécute sur `<branche de la vague>` —, ne commite rien sur `main`, ne pousse rien, n'ouvre pas de PR, et n'invoque ni `memory-bank-sync`, ni `patch-notes-writer`, ni `finishing-a-development-branch`. Sa dernière tâche est la vérification finale : `dart analyze`, `flutter test`, les greps de la spec. Contraintes globales : celles de `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` §3.5, recopiées dans le plan. Ne touche à aucun fichier de `lib/`, `assets/` ni `test/`.
+
+La méthode d'exécution est déjà fixée : *subagent-driven*, lancée par l'orchestrateur une fois le plan vérifié. À l'étape « Execution Handoff » du skill, ne pose aucune question et n'invoque ni `superpowers:subagent-driven-development` ni `superpowers:executing-plans` : rends ton résultat.
 
 Rends le chemin du plan, sa carte des fichiers, le nombre de blocs de code hors des tâches à risque, et sa longueur rapportée à celle de la spec.
 ````
