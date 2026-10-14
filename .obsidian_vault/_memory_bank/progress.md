@@ -242,13 +242,10 @@ Architecture — [`_patterns/18-00`](../_patterns/18-00-menu-de-debug-run-declar
 [`_patterns/19-00`](../_patterns/19-00-editeur-de-contenu-seam-disque-validation-ecriture.md) et [`_patterns/19-5`](../_patterns/19-5-editeur-de-contenu-interface.md).
 
 **Hors build** — `tool/simulations/d26_economy_sim.dart`, entré dans `main` le 2026-10-01 : la
-simulation de l'économie de deck, qui a mesuré les valeurs retenues par le brainstorm v3. Ni test,
-ni asset ; à relancer avant de changer une valeur qu'elle a mesurée, et dans tout lot qui touche
-les données qu'elle lit. Sa sortie complète est suivie à côté d'elle, `d26_reference_output.md` :
-c'est à elle qu'une relance se compare — [`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md).
-Sur la branche de la vague 3, elle lit les entrées du brainstorm dans leurs fichiers, ne joue plus
-ni la relique B ni l'événement de D29, joue la table d'XP du jeu, et sa référence est recommitée
-(`11410f3`).
+simulation de l'économie de deck, qui a mesuré les valeurs retenues par le brainstorm v3, avec sa
+dernière sortie complète à côté d'elle, `d26_reference_output.md`. **Figée depuis ADR-108
+(2026-10-13)** : aucune vague ne la relance ni ne la réaligne ; elle reste `dart analyze` propre —
+[`_patterns/20-00`](../_patterns/20-00-simulation-de-l-economie-de-deck.md).
 
 ## 2. Dette métier assumée
 

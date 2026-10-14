@@ -13,7 +13,10 @@ programme P-43 → P-42 → P-44 lot 1** ; hors de lui, le rythme « une session
 jusqu'ici reste la règle. **Amendé le 2026-10-01 par
 [ADR-103](ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md)** sur D2, D5 et D8 : le
 propriétaire fusionne puis tague, une vague ne livre rien même par héritage, et elle laisse un
-compte rendu écrit et une section dans le suivi des vagues.
+compte rendu écrit et une section dans le suivi des vagues. **Amendé le 2026-10-13 par
+[ADR-108](ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)** sur D2 (les plans consignent des décisions, le cycle n'a plus de simulation), D3 (la
+vérification est différentielle, bornée par une grille et par l'autonomie de la vague) et D4 (les
+questions sont classées T · P · D ; une valeur mesurée se change comme une décision acquise).
 
 ### Contexte
 

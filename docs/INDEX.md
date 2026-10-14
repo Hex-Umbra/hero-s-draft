@@ -5,7 +5,7 @@ ordre ils ont été écrits. C'est un index de navigation — il ne contient **a
 des liens. Si tu cherches une réponse plutôt qu'un document, la table de `CLAUDE.md` (§Documentation
 Map) t'oriente plus vite.
 
-**Dernière mise à jour** : 2026-10-04
+**Dernière mise à jour** : 2026-10-13
 
 ---
 
@@ -170,6 +170,10 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
+| 🔍 | [Audit — le développement assisté par IA, comparé à ce que font les autres](possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md) — mesures des trois vagues livrées (76 % des jetons en specs et plans), comparaison aux frameworks et à Anthropic, recommandations R1 à R31 et leur statut ; le **pourquoi** ; **R1 à R3, R14 à R16, R22 et R31 adoptées par ADR-108 (13/10)** | 05/10/2026 |
+| 🔍 | [Modèle — l'orchestration d'un chantier livré par vagues](possible_upgrades/05-10-2026_modele_orchestration_par_vagues.md) — ce qui s'installe : cinq couches, `docs/chantiers/<chantier>/`, fichiers à copier, gabarits d'agents, hooks, scripts, les deux skills (annexes A et B), migration ; **blueprint figé jusqu'à la clôture du chantier (ADR-108)** | 05/10/2026 |
+| 🔍 | [Guide — le workflow par vagues, pas à pas](possible_upgrades/07-10-2026_guide_du_workflow_par_vagues.md) — le **comment** : quatre phases, fichiers, agents, scripts, hooks, boucle de vérification, arbitrage T · P · D, arrêts, sept graphes ; **blueprint figé ; l'étape `oracle` est retirée par ADR-108** | 07/10/2026 |
+| 🔍 | [Proposition — `memory-bank-sync`, adapté au workflow par vagues](possible_upgrades/06-10-2026_memory_bank_sync_adapte_aux_vagues.md) — R20 : des fiches qui pointent vers porteurs et tests, des valeurs générées, aucun état de branche ; le `SKILL.md` complet et sa migration ; **proposition, le skill n'est pas modifié** | 06/10/2026 |
 | 📖 | [Modèle du suivi des vagues d'un chantier](suivi_vagues_chantier/_modele_suivi.md) — l'en-tête, l'organisation et la manière d'écrire que tout fichier de `suivi_vagues_chantier/` respecte ; squelette à copier à l'ouverture d'un chantier livré par vagues | 01/10/2026 |
 | 🔍 | [Revue du répertoire `possible_upgrades/` — état réel au 11/09, croisements, fraîcheur de la roadmap et de l'index, lots proposés](possible_upgrades/10-09-2026_revue_brainstorms_aout_et_lots.md) — 24 documents croisés avec la ROADMAP, l'index et le code ; regroupements P-49 à P-52 proposés | 10/09/2026 |
 | 📐🔨 | [Refonte de la documentation](superpowers/specs/2026-08-03-documentation-overhaul-design.md) · [plan](superpowers/plans/2026-08-03-documentation-overhaul.md) | 03/08/2026 |

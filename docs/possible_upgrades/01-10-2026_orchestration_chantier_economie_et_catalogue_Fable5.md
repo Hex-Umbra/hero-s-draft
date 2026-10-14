@@ -1,6 +1,7 @@
 # Orchestration — le chantier « Économie unifiée et catalogue », de `0.5.2` à `0.6.0`, vague par vague
 
 **Date** : 01/10/2026 — réécrit le même jour pour la méthode par vagues (brainstorm, D69), puis corrigé après la cinquième passe de revue (revue §14 ; brainstorm, D70 et D71) et après la sixième (revue §15 ; D72 à D74), puis après un contrôle ciblé du texte neuf (revue §16 ; D75).
+**Amendé le 13/10/2026 par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)**, après la mesure des trois vagues livrées ([audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md)) : les plans consignent des décisions, pas du code (§3.4, §4.3, §4.4) ; la vérification est différentielle dès le deuxième tour, avec une grille de gravité à critères (§3.3, §4.2) ; chaque question a une classe T · P · D et un niveau d'autonomie (§5, §6) ; la spec ne garde que ses choix, l'historique va dans un fichier de vérifications (§3.3) ; **la simulation n'est plus relancée par une vague** (§3.6, §7.3) ; le compte rendu est plafonné à 150 lignes et le cahier de test devient un fichier que le propriétaire remplit (§3.8) ; l'outillage est noté (§3.1). La vague 4 est l'essai mesuré de ces changements.
 **Statut** : **ce fichier fait foi pour le déroulé du chantier** — l'ordre des vagues, ce que chacune livre, sa version, son état. **Les décisions de conception ne sont pas ici** : leur source de vérité est le brainstorm v3, [`22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md`](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §1 (D1 à D75). Ce fichier les cite, il ne les recopie pas ; en cas d'écart, le brainstorm a raison sur le *quoi*, ce fichier sur le *comment* et le *quand*.
 **Périmètre** : ce qui a été brainstormé — **P-43** « Économie unifiée » (lots E0 à E4), **P-42** « Catalogue par lots de passif » (tranches 1 à 3) et **P-44 lot 1**. Hors périmètre, après `0.6.0` : P-44 lots 2 à 4 (derrière P-05) et P-16 (calibration).
 **Sources** : le brainstorm v3 ; sa revue, [`29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md`](29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md) ; le rapport de simulation, [`30-09-2026_simulation_D26_economie_Fable5.md`](30-09-2026_simulation_D26_economie_Fable5.md), et la sortie de référence du script, `tool/simulations/d26_reference_output.md` ; `docs/ROADMAP.md` §4.
@@ -19,7 +20,7 @@
    - **une branche de vague existe** : la vague est commencée. Bascule dessus et lis le journal **de la branche**. « En cours » : reprends à l'étape que le journal indique — une reprise ne repasse pas la porte d'entrée, elle vérifie seulement que l'arbre est propre, que `dart analyze` est propre et que `flutter test` est vert. **Une reprise ne détruit rien** : si seuls les fichiers générés de §3.5 sont modifiés, restaure-les ; un arbre sale pour une autre raison se range par `git stash push -u`, noté sur la ligne « Arrêts » (§2) ; un commit rouge se corrige par un commit, jamais par une réécriture de l'historique — et si tu ne sais pas le corriger, arrête-toi (§6). En 3.5, l'étape exacte se lit dans le registre de SDD (`.superpowers/sdd/`, un dossier par plan) et dans `git log` ; de 3.6 à 3.8, dans le journal et dans `git log` — un commit de `patch-notes-writer` sur la branche dit que la note est écrite, et le skill ne réécrit jamais une version. **Une ligne « Arrêts » ouverte pour ta vague** (§6) : lis son motif ; ne reprends que si le propriétaire dit, dans le prompt, ce qui a levé l'arrêt, et que la levée est sur la branche — note-la sur la même ligne ; sinon, arrête-toi de nouveau et dis-le, sans rien écrire. « Livrée sur branche » : tu es une session de correction (§3.10), et tu attends du propriétaire la liste de ce qu'il a trouvé.
 3. **Passe la porte d'entrée** (§3.1) quand tu ouvres une vague. Si elle ne passe pas, arrête-toi et dis pourquoi : ne commence jamais une vague sur une base que tu n'as pas vérifiée.
 4. **Déroule le cycle** (§3), dans l'ordre, en **déléguant** la rédaction, la vérification et l'implémentation à des agents (§4). Tu gardes le fil, pas le détail.
-5. **Arbitre seul** les questions que la fiche de ta vague (§8) laisse ouvertes, par l'arbre de décision de §5. Tu ne demandes rien au propriétaire en cours de vague, sauf dans les cas d'arrêt de §6.
+5. **Arbitre seul les questions de classe T** (§5) ; une question P a sa réponse dans la fiche ou dans le prompt de lancement, sinon elle attend, groupée avec ses semblables, un seul arrêt ; une question D arrête la vague. Tu ne demandes rien au propriétaire en cours de vague, sauf dans les cas d'arrêt de §6.
 6. **Arrête-toi à la porte de sortie** (§3.9). Tu ne pousses rien, tu n'ouvres pas de PR, tu ne fusionnes pas, tu ne poses pas de tag : c'est le propriétaire qui teste, ouvre la PR, fusionne et pose le tag (D70).
 
 **Le prompt qui lance une vague** — le même pour toutes, à coller dans une session neuve :
@@ -60,7 +61,7 @@ Le jeu est en `0.5.2`. Chaque vague, sauf la vague 0, livre une version ; `0.6.0
 
 Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à faire* · *en cours* (avec l'étape) · *livrée sur branche* (en attente du propriétaire) · *close* (fusionnée, taguée, CI/CD verte).
 
-**Le journal a une ligne par vague, que chaque étape réécrit.** « Étape » s'écrit `<lot> · <3.3, 3.4 ou 3.5> · <fait ou en cours>` — `E0 · 3.5 · fait`, `E1 · 3.3 · en cours` ; pour un lot lourd, la partie suit le lot. Les étapes de la vague entière s'écrivent sans lot : `3.2 · fait` au premier commit, puis, le dernier lot implémenté, `3.6 · fait`, `3.7 · en cours` et `3.7 · fait` (§3.6, §3.7). « Tests » s'écrit `base → total` : la base relevée à la porte d'entrée, puis le total à chaque fin d'implémentation. « Spec(s) » et « Plan(s) » reçoivent un lien par document, à mesure.
+**Le journal a une ligne par vague, que chaque étape réécrit.** « Étape » s'écrit `<lot> · <3.3, 3.4 ou 3.5> · <fait ou en cours>` — `E0 · 3.5 · fait`, `E1 · 3.3 · en cours` ; pour un lot lourd, la partie suit le lot. Les étapes de la vague entière s'écrivent sans lot : `3.2 · fait` au premier commit, puis, le dernier lot implémenté, `3.7 · en cours` et `3.7 · fait` (§3.7), puis `3.8 · fait`. « Tests » s'écrit `base → total` : la base relevée à la porte d'entrée, puis le total à chaque fin d'implémentation. « Spec(s) » et « Plan(s) » reçoivent un lien par document, à mesure.
 
 **Toute mise à jour du journal est commitée sur la branche de la vague**, dans le même commit que le document qu'elle note — la spec, le plan, et à la fin de chaque implémentation le compte rendu de la vague, qui s'ouvre là (§3.5) — jamais sur `main`, jamais laissée dans l'arbre de travail. Sur `main`, une vague reste donc « à faire » jusqu'à sa fusion : c'est attendu, et c'est pourquoi §0.2 regarde d'abord les branches.
 
@@ -103,7 +104,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 
 ## 3. Le cycle d'une vague
 
-Neuf étapes. **3.3 à 3.5 forment une boucle, lot par lot puis partie par partie** : pour une vague à deux lots, la spec, le plan et l'implémentation du premier sont finis avant que la spec du second s'écrive. 3.6 se fait une fois, le code de la vague terminé. La vague 0 n'avait ni spec, ni plan, ni code, ni version : elle n'avait à faire que 3.1, 3.2, sa fiche (§8.0), 3.8 et 3.9 — et elle a été faite sans branche ni compte rendu en fichier (§2). La session de clôture est du même genre : 3.1, 3.2, sa fiche (§8.8), puis elle s'arrête.
+**3.3 à 3.5 forment une boucle, lot par lot puis partie par partie** : pour une vague à deux lots, la spec, le plan et l'implémentation du premier sont finis avant que la spec du second s'écrive. La 3.6 est retirée (ADR-108) ; 3.7 à 3.9 se font une fois, le code de la vague terminé. La vague 0 n'avait ni spec, ni plan, ni code, ni version : elle n'avait à faire que 3.1, 3.2, sa fiche (§8.0), 3.8 et 3.9 — et elle a été faite sans branche ni compte rendu en fichier (§2). La session de clôture est du même genre : 3.1, 3.2, sa fiche (§8.8), puis elle s'arrête.
 
 ### 3.1. La porte d'entrée
 
@@ -118,6 +119,7 @@ Neuf étapes. **3.3 à 3.5 forment une boucle, lot par lot puis partie par parti
 | Sa CI/CD est verte | `gh run list --branch main --limit 1` · à partir de la vague 2 : `gh run list --workflow release.yml --limit 3` · `gh release view v<version précédente>` (en vague 1 : `v0.5.2`) | Le run CI **du commit de tête de `main`** est `success` — un run `cancelled`, remplacé par un push plus récent, ne compte pas ; le run Release du tag est vert et la release existe. **Un run `queued` ou `in_progress` s'attend** (`gh run watch <id>` — la CI dure trois à quatre minutes, la release huit à neuf) : il n'arrête pas la session, seul son échec le fait. **Si `gh` ne joint pas l'API** : demande au propriétaire de le confirmer, et note dans le journal que c'est lui qui l'a dit |
 | Les trois porteurs de version concordent | `bash .github/scripts/verify_version.sh <version précédente>` — `pubspec.yaml` (`version:`), la première entrée de `assets/data/patch_notes.json`, l'entrée `current` de `site/_site/versions.json` | Tous trois à la version précédente |
 | `main` est sain | `dart analyze` · `flutter test` | `No issues found!` · tout vert — **le total est la base de tests de la vague**, à écrire au journal |
+| L'outillage est relevé *(ADR-108 D7)* | `claude --version` · la version de Superpowers (son `plugin.json` sous `~/.claude/plugins/`, ou `/plugin`) | Notées, pour le §1 du compte rendu ; aucune montée de version pendant le chantier |
 
 ### 3.2. La branche
 
@@ -127,10 +129,11 @@ Crée la branche de la vague (§1) depuis `main`, dans le checkout principal —
 
 Pour le lot en cours :
 
-1. Un **agent rédacteur** écrit la spec dans `docs/superpowers/specs/<AAAA-MM-JJ>-<id>-<sujet>-design.md`, sur le modèle de `2026-09-16-p49-passifs-partages-design.md`, à partir de la fiche de la vague (§8) et du gabarit de §4.1. `<id>-<sujet>` est donné par la ligne « Fichiers » de la fiche. Il ne code rien.
-2. Un **agent vérificateur**, neuf, qui n'a pas écrit la spec, la contrôle (gabarit §4.2) et rend une table de constats, chacun avec sa gravité : *bloquant*, *moyen*, *mineur*, *rédaction*.
-3. S'il y a un constat bloquant ou moyen : renvoie les constats à un **correcteur** — le rédacteur repris avec son contexte si ton outil le permet, sinon un agent neuf, par le gabarit §4.6 ; puis un **nouveau** vérificateur revérifie. **Boucle jusqu'à zéro constat bloquant ou moyen.** Un tour, c'est une vérification : la troisième qui rend encore un constat bloquant ou moyen arrête la vague (§6). Les constats mineurs et de rédaction se corrigent au passage, sans nouveau tour. **Un constat que le correcteur conteste, ou une question que la spec a tranchée sans que la fiche la pose** (§4.2, point 4) : c'est toi qui le tranches (§5) avant le tour suivant — il se consigne comme un arbitrage, le vérificateur suivant le reçoit avec ton choix, et ce n'est plus un constat ouvert.
-4. Commite la spec sur la branche, avec sa ligne dans `docs/INDEX.md` (§1 de l'index) et la ligne de la vague mise à jour au journal (§2) — un seul commit.
+1. Un **agent rédacteur** écrit la spec dans `docs/superpowers/specs/<AAAA-MM-JJ>-<id>-<sujet>-design.md`, à partir de la fiche de la vague (§8) et du gabarit de §4.1 ; `<id>-<sujet>` est donné par la ligne « Fichiers » de la fiche. Il ne code rien. **La spec ne garde de chaque arbitrage que le choix et sa raison** (ADR-108 D4) : les options écartées, puis le journal des tours, vont dans le fichier de vérifications voisin, `<même nom>-verifications.md`, que tu tiens. Chaque question à arbitrer porte sa **classe** (§5) : T, tranchée par le rédacteur et confirmée par toi ; P, reprise telle quelle de la réponse du propriétaire, ou laissée ouverte et signalée ; D, signalée, jamais tranchée.
+2. Un **agent vérificateur**, neuf, la contrôle (gabarit §4.2) et rend une table de constats avec leur gravité, **selon la grille de §4.2 et rien d'autre**. Un trou de test n'est pas un constat de spec : il va dans une liste à part, « Pour le Review Focus du plan », que le rédacteur du plan reçoit.
+3. S'il reste un constat bloquant ou moyen : un **correcteur** (le rédacteur repris avec son contexte, sinon §4.6) corrige ces constats et rien d'autre ; puis un **nouveau** vérificateur revérifie **en mode différentiel** — les corrections et ce qu'elles touchent, avec les arbitrages déjà tranchés, qu'il ne rouvre pas sans preuve neuve. Une relecture complète ne se refait que si une correction change le périmètre. Les constats mineurs et de rédaction se corrigent au passage. Un constat que le correcteur conteste avec preuve, ou une question tranchée sans que la fiche la pose : tu tranches (§5) avant le tour suivant, et c'est un arbitrage consigné.
+4. **Après le troisième tour**, s'il reste un constat bloquant ou moyen, sa classe décide (§6) : D, arrêt ; P, arrêt, avec toutes les questions P ouvertes groupées ; T seulement — en autonomie `strict`, arrêt ; en `continu`, tu appliques la correction recommandée de chaque constat, tu la consignes **à part** dans le compte rendu, et tu lances un dernier tour différentiel : « prête » termine, sinon arrêt. L'autonomie est fixée par le propriétaire dans le prompt de lancement ; `strict` par défaut.
+5. Après chaque tour, note-le dans le fichier de vérifications : numéro, mode, constats par gravité, corrigé, contesté et tranché. Commite la spec et ce fichier sur la branche, avec la ligne de la spec dans `docs/INDEX.md` et la ligne du journal (§2) — un seul commit.
 
 Une spec de lot lourd **propose son découpage en parties** et l'invariant qui justifie l'ordre ; la fiche de la vague en donne une proposition.
 
@@ -138,10 +141,10 @@ Une spec de lot lourd **propose son découpage en parties** et l'invariant qui j
 
 Pour le lot en cours, et pour chaque partie d'un lot lourd — **le plan de la partie 2 s'écrit après l'implémentation de la partie 1** :
 
-1. Un **agent rédacteur** écrit le plan avec `superpowers:writing-plans`, dans `docs/superpowers/plans/<AAAA-MM-JJ>-<id>-<sujet>.md`, sur le modèle de `2026-09-16-p49-passifs-partages.md` pour la forme (gabarit §4.3). **Le plan ne crée pas de branche et ne livre rien** : le modèle ouvre par une tâche de documentation sur `main` et finit par la synchronisation et la livraison — cette tâche et ces étapes-là ne se reprennent pas. **La base de tests du plan, `<N>`, est le total de `flutter test` sur la branche au moment où il s'écrit** : la base de la vague pour le premier plan, le total que le plan précédent a laissé pour les suivants — relève-le avant de déléguer.
-2. Un **agent vérificateur** neuf le passe au crible contre la spec et contre le code de la branche (gabarit §4.4).
-3. Même boucle qu'en 3.3, même correcteur, même limite de trois tours.
-4. Commite le plan, avec sa ligne dans `docs/INDEX.md` et la ligne de la vague mise à jour au journal.
+1. Un **agent rédacteur** écrit le plan avec `superpowers:writing-plans`, dans `docs/superpowers/plans/<AAAA-MM-JJ>-<id>-<sujet>.md`, par le gabarit de §4.3. **Le plan consigne des décisions, il ne transcrit pas le code** (ADR-108 D1) : par tâche, les fichiers, les signatures exactes, les valeurs de la spec, les tests nommés avec leur assertion clé, la commande de vérification et le total de tests attendu. Le code n'est écrit en entier que pour les **tâches à risque** que la fiche ou le prompt de lancement nomme, et pour un algorithme que la spec impose ligne à ligne. En tête, une section **Review Focus** : au plus cinq modes d'échec qu'aucun test ne garde encore, dont les trous de test remontés par la vérification de la spec, chacun confié à la tâche qui écrira son test. **Le plan de P-49 n'est plus le modèle de forme** : il transcrit le code. Le premier plan écrit selon §4.3 et jugé bon devient la référence des suivants ; d'ici là, le gabarit suffit. **La base de tests du plan, `<N>`**, est le total de `flutter test` sur la branche au moment où il s'écrit — relève-le avant de déléguer. Le plan ne crée pas de branche et ne livre rien.
+2. Un **agent vérificateur** neuf le contrôle contre la spec et le code de la branche (gabarit §4.4). **Il ne rejoue dans un clone que les tâches à risque** ; pour les autres, il vérifie que les signatures existent ou sont créées par une tâche antérieure, que les tests nommés gardent ce que la spec demande, et que le décompte tombe juste.
+3. Même boucle qu'en 3.3 : différentielle dès le deuxième tour, trois tours, puis la classe et l'autonomie décident.
+4. Commite le plan et le fichier de vérifications, avec la ligne du plan dans `docs/INDEX.md` et la ligne du journal.
 
 ### 3.5. L'implémentation — par délégation
 
@@ -166,20 +169,9 @@ Contraintes, à redire à chaque agent :
 - commits en français, `type(portee): message`, sans accents ni apostrophes, terminés par la ligne `Co-Authored-By` que la session fournit ;
 - ne toucher ni à `assets/data/patch_notes.json`, ni au champ `version:` de `pubspec.yaml`, ni à `site/` : ils appartiennent à `patch-notes-writer`.
 
-### 3.6. La simulation, quand la fiche la demande
+### 3.6. La simulation — étape retirée
 
-`dart run tool/simulations/d26_economy_sim.dart --out <fichier>` — 7 à 10 minutes (422 s le 01/10, 462 s sous charge). `--quick` (environ une minute, 25 runs) sert de fumée après un réalignement, jamais de mesure.
-
-- **Qui fait quoi.** Le script lit `assets/data/` : la vague qui change un schéma ou un dossier qu'il parse le **réaligne dans une tâche de son plan** (§7.3). C'est **l'orchestrateur** qui le lance, en arrière-plan, une fois le code de la vague terminé et vert — pas un implémenteur.
-- **La référence.** `tool/simulations/d26_reference_output.md` est la sortie complète du script, suivie par git, produite le 01/10 sur `main` à `25c36ba` — et retrouvée à l'identique par une seconde relance le même jour (revue §15). Les chiffres du rapport ne sont pas la référence : ses §2 à §4 sont la première passe, à k = 5, et seul son §7 est à k = 2 — ils servent à lire, pas à comparer.
-- **La commande.** Lance avec `--out` vers un fichier **hors de l'arbre suivi**, propre à la vague — `.superpowers/d26_vague_<N>.md`, ignoré par git —, **que tu supprimes avant de lancer** : le script n'écrit sa sortie qu'à la toute fin, et s'il plante, un fichier resté là d'un lancement précédent se comparerait à sa place. Attends la ligne `écrit : <chemin>` sur la sortie d'erreur. **Tant qu'il tourne, ni changement de branche ni écriture sous `assets/data/`** : chaque lot de runs relit les données — §3.7, dont le premier skill écrit `assets/data/patch_notes.json`, attend donc la ligne `écrit :`. Puis `git diff --no-index <référence> <sortie>` — code 0, rien d'affiché : identique.
-- **Le critère, en deux temps (D73).** Le script est déterministe — graine fixe, fichiers triés —, mais chaque run tire tout d'un seul générateur : une liste plus longue d'un élément décale tous les tirages qui suivent, et la sortie change partout. Un réalignement et un changement voulu dans la même relance donnent donc un écart qu'on ne peut plus attribuer. Alors :
-  1. **Le réalignement seul.** Le plan réaligne le script sans rien changer aux valeurs qu'il tient en dur : chaque fichier neuf **prend la place exacte de son entrée en dur**, dans la même liste, à la même position, avec la même définition (§7.3). Relance : **le diff est vide**, à une exception écrite d'avance — la ligne « Données lues », qui compte les fichiers et bouge dès qu'une vague en crée. Commite le script réaligné.
-  2. **Chaque changement voulu**, s'il y en a — une valeur jouée que l'arbitrage remplace, une entrée que le brainstorm a retirée : un commit du script, une relance, l'écart expliqué dans le compte rendu, et **la référence recommitée**. La vague suivante se compare à la tienne.
-  **Un écart que tu n'expliques pas arrête la vague** (§6) — et au premier temps, tout écart hors de la ligne « Données lues » est inexpliqué.
-- **Ce que le diff vide prouve.** Que le script n'a pas bougé — c'est un test de non-régression du script, pas une validation des données de la vague : il joue par exemple, jusqu'à la vague 5, six runes qui n'ont pas encore de fichier.
-
-Le script reste `dart analyze` propre. La relance comparée et ses commits faits, le journal passe à `3.6 · fait`, dans le dernier d'entre eux ; une vague qui n'a rien à commiter — la vague 1 : diff vide, ni script ni référence touchés — le laisse dire par le premier commit de §3.7.
+**Retirée par ADR-108 (D5), le 13/10.** Aucune vague ne relance ni ne réaligne `tool/simulations/d26_economy_sim.dart` : c'est l'instrument du brainstorm, figé avec sa sortie de référence sur l'état que la vague 3 a laissé (`d8b2aef`). Une valeur qu'il a mesurée est une décision acquise comme les autres (§5, filtre 2). Le numéro 3.6 reste, pour que les renvois des comptes rendus et des ADR des vagues 1 à 3 restent justes ; le journal passe de `<lot> · 3.5 · fait` à `3.7 · en cours`.
 
 ### 3.7. Les deux skills du projet
 
@@ -194,26 +186,23 @@ Dans cet ordre, une fois le code terminé et vert, chacun délégué à un agent
 
 Commite chacun sur la branche, la ligne du journal dans le même commit : `3.7 · en cours` après la note, `3.7 · fait` après la mémoire.
 
-### 3.8. Le compte rendu, le suivi et le journal
+### 3.8. Le compte rendu, les tests manuels, le suivi et le journal
 
-Trois écritures, un commit, puis un message court au propriétaire qui donne les trois chemins.
+Quatre écritures, un commit, puis un message court au propriétaire : les chemins, et le §0 du compte rendu.
 
-1. **Le compte rendu technique**, dans `docs/superpowers/reports/<AAAA-MM-JJ>-economie-et-catalogue-vague-<N>-compte-rendu.md` — un fichier, pas un message : la session de correction (§3.10) le relira. **Il existe déjà** : tu l'as ouvert à la fin du premier plan, par sa table des arbitrages (§3.5), et sa date est celle de ce jour-là. Tu le complètes ici pour qu'il tienne seul :
-   - la branche, la version, le nombre de commits, le total de tests, `dart analyze` ;
-   - **la table des arbitrages** : chaque question tranchée, ses options, le choix et son motif (§5), et les décisions de SDD, recopiées plan après plan ;
-   - **le cahier de test manuel** : ce qu'il faut jouer pour voir chaque changement, classe et passif compris, et ce qui doit rester inchangé ;
-   - le résultat de la simulation si elle a tourné, temps par temps (§3.6) : diff vide au réalignement, puis chaque changement voulu et l'écart qu'il laisse ;
-   - ce qui a été trouvé périmé dans le brainstorm ou dans la fiche en le re-mesurant, et ce qui mérite d'entrer dans la file ;
-   - **les statistiques de la session** — le temps, les agents, les jetons et le coût au tarif de l'API —, en dernière section. Le modèle est le §6 du compte rendu de la vague 1 ([`2026-10-02-economie-et-catalogue-vague-1-compte-rendu.md`](../superpowers/reports/2026-10-02-economie-et-catalogue-vague-1-compte-rendu.md)) : mêmes tableaux, mêmes définitions, pour que les vagues se comparent. **Mesurées, jamais estimées**, juste avant le commit de §3.8 — ce qui suit n'y est pas compté, et la section le dit :
-     - *les sources* : les transcriptions de Claude Code, sous `~/.claude/projects/<dossier du projet>/` — `<id de session>.jsonl` pour l'orchestrateur (l'id de session est le nom de son dossier scratchpad), et, sous `<id de session>/subagents/`, un `.jsonl` et un `.meta.json` (description, modèle demandé, profondeur) par sous-agent, reprises par message comprises. Un message de l'assistant s'écrit sur plusieurs lignes : son `usage` se compte **une fois par identifiant de message**. Le script de mesure s'écrit dans le scratchpad, il n'entre pas dans le dépôt ;
-     - *le temps* : le début (la première ligne de la session), la fin (le dernier message de l'orchestrateur avant la mesure), la durée, et la durée de chaque étape du cycle d'après les heures des commits de la branche, en heure locale ; le temps actif de l'orchestrateur et celui, cumulé, des sous-agents (somme des écarts de moins de dix minutes entre lignes successives) ;
-     - *les agents* : le total, l'orchestrateur compris, par rôle (rédacteurs, vérificateurs, implémenteurs, relecteurs, revues d'ensemble, skills) et par modèle ; les reprises par message ; le nombre d'appels au modèle ;
-     - *les jetons* : par rôle et par modèle, puis par étape — entrée hors cache, écriture en cache, lecture du cache, sortie, total traité ;
-     - *le coût au tarif de l'API* : chaque catégorie de jetons multipliée par son prix, modèle par modèle ; les écritures en cache au prix de leur durée, que le champ `cache_creation` de chaque appel ventile (`ephemeral_5m_input_tokens`, `ephemeral_1h_input_tokens`) ; la réflexion comptée dans la sortie, comme l'API la facture. Les prix se lisent **le jour même** sur la [page des tarifs](https://platform.claude.com/docs/en/about-claude/pricing), en dollars, et se convertissent en euros au dernier taux de référence de la BCE (`https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`), date et taux écrits dans la section. Vérifier dans les `usage` qu'aucun supplément ne s'applique — recherches web (`server_tool_use`), mode rapide (`speed`), routage aux États-Unis (`inference_geo`) — et le dire. Ventiler par rôle, par catégorie et par étape, en dollars et en euros. C'est le coût qu'aurait la session facturée à l'API, pas la facture de l'abonnement du propriétaire : la section le précise.
-2. **Le suivi des vagues** du chantier, [`docs/suivi_vagues_chantier/economie_unifiee_et_catalogue.md`](../suivi_vagues_chantier/economie_unifiee_et_catalogue.md) (D71) : ajoute la section de ta vague à la suite des précédentes, et mets à jour la ligne « Avancement » de son en-tête. **La forme et la manière sont fixées par le modèle du répertoire**, [`_modele_suivi.md`](../suivi_vagues_chantier/_modele_suivi.md) — lis-le avant d'écrire : deux paragraphes courts, **pourquoi cette vague** et **ce qu'elle apporte au jeu**, écrits **sans technique**, pour quelqu'un qui joue au jeu et ne lit pas le code ; un identifiant de la fiche se traduit par le nom que le jeu affiche. La matière : la ligne « ce que le joueur voit » de ta fiche, le « pourquoi cet ordre » de §1, et ce que la vague a réellement livré — pas ce qui était prévu. Tu l'écris toi-même : c'est toi qui as le fil.
-3. **Le journal** (§2) : passe la vague à « livrée sur branche », avec la date et le total de tests.
+1. **Le compte rendu technique**, `docs/superpowers/reports/<AAAA-MM-JJ>-economie-et-catalogue-vague-<N>-compte-rendu.md` — ouvert à la fin du premier plan (§3.5). **Il se lit en cinq minutes : 150 lignes au plus** (ADR-108 D6), dans cet ordre :
+   - **§0, une page pour le propriétaire** (30 lignes au plus) : ce qu'il faut tester d'abord, par risque ; les arbitrages que le joueur verra ; ceux faits sans lui (autonomie `continu`) ; les risques connus ; les trois commandes qui rejouent l'essentiel ;
+   - **§1, la branche et ses chiffres**, en une table : version, commits, tests `base → total`, `dart analyze`, les versions de Superpowers et de Claude Code (ADR-108 D7) ;
+   - **§2, les arbitrages** : **une ligne par arbitrage** — la question, sa classe, le choix, le filtre ; les décisions de SDD, une ligne chacune, recopiées plan après plan (§3.5). Les options écartées sont dans les fichiers de vérifications, pas ici ;
+   - **§3, les tests manuels** : un renvoi au fichier du point 2, et ses résultats une fois le test fait ;
+   - **§4, trouvé périmé, et pour la file** : dix lignes au plus ;
+   - **§5, les leçons** : cinq au plus, chacune avec l'amendement de méthode qu'elle propose, ou « rien » ;
+   - **§6, les statistiques de la session** : **la seule table** que fixe le [`README.md`](../superpowers/reports/README.md) du répertoire, qui porte aussi les définitions et la méthode de mesure — elles ne se recopient plus dans chaque compte rendu. Mesurées dans les transcriptions, jamais estimées, juste avant le commit de §3.8.
+2. **Les tests manuels**, `docs/superpowers/reports/<AAAA-MM-JJ>-economie-et-catalogue-vague-<N>-tests-manuels.md`, écrits par un agent (gabarit §4.7), au format du README : les tests d'interface que le propriétaire joue à la main, du plus risqué au moins risqué, et la table de ses défauts, qu'il remplit lui-même et commite sur la branche. Le menu de debug ne change pas : un test dit quels onglets utiliser, avec quelles valeurs. Ses ❌ ouvrent une session de correction, et leur nombre est la mesure de qualité de la vague.
+3. **Le suivi des vagues** du chantier, [`docs/suivi_vagues_chantier/economie_unifiee_et_catalogue.md`](../suivi_vagues_chantier/economie_unifiee_et_catalogue.md) (D71) : ajoute la section de ta vague et mets à jour la ligne « Avancement ». **La forme est fixée par le modèle**, [`_modele_suivi.md`](../suivi_vagues_chantier/_modele_suivi.md) — lis-le avant d'écrire : deux paragraphes, une dizaine de lignes, sans technique, sur ce que la vague a réellement livré. Tu l'écris toi-même : c'est toi qui as le fil.
+4. **Le journal** (§2) : passe la vague à « livrée sur branche », avec la date et le total de tests.
 
-La ligne du compte rendu est dans `docs/INDEX.md` depuis son ouverture (§3.5), celle du suivi aussi : retouche-les s'il le faut, et commite les trois ensemble.
+Les lignes du compte rendu (depuis §3.5) et des tests manuels sont dans `docs/INDEX.md` ; commite le tout ensemble.
 
 ### 3.9. La porte de sortie
 
@@ -231,8 +220,8 @@ Tu travailles dans le dépôt Hero's Draft. Lis `CLAUDE.md`, puis `docs/possible
 
 1. Bascule sur la branche de la vague ; arbre propre, `dart analyze`, `flutter test`. Lis le compte rendu de la vague (§3.8).
 2. Corrige par délégation — un agent implémenteur par défaut, une revue —, sous les contraintes de §3.5. **Un arbitrage renversé** : la spec amende sa section « Décisions » en disant que le propriétaire a tranché, le code suit ; l'arbitrage ne devient pas une décision acquise du brainstorm.
-3. **Tant que la vague n'est pas taguée, ses documents se rouvrent en place** : la note de version n'est pas publiée, les ADR écrits sur la branche non plus. Relance `patch-notes-writer` en lui demandant de **reprendre l'entrée de la version de la vague** sans en créer une neuve — par exception à sa règle, qui protège les notes publiées — et `memory-bank-sync` si un fait du vault a changé. **Si la correction touche une donnée que le script de simulation lit** (§7.3), relance-le comme un changement voulu (§3.6, second temps) et recommite la référence.
-4. Complète le compte rendu d'une section « Corrections du <JJ/MM/AAAA> », qui finit par **les statistiques de la session de correction**, mesurées comme en §3.8 sur sa propre transcription ; reprends la section de la vague dans le suivi (§3.8) si ce qu'elle apporte au jeu a changé ; le journal reste à « livrée sur branche », la date de la correction en plus. Commite, et arrête-toi : les gestes de sortie restent au propriétaire.
+3. **Tant que la vague n'est pas taguée, ses documents se rouvrent en place** : la note de version n'est pas publiée, les ADR écrits sur la branche non plus. Relance `patch-notes-writer` en lui demandant de **reprendre l'entrée de la version de la vague** sans en créer une neuve — par exception à sa règle, qui protège les notes publiées — et `memory-bank-sync` si un fait du vault a changé.
+4. Complète le compte rendu d'une section « Corrections du <JJ/MM/AAAA> », courte, qui finit par la table des statistiques de sa propre session (README) — le plafond de 150 lignes vaut corrections comprises ; remplis la colonne « Corrigé par » des tests manuels ; reprends la section de la vague dans le suivi si ce qu'elle apporte au jeu a changé ; le journal reste à « livrée sur branche », la date de la correction en plus. Commite, et arrête-toi : les gestes de sortie restent au propriétaire.
 
 ---
 
@@ -245,20 +234,19 @@ Tu travailles dans le dépôt Hero's Draft. Lis `CLAUDE.md`, puis `docs/possible
 ````
 Tu écris une spec de conception pour le dépôt Hero's Draft. Lis `CLAUDE.md` d'abord. Écris en français.
 
-Produit : `docs/superpowers/specs/<AAAA-MM-JJ>-<id>-<sujet>-design.md`, sur le modèle de `docs/superpowers/specs/2026-09-16-p49-passifs-partages-design.md` — décisions, périmètre, données, moteur, textes joueur, éditeur, sauvegarde, tests, documentation et livraison, alternatives écartées. Aucun code, aucune donnée modifiée.
+Produit : `docs/superpowers/specs/<AAAA-MM-JJ>-<id>-<sujet>-design.md`, sur le modèle de `docs/superpowers/specs/2026-09-16-p49-passifs-partages-design.md` pour ses rubriques — décisions, périmètre, données, moteur, textes joueur, éditeur, sauvegarde, tests, documentation et livraison. **Sans section d'alternatives écartées ni journal de vérification** : la spec garde, par arbitrage, le choix et sa raison en un paragraphe ; les options écartées, tu les rends dans ta réponse, l'orchestrateur les consigne ailleurs. Aucun code, aucune donnée modifiée.
 
 Le lot : <lot, version, une phrase>.
 Les décisions acquises qu'il livre : <liste D, avec les réserves que la fiche leur met> — leur texte exact est dans `docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md` §1 <— et §4.5 pour G1 et G2, si le lot les livre>, source de vérité. Tu ne les rediscutes pas et tu n'en amendes aucune.
 À lire en entier avant d'écrire : <la liste « À lire » de la fiche>.
 État mesuré le 30/09, recontrôlé le 01/10, à revérifier par commande sur la branche courante : <la liste « État mesuré » de la fiche, et les puces qui détaillent ses décisions s'il y en a>. Toute référence `fichier:ligne` que tu écris, tu l'as lue toi-même aujourd'hui.
 Ce que la spec doit fixer : <la liste « La spec doit fixer » de la fiche>.
-Les questions à arbitrer : <la liste « À arbitrer » de la fiche>. Pour chacune, écris les options, évalue-les selon l'arbre de décision de `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` §5, retiens-en une et consigne l'arbitrage dans la section « Décisions » de la spec. Si une question ne se tranche qu'en amendant une décision acquise, ne tranche pas : signale-le.
+Les questions à arbitrer : <la liste « À arbitrer » de la fiche, avec leur classe>. Pour chaque question de classe T, écris les options, passe-les par l'arbre de `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` §5, retiens-en une et consigne le choix et sa raison dans la section « Décisions ». Pour une question de classe P, reprends telle quelle la réponse du propriétaire : <ses réponses> ; sans réponse, laisse-la ouverte et signale-la. Une question qui ne se tranche qu'en amendant une décision acquise est de classe D : ne tranche pas, signale-la. Une question qui naît en écrivant reçoit sa classe de toi ; dans le doute entre T et P, c'est P.
 Ce que la spec ne doit pas absorber : <la liste « Ne pas absorber » de la fiche>.
 Documentation et livraison : <les lignes « Pour `memory-bank-sync` » et « Ce que le joueur voit » de la fiche — pour un lot qui partage sa vague, la part marquée à son nom>. Cette rubrique du modèle ne se reprend pas telle quelle : la spec nomme les ADR et les fiches que le lot périme et ce que le joueur verra, mais elle ne prévoit ni lien dans `docs/ROADMAP.md`, ni note de version propre au lot — la note est celle de la vague, écrite à la fin par un autre agent.
-<Si la simulation est concernée : la ligne « Simulation » de la fiche — ce que le lot ne doit pas toucher sans relance, ce que le plan devra réaligner.>
 <Si lot lourd : propose le découpage en parties et l'invariant qui justifie l'ordre ; proposition de départ : …>
 
-Rends : le chemin du fichier, la table des arbitrages, et toute prémisse du brainstorm ou de la fiche trouvée fausse en la re-mesurant.
+Rends : le chemin du fichier ; la table des arbitrages — question, classe, options écartées, choix, filtre ; les questions P et D laissées ouvertes ; et toute prémisse du brainstorm ou de la fiche trouvée fausse en la re-mesurant.
 ````
 
 ### 4.2. Vérificateur de spec
@@ -267,51 +255,70 @@ Rends : le chemin du fichier, la table des arbitrages, et toute prémisse du bra
 Tu vérifies une spec que tu n'as pas écrite. Lis `CLAUDE.md` d'abord. Tu ne modifies aucun fichier.
 
 La spec : <chemin>. Le lot : <lot>. Ses décisions : <liste D, avec les réserves que la fiche leur met>, texte dans `docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md` §1 <— et §4.5 pour G1 et G2, si le lot les livre>.
+Mode : <complet — toute la spec | différentiel — seulement les corrections listées ci-dessous et ce qu'elles touchent>.
+<En différentiel : les corrections du tour précédent, avec les sections modifiées ; les arbitrages déjà tranchés par l'orchestrateur, avec son choix — ne les rouvre pas sans preuve neuve.>
 
 Vérifie, chaque point par une commande ou une citation, jamais de mémoire :
 1. Chaque `fichier:ligne` cité existe et dit ce que la spec lui fait dire, sur la branche courante.
 2. Chaque décision du lot est couverte, dans la part que la fiche lui donne ; aucune n'est contredite — cite la ligne du brainstorm.
 3. Chaque item de « La spec doit fixer » est fixé : <la liste de la fiche>.
-4. Chaque question de « À arbitrer » est tranchée, avec ses options et son motif : <la liste de la fiche>. Aucun arbitrage n'amende une décision acquise ni ne change une valeur mesurée par la simulation. Une question que la spec a tranchée sans que la fiche la pose est un constat de gravité mineure, à signaler avec son arbitrage : l'orchestrateur le consigne.
+4. Chaque question de « À arbitrer » est tranchée, avec sa classe, son choix et son motif : <la liste de la fiche>. Les réponses du propriétaire aux questions P sont reprises telles quelles ; aucun arbitrage n'amende une décision acquise, valeur mesurée comprise. Une question tranchée sans que la fiche la pose est un constat mineur, à signaler avec son arbitrage.
 5. Rien de « Ne pas absorber » n'y est entré : <la liste de la fiche>.
 6. Les transitions avec les lots voisins sont traitées : <lignes de §7.2 qui concernent le lot>.
 7. Les règles du dépôt tiennent : trois couches séparées, donnée bilingue, id = nom de fichier, un fait à un seul endroit, pas de code sans lecteur.
-8. Les tests sont nommés, et chacun garde une chose précise.
-9. <Le point propre au lot, donné par la fiche — lu pour une spec : « la spec ne prévoit pas… ».>
-<Au deuxième et au troisième tour : les constats des tours précédents que l'orchestrateur a tranchés, avec son choix — ne les rouvre pas sans preuve neuve.>
+8. <Le point propre au lot, donné par la fiche.>
 
-Rends une table : numéro, où, constat, preuve, gravité (bloquant / moyen / mineur / rédaction), correction proposée. Puis une ligne : « prête » ou « à corriger ».
+La gravité suit cette grille, et rien d'autre :
+- bloquant — contredit une décision acquise, ou rend l'implémentation impossible telle qu'écrite ;
+- moyen — produirait un comportement faux, ou un test rouge, que le plan n'aurait aucune raison de voir ;
+- mineur — imprécis, mais le plan le résoudra sans risque ;
+- rédaction — la forme seulement.
+Un test qui manque n'est pas un constat de spec : liste-le à part, sous « Pour le Review Focus du plan ». Ne signale que ce qui touche la correction ou les exigences du lot : une préférence n'est pas un constat.
+
+Rends une table : numéro, où, constat, preuve, gravité, classe (T · P · D), correction proposée. Puis la liste « Pour le Review Focus du plan ». Puis une ligne : « prête » ou « à corriger ».
 ````
 
 ### 4.3. Rédacteur de plan
 
 ````
-Écris le plan d'implémentation de <lot ou partie> avec superpowers:writing-plans, depuis `<chemin de la spec>` <§ de la partie>. Modèle de forme : `docs/superpowers/plans/2026-09-16-p49-passifs-partages.md` — but, architecture, contraintes globales, carte des fichiers, tâches à cases à cocher, titrées `### Task N: …` (le mot « Task », que l'outil d'exécution cherche). Cite le code tel qu'il est sur la branche courante : re-mesure chaque `fichier:ligne`, jamais de mémoire. Base de tests : <N, le total de `flutter test` sur la branche aujourd'hui>, et chaque tâche donne le total attendu — N, plus les tests qu'elle ajoute, moins ceux qu'elle retire, comptés sur les blocs de test que le plan écrit.
+Écris le plan d'implémentation de <lot ou partie> avec superpowers:writing-plans, depuis `<chemin de la spec>` <§ de la partie>, dans `docs/superpowers/plans/<AAAA-MM-JJ>-<id>-<sujet>.md`. Forme : but, architecture, contraintes globales, Review Focus, carte des fichiers, tâches titrées `### Task N: …` (le mot « Task », que l'outil d'exécution cherche), à cases à cocher. <Modèle de forme : `<le premier plan jugé bon selon ce gabarit>` | Aucun modèle de forme : le gabarit suffit.>
 
-Ce que le plan ne reprend PAS du modèle : ni « Task 0 » de documentation ou de branche, ni tâche de livraison. Le plan ne crée pas de branche — il s'exécute sur `<branche de la vague>` —, ne commite rien sur `main`, ne pousse rien, n'ouvre pas de PR, et n'invoque ni `memory-bank-sync`, ni `patch-notes-writer`, ni `finishing-a-development-branch`. Sa dernière tâche est la vérification finale : `dart analyze`, `flutter test`, les greps de la spec.
+Le plan consigne des décisions, il ne transcrit pas le code. Pour chaque tâche :
+- les fichiers touchés ;
+- les signatures exactes de ce qui se crée ou change ;
+- les valeurs que la spec impose ;
+- les tests nommés, chacun avec son assertion clé ;
+- la commande de vérification et ce qu'elle doit rendre ;
+- le total de tests attendu : <N, le total de `flutter test` sur la branche aujourd'hui>, plus les tests ajoutés, moins les retirés.
+Le code s'écrit en entier dans deux cas seulement : les tâches à risque — <liste, ou « aucune »> — et un algorithme que la spec impose ligne à ligne. Toute référence `fichier:ligne`, tu l'as lue toi-même aujourd'hui sur la branche courante.
 
-Contraintes globales : celles de `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` §3.5, recopiées dans le plan. <Si la fiche demande un réalignement de la simulation : une tâche réaligne `tool/simulations/d26_economy_sim.dart` sans changer aucune valeur qu'il tient en dur — chaque fichier neuf prend la place exacte de son entrée en dur, même liste, même position, même définition (§3.6 et §7.3 du même fichier) — et le fume par `--quick` ; un changement voulu d'une valeur jouée est une tâche à part, après elle ; aucune tâche ne lance la mesure complète, c'est l'orchestrateur qui le fait.> <Sinon : ce que la ligne « Simulation » de la fiche interdit de toucher.> Ne touche à aucun fichier de `lib/`, `assets/` ni `test/`. Rends le chemin du plan et sa carte des fichiers.
+En tête du plan, une section « Review Focus » : au plus cinq modes d'échec que la spec implique et qu'aucun test ne garde encore, chacun confié à la tâche qui écrira son test. <Les trous de test remontés par la vérification de la spec : …>
+Avant de rendre, compte les blocs de code hors des tâches à risque : il n'en reste aucun, sauf un algorithme imposé — remplace les autres par leurs signatures et leurs assertions. Compare aussi la longueur du plan à celle de la spec : au-delà du triple, c'est une transcription, raccourcis.
+
+Ce que le plan ne contient PAS : ni « Task 0 » de documentation ou de branche, ni tâche de livraison. Le plan ne crée pas de branche — il s'exécute sur `<branche de la vague>` —, ne commite rien sur `main`, ne pousse rien, n'ouvre pas de PR, et n'invoque ni `memory-bank-sync`, ni `patch-notes-writer`, ni `finishing-a-development-branch`. Sa dernière tâche est la vérification finale : `dart analyze`, `flutter test`, les greps de la spec. Contraintes globales : celles de `docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md` §3.5, recopiées dans le plan. Ne touche à aucun fichier de `lib/`, `assets/` ni `test/`.
+
+Rends le chemin du plan, sa carte des fichiers, le nombre de blocs de code hors des tâches à risque, et sa longueur rapportée à celle de la spec.
 ````
 
 ### 4.4. Vérificateur de plan
 
 ````
-Passe de vérification du plan `<chemin>`, contre la spec `<chemin>` <§> et le code de la branche courante. Tu ne modifies aucun fichier. Base de tests du plan : <N>.
+Passe de vérification du plan `<chemin>`, contre la spec `<chemin>` <§> et le code de la branche courante. Tu ne modifies aucun fichier. Base de tests du plan : <N>. Tâches à risque : <liste, ou « aucune »>.
+Mode : <complet | différentiel — seulement les corrections listées ci-dessous et ce qu'elles touchent>.
+<En différentiel : les corrections du tour précédent ; les arbitrages déjà tranchés par l'orchestrateur, avec son choix — ne les rouvre pas sans preuve neuve.>
 
 Vérifie, chaque point par une commande, jamais de mémoire :
 - ce que le plan croit avoir à faire et qui est déjà fait par un lot précédent — toute tâche qui le réécrit est à supprimer ;
 - les chemins et numéros de ligne cités, un par un ;
-- le total de tests attendu à chaque tâche : N, plus les tests ajoutés, moins les tests retirés, recomptés sur les blocs de test du plan ;
+- **les seules tâches à risque, rejouées dans un clone jetable** ; pour les autres, que chaque signature existe ou est créée par une tâche antérieure, que chaque test nommé garde ce que la spec demande, et que le total de tests attendu tombe juste — N, plus les ajoutés, moins les retirés ;
+- la section Review Focus : chaque mode d'échec est confié à une tâche qui écrit le test qui le garde ; un trou de test remonté par la vérification de la spec et confié à aucune tâche est un constat moyen ;
 - que chaque tâche laisse `dart analyze` propre et `flutter test` vert, et qu'aucune n'introduit de code sans lecteur ;
 - que chaque exigence de la spec a sa tâche, et qu'aucune tâche ne sort de la spec ;
 - qu'aucune tâche ne crée de branche, ne commite sur `main`, ne pousse, n'ouvre de PR, ni n'invoque `memory-bank-sync`, `patch-notes-writer` ou `finishing-a-development-branch` — une telle tâche est un constat bloquant ;
-- que les tâches sont titrées `### Task N: …` ;
-- <s'il y a un réalignement de la simulation : que sa tâche ne change aucune valeur que le script tient en dur, et qu'un changement voulu a sa tâche à part> ;
+- que les tâches sont titrées `### Task N: …`, et qu'aucun bloc de code ne reste hors des tâches à risque, sauf un algorithme imposé ;
 - <le point propre au lot, donné par la fiche>.
 
-<Au deuxième et au troisième tour : les constats des tours précédents que l'orchestrateur a tranchés, avec son choix — ne les rouvre pas sans preuve neuve.>
-
-Rends une table : tâche, constat, preuve, gravité (bloquant / moyen / mineur), correction proposée. Puis une ligne : « prêt » ou « à corriger ».
+La gravité suit la grille du vérificateur de spec. Rends une table : tâche, constat, preuve, gravité, classe (T · P · D), correction proposée. Puis une ligne : « prêt » ou « à corriger ».
 ````
 
 ### 4.5. Les skills de fin de vague
@@ -332,14 +339,32 @@ Quand le rédacteur ne peut pas être repris avec son contexte :
 Tu corriges <une spec | un plan> que tu n'as pas <écrite | écrit> : `<chemin>`. Lis `CLAUDE.md` d'abord, puis le document en entier <et, pour un plan, la spec `<chemin>`>. Voici les constats d'un vérificateur indépendant : <la table, avec ses preuves>. Corrige ces constats, et rien d'autre : ne réécris pas ce qui n'est pas visé, ne rouvre aucun arbitrage que les constats ne contestent pas. Toute ligne `fichier:ligne` que tu touches, tu la re-mesures sur la branche courante. Si un constat te paraît faux, ne le corrige pas : dis-le, avec ta preuve. Ne touche à aucun fichier de `lib/`, `assets/` ni `test/`. Rends la liste des constats traités, un par un, et ce que tu as changé.
 ````
 
+### 4.7. Rédacteur des tests manuels
+
+````
+Tu écris les tests manuels de la vague <N> de Hero's Draft : `docs/superpowers/reports/<AAAA-MM-JJ>-economie-et-catalogue-vague-<N>-tests-manuels.md`, au format de `docs/superpowers/reports/README.md`. Lis `CLAUDE.md`, puis les plans de la vague : <chemins>, et le diff de la branche depuis `<commit de départ>`. Tu ne modifies que ce fichier, et tu ne commites pas.
+
+Pour chaque changement que le joueur peut voir, classe et passif compris : un test — atteindre la situation (en jouant, ou par les onglets existants du menu de debug : lesquels, quelles valeurs ; le menu ne change pas), faire, attendu (chiffres compris), ce qui ne doit pas changer. Classe-les du plus risqué au moins risqué, et ouvre par cette liste. Finis par ce qui doit rester inchangé. Laisse vides la ligne « Résultat » de chaque test et la table des défauts : le propriétaire les remplit. Rends le chemin et le nombre de tests.
+````
+
 ---
 
 ## 5. Arbitrer — l'arbre de décision
 
-Le propriétaire a délégué l'arbitrage des questions de spec (D69). Pour chaque question à arbitrer — celles que la fiche pose, et celles que la rédaction fait apparaître —, écris les options, puis passe-les dans l'ordre par ces filtres ; le premier qui départage tranche.
+Le propriétaire a délégué l'arbitrage des questions techniques (D69, ADR-108 D3). **Chaque question reçoit d'abord sa classe**, qui dit à qui elle appartient :
 
-1. **Une décision acquise.** Une option qui contredit une décision de D1 à D75 est écartée. Si *toutes* les options en contredisent une, ce n'est plus un arbitrage : arrête la vague (§6).
-2. **Une valeur mesurée.** Une option qui change une valeur de D56 à D62 ou de D67 sans relance de la simulation est écartée (brainstorm §12, ligne 1). **Les valeurs de D63 sont des valeurs de spec, non mesurées**, comme les défauts que le script joue sans qu'une décision les fixe (rapport §1.2 ; les fiches les nomment) : elles se confirment ou se remplacent — et en remplacer une, c'est un changement voulu : une relance à part, l'écart expliqué, la référence recommitée (§3.6, second temps).
+| Classe | Ce que c'est | Qui tranche | Quand |
+|:---|:---|:---|:---|
+| **T** — technique | Invisible du joueur : une structure, un nom, un ordre d'exécution, un découpage de tâches | toi, par les huit filtres ci-dessous | sur le moment |
+| **P** — produit | Visible du joueur : une valeur, un texte, un effet, une règle qu'il lira | le propriétaire | avant la vague, dans la fiche ou le prompt de lancement ; sans réponse, le document se termine et se vérifie autour d'elle, et l'arrêt vient quand il ne reste qu'elle et ses semblables, posées en une fois |
+| **D** — décision | Ne se tranche qu'en amendant une décision acquise du brainstorm, valeur mesurée comprise | le propriétaire | arrêt immédiat |
+
+La fiche classe les questions qu'elle pose ; le rédacteur classe celles qui naissent en écrivant, et tu confirmes. **Dans le doute entre T et P, la question est P ; entre P et D, elle est D.**
+
+Pour une question de classe T, écris les options, puis passe-les dans l'ordre par ces filtres ; le premier qui départage tranche.
+
+1. **Une décision acquise.** Une option qui contredit une décision de D1 à D75 est écartée. Si *toutes* les options en contredisent une, ce n'est plus un arbitrage : c'est une question D, arrête la vague (§6).
+2. **Une valeur mesurée.** Les valeurs de D56 à D62 et de D67 sont des décisions acquises comme les autres : une option qui en change une est écartée, et la simulation n'est plus relancée (ADR-108 D5). **Les valeurs de D63 sont des valeurs de spec, non mesurées**, comme les défauts que le script a joués sans qu'une décision les fixe (rapport §1.2 ; les fiches les nomment) : visibles du joueur, elles sont de classe P.
 3. **Les trois principes du brainstorm** (§3) : P1 — pas de contenu qui ne porte pas de décision ; P2 — chaque carte d'un lot nourrit son passif ; P3 — la fusion est le moteur de progression, rien ne court-circuite la chaîne trouvaille → fusion → rune → affûtage.
 4. **Le mécanisme plutôt que le cas.** Entre une règle en donnée, réutilisable, et un cas écrit en Dart pour une carte ou une rune, la règle en donnée. Si les options sont les valeurs d'un même mécanisme, livre le mécanisme et choisis la valeur.
 5. **L'architecture du dépôt.** Les trois couches de `CLAUDE.md` ; le répertoire porte l'appartenance ; un seul prédicat par question (`isOfferableTo`, `availablePassivesFor`) ; aucun champ que le répertoire impose.
@@ -347,7 +372,7 @@ Le propriétaire a délégué l'arbitrage des questions de spec (D69). Pour chaq
 7. **Le périmètre.** L'option qui n'élargit pas la vague ni n'avale un lot voisin.
 8. **À égalité**, la plus simple à défaire.
 
-**Chaque arbitrage est consigné**, dans la section « Décisions » de la spec et dans le compte rendu de la vague (§3.8) : la question, les options, le filtre qui a tranché, le choix. Le propriétaire les lit au moment de son test ; un arbitrage qu'il renverse se corrige sur la branche avant la fusion (§3.10).
+**Chaque arbitrage laisse trois traces, sans répétition** : dans la section « Décisions » de la spec, le choix et sa raison ; dans le fichier de vérifications, les options écartées ; dans le compte rendu (§3.8), une ligne — question, classe, choix, filtre. Le propriétaire les lit au moment de son test, le §0 du compte rendu lui signalant ceux que le joueur verra et ceux faits sans lui ; un arbitrage qu'il renverse se corrige sur la branche avant la fusion (§3.10).
 
 ---
 
@@ -357,7 +382,7 @@ Le propriétaire a délégué l'arbitrage des questions de spec (D69). Pour chaq
 
 - pousser, ouvrir une PR, poser un tag, fusionner, ou commiter sur `main` — basculer sur `main` et le tirer en avance rapide, à la porte d'entrée, n'en est pas ;
 - invoquer `superpowers:finishing-a-development-branch`, ou laisser un plan le faire ;
-- amender une décision acquise du brainstorm, ou changer une valeur mesurée sans relancer la simulation ;
+- amender une décision acquise du brainstorm, valeur mesurée comprise ;
 - élargir le périmètre : ni P-44 lots 2 à 4, ni P-16, ni un rééquilibrage que la fiche n'appelle pas ;
 - éditer `assets/data/patch_notes.json` à la main, ou changer une version autrement que par `patch-notes-writer` ;
 - lancer `dart format`, utiliser un worktree, sauter un hook, écrire du code par heredoc ;
@@ -368,9 +393,9 @@ Le propriétaire a délégué l'arbitrage des questions de spec (D69). Pour chaq
 **Quand la vague s'arrête et rend la main**, avec l'état exact dans le journal et le motif sur la ligne « Arrêts » — commités sur la branche. À la porte d'entrée, aucune branche n'existe encore : rien ne s'écrit, le motif est dit au propriétaire dans le message d'arrêt :
 
 - la porte d'entrée ne passe pas ;
-- trois tours de vérification sans convergence, sur une spec ou sur un plan ;
-- une question ne se tranche qu'en amendant une décision acquise ;
-- la simulation montre, contre sa référence, un écart que la vague n'explique pas ;
+- trois tours de vérification sans convergence, sur une spec ou sur un plan, quand il reste un constat de classe D ou P, ou un constat T en autonomie `strict` — en `continu`, après le dernier tour différentiel de §3.3 ;
+- une question de classe D : elle ne se tranche qu'en amendant une décision acquise ;
+- une question de classe P sans réponse, quand le document est fini et qu'il ne reste qu'elle et ses semblables — posées en une fois, avec leurs options et ta recommandation ;
 - un test reste rouge, ou `dart analyze` sale, après deux tentatives de correction d'une même tâche ;
 - le code de `main` contredit une prémisse de la fiche au point de changer le périmètre du lot ;
 - un numéro de version est à décaler — un correctif s'est intercalé entre deux vagues : la table de §1 est aussi écrite dans D69, que tu n'amendes pas.
@@ -413,23 +438,9 @@ Les items non numérotés ont aussi leur vague : `wisdom.json` en `mythic` (§5)
 | Tranche 1 → 2 → 3 | Six passifs masqués, puis trois — le joueur perd en `0.5.7` six passifs qu'il avait en `0.5.6`, la note le dit ; `fireball` reste neutre jusqu'au lot Marque, son id de tutoriel ne change pas | Le masquage est arbitré en vague 5 (O5) |
 | Tranches → P-44 lots 2 à 4 | Trois cartes attendent un mécanisme hors périmètre : Rempart (épines), Voile (`retain`), Carnage (*Forge de guerre*) | **Elles ne s'écrivent pas avant `0.6.0`** ; chaque lot atteint ses 5 cartes sans elles ; la session de clôture les porte en ROADMAP sur la ligne de P-44 (§8.8) |
 
-### 7.3. Ce que le script de simulation impose
+### 7.3. Le script de simulation — hors du cycle
 
-`tool/simulations/d26_economy_sim.dart` lit `assets/data/` au lancement (`GameData.load`, `:722-877`) : les ennemis ; **les cartes de `cards/` à plat** — son chargeur ne descend pas dans les sous-dossiers (`_jsonFiles`, `:413-421`) ; les reliques ; `level_up_rewards/` ; `forge_upgrades/` (`id`, `weight`, `eligibleCardTypes` — il ignore `pools`) ; `events/` (`:861-873`) ; `class.json` (`maxHp`, `maxMana`, `critChance`, `mastery`, `mightTargets`, et de `statRules` le seul mode `convert`, `:808-816`) ; **les signatures, dans `classes/<id>/cards/`** (`:797-807` — leur coût, leur type, leurs effets) ; et des passifs `value`, `duration`, `threshold` et le bloc `mastery` (`:779-791`). Son chargeur lit par clé : un champ neuf ne le fait ni planter ni dériver ; un champ **absent** ou une valeur non entière là où il attend un entier le fait planter.
-
-**Sont codés en dur** : cinq des huit runes d'aujourd'hui, redéfinies par un `switch` (`:830-846`) ; les neuf runes neuves (`:848-859`) ; les lots, dont les cartes survivantes prises par id (`lotCards`, `:500` et suivantes) ; trois événements (`:2940` et suivantes), quatre reliques (`:693-696`, versées dans la réserve en `:2470-2474`) et la mythique de D42(c) (`:2609-2615`) ; la recharge des signatures (`:803`) et le type de `magic_missile` (`:805`) ; le `ratio` 0,5 du Berserker (`:1441`), les `minFusionRank` (`:1267-1269`) et la table des `maxLevel` (`:1274` et suivantes). La relique B, que D57 supprime, et l'événement de fusion de D29, que D56 sort du chantier, y sont encore joués — par défaut, donc dans la référence.
-
-**Trois choses que la table ci-dessous suppose.** Les listes sont tirées **par index** : runes, reliques, événements et récompenses sont rangés « fichiers triés par nom, puis entrées en dur », et un fichier neuf se range au milieu des autres — d'où la règle du réalignement, §3.6 : chaque fichier neuf prend la place exacte de son entrée en dur. La cinquième ligne de la sortie, « Données lues », **compte les fichiers** (`:3837-3841`) : elle bouge dès qu'une vague en crée un, et c'est le seul écart admis au premier temps. Et **la table d'XP n'est pas lue : elle est recalée à chaque lancement** (`:3801-3806`) — elle égale celle de D67 aujourd'hui (référence, ligne 11).
-
-| Vague | Ce qui casse ou dérive | À faire dans le plan |
-|:---:|:---|:---|
-| 1 | Rien, **tant qu'E1 ne touche ni le `weight` d'aucune des huit runes** (`:828`), **ni l'`eligibleCardTypes` des six autres que `sharp` et `hardened`** (`:829`, `:834-835`) : `ratio`, `maxLevel` et l'éligibilité par effet sont en dur ; les champs neufs d'E0 et d'E1 sont ignorés | **Relancer quand même**, sans réalignement : diff strictement vide attendu — huit minutes en arrière-plan, et la réserve est prouvée au lieu d'être supposée (D73) |
-| 2 | `cheap`, `precise`, `spectral` apparaissent en fichiers : le `switch` les prend par défaut (`:845`) **en plus** des entrées en dur (`:850`, `:854`, `:858`) — doublon, et rangés au milieu des huit | Premier temps : une liste d'ordre explicite des 17 ids dans le script — pour chacun, le fichier s'il existe, l'entrée en dur sinon ; un fichier dont l'id n'y est pas lève une erreur. Diff vide, « 17 runes » compris. Second temps seulement si un arbitrage remplace une valeur jouée (§8.2) |
-| 3 | Les reliques A et C, la légendaire de D42(a), les événements d'affûtage et d'échange de relique, la mythique de D42(c) deviennent des fichiers : doublons avec les entrées en dur, rangés au milieu des listes tirées par index (`:2517-2522`, `:2940-2947`, `:2602-2626`). Le chargeur accepte tout `effect` de récompense : le risque est muet — une liste plus longue, un jet de plus par niveau. `wisdom.json` : le script force déjà son pool (`:2594`), mais lira sa valeur `mythic` (`:2619`) | Premier temps : chaque fichier remplace son entrée en dur à la même position — les reliques en queue, dans l'ordre A, B, C, D42(a), avec leur `trigger: 'special'` ; les deux événements aux places de `d23_relic` et `d42b_sharpen` ; la mythique de D42(c) **en dernier**. Diff vide **hors la ligne « Données lues »**, dont l'écart attendu s'écrit d'avance. Second temps : le retrait de la relique B et de l'événement de D29, relancé à part, référence recommitée ; **et la référence du script lit désormais la table d'XP du jeu**, que cette vague écrit en donnée — la calibration reste affichée à côté |
-| 4 | `classes/*/cards/` devient `skills/` : **le script plante** — `listSync` sur un dossier absent (`:798`) ; le schéma des signatures change | Premier temps : réaligner le chemin, **lire la recharge et le type dans le fichier** à la place des deux valeurs en dur. Diff vide si l'arbitrage garde la recharge de 2 et les coûts d'aujourd'hui ; sinon c'est un second temps |
-| 5 | `cards/<passif>/` apparaît : **les cartes de lot sont ignorées** par le chargeur ; `demon_form`, déplacée, fait planter `survivor()` (`:501`, `:572`) ; `focus` disparaît | Faire lire les lots réels à la place des lots génériques, relancer : **première mesure sur les vraies cartes** — un changement voulu d'un bout à l'autre, l'écart avec la référence est une information, pas un arrêt ; la référence est recommitée |
-| 6 | Trois lots réels de plus | Relancer, recommiter la référence |
-| 7 | Trois lots de plus ; `metallicize`, `warcry` et les quatre élémentaires, déplacées, font planter `survivor()` (`:556`, `:610`, `:635-638`) | Réaligner, relancer ; la mesure des neuf lots est le point de départ de P-16 |
+**Retiré du cycle par ADR-108 (D5), le 13/10.** `tool/simulations/d26_economy_sim.dart` et sa sortie de référence `d26_reference_output.md` restent dans le dépôt tels que la vague 3 les a laissés (`d8b2aef`), comme instrument et trace du brainstorm ; aucune vague ne les réaligne, ne les relance, ni ne les compare. Le script peut cesser de tourner quand une vague change un schéma qu'il lit : c'est accepté, et le prochain brainstorm qui en aurait besoin le réalignera. Les lignes « Simulation » des fiches de vague sont retirées ; la table qui disait, vague par vague, ce qui cassait et ce que le plan devait réaligner est dans l'historique git de ce fichier.
 
 ---
 
@@ -484,7 +495,6 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **À arbitrer** : **l'identité d'une source**, pour chacune de ses six natures — une carte (l'id de carte ou l'`uniqueId` de l'instance, et ce que « la même carte rejouée s'additionne » veut dire avec deux exemplaires dans le deck), la règle de classe, un passif, une relique, un statut qui en pose un autre, un ennemi ; **la portée de la règle** — `might` seul, ce que dit le titre de D36, ou tout statut, ce que dit son texte : dans le second cas les trois lecteurs ci-dessus et le test de `poison` sont dans le lot, et la spec dit ce que la règle fait des statuts que les runes élémentaires posent hors d'`addStatus` ; la borne de `ratio` dans l'éditeur.
 **Ne pas absorber** : rien d'E1 ; ni `mightRatio` (D38) ni le budget de Puissance ; aucun rééquilibrage de carte.
 **Point propre au vérificateur** : rien — ni dans la spec, ni dans une tâche du plan — ne touche `forge_upgrade_data.dart`, le `switch` des runes d'`effect_resolver.dart` (`:142-164`) ni la logique de son bloc élémentaire (`:176-220`, hors l'appel à `createStatus`) — la fabrique `createStatus` du même fichier, elle, est dans le lot.
-**Simulation** : E0 ajoute `ratio` à `class.json`, que le script ignore — son taux est en dur. Aucun réalignement.
 
 #### E1 — le moteur de runes data-driven
 
@@ -506,7 +516,6 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **Ne pas absorber** : la fusion, l'héritage, l'affûtage, le Puits, la boutique, les pré-forgées, la suppression de la capacité, de `pools` et de `stackable`, `minFusionRank`, « une rune par type » hors des runes que D75 ferme à leur plafond — tout cela est E2 ; aucune rune neuve ; les évolutions de signature.
 **Point propre au vérificateur** : `pools`, `stackable` et la capacité gardent leurs lecteurs ; **aucun écran ne change de déroulé**. Les seuls changements visibles sont ceux que le lot livre : la formule de `sharp` et `hardened` (D33) ; l'offre de runes de la forge du feu et de la boutique, filtrée par l'éligibilité en donnée (D44, D51, D61, D75) ; le plafond `maxLevel` partout où un niveau s'écrit — la fusion de cartes, le nœud Forge de Fusion, le tirage de niveau du feu et celui des pré-forgées (D27, D72) : une spec ou une tâche qui borne l'un de ces quatre endroits est dans le lot ; les valeurs que G1 et G2 corrigent.
 
-**Simulation** : aucun réalignement, tant qu'E1 ne touche ni le `weight` d'aucune des huit runes ni l'`eligibleCardTypes` des six autres que `sharp` et `hardened` (§7.3, ligne 1) — une consigne à redonner au rédacteur de la spec et à celui du plan. **L'orchestrateur relance quand même** à la fin de la vague : diff strictement vide attendu (D73).
 **Ce que le joueur voit en `0.5.3`** : *(E0)* le Berserker convertit moitié moins d'armure en Puissance ; deux bonus de Puissance de durées différentes ne se confondent plus ; *(E1)* `sharp` et `hardened` donnent +15 % de la base par niveau, au moins +1, au lieu de +2 ; `hardened` n'est plus proposée sur une carte sans armure, où elle ne faisait rien ; la forge ne propose plus `eco` sur une carte gratuite ni `enduring` sur une carte qui pioche ou rend du mana ; `eco` et `quick` ne dépassent plus le niveau 1 — ni au feu, ni à la fusion, ni à la Forge de Fusion, ni en boutique —, et une carte n'en porte plus deux exemplaires ; `freezing` ne dépasse plus le niveau 1 non plus : son gel ralentit une attaque ennemie, et non plus deux ou trois ; une fusion change toujours au moins un chiffre de dégâts ou d'armure, et ne multiplie plus la pioche ni le mana rendu. *(`sharp` devient éligible aux Compétences de dégâts, D61 ; aucune des 23 cartes d'aujourd'hui n'en est une : cela ne se verra qu'avec le lot Arcaniste, en vague 5 — la note de `0.5.3` n'en parle pas.)* **La ligne se réécrit sur ce que la vague a livré**, arbitrage de G1 et G2 compris.
 **Pour `memory-bank-sync`** : *(E0)* ADR « un statut par source et `ratio` » ; fiches `_rules/04-00` (la fusion des statuts) et `_rules/02-2` (la conversion du Berserker) ; *(E1)* ADR « moteur de runes data-driven », qui amende ADR-094 ; fiches `_rules/03-8` (le filtrage par effet, `maxLevel`, le plafond atteint qui ne se repropose plus — D75 ; la description d'`eco` est déjà corrigée), `_rules/02-4` et `_patterns/10-00` (`forgeSlotBonus` → `fusionRank`).
 
@@ -522,7 +531,6 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **Parties proposées** : (1) la fusion propose une rune, l'héritage, la capacité supprimée, l'affûtage — la boucle change une fois ; (2) le Puits, la boutique, les trois runes, `minFusionRank`, `pools` et `stackable` supprimés.
 **Ne pas absorber** : la trouvaille, `maxHandSize`, l'XP, la DDA, *Sagesse*, les sources d'affûtage hors feu, l'événement de relique (E3) ; les signatures (E4) ; les runes de pipeline (vague 5).
 **Point propre au vérificateur** : après E2, plus aucun lecteur de `pools`, de `stackable` ni de la capacité (`git grep -w`).
-**Simulation** : premier temps — réaligner le chargeur sur les trois fichiers neufs par une liste d'ordre explicite (§7.3, ligne 2), relancer : diff vide contre la référence. Second temps, **seulement si** un arbitrage remplace l'une des trois valeurs jouées ci-dessus ou le poids 50 des runes neuves : une relance par valeur, l'écart expliqué, la référence recommitée (§3.6).
 **Ce que le joueur voit en `0.5.4`** : chaque fusion donne une rune parmi trois ; le feu de camp affûte ; le Puits d'échange remplace la Forge de Fusion ; la boutique vend une copie d'une carte du deck. **À dire dans la note** : les fusions restent rares jusqu'à la version suivante.
 **Pour `memory-bank-sync`** : ADR « fusion = forge », qui amende ADR-074 et ADR-094 ; fiches `_rules/02-3`, `02-4`, `03-7`, `03-8` ; `_patterns/10-00` (`pools`, `stackable`, la capacité) et `_patterns/20-00` (ce que le script lit).
 
@@ -537,8 +545,7 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **À arbitrer** : où vivent les tables (Q5 : `cardDrops` dans `GameConstants` tant que le socle de carte n'existe pas ; la table d'XP « en donnée » — un document plat ou une constante nommée) ; les valeurs de D63 pour l'échange de relique (Q15) et les deux défauts ci-dessus : à confirmer, ou à remplacer **en relançant** (§5, filtre 2) ; ce que fait le boss « XP » quand aucune rune n'est sous son `maxLevel` ; le découpage en parties ; **D25 et la « pioche infinie »** — le bug du testeur n'a pas été reproduit : cherche à le reproduire par un test ; reproduit, c'est un correctif de cette vague ; non reproduit, `maxHandSize` migre quand même (D2) et l'ADR de la vague amende ADR-078 D3 en disant que le testeur a vu le cyclage.
 **Parties proposées** : (1) la boucle — `cardDrops`, reliques, main, XP, DDA ; (2) les sources — boss « XP », relique légendaire, événements, mythique `maxLevel`, *Sagesse*, seuils.
 **Ne pas absorber** : les reliques de mana, le puits d'or, la survie, la boucle XP / niveau ennemi, l'échange 3 → 1, l'événement de fusion (P-16) ; les signatures (E4) ; aucun rééquilibrage.
-**Point propre au vérificateur** : aucune valeur de D56 à D62 ni de D67 n'a changé ; le réalignement du script est une tâche du plan.
-**Simulation** : premier temps — réaligner sur les fichiers neufs, reliques, événements, mythique, `level_up_rewards/`, chacun à la place exacte de son entrée en dur (§7.3, ligne 3), relancer : diff vide **hors la ligne « Données lues »**, dont l'écart s'écrit d'avance dans le plan. Second temps, un commit et une relance chacun : le retrait de la relique B et de l'événement de D29 ; la table d'XP lue dans la donnée du jeu au lieu d'être recalée — la calibration reste affichée à côté ; et toute valeur jouée que l'arbitrage a remplacée. La référence est recommitée.
+**Point propre au vérificateur** : aucune valeur de D56 à D62 ni de D67 n'a changé.
 **Ce que le joueur voit en `0.5.5`** : une carte après chaque combat, une seconde possible en élite ; deux niveaux par acte ; des sources d'affûtage hors du feu ; un événement pour échanger une relique. La note la plus longue du chantier.
 **Pour `memory-bank-sync`** : ADR « trouvaille et progression », qui amende ADR-078 D3 ; fiches `_rules/01-00`, `02-6` (la formule de `PlayerPower`), `02-1` (le boss « XP » n'octroie plus de carte), `03-4` (la main), `08-00` et `_patterns/02-1` (le palier d'XP) ; `_patterns/20-00`.
 
@@ -546,15 +553,15 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 **Fichiers** : `<AAAA-MM-JJ>-p43-e4-signatures-design.md` pour la spec ; `<AAAA-MM-JJ>-p43-e4-signatures-partie-<n>.md` pour chaque plan.
 **Décisions** : D49, D41, D53 ; D7 pour la forme ; D28 (`magic_missile` en Compétence). Branche `feat/v0.5.6-p43-e4-signatures`. Le modèle d'évolution et son écran sont **la vague 5** (D53) : E4 leur réserve le champ.
+**Essai mesuré** (ADR-108 D8) : première vague sous la méthode amendée — plans de décisions, vérification différentielle, classes et autonomie ; son compte rendu se compare aux trois précédents. **Autonomie** : `strict`, sauf mention du propriétaire dans le prompt de lancement. **Tâches à risque** : celles que le propriétaire nomme dans le prompt ; à défaut, aucune. **Questions P** : leurs réponses dans le prompt de lancement, ou dans cette fiche avant la vague.
 
 **À lire** : brainstorm, bloc « Vocabulaire », **§4.4** (forme, moteur, à revoir, esquisse `smite.json`, point « Stockage », point `magic_missile`), §5, §6, §11 ligne E4 ; revue §2.1, §11 — son paragraphe d'objet, où les deux lignes du tutoriel sont vérifiées —, annexe A n° 3, 24, 25, annexe B.2 ; rapport **§1.2** (la recharge de 2, valeur par défaut que la simulation a jouée) ; ADR-084, ADR-086, ADR-094, ADR-101, ADR-081, ADR-100.
 **État mesuré** : `hero_data.dart:44` (`skills`) ; `hero_skills_link.dart:6-13` ; `starter_deck_draft_screen.dart:57` ; `game_data_service.dart:76-89` ; `card_data.dart:7`, `:22-28`, `:44`, `:136-139` ; `deck_controller.dart:158` ; `effect_resolver.dart:104-106` ; `combat_state.dart` ; `power_rules.dart` ; `tutorial_engine.dart:175` ; `tutorial_starter_deck_widget.dart:41` ; `save_service.dart` ; `passives/mage_mark.json` (`trigger: onAttackPlayed`) ; le HUD est en Flutter (`lib/ui/widgets/hud/`), la main en Flame.
 **La spec doit fixer** : `classes/<id>/skills/<id>.json`, l'`EntitySource`, `sync_assets` ; la recharge dans l'état de combat, remise à zéro à chaque combat, jamais sauvegardée ; la résolution — mana, `resolveCard`, mise en recharge ; la suppression de `CardRarity.unique`, d'`isAcquirable` et de `CardCategory.characterSpecific` ; la barre au HUD et ses états ; le tutoriel (`:175`, `:41`) ; le draft de départ à 5 cartes ; la sauvegarde (les signatures sortent du `masterDeck`, sans migration) ; l'onglet du dictionnaire ; la carte de classe ; `magic_missile` en `type: skill`, **et ce que cela fait à *Marque du Mage* en `0.5.6`** (§7.2 : le passif ne se déclenche plus sur la signature, voulu) ; les tests.
-**À arbitrer** : **le modèle** — un `SignatureData` propre ou un `CardData` restreint ; **une signature compte-t-elle comme une carte jouée pour les déclencheurs de passif** — `onSkillPlayed` de Flux de Mana avec `magic_missile`, `onAttackPlayed` de Soif de Sang avec `reckless_strike` et de *Marque du Mage* avec les signatures restées des Attaques ; « résolue comme une carte » penche pour oui ; le coût et la recharge de chaque signature — **la recharge de 2 pour les six et leurs coûts d'aujourd'hui sont les valeurs que la simulation a jouées** (script `:803` ; rapport §1.2) : des valeurs de spec, à confirmer, ou à remplacer en relançant ; ce que devient l'enum `CardCategory` si `global` reste seule ; les signatures dans l'éditeur de contenu, ou non pour ce lot ; les noms du modèle — ADR-084 a supprimé une chaîne de compétences à recharge et interdit ses noms dans le vault (`SkillData`, `SkillController`, `tickCooldowns`…) : d'autres noms, ou l'ADR de la vague lève l'interdit ; le découpage en parties.
+**À arbitrer** : **le modèle** — un `SignatureData` propre ou un `CardData` restreint ; **une signature compte-t-elle comme une carte jouée pour les déclencheurs de passif** — `onSkillPlayed` de Flux de Mana avec `magic_missile`, `onAttackPlayed` de Soif de Sang avec `reckless_strike` et de *Marque du Mage* avec les signatures restées des Attaques ; « résolue comme une carte » penche pour oui ; le coût et la recharge de chaque signature — la recharge de 2 pour les six et leurs coûts d'aujourd'hui sont des valeurs de spec (rapport §1.2), visibles du joueur : **classe P**, à confirmer ou à remplacer par le propriétaire ; ce que devient l'enum `CardCategory` si `global` reste seule ; les signatures dans l'éditeur de contenu, ou non pour ce lot ; les noms du modèle — ADR-084 a supprimé une chaîne de compétences à recharge et interdit ses noms dans le vault (`SkillData`, `SkillController`, `tickCooldowns`…) : d'autres noms, ou l'ADR de la vague lève l'interdit ; le découpage en parties.
 **Parties proposées** : (1) donnée, modèle, moteur, sauvegarde, tests ; (2) HUD, tutoriel, draft, dictionnaire, sélection de classe.
 **Ne pas absorber** : le modèle d'évolution, les pools et l'écran (vague 5) ; **le déclencheur `onDamagingCardPlayed` de D34** (vague 7 — il n'existe pas aujourd'hui) ; toute carte, toute rune ; un rééquilibrage des six signatures.
 **Point propre au vérificateur** : plus aucune signature dans le `masterDeck` ni dans un pool d'offre ; `unique` et `characterSpecific` n'ont plus d'occurrence (`git grep -w`) ; le déclencheur de *Marque du Mage* n'a pas changé.
-**Simulation** : premier temps — réaligner `classes/<id>/cards` → `skills` (`:798`), sans quoi le script plante, et lui faire lire la recharge et le type dans le fichier à la place des deux valeurs en dur (`:803`, `:805`) ; relancer : diff vide si l'arbitrage a gardé la recharge de 2 et les coûts d'aujourd'hui. Sinon, second temps : l'écart expliqué, la référence recommitée (§3.6).
 **Ce que le joueur voit en `0.5.6`** : deux compétences de classe toujours disponibles, dès le premier tour, avec un temps de recharge. **À dire dans la note** : le Projectile Magique devient une Compétence et ne déclenche plus *Marque du Mage*.
 **Pour `memory-bank-sync`** : ADR « signatures hors du deck », qui amende ADR-094, ADR-101 et ADR-084 ; fiches `_rules/02-3`, `02-2` (les cartes de signature), `07-00` ; `_patterns/20-00` ; **P-43 se clôt dans `docs/ROADMAP.md`**.
 
@@ -569,7 +576,6 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **Parties proposées** : (1) **le moteur P-44 lot 1 sur les 17 neutres**, avec les cinq runes — rien de visible, tout testé ; (2) **la forme C et les trois lots**, le masquage, les tests de données ; (3) **les évolutions et leur écran**.
 **Ne pas absorber** : les six autres lots, D30, le déclencheur de D34, D55 ; P-44 lots 2 à 4 ; P-16 ; `maxMana` reste 3.
 **Point propre au vérificateur** : chaque carte de lot touche une entrée de `feeds` ; aucune neutre ne porte de coût autre que du mana (D17) ; aucun lot ne dépasse une carte à coût total nul.
-**Simulation** : faire lire au script les lots réels (§7.3, ligne 5), relancer — première mesure sur les vraies cartes, sur la table d'XP du jeu et non une table recalée (§7.3, ligne 3) ; la référence recommitée est celle que la vague 6 lira.
 **Ce que le joueur voit en `0.5.7`** : le deckbuilding existe — trois passifs jouables avec leur lot, les mécanismes de profondeur, les évolutions de signature. **À dire dans la note** : six passifs quittent la sélection jusqu'à ce que leur lot de cartes arrive, dans les deux versions suivantes.
 **Pour `memory-bank-sync`** : ADR « forme C et lots par passif » ; ADR « évolutions de signature » ; ADR « profondeur, lot 1 » ; les fiches `_rules` des cartes et des statuts ; `_patterns/20-00` ; **P-44 lot 1 se clôt dans `docs/ROADMAP.md`**.
 
@@ -577,12 +583,11 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 **Un lot, trois lots de cartes** — une spec, un plan : **Croisé** (Paladin, *Ferveur*), **Vampire** (Berserker, *Soif de Sang*), **Voile** (Mage, *Canalisation*) — un par classe comme la tranche 1, Voile fixé par D66. L'orchestrateur peut re-arbitrer cette composition (O3) si la vague 5 a appris quelque chose qui la contredit ; il le dit. **Décisions** : D30, D35, D16, D17, D45, D50. Branche `feat/v0.5.8-p42-tranche-2`. **Fichiers** : `<AAAA-MM-JJ>-p42-tranche-2-design.md` pour la spec, le même nom sans `-design` pour le plan.
 
-**À lire** : brainstorm §7.1 ligne Croisé, §7.2 ligne Vampire, §7.3 ligne Voile et la note, §7.4, §5, §1 (D30, D35) ; revue §7 idées 2.5, 2.7, 2.8, §12 T6 (*Barrière* re-valuée), annexe B.3 et B.4 ; la spec, les ADR et le compte rendu de la vague 5 ; la référence de simulation recommitée en vague 5 (`tool/simulations/d26_reference_output.md`).
+**À lire** : brainstorm §7.1 ligne Croisé, §7.2 ligne Vampire, §7.3 ligne Voile et la note, §7.4, §5, §1 (D30, D35) ; revue §7 idées 2.5, 2.7, 2.8, §12 T6 (*Barrière* re-valuée), annexe B.3 et B.4 ; la spec, les ADR et le compte rendu de la vague 5.
 **La spec doit fixer** : **D30** — Canalisation devient une banque de mana : `channeling.json` change d'`effectType`, `startTurn` lit la réserve, plafond `maxMana` plus 1 par point de Maîtrise, Mage uniquement ; le statut `mana_regen` sur le modèle de `might_regen` (*Méditation*) ; les cartes — Croisé (*Riposte*, *Jugement*, *Marteau sacré* en multi-coups), Vampire (Attaques à 1 qui piochent : *Morsure*, *Curée* ; *Lacération*, la carte à 0 du lot ; *Frénésie sanglante* en `scaleWith: cardsPlayedThisTurn`), Voile (*Barrière*, *Méditation*, *Sceau*) — complétées à 5 ou 6 par lot ; le démasquage des trois passifs ; les textes joueur de Canalisation.
 **À arbitrer** : les cartes qui complètent chaque lot ; la courbe de coûts de Voile (des tours à 5-6 mana, sans carte à 0) ; les cartes-pont si Q8 les a retenues.
 **Ne pas absorber** : la carte `retain` de Voile (P-44 lot 3, après `0.6.0`) ; la tranche 3.
 **Point propre au vérificateur** : D50 tient pour Berserker · Vampire (`concentration` et *Lacération*, deux cartes gratuites, épuisables) ; aucune carte ne suppose un mécanisme hors périmètre.
-**Simulation** : relancer sur six lots réels, recommiter la référence.
 **Ce que le joueur voit en `0.5.8`** : trois passifs de plus avec leurs cartes ; Canalisation garde le mana non dépensé pour le tour suivant.
 **Pour `memory-bank-sync`** : ADR pour la banque de mana si le mécanisme le justifie ; les fiches des passifs.
 
@@ -595,7 +600,6 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **À arbitrer** : Q12 (les élémentaires restent des Attaques — le brainstorm penche pour oui) ; Q11 si la vague 5 l'a laissée ouverte ; la variante « armure conservée » de D43 pour Sanctifié, ou rien ; les cartes qui complètent.
 **Ne pas absorber** : *Forge de guerre* de Carnage (production de cartes, P-44 lot 3) ; les épines de Rempart (P-44 lot 2) ; P-16.
 **Point propre au vérificateur** : le tutoriel tourne toujours avec `fireball` ; les neuf lots passent D45 et D50 ; aucun passif n'est resté masqué.
-**Simulation** : réaligner sur les six cartes déplacées (§7.3, ligne 7), relancer sur les neuf lots — la mesure de référence que P-16 reprendra.
 **Ce que le joueur voit en `0.6.0`** : neuf passifs jouables, chacun avec son lot.
 **Pour `memory-bank-sync`** : les ADR et les fiches de la tranche ; **P-42 se clôt dans `docs/ROADMAP.md`**, comme P-43 en vague 4. La vague 7 écrit sa section dans le suivi, comme les autres, et s'arrête « livrée sur branche » : **elle ne dit pas le chantier clos** — c'est la session de clôture qui le fait, une fois `0.6.0` taguée (§8.8).
 
@@ -605,7 +609,7 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 1. **La porte d'entrée** (§3.1), entière, sur la vague 7 : fusionnée, `v0.6.0` posé sur un commit de `main`, release publiée, CI verte, trois porteurs de version à `0.6.0`, `dart analyze` et `flutter test`.
 2. **La branche** (§3.2). Premier commit, le journal : la vague 7 passe à « close », avec la date constatée ; la ligne « Clôture » passe à « faite », avec la date du jour.
-3. **`memory-bank-sync`**, délégué, avec ces consignes : noter la clôture de la vague 7 — fusionnée, taguée, CI/CD verte — et celle du chantier ; dans `docs/ROADMAP.md`, porter **les trois cartes dues** (épines, `retain`, *Forge de guerre*) sur la ligne de P-44 et mettre à jour les constats de P-16 avec la mesure des neuf lots ; `activeContext.md` : le focus revient à la ROADMAP ; un ADR de clôture si le chantier a appris quelque chose de la méthode qui vaille pour le prochain.
+3. **`memory-bank-sync`**, délégué, avec ces consignes : noter la clôture de la vague 7 — fusionnée, taguée, CI/CD verte — et celle du chantier ; dans `docs/ROADMAP.md`, porter **les trois cartes dues** (épines, `retain`, *Forge de guerre*) sur la ligne de P-44 ; `activeContext.md` : le focus revient à la ROADMAP ; un ADR de clôture si le chantier a appris quelque chose de la méthode qui vaille pour le prochain.
 4. **Le suivi des vagues** : le « Bilan du chantier » que le modèle prévoit, et l'en-tête passe à « Chantier clos ». Tu l'écris toi-même, à partir des sept sections et des comptes rendus.
 5. **Ce fichier** : son en-tête passe à « chantier clos le `<JJ/MM/AAAA>` » et sa ligne de fin le dit. **Il ne se déplace pas** : une douzaine de fichiers y renvoient par chemin.
 6. **Arrête-toi.** Message au propriétaire : la branche, ce qu'elle écrit. Il ouvre la PR et la fusionne — pas de test manuel, pas de tag. Ce que la branche dit clos le devient sur `main` au moment où elle y entre.
@@ -628,9 +632,9 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 | O10 | Un suivi lisible sans technique | ✅ **Ouvert le 01/10** (D71) : `docs/suivi_vagues_chantier/`, un fichier par chantier selon le modèle du répertoire ; celui de ce chantier reçoit une section par vague, écrite en §3.8 |
 | O11 | Qui clôt le chantier après la vague 7 | ✅ **Tranché le 01/10** (D74) : une session de clôture, par le même prompt, sur une branche de documentation — §8.8 |
 | O12 | Où `maxLevel` s'applique dès E1 | ✅ **Tranché le 01/10** (D72) : aux quatre endroits qui écrivent un niveau de rune — fiche 8.1 |
-| O13 | Le critère de la simulation quand une vague change une valeur | ✅ **Tranché le 01/10** (D73) : deux temps, le réalignement seul puis chaque changement voulu — §3.6, §7.3 |
+| O13 | Le critère de la simulation quand une vague change une valeur | ✅ Tranché le 01/10 (D73), puis **retiré le 13/10 par ADR-108 D5** : aucune vague ne relance la simulation — §3.6, §7.3 |
 | O14 | Deux exemplaires d'une rune plafonnée sur une même carte, en `0.5.3` | ✅ **Tranché le 01/10** (D75) : le prédicat d'E1 ne repropose plus une rune dont le plafond est atteint sur la carte, exemplaires additionnés — fiche 8.1 |
 
 ---
 
-*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Prochaine étape : la vague 1, par le prompt de §0.*
+*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Prochaine étape : la vague 4, par le prompt de §0, sous la méthode amendée par ADR-108.*
