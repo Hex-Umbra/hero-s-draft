@@ -218,7 +218,7 @@ class RewardController extends Notifier<RewardState> {
     final run = ref.read(runProvider);
     final rng = random ?? Random();
     final offerable =
-        allCards.where((c) => c.isOfferableTo(run.heroClassId)).toList();
+        allCards.where((c) => c.isOfferable).toList();
     final foundCards = <CardInstance>[];
     if (offerable.isNotEmpty) {
       // Les deux règles des reliques : C (+1 carte garantie) au seul combat

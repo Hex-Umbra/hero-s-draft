@@ -52,7 +52,6 @@ CardInstance _card({
         id: 'test_card',
         cost: cost,
         type: type,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
         isExhaust: isExhaust,

@@ -6,8 +6,6 @@ import 'game_data_registry.dart';
 
 enum CardType { attack, skill, power, status }
 
-enum CardCategory { global, characterSpecific }
-
 enum CardRarity {
   common,
   uncommon,
@@ -112,8 +110,6 @@ class CardData implements AudioSource {
   final String descriptionFr;
   final int cost;
   final CardType type;
-  final CardCategory category;
-  final String? heroClass;
   final CardRarity rarity;
   final CardTarget target;
   final String? spritePath;
@@ -132,8 +128,6 @@ class CardData implements AudioSource {
     this.descriptionFr = '',
     required this.cost,
     required this.type,
-    required this.category,
-    this.heroClass,
     required this.rarity,
     required this.target,
     this.spritePath,
@@ -147,21 +141,20 @@ class CardData implements AudioSource {
   String getDescription(String locale) =>
       locale == 'fr' ? descriptionFr : descriptionEn;
 
-  /// Cette carte peut-elle être proposée au héros de classe [heroClassId] par
-  /// un pool d'offre — boutique, trouvaille ?
-  ///
-  /// Une carte de signature n'appartient qu'à sa classe : sans ce filtre, un
-  /// mage pouvait acheter une carte de paladin. Seul `heroClass` est testé, et
-  /// jamais `category` : le chargeur injecte les deux depuis le même chemin de
-  /// fichier, ils ne peuvent pas diverger, et les tester tous les deux ferait
-  /// croire à deux conditions distinctes.
-  ///
-  /// Ne régit pas le draft de départ, qui reste sur `category == global`.
-  bool isOfferableTo(String heroClassId) =>
-      type != CardType.status &&
-      (heroClass == null || heroClass == heroClassId);
+  /// Le prédicat d'offre unique (ADR-101 D1) : boutique, trouvaille, draft de
+  /// départ, `starterPool` du tutoriel ; la vague 5 lui donnera le passif actif.
+  bool get isOfferable => type != CardType.status;
 
   factory CardData.fromJson(Map<String, dynamic> json) {
+    // L'appartenance vient du répertoire (A10) : une carte ne la déclare pas.
+    for (final key in const ['heroClass', 'category']) {
+      if (json.containsKey(key)) {
+        throw FormatException(
+          'CardData: la clé "$key" est refusée, une carte tient son '
+          'appartenance de son répertoire (carte "${json['id']}")',
+        );
+      }
+    }
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
     final dEn =
@@ -181,11 +174,6 @@ class CardData implements AudioSource {
       descriptionFr: dFr,
       cost: json['cost'] as int,
       type: CardType.values.firstWhere((e) => e.name == json['type']),
-      category: CardCategory.values.firstWhere(
-        (e) => e.name == json['category'],
-        orElse: () => CardCategory.global,
-      ),
-      heroClass: json['heroClass'] as String?,
       rarity: CardRarity.values.firstWhere(
         (e) => e.name == json['rarity'],
         orElse: () => CardRarity.common,
@@ -214,8 +202,6 @@ class CardData implements AudioSource {
         'description_fr': descriptionFr,
         'cost': cost,
         'type': type.name,
-        'category': category.name,
-        if (heroClass != null) 'heroClass': heroClass,
         'rarity': rarity.name,
         'target': target.name,
         if (spritePath != null) 'spritePath': spritePath,

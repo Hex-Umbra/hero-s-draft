@@ -72,13 +72,13 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   // La tolerance de migration a expire : le repertoire est desormais la
   // seule source d appartenance. `redundantFields` retombe sur son defaut
   // `const {'id'}` — `id` reste redeclarable a titre permanent (le porter
-  // rend le fichier lisible hors contexte), mais `heroClass` et `category`
-  // ne doivent plus figurer dans le fichier.
+  // rend le fichier lisible hors contexte) ; `heroClass` et `category` sont
+  // refuses par `CardData.fromJson`.
   final cards = await loader.loadAll<CardData>([
     EntitySource(
       'assets/data/cards/*.json',
       CardData.fromJson,
-      inject: (c) => {'id': c[0], 'category': 'global'},
+      inject: (c) => {'id': c[0]},
     ),
   ]);
 

@@ -120,13 +120,13 @@ void main() {
       expect(relic.effectType, 'gain_armor');
     });
 
-    test('le pool de départ ne contient que des cartes globales non-statut', () {
+    test('le pool de départ est celui du prédicat d offre', () {
       expect(fixtures.starterPool, isNotEmpty);
       expect(fixtures.starterPool.length, greaterThanOrEqualTo(5));
-      for (final card in fixtures.starterPool) {
-        expect(card.category, CardCategory.global);
-        expect(card.type, isNot(CardType.status));
-      }
+      expect(fixtures.starterPool.every((c) => c.isOfferable), isTrue);
+      final expected = data.cards.where((c) => c.isOfferable).toList()
+        ..sort(CardData.compareByDisplayOrder);
+      expect(fixtures.starterPool, expected);
     });
   });
 

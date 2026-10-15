@@ -51,11 +51,9 @@ class _StarterDeckDraftScreenState
   void _generateDraftPool() {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    // 1. Filtrer pour n'obtenir que les cartes globales non statut
+    // 1. Filtrer par le predicat d'offre : tout sauf un statut
     final globalCards = gameData.cards
-        .where(
-          (c) => c.category == CardCategory.global && c.type != CardType.status,
-        )
+        .where((c) => c.isOfferable)
         .toList()
       // Le pool est affiché et sélectionné par index, sans mélange : sans tri
       // explicite, le premier choix d'une run suivrait l'ordre du registre,

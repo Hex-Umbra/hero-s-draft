@@ -63,7 +63,6 @@ void main() {
                   id: 'test_card',
                   cost: 1,
                   type: CardType.attack,
-                  category: CardCategory.global,
                   rarity: CardRarity.common,
                   target: targetType,
                   effects: effects,

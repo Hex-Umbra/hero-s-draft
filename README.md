@@ -90,8 +90,9 @@ assets/data/
 3. **Relancez l'application.** La nouvelle carte ou le nouvel ennemi est déjà dans le jeu, pris en
    compte par la Boutique, les récompenses et le système de combat !
 
-*Note : n'écrivez pas les champs que le répertoire impose — `heroClass` et `category` dans le
-fichier d'une carte font échouer le chargement. Seul l'`id` peut être redéclaré, à condition d'être
+*Note : n'écrivez pas les champs que le répertoire impose — `heroClass` dans le fichier
+d'une signature fait échouer le chargement, de même que `heroClass` et `category` dans le fichier
+d'une carte. Seul l'`id` peut être redéclaré, à condition d'être
 identique, parce qu'il rend le fichier lisible hors de son contexte.*
 
 *Note : toute entrée à texte visible porte ses deux variantes `_fr` et `_en`.*

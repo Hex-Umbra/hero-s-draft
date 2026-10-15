@@ -223,8 +223,8 @@ class EntityValidator {
 
   /// Famille 4 — les valeurs enumerees, contre les enumerations Dart reelles.
   ///
-  /// **C'est le controle que `fromJson` avale** : `CardRarity`, `CardTarget` et
-  /// `CardCategory` ont un `orElse` qui retombe en silence sur une valeur par
+  /// **C'est le controle que `fromJson` avale** : `CardRarity` et `CardTarget`
+  /// ont un `orElse` qui retombe en silence sur une valeur par
   /// defaut. La carte existe alors, et elle est fausse.
   List<ValidationFault> _enums(
     EntityDraft draft,

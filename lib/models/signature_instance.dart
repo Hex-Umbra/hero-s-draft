@@ -26,7 +26,6 @@ class SignatureInstance {
           descriptionFr: data.descriptionFr,
           cost: cost,
           type: data.type,
-          category: CardCategory.global,
           rarity: CardRarity.common,
           target: data.target,
           animation: data.animation,

@@ -107,7 +107,6 @@ void main() {
         id: 'tutorial_tap',
         cost: 0,
         type: CardType.attack,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
         effects: [CardEffect(type: 'damage', value: 1)],

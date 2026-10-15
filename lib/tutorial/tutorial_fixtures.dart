@@ -65,7 +65,7 @@ class TutorialFixtures {
 
   /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
   List<CardData> get starterPool => registry.cards
-      .where((c) => c.category == CardCategory.global && c.type != CardType.status)
+      .where((c) => c.isOfferable)
       .toList()
     ..sort(CardData.compareByDisplayOrder);
 }

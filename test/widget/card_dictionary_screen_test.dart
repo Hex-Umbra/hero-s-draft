@@ -9,7 +9,7 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-// Seed catalogue: a mix of global cards and hero-specific cards
+// Seed catalogue: a mix of cards
 // spread across the CardType groups the screen renders (attack/skill/power).
 const _cards = [
   CardData(
@@ -20,7 +20,6 @@ const _cards = [
     descriptionFr: 'Inflige des dégâts.',
     cost: 1,
     type: CardType.attack,
-    category: CardCategory.global,
     rarity: CardRarity.common,
     target: CardTarget.singleEnemy,
     effects: [],
@@ -33,8 +32,6 @@ const _cards = [
     descriptionFr: 'Une attaque réservée au paladin.',
     cost: 2,
     type: CardType.attack,
-    category: CardCategory.characterSpecific,
-    heroClass: 'paladin',
     rarity: CardRarity.rare,
     target: CardTarget.singleEnemy,
     effects: [],
@@ -47,7 +44,6 @@ const _cards = [
     descriptionFr: 'Gagne de l\'armure.',
     cost: 1,
     type: CardType.skill,
-    category: CardCategory.global,
     rarity: CardRarity.common,
     target: CardTarget.self,
     effects: [],
@@ -60,8 +56,6 @@ const _cards = [
     descriptionFr: 'Un pouvoir réservé au mage.',
     cost: 3,
     type: CardType.power,
-    category: CardCategory.characterSpecific,
-    heroClass: 'mage',
     rarity: CardRarity.epic,
     target: CardTarget.self,
     effects: [],

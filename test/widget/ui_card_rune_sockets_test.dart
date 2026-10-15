@@ -58,7 +58,6 @@ CardData _cardData(CardRarity rarity) => CardData(
       descriptionFr: 'Gagne de l armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: rarity,
       target: CardTarget.self,
       effects: const [],

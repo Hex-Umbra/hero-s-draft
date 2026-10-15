@@ -28,7 +28,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -41,7 +40,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -54,7 +52,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -67,7 +64,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -80,7 +76,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -93,7 +88,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -106,7 +100,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -119,7 +112,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -132,7 +124,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -145,7 +136,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -297,31 +287,28 @@ void main() {
   });
 
   testWidgets(
-    'le draft de depart n offre que des cartes globales, jamais une signature de classe',
+    'le pool du draft de depart est celui d isOfferable : tout sauf un statut',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Le pool porte une carte d'une autre classe : elle ne doit pas
-      // apparaitre au draft. La signature du paladin, elle, n'est plus une
-      // carte : rien ne peut l'y faire figurer.
+      // Le pool porte un statut : il ne doit pas apparaitre au draft. Les
+      // signatures ne sont plus des cartes : rien ne peut les y faire figurer.
       final registry = GameDataRegistry(
         enemies: const [],
         heroes: [mockHero],
         cards: [
           ...mockCards,
           const CardData(
-            id: 'fireball',
-            nameEn: 'Fireball',
-            nameFr: 'Boule de Feu',
-            cost: 2,
-            type: CardType.attack,
-            category: CardCategory.characterSpecific,
-            heroClass: 'mage',
-            rarity: CardRarity.rare,
-            target: CardTarget.singleEnemy,
+            id: 'blessure',
+            nameEn: 'Wound',
+            nameFr: 'Blessure',
+            cost: 1,
+            type: CardType.status,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
             effects: [],
           ),
         ],
@@ -359,7 +346,7 @@ void main() {
 
       expect(find.byType(UiCard), findsNWidgets(10));
       expect(find.text('BOUCLIER SACRÉ'), findsNothing);
-      expect(find.text('BOULE DE FEU'), findsNothing);
+      expect(find.text('BLESSURE'), findsNothing);
     },
   );
 

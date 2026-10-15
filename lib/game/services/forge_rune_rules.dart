@@ -59,7 +59,7 @@ class ForgeRuneRules {
   /// La rune [rune] peut-elle s'offrir à [card] ? Le prédicat unique de
   /// l'éligibilité (D3, D44, D48, D51, D61 ; spec P-43 E1, A3, §4.6 ; spec
   /// P-43 E2, §4.3) : une fonction pure, sur le modèle de
-  /// `CardData.isOfferableTo` — toute règle est un champ du fichier de rune,
+  /// `CardData.isOfferable` — toute règle est un champ du fichier de rune,
   /// aucune n'est un `case` par id. [card] est la carte qui reçoit la rune, à
   /// son rang : la carte fusionnée au rang qu'elle atteint, la carte
   /// elle-même en boutique et au Puits. [catalog] sert à lire les exclusions

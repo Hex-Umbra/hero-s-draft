@@ -49,8 +49,7 @@ class ShopController extends Notifier<ShopState> {
   }
 
   List<CardData> _getEligibleCards(List<CardData> allCards) {
-    final heroClassId = ref.read(runProvider).heroClassId;
-    return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
+    return allCards.where((c) => c.isOfferable).toList();
   }
 
   /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :

@@ -19,7 +19,6 @@ CardData fixtureCard(String id) => CardData.fromJson({
       'description_fr': 'x',
       'cost': 1,
       'type': 'attack',
-      'category': 'global',
       'rarity': 'common',
       'target': 'singleEnemy',
     });

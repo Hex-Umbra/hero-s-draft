@@ -213,7 +213,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     directory: 'cards',
     requiredKeys: const {'cost', 'type'},
     // Le repertoire impose l'appartenance : les declarer fait echouer le
-    // chargement depuis l'expiration de la tolerance de migration (ADR-086).
+    // chargement, `CardData.fromJson` refuse aussi ces deux cles.
     forbiddenKeys: const {'heroClass', 'category'},
     enumKeys: {
       'type': _names(CardType.values),

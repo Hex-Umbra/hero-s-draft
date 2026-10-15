@@ -126,7 +126,6 @@ void main() {
       descriptionFr: 'Inflige 6 degats.',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [CardEffect(type: 'damage', value: 6)],
