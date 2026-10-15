@@ -5,6 +5,7 @@ import '../models/data/game_data_registry.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/passive_data.dart';
 import '../models/data/relic_data.dart';
+import '../models/data/signature_data.dart';
 
 /// Ids des entrées de `assets/data/` sur lesquelles le tutoriel s'appuie.
 ///
@@ -35,6 +36,9 @@ class TutorialFixtures {
   const TutorialFixtures(this.registry);
 
   CardData card(String id) => registry.cards.firstWhere((c) => c.id == id);
+
+  SignatureData signature(String id) =>
+      registry.signatures.firstWhere((s) => s.id == id);
 
   EnemyData get trainingEnemy =>
       registry.enemies.firstWhere((e) => e.id == TutorialFixtureIds.trainingEnemy);

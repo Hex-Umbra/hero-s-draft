@@ -7,7 +7,6 @@ import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/hero_data.dart';
 import '../../models/data/passive_data.dart';
-import '../../models/data/hero_skills_link.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/game_moment.dart';
@@ -89,25 +88,11 @@ class _StarterDeckDraftScreenState
   void _startAdventure() {
     if (_selectedIndexes.length != 5) return;
 
-    final gameData = ref.read(gameDataLoaderProvider).requireValue;
-
-    final classCards = widget.playerClass.getHeroCards(gameData);
-
-    // 2. Assembler le deck de départ (5 choisies + N de classe auto-ajoutées)
-    final List<CardInstance> finalDeck = [];
-
-    // Ajouter les cartes spécifiques de classe
-    for (var cardData in classCards) {
-      finalDeck.add(CardInstance(data: cardData));
-    }
-
-    // Ajouter les 5 cartes globales sélectionnées par index
-    final selectedCards = _selectedIndexes
-        .map((idx) => _draftPool[idx])
-        .toList();
-    for (var cardData in selectedCards) {
-      finalDeck.add(CardInstance(data: cardData));
-    }
+    // 2. Le deck de départ : les 5 cartes choisies, rien d'autre. Les
+    // signatures de la classe ne sont pas des cartes.
+    final List<CardInstance> finalDeck = [
+      for (final idx in _selectedIndexes) CardInstance(data: _draftPool[idx]),
+    ];
 
     // 3. Initialiser les providers
     ref.read(deckProvider.notifier).clearDeck();

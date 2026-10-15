@@ -157,34 +157,21 @@ class TutorialEngine extends ChangeNotifier {
   /// Retient [passive] parmi ceux que la classe choisie ouvre.
   ///
   /// Le deck n'est pas remis à zéro, contrairement à `chooseHero` : changer
-  /// de passif ne change pas les cartes de classe, et l'étape 03 reste
-  /// franchie.
+  /// de passif ne change pas le deck, et l'étape 03 reste franchie.
   void choosePassive(PassiveData passive) {
     mockState.activePassive = passive;
     notifyListeners();
   }
 
-  /// Fixe le deck de départ : les cartes choisies plus les cartes de classe,
-  /// comme `StarterDeckDraftScreen._startAdventure`. Un draft vide donne un
-  /// deck vide, cartes de classe comprises : `_isStepActionComplete` lit
-  /// `masterDeck.isNotEmpty` pour savoir si l'étape est terminée, et ne doit
-  /// donc jamais voir un deck non vide tant que la sélection n'est pas
-  /// complète.
+  /// Fixe le deck de départ : les cartes choisies, rien d'autre, comme
+  /// `StarterDeckDraftScreen._startAdventure` — les signatures de la classe
+  /// ne sont pas des cartes. Un draft vide donne un deck vide :
+  /// `_isStepActionComplete` lit `masterDeck.isNotEmpty` pour savoir si
+  /// l'étape est terminée, et ne doit donc jamais voir un deck non vide tant
+  /// que la sélection n'est pas complète.
   void setStarterDeck(List<CardData> chosen) {
-    if (chosen.isEmpty) {
-      mockState.masterDeck = [];
-      notifyListeners();
-      return;
-    }
-
-    final hero = mockState.chosenHero;
-    final classCards = hero == null
-        ? <CardData>[]
-        : hero.skills.map(fixtures.card).toList();
-
     mockState.masterDeck = [
-      ...classCards.map((c) => CardInstance(data: c)),
-      ...chosen.map((c) => CardInstance(data: c)),
+      for (final card in chosen) CardInstance(data: card),
     ];
     notifyListeners();
   }
@@ -252,14 +239,11 @@ class TutorialEngine extends ChangeNotifier {
   /// pool de départ interdit les doublons, rien n'oblige à drafter Frappe ou
   /// Défense, et l'étape 03 a pu être sautée (deck vide).
   ///
-  /// Régression (revue de branche) : `smite`, carte de classe du Paladin,
-  /// est à la fois une attaque `singleEnemy` et porteuse d'un effet `armor`
-  /// (elle inflige des dégâts *et* donne de l'Armure). La retenir comme
-  /// « l'attaque » de la leçon faisait gagner de l'Armure en jouant sur
-  /// l'ennemi : `_isStepActionComplete` se satisfaisait d'un seul geste, pour
-  /// 100 % des parcours Paladin. `_isEnemyTargetingAttack` écarte donc toute
-  /// carte dont les effets contiennent aussi `armor`, exactement comme
-  /// `_seedMergeHand` écarte les cartes de rareté `unique`.
+  /// Une attaque `singleEnemy` qui donne aussi de l'Armure (elle inflige des
+  /// dégâts *et* donne de l'Armure), retenue comme « l'attaque » de la leçon,
+  /// ferait gagner de l'Armure en jouant sur l'ennemi : `_isStepActionComplete`
+  /// se satisferait d'un seul geste au lieu des deux. `_isEnemyTargetingAttack`
+  /// écarte donc toute attaque dont les effets contiennent aussi `armor`.
   void _seedPlayCardHand() {
     CardData? attack;
     CardData? armorSkill;
@@ -424,10 +408,8 @@ class TutorialEngine extends ChangeNotifier {
   /// Sème la main de l'étape Fusion : trois copies d'une carte du deck du
   /// joueur — la première dont la fusion offre au moins une rune, puisque
   /// l'étape enseigne à en choisir une (spec P-43 E2, A18) ; à défaut, la
-  /// première qui fusionne. Les cartes de classe (rareté `unique`) ne
-  /// fusionnent jamais, l'étape l'enseigne elle-même. Repli sur les fixtures
-  /// si le deck est vide ou n'en contient aucune hors classe (étape 03
-  /// sautée).
+  /// première qui fusionne. Repli sur les fixtures si le deck n'en contient
+  /// aucune qui fusionne (étape 03 sautée, deck vide).
   void _seedMergeHand() {
     CardData? fusible;
     CardData? offering;

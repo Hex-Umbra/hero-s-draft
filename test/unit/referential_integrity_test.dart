@@ -154,32 +154,46 @@ void main() {
     );
   });
 
-  test('toute carte de signature existe et appartient bien a sa classe', () {
+  test('chaque id de skills est une signature de sa classe, rangee sous elle',
+      () {
     final offenders = <String>[];
 
     for (final hero in registry.heroes) {
       for (final skillId in hero.skills) {
-        final matches = registry.cards.where((c) => c.id == skillId);
+        final matches = registry.signatures.where((s) => s.id == skillId);
         if (matches.isEmpty) {
-          offenders.add('${hero.id} → carte "$skillId" introuvable');
+          offenders.add('${hero.id} → signature "$skillId" introuvable');
           continue;
         }
-        final card = matches.single;
-        if (card.heroClass != hero.id) {
+        final signature = matches.single;
+        if (signature.heroClass != hero.id) {
           offenders.add(
-            '${hero.id} → carte "$skillId" rangee sous "${card.heroClass}"',
+            '${hero.id} → signature "$skillId" rangee sous '
+            '"${signature.heroClass}"',
           );
         }
-        if (!File('assets/data/classes/${hero.id}/cards/$skillId.json')
+        if (!File('assets/data/classes/${hero.id}/skills/$skillId.json')
             .existsSync()) {
           offenders.add(
-            '${hero.id} → carte "$skillId" absente du dossier de la classe',
+            '${hero.id} → signature "$skillId" absente du dossier skills',
           );
         }
       }
     }
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Une signature n entre jamais dans le deck (spec P-43 E4, §3.1) : un id
+  // partage avec une carte laisserait un pool, un `masterDeck` ou une source
+  // de statut `card:<id>` designer l une pour l autre.
+  test('aucun id de signature n est un id de carte', () {
+    expect(registry.signatures, isNotEmpty);
+
+    final signatureIds = registry.signatures.map((s) => s.id).toSet();
+    final cardIds = registry.cards.map((c) => c.id).toSet();
+
+    expect(signatureIds.intersection(cardIds), isEmpty);
   });
 
   test('chaque dossier de classe et d ennemi porte son image', () {
@@ -208,13 +222,12 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('chaque dossier de classe contient exactement ses cartes de signature', () {
-    // Un dossier `cards/` qui porterait une carte orpheline — non listee dans
-    // `skills` — serait chargee dans le pool de la classe sans que rien ne le
-    // dise. P-42 y ajoutera un pool plus large ; ce test devra alors changer
-    // de forme, pas disparaitre.
+  test('chaque dossier skills contient exactement les signatures de sa classe',
+      () {
+    // Un dossier `skills/` qui porterait une signature orpheline — non listee
+    // dans `skills` — serait chargee sans que rien ne le dise.
     for (final hero in registry.heroes) {
-      final onDisk = Directory('assets/data/classes/${hero.id}/cards')
+      final onDisk = Directory('assets/data/classes/${hero.id}/skills')
           .listSync()
           .whereType<File>()
           // Windows laisse trainer Thumbs.db/desktop.ini dans les dossiers

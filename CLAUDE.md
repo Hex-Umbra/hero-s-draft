@@ -44,7 +44,7 @@ The codebase strictly separates three layers — never mix them:
 
 - **Services** — `lib/services/`
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
-  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/cards/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
+  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/skills/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
   - `MapGeneratorService` plus `lib/services/map/` (`map_node_generator.dart`, `map_connection_builder.dart`, `map_content_placer.dart`, `map_validator.dart`) — procedural world-map generation, decomposed into generate → connect → place-content → validate stages.
   - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`, three keys, into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
 
@@ -69,7 +69,7 @@ The codebase strictly separates three layers — never mix them:
 
 ## Data-Driven Content Workflow
 
-**One entity, one file, and the directory carries the ownership.** A card filed under `assets/data/classes/paladin/cards/` *is* a paladin card — the loader injects that from the path, and a JSON claiming otherwise fails to load.
+**One entity, one file, and the directory carries the ownership.** A signature filed under `assets/data/classes/paladin/skills/` *is* a paladin signature — the loader injects that from the path, and a JSON claiming otherwise fails to load.
 
 ```
 assets/data/
@@ -77,7 +77,7 @@ assets/data/
 │   xp_curve.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
-├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
+├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
 

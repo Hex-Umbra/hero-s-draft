@@ -148,21 +148,6 @@ void main() {
       target: CardTarget.self,
       effects: [],
     ),
-    // Class specific cards (will be auto-added)
-    const CardData(
-      id: 'holy_shield',
-      nameEn: 'Holy Shield',
-      nameFr: 'Bouclier Sacré',
-      descriptionEn: 'Gain 8 armor and heal 2 HP',
-      descriptionFr: 'Gagne 8 armure et soigne 2 PV',
-      cost: 2,
-      type: CardType.skill,
-      category: CardCategory.characterSpecific,
-      heroClass: 'paladin',
-      rarity: CardRarity.rare,
-      target: CardTarget.self,
-      effects: [],
-    ),
   ];
 
   final mockHero = const HeroData(
@@ -277,19 +262,18 @@ void main() {
     await tester.tap(enterButton);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // After starting, the run should be initialized and the deck should contain 6 cards:
-    // 5 drafted global cards + 1 class-specific card ('Bouclier Sacré')
+    // Le deck de depart est fait des 5 cartes choisies, rien d'autre : la
+    // signature du paladin ('holy_shield') n'est plus une carte du deck.
     final deckState = container.read(deckProvider);
-    expect(deckState.masterDeck.length, 6);
-
-    // The first card should be the class specific card
-    expect(deckState.masterDeck[0].data.id, 'holy_shield');
-
-    // The other 5 cards should be Slash or Shield variants
-    for (int i = 1; i < 6; i++) {
-      final id = deckState.masterDeck[i].data.id;
+    expect(deckState.masterDeck.length, 5);
+    for (final card in deckState.masterDeck) {
+      final id = card.data.id;
       expect(id.startsWith('slash') || id.startsWith('shield'), isTrue);
     }
+    expect(
+      deckState.masterDeck.map((c) => c.data.id),
+      isNot(contains('holy_shield')),
+    );
     container.dispose();
   });
 
@@ -301,10 +285,9 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Le pool porte deux cartes de signature : celle du paladin qui joue, et
-      // celle d'une autre classe. Aucune des deux ne doit apparaitre au draft —
-      // celle du paladin est deja ajoutee d'office par getHeroCards, l'offrir
-      // ici la rendrait prenable deux fois.
+      // Le pool porte une carte d'une autre classe : elle ne doit pas
+      // apparaitre au draft. La signature du paladin, elle, n'est plus une
+      // carte : rien ne peut l'y faire figurer.
       final registry = GameDataRegistry(
         enemies: const [],
         heroes: [mockHero],

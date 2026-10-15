@@ -61,8 +61,8 @@ flutter test
 
 ### Modding (Ajouter du contenu)
 Grâce à l'architecture Data-Driven, étendre le jeu est trivial. **Une entité = un fichier**, et
-**le répertoire fait autorité** : une carte rangée dans `classes/paladin/cards/` *est* une carte du
-paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n'ait à le dire.
+**le répertoire fait autorité** : une signature rangée dans `classes/paladin/skills/` *est* une
+signature du paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n'ait à le dire.
 
 ```
 assets/data/
@@ -71,7 +71,7 @@ assets/data/
 ├── classes/<id>/                # un dossier auto-suffisant par classe
 │   ├── class.json
 │   ├── icon.png
-│   └── cards/<id>.json          # cartes propres à la classe
+│   └── skills/<id>.json         # signatures de la classe
 └── enemies/<id>/                # un dossier auto-suffisant par ennemi
     ├── enemy.json
     └── sprite.png

@@ -458,20 +458,18 @@ void main() {
       engine.chooseHero(engine.fixtures.heroes.first);
       engine.setStarterDeck(pool);
 
-      final expectedSize = 5 + engine.fixtures.heroes.first.skills.length;
+      const expectedSize = 5;
       engine.nextStep();
 
       expect(engine.mockState.masterDeck, hasLength(expectedSize));
     });
 
     test(
-      'setStarterDeck([]) vide le deck, cartes de classe comprises',
+      'setStarterDeck([]) vide le deck',
       () {
-        // Régression : setStarterDeck injectait toujours les cartes de
-        // classe, même avec une sélection vide, ce qui rendait
-        // masterDeck.isNotEmpty vrai dès la première carte cochée dans
-        // TutorialStarterDeckWidget (widget qui appelle setStarterDeck([])
-        // tant que la cible de 5 n'est pas atteinte).
+        // TutorialStarterDeckWidget appelle setStarterDeck([]) tant que la
+        // cible de 5 n'est pas atteinte : masterDeck.isNotEmpty ne doit pas
+        // devenir vrai dès la première carte cochée.
         final pool = engine.fixtures.starterPool.take(5).toList();
         engine.chooseHero(engine.fixtures.heroes.first);
         engine.setStarterDeck(pool);
@@ -504,7 +502,7 @@ void main() {
         engine.chooseHero(paladin);
         final pool = engine.fixtures.starterPool.take(5).toList();
         engine.setStarterDeck(pool);
-        expect(engine.mockState.masterDeck, hasLength(5 + paladin.skills.length));
+        expect(engine.mockState.masterDeck, hasLength(5));
 
         engine.chooseHero(mage);
 
@@ -516,15 +514,11 @@ void main() {
 
   group('Semis des étapes Fusion et Jouer des cartes depuis le deck', () {
     test(
-      'la Fusion sème 3 exemplaires d\'une carte non-unique du deck, en écartant les cartes de classe',
+      'la Fusion seme 3 exemplaires d une carte du deck',
       () {
         final paladin = engine.fixtures.heroes.firstWhere((h) => h.id == 'paladin');
         engine.chooseHero(paladin);
         engine.setStarterDeck([engine.fixtures.card('heavy_strike')]);
-        // Les cartes de classe (uniques) du Paladin précèdent la carte
-        // choisie dans `masterDeck` : le test n'a de sens que si elles sont
-        // bien écartées plutôt que ramassées en premier.
-        expect(engine.mockState.masterDeck.first.rarity, CardRarity.unique);
 
         engine.prepareStep(11); // étape "La Fusion de Cartes"
 
@@ -600,31 +594,43 @@ void main() {
     );
 
     test(
-      'Jouer des cartes n\'utilise jamais smite (attaque + armure) comme geste d\'attaque',
+      'Jouer des cartes n utilise jamais une attaque qui donne aussi de l '
+      'Armure comme geste d attaque',
       () {
-        // Régression (revue de branche) : `smite`, carte de classe du
-        // Paladin, est à la fois une attaque `singleEnemy` et porteuse d'un
-        // effet `armor` (6 dégâts + 4 Armure). La retenir comme « l'attaque »
-        // de la leçon fait gagner de l'Armure en jouant sur l'ennemi :
-        // `_isStepActionComplete` se satisfait d'un seul geste au lieu des
-        // deux distincts que la leçon enseigne, et ce pour 100 % des
-        // parcours Paladin (`smite` précède toujours les cartes draftées
-        // dans `masterDeck`).
-        final paladin = engine.fixtures.heroes.firstWhere((h) => h.id == 'paladin');
-        engine.chooseHero(paladin);
-        // masterDeck = [holy_shield, smite, heavy_strike] : smite doit être
-        // écartée et la recherche doit se poursuivre jusqu'à heavy_strike.
-        engine.setStarterDeck([engine.fixtures.card('heavy_strike')]);
+        // Une attaque `singleEnemy` porteuse d'un effet `armor`, retenue
+        // comme « l'attaque » de la leçon, ferait gagner de l'Armure en
+        // jouant sur l'ennemi : `_isStepActionComplete` se satisferait d'un
+        // seul geste au lieu des deux distincts que la leçon enseigne.
+        final attaqueArmure = CardData.fromJson({
+          'id': 'attaque_armure',
+          'name_en': 'Armored Strike',
+          'name_fr': 'Frappe Armée',
+          'cost': 1,
+          'type': 'attack',
+          'target': 'singleEnemy',
+          'effects': [
+            {'type': 'damage', 'value': 6},
+            {'type': 'armor', 'value': 4},
+          ],
+        });
+        // `iron_wall` fournit le geste d'Armure : sans Compétence `self` à
+        // Armure dans le deck, la leçon se replierait sur les fixtures et
+        // `heavy_strike` n'arriverait jamais en main.
+        engine.setStarterDeck([
+          attaqueArmure,
+          engine.fixtures.card('heavy_strike'),
+          engine.fixtures.card('iron_wall'),
+        ]);
 
         engine.prepareStep(7);
 
         expect(
           engine.mockState.hand.map((c) => c.data.id),
-          isNot(contains('smite')),
+          isNot(contains(attaqueArmure.id)),
         );
         expect(
-          engine.mockState.hand.any((c) => c.data.id == 'heavy_strike'),
-          isTrue,
+          engine.mockState.hand.map((c) => c.data.id),
+          contains('heavy_strike'),
         );
       },
     );

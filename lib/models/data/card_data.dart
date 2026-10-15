@@ -165,9 +165,7 @@ class CardData implements AudioSource {
   /// fichier, ils ne peuvent pas diverger, et les tester tous les deux ferait
   /// croire à deux conditions distinctes.
   ///
-  /// Ne régit pas le draft de départ, qui reste sur `category == global` : les
-  /// cartes de signature y sont ajoutées d'office par `getHeroCards`, les
-  /// offrir en plus les rendrait prenables deux fois.
+  /// Ne régit pas le draft de départ, qui reste sur `category == global`.
   bool isOfferableTo(String heroClassId) =>
       type != CardType.status &&
       rarity.isAcquirable &&

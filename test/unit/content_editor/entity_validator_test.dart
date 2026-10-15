@@ -406,13 +406,13 @@ void main() {
     });
   });
 
-  group('bijection skills <-> cards/', () {
-    /// Une classe sur le disque, avec deux cartes dans son dossier.
-    void seedClassWithTwoCards() {
-      Directory('$root/assets/data/classes/gambler/cards')
+  group('bijection skills <-> skills/', () {
+    /// Une classe sur le disque, avec deux signatures dans son dossier.
+    void seedClassWithTwoSignatures() {
+      Directory('$root/assets/data/classes/gambler/skills')
           .createSync(recursive: true);
       for (final id in const ['bluff', 'all_in']) {
-        File('$root/assets/data/classes/gambler/cards/$id.json')
+        File('$root/assets/data/classes/gambler/skills/$id.json')
             .writeAsStringSync('{}');
       }
       File('$root/assets/data/classes/gambler/class.json')
@@ -438,29 +438,35 @@ void main() {
         );
 
     test('un skills exact est accepte', () {
-      seedClassWithTwoCards();
+      seedClassWithTwoSignatures();
       final faults =
           validatorWith().validate(classDraft('["all_in", "bluff"]'));
       expect(faults, isEmpty);
     });
 
-    test('une carte declaree mais absente du dossier est refusee', () {
-      seedClassWithTwoCards();
+    test('une signature declaree mais absente du dossier est refusee', () {
+      seedClassWithTwoSignatures();
       final faults = validatorWith()
           .validate(classDraft('["all_in", "bluff", "fantome"]'));
-      expect(faults.map((f) => f.toString()).join(), contains('fantome'));
+      expect(
+        faults.map((f) => f.toString()).join(),
+        allOf(contains('fantome'), contains('absente de skills/')),
+      );
     });
 
-    // L'autre sens compte autant : une carte presente et non declaree serait
-    // chargee dans le pool de la classe sans que rien ne le dise, et
+    // L'autre sens compte autant : une signature presente et non declaree
+    // serait chargee sans que rien ne le dise, et
     // referential_integrity_test rougirait bien plus tard.
-    test('une carte presente mais absente de skills est refusee', () {
-      seedClassWithTwoCards();
+    test('une signature presente mais absente de skills est refusee', () {
+      seedClassWithTwoSignatures();
       final faults = validatorWith().validate(classDraft('["bluff"]'));
-      expect(faults.map((f) => f.toString()).join(), contains('all_in'));
+      expect(
+        faults.map((f) => f.toString()).join(),
+        allOf(contains('all_in'), contains('est dans skills/')),
+      );
     });
 
-    test('une classe creee, sans dossier cards/ ni skills, passe', () {
+    test('une classe creee, sans dossier skills/ ni skills, passe', () {
       final faults = validatorWith().validate(
         EntityDraft(
           descriptor: kEntityDescriptors[EntityCategory.heroClass]!,

@@ -5,8 +5,8 @@
   "description_en": "Deal 5 damage and draw 1 card.",
   "description_fr": "Inflige 5 dégâts et pioche 1 carte.",
   "cost": 1,
-  "type": "attack",
-  "rarity": "unique",
+  "cooldown": 2,
+  "type": "skill",
   "target": "singleEnemy",
   "animation": "magic",
   "effects": [

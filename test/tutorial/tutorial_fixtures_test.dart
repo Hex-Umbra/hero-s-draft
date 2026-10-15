@@ -66,6 +66,18 @@ void main() {
       expect(fixtures.sampleRelic.id, 'iron_talisman');
     });
 
+    test('la fixture signature resout les six signatures', () {
+      final resolues = [
+        for (final hero in fixtures.heroes)
+          for (final id in hero.skills) (hero.id, fixtures.signature(id)),
+      ];
+
+      for (final (heroId, signature) in resolues) {
+        expect(signature.heroClass, heroId, reason: signature.id);
+      }
+      expect(resolues, hasLength(6));
+    });
+
     test('le Gobelin de l\'étape XP existe', () {
       expect(fixtures.goblin.id, 'gobelin');
     });
@@ -121,6 +133,10 @@ void main() {
   group('Politique fail-fast', () {
     test('un id absent lève au lieu de retomber sur une valeur en dur', () {
       expect(() => fixtures.card('id_qui_nexiste_pas'), throwsStateError);
+    });
+
+    test('une signature absente leve', () {
+      expect(() => fixtures.signature('id_qui_nexiste_pas'), throwsStateError);
     });
   });
 }

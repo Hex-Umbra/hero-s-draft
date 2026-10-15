@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Le SEUL test qui prouve que l application voit reellement les fichiers.
@@ -60,12 +61,13 @@ void main() {
           .length,
       4,
     );
-    // Canari delibere : ce compte (comme celui de registry.cards plus bas
-    // dans ce fichier) augmentera avec les 25 a 30 cartes de classe que
-    // P-42 doit ajouter. Quand ce test rougira a cause de P-42, mettre le 6
-    // a jour avec le nouveau total est la bonne reaction, pas retirer
-    // l assertion.
-    expect(countUnder('assets/data/classes/', 6), 6, reason: 'cartes de classe');
+    // Les six signatures, rangees sous `classes/<classe>/skills/` (spec
+    // P-43 E4, §3.2). Canari delibere, comme le compte de registry.cards
+    // plus bas dans ce fichier : les cartes de classe que P-42 doit ajouter
+    // sous `classes/<classe>/cards/` tombent a la meme profondeur. Quand ce
+    // test rougira a cause de P-42, mettre le 6 a jour avec le nouveau total
+    // est la bonne reaction, pas retirer l assertion.
+    expect(countUnder('assets/data/classes/', 6), 6, reason: 'signatures');
 
     // Les trois documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
@@ -92,7 +94,7 @@ void main() {
     // Canari delibere, comme countUnder('assets/data/classes/', 6) plus
     // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
-    expect(registry.cards, hasLength(23)); // 17 neutres + 6 de classe
+    expect(registry.cards, hasLength(17)); // les signatures n en sont plus
     expect(registry.relics, hasLength(28));
     expect(registry.events, hasLength(7));
     expect(registry.forgeUpgrades, hasLength(11));
@@ -103,6 +105,24 @@ void main() {
     expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));
     expect(registry.enemies, hasLength(4));
+
+    // Les valeurs du proprietaire (spec P-43 E4, §1.2) et D28 :
+    // `magic_missile` est une competence.
+    expect(registry.signatures, hasLength(6));
+    expect(
+      {
+        for (final s in registry.signatures)
+          s.id: (s.heroClass, s.cost, s.cooldown, s.type),
+      },
+      {
+        'smite': ('paladin', 1, 2, CardType.attack),
+        'holy_shield': ('paladin', 1, 2, CardType.skill),
+        'reckless_strike': ('berserker', 2, 2, CardType.attack),
+        'rage_form': ('berserker', 1, 2, CardType.skill),
+        'magic_missile': ('mage', 1, 2, CardType.skill),
+        'mana_surge': ('mage', 0, 2, CardType.skill),
+      },
+    );
 
     // Le tri par id est la seule regle qui donne le meme resultat depuis le
     // bundle et depuis le disque : `listAssets()` n offre aucune garantie

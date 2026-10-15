@@ -33,15 +33,15 @@ void main() {
     test('tout champ sfx d un JSON de contenu correspond a un son declare', () {
       // Les catalogues ont ete eclates : on parcourt l arborescence plutot
       // que d enumerer des chemins. Les entites qui peuvent porter un `sfx`
-      // sont les cartes (neutres et de classe), les ennemis et les reliques ;
-      // `AudioSource` n est implemente que par ces trois modeles.
+      // sont les cartes, les signatures de classe, les ennemis et les
+      // reliques ; `AudioSource` n est implemente que par ces quatre modeles.
       final contentFiles = [
         ...Directory('assets/data/cards').listSync().whereType<File>(),
         ...Directory('assets/data/relics').listSync().whereType<File>(),
         ...Directory('assets/data/classes')
             .listSync(recursive: true)
             .whereType<File>()
-            .where((f) => f.path.replaceAll(r'\', '/').contains('/cards/')),
+            .where((f) => f.path.replaceAll(r'\', '/').contains('/skills/')),
         ...Directory('assets/data/enemies')
             .listSync(recursive: true)
             .whereType<File>()
@@ -49,7 +49,7 @@ void main() {
       ].where((f) => f.path.endsWith('.json'));
 
       expect(contentFiles.length, 55,
-          reason: '17 cartes + 28 reliques + 6 cartes de classe + 4 ennemis');
+          reason: '17 cartes + 28 reliques + 6 signatures + 4 ennemis');
 
       final declared = audio.sounds.keys.toSet();
       final offenders = <String>[];

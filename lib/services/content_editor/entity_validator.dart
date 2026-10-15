@@ -511,7 +511,7 @@ class EntityValidator {
       }
     }
 
-    final folder = '$rootPath/assets/data/classes/${draft.id}/cards';
+    final folder = '$rootPath/assets/data/classes/${draft.id}/skills';
     final onDisk = fs.directoryExists(folder)
         ? fs
             .listDirectory(folder)
@@ -523,12 +523,12 @@ class EntityValidator {
     return [
       for (final missing in declared.difference(onDisk))
         ValidationFault(
-          'la carte "$missing" est déclarée mais absente de cards/',
+          'la carte "$missing" est déclarée mais absente de skills/',
           field: 'skills',
         ),
       for (final orphan in onDisk.difference(declared))
         ValidationFault(
-          'la carte "$orphan" est dans cards/ mais absente de skills',
+          'la carte "$orphan" est dans skills/ mais absente de skills',
           field: 'skills',
         ),
     ];

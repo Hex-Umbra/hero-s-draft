@@ -5,8 +5,8 @@
   "description_en": "Apply 2 Might this turn. Draw 1 card.",
   "description_fr": "Applique 2 Puissance ce tour-ci. Pioche 1 carte.",
   "cost": 1,
+  "cooldown": 2,
   "type": "skill",
-  "rarity": "unique",
   "target": "self",
   "animation": "buff",
   "effects": [

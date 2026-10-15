@@ -35,11 +35,11 @@ flutter:
     - assets/data/
     - assets/data/cards/
     - assets/data/classes/berserker/
-    - assets/data/classes/berserker/cards/
+    - assets/data/classes/berserker/skills/
     - assets/data/classes/mage/
-    - assets/data/classes/mage/cards/
+    - assets/data/classes/mage/skills/
     - assets/data/classes/paladin/
-    - assets/data/classes/paladin/cards/
+    - assets/data/classes/paladin/skills/
     - assets/data/enemies/gobelin/
     - assets/data/enemies/orc/
     - assets/data/enemies/slime/
