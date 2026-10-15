@@ -295,6 +295,35 @@ void main() {
       );
     });
 
+    test('une carte portant une classe ne touche jamais skills', () async {
+      // L'ecrivain ne valide rien : sa propre garde doit tenir la bijection
+      // si un brouillon de carte arrive avec une classe.
+      seedClass('paladin', skills: ['smite']);
+      Directory('$root/assets/data/cards').createSync(recursive: true);
+      final before =
+          File('$root/assets/data/classes/paladin/class.json').readAsStringSync();
+      final card = kEntityDescriptors[EntityCategory.card]!;
+
+      final report = await writerHere().write(EntityDraft(
+        descriptor: card,
+        id: 'coup_bas',
+        heroClass: 'paladin',
+        bilingual: const {
+          'name_fr': 'Coup bas',
+          'name_en': 'Low Blow',
+          'description_fr': 'Inflige 6 degats.',
+          'description_en': 'Deal 6 damage.',
+        },
+        mechanics: card.template,
+      ));
+
+      expect(report.written, ['assets/data/cards/coup_bas.json']);
+      expect(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+        before,
+      );
+    });
+
     test('une signature deja declaree n est pas ajoutee deux fois', () async {
       seedClass('paladin', skills: ['coup_saint']);
       await writerHere().write(signatureDraft('coup_saint', 'paladin'));

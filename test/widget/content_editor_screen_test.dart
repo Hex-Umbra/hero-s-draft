@@ -824,8 +824,7 @@ void main() {
           find.byKey(const Key('editeur-nombre-cartes')), '1');
       await tester.pump();
       // L'identifiant de la signature reste vide : le brouillon de classe seul
-      // est
-      // pourtant parfaitement valide, et c'est exactement le piege.
+      // est pourtant parfaitement valide, et c'est exactement le piege.
 
       await tester.tap(find.text('Valider'));
       await tester.pump();
@@ -1121,6 +1120,8 @@ void main() {
     final listings = fs.listings;
     final reads = fs.reads;
     expect(listings, greaterThan(0), reason: 'le niveau 2 a bien lu le disque');
+    expect(reads, greaterThan(0),
+        reason: 'la couleur du groupe a bien lu un class.json');
 
     for (final typed in const ['e', 'ec', 'ecl']) {
       await tester.enterText(find.byKey(const Key('editeur-id')), typed);

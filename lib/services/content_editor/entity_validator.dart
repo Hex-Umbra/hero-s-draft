@@ -133,6 +133,18 @@ class EntityValidator {
         ),
       ];
     }
+    // L'inverse : seule une signature a un proprietaire. Une autre entite
+    // portant une classe serait ecrite a plat, et l'ecrivain n'a pas a deviner
+    // ce que la classe voulait dire.
+    if (!draft.descriptor.supportsHeroClass && heroClass != null) {
+      return [
+        ValidationFault(
+          '« ${draft.descriptor.label} » n\'appartient à aucune classe : seule '
+          'une signature a un propriétaire',
+          field: 'heroClass',
+        ),
+      ];
+    }
 
     final faults = <ValidationFault>[];
     final exists = fs.fileExists('$rootPath/${draft.path}');

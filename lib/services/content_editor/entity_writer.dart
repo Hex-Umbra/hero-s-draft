@@ -267,9 +267,16 @@ class EntityWriter {
   /// soit exactement egal au tableau `skills` de la classe. Une signature
   /// ajoutee seule y serait orpheline et ferait rougir la suite — a tous les
   /// coups, et jamais au moment de l'ecriture. Les deux fichiers, ou aucun.
+  ///
+  /// La garde porte sur le descripteur, et non sur la seule presence d'une
+  /// classe : seule une signature s'inscrit dans `skills`.
   void _registerSignature(EntityDraft draft, List<WriteStep> steps) {
     final heroClass = draft.heroClass;
-    if (heroClass == null || draft.isModification) return;
+    if (!draft.descriptor.supportsHeroClass ||
+        heroClass == null ||
+        draft.isModification) {
+      return;
+    }
 
     final relative = 'assets/data/classes/$heroClass/class.json';
     final absolute = '$rootPath/$relative';

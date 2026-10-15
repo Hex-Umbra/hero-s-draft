@@ -160,10 +160,11 @@ void main() {
         template: '{}',
       );
 
+      // Sans classe : une injection sans garde ajouterait une cle
+      // `heroClass` valant null, que `containsKey` verrait.
       final faults = validatorWith().validate(EntityDraft(
         descriptor: descriptor,
         id: 'temoin',
-        heroClass: 'mage',
         bilingual: const {},
         mechanics: '{}',
       ));
@@ -171,6 +172,28 @@ void main() {
       expect(faults, isEmpty);
       expect(constructed, isNotNull);
       expect(constructed!.containsKey('heroClass'), isFalse);
+    });
+
+    test('une carte neutre portant une classe est refusee, nommee heroClass',
+        () {
+      // Seule une signature a un proprietaire : une carte portant une classe
+      // serait ecrite a plat, puis inscrite dans les `skills` de la classe.
+      final descriptor = kEntityDescriptors[EntityCategory.card]!;
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: descriptor,
+        id: 'coup_bas',
+        heroClass: 'mage',
+        bilingual: const {
+          'name_fr': 'x',
+          'name_en': 'x',
+          'description_fr': 'x',
+          'description_en': 'x',
+        },
+        mechanics: descriptor.template,
+      ));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'heroClass');
     });
   });
 
