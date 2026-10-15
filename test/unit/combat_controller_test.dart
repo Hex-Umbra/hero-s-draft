@@ -397,6 +397,110 @@ void main() {
     );
 
     test(
+      'applyPlayerCardPlay garde ses evenements : onCardPlayed puis le type, '
+      'passifs puis reliques, puis le nettoyage',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final combatController = container.read(combatProvider.notifier);
+        final runController = container.read(runProvider.notifier);
+        final deckNotifier = container.read(deckProvider.notifier);
+        runController.startNewRun(paladinHero);
+
+        final inventory = container.read(inventoryProvider.notifier);
+        inventory.addRelic(const RelicData(
+          id: 'amulette_test',
+          trigger: RelicTrigger.onCardPlayed,
+          effectType: 'gain_armor',
+          value: 1,
+          rarity: RelicRarity.common,
+          emoji: 'A',
+        ));
+        inventory.addRelic(const RelicData(
+          id: 'shuriken_test',
+          trigger: RelicTrigger.onAttackPlayed,
+          effectType: 'charge_might_combat',
+          value: 1,
+          rarity: RelicRarity.common,
+          emoji: 'S',
+        ));
+
+        final frail = EnemyInstance(
+          data: goblinData,
+          stats: EntityStats(maxPv: 10, currentPv: 10, armure: 0, might: 0),
+        );
+        final sturdy = EnemyInstance(
+          data: orcData,
+          stats: EntityStats(maxPv: 500, currentPv: 500, armure: 0, might: 0),
+        );
+        combatController.state = CombatState(
+          enemies: [frail, sturdy],
+          selectedEnemyId: frail.id,
+          turnPhase: TurnPhase.player,
+        );
+
+        final attack = CardInstance(
+          data: CardData.fromJson({
+            'id': 'attaque_test',
+            'name_en': 'Test',
+            'name_fr': 'Test',
+            'description_en': 'Test',
+            'description_fr': 'Test',
+            'cost': 0,
+            'type': 'attack',
+            'rarity': 'common',
+            'target': 'singleEnemy',
+            'effects': [
+              {'type': 'damage', 'value': 999},
+            ],
+          }),
+        );
+        final skill = CardInstance(
+          data: CardData.fromJson({
+            'id': 'competence_test',
+            'name_en': 'Test',
+            'name_fr': 'Test',
+            'description_en': 'Test',
+            'description_fr': 'Test',
+            'cost': 0,
+            'type': 'skill',
+            'rarity': 'common',
+            'target': 'self',
+            'effects': [
+              {'type': 'armor', 'value': 0},
+            ],
+          }),
+        );
+
+        deckNotifier.initializeStarterDeck([attack, skill]);
+        deckNotifier.startCombat(
+            handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
+        deckNotifier.state =
+            deckNotifier.state.copyWith(hand: [attack, skill]);
+
+        combatController.applyPlayerCardPlay(attack);
+
+        int charge() => runController.currentState.heroStats.statuses
+            .singleWhere((s) => s.id == 'shuriken_charge')
+            .value;
+        expect(runController.currentState.heroStats.armure, 1);
+        expect(charge(), 1);
+        expect(combatController.currentState.enemies.map((e) => e.id),
+            [sturdy.id]);
+        expect(combatController.currentState.defeatedEnemies.map((e) => e.id),
+            [frail.id]);
+        expect(
+            container.read(deckProvider).discardPile.map((c) => c.data.id),
+            contains('attaque_test'));
+
+        combatController.applyPlayerCardPlay(skill);
+
+        expect(runController.currentState.heroStats.armure, 2);
+        expect(charge(), 1);
+      },
+    );
+
+    test(
       'initializeCombat has null selectedEnemyId and does not auto-select on enemy death',
       () {
         final container = ProviderContainer();

@@ -9,6 +9,7 @@ import '../../../models/data/card_data.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/data/relic_data.dart';
 import '../../../models/map_node.dart';
+import '../../../models/signature_instance.dart';
 import '../services/combat_debug_logger.dart';
 import '../systems/encounter_system.dart';
 import '../systems/passives/passive_strategy.dart';
@@ -208,7 +209,6 @@ class CombatController extends Notifier<CombatState> {
   void applyPlayerCardPlay(CardInstance card) {
     final runController = ref.read(runProvider.notifier);
     final deckController = ref.read(deckProvider.notifier);
-    final registry = ref.read(effectRegistryProvider);
 
     // 1. Résolution des effets
     final success = EffectResolver.resolveCard(
@@ -217,64 +217,108 @@ class CombatController extends Notifier<CombatState> {
       deckController,
       this,
       state.selectedEnemyId,
-      registry,
+      ref.read(effectRegistryProvider),
     );
+    if (!success) return;
 
-    if (success) {
-      // 2. Transmettre au deck que la carte est jouée
-      deckController.playCard(card);
+    // 2. Transmettre au deck que la carte est jouée
+    deckController.playCard(card);
 
-      // 3. Déclencher les traits passifs : l'événement générique, puis celui
-      // du type de la carte — les mêmes que les reliques reçoivent juste
-      // après. Un passif choisit son déclencheur par sa donnée, et n'a pas à
-      // retester le type dans sa stratégie.
-      // `enemyId` n'est renseigne que pour une carte qui vise un seul ennemi
-      // (contrat de `PassiveEvent.enemyId`) : une carte a portee de groupe
-      // laisserait sinon une selection residuelle marquer un seul ennemi.
-      final singleTargetEnemyId = card.data.target == CardTarget.singleEnemy
+    // 3. La suite commune. `enemyId` n'est renseigné que pour une carte qui
+    // vise un seul ennemi (contrat de `PassiveEvent.enemyId`) : une carte à
+    // portée de groupe laisserait sinon une sélection résiduelle marquer un
+    // seul ennemi.
+    _afterCardPlayed(
+      card,
+      enemyId: card.data.target == CardTarget.singleEnemy
           ? state.selectedEnemyId
-          : null;
-
-      final event = PassiveEvent(
-        RelicTrigger.onCardPlayed,
-        card: card,
-        enemyId: singleTargetEnemyId,
-      );
-      TraitSystem.dispatch(runController, event);
-
-      final typedTrigger = switch (card.data.type) {
-        CardType.attack => RelicTrigger.onAttackPlayed,
-        CardType.skill => RelicTrigger.onSkillPlayed,
-        CardType.power => RelicTrigger.onPowerPlayed,
-        // Une carte Statut ne se joue pas (`EffectResolver.canPlayCard`).
-        CardType.status => null,
-      };
-      if (typedTrigger != null) {
-        TraitSystem.dispatch(
-          runController,
-          PassiveEvent(
-            typedTrigger,
-            card: card,
-            enemyId: singleTargetEnemyId,
-          ),
-        );
-      }
-
-      // 4. Déclencher les reliques liées aux cartes jouées
-      runController.applyRelics(RelicTrigger.onCardPlayed);
-      if (card.data.type == CardType.attack) {
-        runController.applyRelics(RelicTrigger.onAttackPlayed);
-      } else if (card.data.type == CardType.skill) {
-        runController.applyRelics(RelicTrigger.onSkillPlayed);
-      } else if (card.data.type == CardType.power) {
-        runController.applyRelics(RelicTrigger.onPowerPlayed);
-      }
-
-      // 5. Nettoyer les morts
-      cleanDeadEnemies();
-    }
+          : null,
+    );
   }
 
+  /// Joue une signature (spec P-43 E4, §4.3) : résolue comme une carte, par
+  /// sa vue de carte, puis mise en recharge ; elle n'entre dans aucune pile.
+  ///
+  /// Rend `false` sans rien toucher si le tour n'est pas au joueur, si le
+  /// combat est fini, si la signature n'est pas de la run, si elle recharge,
+  /// si elle vise un seul ennemi sans [enemyId] — jamais la sélection
+  /// restante d'une carte précédente —, ou si le mana manque.
+  bool playSignature(SignatureInstance signature, {String? enemyId}) {
+    final runController = ref.read(runProvider.notifier);
+    final runState = runController.currentState;
+    final id = signature.data.id;
+    final card = signature.asCard;
+    final isSingleTarget = card.data.target == CardTarget.singleEnemy;
+
+    // 1. Les refus sans effet. La run se compare par id : une run rechargée
+    // reconstruit ses instances (A8).
+    if (state.turnPhase != TurnPhase.player || state.isCombatEnded) {
+      return false;
+    }
+    if (!runState.signatures.any((s) => s.data.id == id)) return false;
+    if (!state.isSignatureReady(id)) return false;
+    if (isSingleTarget && enemyId == null) return false;
+
+    // 2. Mana et cible, avant toute écriture.
+    if (!EffectResolver.canPlayCard(card, runState, enemyId)) return false;
+
+    // 3. La cible, comme l'écran la pose avant de jouer une carte, puis la
+    // résolution, qui paie le mana. Le contrôle de l'étape 2 porte sur le
+    // même état : elle réussit.
+    if (isSingleTarget) selectEnemy(enemyId);
+    EffectResolver.resolveCard(
+      card,
+      runController,
+      ref.read(deckProvider.notifier),
+      this,
+      enemyId,
+      ref.read(effectRegistryProvider),
+    );
+
+    // 4. La recharge : le tour à partir duquel elle se rejoue.
+    state = state.copyWith(
+      signaturesReadyOn: {
+        ...state.signaturesReadyOn,
+        id: state.turnCount + signature.cooldown,
+      },
+    );
+
+    // 5. Aucune pile. 6. La suite commune.
+    _afterCardPlayed(card, enemyId: isSingleTarget ? enemyId : null);
+    return true;
+  }
+
+  /// Ce qui suit le jeu d'une carte comme celui d'une signature : les
+  /// passifs (l'événement générique, puis celui du type), les reliques des
+  /// mêmes événements, puis le nettoyage des morts. Un seul chemin : tout ce
+  /// qui écoute une carte jouée voit une signature jouée (spec P-43 E4,
+  /// §4.4 ; Q-P1).
+  void _afterCardPlayed(CardInstance card, {required String? enemyId}) {
+    final runController = ref.read(runProvider.notifier);
+
+    TraitSystem.dispatch(
+      runController,
+      PassiveEvent(RelicTrigger.onCardPlayed, card: card, enemyId: enemyId),
+    );
+    final typedTrigger = switch (card.data.type) {
+      CardType.attack => RelicTrigger.onAttackPlayed,
+      CardType.skill => RelicTrigger.onSkillPlayed,
+      CardType.power => RelicTrigger.onPowerPlayed,
+      // Une carte Statut ne se joue pas (`EffectResolver.canPlayCard`).
+      CardType.status => null,
+    };
+    if (typedTrigger != null) {
+      TraitSystem.dispatch(
+        runController,
+        PassiveEvent(typedTrigger, card: card, enemyId: enemyId),
+      );
+    }
+
+    runController.applyRelics(RelicTrigger.onCardPlayed);
+    if (typedTrigger != null) runController.applyRelics(typedTrigger);
+
+    cleanDeadEnemies();
+  }
   /// Applique l'effet de l'intention d'un ennemi
   void resolveEnemyIntent(String enemyId) {
     _turnPhaseManager.resolveEnemyIntent(enemyId);
