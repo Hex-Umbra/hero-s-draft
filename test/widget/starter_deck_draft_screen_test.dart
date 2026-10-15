@@ -6,6 +6,8 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
@@ -187,6 +189,19 @@ void main() {
     relics: [],
     forgeUpgrades: [],
     xpCurve: const XpCurveData([115, 200]),
+    signatures: const [
+      SignatureData(
+        id: 'holy_shield',
+        heroClass: 'paladin',
+        nameEn: 'Holy Shield',
+        nameFr: 'Bouclier Sacré',
+        cost: 1,
+        cooldown: 2,
+        type: CardType.skill,
+        target: CardTarget.self,
+        effects: [],
+      ),
+    ],
   );
 
   testWidgets('StarterDeckDraftScreen allows independent duplicate card selection', (
@@ -273,6 +288,10 @@ void main() {
     expect(
       deckState.masterDeck.map((c) => c.data.id),
       isNot(contains('holy_shield')),
+    );
+    expect(
+      container.read(runProvider).signatures.map((s) => s.data.id),
+      ['holy_shield'],
     );
     container.dispose();
   });

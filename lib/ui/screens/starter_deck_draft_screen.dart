@@ -6,6 +6,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../models/card_instance.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/data/hero_skills_link.dart';
 import '../../models/data/passive_data.dart';
 import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
@@ -95,10 +96,15 @@ class _StarterDeckDraftScreenState
     ];
 
     // 3. Initialiser les providers
+    final gameData = ref.read(gameDataLoaderProvider).requireValue;
     ref.read(deckProvider.notifier).clearDeck();
     ref
         .read(runProvider.notifier)
-        .startNewRun(widget.playerClass, widget.passive);
+        .startNewRun(
+          widget.playerClass,
+          widget.passive,
+          widget.playerClass.getSignatures(gameData),
+        );
     ref.read(deckProvider.notifier).initializeStarterDeck(finalDeck);
 
     // 4. Redirection propre vers la map de jeu
