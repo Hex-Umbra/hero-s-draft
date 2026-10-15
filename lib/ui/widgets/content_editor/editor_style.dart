@@ -106,6 +106,7 @@ TextStyle editorMono({
 /// l'en-tete du fichier.
 const Map<EntityCategory, IconData> kCategoryIcons = {
   EntityCategory.card: Icons.style,
+  EntityCategory.signature: Icons.bolt,
   EntityCategory.relic: Icons.diamond,
   EntityCategory.passive: Icons.auto_awesome,
   EntityCategory.event: Icons.explore,

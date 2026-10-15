@@ -6,11 +6,13 @@ import 'package:roguelike_card_game/services/content_editor/class_recipe.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system.dart';
 import 'package:roguelike_card_game/services/content_editor/content_file_system_io.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
+import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
+import 'package:roguelike_card_game/services/content_editor/entity_validator.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_writer.dart';
 import 'package:roguelike_card_game/services/content_editor/placeholder_filler.dart';
 
 void main() {
-  ClassRecipe recipe({int cards = 2}) => ClassRecipe(
+  ClassRecipe recipe({int signatures = 2}) => ClassRecipe(
         id: 'gambler',
         bilingual: const {
           'name_fr': 'Le Parieur',
@@ -19,26 +21,28 @@ void main() {
           'description_en': 'Plays the odds.',
         },
         mechanics: '{"maxHp": 90}',
-        signatureCards: [
-          for (var i = 1; i <= cards; i++)
-            SignatureCardInput(id: 'pari_$i', bilingual: const {}),
+        signatures: [
+          for (var i = 1; i <= signatures; i++)
+            SignatureInput(id: 'pari_$i', bilingual: const {}),
         ],
       );
 
-  test('la classe, puis son passif, puis ses cartes', () {
+  test('la classe, puis son passif, puis ses signatures', () {
     final drafts = recipe().toDrafts();
 
     expect(drafts, hasLength(4));
     expect(drafts.first.descriptor.category, EntityCategory.heroClass);
     expect(drafts.first.path, 'assets/data/classes/gambler/class.json');
     // Le passif nomme la classe : elle doit exister avant lui, comme les
-    // cartes de signature.
+    // signatures.
     expect(drafts[1].descriptor.category, EntityCategory.passive);
     expect(drafts[1].path, 'assets/data/passives/gambler.json');
-    // L'inverse leverait StateError : `_registerSignatureCard` exige que le
-    // class.json existe avant qu'une de ses cartes ne soit ecrite.
-    expect(drafts[2].path, 'assets/data/classes/gambler/cards/pari_1.json');
-    expect(drafts[3].path, 'assets/data/classes/gambler/cards/pari_2.json');
+    // L'inverse leverait StateError : `_registerSignature` exige que le
+    // class.json existe avant qu'une de ses signatures ne soit ecrite.
+    expect(drafts[2].descriptor.category, EntityCategory.signature);
+    expect(drafts[2].path, 'assets/data/classes/gambler/skills/pari_1.json');
+    expect(drafts[3].descriptor.category, EntityCategory.signature);
+    expect(drafts[3].path, 'assets/data/classes/gambler/skills/pari_2.json');
   });
 
   test('le passif de depart ne vise que la classe creee', () {
@@ -96,7 +100,7 @@ void main() {
       id: 'gambler',
       bilingual: const {},
       mechanics: '{"maxHp": 90, "iconPath": "icon.png"}',
-      signatureCards: const [],
+      signatures: const [],
       withIcon: false,
     );
     final mechanics = jsonDecode(withoutIcon.toDrafts().first.mechanics)
@@ -105,18 +109,18 @@ void main() {
     expect(mechanics['maxHp'], 90);
   });
 
-  test('chaque carte appartient a la classe et porte une prose non vide', () {
-    final card = recipe().toDrafts()[2];
-    expect(card.heroClass, 'gambler');
-    expect(card.bilingual['name_fr'], isNotEmpty);
-    expect(card.bilingual['name_en'], isNotEmpty);
+  test('chaque signature appartient a la classe et porte une prose non vide',
+      () {
+    final signature = recipe().toDrafts()[2];
+    expect(signature.heroClass, 'gambler');
+    expect(signature.bilingual['name_fr'], isNotEmpty);
+    expect(signature.bilingual['name_en'], isNotEmpty);
   });
 
-  test('une classe sans carte de signature ne produit que sa classe et son '
-      'passif', () {
-    // Le passif de depart n'est pas une carte de signature : il est ecrit
-    // meme quand `signatureCards` est vide.
-    expect(recipe(cards: 0).toDrafts(), hasLength(2));
+  test('une classe sans signature ne produit que sa classe et son passif', () {
+    // Le passif de depart n'est pas une signature : il est ecrit meme quand
+    // `signatures` est vide.
+    expect(recipe(signatures: 0).toDrafts(), hasLength(2));
   });
 
   group('faults', () {
@@ -124,7 +128,7 @@ void main() {
       expect(recipe().faults(), isEmpty);
     });
 
-    test('deux cartes de signature identiques sont signalees', () {
+    test('deux signatures identiques sont signalees', () {
       final withDuplicate = ClassRecipe(
         id: 'gambler',
         bilingual: const {
@@ -134,9 +138,9 @@ void main() {
           'description_en': 'Plays the odds.',
         },
         mechanics: '{"maxHp": 90}',
-        signatureCards: const [
-          SignatureCardInput(id: 'bluff'),
-          SignatureCardInput(id: 'bluff'),
+        signatures: const [
+          SignatureInput(id: 'bluff'),
+          SignatureInput(id: 'bluff'),
         ],
       );
 
@@ -144,6 +148,7 @@ void main() {
       expect(faults, hasLength(1));
       expect(faults.first.field, 'skills');
       expect(faults.first.message, contains('bluff'));
+      expect(faults.first.message, contains('deux signatures portent'));
     });
 
     test('une seule faute par identifiant duplique, meme repete trois fois',
@@ -152,10 +157,10 @@ void main() {
         id: 'gambler',
         bilingual: const {},
         mechanics: '{}',
-        signatureCards: const [
-          SignatureCardInput(id: 'bluff'),
-          SignatureCardInput(id: 'bluff'),
-          SignatureCardInput(id: 'bluff'),
+        signatures: const [
+          SignatureInput(id: 'bluff'),
+          SignatureInput(id: 'bluff'),
+          SignatureInput(id: 'bluff'),
         ],
       );
       expect(withTriple.faults(), hasLength(1));
@@ -164,26 +169,26 @@ void main() {
     test(
         'deux identifiants vides ne sont pas un doublon : la vraie faute '
         'vient de EntityValidator', () {
-      // Regler le nombre de cartes a 2 cree deux controleurs vides ; taper
-      // Ecrire avant d'avoir nomme les cartes est un enchainement normal en
-      // cours de saisie, pas un doublon. `EntityValidator._identity` dit deja
-      // "un identifiant est requis" pour chaque brouillon a id vide — c'est
-      // ce message qui doit rester seul, pas un « deux cartes portent
-      // l'identifiant "" » qui ne veut rien dire pour qui saisit.
+      // Regler le nombre de signatures a 2 cree deux controleurs vides ;
+      // taper Ecrire avant d'avoir nomme les signatures est un enchainement
+      // normal en cours de saisie, pas un doublon. `EntityValidator._identity`
+      // dit deja "un identifiant est requis" pour chaque brouillon a id vide —
+      // c'est ce message qui doit rester seul, pas un « deux signatures
+      // portent l'identifiant "" » qui ne veut rien dire pour qui saisit.
       final withEmptyIds = ClassRecipe(
         id: 'gambler',
         bilingual: const {},
         mechanics: '{}',
-        signatureCards: const [
-          SignatureCardInput(id: ''),
-          SignatureCardInput(id: ''),
+        signatures: const [
+          SignatureInput(id: ''),
+          SignatureInput(id: ''),
         ],
       );
 
       final faults = withEmptyIds.faults();
       expect(
         faults.map((f) => f.message),
-        isNot(contains(contains('deux cartes de signature'))),
+        isNot(contains(contains('deux signatures'))),
       );
     });
   });
@@ -219,24 +224,54 @@ void main() {
 
       final report = await EntityWriter(fs: fs, rootPath: root).writeAll(drafts);
       // `written` compte chaque ecriture physique, pas chaque brouillon :
-      // `_registerSignatureCard` reecrit `class.json` a chaque carte de
-      // signature. Pour 1 classe + 1 passif + 2 cartes, la sequence est
-      // deterministe et verifiee par trace : class.json,
-      // passives/gambler.json, cards/pari_1.json, class.json,
-      // cards/pari_2.json, class.json — jamais 5, jamais 4, jamais 7.
+      // `_registerSignature` reecrit `class.json` a chaque signature. Pour
+      // 1 classe + 1 passif + 2 signatures, la sequence est deterministe et
+      // verifiee par trace : class.json, passives/gambler.json,
+      // skills/pari_1.json, class.json, skills/pari_2.json, class.json —
+      // jamais 5, jamais 4, jamais 7.
       expect(report.written, hasLength(6));
 
-      // L'invariant final : skills == le contenu de cards/.
+      // L'invariant final : skills == le contenu de skills/.
       final classJson = jsonDecode(
         File('$root/assets/data/classes/gambler/class.json').readAsStringSync(),
       ) as Map<String, dynamic>;
       expect(classJson['skills'], ['pari_1', 'pari_2']);
 
-      final onDisk = Directory('$root/assets/data/classes/gambler/cards')
+      final onDisk = Directory('$root/assets/data/classes/gambler/skills')
           .listSync()
           .map((e) => e.uri.pathSegments.last.replaceAll('.json', ''))
           .toSet();
       expect(onDisk, {'pari_1', 'pari_2'});
+
+      // Chaque signature ecrite se relit, puis repasse la validation en
+      // modification sans faute : le fichier que la recette pose est un
+      // fichier que l'editeur accepte de rouvrir.
+      final validator = EntityValidator(fs: fs, rootPath: root);
+      final signature = kEntityDescriptors[EntityCategory.signature]!;
+      for (final id in const ['pari_1', 'pari_2']) {
+        final written = jsonDecode(
+          File('$root/assets/data/classes/gambler/skills/$id.json')
+              .readAsStringSync(),
+        ) as Map<String, dynamic>;
+        final prose = {
+          for (final base in signature.bilingualBases)
+            for (final suffix in const ['fr', 'en'])
+              '${base}_$suffix': written['${base}_$suffix'] as String,
+        };
+        final faults = validator.validate(EntityDraft(
+          descriptor: signature,
+          id: id,
+          heroClass: 'gambler',
+          isModification: true,
+          bilingual: prose,
+          mechanics: jsonEncode({
+            for (final entry in written.entries)
+              if (entry.key != 'id' && !prose.containsKey(entry.key))
+                entry.key: entry.value,
+          }),
+        ));
+        expect(faults, isEmpty, reason: '$id : ${faults.join(' ; ')}');
+      }
 
       // Et les deux images sont la, sous leurs noms respectifs.
       expect(

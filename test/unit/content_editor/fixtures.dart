@@ -4,6 +4,7 @@ import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_draft.dart';
 
@@ -21,6 +22,22 @@ CardData fixtureCard(String id) => CardData.fromJson({
       'category': 'global',
       'rarity': 'common',
       'target': 'singleEnemy',
+    });
+
+SignatureData fixtureSignature(String id, {String heroClass = 'paladin'}) =>
+    SignatureData.fromJson({
+      'id': id,
+      'heroClass': heroClass,
+      'name_en': 'x',
+      'name_fr': 'x',
+      'description_en': 'x',
+      'description_fr': 'x',
+      'cost': 1,
+      'cooldown': 2,
+      'type': 'attack',
+      'effects': [
+        {'type': 'damage', 'value': 6},
+      ],
     });
 
 PassiveData fixturePassive(String id) => PassiveData.fromJson({
@@ -62,6 +79,7 @@ GameDataRegistry fixtureRegistry({
   List<HeroData> heroes = const [],
   List<PassiveData> passives = const [],
   List<ForgeUpgradeData> forgeUpgrades = const [],
+  List<SignatureData> signatures = const [],
 }) =>
     GameDataRegistry(
       enemies: const [],
@@ -71,6 +89,7 @@ GameDataRegistry fixtureRegistry({
       passives: passives,
       relics: const [],
       forgeUpgrades: forgeUpgrades,
+      signatures: signatures,
       audio: const AudioData.disabled(),
     );
 
@@ -94,6 +113,28 @@ EntityDraft fixtureRelicDraft({
           'description_fr': 'Donne 5 armure au debut du combat.',
           'description_en': 'Gain 5 armor at the start of combat.',
         },
+    mechanics: mechanics ?? descriptor.template,
+  );
+}
+
+/// Un brouillon de signature valide, sous la classe [heroClass] — `null`
+/// pour eprouver le refus d'une signature sans proprietaire.
+EntityDraft fixtureSignatureDraft({
+  String id = 'eclair',
+  String? heroClass = 'mage',
+  String? mechanics,
+}) {
+  final descriptor = kEntityDescriptors[EntityCategory.signature]!;
+  return EntityDraft(
+    descriptor: descriptor,
+    id: id,
+    heroClass: heroClass,
+    bilingual: const {
+      'name_fr': 'Eclair',
+      'name_en': 'Lightning',
+      'description_fr': 'Inflige 6 degats.',
+      'description_en': 'Deal 6 damage.',
+    },
     mechanics: mechanics ?? descriptor.template,
   );
 }

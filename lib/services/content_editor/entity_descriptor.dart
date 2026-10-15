@@ -11,17 +11,18 @@ import '../../models/data/hero_data.dart';
 import '../../models/data/level_up_reward_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/data/signature_data.dart';
 import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
 
-/// Les huit categories d'entites editables, en regard exact des huit appels a
-/// `loadAll` de `loadGameDataRegistry` : un par categorie, sans ecart. Les
-/// **sources** sont neuf, la carte en ayant deux — neutre et de classe — pour
-/// un seul descripteur. L'audio n'en est pas une, c'est un document de
-/// configuration.
+/// Les neuf categories d'entites editables, en regard exact des neuf sources
+/// de `loadGameDataRegistry` : une par categorie, sans ecart. La carte est
+/// neutre seulement ; la signature de classe a sa propre source (spec P-43 E4,
+/// §8). L'audio n'en est pas une, c'est un document de configuration.
 enum EntityCategory {
   card,
+  signature,
   relic,
   event,
   passive,
@@ -149,7 +150,9 @@ class EntityDescriptor {
   /// La mecanique pre-remplie, montree dans l'editeur au moment de creer.
   final String template;
 
-  /// Vrai pour la seule carte, qui peut etre neutre ou appartenir a une classe.
+  /// Vrai pour la seule signature, qui appartient toujours a une classe : le
+  /// dossier de la classe la range, et le validateur refuse une signature
+  /// sans proprietaire.
   final bool supportsHeroClass;
 
   /// Pour les categories qui sont un **dossier** : le nom du fichier qu'il
@@ -168,10 +171,12 @@ class EntityDescriptor {
     return slot != null && slot.kind == AssetKind.image && slot.isRequired;
   }
 
-  /// Le chemin du fichier, relatif a la racine du projet.
+  /// Le chemin du fichier, relatif a la racine du projet. Sans classe, une
+  /// signature retombe sur le chemin a plat : le validateur la refuse avant
+  /// que ce chemin ne serve.
   String pathOf(String id, {String? heroClass}) {
     if (supportsHeroClass && heroClass != null) {
-      return 'assets/data/classes/$heroClass/cards/$id.json';
+      return 'assets/data/classes/$heroClass/$directory/$id.json';
     }
     if (folderFile != null) {
       return 'assets/data/$directory/$id/$folderFile';
@@ -199,15 +204,13 @@ List<String> _names(List<Enum> values) =>
     values.map((e) => e.name).toList(growable: false);
 
 /// **La declaration des categories editables.** A tenir en regard des neuf
-/// sources de `loadGameDataRegistry` pour les huit categories — la carte en a
-/// deux, neutre et de classe, pour un seul descripteur ; un test verifie
+/// sources de `loadGameDataRegistry`, une par categorie ; un test verifie
 /// qu'aucune ne manque.
 final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   EntityCategory.card: EntityDescriptor(
     category: EntityCategory.card,
     label: 'Carte',
     directory: 'cards',
-    supportsHeroClass: true,
     requiredKeys: const {'cost', 'type'},
     // Le repertoire impose l'appartenance : les declarer fait echouer le
     // chargement depuis l'expiration de la tolerance de migration (ADR-086).
@@ -233,6 +236,38 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "target": "singleEnemy",
   "animation": "melee",
   "isExhaust": false,
+  "effects": [
+    { "type": "damage", "value": 6 }
+  ]
+}''',
+  ),
+  EntityCategory.signature: EntityDescriptor(
+    category: EntityCategory.signature,
+    label: 'Signature',
+    // Le sous-dossier de chaque classe : `classes/<classe>/skills/<id>.json`.
+    directory: 'skills',
+    supportsHeroClass: true,
+    requiredKeys: const {'cost', 'cooldown', 'type'},
+    // `heroClass` est impose par le dossier de la classe ; `rarity`,
+    // `isExhaust` et `category` appartiennent a une carte, et
+    // `SignatureData.fromJson` les refuse (spec A11).
+    forbiddenKeys: const {'heroClass', 'rarity', 'isExhaust', 'category'},
+    enumKeys: {
+      // `status` n'est pas jouable : lu sur le modele, pas recopie.
+      'type': _names(SignatureData.playableTypes.toList()),
+      'target': _names(CardTarget.values),
+    },
+    bilingualBases: const ['name', 'description'],
+    construct: SignatureData.fromJson,
+    assetKeys: const {'sfx': AssetSlot.sound()},
+    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
+    template: '''
+{
+  "cost": 1,
+  "cooldown": 2,
+  "type": "attack",
+  "target": "singleEnemy",
+  "animation": "melee",
   "effects": [
     { "type": "damage", "value": 6 }
   ]
@@ -466,8 +501,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: HeroData.fromJson,
     // Ni `classCard` ni `skills` ne figurent au gabarit : l'ecrivain calcule
-    // le premier, et `_registerSignatureCard` remplit le second a chaque carte
-    // de classe ecrite. `themeColor` y figure au magenta : une classe dont la
+    // le premier, et `_registerSignature` remplit le second a chaque
+    // signature ecrite. `themeColor` y figure au magenta : une classe dont la
     // couleur n'a pas ete choisie doit se voir.
     //
     // `statRules` y figure **vide**, et non garni : une regle toute faite

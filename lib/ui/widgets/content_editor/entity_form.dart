@@ -89,7 +89,7 @@ class EntityForm extends StatelessWidget {
   final Map<String, String> faults;
   final FieldAnchors anchors;
 
-  /// Rangee de pastilles de proprietaire, pour une carte en creation
+  /// Rangee de pastilles de proprietaire, pour une signature en creation
   /// seulement : `Key('editeur-proprietaire-<classe>')` et
   /// `Key('editeur-proprietaire-neutre')`.
   final List<String> ownerClassIds;
@@ -150,7 +150,7 @@ class EntityForm extends StatelessWidget {
           ],
           if (showSignatureCards) ...[
             const SizedBox(height: 16),
-            _signatureCards(),
+            _signatures(),
           ],
         ],
       ),
@@ -288,8 +288,8 @@ class EntityForm extends StatelessWidget {
     );
   }
 
-  /// Le proprietaire d'une carte est un champ du formulaire, pas un niveau de
-  /// l'arbre : la neutralite et chaque classe sont des pastilles, colorees
+  /// Le proprietaire d'une signature est un champ du formulaire, pas un niveau
+  /// de l'arbre : la neutralite et chaque classe sont des pastilles, colorees
   /// par le `themeColor` de la classe.
   Widget _ownerPills() {
     return PropertyRow(
@@ -515,15 +515,15 @@ class EntityForm extends StatelessWidget {
     );
   }
 
-  /// La classe en creation entraine ses cartes de signature : combien, puis
-  /// pour chacune son identifiant et son nom bilingue.
-  Widget _signatureCards() {
+  /// La classe en creation entraine ses signatures : combien, puis pour
+  /// chacune son identifiant et son nom bilingue.
+  Widget _signatures() {
     final error = faults['skills'];
     return KeyedSubtree(
       key: anchors.keyFor('skills'),
       child: EditorPanel(
         icon: Icons.style,
-        title: 'Cartes de signature',
+        title: 'Signatures',
         caption: 'Nombre',
         trailing: _stepper(),
         children: [
@@ -616,7 +616,7 @@ class EntityForm extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Text(
-                'Aucune carte de signature : la classe sera écrite seule.',
+                'Aucune signature : la classe sera écrite seule.',
                 style: TextStyle(color: EditorColors.faint, fontSize: 12.5),
               ),
             ),

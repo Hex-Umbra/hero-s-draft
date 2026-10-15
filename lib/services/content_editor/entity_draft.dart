@@ -23,8 +23,8 @@ class EntityDraft {
   final EntityDescriptor descriptor;
   final String id;
 
-  /// La classe proprietaire, pour une carte de classe. `null` pour une carte
-  /// neutre et pour toutes les autres categories.
+  /// La classe proprietaire d'une signature, celle du dossier ; `null` pour
+  /// toute autre categorie.
   final String? heroClass;
 
   /// Les champs bilingues, sous leur cle complete : `name_fr`, `title_en`…

@@ -112,15 +112,16 @@ void main() {
   test('le chemin du fichier suit le triangle d identite', () {
     final card = kEntityDescriptors[EntityCategory.card]!;
     expect(draftFor(card).path, 'assets/data/cards/entite_de_test.json');
+    final signature = kEntityDescriptors[EntityCategory.signature]!;
     expect(
       EntityDraft(
-        descriptor: card,
+        descriptor: signature,
         id: 'smite',
         heroClass: 'paladin',
         bilingual: const {},
-        mechanics: card.template,
+        mechanics: signature.template,
       ).path,
-      'assets/data/classes/paladin/cards/smite.json',
+      'assets/data/classes/paladin/skills/smite.json',
     );
   });
 }

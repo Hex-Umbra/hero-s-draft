@@ -20,11 +20,11 @@ void main() {
   }
 
   const labels = [
-    'Carte', 'Relique', 'Événement', 'Passif', 'Amélioration de forge',
-    'Récompense de niveau', 'Classe', 'Ennemi',
+    'Carte', 'Signature', 'Relique', 'Événement', 'Passif',
+    'Amélioration de forge', 'Récompense de niveau', 'Classe', 'Ennemi',
   ];
 
-  testWidgets('les huit types sont des onglets qui rappellent leur type',
+  testWidgets('les neuf types sont des onglets qui rappellent leur type',
       (tester) async {
     final picked = <EntityCategory>[];
     await pump(tester, EditorToolbar(selected: null, onSelected: picked.add));
@@ -64,7 +64,7 @@ void main() {
 
   testWidgets('le controle d action se tient au bout de la barre',
       (tester) async {
-    // Assez large pour que les huit onglets tiennent sur une seule ligne du
+    // Assez large pour que les neuf onglets tiennent sur une seule ligne du
     // `Wrap` : sans quoi "Ennemi" replierait sur une deuxieme ligne, et la
     // comparaison d'abscisses ci-dessous deviendrait vraie pour n'importe
     // quelle position d' "action", meme si `trailing` cessait d'etre le
@@ -83,7 +83,7 @@ void main() {
     expect(
       tester.getTopLeft(find.text('Ennemi')).dy,
       tester.getTopLeft(find.text('Carte')).dy,
-      reason: 'les huit onglets doivent tenir sur une seule ligne ici',
+      reason: 'les neuf onglets doivent tenir sur une seule ligne ici',
     );
     expect(
       tester.getTopLeft(find.text('action')).dx,

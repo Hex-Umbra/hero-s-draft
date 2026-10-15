@@ -30,7 +30,7 @@ void main() {
     Map<String, dynamic> file,
   ) {
     final segments = relative.split('/');
-    final isClassCard = descriptor.supportsHeroClass &&
+    final isSignature = descriptor.supportsHeroClass &&
         segments.length > 4 &&
         segments[2] == 'classes';
     final id = descriptor.folderFile != null
@@ -57,7 +57,7 @@ void main() {
     return fillPlaceholders(EntityDraft(
       descriptor: descriptor,
       id: id,
-      heroClass: isClassCard ? segments[3] : null,
+      heroClass: isSignature ? segments[3] : null,
       isModification: true,
       bilingual: prose,
       mechanics: EditorDocument(

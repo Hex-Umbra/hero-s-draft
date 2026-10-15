@@ -94,8 +94,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   /// Les sons d'`audio.json`, lus avec le catalogue de la categorie.
   List<String> _soundIds = const [];
 
-  // La recette de classe (creation seulement) : combien de cartes de
-  // signature, et pour chacune ses controleurs.
+  // La recette de classe (creation seulement) : combien de signatures, et
+  // pour chacune ses controleurs.
   final TextEditingController _cardCount = TextEditingController(text: '0');
   int _cardCountValue = 0;
   final List<TextEditingController> _cardIds = [];
@@ -136,9 +136,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
   EntityDescriptor get _descriptor => kEntityDescriptors[_category]!;
 
-  /// Une classe en creation entraine ses cartes de signature en un seul
-  /// geste : c'est `ClassRecipe`, pas un `EntityDraft` isole, qui doit etre
-  /// ecrit.
+  /// Une classe en creation entraine ses signatures en un seul geste : c'est
+  /// `ClassRecipe`, pas un `EntityDraft` isole, qui doit etre ecrit.
   bool get _isClassRecipe =>
       _category == EntityCategory.heroClass && _mode == _EditorMode.create;
 
@@ -270,8 +269,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         mechanics: _mechanicsText(),
       );
 
-  /// La recette d'une classe entiere : elle-meme, puis ses cartes de
-  /// signature, dans l'ordre qu'exige `ClassRecipe.toDrafts()`.
+  /// La recette d'une classe entiere : elle-meme, puis ses signatures, dans
+  /// l'ordre qu'exige `ClassRecipe.toDrafts()`.
   ClassRecipe _recipe() => ClassRecipe(
         id: _id.text.trim(),
         bilingual: {
@@ -282,9 +281,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         // remet pas. Une vue brute illisible garde le defaut ; la validation
         // la refusera de toute facon.
         withIcon: _currentMechanics()?.containsKey('iconPath') ?? true,
-        signatureCards: [
+        signatures: [
           for (var i = 0; i < _cardCountValue; i++)
-            SignatureCardInput(
+            SignatureInput(
               id: _cardIds[i].text.trim(),
               bilingual: {
                 'name_fr': _cardNameFr[i].text,
@@ -297,9 +296,9 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   /// Le document tel qu'il sera ecrit, et les fautes qui s'y opposent.
   ///
   /// **Un seul lieu pour les deux boutons.** « Valider » jugeait auparavant
-  /// `_draft()` — un brouillon isole, non rempli, sans les cartes de la
+  /// `_draft()` — un brouillon isole, non rempli, sans les signatures de la
   /// recette ni les fautes de `ClassRecipe.faults()` — la ou « Écrire » juge
-  /// ceci. Deux cartes de signature homonymes, ou une carte non nommee,
+  /// ceci. Deux signatures homonymes, ou une signature non nommee,
   /// passaient donc Valider en silence et etaient refusees par Ecrire. Un
   /// bouton qui valide autre chose que ce qui sera ecrit est pire qu'un bouton
   /// absent.
@@ -314,8 +313,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     final drafts = recipe?.toDrafts() ?? [fillPlaceholders(_draft())];
     final imports = _pendingImports();
     // Un import en attente (`classCard`, `iconPath`...) appartient a la
-    // classe, jamais a une carte de signature : ecarte ces cles pour ne pas
-    // repeter sa faute pour chaque carte, plus bas.
+    // classe, jamais a une signature : ecarte ces cles pour ne pas repeter
+    // sa faute pour chaque signature, plus bas.
     final importKeys = {for (final pending in imports) pending.key};
 
     final validator = EntityValidator(
@@ -338,18 +337,18 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       // (« 1a » pour un entier) ne decode meme pas en un brouillon coherent.
       if (!_rawView) ..._document!.conversionFaults,
       // Les fautes de la recette ensuite : `EntityValidator` juge un
-      // brouillon a la fois et ne peut pas voir que deux cartes de signature
+      // brouillon a la fois et ne peut pas voir que deux signatures
       // partagent un identifiant — seule la recette voit l'ensemble.
       if (recipe != null) ...recipe.faults(),
     ];
-    var cardRank = 0;
+    var signatureRank = 0;
     for (final draft in drafts) {
       final draftFaults = validator.validate(draft);
       if (recipe == null || draft.descriptor.category == EntityCategory.heroClass) {
         faults.addAll(draftFaults);
         continue;
       }
-      // Ni le passif de depart ni une carte de signature ne portent d'import :
+      // Ni le passif de depart ni une signature ne portent d'import :
       // `EntityValidator` juge chaque import en attente contre chaque
       // brouillon quand meme, sans quoi une faute d'import de la classe
       // (fichier introuvable, extension refusee...) serait repetee pour
@@ -359,22 +358,23 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         for (final fault in draftFaults)
           if (fault.field == null || !importKeys.contains(fault.field)) fault,
       ];
-      if (draft.descriptor.category != EntityCategory.card) {
+      if (draft.descriptor.category != EntityCategory.signature) {
         // Le passif de depart : ses fautes rejoignent le bandeau general,
         // comme celles de la classe — il n'a pas de panneau qui lui soit
         // propre.
         faults.addAll(relevant);
         continue;
       }
-      // Une carte de signature n'a pas de rangee a elle dans le formulaire :
-      // ses fautes nommaient le champ homonyme de la classe (`id`, `name_fr`),
+      // Une signature n'a pas de rangee a elle dans le formulaire : ses
+      // fautes nommaient le champ homonyme de la classe (`id`, `name_fr`),
       // qui se bordait de rouge a tort et y ramenait. Elles visent donc le
-      // panneau des cartes de signature, ancre sous `skills`, qui affiche
-      // `faults['skills']` ; le rang de la carte dit laquelle est en cause.
-      cardRank++;
+      // panneau des signatures, ancre sous `skills`, qui affiche
+      // `faults['skills']` ; le rang de la signature dit laquelle est en
+      // cause.
+      signatureRank++;
       for (final fault in relevant) {
         faults.add(ValidationFault(
-          'carte $cardRank : ${fault.message}',
+          'signature $signatureRank : ${fault.message}',
           field: 'skills',
         ));
       }
@@ -860,8 +860,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
     _byOwner = entityIdsByOwner(fs, root, _descriptor);
 
-    // (b) La rangee de pastilles de proprietaire n'existe que pour une carte,
-    // et seulement en creation : `EntityForm` ne la montre pas autrement.
+    // (b) La rangee de pastilles de proprietaire n'existe que pour une
+    // signature, et seulement en creation : `EntityForm` ne la montre pas autrement.
     // Enumerer les classes en modification etait un calcul pur perdu.
     _ownerClassIds = _descriptor.supportsHeroClass
         ? (List<String>.from(
@@ -908,8 +908,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     return byField;
   }
 
-  /// La teinte de la tuile d'en-tete : la classe proprietaire d'une carte, ou
-  /// le `themeColor` d'une classe. `null` : l'accent.
+  /// La teinte de la tuile d'en-tete : la classe proprietaire d'une
+  /// signature, ou le `themeColor` d'une classe. `null` : l'accent.
   Color? _identityColor(String root) {
     final owner = _targetOwner;
     if (_descriptor.supportsHeroClass && owner != null) {
@@ -933,13 +933,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           "recharger avant d'écrire";
     }
     if (_isClassRecipe) {
-      final cards = _cardCountValue == 0
+      final signatures = _cardCountValue == 0
           ? ''
           : _cardCountValue == 1
-              ? ' et sa carte'
-              : ' et ses $_cardCountValue cartes';
+              ? ' et sa signature'
+              : ' et ses $_cardCountValue signatures';
       return 'Valider vérifie sans écrire · Écrire valide, puis écrit la '
-          'classe, son passif de départ$cards';
+          'classe, son passif de départ$signatures';
     }
     return 'Valider vérifie sans écrire · Écrire valide, puis écrit le fichier';
   }

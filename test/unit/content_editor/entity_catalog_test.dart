@@ -31,13 +31,34 @@ void main() {
     expect(byOwner[null], ['amulette', 'talisman'], reason: 'triés');
   });
 
-  test('les cartes sont groupees par proprietaire', () {
+  /// Une carte neutre a plat, et une signature sous le dossier du paladin.
+  void seedCardAndSignature() {
     Directory('$root/assets/data/cards').createSync(recursive: true);
     File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
-    Directory('$root/assets/data/classes/paladin/cards')
+    Directory('$root/assets/data/classes/paladin/skills')
         .createSync(recursive: true);
-    File('$root/assets/data/classes/paladin/cards/smite.json')
+    File('$root/assets/data/classes/paladin/skills/smite.json')
         .writeAsStringSync('{}');
+  }
+
+  test('les signatures sont groupees par classe', () {
+    seedCardAndSignature();
+
+    final byOwner = entityIdsByOwner(
+      const IoContentFileSystem(),
+      root,
+      kEntityDescriptors[EntityCategory.signature]!,
+    );
+
+    // Aucune cle nulle : une signature a toujours une classe, et la carte
+    // neutre a plat n'est pas une signature.
+    expect(byOwner, {
+      'paladin': ['smite'],
+    });
+  });
+
+  test('les cartes vivent a plat, sans proprietaire', () {
+    seedCardAndSignature();
 
     final byOwner = entityIdsByOwner(
       const IoContentFileSystem(),
@@ -45,8 +66,10 @@ void main() {
       kEntityDescriptors[EntityCategory.card]!,
     );
 
-    expect(byOwner[null], ['frappe']);
-    expect(byOwner['paladin'], ['smite']);
+    // La signature du paladin n'apparait pas parmi les cartes.
+    expect(byOwner, {
+      null: ['frappe'],
+    });
   });
 
   test('une classe est listee par son dossier, pas par un fichier a plat', () {
