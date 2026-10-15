@@ -20,12 +20,12 @@ Tenu par l'orchestrateur (ADR-108 D4) : les options que la spec a écartées, pu
 | A11 | Champs de carte dans un fichier de signature | T | Les ignorer, comme `CardData` (filtre 5) | `rarity`, `isExhaust`, `category` échouent au chargement |
 | A12 | Le test de transition E3 → E4 | T | Le réécrire pour les compétences (filtre 5) | Retiré ; un test d'intégrité : ids de signature et de carte disjoints |
 
-**Questions P nées à l'écriture, ouvertes** — la spec se termine autour d'elles (ADR-108 D3) :
+**Questions P nées à l'écriture** — la spec s'est terminée autour d'elles (ADR-108 D3), puis la vague s'est arrêtée le 15/10 ; le propriétaire les a tranchées le même jour, dans le prompt de reprise, selon la recommandation :
 
-| # | Question | Options | Recommandation du rédacteur |
-|:---:|:---|:---|:---|
-| Q-P1 | Les reliques qui comptent les cartes jouées (Amulette du Mage, Plume de scribe, Shuriken, Croc Kunaï) voient-elles une signature jouée ? | (a) oui, le même événement que les passifs · (b) non, seules les cartes du deck comptent | (a) |
-| Q-P2 | Le tutoriel enseigne-t-il la barre par un geste ? | (a) la prose seule · (b) une étape jouable de plus | (a) |
+| # | Question | Options | Recommandation du rédacteur | Réponse du propriétaire |
+|:---:|:---|:---|:---|:---|
+| Q-P1 | Les reliques qui comptent les cartes jouées (Amulette du Mage, Plume de scribe, Shuriken, Croc Kunaï) voient-elles une signature jouée ? | (a) oui, le même événement que les passifs · (b) non, seules les cartes du deck comptent | (a) | **(a)** — écartée : (b), une branche et une règle cachée de plus |
+| Q-P2 | Le tutoriel enseigne-t-il la barre par un geste ? | (a) la prose seule · (b) une étape jouable de plus | (a) | **(a)** — écartée : (b), un widget neuf qui élargit la vague |
 
 ## Le journal des tours
 
@@ -35,6 +35,7 @@ Tenu par l'orchestrateur (ADR-108 D4) : les options que la spec a écartées, pu
 | 2 | différentiel | neuf, seul | 0 | 4 | 2 | 3 | Les onze corrections du tour 1 jugées justes. Les quatre moyens : la commande de §12 ne peut pas rendre vide (le script gelé cite `isOfferableTo`) ; trois tests construisent un `CardData` avec `category` ; cinq tests perdent leur objet avec `unique` ; l'éditeur construit une signature sans `heroClass`. Plus 2 mineurs, 3 rédaction — par le rédacteur repris | **Tranché par l'orchestrateur, constat 4** (T, filtre 5) : le validateur de l'éditeur ajoute `draft.heroClass` au document passé à `construct` ; écarté : `heroClass` facultatif au `fromJson` (filtre 5 — affaiblirait le modèle pour l'outil). Constat 9 : ce fichier aligné (Q-P1, A9, A10) |
 | 3 | différentiel | neuf, seul | 0 | 1 | 1 | 0 | Huit des neuf corrections du tour 2 tiennent ; la commande de §12 rejouée ne masque rien. Restent cinq tests qui reposent sur une carte `unique` exclue des copies ou de la trouvaille (moyen, T) et la phrase « sans changer ce qu'ils vérifient », inexacte pour sept autres (mineur, T) | **Trois tours sans convergence, constats T seulement — autonomie `continu`** : l'orchestrateur applique la correction recommandée de chacun, telle quelle (consignée à part dans le compte rendu), puis un dernier tour différentiel |
 | 4 | différentiel, dernier tour de l'autonomie `continu` | neuf, seul | 0 | 0 | 2 | 1 | **Prête.** Les deux corrections recommandées du tour 3 tiennent ; 2 mineurs (le leurre de `shop_controller_test` mal nommé ; deux fixtures que seuls des tests retirés lisent) et 1 rédaction (`:180-183`) corrigés au passage par l'orchestrateur | Écart accepté à la correction recommandée n° 2 du tour 3 : `tutorial_fixtures_test.dart:115` porte sur `category`, pas sur `unique` — l'assertion disparaît avec le champ |
+| — | réponses du propriétaire, 15/10 | — | — | — | — | — | Q-P1 et Q-P2 écrites en §1.2, §1.4 vidée ; §4.3 étape 6, §4.4, §7.2, §10 et §12 alignés. **Pas de tour de vérification** : des réponses du propriétaire, pas des corrections (prompt de reprise) | — |
 
 
 **Corrections appliquées sans le propriétaire (autonomie `continu`, après le tour 3)** — à reporter à part dans le compte rendu : (1) cinq tests qui lisent une carte `unique` exclue des copies ou de la trouvaille — `shop_screen_test.dart:318-370` et `reward_controller_test.dart:302-319` retirés, `shop_controller_test.dart:629-646` réécrit sans leurre, la fixture `c_unique` retirée et `:617-632` réécrit sur un statut seul ; (2) sept tests dont l'assertion porte sur `unique` — trois retirés avec leur objet, trois réécrits sur une commune, `tutorial_fixtures_test.dart:115` disparu avec `category`.

@@ -37,6 +37,8 @@ Toute référence `fichier:ligne` de ce document a été lue le 2026-10-15 sur `
 | Coût et recharge | Une recharge de **2 tours pour les six**, aux **coûts d'aujourd'hui** — Châtiment 1, Bouclier Sacré 1, Frappe Téméraire 2, Posture de Rage 1, Projectile Magique 1, Surtension de Mana 0. Elles « reviennent tous les deux tours » : jouée au tour 1, une signature est rejouable au tour 3 (sémantique exacte : §4.2) |
 | Épuisement | **Il disparaît.** Bouclier Sacré et Surtension de Mana passent en recharge comme les quatre autres |
 | Déclencheurs de passif | **Oui.** Une signature jouée est résolue comme une carte et déclenche les passifs de son type. *Marque du Mage* ne se déclenche plus sur Projectile Magique, devenu Compétence : voulu, la note le dit |
+| Les reliques voient-elles une signature jouée ? (Q-P1, née à l'écriture, répondue le 15/10) | **Oui.** Les quatre reliques qui réagissent à une carte jouée — *Amulette du Mage* et *Plume de scribe* (`onCardPlayed`), *Shuriken* et *Croc Kunaï* (`onAttackPlayed`) ; `PlayerStatsManager.applyRelics`, `player_stats_manager.dart:236`, leurs charges `:327`, `:361`, `:396` — voient une signature jouée par le même événement que les passifs : « résolue comme une carte » vaut pour tout ce qui écoute une carte jouée, un seul chemin dans le code (§4.3, étape 6). La note dit qu'une signature compte comme une carte de son type |
+| Le tutoriel enseigne-t-il la barre par un geste ? (Q-P2, née à l'écriture, répondue le 15/10) | **La prose seule**, dans l'étape « Votre deck de départ » (§7.2) ; pas d'étape jouable de plus |
 
 ### 1.3. Les arbitrages
 
@@ -122,21 +124,8 @@ protégeait devient une propriété du registre : aucune signature n'est une car
 
 ### 1.4. Les questions ouvertes
 
-**Q-P1 — Les reliques voient-elles une signature jouée ?** *(P, ouverte)*. La réponse du propriétaire couvre les
-passifs ; quatre reliques réagissent aussi à une carte jouée (`PlayerStatsManager.applyRelics`, `player_stats_manager.dart:236` ; leurs charges `:327`, `:361`, `:396`) :
-*Amulette du Mage* (`onCardPlayed` : +1 Armure « chaque fois que vous jouez une carte »), *Plume de scribe*
-(`onCardPlayed` : toutes les 5 cartes, +3 Puissance), *Shuriken* et *Croc Kunaï* (`onAttackPlayed` : toutes les 3
-attaques dans un tour). (a) **Oui**, le même événement que les passifs ; (b) **non**, seules les cartes du deck.
-**Recommandation : (a)** — « résolue comme une carte » vaut pour tout ce qui écoute une carte jouée, le code garde
-un seul chemin (§4.3, étape 6), et la note dit qu'une signature compte comme une carte de son type. (b) laisserait
-le texte de l'Amulette littéralement juste, au prix d'une branche et d'une règle cachée de plus.
-
-**Q-P2 — Le tutoriel enseigne-t-il la barre par un geste ?** *(P, ouverte)*. (a) **La prose seule** : l'étape
-« Votre deck de départ » dit ce qu'est une signature et où elle se trouve (§7.2) ; (b) une étape jouable de plus,
-un widget neuf. **Recommandation : (a)** — la barre se lit seule (§5.2), et l'écran d'évolution de la vague 5
-donnera aux signatures une seconde occasion d'être montrées ; (b) élargirait la vague.
-
-Aucune question de classe D : rien n'exige d'amender une décision acquise.
+Aucune. Les deux questions de classe P nées à l'écriture ont reçu la réponse du propriétaire (§1.2). Aucune
+question de classe D : rien n'exige d'amender une décision acquise.
 
 ---
 
@@ -305,7 +294,7 @@ et `SaveService` n'écrit jamais l'état de combat (`save_service.dart:57-63`).
    pile d'épuisement sont identiques avant et après.
 6. La suite commune au jeu d'une carte, extraite d'`applyPlayerCardPlay` (`combat_controller.dart:227-274`) en
    une méthode privée que les deux appellent : passifs (`onCardPlayed`, puis l'événement du type), reliques
-   (selon Q-P1 — recommandé : les mêmes), nettoyage des morts. L'ennemi de l'événement est `enemyId` pour une
+   (les mêmes événements, §1.2), nettoyage des morts. L'ennemi de l'événement est `enemyId` pour une
    signature `singleEnemy`, nul sinon (`:234-236`).
 7. Rend `true`.
 
@@ -323,7 +312,7 @@ rend que `combat_controller.dart`, l'enum et ses libellés).
 | Passifs `onCardPlayed` / par type — *Soif de Sang* (`onAttackPlayed`), *Flux de Mana* (`onSkillPlayed`, compteur par combat), *Marque du Mage* (`onAttackPlayed`, compteur par tour) | **Oui**, selon son type | La réponse du propriétaire |
 | Effets de dégâts : Puissance par type, critique, vol de vie de *Soif de Sang* (`DamageEffectStrategy`) | **Oui** — c'est la résolution même | La réponse du propriétaire |
 | Statuts posés : source `card:<id>` de la Puissance de *Posture de Rage* (D36) | **Oui**, une source par signature | La résolution ; l'intégrité garde les ids distincts des cartes (§10) |
-| Reliques `onCardPlayed` / `onAttackPlayed` et leurs charges (`player_stats_manager.dart:236`, `:258`, `:327-430`) | **Q-P1** | — |
+| Reliques `onCardPlayed` / `onAttackPlayed` et leurs charges (`player_stats_manager.dart:236`, `:258`, `:327-430`) | **Oui**, selon son type | La réponse du propriétaire (Q-P1) |
 | Pioche des effets `draw` | Oui, la main en reçoit, bornée par `maxHandSize` | La résolution |
 | Son `cardPlay`, animation du héros | Oui (§5.4) | L'écran |
 | Tutoriel, statistiques, journal de combat | Aucun ne compte les cartes jouées | — |
@@ -437,7 +426,7 @@ Les noms et descriptions des six signatures ne changent pas. Le mot est **signat
 | Étape « Votre deck de départ » (`tutorial_data.dart:35-44`) | FR : « Choisissez 5 cartes dans le pool commun : elles forment votre deck de départ, celui avec lequel vous jouerez le reste du tutoriel.\n\nVotre classe apporte en plus ses deux **signatures**, qui ne sont pas des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles vous attendent dans une barre à gauche de l'écran, dès le premier tour ; jouer une signature coûte du Mana, puis elle se recharge quelques tours avant de revenir. » — EN : « Pick 5 cards from the common pool: they form your starting deck, the one you will play the rest of the tutorial with.\n\nYour class also brings its two **signatures**, which are not cards: never drawn, they never merge. In combat they wait in a bar on the left of the screen, from the first turn; playing a signature costs Mana, then it recharges for a few turns before it comes back. » |
 | Étape « La Fusion de Cartes » (`tutorial_data.dart:281`, `:297-298`) | La phrase « Vos cartes de classe sont uniques, et une carte unique ne fusionne jamais. » / « Your class cards are unique, and unique cards never merge. » est retirée |
 
-Rien d'autre du tutoriel n'est réécrit. Si Q-P2 reçoit (b), cette ligne s'étend d'une étape.
+Rien d'autre du tutoriel n'est réécrit : la barre s'enseigne par cette prose seule (Q-P2, §1.2).
 
 ---
 
@@ -481,7 +470,7 @@ repli (`card_instance.dart:60`), lève sur `"unique"`, et `SaveService.load` eff
 |:---|:---|:---|:---:|
 | Donnée | `test/unit/signature_data_test.dart` *(nouveau)* | `cooldown` absent, 0 ou négatif refusé ; `cost` négatif refusé ; `type: status` refusé ; `rarity`, `isExhaust`, `category` refusés, nommés ; `effects` vide refusé ; une signature valide se lit entière | 1 |
 | Vue de carte | `test/unit/signature_instance_test.dart` *(nouveau)* | `asCard` : id, type, cible, coût, effets de la signature ; rareté `common`, aucune rune, `exhaustsOnPlay` faux ; `effective` rend les valeurs du fichier | 1 |
-| **Le jeu d'une signature** — tâche à risque | `test/unit/combat_signature_test.dart` *(nouveau)* | Paie le coût, résout (PV ennemis, armure), `signatureTurnsLeft` vaut 2 ; refusée au même tour, encore au suivant, prête au troisième ; `cooldown` 1 : refusée au même tour, prête au suivant ; mana insuffisant : `false`, mana et recharge intacts ; `singleEnemy` sans `enemyId` refusée malgré une `selectedEnemyId` restante ; refusée au tour ennemi ; **un `initializeCombat` neuf rend tout prêt** ; main, pioche, défausse et épuisement inchangés — `holy_shield` et `mana_surge` rejouables à T+2, jamais épuisés ; `smite` arme *Soif de Sang* ; `magic_missile` fait monter *Flux de Mana* et **ne pose pas** Vulnérable sous *Marque du Mage* ; les reliques selon Q-P1 | 1 |
+| **Le jeu d'une signature** — tâche à risque | `test/unit/combat_signature_test.dart` *(nouveau)* | Paie le coût, résout (PV ennemis, armure), `signatureTurnsLeft` vaut 2 ; refusée au même tour, encore au suivant, prête au troisième ; `cooldown` 1 : refusée au même tour, prête au suivant ; mana insuffisant : `false`, mana et recharge intacts ; `singleEnemy` sans `enemyId` refusée malgré une `selectedEnemyId` restante ; refusée au tour ennemi ; **un `initializeCombat` neuf rend tout prêt** ; main, pioche, défausse et épuisement inchangés — `holy_shield` et `mana_surge` rejouables à T+2, jamais épuisés ; `smite` arme *Soif de Sang* ; `magic_missile` fait monter *Flux de Mana* et **ne pose pas** Vulnérable sous *Marque du Mage* ; les reliques voient la signature (Q-P1) — l'*Amulette du Mage* donne son Armure, le *Shuriken* compte `reckless_strike` comme une attaque | 1 |
 | Jeu d'une carte | `test/unit/combat_controller_test.dart` | La suite commune extraite : ordre et événements inchangés | 1 |
 | État de combat | `test/unit/combat_state_test.dart` *(nouveau ou existant)* | Table vide par défaut ; `copyWith` la porte ; `toJson` n'a aucune clé de signature | 1 |
 | Intégrité | `test/unit/referential_integrity_test.dart:157-180`, `:211-229` | Réécrits sur `registry.signatures` et `classes/<id>/skills/` : chaque id de `skills` est une signature de la classe, rangée sous elle ; dossier `skills/` = `skills`. Neuf : **aucun id de signature n'est un id de carte** — ce qui garde à la fois les pools, le `masterDeck` et les sources de statut | 1 |
@@ -557,8 +546,8 @@ absent se lit vide (`content_file_system_io.dart:45`). Tout ce qui lit ou écrit
 tour de chaque combat, dans une barre à gauche de l'écran, avec un temps de recharge de deux tours ; elles sont aussi
 sur la carte de classe et dans un onglet du dictionnaire ; le deck de départ compte 5 cartes. **À dire dans la
 note** : le Projectile Magique devient une Compétence et ne déclenche plus *Marque du Mage* ; Bouclier Sacré et
-Surtension de Mana ne s'épuisent plus. À considérer : *Flux de Mana* compte désormais les deux signatures du Mage ;
-et, selon Q-P1, une signature compte comme une carte jouée pour les reliques.
+Surtension de Mana ne s'épuisent plus ; une signature jouée compte comme une carte de son type, pour les passifs
+comme pour les reliques (Q-P1). À considérer : *Flux de Mana* compte désormais les deux signatures du Mage.
 
 **Ce que le vérificateur contrôle** :
 
