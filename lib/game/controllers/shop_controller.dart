@@ -44,9 +44,6 @@ class ShopController extends Notifier<ShopState> {
       case CardRarity.legendary:
         basePrice = 200;
         break;
-      case CardRarity.unique:
-        basePrice = 999;
-        break;
     }
     return basePrice + (card.forgeUpgrades.length * 20);
   }
@@ -95,7 +92,7 @@ class ShopController extends Notifier<ShopState> {
     }
 
     // Monte l'échelle marche par marche : elle s'arrête d'elle-même à
-    // `legendary`, et une carte `unique`, hors échelle, ne monte pas.
+    // `legendary`.
     var rarity = baseRarity;
     for (var i = 0; i < increase; i++) {
       rarity = rarity.next ?? rarity;

@@ -9,7 +9,7 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-// Seed catalogue: a mix of global cards and hero-specific ("unique") cards
+// Seed catalogue: a mix of global cards and hero-specific cards
 // spread across the CardType groups the screen renders (attack/skill/power).
 const _cards = [
   CardData(
@@ -35,7 +35,7 @@ const _cards = [
     type: CardType.attack,
     category: CardCategory.characterSpecific,
     heroClass: 'paladin',
-    rarity: CardRarity.unique,
+    rarity: CardRarity.rare,
     target: CardTarget.singleEnemy,
     effects: [],
   ),
@@ -62,7 +62,7 @@ const _cards = [
     type: CardType.power,
     category: CardCategory.characterSpecific,
     heroClass: 'mage',
-    rarity: CardRarity.unique,
+    rarity: CardRarity.epic,
     target: CardTarget.self,
     effects: [],
   ),

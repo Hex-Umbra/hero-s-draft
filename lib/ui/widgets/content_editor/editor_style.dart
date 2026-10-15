@@ -123,7 +123,6 @@ const Map<String, Color> kRarityColors = {
   'rare': AppColors.rarityRare,
   'epic': AppColors.rarityEpic,
   'legendary': AppColors.rarityLegendary,
-  'unique': AppColors.rarityUnique,
 };
 
 /// Le puits d'une saisie : fond sombre, bord qui s'allume au focus, rouge

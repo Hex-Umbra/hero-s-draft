@@ -237,47 +237,30 @@ void main() {
       expect(notifier.state.masterDeck, trio);
     });
 
-    test('copyableCards ecarte les cartes unique du master deck', () {
+    test('copyableCards rend tout le master deck, dans une liste neuve', () {
       final strike = _card('strike');
-      final signature = CardInstance(
-        data: const CardData(
-          id: 'holy_shield',
-          cost: 1,
-          type: CardType.skill,
-          category: CardCategory.characterSpecific,
-          rarity: CardRarity.unique,
-          target: CardTarget.self,
-          effects: [],
-        ),
-      );
+      final defend = _card('defend');
+      final state = DeckState(masterDeck: [strike, defend]);
 
-      expect(DeckState(masterDeck: [strike, signature]).copyableCards, [strike]);
+      final copyable = state.copyableCards;
+
+      expect(copyable, [strike, defend]);
+      expect(identical(copyable, state.masterDeck), isFalse);
+      copyable.clear();
+      expect(state.masterDeck, hasLength(2));
     });
 
     // Le terme de deck de la difficulte (spec P-43 E3, §4.5, A12) : la somme
     // des rangs de fusion, et non le nombre de cartes.
     test('fusionRankSum additionne les rangs de fusion du master deck', () {
-      final signature = CardInstance(
-        data: const CardData(
-          id: 'holy_shield',
-          cost: 1,
-          type: CardType.skill,
-          category: CardCategory.characterSpecific,
-          rarity: CardRarity.unique,
-          target: CardTarget.self,
-          effects: [],
-        ),
-      );
       CardInstance strikeAt(CardRarity rarity) =>
           CardInstance(data: _card('strike').data, rarity: rarity);
 
       expect(const DeckState().fusionRankSum, 0);
-      // Des communes et une signature `unique` : rang 0, quelle que soit la
-      // taille du deck.
+      // Des communes : rang 0, quelle que soit la taille du deck.
       expect(
         DeckState(masterDeck: [
           for (var i = 0; i < 20; i++) _card('c$i'),
-          signature,
         ]).fusionRankSum,
         0,
       );

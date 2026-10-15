@@ -63,10 +63,10 @@ void main() {
     );
     // Les six signatures, rangees sous `classes/<classe>/skills/` (spec
     // P-43 E4, §3.2). Canari delibere, comme le compte de registry.cards
-    // plus bas dans ce fichier : les cartes de classe que P-42 doit ajouter
-    // sous `classes/<classe>/cards/` tombent a la meme profondeur. Quand ce
-    // test rougira a cause de P-42, mettre le 6 a jour avec le nouveau total
-    // est la bonne reaction, pas retirer l assertion.
+    // plus bas dans ce fichier : un futur dossier de contenu propre a une
+    // classe, s il tombe a la meme profondeur, fera rougir ce compte. Mettre
+    // le 6 a jour avec le nouveau total est la bonne reaction, pas retirer
+    // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'signatures');
 
     // Les trois documents de configuration restent a plat.

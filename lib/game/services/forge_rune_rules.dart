@@ -89,8 +89,8 @@ class ForgeRuneRules {
     ).cost;
     if (cost < rune.requiresMinCost) return false;
 
-    // D48 : le rang de la carte qui reçoit la rune ; une commune et une
-    // carte `unique`, de rang 0, n'en reçoivent aucune.
+    // D48 : le rang de la carte qui reçoit la rune ; une commune, de
+    // rang 0, n'en reçoit aucune.
     if (rune.minFusionRank > card.rarity.fusionRank) return false;
 
     // La symétrie des exclusions : une rune portée absente du catalogue est

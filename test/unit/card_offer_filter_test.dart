@@ -44,15 +44,5 @@ void main() {
       final carte = _card(id: 'wound', type: CardType.status);
       expect(carte.isOfferableTo('mage'), isFalse);
     });
-
-    test('une carte unique n est proposable a personne, pas meme a sa classe', () {
-      final carte = _card(
-        id: 'holy_shield',
-        category: CardCategory.characterSpecific,
-        heroClass: 'paladin',
-        rarity: CardRarity.unique,
-      );
-      expect(carte.isOfferableTo('paladin'), isFalse);
-    });
   });
 }

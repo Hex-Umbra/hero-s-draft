@@ -5,7 +5,6 @@ class PolychromaticBorder extends StatefulWidget {
   final Widget child;
   final Color rarityColor;
   final bool isSelected;
-  final bool isUnique;
   final int upgradeCount;
 
   const PolychromaticBorder({
@@ -13,7 +12,6 @@ class PolychromaticBorder extends StatefulWidget {
     required this.child,
     required this.rarityColor,
     required this.isSelected,
-    this.isUnique = false,
     this.upgradeCount = 0,
   });
 
@@ -65,7 +63,6 @@ class _PolychromaticBorderState extends State<PolychromaticBorder>
               rarityColor: widget.rarityColor,
               isSelected: widget.isSelected,
               isHovered: _isHovered,
-              isUnique: widget.isUnique,
               upgradeCount: widget.upgradeCount,
             ),
             child: child,
@@ -82,7 +79,6 @@ class _PolychromaticBorderPainter extends CustomPainter {
   final Color rarityColor;
   final bool isSelected;
   final bool isHovered;
-  final bool isUnique;
   final int upgradeCount;
 
   _PolychromaticBorderPainter({
@@ -90,29 +86,10 @@ class _PolychromaticBorderPainter extends CustomPainter {
     required this.rarityColor,
     required this.isSelected,
     required this.isHovered,
-    this.isUnique = false,
     this.upgradeCount = 0,
   });
 
   List<Color> _getRarityShineColors(Color baseColor) {
-    // Rareté Unique → arc-en-ciel complet basé sur l'upgradeCount
-    if (isUnique) {
-      final pool = [
-        baseColor,
-        Colors.white70,
-        Colors.greenAccent,
-        Colors.blueAccent,
-        Colors.purpleAccent,
-        Colors.orangeAccent,
-        Colors.red,
-        Colors.yellow,
-        Colors.cyan,
-        Colors.pink,
-      ];
-      final count = (upgradeCount + 1).clamp(1, pool.length);
-      final colors = pool.sublist(0, count);
-      return [...colors, colors.first];
-    }
     final hsv = HSVColor.fromColor(baseColor);
     if (hsv.saturation < 0.15 || hsv.value < 0.15) {
       return [
@@ -217,7 +194,6 @@ class _PolychromaticBorderPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.rarityColor != rarityColor ||
         oldDelegate.isSelected != isSelected ||
-        oldDelegate.isUnique != isUnique ||
         oldDelegate.upgradeCount != upgradeCount ||
         oldDelegate.isHovered != isHovered;
   }

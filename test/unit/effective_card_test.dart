@@ -80,16 +80,6 @@ void main() {
       );
     });
 
-    test('unique rend la base', () {
-      expect(
-        EffectiveCard.apply(_card([_damage(1)]), CardRarity.unique, const [])
-            .effects
-            .single
-            .value,
-        1,
-      );
-    });
-
     test('G2 : la pioche et le mana ne grandissent pas avec la rarete', () {
       expect(ladder(const CardEffect(type: 'draw', value: 2)), [2, 2, 2, 2, 2]);
       expect(

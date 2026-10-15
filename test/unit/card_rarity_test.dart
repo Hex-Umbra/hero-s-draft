@@ -23,38 +23,26 @@ void main() {
     test('legendaire est le sommet de l echelle', () {
       expect(CardRarity.legendary.next, isNull);
     });
-
-    test('unique est hors de l echelle, bien que declaree apres legendaire', () {
-      expect(CardRarity.unique.next, isNull);
-    });
   });
 
   group('CardRarity.fusionRank', () {
-    test('le nombre de fusions qui menent a la rarete, 0 hors de l echelle', () {
+    test('le nombre de fusions qui menent a la rarete', () {
       expect([for (final rarity in _ladder) rarity.fusionRank], [0, 1, 2, 3, 4]);
-      expect(CardRarity.unique.fusionRank, 0);
     });
   });
 
   group('CardRarity.multiplier', () {
-    test('un multiplicateur par palier, 1 hors de l echelle', () {
+    test('un multiplicateur par palier', () {
       expect(
         [for (final rarity in _ladder) rarity.multiplier],
         [1.0, 1.2, 1.4, 1.6, 2.0],
       );
-      expect(CardRarity.unique.multiplier, 1.0);
     });
   });
 
-  group('CardRarity.isAcquirable', () {
-    test('une carte de classe n entre dans le deck qu au draft de depart', () {
-      expect(CardRarity.unique.isAcquirable, isFalse);
-    });
-
-    test('toute rarete de l echelle s acquiert en cours de run', () {
-      for (final rarity in _ladder) {
-        expect(rarity.isAcquirable, isTrue, reason: rarity.name);
-      }
+  group('CardRarity.values', () {
+    test('CardRarity porte exactement les cinq paliers de l echelle', () {
+      expect(CardRarity.values, _ladder);
     });
   });
 }

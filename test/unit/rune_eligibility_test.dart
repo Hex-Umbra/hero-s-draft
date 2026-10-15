@@ -166,7 +166,6 @@ void main() {
     final rank1 = _rune('sharp');
     final rank2 = _rune('quick', minFusionRank: 2);
     expect(_eligible(rank1, _card(rarity: CardRarity.common)), isFalse);
-    expect(_eligible(rank1, _card(rarity: CardRarity.unique)), isFalse);
     expect(_eligible(rank1, _card()), isTrue);
     expect(_eligible(rank2, _card()), isFalse);
     expect(_eligible(rank2, _card(rarity: CardRarity.rare)), isTrue);

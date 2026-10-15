@@ -66,10 +66,10 @@ CardData _cardData(CardRarity rarity) => CardData(
 
 /// Une prise par rune portée, aucune vide (spec P-43 E2, §4.10).
 void main() {
-  testWidgets('une carte de classe sans rune n affiche aucun emplacement', (
+  testWidgets('une carte commune sans rune n affiche aucun emplacement', (
     WidgetTester tester,
   ) async {
-    await _pumpCard(tester, CardInstance(data: _cardData(CardRarity.unique)));
+    await _pumpCard(tester, CardInstance(data: _cardData(CardRarity.common)));
 
     expect(_socketCount(tester), 0);
   });

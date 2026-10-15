@@ -185,9 +185,6 @@ Color getCardRarityColor(BuildContext context, String? rarity) {
   if (rarity == null) return Colors.white54;
   final l10n = AppLocalizations.of(context)!;
   final r = rarity.toLowerCase();
-  if (r.contains('unique')) {
-    return const Color(0xFFFFD700); // Gold pur — rareté Unique
-  }
   if (r == l10n.rarityLegendary.toLowerCase() ||
       r.contains('legendary') ||
       r.contains('légendaire')) {
@@ -286,9 +283,7 @@ String buildDetailedDescription(
     final rarityHeader = activeLocale == 'fr' ? '⚡ Rareté : ' : '⚡ Rarity: ';
     String rarityText = rarity;
     final r = rarity.toLowerCase();
-    if (r.contains('unique')) {
-      rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
-    } else if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
+    if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
       rarityText = l10n.rarityLegendary;
     } else if (r == l10n.rarityEpic.toLowerCase() || r.contains('epic') || r.contains('épique')) {
       rarityText = l10n.rarityEpic;

@@ -7,7 +7,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
   final Color rarityRare;
   final Color rarityEpic;
   final Color rarityLegendary;
-  final Color rarityUnique;
 
   final Color statHp;
   final Color statMana;
@@ -24,7 +23,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     required this.rarityRare,
     required this.rarityEpic,
     required this.rarityLegendary,
-    required this.rarityUnique,
     required this.statHp,
     required this.statMana,
     required this.statGold,
@@ -42,7 +40,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       rarityRare: AppColors.rarityRare,
       rarityEpic: AppColors.rarityEpic,
       rarityLegendary: AppColors.rarityLegendary,
-      rarityUnique: AppColors.rarityUnique,
       statHp: AppColors.statHp,
       statMana: AppColors.statMana,
       statGold: AppColors.statGold,
@@ -61,7 +58,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       rarityRare: Color(0xFF1565C0),
       rarityEpic: Color(0xFF6A1B9A),
       rarityLegendary: Color(0xFFE65100),
-      rarityUnique: Color(0xFF00838F),
       statHp: Color(0xFFC62828),
       statMana: Color(0xFF1565C0),
       statGold: Color(0xFFF57F17),
@@ -79,7 +75,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     Color? rarityRare,
     Color? rarityEpic,
     Color? rarityLegendary,
-    Color? rarityUnique,
     Color? statHp,
     Color? statMana,
     Color? statGold,
@@ -94,7 +89,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       rarityRare: rarityRare ?? this.rarityRare,
       rarityEpic: rarityEpic ?? this.rarityEpic,
       rarityLegendary: rarityLegendary ?? this.rarityLegendary,
-      rarityUnique: rarityUnique ?? this.rarityUnique,
       statHp: statHp ?? this.statHp,
       statMana: statMana ?? this.statMana,
       statGold: statGold ?? this.statGold,
@@ -116,7 +110,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       rarityRare: Color.lerp(rarityRare, other.rarityRare, t)!,
       rarityEpic: Color.lerp(rarityEpic, other.rarityEpic, t)!,
       rarityLegendary: Color.lerp(rarityLegendary, other.rarityLegendary, t)!,
-      rarityUnique: Color.lerp(rarityUnique, other.rarityUnique, t)!,
       statHp: Color.lerp(statHp, other.statHp, t)!,
       statMana: Color.lerp(statMana, other.statMana, t)!,
       statGold: Color.lerp(statGold, other.statGold, t)!,

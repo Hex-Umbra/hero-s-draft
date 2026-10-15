@@ -49,14 +49,13 @@ class DeckState {
   /// Cartes du master deck qu'une récompense peut copier : draft de boss,
   /// Miroir Magique, Miroir de montée de niveau, copie du deck en boutique.
   ///
-  /// Liste neuve et modifiable à chaque appel : ses appelants la mélangent ou
-  /// y tirent sans toucher à l'état.
-  List<CardInstance> get copyableCards =>
-      masterDeck.where((card) => card.rarity.isAcquirable).toList();
+  /// Le deck entier, en liste neuve et modifiable à chaque appel : ses
+  /// appelants la mélangent ou y tirent sans toucher à l'état. Le seul point
+  /// des quatre sources de copie.
+  List<CardInstance> get copyableCards => List.of(masterDeck);
 
-  /// La somme des rangs de fusion du master deck — 0 pour une commune comme
-  /// pour une signature `unique` : la difficulté en lit le double, à la place
-  /// du nombre de cartes (spec P-43 E3, §4.5, A12 ; D47, D59).
+  /// La somme des rangs de fusion du master deck — 0 pour une commune : la
+  /// difficulté en lit le double, à la place du nombre de cartes (spec P-43 E3, §4.5, A12 ; D47, D59).
   int get fusionRankSum =>
       masterDeck.fold(0, (sum, card) => sum + card.rarity.fusionRank);
 
@@ -92,12 +91,7 @@ class DeckState {
       final (validUpgrades, upgradesMissing) =
           ForgeUpgradeData.filterValidRefs(instance.forgeUpgrades);
       missing.addAll(upgradesMissing);
-      // Une carte `unique` dont le modèle ne l'est pas ne vient que de l'ancienne
-      // fusion de trois légendaires (ADR-094) : elle retrouve sa légendaire.
-      final rarity = instance.rarity == CardRarity.unique && freshData.rarity != CardRarity.unique
-          ? CardRarity.legendary
-          : instance.rarity;
-      kept.add(instance.copyWith(data: freshData, rarity: rarity, forgeUpgrades: validUpgrades));
+      kept.add(instance.copyWith(data: freshData, forgeUpgrades: validUpgrades));
     }
 
     return (kept, missing);
@@ -310,7 +304,7 @@ class DeckNotifier extends Notifier<DeckState> {
     if (selectedCards.length != 3) return null;
 
     // Trois exemplaires d'une même carte à une même rareté, qui en a une
-    // au-delà : ni une carte `unique` ni une légendaire n'en ont.
+    // au-delà : une légendaire n'en a pas.
     final first = selectedCards.first;
     final nextRarity = first.rarity.next;
     if (nextRarity == null ||

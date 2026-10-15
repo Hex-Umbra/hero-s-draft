@@ -615,17 +615,6 @@ void main() {
 
     // La copie du deck (D46 ; spec P-43 E2, A11, §4.9).
     group('la copie du deck', () {
-      const signature = CardData(
-        id: 'signature_paladin',
-        cost: 1,
-        type: CardType.skill,
-        category: CardCategory.characterSpecific,
-        heroClass: 'paladin',
-        rarity: CardRarity.unique,
-        target: CardTarget.self,
-        effects: [],
-      );
-
       test('tiree des cartes copiables du deck : meme rarete, sans rune, '
           'identifiant neuf', () {
         final source = CardInstance(
@@ -633,24 +622,24 @@ void main() {
           rarity: CardRarity.rare,
           forgeUpgrades: const ['sharp:2'],
         );
-        deckNotifier.initializeStarterDeck(
-            [source, CardInstance(data: signature)]);
+        final other = CardInstance(data: testCardPool[1]);
+        deckNotifier.initializeStarterDeck([source, other]);
 
+        final drawn = <String>{};
         for (var i = 0; i < 50; i++) {
           shopController.initializeShop(testCardPool, 0);
           final copy = shopController.state.deckCopy!;
-          expect(copy.data.id, source.data.id);
-          expect(copy.rarity, CardRarity.rare);
+          final origin = copy.data.id == source.data.id ? source : other;
+          expect(copy.data.id, origin.data.id);
+          expect(copy.rarity, origin.rarity);
           expect(copy.forgeUpgrades, isEmpty);
-          expect(copy.uniqueId, isNot(source.uniqueId));
+          expect(copy.uniqueId, isNot(origin.uniqueId));
+          drawn.add(copy.data.id);
         }
+        expect(drawn, {source.data.id, other.data.id});
       });
 
-      test('sans carte copiable, pas de copie', () {
-        shopController.initializeShop(testCardPool, 0);
-        expect(shopController.state.deckCopy, isNull);
-
-        deckNotifier.initializeStarterDeck([CardInstance(data: signature)]);
+      test('un deck vide n a pas de copie', () {
         shopController.initializeShop(testCardPool, 0);
         expect(shopController.state.deckCopy, isNull);
       });
