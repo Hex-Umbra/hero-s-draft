@@ -116,7 +116,12 @@ void main() {
       final smite = signature('smite');
       expect(combat.playSignature(smite, enemyId: enemy().id), isTrue);
 
+      final mana = hero().currentMana;
+      final selected = combat.currentState.selectedEnemyId;
       expect(combat.playSignature(smite, enemyId: enemy().id), isFalse);
+      // Un refus ne laisse aucune trace.
+      expect(hero().currentMana, mana);
+      expect(combat.currentState.selectedEnemyId, selected);
       nextTurn();
       expect(combat.currentState.signatureTurnsLeft('smite'), 1);
       expect(combat.playSignature(smite, enemyId: enemy().id), isFalse);

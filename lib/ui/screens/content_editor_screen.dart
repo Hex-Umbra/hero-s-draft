@@ -96,11 +96,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
   // La recette de classe (creation seulement) : combien de signatures, et
   // pour chacune ses controleurs.
-  final TextEditingController _cardCount = TextEditingController(text: '0');
-  int _cardCountValue = 0;
-  final List<TextEditingController> _cardIds = [];
-  final List<TextEditingController> _cardNameFr = [];
-  final List<TextEditingController> _cardNameEn = [];
+  final TextEditingController _signatureCount = TextEditingController(text: '0');
+  int _signatureCountValue = 0;
+  final List<TextEditingController> _signatureIds = [];
+  final List<TextEditingController> _signatureNameFr = [];
+  final List<TextEditingController> _signatureNameEn = [];
 
   List<ValidationFault> _faults = const [];
   WriteReport? _report;
@@ -148,14 +148,14 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     for (final controller in _prose.values) {
       controller.dispose();
     }
-    _cardCount.dispose();
-    for (final controller in _cardIds) {
+    _signatureCount.dispose();
+    for (final controller in _signatureIds) {
       controller.dispose();
     }
-    for (final controller in _cardNameFr) {
+    for (final controller in _signatureNameFr) {
       controller.dispose();
     }
-    for (final controller in _cardNameEn) {
+    for (final controller in _signatureNameEn) {
       controller.dispose();
     }
     super.dispose();
@@ -244,18 +244,18 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
 
   void _setCardCount(int n) {
     if (n < 0) n = 0;
-    while (_cardIds.length < n) {
-      _cardIds.add(TextEditingController());
-      _cardNameFr.add(TextEditingController());
-      _cardNameEn.add(TextEditingController());
+    while (_signatureIds.length < n) {
+      _signatureIds.add(TextEditingController());
+      _signatureNameFr.add(TextEditingController());
+      _signatureNameEn.add(TextEditingController());
     }
-    while (_cardIds.length > n) {
-      _cardIds.removeLast().dispose();
-      _cardNameFr.removeLast().dispose();
-      _cardNameEn.removeLast().dispose();
+    while (_signatureIds.length > n) {
+      _signatureIds.removeLast().dispose();
+      _signatureNameFr.removeLast().dispose();
+      _signatureNameEn.removeLast().dispose();
     }
-    _cardCountValue = n;
-    _cardCount.text = '$n';
+    _signatureCountValue = n;
+    _signatureCount.text = '$n';
   }
 
   EntityDraft _draft() => EntityDraft(
@@ -282,12 +282,12 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
         // la refusera de toute facon.
         withIcon: _currentMechanics()?.containsKey('iconPath') ?? true,
         signatures: [
-          for (var i = 0; i < _cardCountValue; i++)
+          for (var i = 0; i < _signatureCountValue; i++)
             SignatureInput(
-              id: _cardIds[i].text.trim(),
+              id: _signatureIds[i].text.trim(),
               bilingual: {
-                'name_fr': _cardNameFr[i].text,
-                'name_en': _cardNameEn[i].text,
+                'name_fr': _signatureNameFr[i].text,
+                'name_en': _signatureNameEn[i].text,
               },
             ),
         ],
@@ -861,8 +861,8 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _byOwner = entityIdsByOwner(fs, root, _descriptor);
 
     // (b) La rangee de pastilles de proprietaire n'existe que pour une
-    // signature, et seulement en creation : `EntityForm` ne la montre pas autrement.
-    // Enumerer les classes en modification etait un calcul pur perdu.
+    // signature, et seulement en creation : `EntityForm` ne la montre pas
+    // autrement. Enumerer les classes en modification etait un calcul pur perdu.
     _ownerClassIds = _descriptor.supportsHeroClass
         ? (List<String>.from(
             entityIdsByOwner(
@@ -933,11 +933,11 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
           "recharger avant d'écrire";
     }
     if (_isClassRecipe) {
-      final signatures = _cardCountValue == 0
+      final signatures = _signatureCountValue == 0
           ? ''
-          : _cardCountValue == 1
+          : _signatureCountValue == 1
               ? ' et sa signature'
-              : ' et ses $_cardCountValue signatures';
+              : ' et ses $_signatureCountValue signatures';
       return 'Valider vérifie sans écrire · Écrire valide, puis écrit la '
           'classe, son passif de départ$signatures';
     }
@@ -972,13 +972,13 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
       resources: _resources(root, faults),
       faults: faults,
       anchors: _anchors,
-      showSignatureCards: _isClassRecipe,
-      cardCountController: _cardCount,
-      cardCount: _cardCountValue,
+      showSignatures: _isClassRecipe,
+      cardCountController: _signatureCount,
+      cardCount: _signatureCountValue,
       onCardCountChanged: (n) => setState(() => _setCardCount(n)),
-      cardIds: _cardIds,
-      cardNameFr: _cardNameFr,
-      cardNameEn: _cardNameEn,
+      cardIds: _signatureIds,
+      cardNameFr: _signatureNameFr,
+      cardNameEn: _signatureNameEn,
     );
   }
 

@@ -5,14 +5,12 @@ class PolychromaticBorder extends StatefulWidget {
   final Widget child;
   final Color rarityColor;
   final bool isSelected;
-  final int upgradeCount;
 
   const PolychromaticBorder({
     super.key,
     required this.child,
     required this.rarityColor,
     required this.isSelected,
-    this.upgradeCount = 0,
   });
 
   @override
@@ -63,7 +61,6 @@ class _PolychromaticBorderState extends State<PolychromaticBorder>
               rarityColor: widget.rarityColor,
               isSelected: widget.isSelected,
               isHovered: _isHovered,
-              upgradeCount: widget.upgradeCount,
             ),
             child: child,
           );
@@ -79,14 +76,12 @@ class _PolychromaticBorderPainter extends CustomPainter {
   final Color rarityColor;
   final bool isSelected;
   final bool isHovered;
-  final int upgradeCount;
 
   _PolychromaticBorderPainter({
     required this.animationValue,
     required this.rarityColor,
     required this.isSelected,
     required this.isHovered,
-    this.upgradeCount = 0,
   });
 
   List<Color> _getRarityShineColors(Color baseColor) {
@@ -194,7 +189,6 @@ class _PolychromaticBorderPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.rarityColor != rarityColor ||
         oldDelegate.isSelected != isSelected ||
-        oldDelegate.upgradeCount != upgradeCount ||
         oldDelegate.isHovered != isHovered;
   }
 }

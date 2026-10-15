@@ -24,7 +24,7 @@ enum EntityFileStatus {
 }
 
 /// Le formulaire d'une entite : l'en-tete du fichier, puis ses sections —
-/// Identite, Textes, Mecanique, Ressources, Cartes de signature (spec D3-D4).
+/// Identite, Textes, Mecanique, Ressources, Signatures (spec D3-D4).
 ///
 /// **Purement presentationnel** : tout l'etat vit dans l'ecran appelant, sous
 /// forme de `TextEditingController`s et de callbacks. Les boutons et l'issue
@@ -54,7 +54,7 @@ class EntityForm extends StatelessWidget {
     this.selectedOwner,
     this.onOwnerSelected,
     this.ownerColorOf,
-    this.showSignatureCards = false,
+    this.showSignatures = false,
     this.cardCountController,
     this.cardCount = 0,
     this.onCardCountChanged,
@@ -98,7 +98,7 @@ class EntityForm extends StatelessWidget {
   final Color? Function(String classId)? ownerColorOf;
 
   /// La recette de classe, pour une classe en creation seulement.
-  final bool showSignatureCards;
+  final bool showSignatures;
   final TextEditingController? cardCountController;
   final int cardCount;
   final ValueChanged<int>? onCardCountChanged;
@@ -148,7 +148,7 @@ class EntityForm extends StatelessWidget {
               children: [resources],
             ),
           ],
-          if (showSignatureCards) ...[
+          if (showSignatures) ...[
             const SizedBox(height: 16),
             _signatures(),
           ],
@@ -522,7 +522,7 @@ class EntityForm extends StatelessWidget {
     return KeyedSubtree(
       key: anchors.keyFor('skills'),
       child: EditorPanel(
-        icon: Icons.style,
+        icon: Icons.bolt,
         title: 'Signatures',
         caption: 'Nombre',
         trailing: _stepper(),

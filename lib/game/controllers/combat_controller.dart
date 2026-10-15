@@ -319,6 +319,7 @@ class CombatController extends Notifier<CombatState> {
 
     cleanDeadEnemies();
   }
+
   /// Applique l'effet de l'intention d'un ennemi
   void resolveEnemyIntent(String enemyId) {
     _turnPhaseManager.resolveEnemyIntent(enemyId);

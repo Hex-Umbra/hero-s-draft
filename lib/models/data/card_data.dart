@@ -25,10 +25,10 @@ enum CardRarity {
       };
 
   /// Le nombre de fusions qu'il a fallu pour atteindre cette rareté : 0 à 4
-  /// de `common` à `legendary`. `minFusionRank` le compare (`ForgeRuneRules.isEligible`), G1
-  /// compte ses paliers (`scaleValue`), il borne les runes d'une pré-forgée
-  /// (`ShopController`), et la difficulté en somme le double
-  /// (`DeckState.fusionRankSum`).
+  /// de `common` à `legendary`. `minFusionRank` le compare
+  /// (`ForgeRuneRules.isEligible`), G1 compte ses paliers (`scaleValue`), il
+  /// borne les runes d'une pré-forgée (`ShopController`), et la difficulté en
+  /// somme le double (`DeckState.fusionRankSum`).
   int get fusionRank => switch (this) {
         CardRarity.common => 0,
         CardRarity.uncommon => 1,

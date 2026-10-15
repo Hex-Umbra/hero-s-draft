@@ -40,7 +40,7 @@ The codebase strictly separates three layers — never mix them:
   - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
   - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
-- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`, `xp_curve_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
+- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `signature_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`, `xp_curve_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `signature_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
 
 - **Services** — `lib/services/`
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
@@ -81,7 +81,7 @@ assets/data/
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
 
-To add or modify a card, enemy, hero, relic, passive, event, forge upgrade or level-up reward:
+To add or modify a card, signature (a file under `classes/<id>/skills/`), enemy, hero, relic, passive, event, forge upgrade or level-up reward:
 
 1. **Create a file** in the right directory, shaped like a neighbouring entry. The filename **is** the `id` (`relics/iron_talisman.json` → `"id": "iron_talisman"`), in lowercase ASCII `snake_case` — enforced by `test/unit/entity_id_convention_test.dart`. For a class or an enemy it is a **folder** you create, image included, and the `id` comes from the folder name.
 2. **Run `dart run tool/sync_assets.dart`** to regenerate `pubspec.yaml`'s `assets:` section — a new class or enemy folder needs its own line, and an undeclared one fails silently at build time.

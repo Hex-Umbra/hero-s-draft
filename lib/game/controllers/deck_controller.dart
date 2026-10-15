@@ -55,7 +55,8 @@ class DeckState {
   List<CardInstance> get copyableCards => List.of(masterDeck);
 
   /// La somme des rangs de fusion du master deck — 0 pour une commune : la
-  /// difficulté en lit le double, à la place du nombre de cartes (spec P-43 E3, §4.5, A12 ; D47, D59).
+  /// difficulté en lit le double, à la place du nombre de cartes (spec P-43
+  /// E3, §4.5, A12 ; D47, D59).
   int get fusionRankSum =>
       masterDeck.fold(0, (sum, card) => sum + card.rarity.fusionRank);
 

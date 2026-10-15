@@ -396,8 +396,8 @@ void main() {
     );
 
     test(
-      'applyPlayerCardPlay garde ses evenements : onCardPlayed puis le type, '
-      'passifs puis reliques, puis le nettoyage',
+      'applyPlayerCardPlay declenche les reliques de la carte et du type, '
+      'puis retire les ennemis morts',
       () {
         final container = ProviderContainer();
         addTearDown(container.dispose);

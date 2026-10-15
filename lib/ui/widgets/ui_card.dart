@@ -199,7 +199,6 @@ class UiCard extends StatelessWidget {
                   child: PolychromaticBorder(
                     rarityColor: rarityColor,
                     isSelected: isSelected,
-                    upgradeCount: forgeUpgrades.length,
                     child: Container(
                       decoration: BoxDecoration(
                         color: bgColor,

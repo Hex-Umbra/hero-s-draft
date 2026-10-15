@@ -212,8 +212,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     label: 'Carte',
     directory: 'cards',
     requiredKeys: const {'cost', 'type'},
-    // Le repertoire impose l'appartenance : les declarer fait echouer le
-    // chargement, `CardData.fromJson` refuse aussi ces deux cles.
+    // Le repertoire impose l'appartenance : declarer ces cles fait echouer le
+    // chargement, `CardData.fromJson` les refuse.
     forbiddenKeys: const {'heroClass', 'category'},
     enumKeys: {
       'type': _names(CardType.values),
