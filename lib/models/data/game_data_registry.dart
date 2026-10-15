@@ -6,6 +6,7 @@ import 'passive_data.dart';
 import 'relic_data.dart';
 import 'forge_upgrade_data.dart';
 import 'level_up_reward_data.dart';
+import 'signature_data.dart';
 import 'audio_data.dart';
 import 'xp_curve_data.dart';
 
@@ -23,6 +24,10 @@ class GameDataRegistry {
   /// `GameDataRegistry` sans le fournir — ces registres-là ne draftent
   /// simplement jamais.
   final List<LevelUpRewardData> levelUpRewards;
+
+  /// Les signatures de classe (spec P-43 E4, §3.1). Défaut vide, comme
+  /// [levelUpRewards], pour ne pas casser les registres de test.
+  final List<SignatureData> signatures;
 
   /// La courbe d'XP (spec P-43 E3, §3.2, A27). Optionnelle, comme
   /// [levelUpRewards], pour ne pas casser les dizaines de registres de test :
@@ -45,6 +50,7 @@ class GameDataRegistry {
     required this.relics,
     required this.forgeUpgrades,
     this.levelUpRewards = const [],
+    this.signatures = const [],
     this.xpCurve,
     this.audio = const AudioData.disabled(),
   }) {
