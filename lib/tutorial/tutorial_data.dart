@@ -33,15 +33,20 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Your Starting Deck',
     titleFr: 'Votre deck de départ',
     bodyEn:
-        'Pick 5 cards from the common pool. Your class cards are added on top, '
-        'automatically — they are unique, and unlike the others they can never '
-        'be merged. This deck is the one you will play with for the rest of '
-        'the tutorial.',
+        'Pick 5 cards from the common pool: they form your starting deck, the '
+        'one you will play the rest of the tutorial with.\n\n'
+        'Your class also brings its two **signatures**, which are not cards: '
+        'never drawn, they never merge. In combat they wait in a bar on the '
+        'left of the screen, from the first turn; playing a signature costs '
+        'Mana, then it recharges for a few turns before it comes back.',
     bodyFr:
-        'Choisissez 5 cartes dans le pool commun. Les cartes de votre classe '
-        's\'y ajoutent automatiquement : elles sont uniques et, contrairement '
-        'aux autres, ne pourront jamais être fusionnées. C\'est avec ce deck '
-        'que vous jouerez le reste du tutoriel.',
+        'Choisissez 5 cartes dans le pool commun : elles forment votre deck de '
+        'départ, celui avec lequel vous jouerez le reste du tutoriel.\n\n'
+        'Votre classe apporte en plus ses deux **signatures**, qui ne sont pas '
+        'des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles '
+        'vous attendent dans une barre à gauche de l\'écran, dès le premier '
+        'tour ; jouer une signature coûte du Mana, puis elle se recharge '
+        'quelques tours avant de revenir.',
     type: TutorialStepType.starterDeck,
   ),
   TutorialStep(
@@ -278,8 +283,7 @@ const List<TutorialStep> kTutorialSteps = [
         'The runes of the three copies are all kept — the same rune adds up '
         'its levels — and the merged card **gains one more, chosen among '
         'three**, at level 1; Quick and Eco only appear from the second '
-        'merge. Your class cards are unique, and unique cards never merge. '
-        '**The Exchange Well is a separate, paid system** — a dedicated map '
+        'merge. **The Exchange Well is a separate, paid system** — a dedicated map '
         'node, not to be confused with this free merging.',
     bodyFr:
         'La fusion est **manuelle**, et seulement hors combat. Ouvrez votre '
@@ -294,8 +298,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Les runes des trois exemplaires sont toutes conservées — une même '
         'rune additionne ses niveaux — et la carte fusionnée **en reçoit une '
         'de plus, au choix parmi trois**, au niveau 1 ; Véloce et Économe '
-        'n\'apparaissent qu\'à partir de la deuxième fusion. Vos cartes de '
-        'classe sont uniques, et une carte unique ne fusionne jamais. **Le '
+        'n\'apparaissent qu\'à partir de la deuxième fusion. **Le '
         'Puits d\'échange est un système distinct et payant** — un nœud dédié '
         'de la carte du monde, à ne pas confondre avec cette fusion-ci, qui '
         'reste gratuite.',

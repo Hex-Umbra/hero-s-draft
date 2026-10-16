@@ -73,6 +73,16 @@ void main() {
     );
   });
 
+  testWidgets('le bandeau nomme les signatures de la classe, toujours disponibles en combat', (tester) async {
+    await _pump(tester);
+
+    expect(
+      find.text('Vos signatures, toujours disponibles en combat : Bouclier Sacré, Châtiment'),
+      findsOneWidget,
+    );
+    expect(find.textContaining("Ajoutées d'office"), findsNothing);
+  });
+
   testWidgets('la sélection est bornée à 5', (tester) async {
     final engine = await _pump(tester);
     final pool = engine.fixtures.starterPool;

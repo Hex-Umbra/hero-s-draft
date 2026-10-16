@@ -52,7 +52,7 @@ class _StarterDeckDraftScreenState
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
     // 1. Filtrer par le predicat d'offre : tout sauf un statut
-    final globalCards = gameData.cards
+    final offerableCards = gameData.cards
         .where((c) => c.isOfferable)
         .toList()
       // Le pool est affiché et sélectionné par index, sans mélange : sans tri
@@ -61,7 +61,7 @@ class _StarterDeckDraftScreenState
       ..sort(CardData.compareByDisplayOrder);
 
     setState(() {
-      _draftPool = globalCards;
+      _draftPool = offerableCards;
     });
   }
 
