@@ -332,69 +332,69 @@ class _SignatureTileState extends State<_SignatureTile>
               child: child,
             ),
             child: AnimatedBuilder(
-          animation: _pulse,
-          // Le contenu ne dépend pas de l'impulsion : construit une fois.
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _CostMedallion(
-                cost: widget.signature.cost,
-                unaffordable: state == SignatureTileState.unaffordable,
-              ),
-              const SizedBox(width: 6),
-              Expanded(child: _details(context, l10n)),
-            ],
-          ),
-          builder: (context, content) {
-            final borderColor = switch (state) {
-              SignatureTileState.recharging => Colors.grey,
-              SignatureTileState.armed => Color.lerp(
-                widget.classColor,
-                Colors.white,
-                _pulse.value,
-              )!,
-              _ => widget.classColor,
-            };
-            return Opacity(
-              opacity: state == SignatureTileState.inactive ? 0.45 : 1,
-              child: Container(
-                key: ValueKey('signature-tile-${data.id}'),
-                width: widget.compact ? 170 : 220,
-                constraints: BoxConstraints(
-                  minHeight: widget.compact ? 64 : 80,
-                ),
-                // La bordure armée, plus épaisse d'un point, le prend sur la
-                // marge : la tuile garde sa taille, ses voisines leur place.
-                padding: EdgeInsets.all(armed ? 5 : 6),
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: recharging
-                      ? const Color(0xFF2A2A2A)
-                      : neutralCardBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: borderColor,
-                    width: armed ? 3 : 2,
+              animation: _pulse,
+              // Le contenu ne dépend pas de l'impulsion : construit une fois.
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CostMedallion(
+                    cost: widget.signature.cost,
+                    unaffordable: state == SignatureTileState.unaffordable,
                   ),
-                  boxShadow: [
-                    if (state == SignatureTileState.available)
-                      BoxShadow(
-                        color: widget.classColor.withAlpha(150),
-                        blurRadius: 8,
-                      ),
-                    // Le survol intensifie la lueur de classe.
-                    if (lifted)
-                      BoxShadow(
-                        color: widget.classColor.withAlpha(230),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                      ),
-                  ],
-                ),
-                child: content,
+                  const SizedBox(width: 6),
+                  Expanded(child: _details(context, l10n)),
+                ],
               ),
-            );
-          },
+              builder: (context, content) {
+                final borderColor = switch (state) {
+                  SignatureTileState.recharging => Colors.grey,
+                  SignatureTileState.armed => Color.lerp(
+                    widget.classColor,
+                    Colors.white,
+                    _pulse.value,
+                  )!,
+                  _ => widget.classColor,
+                };
+                return Opacity(
+                  opacity: state == SignatureTileState.inactive ? 0.45 : 1,
+                  child: Container(
+                    key: ValueKey('signature-tile-${data.id}'),
+                    width: widget.compact ? 170 : 220,
+                    constraints: BoxConstraints(
+                      minHeight: widget.compact ? 64 : 80,
+                    ),
+                    // La bordure armée, plus épaisse d'un point, le prend sur la
+                    // marge : la tuile garde sa taille, ses voisines leur place.
+                    padding: EdgeInsets.all(armed ? 5 : 6),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: recharging
+                          ? const Color(0xFF2A2A2A)
+                          : neutralCardBackground,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: borderColor,
+                        width: armed ? 3 : 2,
+                      ),
+                      boxShadow: [
+                        if (state == SignatureTileState.available)
+                          BoxShadow(
+                            color: widget.classColor.withAlpha(150),
+                            blurRadius: 8,
+                          ),
+                        // Le survol intensifie la lueur de classe.
+                        if (lifted)
+                          BoxShadow(
+                            color: widget.classColor.withAlpha(230),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                          ),
+                      ],
+                    ),
+                    child: content,
+                  ),
+                );
+              },
             ),
           ),
         ),
