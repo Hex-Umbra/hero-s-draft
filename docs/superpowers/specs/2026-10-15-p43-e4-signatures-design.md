@@ -364,8 +364,10 @@ Dans l'ordre de priorité — le premier qui s'applique gagne :
 | **Armée** | Une `singleEnemy` touchée, en attente de cible | Bordure pulsante ; sous la barre, « Choisissez une cible » | La retoucher désarme |
 | **Disponible** | Sinon | Pleine couleur, lueur de classe | Toute cible autre que `singleEnemy` (`self`, `allEnemies`, `none` — `card_data.dart:84`) : joue aussitôt. `singleEnemy` : **arme** la signature |
 
-Survol (bureau) ou appui long (mobile) : l'infobulle de combat existante (`CombatTooltipOverlay`) — le nom, la
-description, et la ligne « Coût · Recharge » (§7.1), bordée de la couleur du type.
+Ni survol ni appui long : **pas d'infobulle** — tranché par le propriétaire le 16/10, la tuile écrivant elle-même le
+nom, le type, la description et la recharge (§5.1). La spec prévoyait l'infobulle de combat (`CombatTooltipOverlay`)
+avec la ligne « Coût · Recharge » ; cette ligne ne se lit plus en combat qu'en recharge, et hors combat sur les tuiles
+de la carte de classe et du dictionnaire (§6).
 
 ### 5.3. Le ciblage — le contrat entre la barre et Flame
 

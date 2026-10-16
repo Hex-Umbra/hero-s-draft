@@ -20,7 +20,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## À tester d'abord
 <!-- du plus risqué au moins risqué -->
 1. **T1** — Châtiment : toucher la tuile, puis un ennemi précis ; les dégâts vont à cet ennemi, pas à la sélection d'une carte précédente.
-2. **T2** — Le héros meurt pendant que la souris est sur une tuile : l'infobulle disparaît, les boutons de l'écran de mort restent cliquables.
+2. **T2** — Le héros meurt pendant que la souris est sur une tuile : rien ne reste affiché, les boutons de l'écran de mort restent cliquables.
 3. **T3** — Chaque geste qui désarme une signature armée, et la priorité d'une carte focalisée.
 4. **T4** — Une signature jouée compte comme une carte de son type pour les passifs (Flux de Mana, Soif de Sang) et **Marque du Mage ne se déclenche plus sur Projectile Magique**.
 5. **T5** — Les quatre reliques (Amulette du Mage, Plume de scribe, Shuriken, Croc Kunaï) voient une signature jouée.
@@ -32,7 +32,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 11. **T11** — Bouclier Sacré (sans cible) : armure, soin, mana −1, animation, son.
 12. **T12** — Mana insuffisant : secousse et son.
 13. **T13** — Les deux autres classes : Berserker et Mage, leurs quatre signatures.
-14. **T14** — L'infobulle au survol et à l'appui long.
+14. **T14** — Aucune infobulle sur une tuile, ni au survol ni à l'appui long.
 15. **T15** — Recharge remise à zéro au combat suivant.
 16. **T16** — Boutons de 170 px de large sous 600 px de large.
 17. **T17** — Le draft de départ : 5 cartes du pool commun, sans signature.
@@ -50,8 +50,8 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 
 ## T2 — Mort du héros, souris sur une tuile
 - **Atteindre la situation** : combat Paladin, tiroir de debug fermé.
-- **Faire** : placer la souris sur une tuile (l'infobulle s'affiche), sans la bouger ; ouvrir le tiroir de debug (sans passer sur la barre), onglet « Combat », « Perdre le combat » (ou laisser un ennemi tuer le héros, PV à 1 par l'onglet Combat, puis « Sauter la phase ennemie » ou fin de tour) ; essayer ensuite les boutons de l'écran de mort.
-- **Attendu** : à la mort, la barre disparaît **et l'infobulle disparaît avec elle** ; les boutons de l'écran de mort sont cliquables (rien ne les recouvre). Répéter avec un appui long maintenu au doigt/souris sur une tuile si le matériel le permet.
+- **Faire** : placer la souris sur une tuile, sans la bouger ; ouvrir le tiroir de debug (sans passer sur la barre), onglet « Combat », « Perdre le combat » (ou laisser un ennemi tuer le héros, PV à 1 par l'onglet Combat, puis « Sauter la phase ennemie » ou fin de tour) ; essayer ensuite les boutons de l'écran de mort.
+- **Attendu** : à la mort, la barre disparaît et rien ne reste affiché à sa place ; les boutons de l'écran de mort sont cliquables (rien ne les recouvre). Répéter avec un appui long maintenu au doigt/souris sur une tuile si le matériel le permet.
 - **Ne doit pas changer** : l'écran de mort et son flux habituel (retour à l'accueil, etc.).
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -139,10 +139,10 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 - **Ne doit pas changer** : les cartes de la main et leurs effets ; le passif de la classe.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## T14 — L'infobulle d'une signature
+## T14 — Aucune infobulle sur une signature
 - **Atteindre la situation** : combat Paladin (souris), puis, si possible, un écran tactile pour l'appui long.
 - **Faire** : survoler une tuile puis la quitter ; maintenir un appui long sur une tuile puis relâcher ; survoler une tuile pendant qu'une autre est armée.
-- **Attendu** : l'infobulle montre le nom, la description (ex. « Donne 8 d'Armure et soigne 2 PV. ») et la ligne « Coût : 1 Mana · Recharge : 2 tours », avec la couleur de bordure du type (Attaque / Compétence) ; elle disparaît au départ de la souris et au relâchement de l'appui long. Elle s'affiche aussi sur une tuile en recharge ou inactive.
+- **Attendu** : aucune infobulle ne s'ouvre, dans aucun état de la tuile ; un appui long, une fois relâché, agit comme un toucher (il joue ou arme une tuile disponible) ; les informations se lisent sur la tuile elle-même (nom, type, description, recharge).
 - **Ne doit pas changer** : l'infobulle d'une carte de la main (titre, description, couleur) ; sa disparition au retrait de la souris.
 - **Résultat** : ✅ · ❌ · non testé —
 
