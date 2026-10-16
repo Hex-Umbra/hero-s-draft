@@ -25,7 +25,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 4. **T4** — Une signature jouée compte comme une carte de son type pour les passifs (Flux de Mana, Soif de Sang) et **Marque du Mage ne se déclenche plus sur Projectile Magique**.
 5. **T5** — Les quatre reliques (Amulette du Mage, Plume de scribe, Shuriken, Croc Kunaï) voient une signature jouée.
 6. **T6** — La barre : place, au-dessus du panneau des statuts, tuile qui ne saute pas quand on arme.
-7. **T7** — Le compte de recharge « 2 tours » puis « 1 tour », sur une ligne, et le nom coupé d'un « … » tant que le compte s'affiche.
+7. **T7** — Le compte de recharge « 2 tours » puis « 1 tour », sous la description, sans rien recouvrir.
 8. **T8** — Reprendre une run en cours garde les signatures.
 9. **T9** — Les cinq états de la tuile.
 10. **T10** — Aucune signature dans le deck, la pioche, la défausse, la fusion, la boutique, les récompenses ; Bouclier Sacré et Surtension de Mana ne s'épuisent pas.
@@ -34,7 +34,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 13. **T13** — Les deux autres classes : Berserker et Mage, leurs quatre signatures.
 14. **T14** — L'infobulle au survol et à l'appui long.
 15. **T15** — Recharge remise à zéro au combat suivant.
-16. **T16** — Tuiles de 64 px sous 600 px de large.
+16. **T16** — Boutons de 170 px de large sous 600 px de large.
 17. **T17** — Le draft de départ : 5 cartes du pool commun, sans signature.
 18. **T18** — Le tutoriel : prose, bandeau du draft, Fusion.
 19. **T19** — La carte de classe à la sélection.
@@ -86,15 +86,15 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T6 — La barre : emplacement et stabilité
 - **Atteindre la situation** : combat Paladin, fenêtre large (au moins 600 px).
 - **Faire** : observer la barre ; armer puis désarmer Châtiment plusieurs fois ; ouvrir le panneau des statuts s'il y en a (appliquer un statut au héros par un combat ou une carte).
-- **Attendu** : la barre est à **gauche**, à **mi-hauteur** de l'écran, tuiles de **76 px** en colonne, **au-dessus du panneau des statuts** (le panneau ne capte pas les touchers de la tuile du bas) ; elle fait miroir du bouton de fin de tour. En armant, **aucune tuile ne bouge** : l'invite « Choisissez une cible » pend sous la colonne, sans la déplacer. Une classe n'a pas de barre si le héros est mort.
+- **Attendu** : la barre est à **gauche**, à **mi-hauteur** de l'écran, deux **boutons larges** de **220 px** l'un sous l'autre (médaillon de coût, nom entier, type à sa couleur, description de l'effet), **au-dessus du panneau des statuts** (le panneau ne capte pas les touchers de la tuile du bas) ; elle fait miroir du bouton de fin de tour. En armant, **aucune tuile ne bouge** : l'invite « Choisissez une cible » pend sous la colonne, sans la déplacer. Une classe n'a pas de barre si le héros est mort.
 - **Ne doit pas changer** : le bouton de fin de tour, le panneau des statuts, la main, l'indicateur de mana ; l'infobulle de carte passe toujours au-dessus de la barre.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## T7 — Le compte de recharge et le nom coupé
+## T7 — Le compte de recharge
 - **Atteindre la situation** : combat de n'importe quelle classe, Mana 3 ; jouer une signature.
 - **Faire** : observer la tuile jouée tout de suite, puis après avoir fini le tour (phase ennemie comprise), puis au tour suivant. Répéter en français puis en anglais si la langue se change ; essayer Frappe Téméraire ou Projectile Magique (noms longs).
-- **Attendu** : la tuile jouée affiche **« 2 tours »** (un bloc, sur **une ligne**, en grand dans sa bande entre le médaillon de coût et le nom), puis, au tour suivant, **« 1 tour »** (singulier), puis redevient disponible au tour d'après. Tant que le compte s'affiche, **le nom tient sur une seule ligne, coupé d'un « … »** si trop long ; il n'est pas chevauché par le compte. Sans compte, le nom peut passer sur deux lignes. Fond sombre, bordure grise, nom grisé en recharge. Le compte ne déborde pas de la tuile.
-- **Ne doit pas changer** : le médaillon de coût en haut à gauche, la bande de couleur du type à gauche.
+- **Attendu** : sous la description, la tuile jouée affiche un sablier et **« 2 tours »** sur une ligne, puis, au tour suivant, **« 1 tour »** (singulier), puis la ligne disparaît et la tuile redevient disponible au tour d'après. Le nom reste entier ; rien ne se chevauche, rien ne déborde. En recharge : fond gris, bordure grise, nom, type et description grisés.
+- **Ne doit pas changer** : le médaillon de coût en haut à gauche ; pas de liseré de couleur à gauche.
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## T8 — Reprise de run : les signatures sont gardées
@@ -153,10 +153,10 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 - **Ne doit pas changer** : le mana, l'armure et les statuts repartent comme avant (mana plein, armure 0).
 - **Résultat** : ✅ · ❌ · non testé —
 
-## T16 — Tuiles de 64 px sous 600 px
+## T16 — Boutons de 170 px sous 600 px
 - **Atteindre la situation** : combat dans une fenêtre redimensionnée à moins de 600 px de large (ou un émulateur étroit).
 - **Faire** : observer la barre ; jouer une signature, observer le compte ; armer Châtiment ; passer de la largeur étroite à la largeur large pendant le combat.
-- **Attendu** : tuiles de **64 px** de côté sous 600 px, **76 px** au-delà ; le compte « 2 tours » tient dans la bande (réduit à la taille, il ne déborde pas) ; le nom tient sur une ligne avec « … » ; l'invite ne fait pas sauter les tuiles.
+- **Attendu** : boutons de **170 px** de large sous 600 px, **220 px** au-delà ; nom, type, description (deux lignes au plus) et compte « 2 tours » lisibles, sans chevauchement ni débordement ; l'invite ne fait pas sauter les tuiles.
 - **Ne doit pas changer** : le reste du HUD reste utilisable, sans chevauchement avec la barre.
 - **Résultat** : ✅ · ❌ · non testé —
 

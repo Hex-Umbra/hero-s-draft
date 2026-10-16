@@ -340,15 +340,17 @@ dictionnaire des cartes. Aucun filtre n'est écrit pour cela : elles n'y sont pa
 `lib/ui/widgets/hud/signature_bar.dart` — `SignatureBar`, widget sans état, posé par `GameScreen` à côté de
 `TurnControlPanel`. **À gauche, centrée sur la hauteur de l'écran** (`left: 20`), en miroir du bouton de fin de tour
 (`turn_control_panel.dart:101-104`, `right: 20`) ; au-dessus du panneau des statuts du héros, qui reste à
-`bottom: 80` (`combat_side_panels.dart:71-75`). Une colonne de tuiles carrées, une par signature dans l'ordre de
-`HeroData.skills` : 76 px, 64 en mobile (largeur < 600).
+`bottom: 80` (`combat_side_panels.dart:71-75`). Une colonne de boutons larges, un par signature dans l'ordre de
+`HeroData.skills` : 220 px de large, 170 en mobile (largeur < 600), la hauteur suivant le contenu.
 
-Une tuile porte : le médaillon de coût en haut à gauche, comme une carte ; le nom, sur deux lignes au plus ; un fond
-neutre, le même quel que soit le type, sans liseré ; la couleur de la classe (`ClassIdentity.colorOf`) en bordure.
-**Tranché par le propriétaire le 16/10, à son test** : la spec prévoyait la couleur du type en liseré, et
-l'implémentation avait pris aussi le fond au type ; le rouge d'une Attaque se lisait comme une erreur sur la carte de
-classe, où le type n'est pas écrit. Vaut aussi pour la tuile hors combat (§6) ; seule la tuile détaillée du
-dictionnaire dit le type, par son libellé (P-2).
+Une tuile porte : le médaillon de coût en haut à gauche, comme une carte ; à sa droite, le nom entier, le type
+(Attaque / Compétence) à sa couleur, la description de l'effet sur deux lignes au plus, et, en recharge seulement, un
+sablier et le compte (« 2 tours ») ; un fond neutre, le même quel que soit le type, sans liseré ; la couleur de la
+classe (`ClassIdentity.colorOf`) en bordure. **Tranché par le propriétaire le 16/10, à son test** : la spec
+prévoyait des tuiles carrées de 76 px, le nom seul et la couleur du type en liseré — deux carrés trop petits à l'écran,
+et le rouge d'une Attaque qui, sans type écrit, se lisait comme une erreur.
+Le fond neutre sans liseré vaut aussi pour la tuile hors combat (§6), qui occupe toute la largeur de la carte de
+classe ; hors combat, seule la tuile détaillée du dictionnaire dit le type (P-2).
 
 ### 5.2. Les états
 
@@ -357,7 +359,7 @@ Dans l'ordre de priorité — le premier qui s'applique gagne :
 | État | Quand | Ce que la tuile montre | Toucher |
 |:---|:---|:---|:---|
 | **Inactive** | Pas le tour du joueur (`combatState.turnPhase` ou `_game.currentPhase`), animation de carte en cours (`_game.isCardAnimating`), héros mort, combat fini — la condition de `canEndTurn` (`game_screen.dart:537-540`) | Atténuée ; le compte de recharge reste lisible | Rien |
-| **En recharge** | `signatureTurnsLeft > 0` | Grisée, le nombre de tours en grand au centre et « tour(s) » dessous | Rien |
+| **En recharge** | `signatureTurnsLeft > 0` | Grisée ; sous la description, un sablier et le compte (« 2 tours ») | Rien |
 | **Mana insuffisant** | Mana courant < coût | Couleurs gardées, médaillon de coût en rouge | Son `insufficientMana` et une secousse, comme une carte (`card_interaction_handler.dart:134-139`) ; rien n'est joué |
 | **Armée** | Une `singleEnemy` touchée, en attente de cible | Bordure pulsante ; sous la barre, « Choisissez une cible » | La retoucher désarme |
 | **Disponible** | Sinon | Pleine couleur, lueur de classe | Toute cible autre que `singleEnemy` (`self`, `allEnemies`, `none` — `card_data.dart:84`) : joue aussitôt. `singleEnemy` : **arme** la signature |
