@@ -14,6 +14,7 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
+import 'package:roguelike_card_game/ui/widgets/signature_tile.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
 
@@ -632,6 +633,30 @@ void main() {
           titre,
           lessThan(tester.getTopLeft(find.text('A holy fighter')).dy),
         );
+      },
+    );
+
+    testWidgets(
+      'les tuiles de signature occupent toute la largeur de la carte',
+      (WidgetTester tester) async {
+        // Desktop (rangees sous `IntrinsicHeight`) puis mobile (`ListView`).
+        for (final taille in const [Size(1600, 1200), Size(400, 1200)]) {
+          await _buildAndReady(
+            tester,
+            heroes: const [croise],
+            signatures: const [smite, holyShield],
+            physicalSize: taille,
+            textScaler: const TextScaler.linear(0.3),
+          );
+
+          final double largeurCarte = tester
+              .getSize(find.byType(Divider).first)
+              .width;
+          expect(find.byType(SignatureTile), findsNWidgets(2));
+          for (final tuile in tester.widgetList(find.byType(SignatureTile))) {
+            expect(tester.getSize(find.byWidget(tuile)).width, largeurCarte);
+          }
+        }
       },
     );
 

@@ -677,9 +677,12 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                   ),
                                   for (final signature in signatures) ...[
                                     SizedBox(height: widget.isMobile ? 4 : 6),
-                                    SignatureTile(
-                                      signature: signature,
-                                      classColor: classColor,
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: SignatureTile(
+                                        signature: signature,
+                                        classColor: classColor,
+                                      ),
                                     ),
                                   ],
                                 ],
