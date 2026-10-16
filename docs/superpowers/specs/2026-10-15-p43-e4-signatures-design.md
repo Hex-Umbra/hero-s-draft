@@ -360,7 +360,7 @@ Dans l'ordre de priorité — le premier qui s'applique gagne :
 |:---|:---|:---|:---|
 | **Inactive** | Pas le tour du joueur (`combatState.turnPhase` ou `_game.currentPhase`), animation de carte en cours (`_game.isCardAnimating`), héros mort, combat fini — la condition de `canEndTurn` (`game_screen.dart:537-540`) | Atténuée ; le compte de recharge reste lisible | Rien |
 | **En recharge** | `signatureTurnsLeft > 0` | Grisée ; sous la description, un sablier et le compte (« 2 tours ») | Rien |
-| **Mana insuffisant** | Mana courant < coût | Couleurs gardées, médaillon de coût en rouge | Son `insufficientMana` et une secousse, comme une carte (`card_interaction_handler.dart:134-139`) ; rien n'est joué |
+| **Mana insuffisant** | Mana courant < coût | Grisée comme en recharge, médaillon de coût en rouge, sans compte ni effet de survol (tranché par le propriétaire le 16/10 : la spec gardait les couleurs) | Son `insufficientMana` et une secousse, comme une carte (`card_interaction_handler.dart:134-139`) ; rien n'est joué |
 | **Armée** | Une `singleEnemy` touchée, en attente de cible | Bordure pulsante ; sous la barre, « Choisissez une cible » | La retoucher désarme |
 | **Disponible** | Sinon | Pleine couleur, lueur de classe | Toute cible autre que `singleEnemy` (`self`, `allEnemies`, `none` — `card_data.dart:84`) : joue aussitôt. `singleEnemy` : **arme** la signature |
 
@@ -368,8 +368,8 @@ Ni survol ni appui long : **pas d'infobulle** — tranché par le propriétaire 
 nom, le type, la description et la recharge (§5.1). La spec prévoyait l'infobulle de combat (`CombatTooltipOverlay`)
 avec la ligne « Coût · Recharge » ; cette ligne ne se lit plus en combat qu'en recharge, et hors combat sur les tuiles
 de la carte de classe et du dictionnaire (§6). **Au survol** (bureau), demandé par le propriétaire le 16/10 : une tuile
-qui répond au toucher (disponible, armée, mana insuffisant) grossit à 1,05, ancrée sur son bord gauche, en 100 ms,
-sa lueur de classe s'intensifie et le curseur devient une main ; une tuile inactive ou en recharge ne réagit pas. La
+disponible ou armée grossit à 1,05, ancrée sur son bord gauche, en 100 ms,
+sa lueur de classe s'intensifie et le curseur devient une main ; une tuile inactive, en recharge ou sans le mana ne réagit pas. La
 mise en page ne bouge pas.
 
 ### 5.3. Le ciblage — le contrat entre la barre et Flame

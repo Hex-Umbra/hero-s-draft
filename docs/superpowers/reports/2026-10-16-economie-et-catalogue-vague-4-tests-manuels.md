@@ -107,7 +107,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T9 — Les cinq états de la tuile
 - **Atteindre la situation** : combat Paladin ; pour le mana, onglet Combat > « Mana ».
 - **Faire** : observer une tuile dans chaque état. Disponible : Mana suffisant (tuile avec lueur de la couleur de classe). En recharge : après avoir joué Bouclier Sacré. Mana insuffisant : Mana 0 (onglet Combat), tuile disponible. Armée : toucher Châtiment avec Mana suffisant. Inactive : pendant la phase ennemie ; après la victoire (« Gagner le combat ») sans quitter l'écran. Vérifier aussi la priorité : une signature en recharge **et** sans mana se montre en recharge ; armée puis mana tombé à 0 se montre « mana insuffisant ».
-- **Attendu** : hors recharge, toutes les tuiles ont le même fond neutre, quel que soit le type, sans liseré à gauche ; disponible = lueur de classe ; en recharge = fond gris sombre, bordure grise, compte ; mana insuffisant = médaillon de coût rouge ; armée = bordure de 3 px pulsante vers le blanc ; inactive = opacité réduite (≈ 45 %), sans réaction au toucher.
+- **Attendu** : hors recharge et hors mana insuffisant, toutes les tuiles ont le même fond neutre, quel que soit le type, sans liseré à gauche ; disponible = lueur de classe ; en recharge = fond gris sombre, bordure grise, compte ; mana insuffisant = tuile grisée comme en recharge (fond et bordure gris, textes pâles), médaillon de coût rouge, sans compte ; armée = bordure de 3 px pulsante vers le blanc ; inactive = opacité réduite (≈ 45 %), sans réaction au toucher.
 - **Ne doit pas changer** : toucher une tuile en recharge ou inactive ne joue rien, ne secoue rien, ne fait aucun son.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -128,7 +128,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T12 — Mana insuffisant : secousse et son
 - **Atteindre la situation** : combat Berserker, onglet Combat > Mana à 1 (Frappe Téméraire coûte 2).
 - **Faire** : toucher la tuile Frappe Téméraire.
-- **Attendu** : la tuile **secoue** (≈ 250 ms, quatre allers-retours de 5 px) et le son « mana insuffisant » est joué, comme pour une carte inabordable ; la tuile n'arme pas ; le mana n'est pas dépensé ; l'avertissement de mana (indicateur) réagit comme avec une carte. Avec Mana 0, la tuile à coût 0 (Surtension de Mana, Mage) reste jouable.
+- **Attendu** : avant le toucher, la tuile est **grisée** (fond et bordure gris, textes pâles), son médaillon de coût est rouge, et le survol ne la fait ni grossir ni s'illuminer (curseur flèche). Au toucher, la tuile **secoue** (≈ 250 ms, quatre allers-retours de 5 px) et le son « mana insuffisant » est joué, comme pour une carte inabordable ; la tuile n'arme pas ; le mana n'est pas dépensé ; l'avertissement de mana (indicateur) réagit comme avec une carte. Avec Mana 0, la tuile à coût 0 (Surtension de Mana, Mage) reste jouable.
 - **Ne doit pas changer** : la recharge n'est pas posée ; aucune invite « Choisissez une cible ».
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -142,7 +142,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T14 — Le survol d'une signature, sans infobulle
 - **Atteindre la situation** : combat Paladin (souris), puis, si possible, un écran tactile pour l'appui long.
 - **Faire** : survoler une tuile puis la quitter ; maintenir un appui long sur une tuile puis relâcher ; survoler une tuile pendant qu'une autre est armée.
-- **Attendu** : au survol, une tuile disponible, armée ou en mana insuffisant grossit légèrement (ancrée à gauche, en un dixième de seconde), sa lueur de classe s'intensifie et le curseur devient une main ; elle revient à sa taille en sortant, ou dès que le tour ennemi commence ; une tuile en recharge ou inactive ne réagit pas (curseur flèche) ; l'autre tuile ne bouge pas. Aucune infobulle ne s'ouvre, dans aucun état de la tuile ; un appui long, une fois relâché, agit comme un toucher (il joue ou arme une tuile disponible) ; les informations se lisent sur la tuile elle-même (nom, type, description, recharge).
+- **Attendu** : au survol, une tuile disponible ou armée grossit légèrement (ancrée à gauche, en un dixième de seconde), sa lueur de classe s'intensifie et le curseur devient une main ; elle revient à sa taille en sortant, ou dès que le tour ennemi commence ; une tuile en recharge, sans le mana ou inactive ne réagit pas (curseur flèche) ; l'autre tuile ne bouge pas. Aucune infobulle ne s'ouvre, dans aucun état de la tuile ; un appui long, une fois relâché, agit comme un toucher (il joue ou arme une tuile disponible) ; les informations se lisent sur la tuile elle-même (nom, type, description, recharge).
 - **Ne doit pas changer** : l'infobulle d'une carte de la main (titre, description, couleur) ; sa disparition au retrait de la souris.
 - **Résultat** : ✅ · ❌ · non testé —
 

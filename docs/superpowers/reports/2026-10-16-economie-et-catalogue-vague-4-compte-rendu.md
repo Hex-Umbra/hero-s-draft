@@ -19,13 +19,13 @@
 
 **Risques connus** : la glue de l'écran de combat n'a que la revue de code et ton test ; la mise en page n'est mesurée ni sur Android ni sur iOS ; l'ennemi visé par la dernière carte garde sa bordure ambre pendant qu'une signature est armée (S12) ; le sous-titre du draft dit encore « 5 cartes globales » (§4).
 
-**Trois commandes** : `flutter test` (1700) · `flutter test test/widget/signature_bar_test.dart test/unit/heros_draft_game_targeting_test.dart` (le HUD et le ciblage) · `flutter run -d windows`.
+**Trois commandes** : `flutter test` (1701) · `flutter test test/widget/signature_bar_test.dart test/unit/heros_draft_game_targeting_test.dart` (le HUD et le ciblage) · `flutter run -d windows`.
 
 ## 1. La branche et ses chiffres
 
 | Version | Commits | Tests | `dart analyze` | Code (`lib/`, `test/`, `assets/`) | Superpowers | Claude Code |
 |:---|---:|:---|:---|:---|:---|:---|
-| `0.5.6` | 38 (`848645b..`) | 1625 → 1663 → 1694 → **1700** | `No issues found!` | 120 fichiers, +4132 / −1538 | 7.0.0, `bb92a77` | 2.1.300 (15-16/10), 2.1.301 (16/10, mise à jour seule) |
+| `0.5.6` | 40 (`848645b..`) | 1625 → 1663 → 1694 → **1701** | `No issues found!` | 120 fichiers, +4132 / −1538 | 7.0.0, `bb92a77` | 2.1.300 (15-16/10), 2.1.301 (16/10, mise à jour seule) |
 
 ## 2. Les arbitrages
 
@@ -108,7 +108,8 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | O2 | **Tranché par le propriétaire, 16/10** : les tuiles de signature de la carte de classe occupent toute sa largeur (le dictionnaire ne change pas) ; `f419d7e`, revue approuvée, +1 test | P | — |
 | O3 | **Tranché par le propriétaire, 16/10** : en combat, deux carrés trop petits — la barre devient deux boutons larges (220 px, 170 sous 600), nom entier, type, description sur la tuile, sablier et compte en recharge ; spec §5.1 et §5.2 amendées ; `ec8c2cb`, revue approuvée, 1698 tests | P | — |
 | O4 | **Tranché par le propriétaire, 16/10** : la tuile écrivant ses informations, l'infobulle des signatures disparaît (ni survol ni appui long) ; l'infobulle de combat reste pour les cartes et les ennemis ; la durée de recharge ne se lit plus en combat qu'en recharge ; spec §5.2 amendée ; `efcf984`, revue approuvée, 1698 tests | P | — |
-| O5 | **Demandé par le propriétaire, 16/10** : un effet de survol — forme choisie par l'orchestrateur (A6 déléguée) : une tuile qui répond grossit à 1,05 ancrée à gauche en 100 ms, lueur intensifiée, curseur main ; inactive ou en recharge, rien ; spec §5.2 ; `835814a`, `7f1f3b7` (indentation), revue approuvée, 1700 tests | T | 6 |
+| O5 | **Demandé par le propriétaire, 16/10** : un effet de survol — forme choisie par l'orchestrateur (A6 déléguée) : une tuile disponible ou armée grossit à 1,05 ancrée à gauche en 100 ms, lueur intensifiée, curseur main ; inactive, en recharge ou sans le mana, rien (O6) ; spec §5.2 ; `835814a`, `7f1f3b7` (indentation), revue approuvée, 1700 tests | T | 6 |
+| O6 | **Tranché par le propriétaire, 16/10** : une tuile sans le mana est grisée comme en recharge, médaillon rouge, sans effet de survol ; le toucher garde son et secousse ; spec §5.2 amendée ; `24b5d98`, revue approuvée, 1701 tests | P | — |
 
 ## 3. Les tests manuels
 
@@ -127,7 +128,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 5. Les leçons
 
-1. **Les plans de décisions tiennent leur promesse** : 0,34 milliard de jetons et 130 $ contre 1,31 milliard et 389 $ en vague 3 ; la spec et les plans font 46 % du coût, contre 73 à 76 %. Amendement : rien, garder D1.
+1. **Les plans de décisions tiennent leur promesse** : 0,35 milliard de jetons et 131 $ contre 1,31 milliard et 389 $ en vague 3 ; la spec et les plans font 45 % du coût, contre 73 à 76 %. Amendement : rien, garder D1.
 2. **Un mineur visible du joueur est sous-classé par la revue de tâche** : trois défauts de mise en page (S9 à S11) notés « mineurs » en Tasks 2 et 4 ne sont remontés qu'à la revue d'ensemble, qui les a mesurés. Amendement : à chaque tâche d'interface, l'orchestrateur trie ses mineurs visibles du joueur avant la suivante.
 3. **Deux arrêts pour trois questions P nées à l'écriture**, dont P-2 sur un écran neuf. Amendement : la fiche d'une vague qui crée des écrans pose au propriétaire, avant la vague, le contenu de chacun.
 4. **Une tâche de vérification pure n'a pas besoin d'agent** : la Task 7 (des commandes, aucun fichier) jouée par l'orchestrateur. Amendement : le gabarit de plan la marque « orchestrateur ».
@@ -135,14 +136,14 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 6. Les statistiques de la session
 
-**Mesuré le 16/10/2026 à 14:31**, après les corrections O1 à O5 (comptées en fin de vague) — sessions : 3 (`45afce4c`, arrêtée en 3.3 ; `1f50c59f`, arrêtée en 3.4 ; `f62aaed4`) · arrêts : 2 · durée : du 15/10 à 09:38 au 16/10 à 14:31, dont 11 h 06 de temps actif cumulé · tours de spec : 4 · tours de plan : 6 (3 + 3)
+**Mesuré le 16/10/2026 à 15:16**, après les corrections O1 à O6 (comptées en fin de vague) — sessions : 3 (`45afce4c`, arrêtée en 3.3 ; `1f50c59f`, arrêtée en 3.4 ; `f62aaed4`) · arrêts : 2 · durée : du 15/10 à 09:38 au 16/10 à 15:16, dont 11 h 15 de temps actif cumulé · tours de spec : 4 · tours de plan : 6 (3 + 3)
 Prix lus le 16/10 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1208 $ (BCE, 15/10) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
 
 | | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
 |:---|---:|---:|---:|---:|---:|---:|
-| Temps actif | 1 h 18 | 2 h 13 | 1 h 57 | 46 min | 4 h 52 | **11 h 06** |
-| Agents — Opus / Sonnet | 5 / 0 | 8 / 0 | 9 / 24 | 2 / 11 | 3 / 0 | **27 / 35** |
-| Appels au modèle | 316 | 477 | 473 | 223 | 337 | **1 826** |
-| Jetons traités, dont hors cache | 65,7 M · 2,49 M | 94,4 M · 2,76 M | 54,3 M · 2,82 M | 35,5 M · 1,23 M | 91,8 M · 1,65 M | **341,7 M · 10,95 M** |
-| Sortie (minimum) | 24 k | 96 k | 142 k | 49 k | 327 k | **638 k** |
-| Coût API — $ / € | 25,59 / 22,83 | 34,04 / 30,37 | 21,08 / 18,80 | 11,16 / 9,96 | 37,70 / 33,64 | **129,57 / 115,60** |
+| Temps actif | 1 h 18 | 2 h 13 | 1 h 57 | 49 min | 4 h 57 | **11 h 15** |
+| Agents — Opus / Sonnet | 5 / 0 | 8 / 0 | 9 / 24 | 2 / 13 | 3 / 0 | **27 / 37** |
+| Appels au modèle | 316 | 477 | 473 | 233 | 347 | **1 846** |
+| Jetons traités, dont hors cache | 65,7 M · 2,49 M | 94,4 M · 2,76 M | 54,3 M · 2,82 M | 36,1 M · 1,36 M | 96,3 M · 1,67 M | **346,8 M · 11,11 M** |
+| Sortie (minimum) | 24 k | 96 k | 142 k | 53 k | 337 k | **652 k** |
+| Coût API — $ / € | 25,59 / 22,83 | 34,04 / 30,37 | 21,08 / 18,80 | 11,60 / 10,35 | 38,93 / 34,74 | **131,23 / 117,09** |
