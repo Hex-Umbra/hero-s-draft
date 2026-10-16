@@ -107,7 +107,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T9 — Les cinq états de la tuile
 - **Atteindre la situation** : combat Paladin ; pour le mana, onglet Combat > « Mana ».
 - **Faire** : observer une tuile dans chaque état. Disponible : Mana suffisant (tuile avec lueur de la couleur de classe). En recharge : après avoir joué Bouclier Sacré. Mana insuffisant : Mana 0 (onglet Combat), tuile disponible. Armée : toucher Châtiment avec Mana suffisant. Inactive : pendant la phase ennemie ; après la victoire (« Gagner le combat ») sans quitter l'écran. Vérifier aussi la priorité : une signature en recharge **et** sans mana se montre en recharge ; armée puis mana tombé à 0 se montre « mana insuffisant ».
-- **Attendu** : disponible = lueur de classe ; en recharge = fond gris sombre, bordure grise, compte ; mana insuffisant = médaillon de coût rouge ; armée = bordure de 3 px pulsante vers le blanc ; inactive = opacité réduite (≈ 45 %), sans réaction au toucher.
+- **Attendu** : hors recharge, toutes les tuiles ont le même fond neutre, quel que soit le type, sans liseré à gauche ; disponible = lueur de classe ; en recharge = fond gris sombre, bordure grise, compte ; mana insuffisant = médaillon de coût rouge ; armée = bordure de 3 px pulsante vers le blanc ; inactive = opacité réduite (≈ 45 %), sans réaction au toucher.
 - **Ne doit pas changer** : toucher une tuile en recharge ou inactive ne joue rien, ne secoue rien, ne fait aucun son.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -177,7 +177,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T19 — La carte de classe à la sélection
 - **Atteindre la situation** : nouvelle partie, écran de sélection de classe.
 - **Faire** : parcourir chaque classe.
-- **Attendu** : sur chaque carte, un bloc « **Signatures** » entre la Puissance et la description de la classe, avec pour chacune des deux signatures nom, coût, recharge, description (ex. Paladin : Bouclier Sacré 1 Mana · Recharge 2 tours — « Donne 8 d'Armure et soigne 2 PV. » ; Châtiment — « Inflige 6 dégâts et donne 4 d'Armure. »).
+- **Attendu** : sur chaque carte, un bloc « **Signatures** » entre la Puissance et la description de la classe, avec pour chacune des deux signatures nom, coût, recharge, description (ex. Paladin : Bouclier Sacré 1 Mana · Recharge 2 tours — « Donne 8 d'Armure et soigne 2 PV. » ; Châtiment — « Inflige 6 dégâts et donne 4 d'Armure. »). Les deux tuiles ont le même fond neutre, ni rouge ni bleu, sans liseré à gauche, bordées de la couleur de la classe.
 - **Ne doit pas changer** : le bloc de la Puissance, le passif, la description, le choix de la classe.
 - **Résultat** : ✅ · ❌ · non testé —
 

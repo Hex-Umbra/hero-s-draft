@@ -343,8 +343,12 @@ dictionnaire des cartes. Aucun filtre n'est écrit pour cela : elles n'y sont pa
 `bottom: 80` (`combat_side_panels.dart:71-75`). Une colonne de tuiles carrées, une par signature dans l'ordre de
 `HeroData.skills` : 76 px, 64 en mobile (largeur < 600).
 
-Une tuile porte : le médaillon de coût en haut à gauche, comme une carte ; le nom, sur deux lignes au plus ; la
-couleur du type de carte en liseré ; la couleur de la classe (`ClassIdentity.colorOf`) en bordure.
+Une tuile porte : le médaillon de coût en haut à gauche, comme une carte ; le nom, sur deux lignes au plus ; un fond
+neutre, le même quel que soit le type, sans liseré ; la couleur de la classe (`ClassIdentity.colorOf`) en bordure.
+**Tranché par le propriétaire le 16/10, à son test** : la spec prévoyait la couleur du type en liseré, et
+l'implémentation avait pris aussi le fond au type ; le rouge d'une Attaque se lisait comme une erreur sur la carte de
+classe, où le type n'est pas écrit. Vaut aussi pour la tuile hors combat (§6) ; seule la tuile détaillée du
+dictionnaire dit le type, par son libellé (P-2).
 
 ### 5.2. Les états
 
