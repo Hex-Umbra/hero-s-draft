@@ -5,6 +5,9 @@
 ✅ Accepté — chantier **P-41, lot D, partie 2**, fusionné dans `main` par la **PR #45**
 (2026-09-20, merge `d27edc9`, `70fea1d`..`6c1a8dd`, 5 commits de code).
 
+**Complété le 2026-10-16 par [ADR-109](ADR-109-signatures-hors-du-deck.md)** (P-43, lot E4, livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire) : une neuvième catégorie,
+`signature`, reprend la propriété de classe de la carte — neuf sources, neuf descripteurs.
+
 **Clôt le lot D, et P-41 en entier.** Amende la famille 8 du pipeline de validation
 d'[ADR-089](ADR-089-editeur-de-contenu-seam-disque-et-validation-totale.md) et étend la table
 déclarative d'[ADR-092](ADR-092-formulaire-infere-du-document-et-ressources-liees.md) d'une

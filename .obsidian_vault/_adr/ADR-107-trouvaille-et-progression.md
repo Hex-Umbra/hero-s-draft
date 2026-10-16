@@ -9,8 +9,11 @@ description: Every fight finds a common card drawn from what the class may recei
 ✅ Accepté — 2026-10-04 (P-43, lot **E3** ; brainstorm v3, décisions D1, D2, D11, D23, D24, D25,
 D31, D42, D43, D47, D57 à D60, D62, D63 — Q15 — et D67). **Livré sur la branche
 `feat/v0.5.5-p43-e3-trouvaille` — vague 3 du
-[fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md),
-en attente du test, de la PR, de la fusion et du tag du propriétaire.** Spec `2c1d8f4`, convergée au
+[fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) —,
+fusionné dans `main` le 2026-10-04 par la PR #49** (commit de fusion `0ec09ab`), tagué sur ce
+commit, CI/CD verte — `release.yml` run `37208776369` vert —, release publiée en pré-release le
+même jour ; constaté par la porte d'entrée de la vague 4 (`d0ac431`) et re-vérifié par `gh` le
+2026-10-16. Spec `2c1d8f4`, convergée au
 sixième tour de vérification après trois arrêts de la vague, chacun levé par le propriétaire le
 2026-10-03 ; plans `7a4f0d7` (partie 1, la boucle) et `a7e0635` (partie 2, les sources) ; code
 `3d58c2f`..`83cf7c7` et le correctif de revue `9b0e2e5` (partie 1), `d6924f7`..`7e29709` et le

@@ -2,9 +2,10 @@
 
 > [!IMPORTANT]
 > **Le répertoire fait autorité sur l'appartenance.** Un fichier rangé dans
-> `assets/data/classes/paladin/cards/` *est* une carte du paladin : le chargeur l'injecte
+> `assets/data/classes/paladin/skills/` *est* une signature du paladin : le chargeur l'injecte
 > depuis le chemin. Un JSON qui déclarerait `heroClass` échoue au chargement. Voir
-> [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).
+> [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md), complété par
+> [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) (branche de la vague 4), qui a déplacé les signatures de `cards/` à `skills/`.
 
 ### 17.1. Les deux classes
 
@@ -13,10 +14,11 @@
 | Classe | Rôle |
 |:---|:---|
 | `EntitySource<T>` | Une catégorie : **où** trouver les fichiers (`pattern`), **comment** les construire (`fromJson`), et **ce que leur emplacement dit d'elles** (`inject`) |
-| `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes. Sur la branche de la vague 3, il charge aussi les **documents plats** (§17.7) |
+| `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes. Depuis la vague 3, il charge aussi les **documents plats** (§17.7) |
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des neuf sources du jeu**. Le provider de production et le registre des tests du
+déclaration des neuf sources du jeu** — la neuvième est celle des signatures depuis la branche
+de la vague 4, à la place de celle des cartes de classe : le compte ne bouge pas. Le provider de production et le registre des tests du
 tutoriel passent tous deux par elle : une seconde déclaration serait une seconde vérité.
 
 ### 17.2. Le motif de chemin porte la sélection *et* l'injection
@@ -27,15 +29,15 @@ capturés alimentent `inject`, dans leur ordre d'apparition.
 
 | Motif | Capture | Injecte |
 |:---|:---|:---|
-| `assets/data/cards/*.json` | `[id]` | `id`, `category: global` |
-| `assets/data/classes/*/cards/*.json` | `[classe, id]` | `id`, `heroClass`, `category: characterSpecific` |
+| `assets/data/cards/*.json` | `[id]` | `id` — `category` n'existe plus (branche de la vague 4) |
+| `assets/data/classes/*/skills/*.json` | `[classe, id]` | `id`, `heroClass` → `SignatureData`, dans `registry.signatures` |
 | `assets/data/classes/*/class.json` | `[id]` | `id` |
 | `assets/data/enemies/*/enemy.json` | `[id]` | `id` |
 | `assets/data/relics/*.json` · `events/` · `forge_upgrades/` · `passives/` | `[id]` | `id` |
 
 > [!NOTE]
 > **Le nombre de segments doit correspondre exactement.** C'est ce seul fait qui sépare
-> `classes/*/class.json` de `classes/*/cards/*.json` — les deux commencent pareil. Aucune
+> `classes/*/class.json` de `classes/*/skills/*.json` — les deux commencent pareil. Aucune
 > expression régulière n'est en jeu.
 >
 > ⚠️ **La profondeur ne suffit pas** à écarter les assets de paquets, servis sous
@@ -56,7 +58,10 @@ fichier, le champ, la valeur imposée et la valeur trouvée.
 
 `redundantFields` vaut `const {'id'}` partout en production. `heroClass` et `category` y ont
 été tolérés le temps de la migration ; **cette tolérance a expiré** et les déclarer est
-désormais une erreur de chargement. `id` y reste à titre permanent : le porter dans le
+désormais une erreur de chargement. Sur la branche de la vague 4, le refus est porté par les
+modèles eux-mêmes : `CardData.fromJson` refuse `heroClass` et `category`, que plus rien
+n'injecte ; `SignatureData.fromJson` exige `heroClass` — injecté — et refuse `rarity`,
+`isExhaust` et `category`, nommés ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)). `id` y reste à titre permanent : le porter dans le
 fichier le rend lisible hors contexte et inspectable en masse
 (`jq -s '.' assets/data/relics/*.json`).
 
@@ -91,7 +96,7 @@ faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-syste
 
 ### 17.7. Les documents plats — `loadDocument`
 
-*Branche de la vague 3, en attente du propriétaire —
+*Vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md) (A1, A27).*
 `Future<T?> loadDocument<T>(String path, T Function(Map<String, dynamic>) fromJson)` charge **un
 document de configuration**, pas une catégorie d'entités : ni motif, ni injection, ni id. Il lit par

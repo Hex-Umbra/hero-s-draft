@@ -2,9 +2,11 @@
 
 > [!IMPORTANT]
 > **Une entité, un fichier, et le répertoire porte l'appartenance.** Le nom du fichier **est**
-> l'`id`. Une carte rangée sous `classes/paladin/cards/` *est* une carte du paladin — le
-> chargeur l'injecte depuis le chemin, et un JSON qui déclarerait `heroClass` échoue au
-> chargement. Voir [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md).
+> l'`id`. Une signature rangée sous `classes/paladin/skills/` *est* une signature du paladin —
+> le chargeur l'injecte depuis le chemin, et un JSON qui déclarerait `heroClass` échoue au
+> chargement ; une carte neutre qui déclarerait `heroClass` ou `category` aussi. Voir
+> [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md), complété par
+> [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) (branche de la vague 4).
 
 ### 7.1. Structure de `assets/data/`
 
@@ -14,7 +16,7 @@ assets/data/
 │   xp_curve.json
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
-├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
+├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
 
@@ -23,7 +25,7 @@ s'il est un document de configuration unique** — [ADR-085](../_adr/ADR-085-reg
 `audio.json` est une table de résolution dont les entrées n'ont de sens que les unes par
 rapport aux autres ; dans `patch_notes.json`, l'ordre du tableau **est** la sémantique
 (index 0 = version courante) et six consommateurs hors du jeu en dépendent. **`xp_curve.json`**
-(branche de la vague 3, en attente du propriétaire —
+(vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) porte une seule table,
 `xpPerLevelByAct` — le prix d'un niveau par acte ([`_rules/06-00`](06-00-economie-de-jeu.md)
 §6.5) —, lue par `XpCurveData` (`lib/models/data/xp_curve_data.dart`) : une liste non vide
@@ -53,7 +55,7 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
 déclaration des neuf sources du jeu** ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
-en une fois, en nommant fichier et champ. Sur la branche de la vague 3, elle charge aussi la
+en une fois, en nommant fichier et champ. Depuis la vague 3, elle charge aussi la
 courbe d'XP, un document plat, par `GameDataLoader.loadDocument`, avant la levée ; le registre la
 porte en `xpCurve`, que lit `xpCurveProvider`.
 
@@ -63,8 +65,10 @@ Mécanique complète du chargeur — [`_patterns/17-00`](../_patterns/17-00-char
 
 ```
 PassiveData.classes ─────────────► HeroData.id (liste optionnelle, lue par availablePassivesFor)
-HeroData.skills ─────────────────► CardData.id  (cartes de signature de la classe)
-CardData.heroClass ──────────────► HeroData.id (nullable = global, injecté par le chemin)
+HeroData.skills ─────────────────► SignatureData.id (signatures de la classe, rangées sous elle)
+SignatureData.heroClass ─────────► HeroData.id (exigé, injecté par le chemin)
+RunState.signatures ─────────────► List<SignatureInstance> (relues de la classe, jamais sérialisées)
+CombatState.signaturesReadyOn ───► SignatureData.id → tour de disponibilité (jamais sérialisé)
 PassiveData.trigger ─────────────► RelicTrigger (enum partagé avec RelicData)
 CardInstance.data ───────────────► CardData
 EnemyInstance.data ──────────────► EnemyData
@@ -73,19 +77,23 @@ EntityStats.statuses ────────────► List<StatusEffect>
 CombatState.enemies ─────────────► List<EnemyInstance>
 EventState.activeEvent ──────────► EventData
 EventState.selectedChoice ───────► EventChoice
-EventState.tradedRelic ──────────► RelicData (la relique que vise trade_relic, branche de la vague 3)
-RunState.runeCapBonus ───────────► ForgeUpgradeData.id (bonus de plafond par rune, branche de la vague 3)
+EventState.tradedRelic ──────────► RelicData (la relique que vise trade_relic, vague 3)
+RunState.runeCapBonus ───────────► ForgeUpgradeData.id (bonus de plafond par rune, vague 3)
 InventoryState.relics ───────────► List<RelicData>
 ShopState.cardsForSale ──────────► List<CardInstance>
 GameDataRegistry ────────────────► List<T> pour chaque type de données
 ```
 
-`HeroData.skills` est la liste des `id` des cartes de signature d'une classe, résolue par
-`HeroSkillsLink.getHeroCards()`. **Homonyme sans rapport** avec le système de compétences
-héroïques, supprimé du jeu — [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md).
+`HeroData.skills` est la liste des `id` des signatures d'une classe, dans leur ordre
+d'affichage, résolue par `HeroSkillsLink.getSignatures()` dans `registry.signatures` — une liste
+à part de `registry.cards`, ce qui tient les signatures hors de tout pool de cartes par
+construction (ADR-109). Le lien est fail-fast : un id introuvable lève. **Homonyme sans rapport**
+avec le système de compétences héroïques, supprimé du jeu —
+[ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md).
 
 L'intégrité de ce graphe est gardée par `test/unit/referential_integrity_test.dart` : aucune
-référence pendante, aucun dossier incomplet.
+référence pendante, aucun dossier incomplet, le dossier `skills/` d'une classe en bijection avec
+son champ `skills`, et **aucun id de signature n'est un id de carte**.
 
 ### 7.4. Internationalisation (i18n)
 

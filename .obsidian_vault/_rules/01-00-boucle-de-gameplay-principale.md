@@ -18,7 +18,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
-  Constitution du deck : choix de 5 cartes globales + cartes de classe uniques chargées via compétences
+  Constitution du deck : 5 cartes choisies, rien d'autre ; la classe apporte ses deux signatures, hors du deck (ADR-109)
        │                                                                │
        ▼                                                                ▼
 [Carte Stratégique (MapScreen)] ◄──────────────────────────────────────┘ ◄─── Graphe Acyclique Dirigé (10 étages)
@@ -41,5 +41,5 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
 ```
 
 La carte trouvée après chaque combat, et le prix d'un niveau par acte, sont du lot E3 de P-43 —
-branche de la vague 3, en attente du propriétaire : règles en [`_rules/06-00`](06-00-economie-de-jeu.md)
+vague 3, fusionnée dans `main` le 2026-10-04 : règles en [`_rules/06-00`](06-00-economie-de-jeu.md)
 §6.4 et §6.5, décision en [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md).

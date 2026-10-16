@@ -18,8 +18,7 @@ tagué sur ce commit, CI/CD verte, release publiée — constaté par la porte d
 `drawRunes`, l'affûtage et le Puits), D7 (`boundLevel` borne la fusion, les pré-forgées,
 l'affûtage et le Puits), D8 (le prédicat gagne le rang et « une rune par type », ses lecteurs
 changent) et D10 (l'héritage garde toutes les runes).
-**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
-sur la branche de la vague 3, en attente du propriétaire) sur D7 : `boundLevel` et tous ses lecteurs
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) sur D7 : `boundLevel` et tous ses lecteurs
 reçoivent le bonus de plafond de la run (`capBonus`), et `DeckNotifier.raiseRuneLevel` devient un
 écrivain de niveau de plus.
 **Amende [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)** sur ses

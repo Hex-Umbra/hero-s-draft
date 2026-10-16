@@ -1,8 +1,8 @@
 ### 2.2. Système de Héros
 
-Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `cards/`) :
+Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `skills/`) :
 
-| Héros | HP | Mana | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Cartes de signature (`skills`) |
+| Héros | HP | Mana | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Signatures (`skills`) |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | **Paladin** | 100 | 3 | 0 | **1** | Attaque · Compétence · Altération | `regen_armor` | `holy_shield`, `smite` |
 | **Berserker** | 80 | 3 | **10** | 0 | Attaque | `rage` | `reckless_strike`, `rage_form` |
@@ -17,9 +17,10 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > **Chaque classe oriente sa Puissance** (`HeroData.mightTargets`, obligatoire dans `class.json`) —
 > [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md). Le Paladin est le
 > généraliste ; le Berserker ne frappe qu'en direct ; le Mage frappe par ses Compétences et ses
-> altérations. **Conséquence assumée** : aucune carte de dégâts du jeu n'étant de type Compétence
-> (*Projectile Magique* compris), la Puissance du Mage ne renforce aujourd'hui que l'intensité de
-> ses brûlures, gels, poisons et chocs — jusqu'aux Compétences offensives de P-42.
+> altérations. **Depuis le lot E4 de P-43** (branche de la vague 4, D28), la signature *Projectile
+> Magique* est une Compétence : c'est la seule source de dégâts que la Puissance du Mage renforce
+> en dehors de l'intensité de ses brûlures, gels, poisons et chocs — jusqu'aux Compétences
+> offensives de P-42.
 
 > [!IMPORTANT]
 > **Le Berserker n'a plus jamais d'armure.** Son `class.json` déclare une `statRules` qui convertit
@@ -49,13 +50,49 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > `classes` éligibles, lues par le point d'accès unique `availablePassivesFor()`
 > (`lib/game/systems/passive_availability.dart`), qui trie par `(displayOrder, id)`.
 
-> [!WARNING]
-> Le champ `skills` de `class.json` est la liste des **cartes de classe de départ**, résolue
-> par `HeroSkillsLink.getHeroCards()`. Il n'a **aucun rapport** avec le système de compétences
-> héroïques, supprimé du jeu — [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md).
-> Cette colonne a listé les six compétences mortes jusqu'au 2026-09-05 ; leurs valeurs sont
-> archivées dans `../_archive/2026-09-05-competences-heroiques.md`. Détail des cartes —
-> [`_rules/02-3`](02-3-catalogue-de-cartes.md).
+#### Signatures
+
+> [!IMPORTANT]
+> **Une signature n'est pas une carte** — lot E4 de P-43, branche de la vague 4, en attente du
+> test, de la PR, de la fusion et du tag du propriétaire —
+> [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md). Chaque classe en a deux, listées par le
+> champ `skills` de `class.json` dans leur ordre d'affichage, un fichier chacune sous
+> `classes/<classe>/skills/<id>.json` ; elles ne sont **jamais** piochées, défaussées, épuisées,
+> offertes, copiées, fusionnées ni runées, et n'entrent dans aucun deck. Le deck de départ compte
+> les **5 cartes** choisies au draft, rien d'autre.
+
+| Signature | Classe | Coût | Recharge | Type | Cible |
+|:---|:---|:---:|:---:|:---|:---|
+| `smite` — Châtiment | Paladin | 1 | 2 | Attaque | Un ennemi |
+| `holy_shield` — Bouclier Sacré | Paladin | 1 | 2 | Compétence | Soi |
+| `reckless_strike` — Frappe Téméraire | Berserker | 2 | 2 | Attaque | Un ennemi |
+| `rage_form` — Posture de Rage | Berserker | 1 | 2 | Compétence | Soi |
+| `magic_missile` — Projectile Magique | Mage | 1 | 2 | Compétence (Attaque avant E4, D28) | Un ennemi |
+| `mana_surge` — Surtension de Mana | Mage | 0 | 2 | Compétence | Soi |
+
+Re-lu le 2026-10-16 dans les six fichiers. Les coûts sont ceux des anciennes cartes ; la recharge
+de 2 tours est la réponse du propriétaire (spec E4 §1.2). **L'épuisement a disparu** : *Bouclier
+Sacré* et *Surtension de Mana* se rechargent comme les quatre autres.
+
+- **La recharge** : disponibles dès le premier tour de chaque combat (D41) ; jouée au tour T, une
+  signature de recharge 2 revient au tour T + 2 — « tous les deux tours ». La tuile affiche le
+  nombre de tours joueur restants. La recharge ne survit pas au combat et n'est jamais sauvegardée.
+- **Jouée comme une carte de son type** : coût en Mana, Puissance et critique de la classe,
+  mêmes effets que les cartes. Une signature jouée **déclenche les passifs** (`onCardPlayed`, puis
+  `onAttackPlayed` ou `onSkillPlayed`) **et les reliques** qui écoutent une carte jouée — *Amulette
+  du Mage*, *Plume de scribe*, *Shuriken*, *Croc Kunaï*. Conséquence voulue : *Marque du Mage*
+  (`onAttackPlayed`) ne se déclenche plus sur *Projectile Magique*, devenu Compétence, et *Flux de
+  Mana* compte les deux signatures du Mage (D34 corrige la Marque en vague 7).
+- **Où le joueur les voit** : une barre à gauche du HUD de combat, une tuile par signature, cinq
+  états (inactive, en recharge, Mana insuffisant, armée, disponible) ; une signature à cible
+  unique s'**arme** au toucher, puis se joue sur l'ennemi touché. Aussi : un bloc « Signatures »
+  sur la carte de classe de l'écran de sélection, un onglet « Signatures » au dictionnaire, la
+  prose de l'étape « Votre deck de départ » du tutoriel ([`_rules/08-00`](08-00-systeme-de-tutoriel-autonome.md)).
+- **Le mot `skills`** de `class.json` et le répertoire `skills/` sont les seuls à porter ce mot :
+  ils n'ont **aucun rapport** avec le système de compétences héroïques supprimé par
+  [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md), dont l'interdit
+  de noms tient (ADR-109). Les valeurs de ces compétences mortes sont archivées dans
+  `../_archive/2026-09-05-competences-heroiques.md`.
 
 **Identité visuelle portée par la donnée** — [ADR-090](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md) :
 
@@ -89,7 +126,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 | 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
 | 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
 | 1 | `channeling` | Mage | `endOfTurn` | `channeling` | 1 | Chaque Mana non dépensé devient 1 armure |
-| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | 1, durée 2 | La **première** Attaque du tour rend sa cible Vulnérable 2 tours |
+| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | 1, durée 2 | La **première** Attaque du tour rend sa cible Vulnérable 2 tours — une signature d'Attaque compte, aucune du Mage n'en est une |
 | 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3, plancher 2 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour ; la Maîtrise abaisse le seuil, jamais sous 2 |
 
 > [!NOTE]
@@ -97,8 +134,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 > la sienne et les changer ne demande aucun code. La Maîtrise augmente le paramètre que le bloc
 > `mastery` du passif désigne — `value`, `duration` ou `threshold`.
 
-**Deux seuils passent en donnée au lot E3 de P-43** (D43, D60 — branche de la vague 3, en attente
-du propriétaire, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) :
+**Deux seuils passent en donnée au lot E3 de P-43** (D43, D60 — vague 3, fusionnée dans `main` le 2026-10-04, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) :
 - ***Bénédiction*** lit sa tranche dans `threshold` (5) au lieu d'une constante de sa stratégie ;
   un seuil sous 1 ne fait rien, sans exception en combat. La Maîtrise monte toujours `value`, les
   PV par tranche, sans plancher.

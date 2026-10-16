@@ -7,8 +7,7 @@ Une rune est une amélioration permanente d'une carte, notée `id:niveau` dans
 de camp** (§3.8.5) et **s'échange au Puits d'échange** (§3.8.6) ; la boutique vend des cartes qui en
 portent déjà ([`_rules/03-9`](03-9-boutique.md)). Ont disparu avec E2 : la forge du feu — ses fentes
 tirées, ses relances, ses fentes achetées et sa « session » dans `RunState` —, la Forge de Fusion,
-la capacité de runes d'une carte, et les clés `pools` et `stackable`. **Le lot E3** (branche de la
-vague 3, en attente du propriétaire — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md))
+la capacité de runes d'une carte, et les clés `pools` et `stackable`. **Le lot E3** (vague 3, fusionnée dans `main` le 2026-10-04 — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md))
 ajoute trois sources d'affûtage hors du feu et un plafond que la run peut relever (§3.8.7).
 
 #### 3.8.1. Une rune est un fichier
@@ -18,7 +17,7 @@ ajoute trois sources d'affûtage hors du feu et un plafond que la run peut relev
   ≥ 1)**, champs d'éligibilité, **plafond (`maxLevel`, obligatoire, `null` = sans plafond)** et
   **effet (`deltas`, obligatoire)**. `ForgeUpgradeData.fromJson` refuse une clé obligatoire absente
   ou hors bornes ; le modèle tient le registre `getById(id)`.
-- **`binary`** (branche de la vague 3, A16 ; booléen, absent = faux, toujours écrit par `toJson`) :
+- **`binary`** (vague 3, A16 ; booléen, absent = faux, toujours écrit par `toJson`) :
   la rune n'a qu'un niveau qui compte, son plafond ne monte jamais. Vrai sur *Persistant* et
   *Allégé* ; refusé avec un `maxLevel` autre que 1.
 - **Aucune rune n'a de code à son nom** — ni son effet, ni son éligibilité, ni ses textes :
@@ -56,7 +55,7 @@ les rendus :
   baisse, la rareté ne le change jamais ([`_rules/03-1`](03-1-gestion-du-mana.md)).
 - **Le plafond** : une seule fonction, `ForgeUpgradeData.boundLevel`, borne les quatre endroits qui
   écrivent un niveau — l'héritage de la fusion, les pré-forgées de la boutique, l'affûtage et le
-  Puits — et, sur la branche de la vague 3, `DeckNotifier.raiseRuneLevel`, l'écriture que
+  Puits — et, depuis la vague 3, `DeckNotifier.raiseRuneLevel`, l'écriture que
   partagent le feu et les trois sources sans or. Le plafond lu est **le plafond effectif** :
   `maxLevel` plus le bonus de la run pour cette rune (`capBonus`, §3.8.7).
 - **Une rune de chaque type par carte** (D3) — une rune portée ne se repropose jamais —, et **aucun
@@ -98,7 +97,7 @@ Ce que le prédicat offre, sur les cartes livrées sans rune héritée — matri
 | *Forme Démoniaque*, *Métallisation* | *Allégé* | et *Économe*, *Véloce* |
 | *Concentration*, *Focalisation* | **aucune** | *Véloce* |
 
-Les six cartes de classe, `unique`, ne fusionnent pas et ne reçoivent jamais de rune.
+Les six signatures ne sont pas des cartes : aucun chemin de rune ni de fusion ne les atteint (lot E4 de P-43, branche de la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 
 #### 3.8.4. La fusion donne la rune
 
@@ -126,7 +125,7 @@ Au feu de camp, « AFFÛTER » remplace l'ancienne forge parmi trois options exc
   jusqu'au niveau 10 ; jamais *Économe*, *Véloce*, *Congelant*, *Persistant*, *Allégé*, au plafond
   dès le niveau 1 (`canSharpen`) — sauf, pour les trois premières, sous *Transcendance* (§3.8.7) ;
 - la référence `id:n` devient `id:n+1` à sa place, par `GoldManager.sharpenRune`, qui refuse — sans
-  rien toucher — une rune au plafond ou l'or qui manque. Sur la branche de la vague 3, il vérifie,
+  rien toucher — une rune au plafond ou l'or qui manque. Depuis la vague 3, il vérifie,
   paie, puis délègue l'écriture à `DeckNotifier.raiseRuneLevel` ; `capBonus` lui est **requis**,
   comme à `exchangeRune` — `RunController` passe `RunState.runeCapBonus`.
 
@@ -155,7 +154,7 @@ désormais garanti **tous les trois actes** ([`_rules/02-1`](02-1-generation-pro
 
 #### 3.8.7. L'affûtage hors du feu, et le plafond relevé
 
-*Branche de la vague 3, en attente du propriétaire —
+*Vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md) (D42, A3 à A5, A13 à A18, A21).* Trois
 sources montent une rune **sans or**, toutes par `DeckNotifier.raiseRuneLevel(cardId, runeId,
 {levels, capBonus})`, qui refuse sans rien toucher une carte absente, une rune non portée, hors
@@ -192,6 +191,6 @@ dans les onze runes livrées, *Économe*, *Véloce*, *Congelant* et *Précis*, j
 > [!NOTE]
 > **Les sources de rune en jeu** : la fusion (une rune par fusion), les pré-forgées de la boutique,
 > et les clones qui recopient les runes (boss « cartes », Miroirs). Les niveaux montent par
-> l'héritage et l'affûtage — au feu, et sur la branche de la vague 3 par le boss « XP », la *Meule*
+> l'héritage et l'affûtage — au feu, et depuis la vague 3 par le boss « XP », la *Meule*
 > et le *Rémouleur*. **Les fusions, rares en vague 2, deviennent fréquentes avec la trouvaille de la
 > vague 3** — une carte après chaque combat ([`_rules/06-00`](06-00-economie-de-jeu.md) §6.4).

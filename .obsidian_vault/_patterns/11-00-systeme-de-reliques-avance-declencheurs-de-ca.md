@@ -4,7 +4,7 @@ Le système de reliques a été étendu pour prendre en charge deux nouveaux mé
 
 ### 11.1. Déclencheurs par Type de Carte
 
-Lorsqu'une carte est jouée par le joueur, la propagation des événements de déclenchement s'effectue dans `CombatController.applyPlayerCardPlay` :
+Lorsqu'une carte est jouée par le joueur, la propagation des événements de déclenchement s'effectue dans la suite commune `CombatController._afterCardPlayed`, qu'appellent `applyPlayerCardPlay` et, sur la branche de la vague 4, `playSignature` — **une signature jouée compte comme une carte de son type** ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md), réponse du propriétaire Q-P1) :
 1. Les reliques génériques `onCardPlayed` sont déclenchées en premier.
 2. Le type de carte (`CardType`) est ensuite évalué afin de propager le déclencheur spécifique approprié :
    - `CardType.attack` → Déclenche `RelicTrigger.onAttackPlayed`.
@@ -62,10 +62,9 @@ Les reliques inspirées des deckbuilders classiques accumulent des charges repr�
 Une relique `startOfRun` qui change une **règle de run** du joueur — et non une stat d'`EntityStats`,
 partagé avec les ennemis — passe par `PlayerStatsManager.applyRunRuleModifier`, un accumulateur par
 règle, posé par `applyRelicEffect` et **défait par le `case` symétrique de `removeRelicEffect`** :
-c'est ce qui garde l'Autel, et sur la branche de la vague 3 le *Colporteur* (`RunController.loseRelic`),
+c'est ce qui garde l'Autel, et depuis la vague 3 le *Colporteur* (`RunController.loseRelic`),
 de toute fuite. Quatre règles : `cardsPerTurn` (*Besace de l'Érudit*,
-[ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md)) et, sur la branche
-de la vague 3 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)), `extraCombatCards`
+[ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md)) et, depuis la vague 3 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)), `extraCombatCards`
 (*Sacoche du glaneur*), `eliteCardChanceBonus` (*Registre des primes*) et `extraBossRuneSharpens`
 (*Meule*), sur le modèle exact de la première. Le retrait par le menu de debug reste asymétrique.
 Règles de jeu : [`_rules/03-5`](../_rules/03-5-systeme-de-reliques.md).

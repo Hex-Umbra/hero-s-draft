@@ -26,7 +26,7 @@ Cette fiche décrit le moteur, `lib/services/content_editor/` ; l'écran vit en
 La racine est **passée en paramètre** à tout le moteur : les tests écrivent sur une arborescence
 jetable, comme `bundle` pour `GameDataLoader`.
 
-### 19.2. La table déclarative des 8 catégories
+### 19.2. La table déclarative des 9 catégories
 
 `kEntityDescriptors` (`entity_descriptor.dart`) décrit chaque catégorie en données : motif de
 chemin, clés requises et interdites, bases bilingues, `construct` (le vrai `fromJson`), gabarit,
@@ -34,6 +34,14 @@ fichier de dossier, et six familles de métadonnées. Ajouter une catégorie = a
 pas du code d'interface. La 8ᵉ, **récompense de niveau**, l'a démontré : une entrée a suffi, le
 catalogue, les valeurs connues, le formulaire inféré, l'écrivain et l'aller-retour sur les fichiers
 livrés étant tous pilotés par la table ([ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md)).
+La 9ᵉ, **signature** (branche de la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), reprend la propriété de classe que
+portait la carte : chemin `classes/<classe>/skills/<id>.json`, classe exigée, `requiredKeys`
+`cost`, `cooldown`, `type` (sans `status`, lu sur `SignatureData.playableTypes`) ; `forbiddenKeys`
+`heroClass`, `rarity`, `isExhaust`, `category` ; même vocabulaire que la carte, union des fichiers
+de carte et de signature. La carte est désormais **neutre seulement**, sans chemin sous une classe ;
+neuf sources de chargement, neuf descripteurs. `_construct` passe au `fromJson` le document
+augmenté de `heroClass: draft.heroClass` quand le descripteur porte la propriété de classe — le
+document **écrit** n'a jamais la clé.
 
 | Table | Désigne | Exemple |
 |:---|:---|:---|
@@ -67,7 +75,7 @@ trois clés optionnelles d'une récompense de niveau (`requires`, `fallbackDescr
 > et le descripteur de rune **n'exige aucune clé** (`requiredKeys` vide) depuis que `pools` a
 > disparu ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Le gabarit de rune porte
 > `"maxLevel": 1`, valeur prudente — un plafond oublié ne laisse pas monter une rune sans fin —, et
-> `"minFusionRank": 1` ; il ne porte plus ni `pools` ni `stackable`. Sur la branche de la vague 3,
+> `"minFusionRank": 1` ; il ne porte plus ni `pools` ni `stackable`. Depuis la vague 3,
 > il gagne `"binary": false`, refusé à vrai avec un `maxLevel` autre que 1 par le modèle ; les
 > bornes neuves d'E3 vivent elles aussi au modèle — `mastery.floor` (`PassiveData.fromJson`),
 > `requiresHpBelowPercent` et les valeurs des quatre actions d'événement (`EventChoice.fromJson`,
@@ -96,7 +104,7 @@ complétion préalable, le contrôle bilingue refuserait exactement ce qu'elle f
 7. **Bilingue** — `_fr` et `_en`
 8. **Références** — contre le registre **uni aux `pendingIds`**, sautées si le registre est nul
 9. **Ressources** — `sfx` déclaré dans `audio.json` ou importé ; import copiable (source, extension, identifiant neuf, destination libre) ; image obligatoire, ou optionnelle et déclarée, présente
-10. **Cartes de signature** — bijection `skills` ↔ `cards/` **lue sur le disque**
+10. **Signatures** — bijection `skills` ↔ `skills/` **lue sur le disque** (`_signatures`, branche de la vague 4) ; une carte neutre qui porterait un propriétaire est refusée
 11. **Construction** — le vrai `fromJson` ne lève pas
 
 **`pendingIds` : ce que la même transaction va écrire.** `Map<EntityCategory, Set<String>>`, uni au
@@ -121,18 +129,20 @@ pendants, qui ne couvrent qu'une partie de la catégorie
 - **Un son importé est déclaré dans `audio.json` par insertion textuelle** (`insertSound`,
   `audio_catalog.dart`) : le fichier est aligné à la main. Le résultat décodé doit valoir
   l'original plus l'entrée, sinon l'insertion lève et tout se défait.
-- **Carte de classe = deux écritures** : son fichier, et son `id` ajouté (trié) au `skills` de
-  `class.json`.
-- **Classe = dossier + `cards/` vide** : `referential_integrity_test` lève sur un `cards/` absent.
+- **Signature = deux écritures** : son fichier, et son `id` ajouté (trié) au `skills` de
+  `class.json` (`_registerSignature`, branche de la vague 4).
+- **Classe = dossier + `skills/` vide** : `referential_integrity_test` appelle `listSync()` sur
+  `skills/` sans garde.
 - **Image placeholder copiée si absente et sans import** (`assets/placeholders/images/`) ; l'icône
   d'une classe ne l'est que si le corps porte `iconPath`.
 - **`tool/sync_assets.dart` lancé une fois, en fin de geste** ; son échec est signalé, l'écriture
   est conservée.
 
-`ClassRecipe` (`class_recipe.dart`) transforme « une classe et ses cartes de signature » en une
-liste de brouillons pour un seul `writeAll` ; `faults()` refuse deux cartes de même `id`.
+`ClassRecipe` (`class_recipe.dart`) transforme « une classe et ses signatures »
+(`ClassRecipe.signatures`, des `SignatureInput` sur la branche de la vague 4) en une
+liste de brouillons pour un seul `writeAll` ; `faults()` refuse deux signatures de même `id`.
 Elle écrit **trois** sortes de brouillons, dans cet ordre imposé : la classe, **un passif de
-départ**, puis les cartes. Le passif porte l'identifiant de la classe — dérivé, jamais saisi,
+départ**, puis les signatures. Le passif porte l'identifiant de la classe — dérivé, jamais saisi,
 même doctrine qu'`iconPath` — et `"classes": ["<id>"]`, sans quoi il serait ouvert à toutes les
 classes. Sans lui, une classe créée n'avait aucun passif disponible : choix vide à la sélection,
 et `referential_integrity_test` rouge *après* écriture des fichiers.

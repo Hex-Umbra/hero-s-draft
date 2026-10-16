@@ -37,8 +37,10 @@ Retaper le type ou le mode courant ne change rien : ni l'identifiant ni la saisi
 | Ressource | `asset_field.dart` | Son : « aucun », les sons d'`audio.json`, « Importer… ». Image : aperçu `Image.memory` sur `readBytes` — `Image.file` ferait entrer `dart:io` dans `lib/ui/`, que le build web refuse —, « Importer… », « aucune » pour une image optionnelle |
 | Couleur | `color_field.dart` | Roue `flutter_colorpicker`, sans alpha ; le hex est en lecture seule |
 
-Création et modification partagent ce formulaire. Les pastilles de propriétaire et les cartes de
-signature restent propres à la création.
+Création et modification partagent ce formulaire. Les pastilles de propriétaire et les
+signatures de la recette restent propres à la création ; sur la branche de la vague 4, le
+propriétaire ne sert plus qu'à la signature — une carte n'en a plus
+([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 
 ### 19.5.3. Le formulaire habillé
 
@@ -46,7 +48,7 @@ signature restent propres à la création.
   propriétaire ou `themeColor` ; titre `Créer · Classe` ; chemin visé ; état `EntityFileStatus` —
   `Nouveau fichier`, `Relu du disque`, `Non chargé` (qu'« Écrire » refusera).
 - **Sections** `EditorPanel` : Identité, Textes, Mécanique (bascule Formulaire / JSON brut dans
-  son en-tête), Ressources, Cartes de signature.
+  son en-tête), Ressources, Signatures (« Cartes de signature » avant la branche de la vague 4).
 - **Rangée de propriété** `PropertyRow` : clé JSON réelle en chasse fixe (`editorMono`), point bleu
   si obligatoire ; la clé passe au-dessus du contrôle sous 240 px de contrôle. Textes FR et EN côte
   à côte.
@@ -59,9 +61,10 @@ dernier geste — rouge pour une faute ou un échec, vert pour une écriture, am
 message, et sa ligne du bandeau y ramène : `FieldAnchors` tient une `GlobalKey` par champ, posée par
 le widget qui le rend, et `reveal` fait défiler jusqu'à lui.
 
-**Une carte de signature n'a pas de rangée à elle** : l'écran (`_judge`) re-étiquette ses fautes
-`carte N : …` et les fait viser `skills`, l'ancre du panneau des cartes de signature. Une faute
-d'import de la classe n'y est pas répétée par carte — le brouillon de la classe la rapporte déjà.
+**Une signature de la recette n'a pas de rangée à elle** : l'écran (`_judge`) re-étiquette ses
+fautes `signature N : …` et les fait viser `skills`, l'ancre du panneau des signatures. Une faute
+d'import de la classe n'y est pas répétée par signature — le brouillon de la classe la rapporte
+déjà.
 
 ### 19.5.5. Les jetons et le contrat de choix
 
@@ -85,6 +88,6 @@ alphabétique, pastille de couleur et compteur — et un filtre les réduit (sou
 
 | Emplacement | Couvre |
 |:---|:---|
-| `test/widget/content_editor_screen_test.dart` | Parcours complet, Valider = Écrire, imports, faute de conversion, faute qui ramène à son champ ou vise le panneau des cartes de signature, lisibilité |
+| `test/widget/content_editor_screen_test.dart` | Parcours complet, Valider = Écrire, imports, faute de conversion, faute qui ramène à son champ ou vise le panneau des signatures, lisibilité |
 | `test/widget/content_editor/` (11 fichiers + `contrast.dart`, **vérifié le 2026-09-15**) | Chaque widget ; `choice_surface_test.dart` pose un test d'encre par usager |
 | `test/widget/content_editor/contrast.dart` | `expectReadableChoice` : fond opaque et 4,5:1, par la luminance du framework, jamais par `readableOn` |

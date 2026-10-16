@@ -1,8 +1,7 @@
 ### 3.6. 🎪 Système d'Événements
 
 **7 événements** sous `assets/data/events/`, un fichier par événement, avec 2 ou 3 choix
-narratifs — **re-mesuré le 2026-10-04** (`ls assets/data/events/*.json | wc -l`) sur la branche
-de la vague 3, qui en ajoute deux, le *Colporteur* et le *Rémouleur* (5 sur `main`). Tous entrent
+narratifs — **re-mesuré le 2026-10-16** (`ls assets/data/events/*.json | wc -l`) ; la vague 3 en a ajouté deux, le *Colporteur* et le *Rémouleur* (5 avant elle). Tous entrent
 dans le tirage uniforme de `initializeEvent` : chacun une fois sur sept.
 
 | Événement | Choix | Actions |
@@ -32,7 +31,7 @@ Table **relue fichier par fichier le 2026-10-04** : `gain_strength`, que cette f
 `gain_might` depuis [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), et les
 valeurs de l'Autel Mystérieux et du Marchand Gobelin avaient dérivé de leurs fichiers.
 
-**Les actions et la condition d'E3** (branche de la vague 3, en attente du propriétaire —
+**Les actions et la condition d'E3** (vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A2, A4, A19 à A22), composables comme
 les autres et bornées au chargement par `EventAction.fromJson` :
 

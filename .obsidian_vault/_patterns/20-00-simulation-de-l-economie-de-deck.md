@@ -9,6 +9,12 @@
 > quand une vague change un schéma qu'ils lisent — le prochain brainstorm qui en aurait besoin
 > les réalignera. Ce qui suit décrit le script tel qu'il est ; §20.5 décrit la relance comparée
 > que les vagues 1 à 3 ont pratiquée, et qui n'a plus cours.
+>
+> ⚠️ **Sur la branche de la vague 4, le script ne tourne plus** : il lit les signatures dans
+> `classes/*/cards/` (`_jsonFiles('${dir.path}/cards')`, `d26_economy_sim.dart:866`), que le lot
+> E4 a renommé `classes/*/skills/`, et son lecteur de dossier lève sur un dossier absent. Constaté
+> par lecture, **sans lancer le script** ; accepté par la spec E4 (§2) et ADR-108 D5 — aucune ligne
+> de `tool/simulations/` n'a changé, et il reste `dart analyze` propre.
 
 `tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 4 053 lignes
 (**vérifié le 2026-10-04**, `wc -l`, sur la branche de la vague 3). Il n'est ni un test, ni un
@@ -45,7 +51,7 @@ changement de branche ni écriture sous `assets/data/` tant qu'une passe tourne.
 | `events/` | chaque événement, les types et valeurs de ses actions (`:949-984`) | **Les événements de D23 et de D42(b) sont des fichiers depuis la vague 3** — le *Colporteur*, le *Rémouleur* —, reconnus au type d'action qu'ils portent (`trade_relic`, `sharpen_rune` ; `brainstormEventFiles`, `:710-713`), sortis de la liste et résolus par le script à la place de leur entrée en dur ; leur fichier absent le fait planter |
 | `passives/` | `value`, `duration`, `threshold` et, du bloc `mastery`, `field` et `perPoint` (`:847-858`) | Le `floor` de *Flux* et le `threshold` de *Bénédiction*, en donnée depuis la vague 3, ne sont pas lus : le script joue déjà le plancher 2 (`fluxThreshold`, `:2266`) et la tranche de 5 (`blessingThreshold`, `:2271`) en dur — sortie inchangée |
 | `classes/*/class.json` | `maxHp`, `maxMana`, `critChance`, `mastery`, `mightTargets`, et de `statRules` le seul mode `convert` (`:862-889`) | Le taux de conversion est en dur |
-| `classes/*/cards/` | les signatures : coût, type, cible, effets de chaque fichier | Le dossier renommé ou absent fait planter le script ; seuls leur recharge (`:871`) et le type d'une d'elles sont en dur |
+| `classes/*/cards/` | les signatures : coût, type, cible, effets de chaque fichier | Le dossier renommé ou absent fait planter le script ; seuls leur recharge (`:871`) et le type d'une d'elles sont en dur. **Renommé `classes/*/skills/` par le lot E4** (branche de la vague 4) : le script plante au chargement (encadré ci-dessus) |
 | `xp_curve.json` | `xpPerLevelByAct` (`:986-995`) | **Depuis la vague 3** : refusé comme le jeu le refuse — une liste non vide d'entiers ≥ 1 ; la référence joue cette table (`:3933`) |
 
 **Les listes se tirent par index.** Reliques (`relicPool`, `:2620-2624`), événements
@@ -108,8 +114,9 @@ ce qu'il code en dur (§20.3).
 **La relance se compare à une sortie de référence, pas au rapport.**
 `tool/simulations/d26_reference_output.md` est la sortie complète du script, suivie par git — 788
 lignes (**vérifié le 2026-10-04**, `wc -l`, sur la branche de la vague 3). Produite le 2026-10-01,
-recommitée le 2026-10-02 (`cba147c`) sur le second temps de la vague 2, elle l'est de nouveau sur
-la branche de la vague 3 (`11410f3`, sur la sortie de `d8b2aef`) : la vague 4 se comparera à elle.
+recommitée le 2026-10-02 (`cba147c`) sur le second temps de la vague 2, elle l'est de nouveau par
+la vague 3 (`11410f3`, sur la sortie de `d8b2aef`) ; c'est sa dernière version : depuis ADR-108 D5,
+aucune vague ne s'y compare plus.
 Son attribut `eol=lf` (`.gitattributes`) l'empêche d'être convertie à l'extraction. La comparaison
 se fait **en deux temps**
 ([ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md), D5) :

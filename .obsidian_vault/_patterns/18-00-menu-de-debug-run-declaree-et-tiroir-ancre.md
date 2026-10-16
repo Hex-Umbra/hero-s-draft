@@ -37,7 +37,7 @@ les méthodes **déjà publiques** des contrôleurs (`hydrate`, `gainXp`, `advan
 `cleanDeadEnemies`…). **Aucune méthode n'a été ajoutée à un contrôleur** : `SaveService.load()`
 avait déjà rendu cette surface publique. Chaque méthode sort d'emblée si `_allowed` est faux.
 
-**Ce que le lot E3 y change** (branche de la vague 3, en attente du propriétaire —
+**Ce que le lot E3 y change** (vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : « Gagner un niveau »
 (`DebugActions.gainLevel`) et le libellé « XP (seuil N) » de l'onglet Héros lisent le palier de
 l'acte courant sur `xpCurveProvider`, `xpToNextLevel` ayant disparu — ⚠️ `gainLevel` peut donner
@@ -65,7 +65,7 @@ poignée « DEBUG » au bord gauche ouvre un panneau.
 Contenu des onglets : **Héros** — PV/mana max, Puissance **et ses cibles**, chance, critique,
 niveau, XP, « Gagner un niveau », plus l'**identité de la run en lecture seule** (voir 18.3 bis) ;
 **Run** — or, acte (sans régénérer la carte), niveau, drafts en attente, cartes par
-tour, « Main max » (`RunState.maxHandSize`, branche de la vague 3), « Acte suivant » — la ligne des
+tour, « Main max » (`RunState.maxHandSize`, vague 3), « Acte suivant » — la ligne des
 forges bonus est partie avec `bonusForgeSlots`
 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) ; **Deck** — piocher 1, défausser la main, ajouter/retirer
 une carte ; **Reliques** — ajouter/retirer ; **Combat** — PV/mana/armure du héros, soin et mana

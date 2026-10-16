@@ -12,7 +12,7 @@ Trois options interactives s'offrent au joueur sur l'écran `RestScreen`, **une 
    de la carte, chacune avec ce que le niveau suivant lui ajoute et « Affûter — coût or », inactif au
    plafond (« Niveau maximal ») ou faute d'or. **Annuler ramène à la sélection** ; affûter ferme le
    dialogue et la sélection, et la visite est faite. **Le feu n'est plus la seule source
-   d'affûtage** sur la branche de la vague 3 (en attente du propriétaire —
+   d'affûtage** depuis la vague 3 (fusionnée dans `main` le 2026-10-04 —
    [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : le boss « XP », la *Meule* et le
    *Rémouleur* montent une rune sans or, et la sélection comme le dialogue servent aussi le
    *Rémouleur*, en mode sans or (`isFree`) ; au feu, rien ne change, sinon que le plafond lu est le

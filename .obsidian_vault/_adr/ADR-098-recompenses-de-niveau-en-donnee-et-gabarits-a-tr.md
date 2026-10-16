@@ -10,8 +10,7 @@ Complète [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md) et
 source d'entités suit leur règle sans l'amender. **Étendu par
 [ADR-099](ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)** (lot C, partie 2),
 qui ajoute le champ `requires` au modèle créé ici. **Complété le 2026-10-04 par
-[ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré sur la branche de la vague 3,
-en attente du propriétaire) : neuf récompenses, cinq tirables et quatre mythiques — *Sagesse* passe
+[ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) : neuf récompenses, cinq tirables et quatre mythiques — *Sagesse* passe
 mythique, sans son plateau ; l'effet `raiseRuneCap`, que porte *Transcendance*.
 
 ### Contexte

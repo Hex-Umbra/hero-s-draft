@@ -5,7 +5,7 @@ Le système de runes sépare la logique — fonctions pures de `ForgeRuneRules` 
 E2 de P-43 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md), vague 2, fusionnée dans `main` le
 2026-10-03), **la fusion donne la rune, le feu l'affûte, le Puits l'échange** ; la forge du feu,
 sa session dans `RunState`, la capacité de runes d'une carte, `pools` et `stackable` ont disparu.
-Le lot E3 (branche de la vague 3, en attente du propriétaire —
+Le lot E3 (vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) ajoute l'affûtage sans or et le bonus de
 plafond de la run (§10.5). Règles de jeu : [`_rules/03-8`](../_rules/03-8-systeme-de-forge-forge-de-fusion.md).
 
@@ -13,7 +13,7 @@ plafond de la run (§10.5). Règles de jeu : [`_rules/03-8`](../_rules/03-8-syst
 > **Une règle, une fonction pure.** `lib/game/services/forge_rune_rules.dart` porte le prédicat
 > (`isEligible`), le tirage (`drawRunes`), l'héritage (`consolidate`), l'affûtage (`sharpenCost`,
 > `canSharpen`, `hasSharpenableRune`, `replaceRune`) et le Puits (`wellCost`, `wellLevel`,
-> `wellOptions`) — et, sur la branche de la vague 3, `sharpenablePairs` et `raisableCaps`. Aucune
+> `wellOptions`) — et, depuis la vague 3, `sharpenablePairs` et `raisableCaps`. Aucune
 > ne lit ni n'écrit d'état : les écrans et le tutoriel les appellent sur leurs entrées — le bonus
 > de plafond compris, passé en paramètre (`capBonus`) ; l'état ne change que par `DeckNotifier`
 > (`mergeCards`, `addForgeUpgrade`, `setForgeUpgrades`, et `raiseRuneLevel` sur la branche de la
@@ -26,7 +26,7 @@ plafond de la run (§10.5). Règles de jeu : [`_rules/03-8`](../_rules/03-8-syst
 ### 10.1. Le prédicat et le tirage
 
 1. **`ForgeRuneRules.isEligible(rune, carte, catalogue)`** — le prédicat unique, sur le modèle de
-   `CardData.isOfferableTo`. Il lit les champs du fichier de rune : `eligibleCardTypes`,
+   `CardData.isOfferable`. Il lit les champs du fichier de rune : `eligibleCardTypes`,
    `eligibleEffects` et `excludesEffects` sur les effets **propres** de la carte, `requiresExhaust`,
    `requiresMinCost` sur le **coût courant calculé par l'applicateur sur le catalogue reçu** —
    jamais sur le registre global, le tutoriel jugeant sur le sien (A15) —, `excludesRunes` dans les
@@ -42,14 +42,14 @@ plafond de la run (§10.5). Règles de jeu : [`_rules/03-8`](../_rules/03-8-syst
    [`_patterns/02-5`](02-5-shopcontroller.md)) ; l'étape de fusion du tutoriel, sur son registre.
 3. **La borne `ForgeUpgradeData.boundLevel`** (D72) sert les quatre endroits qui écrivent un
    niveau : `consolidate`, le niveau tiré des pré-forgées (80 · 15 · 5 %), `canSharpen` et
-   `wellLevel` — et `DeckNotifier.raiseRuneLevel` sur la branche de la vague 3, où elle devient
+   `wellLevel` — et `DeckNotifier.raiseRuneLevel` depuis la vague 3, où elle devient
    `boundLevel(requested, {carried = 0, capBonus = 0})` (§10.5). Le prédicat ne la lit plus.
 
 ### 10.2. La fusion de cartes (`DeckNotifier.mergeCards`, `DeckScreen`)
 
 1. **Validation 3→1** : `mergeCards(selectedIds)` exige trois exemplaires existants d'une même
-   carte à une même rareté qui a une suivante (`CardRarity.next`, nul pour `legendary` et
-   `unique`), les remplace par une carte de la rareté suivante et **la rend** — `null` si la fusion
+   carte à une même rareté qui a une suivante (`CardRarity.next`, nul pour `legendary` —
+   `unique` a disparu avec les cartes de classe, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), les remplace par une carte de la rareté suivante et **la rend** — `null` si la fusion
    est refusée.
 2. **L'héritage se calcule dedans, une fois** : `ForgeRuneRules.consolidate` sur les runes des
    trois exemplaires — niveaux de même id additionnés, bornés par `boundLevel` (trois `eco:1` →
@@ -85,8 +85,8 @@ exposés par `RunController.sharpenRune` et `RunController.exchangeRune` : **« 
 rien »** est de la logique métier, que l'écran ne porte pas (A16). Chacun relit la carte dans le
 deck, refuse sans rien toucher, puis dépense par `InventoryController.spendGold` et réécrit la
 référence **à sa place** par `ForgeRuneRules.replaceRune` et `DeckNotifier.setForgeUpgrades` —
-l'affûtage, sur la branche de la vague 3, par `DeckNotifier.raiseRuneLevel`, que `canSharpen` vient
-de garantir. Les deux prennent **`capBonus` requis** sur la branche de la vague 3 : leur seul
+l'affûtage, depuis la vague 3, par `DeckNotifier.raiseRuneLevel`, que `canSharpen` vient
+de garantir. Les deux prennent **`capBonus` requis** depuis la vague 3 : leur seul
 appelant est `RunController`, qui passe `RunState.runeCapBonus`.
 
 | Opération | Refuse si | Coût | Écrit |
@@ -103,7 +103,7 @@ appelant est `RunController`, qui passe `RunState.runeCapBonus`.
   le nœud (`canPop` et `onPopInvokedWithResult` de `ScreenScaffold`).
 - **Les écrans** : `RestScreen` → `RestCardSelectionScreen` en mode affûtage (refus d'une carte
   sans rune affûtable, `hasSharpenableRune`) → `SharpenRuneDialog` — la sélection et le dialogue
-  gagnent, sur la branche de la vague 3, un **mode sans or** (`isFree`), que pousse le *Rémouleur* :
+  gagnent, depuis la vague 3, un **mode sans or** (`isFree`), que pousse le *Rémouleur* :
   le bouton dit « Choisir », sans coût, sans condition d'or ni solde affiché, et **n'écrit rien** —
   il rend l'id de la rune, la sélection rend la paire, et l'événement la monte ; le Puits réécrit
   `ForgeFusionScreen` en place — une colonne défilante : les cartes, la rune à donner, les
@@ -142,7 +142,7 @@ traduiront en paires, sans lire une rune.
 
 ### 10.5. L'affûtage sans or et le bonus de plafond
 
-*Branche de la vague 3, en attente du propriétaire —
+*Vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A13 à A18.*
 
 1. **Une écriture, quatre appelants** : `DeckNotifier.raiseRuneLevel(cardId, runeId, {levels = 1,
