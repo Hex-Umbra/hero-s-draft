@@ -6,6 +6,10 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
+import '../../models/data/game_data_registry.dart';
+import '../../models/data/hero_skills_link.dart';
+import '../widgets/class_identity.dart';
+import '../widgets/signature_tile.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/screen_scaffold.dart';
 
@@ -45,12 +49,13 @@ class CardDictionaryScreen extends ConsumerWidget {
         tabs: [
           Tab(text: locale == 'fr' ? 'Cartes' : 'Cards'),
           Tab(text: l10n.relics),
+          Tab(text: l10n.signatures),
         ],
       ),
     );
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: ScreenScaffold(
         backgroundType: ScreenBackgroundType.dark,
         appBar: appBar,
@@ -60,6 +65,7 @@ class CardDictionaryScreen extends ConsumerWidget {
               children: [
                 _buildCardsTab(context, gameData.cards, locale),
                 _buildRelicsTab(context, gameData.relics, locale),
+                _buildSignaturesTab(gameData, locale),
               ],
             );
           },
@@ -199,6 +205,43 @@ class CardDictionaryScreen extends ConsumerWidget {
             ],
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSignaturesTab(GameDataRegistry gameData, String locale) {
+    final heroes = gameData.heroes
+        .where((hero) => hero.skills.isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final hero in heroes) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                hero.getName(locale),
+                style: TextStyle(
+                  color: ClassIdentity.colorOf(hero),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            for (final signature in hero.getSignatures(gameData)) ...[
+              SignatureTile(
+                signature: signature,
+                classColor: ClassIdentity.colorOf(hero),
+                detailed: true,
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ],
       ),
     );
   }

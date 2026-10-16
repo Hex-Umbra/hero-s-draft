@@ -8,8 +8,10 @@ import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import 'card_dictionary_screen.dart';
 import 'starter_deck_draft_screen.dart';
+import '../../models/data/hero_skills_link.dart';
 import '../../models/data/model_extensions.dart';
 import '../widgets/class_identity.dart';
+import '../widgets/signature_tile.dart';
 import '../widgets/class_passive_list.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
@@ -375,6 +377,7 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
     final playerClass = widget.playerClass;
     final gameData = widget.ref.watch(gameDataLoaderProvider).requireValue;
     final passives = availablePassivesFor(playerClass, gameData);
+    final signatures = playerClass.getSignatures(gameData);
     // Le rang peut sortir de la liste si la donnée change sous l'écran : on
     // retombe sur le premier plutôt que de lever.
     final index = _passiveIndex < passives.length ? _passiveIndex : 0;
@@ -661,6 +664,25 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
                                     ],
                                   ),
                                 ),
+                                if (signatures.isNotEmpty) ...[
+                                  SizedBox(height: widget.isMobile ? 6 : 8),
+                                  Text(
+                                    l10n.signatures,
+                                    style: TextStyle(
+                                      fontSize: widget.isMobile ? 11 : 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: classColor,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                  for (final signature in signatures) ...[
+                                    SizedBox(height: widget.isMobile ? 4 : 6),
+                                    SignatureTile(
+                                      signature: signature,
+                                      classColor: classColor,
+                                    ),
+                                  ],
+                                ],
                                 Divider(
                                   color: Colors.white12,
                                   height: widget.isMobile ? 16 : 25,

@@ -1693,6 +1693,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
   String signatureTurnsLeft(int count);
+
+  /// Title of the class signatures block and of the dictionary tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Signatures'**
+  String get signatures;
 }
 
 class _AppLocalizationsDelegate

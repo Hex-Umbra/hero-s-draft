@@ -7,7 +7,9 @@ import 'package:roguelike_card_game/ui/screens/class_selection_screen.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -342,6 +344,7 @@ const _stressWrapTest = PassiveData(
 GameDataRegistry _registryOf(
   List<HeroData> heroes, {
   List<PassiveData> passives = const [],
+  List<SignatureData> signatures = const [],
 }) => GameDataRegistry(
   enemies: const [],
   heroes: heroes,
@@ -350,6 +353,7 @@ GameDataRegistry _registryOf(
   passives: passives,
   relics: const [],
   forgeUpgrades: const [],
+  signatures: signatures,
 );
 
 Future<ProviderContainer> _buildAndReady(
@@ -357,6 +361,7 @@ Future<ProviderContainer> _buildAndReady(
   Locale locale = const Locale('en', ''),
   List<HeroData> heroes = _heroes,
   List<PassiveData> passives = const [],
+  List<SignatureData> signatures = const [],
   Size physicalSize = const Size(1600, 1200),
   // Axe non modelise par le reste de ce fichier avant le defaut 4 du
   // 2026-09-19 : aucun test ici ne fixait de `textScaler`, alors que c'est
@@ -378,7 +383,7 @@ Future<ProviderContainer> _buildAndReady(
   final container = ProviderContainer(
     overrides: [
       gameDataLoaderProvider.overrideWith(
-        (ref) => _registryOf(heroes, passives: passives),
+        (ref) => _registryOf(heroes, passives: passives, signatures: signatures),
       ),
     ],
   );
@@ -561,6 +566,83 @@ void main() {
       expect(pushedScreen.playerClass.id, 'berserker');
     },
   );
+
+  group('les signatures de la classe', () {
+    const croise = HeroData(
+      id: 'crusader',
+      nameEn: 'Crusader',
+      nameFr: 'Le Croise',
+      descriptionEn: 'A holy fighter',
+      descriptionFr: 'Un combattant sacre',
+      classCard: 'hero_paladin.png',
+      maxHp: 90,
+      maxMana: 3,
+      skills: ['smite', 'holy_shield'],
+    );
+    const smite = SignatureData(
+      id: 'smite',
+      heroClass: 'crusader',
+      nameEn: 'Smite',
+      nameFr: 'Chatiment',
+      descriptionEn: 'Strike a foe.',
+      descriptionFr: 'Frappe un ennemi.',
+      cost: 1,
+      cooldown: 2,
+      type: CardType.attack,
+      effects: [],
+    );
+    const holyShield = SignatureData(
+      id: 'holy_shield',
+      heroClass: 'crusader',
+      nameEn: 'Holy Shield',
+      nameFr: 'Bouclier sacre',
+      descriptionEn: 'Gain armor.',
+      descriptionFr: 'Gagne de l armure.',
+      cost: 1,
+      cooldown: 2,
+      type: CardType.skill,
+      target: CardTarget.self,
+      effects: [],
+    );
+
+    testWidgets(
+      'la carte de classe montre ses signatures entre la Puissance et la '
+      'description',
+      (WidgetTester tester) async {
+        await _buildAndReady(
+          tester,
+          heroes: const [croise],
+          signatures: const [smite, holyShield],
+        );
+
+        expect(find.text('Signatures'), findsOneWidget);
+        expect(find.text('Smite'), findsOneWidget);
+        expect(find.text('Holy Shield'), findsOneWidget);
+        expect(
+          find.text('Cost: 1 Mana · Cooldown: 2 turns'),
+          findsNWidgets(2),
+        );
+
+        final titre = tester.getTopLeft(find.text('Signatures')).dy;
+        expect(
+          titre,
+          lessThan(tester.getTopLeft(find.byType(Divider).first).dy),
+        );
+        expect(
+          titre,
+          lessThan(tester.getTopLeft(find.text('A holy fighter')).dy),
+        );
+      },
+    );
+
+    testWidgets('une classe sans signature n a pas de bloc Signatures', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(tester);
+
+      expect(find.text('Signatures'), findsNothing);
+    });
+  });
 
   group('class identity is read from the data', () {
     testWidgets('a class unknown to the code shows its own themeColor', (

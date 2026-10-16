@@ -273,5 +273,6 @@
 
   "signatureCostAndCooldown": "Coût : {cost} Mana · Recharge : {cooldown, plural, =1{1 tour} other{{cooldown} tours}}",
   "signatureChooseTarget": "Choisissez une cible",
-  "signatureTurnsLeft": "{count, plural, =1{1 tour} other{{count} tours}}"
+  "signatureTurnsLeft": "{count, plural, =1{1 tour} other{{count} tours}}",
+  "signatures": "Signatures"
 }
