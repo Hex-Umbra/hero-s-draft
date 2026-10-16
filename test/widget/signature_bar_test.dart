@@ -9,6 +9,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/ui/widgets/hud/signature_bar.dart';
+import 'package:roguelike_card_game/ui/widgets/ui_card/ui_card_helpers.dart';
 
 const _smite = SignatureInstance(
   SignatureData(
@@ -119,6 +120,26 @@ void main() {
       of(interactive: false, turnsLeft: 2, affordable: false, armed: true),
       SignatureTileState.inactive,
     );
+  });
+
+  testWidgets('le fond est neutre quel que soit le type, sans liseré', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(_Calls(), armedId: 'smite'));
+    await tester.pump();
+
+    for (final id in ['smite', 'holy_shield']) {
+      final tile = tester.widget<Container>(_tile(id));
+      expect((tile.decoration! as BoxDecoration).color, neutralCardBackground);
+
+      final stripes = tester
+          .widgetList<ColoredBox>(
+            find.descendant(of: _tile(id), matching: find.byType(ColoredBox)),
+          )
+          .map((b) => b.color)
+          .where((c) => c == Colors.redAccent || c == Colors.blueAccent);
+      expect(stripes, isEmpty);
+    }
   });
 
   testWidgets('une tuile en recharge affiche son compte, en anglais et en '

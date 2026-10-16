@@ -5,10 +5,12 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/ui/widgets/signature_tile.dart';
+import 'package:roguelike_card_game/ui/widgets/ui_card/ui_card_helpers.dart';
 
 const _classColor = Color(0xFF2196F3);
 
-SignatureData _smite({int cooldown = 2}) => SignatureData(
+SignatureData _smite({int cooldown = 2, CardType type = CardType.attack}) =>
+    SignatureData(
       id: 'smite',
       heroClass: 'paladin',
       nameEn: 'Smite',
@@ -17,7 +19,7 @@ SignatureData _smite({int cooldown = 2}) => SignatureData(
       descriptionFr: "Inflige 6 dégâts et donne 4 d'Armure.",
       cost: 1,
       cooldown: cooldown,
-      type: CardType.attack,
+      type: type,
       effects: const [],
     );
 
@@ -79,6 +81,29 @@ void main() {
 
     await _pump(tester, _smite());
     expect(find.text('Attack'), findsNothing);
+  });
+
+  testWidgets('le fond est neutre quel que soit le type, sans liseré', (
+    tester,
+  ) async {
+    for (final type in [CardType.attack, CardType.skill]) {
+      for (final detailed in [false, true]) {
+        await _pump(tester, _smite(type: type), detailed: detailed);
+
+        final tile = tester
+            .widgetList<Container>(find.byType(Container))
+            .map((c) => c.decoration)
+            .whereType<BoxDecoration>()
+            .firstWhere((d) => d.border?.top.color == _classColor);
+        expect(tile.color, neutralCardBackground);
+
+        final stripes = tester
+            .widgetList<ColoredBox>(find.byType(ColoredBox))
+            .map((b) => b.color)
+            .where((c) => c == Colors.redAccent || c == Colors.blueAccent);
+        expect(stripes, isEmpty);
+      }
+    }
   });
 
   testWidgets('la bordure porte la couleur de la classe', (tester) async {

@@ -25,63 +25,46 @@ class SignatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = l10n.localeName;
-    final typeColor = getCardTypeColor(signature.type);
     final nameSize = detailed ? 18.0 : 13.0;
     final bodySize = detailed ? 14.0 : 11.0;
 
     return Container(
       decoration: BoxDecoration(
-        color: getCardBackgroundColor(signature.type),
+        color: neutralCardBackground,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: classColor, width: 2),
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Padding(
+        padding: EdgeInsets.all(detailed ? 12 : 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 4, color: typeColor),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(detailed ? 12 : 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      signature.getName(locale),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: nameSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (detailed)
-                      Text(
-                        getCardTypeLabel(context, signature.type),
-                        style: TextStyle(color: typeColor, fontSize: bodySize),
-                      ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.signatureCostAndCooldown(
-                        signature.cost,
-                        signature.cooldown,
-                      ),
-                      style: TextStyle(
-                        color: Colors.amberAccent,
-                        fontSize: bodySize,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      signature.getDescription(locale),
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: bodySize,
-                      ),
-                    ),
-                  ],
+            Text(
+              signature.getName(locale),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: nameSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (detailed)
+              Text(
+                getCardTypeLabel(context, signature.type),
+                style: TextStyle(
+                  color: getCardTypeColor(signature.type),
+                  fontSize: bodySize,
                 ),
               ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.signatureCostAndCooldown(signature.cost, signature.cooldown),
+              style: TextStyle(color: Colors.amberAccent, fontSize: bodySize),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              signature.getDescription(locale),
+              style: TextStyle(color: Colors.white70, fontSize: bodySize),
             ),
           ],
         ),

@@ -287,7 +287,7 @@ class _SignatureTileState extends State<_SignatureTile>
                   decoration: BoxDecoration(
                     color: recharging
                         ? const Color(0xFF2A2A2A)
-                        : getCardBackgroundColor(data.type),
+                        : neutralCardBackground,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: borderColor,
@@ -304,19 +304,7 @@ class _SignatureTileState extends State<_SignatureTile>
                   child: Stack(
                     children: [
                       Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 3,
-                        child: ColoredBox(
-                          color: getCardTypeColor(
-                            data.type,
-                            isGrayedOut: recharging,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 6,
+                        left: 4,
                         top: 4,
                         child: _CostMedallion(
                           cost: widget.signature.cost,
@@ -329,7 +317,7 @@ class _SignatureTileState extends State<_SignatureTile>
                         // du nom ramené à une ligne : d'un bloc, aussi grand
                         // qu'il tient.
                         Positioned(
-                          left: 6,
+                          left: 4,
                           right: 4,
                           top: 26,
                           bottom: 4,
@@ -362,7 +350,7 @@ class _SignatureTileState extends State<_SignatureTile>
                         )
                       else
                         Positioned(
-                          left: 6,
+                          left: 4,
                           right: 4,
                           bottom: 4,
                           child: _name(locale, maxLines: 2),

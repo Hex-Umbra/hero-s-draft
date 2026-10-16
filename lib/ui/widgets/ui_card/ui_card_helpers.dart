@@ -165,6 +165,10 @@ Color getCardTypeColor(CardType? type, {bool isGrayedOut = false}) {
   }
 }
 
+/// Le gris-bleu des cartes de type inconnu, et le fond de toute tuile de
+/// signature : une signature n'est pas une carte, son type ne la teinte pas.
+const Color neutralCardBackground = Color(0xFF2A2A3D);
+
 Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
   if (isGrayedOut) return const Color(0xFF1A1A1A);
   switch (type) {
@@ -177,7 +181,7 @@ Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
     case CardType.status:
       return const Color(0xFF2D2D2D);
     default:
-      return const Color(0xFF2A2A3D);
+      return neutralCardBackground;
   }
 }
 
