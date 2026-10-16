@@ -11,7 +11,7 @@
 4. **T8, la reprise d'une run** : les signatures reviennent de la classe, la sauvegarde ne les porte pas.
 
 **Arbitrages que le joueur verra** — tes réponses P : recharge de 2 tours aux coûts d'aujourd'hui, l'épuisement disparaît, Q-P1 (a), Q-P2 (a), P-2 (b). **À juger au test**, délégués :
-- **A6, la forme de la barre** : à gauche, à mi-hauteur, tuiles de 76 px (64 sous 600 px), cinq états, toucher la signature puis l'ennemi ; les détails que la spec ne fixait pas (couleurs, opacité, polices) choisis à l'implémentation (S7) — **sauf le fond, que tu as tranché le 16/10 : neutre et sans liseré pour toutes les tuiles (O1)** ;
+- **A6, la forme de la barre** : à gauche, à mi-hauteur, tuiles de 76 px (64 sous 600 px), cinq états, toucher la signature puis l'ennemi ; les détails que la spec ne fixait pas (couleurs, opacité, polices) choisis à l'implémentation (S7) — **sauf le fond, que tu as tranché le 16/10 : neutre et sans liseré pour toutes les tuiles (O1), et sur toute la largeur de la carte de classe (O2)** ;
 - **PM19, le compte de recharge** : « 2 tours » d'un bloc, centré — **dans une bande à lui, réduit à la taille, et le nom coupé d'un « … » sur une ligne tant que le compte s'affiche** (S9, revue d'ensemble) ; le nom entier reste dans l'infobulle ;
 - l'invite « Choisissez une cible » pend sous la colonne des tuiles (S10).
 
@@ -19,13 +19,13 @@
 
 **Risques connus** : la glue de l'écran de combat n'a que la revue de code et ton test ; la mise en page n'est mesurée ni sur Android ni sur iOS ; l'ennemi visé par la dernière carte garde sa bordure ambre pendant qu'une signature est armée (S12) ; le sous-titre du draft dit encore « 5 cartes globales » (§4).
 
-**Trois commandes** : `flutter test` (1696) · `flutter test test/widget/signature_bar_test.dart test/unit/heros_draft_game_targeting_test.dart` (le HUD et le ciblage) · `flutter run -d windows`.
+**Trois commandes** : `flutter test` (1697) · `flutter test test/widget/signature_bar_test.dart test/unit/heros_draft_game_targeting_test.dart` (le HUD et le ciblage) · `flutter run -d windows`.
 
 ## 1. La branche et ses chiffres
 
 | Version | Commits | Tests | `dart analyze` | Code (`lib/`, `test/`, `assets/`) | Superpowers | Claude Code |
 |:---|---:|:---|:---|:---|:---|:---|
-| `0.5.6` | 29 (`848645b..`) | 1625 → 1663 → 1694 → **1696** | `No issues found!` | 120 fichiers, +4132 / −1538 | 7.0.0, `bb92a77` | 2.1.300 (15-16/10), 2.1.301 (16/10, mise à jour seule) |
+| `0.5.6` | 31 (`848645b..`) | 1625 → 1663 → 1694 → **1697** | `No issues found!` | 120 fichiers, +4132 / −1538 | 7.0.0, `bb92a77` | 2.1.300 (15-16/10), 2.1.301 (16/10, mise à jour seule) |
 
 ## 2. Les arbitrages
 
@@ -105,6 +105,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | S11 | La barre était peinte sous le panneau des statuts, qui prenait les touchers de la tuile basse : posée au-dessus, sous l'infobulle | T | Une ligne déplacée |
 | S12 | L'ennemi visé par la dernière carte garde sa bordure ambre pendant qu'une signature est armée, la même que l'illumination du survol : à la file (vocabulaire visuel existant ; les dégâts vont à l'ennemi touché) | T | Sur écran tactile, le joueur peut croire que la signature frappera l'ennemi ambre |
 | O1 | **Tranché par le propriétaire, 16/10, à son test** : une tuile sur deux rouge à la sélection de classe — toutes les tuiles de signature (carte de classe, dictionnaire, barre) prennent un fond neutre, le même quel que soit le type, et perdent le liseré du type ; spec §5.1 amendée ; `7ed2422`, revue approuvée, +2 tests | P | — |
+| O2 | **Tranché par le propriétaire, 16/10** : les tuiles de signature de la carte de classe occupent toute sa largeur (le dictionnaire ne change pas) ; `f419d7e`, revue approuvée, +1 test | P | — |
 
 ## 3. Les tests manuels
 
@@ -123,7 +124,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 5. Les leçons
 
-1. **Les plans de décisions tiennent leur promesse** : 0,32 milliard de jetons et 121 $ contre 1,31 milliard et 389 $ en vague 3 ; la spec et les plans font 49 % du coût, contre 73 à 76 %. Amendement : rien, garder D1.
+1. **Les plans de décisions tiennent leur promesse** : 0,32 milliard de jetons et 123 $ contre 1,31 milliard et 389 $ en vague 3 ; la spec et les plans font 49 % du coût, contre 73 à 76 %. Amendement : rien, garder D1.
 2. **Un mineur visible du joueur est sous-classé par la revue de tâche** : trois défauts de mise en page (S9 à S11) notés « mineurs » en Tasks 2 et 4 ne sont remontés qu'à la revue d'ensemble, qui les a mesurés. Amendement : à chaque tâche d'interface, l'orchestrateur trie ses mineurs visibles du joueur avant la suivante.
 3. **Deux arrêts pour trois questions P nées à l'écriture**, dont P-2 sur un écran neuf. Amendement : la fiche d'une vague qui crée des écrans pose au propriétaire, avant la vague, le contenu de chacun.
 4. **Une tâche de vérification pure n'a pas besoin d'agent** : la Task 7 (des commandes, aucun fichier) jouée par l'orchestrateur. Amendement : le gabarit de plan la marque « orchestrateur ».
@@ -131,14 +132,14 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 6. Les statistiques de la session
 
-**Mesuré le 16/10/2026 à 13:07**, après la correction O1 (comptée en fin de vague) — sessions : 3 (`45afce4c`, arrêtée en 3.3 ; `1f50c59f`, arrêtée en 3.4 ; `f62aaed4`) · arrêts : 2 · durée : du 15/10 à 09:38 au 16/10 à 13:07, dont 9 h 51 de temps actif cumulé · tours de spec : 4 · tours de plan : 6 (3 + 3)
+**Mesuré le 16/10/2026 à 13:19**, après les corrections O1 et O2 (comptées en fin de vague) — sessions : 3 (`45afce4c`, arrêtée en 3.3 ; `1f50c59f`, arrêtée en 3.4 ; `f62aaed4`) · arrêts : 2 · durée : du 15/10 à 09:38 au 16/10 à 13:19, dont 10 h 09 de temps actif cumulé · tours de spec : 4 · tours de plan : 6 (3 + 3)
 Prix lus le 16/10 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1208 $ (BCE, 15/10) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
 
 | | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
 |:---|---:|---:|---:|---:|---:|---:|
-| Temps actif | 1 h 18 | 2 h 13 | 1 h 57 | 23 min | 4 h 00 | **9 h 51** |
-| Agents — Opus / Sonnet | 5 / 0 | 8 / 0 | 9 / 24 | 1 / 4 | 3 / 0 | **26 / 28** |
-| Appels au modèle | 316 | 477 | 473 | 142 | 287 | **1 695** |
-| Jetons traités, dont hors cache | 65,7 M · 2,49 M | 94,4 M · 2,76 M | 54,3 M · 2,82 M | 29,8 M · 0,69 M | 72,2 M · 1,56 M | **316,4 M · 10,33 M** |
-| Sortie (minimum) | 24 k | 96 k | 142 k | 24 k | 280 k | **566 k** |
-| Coût API — $ / € | 25,59 / 22,83 | 34,04 / 30,37 | 21,08 / 18,80 | 8,56 / 7,64 | 32,13 / 28,67 | **121,39 / 108,30** |
+| Temps actif | 1 h 18 | 2 h 13 | 1 h 57 | 28 min | 4 h 13 | **10 h 09** |
+| Agents — Opus / Sonnet | 5 / 0 | 8 / 0 | 9 / 24 | 1 / 6 | 3 / 0 | **26 / 30** |
+| Appels au modèle | 316 | 477 | 473 | 164 | 297 | **1 727** |
+| Jetons traités, dont hors cache | 65,7 M · 2,49 M | 94,4 M · 2,76 M | 54,3 M · 2,82 M | 31,2 M · 0,81 M | 75,7 M · 1,57 M | **321,3 M · 10,46 M** |
+| Sortie (minimum) | 24 k | 96 k | 142 k | 33 k | 288 k | **583 k** |
+| Coût API — $ / € | 25,59 / 22,83 | 34,04 / 30,37 | 21,08 / 18,80 | 9,07 / 8,09 | 33,12 / 29,55 | **122,89 / 109,64** |

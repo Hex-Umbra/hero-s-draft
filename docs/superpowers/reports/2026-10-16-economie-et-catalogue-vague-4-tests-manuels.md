@@ -177,7 +177,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 ## T19 — La carte de classe à la sélection
 - **Atteindre la situation** : nouvelle partie, écran de sélection de classe.
 - **Faire** : parcourir chaque classe.
-- **Attendu** : sur chaque carte, un bloc « **Signatures** » entre la Puissance et la description de la classe, avec pour chacune des deux signatures nom, coût, recharge, description (ex. Paladin : Bouclier Sacré 1 Mana · Recharge 2 tours — « Donne 8 d'Armure et soigne 2 PV. » ; Châtiment — « Inflige 6 dégâts et donne 4 d'Armure. »). Les deux tuiles ont le même fond neutre, ni rouge ni bleu, sans liseré à gauche, bordées de la couleur de la classe.
+- **Attendu** : sur chaque carte, un bloc « **Signatures** » entre la Puissance et la description de la classe, avec pour chacune des deux signatures nom, coût, recharge, description (ex. Paladin : Bouclier Sacré 1 Mana · Recharge 2 tours — « Donne 8 d'Armure et soigne 2 PV. » ; Châtiment — « Inflige 6 dégâts et donne 4 d'Armure. »). Les deux tuiles occupent toute la largeur de la carte, avec le même fond neutre, ni rouge ni bleu, sans liseré à gauche, bordées de la couleur de la classe.
 - **Ne doit pas changer** : le bloc de la Puissance, le passif, la description, le choix de la classe.
 - **Résultat** : ✅ · ❌ · non testé —
 
