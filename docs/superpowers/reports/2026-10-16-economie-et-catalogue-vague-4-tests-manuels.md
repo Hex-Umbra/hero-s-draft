@@ -32,7 +32,7 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 11. **T11** — Bouclier Sacré (sans cible) : armure, soin, mana −1, animation, son.
 12. **T12** — Mana insuffisant : secousse et son.
 13. **T13** — Les deux autres classes : Berserker et Mage, leurs quatre signatures.
-14. **T14** — Aucune infobulle sur une tuile, ni au survol ni à l'appui long.
+14. **T14** — Le survol : une tuile qui répond grossit et s'illumine ; aucune infobulle.
 15. **T15** — Recharge remise à zéro au combat suivant.
 16. **T16** — Boutons de 170 px de large sous 600 px de large.
 17. **T17** — Le draft de départ : 5 cartes du pool commun, sans signature.
@@ -139,10 +139,10 @@ Le menu de debug (tiroir au bord gauche, build debug seulement, run lancée par 
 - **Ne doit pas changer** : les cartes de la main et leurs effets ; le passif de la classe.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## T14 — Aucune infobulle sur une signature
+## T14 — Le survol d'une signature, sans infobulle
 - **Atteindre la situation** : combat Paladin (souris), puis, si possible, un écran tactile pour l'appui long.
 - **Faire** : survoler une tuile puis la quitter ; maintenir un appui long sur une tuile puis relâcher ; survoler une tuile pendant qu'une autre est armée.
-- **Attendu** : aucune infobulle ne s'ouvre, dans aucun état de la tuile ; un appui long, une fois relâché, agit comme un toucher (il joue ou arme une tuile disponible) ; les informations se lisent sur la tuile elle-même (nom, type, description, recharge).
+- **Attendu** : au survol, une tuile disponible, armée ou en mana insuffisant grossit légèrement (ancrée à gauche, en un dixième de seconde), sa lueur de classe s'intensifie et le curseur devient une main ; elle revient à sa taille en sortant, ou dès que le tour ennemi commence ; une tuile en recharge ou inactive ne réagit pas (curseur flèche) ; l'autre tuile ne bouge pas. Aucune infobulle ne s'ouvre, dans aucun état de la tuile ; un appui long, une fois relâché, agit comme un toucher (il joue ou arme une tuile disponible) ; les informations se lisent sur la tuile elle-même (nom, type, description, recharge).
 - **Ne doit pas changer** : l'infobulle d'une carte de la main (titre, description, couleur) ; sa disparition au retrait de la souris.
 - **Résultat** : ✅ · ❌ · non testé —
 

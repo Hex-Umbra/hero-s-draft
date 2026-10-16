@@ -367,7 +367,10 @@ Dans l'ordre de priorité — le premier qui s'applique gagne :
 Ni survol ni appui long : **pas d'infobulle** — tranché par le propriétaire le 16/10, la tuile écrivant elle-même le
 nom, le type, la description et la recharge (§5.1). La spec prévoyait l'infobulle de combat (`CombatTooltipOverlay`)
 avec la ligne « Coût · Recharge » ; cette ligne ne se lit plus en combat qu'en recharge, et hors combat sur les tuiles
-de la carte de classe et du dictionnaire (§6).
+de la carte de classe et du dictionnaire (§6). **Au survol** (bureau), demandé par le propriétaire le 16/10 : une tuile
+qui répond au toucher (disponible, armée, mana insuffisant) grossit à 1,05, ancrée sur son bord gauche, en 100 ms,
+sa lueur de classe s'intensifie et le curseur devient une main ; une tuile inactive ou en recharge ne réagit pas. La
+mise en page ne bouge pas.
 
 ### 5.3. Le ciblage — le contrat entre la barre et Flame
 
