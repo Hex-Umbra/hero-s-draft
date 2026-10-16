@@ -1681,6 +1681,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}'**
   String signatureCostAndCooldown(int cost, int cooldown);
+
+  /// Prompt under the signature bar while a signature waits for an enemy target.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a target'**
+  String get signatureChooseTarget;
+
+  /// Turns left before a signature can be played again.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
+  String signatureTurnsLeft(int count);
 }
 
 class _AppLocalizationsDelegate

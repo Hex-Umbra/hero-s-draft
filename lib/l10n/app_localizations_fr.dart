@@ -1016,4 +1016,18 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return 'Coût : $cost Mana · Recharge : $_temp0';
   }
+
+  @override
+  String get signatureChooseTarget => 'Choisissez une cible';
+
+  @override
+  String signatureTurnsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tours',
+      one: '1 tour',
+    );
+    return '$_temp0';
+  }
 }

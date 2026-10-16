@@ -733,5 +733,16 @@
       "cost": { "type": "int" },
       "cooldown": { "type": "int" }
     }
+  },
+  "signatureChooseTarget": "Choose a target",
+  "@signatureChooseTarget": {
+    "description": "Prompt under the signature bar while a signature waits for an enemy target."
+  },
+  "signatureTurnsLeft": "{count, plural, =1{1 turn} other{{count} turns}}",
+  "@signatureTurnsLeft": {
+    "description": "Turns left before a signature can be played again.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }
