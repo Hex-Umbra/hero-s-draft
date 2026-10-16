@@ -4,11 +4,28 @@
 
 ## 0. Pour le propriétaire
 
-*À écrire en fin de vague (§3.8).*
+**À tester d'abord**, par risque — [tests manuels](2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md), 21 tests :
+1. **T1 à T3, le jeu à l'écran de combat** : aucun test automatique ne monte cet écran. Châtiment armé frappe l'ennemi touché, jamais celui qu'une carte avait sélectionné ; chaque geste désarme ; le héros qui meurt souris sur une tuile laisse les boutons de l'écran de mort cliquables (S8).
+2. **T4, T5, passifs et reliques** : une signature compte comme une carte de son type ; *Marque du Mage* ne se déclenche plus sur Projectile Magique.
+3. **T6, T7, T16, la barre** : au-dessus du panneau des statuts même avec beaucoup de statuts (S11), immobile quand on arme (S10), le compte sur une ligne (S9). Mesuré sous Windows (Segoe UI) par la revue d'ensemble, pas sur mobile.
+4. **T8, la reprise d'une run** : les signatures reviennent de la classe, la sauvegarde ne les porte pas.
+
+**Arbitrages que le joueur verra** — tes réponses P : recharge de 2 tours aux coûts d'aujourd'hui, l'épuisement disparaît, Q-P1 (a), Q-P2 (a), P-2 (b). **À juger au test**, délégués :
+- **A6, la forme de la barre** : à gauche, à mi-hauteur, tuiles de 76 px (64 sous 600 px), cinq états, toucher la signature puis l'ennemi ; les détails que la spec ne fixait pas (couleurs, opacité, polices) choisis à l'implémentation (S7) ;
+- **PM19, le compte de recharge** : « 2 tours » d'un bloc, centré — **dans une bande à lui, réduit à la taille, et le nom coupé d'un « … » sur une ligne tant que le compte s'affiche** (S9, revue d'ensemble) ; le nom entier reste dans l'infobulle ;
+- l'invite « Choisissez une cible » pend sous la colonne des tuiles (S10).
+
+**Faits sans toi** (autonomie `continu`) : une fois, à la spec (15/10) — après trois tours, les deux corrections recommandées du troisième appliquées telles quelles, puis un tour différentiel « prête » : (1) cinq tests qui lisaient une carte `unique` exclue des copies ou de la trouvaille, retirés ou réécrits ; (2) sept tests dont l'assertion portait sur `unique` — trois retirés avec leur objet, trois réécrits sur une commune, un disparu avec `category` ([vérifications de la spec](../specs/2026-10-15-p43-e4-signatures-design-verifications.md), tours 3 et 4). Les plans ont convergé en trois tours : rien d'autre.
+
+**Risques connus** : la glue de l'écran de combat n'a que la revue de code et ton test ; la mise en page n'est mesurée ni sur Android ni sur iOS ; l'ennemi visé par la dernière carte garde sa bordure ambre pendant qu'une signature est armée (S12) ; le sous-titre du draft dit encore « 5 cartes globales » (§4).
+
+**Trois commandes** : `flutter test` (1694) · `flutter test test/widget/signature_bar_test.dart test/unit/heros_draft_game_targeting_test.dart` (le HUD et le ciblage) · `flutter run -d windows`.
 
 ## 1. La branche et ses chiffres
 
-*À écrire en fin de vague.*
+| Version | Commits | Tests | `dart analyze` | Code (`lib/`, `test/`, `assets/`) | Superpowers | Claude Code |
+|:---|---:|:---|:---|:---|:---|:---|
+| `0.5.6` | 27 (`848645b..`) | 1625 → 1663 → **1694** | `No issues found!` | 120 fichiers, +4132 / −1538 | 7.0.0, `bb92a77` | 2.1.300 (15-16/10), 2.1.301 (16/10, mise à jour seule) |
 
 ## 2. Les arbitrages
 
@@ -90,16 +107,37 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-*Fichier voisin, écrit en fin de vague.*
+[`2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md`](2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md) — 21 tests, à remplir par le propriétaire.
 
 ## 4. Trouvé périmé, et pour la file
 
-*À écrire en fin de vague.*
+- **La simulation ne tourne plus** : elle lit `classes/*/cards/`, que la vague a renommé (`tool/simulations/d26_economy_sim.dart:866`) ; `dart analyze` propre — accepté par ADR-108 D5.
+- **Texte joueur périmé** : le sous-titre du draft de départ dit « 5 cartes globales » (`draftDeckSubtitle`, `lib/l10n/app_fr.arb:224`) ; la spec §6 a figé les textes de l'écran cette vague.
+- **L'écran de combat sans banc de test** : la glue des signatures (S8 compris) n'a aucun garde automatique.
+- **La bordure ambre** partagée par la sélection et l'illumination du survol (S12).
+- **`SignatureData`** : un type JSON faux rend une `TypeError`, pas une `FormatException` ; une cible inconnue retombe sans bruit sur `singleEnemy` (comme `CardData`).
+- **L'éditeur de contenu** nomme encore « carte » ses champs de signature (`cardCount`, `cardIds`, `cardNameFr`…).
+- **Tests faibles** : `onLongPressCancel` et l'illumination au survol sans test ; le test de bordure de `SignatureTile` lit n'importe quel `Container` ; des fixtures du dictionnaire aux noms trompeurs ; un aller-retour de `card_offer_filter_test` compare deux listes vides.
+- **Polissage** : couleurs en dur dans `SignatureTile`, aucune `Semantics` sur les tuiles, des imports hors d'ordre, des lignes de plus de 80 colonnes.
 
 ## 5. Les leçons
 
-*À écrire en fin de vague.*
+1. **Les plans de décisions tiennent leur promesse** : 0,31 milliard de jetons et 119 $ contre 1,31 milliard et 389 $ en vague 3 ; la spec et les plans font 51 % du coût, contre 73 à 76 %. Amendement : rien, garder D1.
+2. **Un mineur visible du joueur est sous-classé par la revue de tâche** : trois défauts de mise en page (S9 à S11) notés « mineurs » en Tasks 2 et 4 ne sont remontés qu'à la revue d'ensemble, qui les a mesurés. Amendement : à chaque tâche d'interface, l'orchestrateur trie ses mineurs visibles du joueur avant la suivante.
+3. **Deux arrêts pour trois questions P nées à l'écriture**, dont P-2 sur un écran neuf. Amendement : la fiche d'une vague qui crée des écrans pose au propriétaire, avant la vague, le contenu de chacun.
+4. **Une tâche de vérification pure n'a pas besoin d'agent** : la Task 7 (des commandes, aucun fichier) jouée par l'orchestrateur. Amendement : le gabarit de plan la marque « orchestrateur ».
+5. **La glue de l'écran de combat reste sans filet automatique**. Amendement : rien pour la méthode ; un banc de test de l'écran de combat est à porter à la file de la ROADMAP.
 
 ## 6. Les statistiques de la session
 
-*Mesurées juste avant le commit de §3.8.*
+**Mesuré le 16/10/2026 à 11:15**, avant le commit de §3.8 — sessions : 3 (`45afce4c`, arrêtée en 3.3 ; `1f50c59f`, arrêtée en 3.4 ; `f62aaed4`) · arrêts : 2 · durée : du 15/10 à 09:38 au 16/10 à 11:15, dont 9 h 36 de temps actif cumulé · tours de spec : 4 · tours de plan : 6 (3 + 3)
+Prix lus le 16/10 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1208 $ (BCE, 15/10) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
+
+| | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|
+| Temps actif | 1 h 18 | 2 h 13 | 1 h 57 | 20 min | 3 h 47 | **9 h 36** |
+| Agents — Opus / Sonnet | 5 / 0 | 8 / 0 | 9 / 24 | 1 / 2 | 3 / 0 | **26 / 26** |
+| Appels au modèle | 316 | 477 | 473 | 129 | 266 | **1 661** |
+| Jetons traités, dont hors cache | 65,7 M · 2,49 M | 94,4 M · 2,76 M | 54,3 M · 2,82 M | 28,9 M · 0,49 M | 65,3 M · 1,52 M | **308,6 M · 10,09 M** |
+| Sortie (minimum) | 24 k | 96 k | 142 k | 19 k | 260 k | **540 k** |
+| Coût API — $ / € | 25,59 / 22,83 | 34,04 / 30,37 | 21,08 / 18,80 | 7,93 / 7,07 | 30,09 / 26,85 | **118,72 / 105,93** |
