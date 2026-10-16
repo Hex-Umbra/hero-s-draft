@@ -172,10 +172,15 @@ class _SignatureTileState extends State<_SignatureTile>
 
   bool _hovered = false;
 
-  // Seules les tuiles qui répondent au toucher réagissent au survol.
+  // Seules les tuiles jouables réagissent au survol : une tuile grisée, même
+  // sensible au toucher, ne doit pas avoir l'air jouable.
   static bool _responds(SignatureTileState state) =>
       state == SignatureTileState.available ||
-      state == SignatureTileState.armed ||
+      state == SignatureTileState.armed;
+
+  // Recharge ou mana insuffisant : la tuile porte le même aspect grisé.
+  static bool _grayedOut(SignatureTileState state) =>
+      state == SignatureTileState.recharging ||
       state == SignatureTileState.unaffordable;
 
   @override
@@ -230,7 +235,7 @@ class _SignatureTileState extends State<_SignatureTile>
   /// de haut en bas, à droite du médaillon.
   Widget _details(BuildContext context, AppLocalizations l10n) {
     final data = widget.signature.data;
-    final recharging = widget.state == SignatureTileState.recharging;
+    final grayedOut = _grayedOut(widget.state);
     final compact = widget.compact;
     final locale = l10n.localeName;
 
@@ -243,7 +248,7 @@ class _SignatureTileState extends State<_SignatureTile>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: recharging ? Colors.white38 : Colors.white,
+            color: grayedOut ? Colors.white38 : Colors.white,
             fontSize: compact ? 11 : 13,
             fontWeight: FontWeight.bold,
           ),
@@ -254,7 +259,7 @@ class _SignatureTileState extends State<_SignatureTile>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: getCardTypeColor(data.type, isGrayedOut: recharging),
+            color: getCardTypeColor(data.type, isGrayedOut: grayedOut),
             fontSize: compact ? 9 : 10,
             fontWeight: FontWeight.bold,
           ),
@@ -265,7 +270,7 @@ class _SignatureTileState extends State<_SignatureTile>
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: recharging ? Colors.white38 : Colors.white70,
+            color: grayedOut ? Colors.white38 : Colors.white70,
             fontSize: compact ? 10 : 11,
           ),
         ),
@@ -304,7 +309,7 @@ class _SignatureTileState extends State<_SignatureTile>
     final l10n = AppLocalizations.of(context)!;
     final data = widget.signature.data;
     final state = widget.state;
-    final recharging = state == SignatureTileState.recharging;
+    final grayedOut = _grayedOut(state);
     final armed = state == SignatureTileState.armed;
 
     final responsive = _responds(state);
@@ -347,7 +352,8 @@ class _SignatureTileState extends State<_SignatureTile>
               ),
               builder: (context, content) {
                 final borderColor = switch (state) {
-                  SignatureTileState.recharging => Colors.grey,
+                  SignatureTileState.recharging ||
+                  SignatureTileState.unaffordable => Colors.grey,
                   SignatureTileState.armed => Color.lerp(
                     widget.classColor,
                     Colors.white,
@@ -368,7 +374,7 @@ class _SignatureTileState extends State<_SignatureTile>
                     padding: EdgeInsets.all(armed ? 5 : 6),
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      color: recharging
+                      color: grayedOut
                           ? const Color(0xFF2A2A2A)
                           : neutralCardBackground,
                       borderRadius: BorderRadius.circular(8),

@@ -253,6 +253,42 @@ void main() {
     expect(inSmite('2 turns'), findsOneWidget);
   });
 
+  testWidgets('une tuile sans le mana est grisee, son medaillon reste rouge', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(_Calls(), currentMana: 0));
+
+    final decoration =
+        tester.widget<Container>(_tile('smite')).decoration! as BoxDecoration;
+    expect(decoration.color, const Color(0xFF2A2A2A));
+    expect((decoration.border! as Border).top.color, Colors.grey);
+
+    final medallion = tester.widget<Container>(
+      find.descendant(
+        of: _tile('smite'),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).shape == BoxShape.circle,
+        ),
+      ),
+    );
+    expect(
+      (medallion.decoration! as BoxDecoration).color,
+      Colors.redAccent,
+    );
+
+    expect(
+      find.descendant(
+        of: _tile('smite'),
+        matching: find.byIcon(Icons.hourglass_bottom),
+      ),
+      findsNothing,
+    );
+    expect(find.textContaining('turn'), findsNothing);
+  });
+
   testWidgets('armer une signature ne deplace pas les tuiles', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(_harness(calls));
@@ -423,9 +459,8 @@ void main() {
     expect(cursor(), SystemMouseCursors.basic);
   });
 
-  testWidgets('une tuile en recharge ou inactive ne reagit pas au survol', (
-    tester,
-  ) async {
+  testWidgets('une tuile en recharge, grisee ou inactive ne reagit pas au '
+      'survol', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(_harness(calls, combatState: _smiteRecharging()));
     final rest = paintedSize(tester, 'smite');
@@ -442,6 +477,22 @@ void main() {
 
     expect(paintedSize(tester, 'smite'), rest);
     expect(cursor(), SystemMouseCursors.basic);
+
+    // Sans le mana : grisee, ni agrandie, ni lueur, ni main.
+    await tester.pumpWidget(_harness(calls, currentMana: 0));
+    final restGrey = paintedSize(tester, 'smite');
+    await mouse.moveTo(const Offset(700, 10));
+    await mouse.moveTo(tester.getCenter(_tile('smite')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(paintedSize(tester, 'smite'), restGrey);
+    expect(cursor(), SystemMouseCursors.basic);
+    expect(
+      (tester.widget<Container>(_tile('smite')).decoration! as BoxDecoration)
+          .boxShadow,
+      isEmpty,
+    );
 
     await tester.pumpWidget(_harness(calls, interactive: false));
     final restInactive = paintedSize(tester, 'holy_shield');
