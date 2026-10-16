@@ -170,6 +170,14 @@ class _SignatureTileState extends State<_SignatureTile>
     duration: const Duration(milliseconds: 700),
   );
 
+  bool _hovered = false;
+
+  // Seules les tuiles qui répondent au toucher réagissent au survol.
+  static bool _responds(SignatureTileState state) =>
+      state == SignatureTileState.available ||
+      state == SignatureTileState.armed ||
+      state == SignatureTileState.unaffordable;
+
   @override
   void initState() {
     super.initState();
@@ -299,16 +307,31 @@ class _SignatureTileState extends State<_SignatureTile>
     final recharging = state == SignatureTileState.recharging;
     final armed = state == SignatureTileState.armed;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _onTap,
-      child: AnimatedBuilder(
-        animation: _shake,
-        builder: (context, child) => Transform.translate(
-          offset: Offset(_shakeOffset.evaluate(_shake), 0),
-          child: child,
-        ),
-        child: AnimatedBuilder(
+    final responsive = _responds(state);
+    final lifted = responsive && _hovered;
+
+    // La zone de survol est hors de l'agrandissement : elle garde la taille au
+    // repos, pour que la tuile ne clignote pas sur son propre bord.
+    return MouseRegion(
+      cursor: responsive ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _onTap,
+        // Effet de peinture seulement : la mise en page ne bouge pas.
+        child: AnimatedScale(
+          scale: lifted ? 1.05 : 1,
+          alignment: Alignment.centerLeft,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+          child: AnimatedBuilder(
+            animation: _shake,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(_shakeOffset.evaluate(_shake), 0),
+              child: child,
+            ),
+            child: AnimatedBuilder(
           animation: _pulse,
           // Le contenu ne dépend pas de l'impulsion : construit une fois.
           child: Row(
@@ -359,12 +382,21 @@ class _SignatureTileState extends State<_SignatureTile>
                         color: widget.classColor.withAlpha(150),
                         blurRadius: 8,
                       ),
+                    // Le survol intensifie la lueur de classe.
+                    if (lifted)
+                      BoxShadow(
+                        color: widget.classColor.withAlpha(230),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                      ),
                   ],
                 ),
                 child: content,
               ),
             );
           },
+            ),
+          ),
         ),
       ),
     );

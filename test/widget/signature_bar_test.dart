@@ -379,6 +379,81 @@ void main() {
     expect(tester.getSize(_tile('holy_shield')).width, 170);
   });
 
+  Size paintedSize(WidgetTester tester, String id) =>
+      Size(
+        tester.getBottomRight(_tile(id)).dx - tester.getTopLeft(_tile(id)).dx,
+        tester.getBottomRight(_tile(id)).dy - tester.getTopLeft(_tile(id)).dy,
+      );
+
+  MouseCursor cursor() =>
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1)!;
+
+  testWidgets('survoler une tuile qui repond l agrandit et met le curseur '
+      'main, la quitter la ramene', (tester) async {
+    await tester.pumpWidget(_harness(_Calls()));
+    final rest = paintedSize(tester, 'smite');
+    final restLeft = tester.getTopLeft(_tile('smite'));
+    final otherRest = tester.getRect(_tile('holy_shield'));
+
+    final mouse = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+      pointer: 1,
+    );
+    await mouse.addPointer(location: const Offset(700, 10));
+    addTearDown(mouse.removePointer);
+    await tester.pump();
+    expect(cursor(), SystemMouseCursors.basic);
+
+    await mouse.moveTo(tester.getCenter(_tile('smite')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    final hovered = paintedSize(tester, 'smite');
+    expect(hovered.width, closeTo(rest.width * 1.05, 0.01));
+    expect(hovered.height, closeTo(rest.height * 1.05, 0.01));
+    expect(tester.getTopLeft(_tile('smite')).dx, closeTo(restLeft.dx, 0.01));
+    expect(cursor(), SystemMouseCursors.click);
+    expect(tester.getRect(_tile('holy_shield')), otherRest);
+
+    await mouse.moveTo(const Offset(700, 10));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(paintedSize(tester, 'smite'), rest);
+    expect(cursor(), SystemMouseCursors.basic);
+  });
+
+  testWidgets('une tuile en recharge ou inactive ne reagit pas au survol', (
+    tester,
+  ) async {
+    final calls = _Calls();
+    await tester.pumpWidget(_harness(calls, combatState: _smiteRecharging()));
+    final rest = paintedSize(tester, 'smite');
+
+    final mouse = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+      pointer: 1,
+    );
+    await mouse.addPointer(location: const Offset(700, 10));
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(_tile('smite')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(paintedSize(tester, 'smite'), rest);
+    expect(cursor(), SystemMouseCursors.basic);
+
+    await tester.pumpWidget(_harness(calls, interactive: false));
+    final restInactive = paintedSize(tester, 'holy_shield');
+    await mouse.moveTo(tester.getCenter(_tile('holy_shield')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(paintedSize(tester, 'holy_shield'), restInactive);
+    expect(cursor(), SystemMouseCursors.basic);
+    expect(calls.gestures, 0);
+  });
+
   testWidgets('ni le survol ni l appui long n ouvrent rien', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(_harness(calls));
