@@ -66,51 +66,64 @@ class SignatureBar extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.only(left: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          // Seule la colonne des tuiles est centrée : l'invite pend sous elle,
+          // hors de sa taille, pour qu'armer ne déplace aucune tuile.
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              for (final signature in signatures)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: _SignatureTile(
-                    signature: signature,
-                    side: side,
-                    classColor: classColor,
-                    turnsLeft: combatState.signatureTurnsLeft(
-                      signature.data.id,
-                    ),
-                    state: signatureTileStateOf(
-                      interactive: interactive,
-                      turnsLeft: combatState.signatureTurnsLeft(
-                        signature.data.id,
-                      ),
-                      affordable: currentMana >= signature.cost,
-                      armed: armedId == signature.data.id,
-                    ),
-                    onPlay: () => onPlay(signature),
-                    onArm: () => onArm(signature),
-                    onDisarm: onDisarm,
-                    onInsufficientMana: onInsufficientMana,
-                    onShowTooltip: () => onShowTooltip(signature),
-                    onHideTooltip: onHideTooltip,
-                  ),
-                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final signature in signatures)
+                    _tileFor(signature, side),
+                ],
+              ),
               if (armedId != null)
-                SizedBox(
-                  width: side,
-                  child: Text(
-                    l10n.signatureChooseTarget,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FractionalTranslation(
+                    translation: const Offset(0, 1),
+                    child: Text(
+                      l10n.signatureChooseTarget,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _tileFor(SignatureInstance signature, double side) {
+    final turnsLeft = combatState.signatureTurnsLeft(signature.data.id);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: _SignatureTile(
+        signature: signature,
+        side: side,
+        classColor: classColor,
+        turnsLeft: turnsLeft,
+        state: signatureTileStateOf(
+          interactive: interactive,
+          turnsLeft: turnsLeft,
+          affordable: currentMana >= signature.cost,
+          armed: armedId == signature.data.id,
+        ),
+        onPlay: () => onPlay(signature),
+        onArm: () => onArm(signature),
+        onDisarm: onDisarm,
+        onInsufficientMana: onInsufficientMana,
+        onShowTooltip: () => onShowTooltip(signature),
+        onHideTooltip: onHideTooltip,
       ),
     );
   }
@@ -215,6 +228,20 @@ class _SignatureTileState extends State<_SignatureTile>
     }
   }
 
+  Widget _name(String locale, {required int maxLines}) => Text(
+    widget.signature.data.getName(locale),
+    maxLines: maxLines,
+    overflow: TextOverflow.ellipsis,
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      color: widget.state == SignatureTileState.recharging
+          ? Colors.white38
+          : Colors.white,
+      fontSize: 10,
+      fontWeight: FontWeight.bold,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -290,22 +317,6 @@ class _SignatureTileState extends State<_SignatureTile>
                       ),
                       Positioned(
                         left: 6,
-                        right: 4,
-                        bottom: 4,
-                        child: Text(
-                          data.getName(locale),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: recharging ? Colors.white38 : Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 6,
                         top: 4,
                         child: _CostMedallion(
                           cost: widget.signature.cost,
@@ -314,22 +325,47 @@ class _SignatureTileState extends State<_SignatureTile>
                         ),
                       ),
                       if (widget.turnsLeft > 0)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Text(
-                              l10n.signatureTurnsLeft(widget.turnsLeft),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(color: Colors.black, blurRadius: 4),
-                                ],
+                        // Le compte a sa bande, sous le médaillon et au-dessus
+                        // du nom ramené à une ligne : d'un bloc, aussi grand
+                        // qu'il tient.
+                        Positioned(
+                          left: 6,
+                          right: 4,
+                          top: 26,
+                          bottom: 4,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    l10n.signatureTurnsLeft(widget.turnsLeft),
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                              _name(locale, maxLines: 1),
+                            ],
                           ),
+                        )
+                      else
+                        Positioned(
+                          left: 6,
+                          right: 4,
+                          bottom: 4,
+                          child: _name(locale, maxLines: 2),
                         ),
                     ],
                   ),

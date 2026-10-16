@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -146,6 +147,57 @@ void main() {
       ),
     );
     expect(find.text('1 tour'), findsOneWidget);
+  });
+
+  testWidgets('sur une tuile de 64, le compte tient sur une ligne, a part du '
+      'nom et du cout', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(400, 800);
+    addTearDown(tester.view.reset);
+
+    final calls = _Calls();
+    await tester.pumpWidget(
+      _harness(
+        calls,
+        combatState: CombatState(
+          turnCount: 1,
+          signaturesReadyOn: {'holy_shield': 3},
+        ),
+        locale: const Locale('fr', ''),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(_tile('holy_shield')), const Size(64, 64));
+
+    final count = find.text('2 tours');
+    final paragraph = tester.renderObject<RenderParagraph>(count);
+    final oneLine = TextPainter(
+      text: paragraph.text,
+      textDirection: TextDirection.ltr,
+      textScaler: paragraph.textScaler,
+    )..layout();
+    addTearDown(oneLine.dispose);
+    expect(paragraph.size.height, oneLine.height);
+
+    final countRect = tester.getRect(count);
+    final nameRect = tester.getRect(find.text('Bouclier sacre'));
+    final costRect = tester.getRect(
+      find.descendant(of: _tile('holy_shield'), matching: find.text('1')),
+    );
+    expect(countRect.overlaps(nameRect), isFalse);
+    expect(countRect.overlaps(costRect), isFalse);
+  });
+
+  testWidgets('armer une signature ne deplace pas les tuiles', (tester) async {
+    final calls = _Calls();
+    await tester.pumpWidget(_harness(calls));
+    final rest = tester.getTopLeft(_tile('smite'));
+
+    // L'impulsion se répète sans fin : jamais `pumpAndSettle` une fois armée.
+    await tester.pumpWidget(_harness(calls, armedId: 'smite'));
+    await tester.pump();
+    expect(find.text('Choose a target'), findsOneWidget);
+    expect(tester.getTopLeft(_tile('smite')), rest);
   });
 
   testWidgets('une tuile inactive garde son compte lisible et ne repond pas', (

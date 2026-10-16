@@ -624,6 +624,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       turnCount: combatState.turnCount,
                     ),
 
+                  if (!runState.isDead && !_showDraft)
+                    CombatSidePanels(
+                      drawPileCount: deckState.drawPile.length,
+                      discardPileCount: deckState.discardPile.length,
+                      heroStatuses: runState.heroStats.statuses,
+                      enemies: combatState.enemies,
+                    ),
+
+                  // La barre passe au-dessus du panneau de statuts du héros.
                   if (!runState.isDead &&
                       !_showDraft &&
                       runState.signatures.isNotEmpty)
@@ -667,21 +676,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       },
                     ),
 
-                  if (!runState.isDead && !_showDraft)
-                    CombatSidePanels(
-                      drawPileCount: deckState.drawPile.length,
-                      discardPileCount: deckState.discardPile.length,
-                      heroStatuses: runState.heroStats.statuses,
-                      enemies: combatState.enemies,
-                    ),
-
                   // Phase Banner Overlay (Centre)
                   if (_showPhaseBanner)
                     CombatPhaseBanner(text: _phaseBannerText ?? ''),
 
-                  // Tooltip Overlay
+                  // Tooltip Overlay. La barre démontée à la mort du héros ne
+                  // reçoit jamais `onExit` : l'infobulle s'éteint avec elle.
                   CombatTooltipOverlay(
-                    visible: _showTooltip,
+                    visible: _showTooltip && !runState.isDead,
                     title: _tooltipTitle,
                     description: _tooltipDescription,
                     borderColor: _getTooltipBorderColor(),
