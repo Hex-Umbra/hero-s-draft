@@ -29,11 +29,11 @@ Questions de classe T nées à l'écriture du plan, tranchées par le rédacteur
 | PM18 | Le nom de la locale du draft | Garder `globalCards` (filtre 5) | `offerableCards` |
 | PM19 | La forme du compte de recharge sur une tuile (signalée P-1 par le rédacteur ; **reclassée T par l'orchestrateur** : la forme de la barre est déléguée, A6) | (a) le nombre seul et une cinquième clé pour le mot · (c) couper la chaîne traduite après le nombre (filtre 5 : une clé de plus, ou une chaîne traduite découpée) | (b) `signatureTurnsLeft(n)` d'un bloc, centré et en grand |
 
-**Question P née à l'écriture, ouverte** — le plan se termine et se vérifie autour d'elle (ADR-108 D3) :
+**Question P née à l'écriture** — le plan s'est terminé et vérifié autour d'elle (ADR-108 D3), puis **le propriétaire l'a tranchée le 16/10**, dans le prompt de reprise ; sa réponse ne rouvre aucun tour de vérification :
 
-| # | Question | Options | Recommandation |
-|:---:|:---|:---|:---|
-| P-2 | La tuile « détaillée » du dictionnaire (spec §6) : qu'ajoute-t-elle à la compacte (nom, coût, recharge, description) ? | (a) le même contenu en plus grand · (b) en plus, le libellé du type (Attaque / Compétence, clés ARB existantes) · (c) le type et la cible | (b) — le type dit quels passifs et quelles reliques la signature déclenche (Q-P1), sans texte neuf |
+| # | Question | Options | Recommandation | Réponse du propriétaire |
+|:---:|:---|:---|:---|:---|
+| P-2 | La tuile « détaillée » du dictionnaire (spec §6) : qu'ajoute-t-elle à la compacte (nom, coût, recharge, description) ? | (a) le même contenu en plus grand · (b) en plus, le libellé du type (Attaque / Compétence, clés ARB existantes) · (c) le type et la cible | (b) — le type dit quels passifs et quelles reliques la signature déclenche (Q-P1), sans texte neuf | **(b)** — un onglet « Signatures » dans le dictionnaire ; chaque tuile y montre nom, coût, recharge, description, et le type (Attaque / Compétence) par les clés ARB existantes. Écartées : (a), (c) |
 
 ## Le journal des tours
 

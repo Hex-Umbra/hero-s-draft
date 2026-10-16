@@ -38,7 +38,7 @@ Propres à cette partie :
 - **Les textes de l'écran de draft ne changent pas** (spec §6) : `draftDeckSubtitle` (« 5 cartes globales ») reste tel quel, même quand la locale `globalCards` se renomme (Task 6).
 - **Aucun test neuf ne porte un littéral que vise la commande de §12** : ni `'unique'`, `"unique"`, `` `unique` ``, ni `CardCategory`, `isOfferableTo`, `isAcquirable`, `characterSpecific`, `isUnique`, `rarityUnique`.
 - **Les références `fichier:ligne`** de ce plan ont été relues le 2026-10-16 sur `1315aab`. Une tâche qui modifie un fichier décale les lignes des suivantes : l'implémenteur se fie au symbole nommé.
-- **Une question P (P-2), sans réponse à l'écriture** (voir la fin du plan) : le contenu de la tuile détaillée (Task 1). Le plan applique sa recommandation ; une autre réponse du propriétaire ne change qu'une étape, nommée.
+- **La question P (P-2), tranchée par le propriétaire le 16/10** (voir la fin du plan) : la tuile détaillée du dictionnaire montre ce que montre la compacte, et en plus le type de la signature (Task 1) — option (b).
 
 ## Review Focus
 
@@ -109,7 +109,7 @@ Ordre : les widgets d'abord, sans lecteur dans le jeu mais chacun avec ses tests
 `test/widget/signature_tile_test.dart` *(nouveau)* — une `SignatureData` construite : `smite`, `heroClass` `paladin`, noms `Smite` / `Châtiment`, descriptions `Deal 6 damage and gain 4 Block.` / `Inflige 6 dégâts et donne 4 d'Armure.`, `cost` 1, `cooldown` 2, `type` attack. La tuile est pompée dans un `MaterialApp` aux délégués de `AppLocalizations` (comme `card_dictionary_screen_test.dart:115-130`), `classColor` `Color(0xFF2196F3)` :
 - `la tuile compacte montre le nom, la ligne cout et recharge, la description` — en anglais : `Smite`, `Cost: 1 Mana · Cooldown: 2 turns`, `Deal 6 damage and gain 4 Block.`, chacun `findsOneWidget`.
 - `en francais la ligne dit Cout et Recharge, au singulier pour un tour` — en français : `Coût : 1 Mana · Recharge : 2 tours` ; puis la même signature à `cooldown` 1 : `Coût : 1 Mana · Recharge : 1 tour`.
-- `la tuile detaillee montre aussi le type de la signature` — `detailed: true` → `Attack` (`cardTypeAttack`) `findsOneWidget` ; la compacte → `findsNothing` *(dépend de P-2 ; voir Step 3)*.
+- `la tuile detaillee montre aussi le type de la signature` — `detailed: true` → `Attack` (`cardTypeAttack`) `findsOneWidget` ; la compacte → `findsNothing`.
 - `la bordure porte la couleur de la classe` — un `Container` de la tuile a une `BoxDecoration` dont `border.top.color` égale `classColor`.
 
 - [ ] **Step 2: Lancer les tests, constater l'échec**
@@ -121,7 +121,7 @@ Expected: échec de compilation — `getDescription`, `SignatureTile` et `signat
 
 - La clé, dans les deux ARB, avec sa métadonnée `@signatureCostAndCooldown` (`cost` et `cooldown` en `int`), valeurs **mot pour mot** de §7.1 — FR : `Coût : {cost} Mana · Recharge : {cooldown, plural, =1{1 tour} other{{cooldown} tours}}` ; EN : `Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}`. Puis `flutter gen-l10n`.
 - `getDescription` dans `SignatureData`.
-- `SignatureTile` — une carte rectangulaire : bordure de `classColor`, liseré de la couleur du type (`getCardTypeColor(signature.type)`) ; le nom (`getName`), la ligne `signatureCostAndCooldown(signature.cost, signature.cooldown)`, la description (`getDescription`). `detailed: false` (sélection de classe) : typographie réduite ; `detailed: true` (dictionnaire) : typographie pleine et, sous le nom, le libellé du type (`getCardTypeLabel`) — **recommandation de P-2** ; si le propriétaire répond autrement, seuls cette ligne et le troisième test changent. La tuile lit la donnée, pas une `SignatureInstance` : hors combat, il n'y a pas de run (spec §6).
+- `SignatureTile` — une carte rectangulaire : bordure de `classColor`, liseré de la couleur du type (`getCardTypeColor(signature.type)`) ; le nom (`getName`), la ligne `signatureCostAndCooldown(signature.cost, signature.cooldown)`, la description (`getDescription`). `detailed: false` (sélection de classe) : typographie réduite ; `detailed: true` (dictionnaire) : typographie pleine et, sous le nom, le libellé du type (`getCardTypeLabel`) — **P-2, réponse du propriétaire (b)**. La tuile lit la donnée, pas une `SignatureInstance` : hors combat, il n'y a pas de run (spec §6).
 
 - [ ] **Step 4: Lancer les tests, constater le succès**
 
@@ -422,17 +422,17 @@ Run: `rm -rf build/unit_test_assets` puis `dart analyze` → `No issues found!` 
 
 - [ ] **Step 4: L'état de la branche**
 
-Run: `git status` → arbre propre (hors fichiers régénérés par `flutter`, à restaurer par `git restore`) ; `git log --oneline 1315aab..HEAD` → les six commits de ce plan, après celui du plan lui-même s'il a été commité entre-temps. Rien n'est poussé.
+Run: `git status` → arbre propre (hors fichiers régénérés par `flutter`, à restaurer par `git restore`) ; `git log --oneline 1315aab..HEAD` → les six commits de ce plan, après les deux du plan lui-même (`bb4a020`, puis la réponse à P-2). Rien n'est poussé.
 
 ---
 
 ## Questions signalées
 
-### Classe P — non tranchée, recommandation appliquée en attendant
+### Classe P — tranchée par le propriétaire le 16/10
 
-| # | Question | Options | Recommandation | Ce qui change si la réponse diffère |
-|:---|:---|:---|:---|:---|
-| **P-2** | Le contenu de la tuile « détaillée » du dictionnaire (§6) face à la « compacte » de la carte de classe (« nom, coût, recharge, description »). La spec ne dit pas ce que « détaillée » ajoute. | (a) le même contenu, en typographie pleine ; (b) en plus, le libellé du type (`Attaque` / `Compétence`, clés ARB existantes) ; (c) en plus, le type et la cible | **(b)** : le type est ce qu'une signature a de plus qu'une compétence quelconque — il dit quels passifs et reliques elle déclenche (§1.2) —, sans texte neuf | Task 1 : une ligne de `SignatureTile` et le test « la tuile detaillee montre aussi le type » |
+| # | Question | Réponse du propriétaire |
+|:---|:---|:---|
+| **P-2** | Le contenu de la tuile « détaillée » du dictionnaire (§6) face à la « compacte » de la carte de classe (« nom, coût, recharge, description ») | **(b)** : les signatures ont leur propre onglet, « Signatures » (spec §6) ; chaque tuile de cet onglet montre ce que montre la compacte (nom, coût, recharge, description) **et en plus le type de la signature (Attaque / Compétence)**, par les clés ARB existantes. Appliquée en Task 1 |
 
 Aucune question de classe D.
 
