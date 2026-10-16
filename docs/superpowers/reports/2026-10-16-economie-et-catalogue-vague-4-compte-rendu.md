@@ -1,6 +1,6 @@
 # Vague 4 — `0.5.6` — E4, les signatures en compétences de classe — compte rendu
 
-**Branche** : `feat/v0.5.6-p43-e4-signatures` · **Spec** : [E4](../specs/2026-10-15-p43-e4-signatures-design.md) ([vérifications](../specs/2026-10-15-p43-e4-signatures-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-10-15-p43-e4-signatures-partie-1.md) ([vérifications](../plans/2026-10-15-p43-e4-signatures-partie-1-verifications.md)) · **Forme** : [README](README.md) — essai mesuré d'ADR-108 (D8).
+**Branche** : `feat/v0.5.6-p43-e4-signatures` · **Spec** : [E4](../specs/2026-10-15-p43-e4-signatures-design.md) ([vérifications](../specs/2026-10-15-p43-e4-signatures-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-10-15-p43-e4-signatures-partie-1.md) ([vérifications](../plans/2026-10-15-p43-e4-signatures-partie-1-verifications.md)) · [partie 2](../plans/2026-10-16-p43-e4-signatures-partie-2.md) ([vérifications](../plans/2026-10-16-p43-e4-signatures-partie-2-verifications.md)) · **Forme** : [README](README.md) — essai mesuré d'ADR-108 (D8).
 
 ## 0. Pour le propriétaire
 
@@ -45,6 +45,26 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | PL9 | Quand écrire `CLAUDE.md:89` | T | Avec la purge de `heroClass` (Task 7) | 5 |
 | PL10 | Découpage de l'éditeur | T | Une ligne au déplacement, la catégorie en Task 5 | 8 |
 | V1 | `SignatureData.getDescription` sans lecteur en partie 1 (plan, tour 1) | T | Reporté à la partie 2 | 5 |
+| P-2 | La tuile « détaillée » du dictionnaire | P | Onglet « Signatures » ; nom, coût, recharge, description, et le type (propriétaire, 16/10) | — |
+| PM1 | Où vit la priorité des cinq états | T | Fonction pure `signatureTileStateOf` | 5 |
+| PM2 | Comment la barre rend ses gestes | T | `onPlay`, `onArm`, `onDisarm`, `onInsufficientMana`, la paire de l'infobulle | 5 |
+| PM3 | Qui joue le son « mana insuffisant » | T | L'écran, sur le rappel | 5 |
+| PM4 | Où vit la secousse | T | Un widget de tuile privé, à état | 1 |
+| PM5 | La forme d'`awaitingEnemyTarget` | T | Accesseur et mutateur ; `false` éteint l'illumination sans rappel | 6, 8 |
+| PM6 | Où Flame détecte l'annulation | T | `setFocusedCard` et le toucher du décor | 8 |
+| PM7 | Un ennemi mort ou mourant touché pendant l'attente | T | Flame l'ignore, l'attente demeure | 5 |
+| PM8 | L'illumination au survol | T | `onPointerMove` du jeu | 8 |
+| PM9 | `onSelectEnemy` dans l'écran | T | Ne joue que la signature armée | 5 |
+| PM10 | L'ordre dans `_playSignature` | T | `playSignature` d'abord ; animation et son s'il rend `true` | 5 |
+| PM11 | La condition d'activité de la barre | T | Celle de `canEndTurn`, plus le combat fini | 7 |
+| PM12 | Une autre tuile touchée pendant qu'une signature est armée | T | Jouer désarme d'abord ; armer remplace | 1 |
+| PM13 | Une classe sans signature | T | Ni bloc ni en-tête | 8 |
+| PM14 | Le bandeau du tutoriel | T | Texte en ligne, sans clé ARB | 5 |
+| PM15 | Quand ajouter chaque clé ARB | T | Chacune avec son premier lecteur | 5 |
+| PM16 | La couleur de classe en combat | T | `firstWhere` sans repli | 5 |
+| PM17 | Tester le ciblage Flame | T | Un test du jeu non monté | 8 |
+| PM18 | Le nom de la locale du draft | T | `offerableCards` | 5 |
+| PM19 | La forme du compte de recharge (signalée P, reclassée T : A6) | T | `signatureTurnsLeft(n)` d'un bloc, centré, en grand | A6 |
 
 **Décisions de SDD — partie 1** (registre de SDD, recopiées avant sa suppression) :
 
@@ -56,6 +76,17 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | S4 | `playSignature` ne vérifie pas que `enemyId` est un ennemi présent, comme le chemin d'une carte (spec §4.3) ; reporté au Review Focus du plan de la partie 2 | T | Un id inconnu venu d'une interface fautive paierait le mana et poserait la recharge pour rien |
 | S5 | Les libellés « globales » (ARB `draftDeckSubtitle`, doc du widget du tutoriel, locale `globalCards`) attendent la partie 2, avec le bandeau : la spec §6 fige les textes de l'écran en partie 1 | T | Un mot périmé pendant une partie |
 | S6 | Revue de la Task 5, constat important : une carte neutre portant un `heroClass` passait le validateur et s'inscrivait dans `skills` — corrigé aux deux bouts (validateur, écrivain), deux tests | T | — |
+
+**Décisions de SDD — partie 2** (registre de SDD, recopiées avant sa suppression ; revue d'ensemble sur `bb4a020..3b5fd85`, « avec corrections », un seul passage de correction, `e434d0d`) :
+
+| # | Décision | Classe | Coût si fausse |
+|:---|:---|:---:|:---|
+| S7 | Les détails visuels que la spec ne fixe pas (fond en recharge, opacité 0,45 de l'état inactif, polices, 4 px entre tuiles) choisis par l'implémenteur, sous la délégation A6 | T | Une retouche visuelle au test |
+| S8 | L'infobulle d'une signature survivait à la mort du héros et couvrait les boutons de l'écran de mort : masquée quand le héros est mort | T | Une condition |
+| S9 | Le compte de recharge débordait (64 px) et chevauchait le nom (76 px) : bande à lui, une ligne réduite à la taille ; **le nom passe sur une ligne, avec « … », tant que le compte s'affiche** | T | Le propriétaire rejuge la forme au test |
+| S10 | L'invite « Choisissez une cible » faisait sauter les tuiles de 16 px : posée sous la colonne sans la déplacer | T | Une retouche de mise en page |
+| S11 | La barre était peinte sous le panneau des statuts, qui prenait les touchers de la tuile basse : posée au-dessus, sous l'infobulle | T | Une ligne déplacée |
+| S12 | L'ennemi visé par la dernière carte garde sa bordure ambre pendant qu'une signature est armée, la même que l'illumination du survol : à la file (vocabulaire visuel existant ; les dégâts vont à l'ennemi touché) | T | Sur écran tactile, le joueur peut croire que la signature frappera l'ennemi ambre |
 
 ## 3. Les tests manuels
 
