@@ -547,8 +547,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final bool isPlayerActionable = combatState.turnPhase == TurnPhase.player &&
         _game.currentPhase == TurnPhase.player &&
         !_game.isCardAnimating;
-    final locale = Localizations.localeOf(context).languageCode;
-    final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: isCompleted || runState.isDead,
@@ -659,29 +657,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       onInsufficientMana: () => ref
                           .read(audioDirectorProvider)
                           .onMoment(GameMoment.insufficientMana),
-                      onShowTooltip: (signature) {
-                        setState(() {
-                          _tooltipTitle = signature.data.getName(locale);
-                          _tooltipDescription =
-                              '${signature.data.getDescription(locale)}\n'
-                              '${l10n.signatureCostAndCooldown(signature.cost, signature.cooldown)}';
-                          _tooltipCardType = signature.data.type;
-                          _showTooltip = true;
-                        });
-                      },
-                      onHideTooltip: () {
-                        setState(() {
-                          _showTooltip = false;
-                        });
-                      },
                     ),
 
                   // Phase Banner Overlay (Centre)
                   if (_showPhaseBanner)
                     CombatPhaseBanner(text: _phaseBannerText ?? ''),
 
-                  // Tooltip Overlay. La barre démontée à la mort du héros ne
-                  // reçoit jamais `onExit` : l'infobulle s'éteint avec elle.
+                  // Tooltip Overlay. Jamais visible à la mort du héros : une
+                  // infobulle encore ouverte ne couvre pas l'écran de mort.
                   CombatTooltipOverlay(
                     visible: _showTooltip && !runState.isDead,
                     title: _tooltipTitle,

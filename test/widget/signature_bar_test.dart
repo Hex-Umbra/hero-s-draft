@@ -46,10 +46,8 @@ const _holyShield = SignatureInstance(
 class _Calls {
   final played = <SignatureInstance>[];
   final armed = <SignatureInstance>[];
-  final shown = <SignatureInstance>[];
   int disarmed = 0;
   int insufficientMana = 0;
-  int hidden = 0;
 
   int get gestures =>
       played.length + armed.length + disarmed + insufficientMana;
@@ -86,8 +84,6 @@ Widget _harness(
           onArm: calls.armed.add,
           onDisarm: () => calls.disarmed++,
           onInsufficientMana: () => calls.insufficientMana++,
-          onShowTooltip: calls.shown.add,
-          onHideTooltip: () => calls.hidden++,
         ),
       ],
     ),
@@ -383,8 +379,7 @@ void main() {
     expect(tester.getSize(_tile('holy_shield')).width, 170);
   });
 
-  testWidgets('le survol montre l infobulle de la signature, la sortie et '
-      'l appui long aussi', (tester) async {
+  testWidgets('ni le survol ni l appui long n ouvrent rien', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(_harness(calls));
 
@@ -392,22 +387,17 @@ void main() {
     await mouse.addPointer(location: const Offset(700, 10));
     await mouse.moveTo(tester.getCenter(_tile('smite')));
     await tester.pump();
-    expect(calls.shown, [_smite]);
-    expect(calls.hidden, 0);
-
     await mouse.moveTo(const Offset(700, 10));
     await tester.pump();
-    expect(calls.hidden, 1);
 
     final touch = await tester.startGesture(
       tester.getCenter(_tile('holy_shield')),
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
-    expect(calls.shown, [_smite, _holyShield]);
-    expect(calls.hidden, 1);
-
-    await touch.up();
+    await touch.cancel();
     await tester.pump();
-    expect(calls.hidden, 2);
+
+    expect(calls.gestures, 0);
+    expect(tester.takeException(), isNull);
   });
 }

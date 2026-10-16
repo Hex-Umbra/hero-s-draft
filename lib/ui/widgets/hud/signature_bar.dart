@@ -37,8 +37,6 @@ class SignatureBar extends StatelessWidget {
   final ValueChanged<SignatureInstance> onArm;
   final VoidCallback onDisarm;
   final VoidCallback onInsufficientMana;
-  final ValueChanged<SignatureInstance> onShowTooltip;
-  final VoidCallback onHideTooltip;
 
   const SignatureBar({
     super.key,
@@ -52,8 +50,6 @@ class SignatureBar extends StatelessWidget {
     required this.onArm,
     required this.onDisarm,
     required this.onInsufficientMana,
-    required this.onShowTooltip,
-    required this.onHideTooltip,
   });
 
   @override
@@ -122,8 +118,6 @@ class SignatureBar extends StatelessWidget {
         onArm: () => onArm(signature),
         onDisarm: onDisarm,
         onInsufficientMana: onInsufficientMana,
-        onShowTooltip: () => onShowTooltip(signature),
-        onHideTooltip: onHideTooltip,
       ),
     );
   }
@@ -139,8 +133,6 @@ class _SignatureTile extends StatefulWidget {
   final VoidCallback onArm;
   final VoidCallback onDisarm;
   final VoidCallback onInsufficientMana;
-  final VoidCallback onShowTooltip;
-  final VoidCallback onHideTooltip;
 
   const _SignatureTile({
     required this.signature,
@@ -152,8 +144,6 @@ class _SignatureTile extends StatefulWidget {
     required this.onArm,
     required this.onDisarm,
     required this.onInsufficientMana,
-    required this.onShowTooltip,
-    required this.onHideTooltip,
   });
 
   @override
@@ -309,79 +299,72 @@ class _SignatureTileState extends State<_SignatureTile>
     final recharging = state == SignatureTileState.recharging;
     final armed = state == SignatureTileState.armed;
 
-    return MouseRegion(
-      onEnter: (_) => widget.onShowTooltip(),
-      onExit: (_) => widget.onHideTooltip(),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _onTap,
-        onLongPressStart: (_) => widget.onShowTooltip(),
-        onLongPressEnd: (_) => widget.onHideTooltip(),
-        onLongPressCancel: widget.onHideTooltip,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTap,
+      child: AnimatedBuilder(
+        animation: _shake,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(_shakeOffset.evaluate(_shake), 0),
+          child: child,
+        ),
         child: AnimatedBuilder(
-          animation: _shake,
-          builder: (context, child) => Transform.translate(
-            offset: Offset(_shakeOffset.evaluate(_shake), 0),
-            child: child,
+          animation: _pulse,
+          // Le contenu ne dépend pas de l'impulsion : construit une fois.
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _CostMedallion(
+                cost: widget.signature.cost,
+                unaffordable: state == SignatureTileState.unaffordable,
+              ),
+              const SizedBox(width: 6),
+              Expanded(child: _details(context, l10n)),
+            ],
           ),
-          child: AnimatedBuilder(
-            animation: _pulse,
-            // Le contenu ne dépend pas de l'impulsion : construit une fois.
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _CostMedallion(
-                  cost: widget.signature.cost,
-                  unaffordable: state == SignatureTileState.unaffordable,
+          builder: (context, content) {
+            final borderColor = switch (state) {
+              SignatureTileState.recharging => Colors.grey,
+              SignatureTileState.armed => Color.lerp(
+                widget.classColor,
+                Colors.white,
+                _pulse.value,
+              )!,
+              _ => widget.classColor,
+            };
+            return Opacity(
+              opacity: state == SignatureTileState.inactive ? 0.45 : 1,
+              child: Container(
+                key: ValueKey('signature-tile-${data.id}'),
+                width: widget.compact ? 170 : 220,
+                constraints: BoxConstraints(
+                  minHeight: widget.compact ? 64 : 80,
                 ),
-                const SizedBox(width: 6),
-                Expanded(child: _details(context, l10n)),
-              ],
-            ),
-            builder: (context, content) {
-              final borderColor = switch (state) {
-                SignatureTileState.recharging => Colors.grey,
-                SignatureTileState.armed => Color.lerp(
-                  widget.classColor,
-                  Colors.white,
-                  _pulse.value,
-                )!,
-                _ => widget.classColor,
-              };
-              return Opacity(
-                opacity: state == SignatureTileState.inactive ? 0.45 : 1,
-                child: Container(
-                  key: ValueKey('signature-tile-${data.id}'),
-                  width: widget.compact ? 170 : 220,
-                  constraints: BoxConstraints(
-                    minHeight: widget.compact ? 64 : 80,
+                // La bordure armée, plus épaisse d'un point, le prend sur la
+                // marge : la tuile garde sa taille, ses voisines leur place.
+                padding: EdgeInsets.all(armed ? 5 : 6),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: recharging
+                      ? const Color(0xFF2A2A2A)
+                      : neutralCardBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: borderColor,
+                    width: armed ? 3 : 2,
                   ),
-                  // La bordure armée, plus épaisse d'un point, le prend sur la
-                  // marge : la tuile garde sa taille, ses voisines leur place.
-                  padding: EdgeInsets.all(armed ? 5 : 6),
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: recharging
-                        ? const Color(0xFF2A2A2A)
-                        : neutralCardBackground,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: borderColor,
-                      width: armed ? 3 : 2,
-                    ),
-                    boxShadow: [
-                      if (state == SignatureTileState.available)
-                        BoxShadow(
-                          color: widget.classColor.withAlpha(150),
-                          blurRadius: 8,
-                        ),
-                    ],
-                  ),
-                  child: content,
+                  boxShadow: [
+                    if (state == SignatureTileState.available)
+                      BoxShadow(
+                        color: widget.classColor.withAlpha(150),
+                        blurRadius: 8,
+                      ),
+                  ],
                 ),
-              );
-            },
-          ),
+                child: content,
+              ),
+            );
+          },
         ),
       ),
     );
