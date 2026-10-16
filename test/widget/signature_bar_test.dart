@@ -16,7 +16,9 @@ const _smite = SignatureInstance(
     id: 'smite',
     heroClass: 'paladin',
     nameEn: 'Smite',
-    nameFr: 'Chatiment',
+    nameFr: 'Châtiment',
+    descriptionEn: 'Deal 6 damage and gain 4 Block.',
+    descriptionFr: "Inflige 6 dégâts et donne 4 d'Armure.",
     cost: 1,
     cooldown: 2,
     type: CardType.attack,
@@ -30,7 +32,9 @@ const _holyShield = SignatureInstance(
     id: 'holy_shield',
     heroClass: 'paladin',
     nameEn: 'Holy Shield',
-    nameFr: 'Bouclier sacre',
+    nameFr: 'Bouclier Sacré',
+    descriptionEn: 'Gain 8 Block and heal 2 HP.',
+    descriptionFr: "Donne 8 d'Armure et soigne 2 PV.",
     cost: 1,
     cooldown: 2,
     type: CardType.skill,
@@ -170,43 +174,87 @@ void main() {
     expect(find.text('1 tour'), findsOneWidget);
   });
 
-  testWidgets('sur une tuile de 64, le compte tient sur une ligne, a part du '
-      'nom et du cout', (tester) async {
+  testWidgets('en recharge, nom, type, description et compte ne se '
+      'chevauchent pas, aux deux largeurs', (tester) async {
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(400, 800);
     addTearDown(tester.view.reset);
 
     final calls = _Calls();
-    await tester.pumpWidget(
-      _harness(
-        calls,
-        combatState: CombatState(
-          turnCount: 1,
-          signaturesReadyOn: {'holy_shield': 3},
+    for (final size in const [Size(1280, 800), Size(400, 800)]) {
+      tester.view.physicalSize = size;
+      await tester.pumpWidget(
+        _harness(
+          calls,
+          combatState: CombatState(
+            turnCount: 1,
+            signaturesReadyOn: {'holy_shield': 3},
+          ),
+          locale: const Locale('fr', ''),
         ),
-        locale: const Locale('fr', ''),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.getSize(_tile('holy_shield')), const Size(64, 64));
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
-    final count = find.text('2 tours');
-    final paragraph = tester.renderObject<RenderParagraph>(count);
-    final oneLine = TextPainter(
-      text: paragraph.text,
-      textDirection: TextDirection.ltr,
-      textScaler: paragraph.textScaler,
-    )..layout();
-    addTearDown(oneLine.dispose);
-    expect(paragraph.size.height, oneLine.height);
+      Finder inTile(Finder matching) =>
+          find.descendant(of: _tile('holy_shield'), matching: matching);
 
-    final countRect = tester.getRect(count);
-    final nameRect = tester.getRect(find.text('Bouclier sacre'));
-    final costRect = tester.getRect(
-      find.descendant(of: _tile('holy_shield'), matching: find.text('1')),
-    );
-    expect(countRect.overlaps(nameRect), isFalse);
-    expect(countRect.overlaps(costRect), isFalse);
+      final count = inTile(find.text('2 tours'));
+      final paragraph = tester.renderObject<RenderParagraph>(count);
+      final oneLine = TextPainter(
+        text: paragraph.text,
+        textDirection: TextDirection.ltr,
+        textScaler: paragraph.textScaler,
+      )..layout();
+      addTearDown(oneLine.dispose);
+      expect(paragraph.size.height, oneLine.height);
+
+      final rects = [
+        tester.getRect(inTile(find.text('Bouclier Sacré'))),
+        tester.getRect(inTile(find.text('Compétence'))),
+        tester.getRect(inTile(find.text("Donne 8 d'Armure et soigne 2 PV."))),
+        tester.getRect(count),
+        tester.getRect(
+          inTile(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is Container &&
+                  w.decoration is BoxDecoration &&
+                  (w.decoration! as BoxDecoration).shape == BoxShape.circle,
+            ),
+          ),
+        ),
+      ];
+      for (var i = 0; i < rects.length; i++) {
+        for (var j = i + 1; j < rects.length; j++) {
+          expect(
+            rects[i].overlaps(rects[j]),
+            isFalse,
+            reason: 'rectangles $i et $j, sur $size',
+          );
+        }
+      }
+    }
+  });
+
+  testWidgets('la tuile montre le nom, le type et la description', (
+    tester,
+  ) async {
+    final calls = _Calls();
+    await tester.pumpWidget(_harness(calls));
+
+    Finder inSmite(String text) =>
+        find.descendant(of: _tile('smite'), matching: find.text(text));
+
+    expect(inSmite('Smite'), findsOneWidget);
+    expect(inSmite('Attack'), findsOneWidget);
+    expect(inSmite('Deal 6 damage and gain 4 Block.'), findsOneWidget);
+    expect(inSmite('2 turns'), findsNothing);
+
+    await tester.pumpWidget(_harness(calls, combatState: _smiteRecharging()));
+    expect(inSmite('Smite'), findsOneWidget);
+    expect(inSmite('Attack'), findsOneWidget);
+    expect(inSmite('Deal 6 damage and gain 4 Block.'), findsOneWidget);
+    expect(inSmite('2 turns'), findsOneWidget);
   });
 
   testWidgets('armer une signature ne deplace pas les tuiles', (tester) async {
@@ -310,8 +358,8 @@ void main() {
     expect(tester.getTopLeft(_tile('smite')), rest);
   });
 
-  testWidgets('les tuiles suivent l ordre donne et mesurent 76, 64 sous 600 '
-      'de large', (tester) async {
+  testWidgets('les tuiles suivent l ordre donne et mesurent 220 de large, 170 '
+      'sous 600', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(
       _harness(calls, signatures: const [_holyShield, _smite]),
@@ -326,11 +374,13 @@ void main() {
 
     tester.view.physicalSize = const Size(1280, 800);
     await tester.pumpAndSettle();
-    expect(tester.getSize(_tile('smite')), const Size(76, 76));
+    expect(tester.getSize(_tile('smite')).width, 220);
+    expect(tester.getSize(_tile('holy_shield')).width, 220);
 
     tester.view.physicalSize = const Size(400, 800);
     await tester.pumpAndSettle();
-    expect(tester.getSize(_tile('smite')), const Size(64, 64));
+    expect(tester.getSize(_tile('smite')).width, 170);
+    expect(tester.getSize(_tile('holy_shield')).width, 170);
   });
 
   testWidgets('le survol montre l infobulle de la signature, la sortie et '
