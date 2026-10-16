@@ -724,5 +724,14 @@
   "volumeMaster": "Master volume",
   "volumeSfx": "Sound effects",
   "volumeMusic": "Music",
-  "muteAll": "Mute all"
+  "muteAll": "Mute all",
+
+  "signatureCostAndCooldown": "Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}",
+  "@signatureCostAndCooldown": {
+    "description": "Cost and cooldown line of a class signature.",
+    "placeholders": {
+      "cost": { "type": "int" },
+      "cooldown": { "type": "int" }
+    }
+  }
 }

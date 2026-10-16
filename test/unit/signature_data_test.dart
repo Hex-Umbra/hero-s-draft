@@ -46,6 +46,12 @@ void main() {
     expect(s.effects.first.value, 6);
   });
 
+  test('getDescription rend la description de la langue', () {
+    final s = SignatureData.fromJson(valid());
+    expect(s.getDescription('fr'), 'Inflige 6 degats et gagne 4 armure.');
+    expect(s.getDescription('en'), 'Deal 6 damage and gain 4 armor.');
+  });
+
   test('cooldown absent est refuse', () {
     expect(() => SignatureData.fromJson(valid()..remove('cooldown')),
         refusing('cooldown'));

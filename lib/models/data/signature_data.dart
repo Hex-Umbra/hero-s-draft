@@ -50,6 +50,9 @@ class SignatureData implements AudioSource {
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
 
+  String getDescription(String locale) =>
+      locale == 'fr' ? descriptionFr : descriptionEn;
+
   /// Ces clés appartiennent à une carte : les accepter silencieusement serait
   /// promettre un comportement que le moteur ne tient pas (spec A11).
   static const _forbiddenKeys = ['rarity', 'isExhaust', 'category'];

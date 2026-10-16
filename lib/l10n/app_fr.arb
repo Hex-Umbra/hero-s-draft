@@ -269,5 +269,7 @@
   "volumeMaster": "Volume général",
   "volumeSfx": "Bruitages",
   "volumeMusic": "Musique",
-  "muteAll": "Couper le son"
+  "muteAll": "Couper le son",
+
+  "signatureCostAndCooldown": "Coût : {cost} Mana · Recharge : {cooldown, plural, =1{1 tour} other{{cooldown} tours}}"
 }

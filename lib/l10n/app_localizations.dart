@@ -1675,6 +1675,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mute all'**
   String get muteAll;
+
+  /// Cost and cooldown line of a class signature.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}'**
+  String signatureCostAndCooldown(int cost, int cooldown);
 }
 
 class _AppLocalizationsDelegate

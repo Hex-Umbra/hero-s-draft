@@ -1005,4 +1005,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get muteAll => 'Couper le son';
+
+  @override
+  String signatureCostAndCooldown(int cost, int cooldown) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cooldown,
+      locale: localeName,
+      other: '$cooldown tours',
+      one: '1 tour',
+    );
+    return 'Coût : $cost Mana · Recharge : $_temp0';
+  }
 }
