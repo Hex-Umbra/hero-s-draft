@@ -66,16 +66,20 @@ sur l'étape 01.
    montre le passif avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
    sont cliquables, une seule à la fois. Trois cartes simples, pas le carrousel. Écrit la tranche
    persistante.
-3. **Draft du deck de départ** *(5 cartes choisies)* : les 17 cartes globales de
-   `registry.cards` (mêmes critères que `StarterDeckDraftScreen`) ; les cartes de la classe
-   choisie s'ajoutent automatiquement. Écrit `masterDeck`.
+3. **Draft du deck de départ** *(5 cartes choisies)* : les 17 cartes de `registry.cards` que
+   `CardData.isOfferable` retient (mêmes critères que `StarterDeckDraftScreen`) ; le deck est
+   **les 5 cartes choisies, rien d'autre**. Depuis le lot E4 de P-43 (branche de la vague 4,
+   [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), la prose de l'étape présente les deux
+   **signatures** de la classe — pas des cartes, jamais piochées, sans fusion, dans une barre à
+   gauche de l'écran dès le premier tour, rechargées après usage — et un bandeau les nomme
+   (`fixtures.signature`). **La prose seule** enseigne la barre : aucune étape jouable de plus
+   (réponse du propriétaire, Q-P2). Écrit `masterDeck`.
 4. **Carte du Monde** : mini-carte annotée, dix planchers, goulot Élite au 6, Repos garanti au
    9, 3 Boss au sommet. Rappelle qu'un nœud touché engage immédiatement, sans confirmation.
 5. **Types de Rencontres** : les 8 nœuds (Combat, Élite, Boutique, Repos, Événement, Autel des
    Reliques, Puits d'échange, Boss). Depuis le lot E2 de P-43, la Boutique dit la copie d'une carte
    du deck, le Repos l'affûtage d'une rune, et le Puits l'échange d'une rune contre de l'or, tous les
-   trois actes ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Depuis le lot E3 (branche de la
-   vague 3, en attente du propriétaire — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)),
+   trois actes ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). Depuis le lot E3 (vague 3, fusionnée dans `main` le 2026-10-04 — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)),
    le Combat rapporte « l'or, l'XP et une carte », l'Élite « une Relique et une carte — parfois
    deux », et le Boss d'XP « le triple d'XP et d'or, et monte une rune si l'une peut encore
    monter » — dans la tuile comme dans la prose de l'étape des nœuds, qui le répète.
@@ -127,7 +131,7 @@ sur l'étape 01.
     [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md)).
 13. **Expérience & Level Up** *(niveau gagné)* : le palier est celui de l'acte 1 sur la courbe
     du jeu — `TutorialEngine.xpThreshold`, `data.xpCurve!.thresholdFor(1)`, sur le registre du
-    tutoriel, qui porte toujours la courbe (branche de la vague 3 ; la formule
+    tutoriel, qui porte toujours la courbe (vague 3 ; la formule
     `100 × 1,5^(niveau-1)` et le champ `mockState.xpToNextLevel` ont disparu). La prose dit le prix
     des actes 1 et 2 par deux placeholders, `{xpAct1}` et `{xpAct2}`, que remplit la fonction pure
     `fillXpPlaceholders` de `tutorial_prose.dart`, et « de quoi gagner deux niveaux par acte » ;

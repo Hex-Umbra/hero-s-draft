@@ -8,6 +8,9 @@ import 'package:roguelike_card_game/models/missing_save_item.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
+import 'package:roguelike_card_game/models/signature_instance.dart';
 
 void main() {
   group('RunState persistence', () {
@@ -30,6 +33,26 @@ void main() {
         relics: [],
         forgeUpgrades: [],
       );
+    });
+
+    test('copyWith garde les signatures de la run', () {
+      const signature = SignatureInstance(SignatureData(
+        id: 'smite',
+        heroClass: 'paladin',
+        cost: 1,
+        cooldown: 2,
+        type: CardType.attack,
+        effects: [CardEffect(type: 'damage', value: 6)],
+      ));
+      final run = RunState(
+        currentLevel: 1,
+        heroStats: EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+        heroClassId: 'paladin',
+        signatures: const [signature],
+      );
+
+      expect(run.copyWith(currentLevel: 2).signatures, [signature]);
+      expect(run.toJson().containsKey('signatures'), isFalse);
     });
 
     RunState buildRunState() => RunState(

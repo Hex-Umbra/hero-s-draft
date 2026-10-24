@@ -28,7 +28,6 @@ void main() {
         nameFr: 'Frappe',
         cost: 1,
         type: CardType.attack,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
         effects: [],
@@ -39,7 +38,6 @@ void main() {
         nameFr: 'Défense',
         cost: 1,
         type: CardType.skill,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.self,
         effects: [],
@@ -50,7 +48,6 @@ void main() {
         nameFr: 'Pouvoir Rare',
         cost: 2,
         type: CardType.power,
-        category: CardCategory.global,
         rarity: CardRarity.rare,
         target: CardTarget.self,
         effects: [],
@@ -61,7 +58,6 @@ void main() {
         nameFr: 'Attaque Peu Commune',
         cost: 1,
         type: CardType.attack,
-        category: CardCategory.global,
         rarity: CardRarity.uncommon,
         target: CardTarget.singleEnemy,
         effects: [],
@@ -287,7 +283,6 @@ void main() {
         id: 'epic_strike',
         cost: 1,
         type: CardType.attack,
-        category: CardCategory.global,
         rarity: CardRarity.epic,
         target: CardTarget.singleEnemy,
         effects: [],
@@ -615,17 +610,6 @@ void main() {
 
     // La copie du deck (D46 ; spec P-43 E2, A11, §4.9).
     group('la copie du deck', () {
-      const signature = CardData(
-        id: 'signature_paladin',
-        cost: 1,
-        type: CardType.skill,
-        category: CardCategory.characterSpecific,
-        heroClass: 'paladin',
-        rarity: CardRarity.unique,
-        target: CardTarget.self,
-        effects: [],
-      );
-
       test('tiree des cartes copiables du deck : meme rarete, sans rune, '
           'identifiant neuf', () {
         final source = CardInstance(
@@ -633,24 +617,24 @@ void main() {
           rarity: CardRarity.rare,
           forgeUpgrades: const ['sharp:2'],
         );
-        deckNotifier.initializeStarterDeck(
-            [source, CardInstance(data: signature)]);
+        final other = CardInstance(data: testCardPool[1]);
+        deckNotifier.initializeStarterDeck([source, other]);
 
+        final drawn = <String>{};
         for (var i = 0; i < 50; i++) {
           shopController.initializeShop(testCardPool, 0);
           final copy = shopController.state.deckCopy!;
-          expect(copy.data.id, source.data.id);
-          expect(copy.rarity, CardRarity.rare);
+          final origin = copy.data.id == source.data.id ? source : other;
+          expect(copy.data.id, origin.data.id);
+          expect(copy.rarity, origin.rarity);
           expect(copy.forgeUpgrades, isEmpty);
-          expect(copy.uniqueId, isNot(source.uniqueId));
+          expect(copy.uniqueId, isNot(origin.uniqueId));
+          drawn.add(copy.data.id);
         }
+        expect(drawn, {source.data.id, other.data.id});
       });
 
-      test('sans carte copiable, pas de copie', () {
-        shopController.initializeShop(testCardPool, 0);
-        expect(shopController.state.deckCopy, isNull);
-
-        deckNotifier.initializeStarterDeck([CardInstance(data: signature)]);
+      test('un deck vide n a pas de copie', () {
         shopController.initializeShop(testCardPool, 0);
         expect(shopController.state.deckCopy, isNull);
       });
@@ -799,62 +783,6 @@ void main() {
 
         expect(shopController.state, isNot(same(first)));
         expect(shopController.state.nodeId, isNull);
-      });
-    });
-
-    group('filtre de classe sur le pool de boutique', () {
-      const mageHero = HeroData(
-        id: 'mage',
-        nameEn: 'Mage',
-        nameFr: 'Mage',
-        classCard: 'mage.png',
-        maxHp: 80,
-        maxMana: 4,
-        luck: 0,
-        mastery: 0,
-      );
-
-      CardData signature(String heroClassId) => CardData(
-            id: 'signature_$heroClassId',
-            cost: 2,
-            type: CardType.attack,
-            category: CardCategory.characterSpecific,
-            heroClass: heroClassId,
-            rarity: CardRarity.rare,
-            target: CardTarget.singleEnemy,
-            effects: const [],
-          );
-
-      final mixedPool = [
-        ...testCardPool,
-        signature('mage'),
-        signature('paladin'),
-        signature('berserker'),
-      ];
-
-      test('la boutique d un mage ne propose jamais la signature d une autre classe', () {
-        runController.startNewRun(mageHero);
-
-        final offered = <String>{};
-        for (var i = 0; i < 200; i++) {
-          shopController.initializeShop(mixedPool, 0);
-          offered.addAll(shopController.state.cardsForSale.map((c) => c.data.id));
-        }
-
-        expect(offered, isNot(contains('signature_paladin')));
-        expect(offered, isNot(contains('signature_berserker')));
-      });
-
-      test('la boutique d un mage propose bien sa propre signature', () {
-        runController.startNewRun(mageHero);
-
-        final offered = <String>{};
-        for (var i = 0; i < 200; i++) {
-          shopController.initializeShop(mixedPool, 0);
-          offered.addAll(shopController.state.cardsForSale.map((c) => c.data.id));
-        }
-
-        expect(offered, contains('signature_mage'));
       });
     });
   });

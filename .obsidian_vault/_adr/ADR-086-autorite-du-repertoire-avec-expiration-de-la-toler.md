@@ -7,6 +7,9 @@ Complète [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md), qui d�
 **D4 est remplacée par [ADR-096](ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md)**
 (chantier P-49) : les passifs restent à plat, mais le lien à la classe part désormais du passif
 (`classes`), plus de `HeroData.passiveTrait`.
+**Complété le 2026-10-16 par [ADR-109](ADR-109-signatures-hors-du-deck.md)** (P-43, lot E4, livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `classes/<id>/skills/` injecte
+`heroClass` aux signatures ; `category` et `CardData.heroClass` n'existent plus, et une carte qui
+les déclare échoue au chargement.
 
 ### Contexte
 

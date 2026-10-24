@@ -19,8 +19,7 @@ et `017aa4c` (partie 2) ; code `3eafb5e`..`d6e6cd5` et le correctif de revue `14
 tagué sur ce commit, CI/CD verte — `release.yml` run `37078474537` vert —, release publiée en
 pré-release le même jour ; constaté par la porte d'entrée de la vague 3 (`9282513`) et re-vérifié
 par `gh` le 2026-10-04.
-**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
-sur la branche de la vague 3, en attente du propriétaire) : `boundLevel` et ses lecteurs — la
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) : `boundLevel` et ses lecteurs — la
 fusion, les pré-forgées, l'affûtage, le Puits — gagnent le bonus de plafond ; `nameAt` écrit le
 niveau dès qu'il dépasse 1 ; l'écriture de l'affûtage devient `DeckNotifier.raiseRuneLevel`,
 partagée par le feu et les trois sources sans or. Aucune décision ci-dessous n'est amendée.

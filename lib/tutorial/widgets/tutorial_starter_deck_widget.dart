@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 
 import '../../models/data/card_data.dart';
+import '../../models/data/signature_data.dart';
 import '../../ui/widgets/ui_card.dart';
 import '../tutorial_engine.dart';
 
 /// Étape 03 — draft du deck de départ.
 ///
-/// Le pool est celui de `StarterDeckDraftScreen` : cartes globales non-statut.
+/// Le pool est celui de `StarterDeckDraftScreen` : toute carte offerte (`CardData.isOfferable`).
 /// Les cartes s'affichent avec le vrai [UiCard], donc le vrai médaillon de
 /// mana et les vrais badges d'effets.
 class TutorialStarterDeckWidget extends StatefulWidget {
@@ -38,10 +39,10 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
     final locale = Localizations.localeOf(context).languageCode;
     final isFrench = locale == 'fr';
     final pool = widget.engine.fixtures.starterPool;
-    final classCards = widget.engine.mockState.chosenHero?.skills
-            .map(widget.engine.fixtures.card)
+    final signatures = widget.engine.mockState.chosenHero?.skills
+            .map(widget.engine.fixtures.signature)
             .toList() ??
-        const <CardData>[];
+        const <SignatureData>[];
 
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -103,8 +104,8 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
             ),
             child: Text(
               isFrench
-                  ? 'Ajoutées d\'office : ${classCards.map((c) => c.getName(locale)).join(", ")}'
-                  : 'Added automatically: ${classCards.map((c) => c.getName(locale)).join(", ")}',
+                  ? 'Vos signatures, toujours disponibles en combat : ${signatures.map((s) => s.getName(locale)).join(", ")}'
+                  : 'Your signatures, always available in combat: ${signatures.map((s) => s.getName(locale)).join(", ")}',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade300, fontSize: 11.5),
             ),

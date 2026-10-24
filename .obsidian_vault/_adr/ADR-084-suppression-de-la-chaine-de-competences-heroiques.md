@@ -3,6 +3,10 @@
 ✅ **Livré le 2026-09-04**, commit `ced306e`, bloc 1 du chantier P-40.
 Retire du jeu un système décrit par [ADR-003](ADR-003-architecture-100-data-driven.md) parmi
 les huit catalogues d'origine.
+**D3 amendée le 2026-10-16 par [ADR-109](ADR-109-signatures-hors-du-deck.md)** (P-43, lot E4, livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `HeroData.skills` liste
+désormais des **signatures**, compétences à recharge avec un point d'entrée
+(`CombatController.playSignature`), et non plus des cartes. **L'invariant de purge ci-dessous
+tient, et l'interdit de noms n'est pas levé** : aucun nom de la chaîne supprimée n'est repris.
 
 > [!IMPORTANT]
 > **Invariant de purge**, à relancer plutôt qu'à croire sur parole :

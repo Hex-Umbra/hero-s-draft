@@ -106,6 +106,7 @@ TextStyle editorMono({
 /// l'en-tete du fichier.
 const Map<EntityCategory, IconData> kCategoryIcons = {
   EntityCategory.card: Icons.style,
+  EntityCategory.signature: Icons.bolt,
   EntityCategory.relic: Icons.diamond,
   EntityCategory.passive: Icons.auto_awesome,
   EntityCategory.event: Icons.explore,
@@ -122,7 +123,6 @@ const Map<String, Color> kRarityColors = {
   'rare': AppColors.rarityRare,
   'epic': AppColors.rarityEpic,
   'legendary': AppColors.rarityLegendary,
-  'unique': AppColors.rarityUnique,
 };
 
 /// Le puits d'une saisie : fond sombre, bord qui s'allume au focus, rouge

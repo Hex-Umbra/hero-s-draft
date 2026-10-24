@@ -57,9 +57,9 @@ class EntityValidator {
   ///
   /// Une recette de classe ecrit la classe, puis un passif qui la nomme : au
   /// moment ou ce passif est juge, la classe n'existe ni dans le registre ni
-  /// sur le disque. `_signatureCards` contournait le probleme en n'etant pas
-  /// un controle par reference (voir sa documentation) ; le passif, lui, en
-  /// est un. C'est ce seam, nomme.
+  /// sur le disque. `_signatures` contourne le probleme en n'etant pas un
+  /// controle par reference (voir sa documentation) ; le passif, lui, en est
+  /// un. C'est ce seam, nomme.
   final Map<EntityCategory, Set<String>> pendingIds;
 
   static final RegExp _idPattern = RegExp(r'^[a-z0-9_]+$');
@@ -92,7 +92,7 @@ class EntityValidator {
       () => _bilingual(draft),
       () => _references(draft, mechanics),
       () => _assets(draft, mechanics),
-      () => _signatureCards(draft, mechanics),
+      () => _signatures(draft, mechanics),
       () => _construct(draft),
     ]) {
       final faults = family();
@@ -122,6 +122,29 @@ class EntityValidator {
             field: 'heroClass'),
       ];
     }
+    // Une signature n'existe que sous une classe : sans proprietaire, son
+    // chemin de repli `assets/data/skills/<id>.json` n'est celui d'aucune
+    // signature, et le controle d'existence qui suit n'aurait aucun sens.
+    if (draft.descriptor.supportsHeroClass && heroClass == null) {
+      return const [
+        ValidationFault(
+          'une signature appartient à une classe : choisissez son propriétaire',
+          field: 'heroClass',
+        ),
+      ];
+    }
+    // L'inverse : seule une signature a un proprietaire. Une autre entite
+    // portant une classe serait ecrite a plat, et l'ecrivain n'a pas a deviner
+    // ce que la classe voulait dire.
+    if (!draft.descriptor.supportsHeroClass && heroClass != null) {
+      return [
+        ValidationFault(
+          '« ${draft.descriptor.label} » n\'appartient à aucune classe : seule '
+          'une signature a un propriétaire',
+          field: 'heroClass',
+        ),
+      ];
+    }
 
     final faults = <ValidationFault>[];
     final exists = fs.fileExists('$rootPath/${draft.path}');
@@ -134,8 +157,9 @@ class EntityValidator {
         faults.add(ValidationFault('${draft.path} existe déjà'));
       }
       // Le controle disque ne voit qu'un chemin. Le registre voit tous ceux
-      // d'une categorie — dont le cas d'une carte neutre homonyme d'une carte
-      // de classe, que le chargeur rejette comme un doublon.
+      // d'une categorie — dont le cas d'une signature homonyme d'une
+      // signature d'une autre classe, que le chargeur rejette comme un
+      // doublon.
       //
       // `_registryIdsOf`, et non `_idsOf` : cette derniere unit les
       // identifiants en attente, et une recette de classe annonce son propre
@@ -199,8 +223,8 @@ class EntityValidator {
 
   /// Famille 4 — les valeurs enumerees, contre les enumerations Dart reelles.
   ///
-  /// **C'est le controle que `fromJson` avale** : `CardRarity`, `CardTarget` et
-  /// `CardCategory` ont un `orElse` qui retombe en silence sur une valeur par
+  /// **C'est le controle que `fromJson` avale** : `CardRarity` et `CardTarget`
+  /// ont un `orElse` qui retombe en silence sur une valeur par
   /// defaut. La carte existe alors, et elle est fausse.
   List<ValidationFault> _enums(
     EntityDraft draft,
@@ -472,14 +496,14 @@ class EntityValidator {
   }
 
   /// Le tableau `skills` d'une classe doit etre **exactement** l'ensemble des
-  /// cartes de son dossier `cards/`.
+  /// signatures de son dossier `skills/`.
   ///
-  /// Le controle lit le **disque** et non le registre : les cartes qu'une
+  /// Le controle lit le **disque** et non le registre : les signatures qu'une
   /// recette vient d'ecrire ne sont pas dans le registre charge au demarrage,
   /// et un controle par reference refuserait la sortie meme de l'outil. C'est
   /// aussi l'invariant exact qu'exige `referential_integrity_test`, avance au
   /// moment de l'ecriture plutot qu'a celui des tests.
-  List<ValidationFault> _signatureCards(
+  List<ValidationFault> _signatures(
     EntityDraft draft,
     Map<String, dynamic> mechanics,
   ) {
@@ -493,7 +517,7 @@ class EntityValidator {
       if (raw is! List) {
         return const [
           ValidationFault(
-            'doit être une liste d\'identifiants de cartes',
+            'doit être une liste d\'identifiants de signatures',
             field: 'skills',
           ),
         ];
@@ -502,7 +526,7 @@ class EntityValidator {
         if (element is! String) {
           return const [
             ValidationFault(
-              'chaque élément doit être un identifiant de carte',
+              'chaque élément doit être un identifiant de signature',
               field: 'skills',
             ),
           ];
@@ -511,7 +535,7 @@ class EntityValidator {
       }
     }
 
-    final folder = '$rootPath/assets/data/classes/${draft.id}/cards';
+    final folder = '$rootPath/assets/data/classes/${draft.id}/skills';
     final onDisk = fs.directoryExists(folder)
         ? fs
             .listDirectory(folder)
@@ -523,12 +547,12 @@ class EntityValidator {
     return [
       for (final missing in declared.difference(onDisk))
         ValidationFault(
-          'la carte "$missing" est déclarée mais absente de cards/',
+          'la signature "$missing" est déclarée mais absente de skills/',
           field: 'skills',
         ),
       for (final orphan in onDisk.difference(declared))
         ValidationFault(
-          'la carte "$orphan" est dans cards/ mais absente de skills',
+          'la signature "$orphan" est dans skills/ mais absente de skills',
           field: 'skills',
         ),
     ];
@@ -539,9 +563,17 @@ class EntityValidator {
   /// Elle attrape ce que les six autres n'ont pas prevu : un `cost` textuel,
   /// un `choices` absent, un effet malforme. Elle ne les remplace pas — les
   /// familles 4 et 5 existent precisement parce qu'elle est trop permissive.
+  ///
+  /// Le document d'une signature est augmente de sa classe : `compose()`
+  /// n'ecrit jamais `heroClass`, que le dossier impose, et
+  /// `SignatureData.fromJson` l'exige. L'editeur la tient comme le chargeur,
+  /// qui l'injecte depuis le chemin ; le document **ecrit** ne change pas.
   List<ValidationFault> _construct(EntityDraft draft) {
     try {
-      draft.descriptor.construct(draft.compose());
+      draft.descriptor.construct({
+        ...draft.compose(),
+        if (draft.descriptor.supportsHeroClass) 'heroClass': draft.heroClass,
+      });
     } catch (e) {
       return [
         ValidationFault(
@@ -574,6 +606,8 @@ class EntityValidator {
     switch (category) {
       case EntityCategory.card:
         return r.cards.map((e) => e.id).toSet();
+      case EntityCategory.signature:
+        return r.signatures.map((e) => e.id).toSet();
       case EntityCategory.relic:
         return r.relics.map((e) => e.id).toSet();
       case EntityCategory.event:

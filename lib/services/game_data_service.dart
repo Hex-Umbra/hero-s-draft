@@ -11,6 +11,7 @@ import '../models/data/relic_data.dart';
 import '../models/data/forge_upgrade_data.dart';
 import '../models/data/level_up_reward_data.dart';
 import '../models/data/game_data_registry.dart';
+import '../models/data/signature_data.dart';
 import '../models/data/audio_data.dart';
 import '../models/data/xp_curve_data.dart';
 import 'game_data_loader.dart';
@@ -71,22 +72,23 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   // La tolerance de migration a expire : le repertoire est desormais la
   // seule source d appartenance. `redundantFields` retombe sur son defaut
   // `const {'id'}` — `id` reste redeclarable a titre permanent (le porter
-  // rend le fichier lisible hors contexte), mais `heroClass` et `category`
-  // ne doivent plus figurer dans le fichier.
+  // rend le fichier lisible hors contexte) ; `heroClass` et `category` sont
+  // refuses par `CardData.fromJson`.
   final cards = await loader.loadAll<CardData>([
     EntitySource(
       'assets/data/cards/*.json',
       CardData.fromJson,
-      inject: (c) => {'id': c[0], 'category': 'global'},
+      inject: (c) => {'id': c[0]},
     ),
+  ]);
+
+  // Les signatures de classe (spec P-43 E4, §3.2) : hors du deck, elles ne
+  // sont pas des cartes. Le dossier de la classe injecte `heroClass`.
+  final signatures = await loader.loadAll<SignatureData>([
     EntitySource(
-      'assets/data/classes/*/cards/*.json',
-      CardData.fromJson,
-      inject: (c) => {
-        'id': c[1],
-        'heroClass': c[0],
-        'category': 'characterSpecific',
-      },
+      'assets/data/classes/*/skills/*.json',
+      SignatureData.fromJson,
+      inject: (c) => {'id': c[1], 'heroClass': c[0]},
     ),
   ]);
 
@@ -152,6 +154,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     enemies: enemies,
     heroes: heroes,
     cards: cards,
+    signatures: signatures,
     events: events,
     passives: passives,
     relics: relics,

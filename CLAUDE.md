@@ -40,11 +40,11 @@ The codebase strictly separates three layers — never mix them:
   - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
   - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
-- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`, `xp_curve_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
+- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `signature_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `audio_data.dart`, `xp_curve_data.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `signature_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
 
 - **Services** — `lib/services/`
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
-  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/cards/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
+  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/skills/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
   - `MapGeneratorService` plus `lib/services/map/` (`map_node_generator.dart`, `map_connection_builder.dart`, `map_content_placer.dart`, `map_validator.dart`) — procedural world-map generation, decomposed into generate → connect → place-content → validate stages.
   - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`, three keys, into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
 
@@ -69,7 +69,7 @@ The codebase strictly separates three layers — never mix them:
 
 ## Data-Driven Content Workflow
 
-**One entity, one file, and the directory carries the ownership.** A card filed under `assets/data/classes/paladin/cards/` *is* a paladin card — the loader injects that from the path, and a JSON claiming otherwise fails to load.
+**One entity, one file, and the directory carries the ownership.** A signature filed under `assets/data/classes/paladin/skills/` *is* a paladin signature — the loader injects that from the path, and a JSON claiming otherwise fails to load.
 
 ```
 assets/data/
@@ -77,16 +77,16 @@ assets/data/
 │   xp_curve.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
-├── classes/<id>/{class.json, <id>.png, cards/<id>.json}
+├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
 
-To add or modify a card, enemy, hero, relic, passive, event, forge upgrade or level-up reward:
+To add or modify a card, signature (a file under `classes/<id>/skills/`), enemy, hero, relic, passive, event, forge upgrade or level-up reward:
 
 1. **Create a file** in the right directory, shaped like a neighbouring entry. The filename **is** the `id` (`relics/iron_talisman.json` → `"id": "iron_talisman"`), in lowercase ASCII `snake_case` — enforced by `test/unit/entity_id_convention_test.dart`. For a class or an enemy it is a **folder** you create, image included, and the `id` comes from the folder name.
 2. **Run `dart run tool/sync_assets.dart`** to regenerate `pubspec.yaml`'s `assets:` section — a new class or enemy folder needs its own line, and an undeclared one fails silently at build time.
 
-No business-logic code needs to change for pure content additions. Never write a field the directory imposes: `heroClass` and `category` in a card file fail the load. Only `id` may be restated, and only identically — it makes the file readable out of context.
+No business-logic code needs to change for pure content additions. Never write a field the directory imposes: `heroClass` in a signature file fails the load, and so do `heroClass` and `category` in a card file. Only `id` may be restated, and only identically — it makes the file readable out of context.
 
 `patch_notes.json` is the one exception to all of the above — it stays flat (array order *is* the semantics: index 0 is the current version) and is agent-managed; see below.
 

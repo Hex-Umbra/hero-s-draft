@@ -24,7 +24,7 @@ enum EntityFileStatus {
 }
 
 /// Le formulaire d'une entite : l'en-tete du fichier, puis ses sections —
-/// Identite, Textes, Mecanique, Ressources, Cartes de signature (spec D3-D4).
+/// Identite, Textes, Mecanique, Ressources, Signatures (spec D3-D4).
 ///
 /// **Purement presentationnel** : tout l'etat vit dans l'ecran appelant, sous
 /// forme de `TextEditingController`s et de callbacks. Les boutons et l'issue
@@ -54,7 +54,7 @@ class EntityForm extends StatelessWidget {
     this.selectedOwner,
     this.onOwnerSelected,
     this.ownerColorOf,
-    this.showSignatureCards = false,
+    this.showSignatures = false,
     this.cardCountController,
     this.cardCount = 0,
     this.onCardCountChanged,
@@ -89,7 +89,7 @@ class EntityForm extends StatelessWidget {
   final Map<String, String> faults;
   final FieldAnchors anchors;
 
-  /// Rangee de pastilles de proprietaire, pour une carte en creation
+  /// Rangee de pastilles de proprietaire, pour une signature en creation
   /// seulement : `Key('editeur-proprietaire-<classe>')` et
   /// `Key('editeur-proprietaire-neutre')`.
   final List<String> ownerClassIds;
@@ -98,7 +98,7 @@ class EntityForm extends StatelessWidget {
   final Color? Function(String classId)? ownerColorOf;
 
   /// La recette de classe, pour une classe en creation seulement.
-  final bool showSignatureCards;
+  final bool showSignatures;
   final TextEditingController? cardCountController;
   final int cardCount;
   final ValueChanged<int>? onCardCountChanged;
@@ -148,9 +148,9 @@ class EntityForm extends StatelessWidget {
               children: [resources],
             ),
           ],
-          if (showSignatureCards) ...[
+          if (showSignatures) ...[
             const SizedBox(height: 16),
-            _signatureCards(),
+            _signatures(),
           ],
         ],
       ),
@@ -288,8 +288,8 @@ class EntityForm extends StatelessWidget {
     );
   }
 
-  /// Le proprietaire d'une carte est un champ du formulaire, pas un niveau de
-  /// l'arbre : la neutralite et chaque classe sont des pastilles, colorees
+  /// Le proprietaire d'une signature est un champ du formulaire, pas un niveau
+  /// de l'arbre : la neutralite et chaque classe sont des pastilles, colorees
   /// par le `themeColor` de la classe.
   Widget _ownerPills() {
     return PropertyRow(
@@ -515,15 +515,15 @@ class EntityForm extends StatelessWidget {
     );
   }
 
-  /// La classe en creation entraine ses cartes de signature : combien, puis
-  /// pour chacune son identifiant et son nom bilingue.
-  Widget _signatureCards() {
+  /// La classe en creation entraine ses signatures : combien, puis pour
+  /// chacune son identifiant et son nom bilingue.
+  Widget _signatures() {
     final error = faults['skills'];
     return KeyedSubtree(
       key: anchors.keyFor('skills'),
       child: EditorPanel(
-        icon: Icons.style,
-        title: 'Cartes de signature',
+        icon: Icons.bolt,
+        title: 'Signatures',
         caption: 'Nombre',
         trailing: _stepper(),
         children: [
@@ -616,7 +616,7 @@ class EntityForm extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Text(
-                'Aucune carte de signature : la classe sera écrite seule.',
+                'Aucune signature : la classe sera écrite seule.',
                 style: TextStyle(color: EditorColors.faint, fontSize: 12.5),
               ),
             ),

@@ -51,16 +51,26 @@ Map<String, List<String>> knownValues(
     });
   }
 
-  for (final relative in entityFiles(fs, rootPath, descriptor)) {
-    final Object? decoded;
-    try {
-      decoded = jsonDecode(fs.readFile('$rootPath/$relative'));
-    } catch (_) {
-      // Un fichier illisible ne doit pas priver du panneau entier : il sera
-      // signale par le chargement du jeu, pas par un panneau d'aide.
-      continue;
+  // Une signature parle le vocabulaire de la carte (spec §8) : ses valeurs
+  // connues sont l'union des fichiers de cartes et de ceux des signatures.
+  final sources = [
+    descriptor,
+    if (descriptor.category == EntityCategory.signature)
+      kEntityDescriptors[EntityCategory.card]!,
+  ];
+
+  for (final source in sources) {
+    for (final relative in entityFiles(fs, rootPath, source)) {
+      final Object? decoded;
+      try {
+        decoded = jsonDecode(fs.readFile('$rootPath/$relative'));
+      } catch (_) {
+        // Un fichier illisible ne doit pas priver du panneau entier : il sera
+        // signale par le chargement du jeu, pas par un panneau d'aide.
+        continue;
+      }
+      if (decoded is Map<String, dynamic>) take('', decoded);
     }
-    if (decoded is Map<String, dynamic>) take('', decoded);
   }
 
   return {

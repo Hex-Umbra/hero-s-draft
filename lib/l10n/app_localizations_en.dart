@@ -995,4 +995,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muteAll => 'Mute all';
+
+  @override
+  String signatureCostAndCooldown(int cost, int cooldown) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cooldown,
+      locale: localeName,
+      other: '$cooldown turns',
+      one: '1 turn',
+    );
+    return 'Cost: $cost Mana · Cooldown: $_temp0';
+  }
+
+  @override
+  String get signatureChooseTarget => 'Choose a target';
+
+  @override
+  String signatureTurnsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count turns',
+      one: '1 turn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get signatures => 'Signatures';
 }

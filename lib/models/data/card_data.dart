@@ -6,37 +6,31 @@ import 'game_data_registry.dart';
 
 enum CardType { attack, skill, power, status }
 
-enum CardCategory { global, characterSpecific }
-
 enum CardRarity {
   common,
   uncommon,
   rare,
   epic,
-  legendary,
-  unique;
+  legendary;
 
   /// Rareté que produit une fusion 3→1 de cartes de cette rareté.
   ///
-  /// `null` au sommet de l'échelle (`legendary`) comme hors d'elle (`unique`,
-  /// qui ne fusionne jamais — ADR-026). Ne jamais la dériver de `index` :
-  /// `unique` est déclarée après `legendary` sans lui succéder.
+  /// `null` au sommet de l'échelle (`legendary`).
   CardRarity? get next => switch (this) {
         CardRarity.common => CardRarity.uncommon,
         CardRarity.uncommon => CardRarity.rare,
         CardRarity.rare => CardRarity.epic,
         CardRarity.epic => CardRarity.legendary,
-        CardRarity.legendary || CardRarity.unique => null,
+        CardRarity.legendary => null,
       };
 
   /// Le nombre de fusions qu'il a fallu pour atteindre cette rareté : 0 à 4
-  /// de `common` à `legendary`, 0 pour `unique`, qui ne fusionne jamais
-  /// (ADR-026). `minFusionRank` le compare (`ForgeRuneRules.isEligible`), G1
-  /// compte ses paliers (`scaleValue`), il borne les runes d'une pré-forgée
-  /// (`ShopController`), et la difficulté en somme le double
-  /// (`DeckState.fusionRankSum`).
+  /// de `common` à `legendary`. `minFusionRank` le compare
+  /// (`ForgeRuneRules.isEligible`), G1 compte ses paliers (`scaleValue`), il
+  /// borne les runes d'une pré-forgée (`ShopController`), et la difficulté en
+  /// somme le double (`DeckState.fusionRankSum`).
   int get fusionRank => switch (this) {
-        CardRarity.common || CardRarity.unique => 0,
+        CardRarity.common => 0,
         CardRarity.uncommon => 1,
         CardRarity.rare => 2,
         CardRarity.epic => 3,
@@ -44,9 +38,9 @@ enum CardRarity {
       };
 
   /// Le multiplicateur du palier de cette rareté, que G1 applique palier par
-  /// palier (`scaleValue`). 1,0 pour `unique`, hors de l'échelle.
+  /// palier (`scaleValue`).
   double get multiplier => switch (this) {
-        CardRarity.common || CardRarity.unique => 1.0,
+        CardRarity.common => 1.0,
         CardRarity.uncommon => 1.2,
         CardRarity.rare => 1.4,
         CardRarity.epic => 1.6,
@@ -74,11 +68,6 @@ enum CardRarity {
     }
     return value;
   }
-
-  /// Une carte de cette rareté peut-elle entrer dans le deck en cours de run :
-  /// achat, récompense, copie par un Miroir ? Une carte `unique` n'y entre
-  /// qu'au draft de départ (ADR-026, ADR-051).
-  bool get isAcquirable => this != CardRarity.unique;
 }
 
 enum CardTarget { singleEnemy, allEnemies, self, none }
@@ -121,8 +110,6 @@ class CardData implements AudioSource {
   final String descriptionFr;
   final int cost;
   final CardType type;
-  final CardCategory category;
-  final String? heroClass;
   final CardRarity rarity;
   final CardTarget target;
   final String? spritePath;
@@ -141,8 +128,6 @@ class CardData implements AudioSource {
     this.descriptionFr = '',
     required this.cost,
     required this.type,
-    required this.category,
-    this.heroClass,
     required this.rarity,
     required this.target,
     this.spritePath,
@@ -156,24 +141,20 @@ class CardData implements AudioSource {
   String getDescription(String locale) =>
       locale == 'fr' ? descriptionFr : descriptionEn;
 
-  /// Cette carte peut-elle être proposée au héros de classe [heroClassId] par
-  /// un pool d'offre — boutique, trouvaille ?
-  ///
-  /// Une carte de signature n'appartient qu'à sa classe : sans ce filtre, un
-  /// mage pouvait acheter une carte de paladin. Seul `heroClass` est testé, et
-  /// jamais `category` : le chargeur injecte les deux depuis le même chemin de
-  /// fichier, ils ne peuvent pas diverger, et les tester tous les deux ferait
-  /// croire à deux conditions distinctes.
-  ///
-  /// Ne régit pas le draft de départ, qui reste sur `category == global` : les
-  /// cartes de signature y sont ajoutées d'office par `getHeroCards`, les
-  /// offrir en plus les rendrait prenables deux fois.
-  bool isOfferableTo(String heroClassId) =>
-      type != CardType.status &&
-      rarity.isAcquirable &&
-      (heroClass == null || heroClass == heroClassId);
+  /// Le prédicat d'offre unique (ADR-101 D1) : boutique, trouvaille, draft de
+  /// départ, `starterPool` du tutoriel ; la vague 5 lui donnera le passif actif.
+  bool get isOfferable => type != CardType.status;
 
   factory CardData.fromJson(Map<String, dynamic> json) {
+    // L'appartenance vient du répertoire (A10) : une carte ne la déclare pas.
+    for (final key in const ['heroClass', 'category']) {
+      if (json.containsKey(key)) {
+        throw FormatException(
+          'CardData: la clé "$key" est refusée, une carte tient son '
+          'appartenance de son répertoire (carte "${json['id']}")',
+        );
+      }
+    }
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
     final dEn =
@@ -193,11 +174,6 @@ class CardData implements AudioSource {
       descriptionFr: dFr,
       cost: json['cost'] as int,
       type: CardType.values.firstWhere((e) => e.name == json['type']),
-      category: CardCategory.values.firstWhere(
-        (e) => e.name == json['category'],
-        orElse: () => CardCategory.global,
-      ),
-      heroClass: json['heroClass'] as String?,
       rarity: CardRarity.values.firstWhere(
         (e) => e.name == json['rarity'],
         orElse: () => CardRarity.common,
@@ -226,8 +202,6 @@ class CardData implements AudioSource {
         'description_fr': descriptionFr,
         'cost': cost,
         'type': type.name,
-        'category': category.name,
-        if (heroClass != null) 'heroClass': heroClass,
         'rarity': rarity.name,
         'target': target.name,
         if (spritePath != null) 'spritePath': spritePath,

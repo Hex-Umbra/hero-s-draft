@@ -154,7 +154,7 @@ void main() {
 
   /// Monte une classe minimale dans le bac a sable, comme le depot la porte.
   void seedClass(String id, {List<String> skills = const []}) {
-    Directory('$root/assets/data/classes/$id/cards').createSync(recursive: true);
+    Directory('$root/assets/data/classes/$id/skills').createSync(recursive: true);
     File('$root/assets/data/classes/$id/class.json').writeAsStringSync(
       jsonEncode({
         'id': id,
@@ -172,7 +172,7 @@ void main() {
 
   /// Un brouillon de classe minimal, pour les tests de `writeAll` : le
   /// gabarit ne porte pas `skills`, comme celui livre par le descripteur — la
-  /// premiere carte de signature l ajoute.
+  /// premiere signature l ajoute.
   EntityDraft classDraft(String id, {bool isModification = false}) {
     final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
     return EntityDraft(
@@ -189,8 +189,8 @@ void main() {
     );
   }
 
-  EntityDraft classCardDraft(String id, String heroClass) {
-    final descriptor = kEntityDescriptors[EntityCategory.card]!;
+  EntityDraft signatureDraft(String id, String heroClass) {
+    final descriptor = kEntityDescriptors[EntityCategory.signature]!;
     return EntityDraft(
       descriptor: descriptor,
       id: id,
@@ -205,15 +205,15 @@ void main() {
     );
   }
 
-  group('carte de classe', () {
-    test('ecrit la carte ET declare son identifiant dans skills', () async {
+  group('signature', () {
+    test('ecrit la signature ET declare son identifiant dans skills', () async {
       seedClass('paladin', skills: ['smite']);
 
       final report =
-          await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+          await writerHere().write(signatureDraft('coup_saint', 'paladin'));
 
       expect(
-        File('$root/assets/data/classes/paladin/cards/coup_saint.json')
+        File('$root/assets/data/classes/paladin/skills/coup_saint.json')
             .existsSync(),
         isTrue,
       );
@@ -224,12 +224,12 @@ void main() {
       expect(report.written, hasLength(2));
     });
 
-    test('le dossier cards et skills restent en bijection', () async {
+    test('le dossier skills et le champ skills restent en bijection', () async {
       seedClass('paladin');
-      await writerHere().write(classCardDraft('un', 'paladin'));
-      await writerHere().write(classCardDraft('deux', 'paladin'));
+      await writerHere().write(signatureDraft('un', 'paladin'));
+      await writerHere().write(signatureDraft('deux', 'paladin'));
 
-      final onDisk = Directory('$root/assets/data/classes/paladin/cards')
+      final onDisk = Directory('$root/assets/data/classes/paladin/skills')
           .listSync()
           .whereType<File>()
           // Meme filtre que `referential_integrity_test` : Windows y laisse
@@ -246,33 +246,33 @@ void main() {
       expect(onDisk, (classJson['skills'] as List).toSet());
     });
 
-    test('une classe sans class.json ne laisse pas la carte derriere elle',
+    test('une classe sans class.json ne laisse pas la signature derriere elle',
         () async {
-      Directory('$root/assets/data/classes/fantome/cards')
+      Directory('$root/assets/data/classes/fantome/skills')
           .createSync(recursive: true);
 
       await expectLater(
-        writerHere().write(classCardDraft('orpheline', 'fantome')),
+        writerHere().write(signatureDraft('orpheline', 'fantome')),
         throwsA(isA<StateError>()),
       );
 
-      // Les deux fichiers, ou aucun : la carte a ete defaite.
+      // Les deux fichiers, ou aucun : la signature a ete defaite.
       expect(
-        File('$root/assets/data/classes/fantome/cards/orpheline.json')
+        File('$root/assets/data/classes/fantome/skills/orpheline.json')
             .existsSync(),
         isFalse,
       );
     });
 
-    test('modifier une carte ne retouche pas skills', () async {
+    test('modifier une signature ne retouche pas skills', () async {
       seedClass('paladin');
-      await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+      await writerHere().write(signatureDraft('coup_saint', 'paladin'));
 
       final before =
           File('$root/assets/data/classes/paladin/class.json').readAsStringSync();
       final report = await writerHere().write(
         EntityDraft(
-          descriptor: kEntityDescriptors[EntityCategory.card]!,
+          descriptor: kEntityDescriptors[EntityCategory.signature]!,
           id: 'coup_saint',
           heroClass: 'paladin',
           isModification: true,
@@ -282,7 +282,7 @@ void main() {
             'description_fr': 'Inflige 9 degats.',
             'description_en': 'Deal 9 damage.',
           },
-          mechanics: '{"cost": 2, "type": "attack", "rarity": "common", '
+          mechanics: '{"cost": 2, "cooldown": 2, "type": "attack", '
               '"target": "singleEnemy", "effects": '
               '[{"type": "damage", "value": 9}]}',
         ),
@@ -295,9 +295,38 @@ void main() {
       );
     });
 
-    test('une carte deja declaree n est pas ajoutee deux fois', () async {
+    test('une carte portant une classe ne touche jamais skills', () async {
+      // L'ecrivain ne valide rien : sa propre garde doit tenir la bijection
+      // si un brouillon de carte arrive avec une classe.
+      seedClass('paladin', skills: ['smite']);
+      Directory('$root/assets/data/cards').createSync(recursive: true);
+      final before =
+          File('$root/assets/data/classes/paladin/class.json').readAsStringSync();
+      final card = kEntityDescriptors[EntityCategory.card]!;
+
+      final report = await writerHere().write(EntityDraft(
+        descriptor: card,
+        id: 'coup_bas',
+        heroClass: 'paladin',
+        bilingual: const {
+          'name_fr': 'Coup bas',
+          'name_en': 'Low Blow',
+          'description_fr': 'Inflige 6 degats.',
+          'description_en': 'Deal 6 damage.',
+        },
+        mechanics: card.template,
+      ));
+
+      expect(report.written, ['assets/data/cards/coup_bas.json']);
+      expect(
+        File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
+        before,
+      );
+    });
+
+    test('une signature deja declaree n est pas ajoutee deux fois', () async {
       seedClass('paladin', skills: ['coup_saint']);
-      await writerHere().write(classCardDraft('coup_saint', 'paladin'));
+      await writerHere().write(signatureDraft('coup_saint', 'paladin'));
 
       final classJson = jsonDecode(
         File('$root/assets/data/classes/paladin/class.json').readAsStringSync(),
@@ -305,9 +334,10 @@ void main() {
       expect(classJson['skills'], ['coup_saint']);
     });
 
-    test('une classe creee par l outil accueille sa premiere carte', () async {
+    test('une classe creee par l outil accueille sa premiere signature',
+        () async {
       // Le premier vrai geste d un utilisateur : creer une classe, puis lui
-      // donner sa premiere carte de signature. Le gabarit de la classe ne
+      // donner sa premiere signature. Le gabarit de la classe ne
       // porte **pas** `skills` — c est le `?? const []` de l ecrivain qui
       // tient ce cas, et rien ne l exercait : `seedClass` ecrit toujours la
       // cle, y compris vide.
@@ -334,14 +364,14 @@ void main() {
       // gagnait un `skills`, ce test cesserait de couvrir ce qu il annonce.
       expect(read().containsKey('skills'), isFalse);
 
-      await writerHere().write(classCardDraft('ballade', 'barde'));
+      await writerHere().write(signatureDraft('ballade', 'barde'));
 
       expect(read()['skills'], ['ballade']);
     });
   });
 
   group('categories en dossier', () {
-    test('une classe nait avec un sous-dossier cards vide', () async {
+    test('une classe nait avec un sous-dossier skills vide', () async {
       final descriptor = kEntityDescriptors[EntityCategory.heroClass]!;
       await writerHere().write(
         EntityDraft(
@@ -357,11 +387,11 @@ void main() {
         ),
       );
 
-      final cards = Directory('$root/assets/data/classes/barde/cards');
+      final skills = Directory('$root/assets/data/classes/barde/skills');
       // Sans ce dossier, `referential_integrity_test` **leve** au lieu
       // d'echouer : `listSync()` y est appele sans garde.
-      expect(cards.existsSync(), isTrue);
-      expect(cards.listSync(), isEmpty);
+      expect(skills.existsSync(), isTrue);
+      expect(skills.listSync(), isEmpty);
     });
 
     test('un ennemi nait dans son propre dossier', () async {
@@ -501,7 +531,7 @@ void main() {
       Directory('$root/assets/placeholders/images').createSync(recursive: true);
       File('assets/placeholders/images/placeholder_icon.png')
           .copySync('$root/assets/placeholders/images/placeholder_icon.png');
-      Directory('$root/assets/data/classes/paladin/cards')
+      Directory('$root/assets/data/classes/paladin/skills')
           .createSync(recursive: true);
       File('$root/assets/data/classes/paladin/class.json')
           .writeAsStringSync('{}');
@@ -517,26 +547,26 @@ void main() {
   });
 
   group('writeAll', () {
-    // classCardDraft(id, heroClass) : meme ordre que l helper deja present
+    // signatureDraft(id, heroClass) : meme ordre que l helper deja present
     // plus haut dans ce fichier.
     test('writeAll ecrit tous les brouillons et ne synchronise qu une fois',
         () async {
       final fs = RecordingFileSystem(root);
       final report = await EntityWriter(fs: fs, rootPath: root).writeAll([
         classDraft('gambler'),
-        classCardDraft('bluff', 'gambler'),
-        classCardDraft('all_in', 'gambler'),
+        signatureDraft('bluff', 'gambler'),
+        signatureDraft('all_in', 'gambler'),
       ]);
 
-      // Compte exact, verifie par trace : class.json, cards/bluff.json,
-      // class.json (skills += bluff), cards/all_in.json, class.json (skills
-      // += all_in). `_registerSignatureCard` reecrit class.json a chaque
-      // carte de signature, jamais deux fois pour la meme carte.
+      // Compte exact, verifie par trace : class.json, skills/bluff.json,
+      // class.json (skills += bluff), skills/all_in.json, class.json (skills
+      // += all_in). `_registerSignature` reecrit class.json a chaque
+      // signature, jamais deux fois pour la meme signature.
       expect(report.written, hasLength(5));
       expect(
         fs.syncRuns,
         1,
-        reason: 'un dart run par carte serait insupportable',
+        reason: 'un dart run par signature serait insupportable',
       );
     });
 
@@ -551,8 +581,8 @@ void main() {
       await expectLater(
         writer.writeAll([
           classDraft('gambler'),
-          classCardDraft('bluff', 'gambler'),
-          classCardDraft('all_in', 'gambler'),
+          signatureDraft('bluff', 'gambler'),
+          signatureDraft('all_in', 'gambler'),
         ]),
         throwsA(anything),
       );
@@ -562,7 +592,7 @@ void main() {
         isFalse,
       );
       expect(
-        File('$root/assets/data/classes/gambler/cards/bluff.json')
+        File('$root/assets/data/classes/gambler/skills/bluff.json')
             .existsSync(),
         isFalse,
       );
@@ -809,7 +839,7 @@ class RecordingFileSystem extends IoContentFileSystem {
 /// Le vrai systeme de fichiers, qui leve au n-ieme appel a [writeFile].
 ///
 /// Sert a prouver que la pile de rollback de `writeAll` est **partagee**
-/// entre brouillons : sans elle, un echec sur la carte de signature d une
+/// entre brouillons : sans elle, un echec sur la signature d une
 /// classe fraichement creee laisserait le `class.json` deja ecrit sur le
 /// disque, et `referential_integrity_test` refuse precisement cet etat.
 class FailingOnNthWrite extends IoContentFileSystem {

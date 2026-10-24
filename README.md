@@ -61,8 +61,8 @@ flutter test
 
 ### Modding (Ajouter du contenu)
 Grâce à l'architecture Data-Driven, étendre le jeu est trivial. **Une entité = un fichier**, et
-**le répertoire fait autorité** : une carte rangée dans `classes/paladin/cards/` *est* une carte du
-paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n'ait à le dire.
+**le répertoire fait autorité** : une signature rangée dans `classes/paladin/skills/` *est* une
+signature du paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n'ait à le dire.
 
 ```
 assets/data/
@@ -71,7 +71,7 @@ assets/data/
 ├── classes/<id>/                # un dossier auto-suffisant par classe
 │   ├── class.json
 │   ├── icon.png
-│   └── cards/<id>.json          # cartes propres à la classe
+│   └── skills/<id>.json         # signatures de la classe
 └── enemies/<id>/                # un dossier auto-suffisant par ennemi
     ├── enemy.json
     └── sprite.png
@@ -90,8 +90,9 @@ assets/data/
 3. **Relancez l'application.** La nouvelle carte ou le nouvel ennemi est déjà dans le jeu, pris en
    compte par la Boutique, les récompenses et le système de combat !
 
-*Note : n'écrivez pas les champs que le répertoire impose — `heroClass` et `category` dans le
-fichier d'une carte font échouer le chargement. Seul l'`id` peut être redéclaré, à condition d'être
+*Note : n'écrivez pas les champs que le répertoire impose — `heroClass` dans le fichier
+d'une signature fait échouer le chargement, de même que `heroClass` et `category` dans le fichier
+d'une carte. Seul l'`id` peut être redéclaré, à condition d'être
 identique, parce qu'il rend le fichier lisible hors de son contexte.*
 
 *Note : toute entrée à texte visible porte ses deux variantes `_fr` et `_en`.*

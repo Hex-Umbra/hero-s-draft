@@ -15,7 +15,7 @@ void main() {
     // fichier, a cent lignes l'un de l'autre ; elle ne dit donc rien de
     // `loadGameDataRegistry`, dont c'est le test suivant qui s'occupe.
     expect(kEntityDescriptors.keys.toSet(), EntityCategory.values.toSet());
-    expect(EntityCategory.values, hasLength(8));
+    expect(EntityCategory.values, hasLength(9));
   });
 
   test('aucune source de chargement n a ete ajoutee sans descripteur', () {
@@ -26,10 +26,10 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Neuf sources pour **huit**
-    // categories, par un seul ecart assume : la carte en a deux, neutre et de
-    // classe, pour un seul descripteur. Les recompenses de niveau ont recu le
-    // leur au lot D (spec §9.2).
+    // puis relever le compte ci-dessous. Neuf sources pour neuf categories,
+    // sans ecart : la carte est neutre seulement, et la signature de classe a
+    // sa propre source et son propre descripteur (spec P-43 E4, §8). Les
+    // recompenses de niveau ont recu le leur au lot D (spec §9.2).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
     expect(declared, hasLength(9));
@@ -63,11 +63,11 @@ void main() {
       );
     });
 
-    test('une carte de classe va dans le dossier de sa classe', () {
+    test('une signature va dans skills de sa classe', () {
       expect(
-        kEntityDescriptors[EntityCategory.card]!
+        kEntityDescriptors[EntityCategory.signature]!
             .pathOf('smite', heroClass: 'paladin'),
-        'assets/data/classes/paladin/cards/smite.json',
+        'assets/data/classes/paladin/skills/smite.json',
       );
     });
 
@@ -116,6 +116,23 @@ void main() {
     );
   });
 
+  test('la signature exige cost, cooldown et type, et refuse heroClass, '
+      'rarity, isExhaust et category', () {
+    final signature = kEntityDescriptors[EntityCategory.signature]!;
+    expect(signature.requiredKeys, {'cost', 'cooldown', 'type'});
+    expect(
+      signature.forbiddenKeys,
+      {'heroClass', 'rarity', 'isExhaust', 'category'},
+    );
+  });
+
+  test('le type d une signature exclut status', () {
+    expect(
+      kEntityDescriptors[EntityCategory.signature]!.enumKeys['type'],
+      ['attack', 'skill', 'power'],
+    );
+  });
+
   test('les gabarits sont du JSON valide et ne portent aucun champ interdit',
       () {
     for (final descriptor in kEntityDescriptors.values) {
@@ -130,12 +147,12 @@ void main() {
     }
   });
 
-  test('seule la carte accepte une classe', () {
+  test('seule la signature accepte une classe', () {
     final withClass = kEntityDescriptors.values
         .where((d) => d.supportsHeroClass)
         .map((d) => d.category)
         .toList();
-    expect(withClass, [EntityCategory.card]);
+    expect(withClass, [EntityCategory.signature]);
   });
 
   test('seules la classe et l ennemi portent des emplacements image', () {
@@ -187,7 +204,7 @@ void main() {
     }
   });
 
-  // **Gabarit superset-du-modele, pour les huit categories.**
+  // **Gabarit superset-du-modele, pour les neuf categories.**
   //
   // En creation, le formulaire est infere du gabarit : un champ par cle du
   // gabarit, plus les `assetKeys` et les `referenceKeys` qu'il ne porte pas
@@ -207,14 +224,15 @@ void main() {
   //
   // Ne figurent pas au gabarit, et c'est la §5.3 de la spec :
   // - `id`, saisi dans le triangle d'identite ;
-  // - `sfx`, ressource son de la carte, de la relique et de l'ennemi : le
-  //   formulaire le rend en liste de sons (`assetKeys`), jamais en texte ;
+  // - `sfx`, ressource son de la carte, de la signature, de la relique et de
+  //   l'ennemi : le formulaire le rend en liste de sons (`assetKeys`), jamais
+  //   en texte ;
   // - `spritePath` d'une carte : lu par `CardData`, reserve aux illustrations
   //   a venir, sans lecteur a l'ecran. Exclusion nommee, test ci-dessous ;
   // - `classCard` / `spritePath` d'une classe et d'un ennemi, calcules par
   //   `EntityWriter` a partir de l'identifiant ;
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
-  // - `skills`, alimente carte par carte par `_registerSignatureCard` ;
+  // - `skills`, alimente signature par signature par `_registerSignature` ;
   // - `heroClass` et `category`, imposes par le repertoire ;
   // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
   //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
@@ -235,6 +253,14 @@ void main() {
         'target',
         'animation',
         'isExhaust',
+        'effects',
+      },
+      EntityCategory.signature: {
+        'cost',
+        'cooldown',
+        'type',
+        'target',
+        'animation',
         'effects',
       },
       EntityCategory.relic: {
@@ -304,7 +330,7 @@ void main() {
     expect(
       expected.keys.toSet(),
       EntityCategory.values.toSet(),
-      reason: 'la table doit couvrir les huit categories',
+      reason: 'la table doit couvrir les neuf categories',
     );
 
     expected.forEach((category, keys) {
@@ -327,9 +353,10 @@ void main() {
     expect(descriptor.enumKeys['mastery.field'], PassiveMastery.fields);
   });
 
-  test('sfx est une ressource son des trois categories qui le lisent', () {
+  test('sfx est une ressource son des quatre categories qui le lisent', () {
     for (final category in const [
       EntityCategory.card,
+      EntityCategory.signature,
       EntityCategory.relic,
       EntityCategory.enemy,
     ]) {
@@ -361,6 +388,8 @@ void main() {
   test('les vocabulaires fermes cote moteur sont declares', () {
     expect(kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
         {'animation', 'effects[].type', 'effects[].statusId'});
+    expect(kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys,
+        kEntityDescriptors[EntityCategory.card]!.vocabularyKeys);
     expect(kEntityDescriptors[EntityCategory.relic]!.vocabularyKeys,
         {'effectType'});
     expect(kEntityDescriptors[EntityCategory.passive]!.vocabularyKeys,

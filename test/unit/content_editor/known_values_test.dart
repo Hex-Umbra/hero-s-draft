@@ -60,15 +60,19 @@ void main() {
     expect(values['eligibleCardTypes'], ['attack', 'skill']);
   });
 
-  test('une carte est cherchee a plat ET sous chaque classe', () {
+  test('une carte est lue a plat, une signature parle aussi la carte', () {
     write('assets/data/cards/neutre.json', '{"animation": "melee"}');
-    write('assets/data/classes/paladin/cards/smite.json',
+    write('assets/data/classes/paladin/skills/smite.json',
         '{"animation": "buff"}');
 
-    final values =
+    final cards =
         knownValues(fs, root, kEntityDescriptors[EntityCategory.card]!);
+    final signatures =
+        knownValues(fs, root, kEntityDescriptors[EntityCategory.signature]!);
 
-    expect(values['animation'], ['buff', 'melee']);
+    // La carte ne lit que le dossier a plat ; la signature, l'union des deux.
+    expect(cards['animation'], ['melee']);
+    expect(signatures['animation'], ['buff', 'melee']);
   });
 
   test('une categorie en dossier lit le fichier que le dossier porte', () {

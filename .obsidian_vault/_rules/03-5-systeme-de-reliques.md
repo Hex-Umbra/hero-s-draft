@@ -1,6 +1,6 @@
 ### 3.5. 🎒 Système de Reliques
 
-**28 reliques**, un fichier par relique sous `assets/data/relics/` (au lieu de 14 initialement, équilibrant le pool commun) — re-compté le 2026-10-04 (`ls assets/data/relics | wc -l`) sur la branche de la vague 3, qui en ajoute trois (25 sur `main`) —, organisées par déclencheurs et types d'effets :
+**28 reliques**, un fichier par relique sous `assets/data/relics/` (au lieu de 14 initialement, équilibrant le pool commun) — re-compté le 2026-10-16 (`ls assets/data/relics | wc -l`) ; la vague 3 en a ajouté trois (25 avant elle) —, organisées par déclencheurs et types d'effets :
 
 | ID | Nom | Rareté | Trigger | Effet | Valeur | Description |
 |:---|:---|:---|:---|:---|:---|:---|
@@ -43,7 +43,7 @@
 > Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md).
 
 > [!NOTE]
-> **Trois règles de run de plus, sur le même modèle** (lot E3 de P-43 — branche de la vague 3, en
+> **Trois règles de run de plus, sur le même modèle** (lot E3 de P-43 — vague 3, en
 > attente du propriétaire, [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)) : le
 > *Registre des primes* et la *Sacoche du glaneur* (D31, D57, toutes deux rares) modulent la
 > trouvaille ([`_rules/06-00`](06-00-economie-de-jeu.md) §6.4), la *Meule* (D42(a), légendaire)
@@ -55,13 +55,19 @@
 > s'additionnent. Aucune n'est exclue du tirage de la relique que vise le *Colporteur*.
 
 **Cycle de vie des triggers** :
-- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`), et **retiré symétriquement** par `removeRelicEffect()` lors d'un sacrifice à l'Autel d'Échange — ou, sur la branche de la vague 3, de la relique cédée au *Colporteur* (`RunController.loseRelic`).
+- `startOfRun` : Appliqué immédiatement à l'ajout (`InventoryController.addRelic()`), et **retiré symétriquement** par `removeRelicEffect()` lors d'un sacrifice à l'Autel d'Échange — ou, depuis la vague 3, de la relique cédée au *Colporteur* (`RunController.loseRelic`).
 - `startOfCombat` : Via `RunController.startCombat()`.
 - `startOfTurn` / `endOfTurn` : Via `RunController.startTurn()` / `TraitSystem.onTurnEnd()`.
-- `onCardPlayed` : Via `CombatController.applyPlayerCardPlay()`.
-- `onAttackPlayed` : Via `CombatController.applyPlayerCardPlay()` si le type de la carte jouée est `CardType.attack`.
-- `onSkillPlayed` : Via `CombatController.applyPlayerCardPlay()` si le type de la carte jouée est `CardType.skill`.
-- `onPowerPlayed` : Via `CombatController.applyPlayerCardPlay()` si le type de la carte jouée est `CardType.power`.
+- `onCardPlayed` : Via la suite commune au jeu d'une carte, `CombatController._afterCardPlayed()`, qu'appellent `applyPlayerCardPlay()` et `playSignature()`.
+- `onAttackPlayed` : Par la même suite, si le type de la carte jouée est `CardType.attack`.
+- `onSkillPlayed` : Par la même suite, si le type de la carte jouée est `CardType.skill`.
+- `onPowerPlayed` : Par la même suite, si le type de la carte jouée est `CardType.power`.
+
+> [!NOTE]
+> **Une signature jouée compte comme une carte de son type** (lot E4 de P-43, branche de la
+> vague 4, réponse du propriétaire Q-P1 — [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)) :
+> l'*Amulette du Mage* et la *Plume de scribe* la voient, le *Shuriken* et le *Croc Kunaï* aussi
+> quand c'est une Attaque — *Châtiment*, *Frappe Téméraire*. Un seul chemin dans le code.
 - `onEnemyKilled` : Via `CombatController._cleanDeadEnemies()` → `RunController.onEnemyKilled()`.
 
 **Système de Charges (Reliques Actives)** :

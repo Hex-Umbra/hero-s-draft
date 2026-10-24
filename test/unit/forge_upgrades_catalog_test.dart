@@ -193,18 +193,7 @@ const _offers = <String, (Set<String>, Set<String>)>{
   'focus': (<String>{}, {'quick'}),
 };
 
-/// Les six signatures, `unique` : rang 0, elles ne fusionnent jamais et
-/// aucune rune ne s'offre à elles (spec P-43 E2, §4.12).
-const _signatures = {
-  'reckless_strike',
-  'rage_form',
-  'magic_missile',
-  'mana_surge',
-  'smite',
-  'holy_shield',
-};
-
-/// Les onze runes livrées, et l'offre qu'elles font aux 23 cartes livrées
+/// Les onze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -280,9 +269,8 @@ void main() {
     );
   });
 
-  test('la matrice couvre les 23 cartes livrees', () {
-    expect(registry.cards.map((c) => c.id).toSet(),
-        {..._offers.keys, ..._signatures});
+  test('la matrice couvre les 17 cartes livrees', () {
+    expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
   });
 
   for (final MapEntry(key: cardId, value: (rank1, rank2)) in _offers.entries) {
@@ -297,13 +285,5 @@ void main() {
         );
       });
     }
-  }
-
-  for (final cardId in _signatures) {
-    test('$cardId, unique, ne recoit aucune rune', () {
-      final card = CardInstance(data: cardOf(cardId));
-      expect(card.rarity, CardRarity.unique);
-      expect(offeredTo(card), isEmpty);
-    });
   }
 }

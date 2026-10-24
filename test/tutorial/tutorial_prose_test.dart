@@ -90,6 +90,39 @@ void main() {
     }
   });
 
+  test('l etape du deck de depart enseigne les signatures, mot pour mot', () {
+    final etape = kTutorialSteps.firstWhere((s) => s.titleFr == 'Votre deck de départ');
+
+    expect(
+      etape.bodyFr,
+      'Choisissez 5 cartes dans le pool commun : elles forment votre deck de '
+      'départ, celui avec lequel vous jouerez le reste du tutoriel.\n\n'
+      'Votre classe apporte en plus ses deux **signatures**, qui ne sont pas '
+      'des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles '
+      'vous attendent dans une barre à gauche de l\'écran, dès le premier '
+      'tour ; jouer une signature coûte du Mana, puis elle se recharge '
+      'quelques tours avant de revenir.',
+    );
+    expect(
+      etape.bodyEn,
+      'Pick 5 cards from the common pool: they form your starting deck, the '
+      'one you will play the rest of the tutorial with.\n\n'
+      'Your class also brings its two **signatures**, which are not cards: '
+      'never drawn, they never merge. In combat they wait in a bar on the '
+      'left of the screen, from the first turn; playing a signature costs '
+      'Mana, then it recharges for a few turns before it comes back.',
+    );
+  });
+
+  test('la Fusion ne dit plus que les cartes de classe ne fusionnent pas', () {
+    final etape = kTutorialSteps.firstWhere((s) => s.type == TutorialStepType.merge);
+
+    expect(etape.bodyFr, isNot(contains('Vos cartes de classe sont uniques')));
+    expect(etape.bodyEn, isNot(contains('Your class cards are unique')));
+    expect(etape.bodyFr, contains('Le Puits d\'échange est un système distinct et payant'));
+    expect(etape.bodyEn, contains('The Exchange Well is a separate, paid system'));
+  });
+
   test('un texte sans placeholder traverse inchangé', () async {
     final rewards = (await loadGameDataRegistry(rootBundle)).levelUpRewards;
     const corps = 'Les reliques donnent des bonus passifs.';

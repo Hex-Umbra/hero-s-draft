@@ -212,13 +212,12 @@ class RewardController extends Notifier<RewardState> {
     }
 
     // 5. La trouvaille (spec P-43 E3, §4.1 ; D1, D31) : des cartes tirées
-    // uniformément, avec remise, parmi celles que la classe peut recevoir —
-    // le prédicat d'offre unique (ADR-101) —, toujours communes, donc sans
-    // rune. Pool vide : aucune carte, sans repli (ADR-101 D4).
+    // uniformément, avec remise, parmi les cartes offrables — le prédicat
+    // d'offre unique (ADR-101) —, toujours communes, donc sans rune. Pool
+    // vide : aucune carte, sans repli (ADR-101 D4).
     final run = ref.read(runProvider);
     final rng = random ?? Random();
-    final offerable =
-        allCards.where((c) => c.isOfferableTo(run.heroClassId)).toList();
+    final offerable = allCards.where((c) => c.isOfferable).toList();
     final foundCards = <CardInstance>[];
     if (offerable.isNotEmpty) {
       // Les deux règles des reliques : C (+1 carte garantie) au seul combat

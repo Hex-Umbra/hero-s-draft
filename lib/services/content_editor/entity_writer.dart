@@ -125,7 +125,7 @@ class EntityWriter {
     _placeImage(draft);
     _placeClassIcon(draft);
     _writeJson(draft.path, draft.compose(), steps);
-    _registerSignatureCard(draft, steps);
+    _registerSignature(draft, steps);
   }
 
   /// Copie un fichier importe a sa destination. Une destination existante est
@@ -192,7 +192,7 @@ class EntityWriter {
   /// Une classe et un ennemi sont des **dossiers**, qu'il faut creer avant
   /// d'y ecrire.
   ///
-  /// Celui d'une classe porte en outre un sous-dossier `cards/`, **meme
+  /// Celui d'une classe porte en outre un sous-dossier `skills/`, **meme
   /// vide** : `referential_integrity_test` y appelle `listSync()` sans garde,
   /// et un dossier absent le fait *lever*. Ce n'est alors pas ce test qui
   /// echoue, c'est toute la suite qui tombe.
@@ -206,7 +206,7 @@ class EntityWriter {
     final folder = '$rootPath/assets/data/${descriptor.directory}/${draft.id}';
     fs.createDirectory(folder);
     if (descriptor.category == EntityCategory.heroClass) {
-      fs.createDirectory('$folder/cards');
+      fs.createDirectory('$folder/skills');
     }
   }
 
@@ -260,22 +260,30 @@ class EntityWriter {
     fs.copyFile(source, absolute);
   }
 
-  /// Une carte de classe **est** une carte de signature.
+  /// Ecrire une signature neuve l'inscrit dans le tableau `skills` de sa
+  /// classe : la bijection `skills` <-> `skills/`.
   ///
-  /// `referential_integrity_test` exige que le contenu du dossier `cards/`
-  /// soit exactement egal au tableau `skills` de la classe. Une carte ajoutee
-  /// seule y serait orpheline et ferait rougir la suite — a tous les coups, et
-  /// jamais au moment de l'ecriture. Les deux fichiers, ou aucun.
-  void _registerSignatureCard(EntityDraft draft, List<WriteStep> steps) {
+  /// `referential_integrity_test` exige que le contenu du dossier `skills/`
+  /// soit exactement egal au tableau `skills` de la classe. Une signature
+  /// ajoutee seule y serait orpheline et ferait rougir la suite — a tous les
+  /// coups, et jamais au moment de l'ecriture. Les deux fichiers, ou aucun.
+  ///
+  /// La garde porte sur le descripteur, et non sur la seule presence d'une
+  /// classe : seule une signature s'inscrit dans `skills`.
+  void _registerSignature(EntityDraft draft, List<WriteStep> steps) {
     final heroClass = draft.heroClass;
-    if (heroClass == null || draft.isModification) return;
+    if (!draft.descriptor.supportsHeroClass ||
+        heroClass == null ||
+        draft.isModification) {
+      return;
+    }
 
     final relative = 'assets/data/classes/$heroClass/class.json';
     final absolute = '$rootPath/$relative';
     if (!fs.fileExists(absolute)) {
       throw StateError(
-        'la classe "$heroClass" n\'a pas de class.json : sa carte de signature '
-        'ne peut pas y être déclarée',
+        'la classe "$heroClass" n\'a pas de class.json : sa signature ne peut '
+        'pas y être déclarée',
       );
     }
 
@@ -285,7 +293,7 @@ class EntityWriter {
 
     skills.add(draft.id);
     // Trie pour que l'ordre ne depende pas de celui des ajouts : le diff d'une
-    // classe reste lisible d'une carte a l'autre.
+    // classe reste lisible d'une signature a l'autre.
     skills.sort();
     document['skills'] = skills;
     _writeJson(relative, document, steps);
@@ -310,7 +318,7 @@ class EntityWriter {
   /// fichier **modifie** retrouve son contenu d'avant.
   ///
   /// La distinction n'est pas cosmetique. Une modification ecrase un fichier
-  /// existant, et l'ecriture couplee de la carte de classe touche un
+  /// existant, et l'ecriture couplee d'une signature touche un
   /// `class.json` deja la : le supprimer au motif qu'on « defait » serait bien
   /// pire que la panne qu'on rattrape.
   void _rollback(List<WriteStep> steps) {

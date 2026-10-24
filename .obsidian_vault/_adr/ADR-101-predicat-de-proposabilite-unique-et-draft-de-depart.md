@@ -9,10 +9,13 @@ description: Single offerability predicate on CardData, and why the starter draf
 ✅ Accepté — 2026-09-21. Livré sur la branche `fix/filtre-cartes-de-classe`, commit `3727f09`.
 **Complète [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)**, qui avait
 posé `CardRarity.isAcquirable` ; **prérequis de P-42**, qui multipliera les cartes de classe.
-**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
-sur la branche de la vague 3, en attente du propriétaire) : la trouvaille devient le lecteur
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) : la trouvaille devient le lecteur
 d'`isOfferableTo` à la place de la carte bonus du boss « XP », supprimée ; D4, aucun repli sur pool
 vide, y vaut.
+**D1 et D3 amendées le 2026-10-16 par [ADR-109](ADR-109-signatures-hors-du-deck.md)** (P-43, lot E4, livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire) : le prédicat, toujours
+unique, devient `CardData.isOfferable`, sans paramètre ni clause de rareté ou de classe ; **le
+draft de départ l'adopte**, son motif — des signatures ajoutées d'office — étant parti avec elles.
+D2 est sans objet ; D4 tient.
 
 ### Contexte
 

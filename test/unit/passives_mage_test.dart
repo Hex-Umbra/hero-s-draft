@@ -121,7 +121,6 @@ void main() {
           id: 'test_card',
           cost: 0,
           type: type,
-          category: CardCategory.global,
           rarity: CardRarity.common,
           target: target,
           effects: const [CardEffect(type: 'damage', value: 1)],

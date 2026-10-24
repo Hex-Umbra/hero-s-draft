@@ -20,7 +20,7 @@ static List<EnemyData> generateEnemiesForLevel(
 ```
 
 Signature relue le 2026-10-04 : `playerAttaque`, que cette fiche écrivait, est `playerMight` depuis
-ADR-097 ; `playerCardsCount` est devenu **`deckFusionRanks`** sur la branche de la vague 3
+ADR-097 ; `playerCardsCount` est devenu **`deckFusionRanks`** depuis la vague 3
 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A12, D47, D59), de même sur
 `calculateBudget`, `CombatController.initializeCombat` et `CombatDebugLogger`. L'écran de combat
 passe `ref.read(deckProvider).fusionRankSum` ; `EncounterSystem` reste une fonction pure sur des

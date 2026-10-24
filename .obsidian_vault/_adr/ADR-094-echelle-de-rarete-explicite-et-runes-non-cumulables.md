@@ -18,6 +18,10 @@ supprimés ; `fusionRank` comparé par `minFusionRank`, borne des pré-forgées)
 sert quatre sources de copie, la copie du deck comprise), D3 (`stackable` supprimé), D4
 (`exhaustsOnPlay` lit aussi `addsExhaust` ; la conséquence du badge et des particules qui ignoraient
 Persistant est close) et D5 (`ForgeRuneRules` perd `isStackable` et `fusionOptionsFor`).
+**Amendé une troisième fois le 2026-10-16 par [ADR-109](ADR-109-signatures-hors-du-deck.md)** (P-43, lot E4, livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire) sur D1 (la
+rareté `unique`, hors échelle, disparaît : cinq raretés), D2 (`isAcquirable` disparaît ;
+`copyableCards` est le deck entier) et D6 (la réparation B5 au chargement est retirée — une
+instance `unique` ne peut plus exister).
 
 ### Contexte
 

@@ -66,6 +66,18 @@ void main() {
       expect(fixtures.sampleRelic.id, 'iron_talisman');
     });
 
+    test('la fixture signature resout les six signatures', () {
+      final resolues = [
+        for (final hero in fixtures.heroes)
+          for (final id in hero.skills) (hero.id, fixtures.signature(id)),
+      ];
+
+      for (final (heroId, signature) in resolues) {
+        expect(signature.heroClass, heroId, reason: signature.id);
+      }
+      expect(resolues, hasLength(6));
+    });
+
     test('le Gobelin de l\'étape XP existe', () {
       expect(fixtures.goblin.id, 'gobelin');
     });
@@ -108,19 +120,23 @@ void main() {
       expect(relic.effectType, 'gain_armor');
     });
 
-    test('le pool de départ ne contient que des cartes globales non-statut', () {
+    test('le pool de départ est celui du prédicat d offre', () {
       expect(fixtures.starterPool, isNotEmpty);
       expect(fixtures.starterPool.length, greaterThanOrEqualTo(5));
-      for (final card in fixtures.starterPool) {
-        expect(card.category, CardCategory.global);
-        expect(card.type, isNot(CardType.status));
-      }
+      expect(fixtures.starterPool.every((c) => c.isOfferable), isTrue);
+      final expected = data.cards.where((c) => c.isOfferable).toList()
+        ..sort(CardData.compareByDisplayOrder);
+      expect(fixtures.starterPool, expected);
     });
   });
 
   group('Politique fail-fast', () {
     test('un id absent lève au lieu de retomber sur une valeur en dur', () {
       expect(() => fixtures.card('id_qui_nexiste_pas'), throwsStateError);
+    });
+
+    test('une signature absente leve', () {
+      expect(() => fixtures.signature('id_qui_nexiste_pas'), throwsStateError);
     });
   });
 }

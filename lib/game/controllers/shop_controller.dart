@@ -44,16 +44,12 @@ class ShopController extends Notifier<ShopState> {
       case CardRarity.legendary:
         basePrice = 200;
         break;
-      case CardRarity.unique:
-        basePrice = 999;
-        break;
     }
     return basePrice + (card.forgeUpgrades.length * 20);
   }
 
   List<CardData> _getEligibleCards(List<CardData> allCards) {
-    final heroClassId = ref.read(runProvider).heroClassId;
-    return allCards.where((c) => c.isOfferableTo(heroClassId)).toList();
+    return allCards.where((c) => c.isOfferable).toList();
   }
 
   /// Tire une rune pour [card], qui porte déjà les runes tirées avant elle :
@@ -95,7 +91,7 @@ class ShopController extends Notifier<ShopState> {
     }
 
     // Monte l'échelle marche par marche : elle s'arrête d'elle-même à
-    // `legendary`, et une carte `unique`, hors échelle, ne monte pas.
+    // `legendary`.
     var rarity = baseRarity;
     for (var i = 0; i < increase; i++) {
       rarity = rarity.next ?? rarity;

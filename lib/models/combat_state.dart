@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:meta/meta.dart';
 import 'enemy_instance.dart';
 
@@ -14,6 +16,13 @@ class CombatState {
   final bool isCombatEnded;
   final bool isVictory;
 
+  /// Par id de signature, le tour à partir duquel elle se rejoue (spec P-43
+  /// E4, §4.2 ; A7). Absente : disponible. Écrite une fois, au jeu ; lue par
+  /// soustraction ; jamais décomptée. Un `CombatState` neuf la porte vide —
+  /// toutes les signatures sont prêtes au premier tour de chaque combat
+  /// (D41). **Jamais sérialisée** : ni `toJson` ni `fromJson` ne la lisent.
+  final Map<String, int> signaturesReadyOn;
+
   CombatState({
     List<EnemyInstance> enemies = const [],
     List<EnemyInstance> pendingEnemies = const [],
@@ -23,9 +32,11 @@ class CombatState {
     this.selectedEnemyId,
     this.isCombatEnded = false,
     this.isVictory = false,
+    Map<String, int> signaturesReadyOn = const {},
   })  : enemies = List.unmodifiable(enemies),
         pendingEnemies = List.unmodifiable(pendingEnemies),
-        defeatedEnemies = List.unmodifiable(defeatedEnemies);
+        defeatedEnemies = List.unmodifiable(defeatedEnemies),
+        signaturesReadyOn = Map.unmodifiable(signaturesReadyOn);
 
   CombatState copyWith({
     List<EnemyInstance>? enemies,
@@ -36,6 +47,7 @@ class CombatState {
     String? selectedEnemyId,
     bool? isCombatEnded,
     bool? isVictory,
+    Map<String, int>? signaturesReadyOn,
     bool clearSelectedEnemy = false,
   }) {
     return CombatState(
@@ -49,8 +61,18 @@ class CombatState {
           : (selectedEnemyId ?? this.selectedEnemyId),
       isCombatEnded: isCombatEnded ?? this.isCombatEnded,
       isVictory: isVictory ?? this.isVictory,
+      signaturesReadyOn: signaturesReadyOn ?? this.signaturesReadyOn,
     );
   }
+
+  /// Dans combien de tours joueur la signature [id] revient : 0 si elle est
+  /// prête. Ne bouge pas pendant le tour ennemi.
+  int signatureTurnsLeft(String id) {
+    final readyOn = signaturesReadyOn[id];
+    return readyOn == null ? 0 : max(0, readyOn - turnCount);
+  }
+
+  bool isSignatureReady(String id) => signatureTurnsLeft(id) == 0;
 
   factory CombatState.fromJson(Map<String, dynamic> json) {
     var enemiesJson = json['enemies'] as List?;

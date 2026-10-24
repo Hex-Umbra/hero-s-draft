@@ -165,6 +165,10 @@ Color getCardTypeColor(CardType? type, {bool isGrayedOut = false}) {
   }
 }
 
+/// Le gris-bleu des cartes de type inconnu, et le fond de toute tuile de
+/// signature : une signature n'est pas une carte, son type ne la teinte pas.
+const Color neutralCardBackground = Color(0xFF2A2A3D);
+
 Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
   if (isGrayedOut) return const Color(0xFF1A1A1A);
   switch (type) {
@@ -177,7 +181,7 @@ Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
     case CardType.status:
       return const Color(0xFF2D2D2D);
     default:
-      return const Color(0xFF2A2A3D);
+      return neutralCardBackground;
   }
 }
 
@@ -185,9 +189,6 @@ Color getCardRarityColor(BuildContext context, String? rarity) {
   if (rarity == null) return Colors.white54;
   final l10n = AppLocalizations.of(context)!;
   final r = rarity.toLowerCase();
-  if (r.contains('unique')) {
-    return const Color(0xFFFFD700); // Gold pur — rareté Unique
-  }
   if (r == l10n.rarityLegendary.toLowerCase() ||
       r.contains('legendary') ||
       r.contains('légendaire')) {
@@ -286,9 +287,7 @@ String buildDetailedDescription(
     final rarityHeader = activeLocale == 'fr' ? '⚡ Rareté : ' : '⚡ Rarity: ';
     String rarityText = rarity;
     final r = rarity.toLowerCase();
-    if (r.contains('unique')) {
-      rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
-    } else if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
+    if (r == l10n.rarityLegendary.toLowerCase() || r.contains('legendary') || r.contains('légendaire')) {
       rarityText = l10n.rarityLegendary;
     } else if (r == l10n.rarityEpic.toLowerCase() || r.contains('epic') || r.contains('épique')) {
       rarityText = l10n.rarityEpic;

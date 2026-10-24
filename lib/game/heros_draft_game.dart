@@ -78,6 +78,21 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
   final VoidCallback? onAnimationStateChanged;
 
+  /// Appele quand le jeu lui-meme abandonne l attente d une cible (carte
+  /// focalisee, toucher du decor) — jamais quand l ecran la leve.
+  final VoidCallback? onEnemyTargetCancelled;
+
+  bool _awaitingEnemyTarget = false;
+
+  /// Armee par l ecran : le prochain ennemi vivant touche lui est rapporte
+  /// par [onSelectEnemy]. La lever eteint l ennemi illumine sans rappeler
+  /// [onEnemyTargetCancelled].
+  bool get awaitingEnemyTarget => _awaitingEnemyTarget;
+  set awaitingEnemyTarget(bool value) {
+    _awaitingEnemyTarget = value;
+    if (!value) highlightEnemy(null);
+  }
+
   HerosDraftGame({
     required this.audio,
     required this.imagesToPreload,
@@ -94,6 +109,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onUpdateEnemyStats,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
+    this.onEnemyTargetCancelled,
   }) {
     // Cache propre au jeu, jamais le singleton `Flame.images` : le muter en
     // place changerait le prefixe pour tout le processus, et la mutation
@@ -114,18 +130,42 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   void setFocusedCard(CardComponent? card) {
+    // Saisir une carte au glisser passe aussi par ici : le glisser commence
+    // par le onTapDown de la carte, qui la focalise.
+    if (card != null) _cancelEnemyTarget();
     cardAnimationSystem?.setFocusedCard(card);
+  }
+
+  void _cancelEnemyTarget() {
+    if (!_awaitingEnemyTarget) return;
+    awaitingEnemyTarget = false;
+    onEnemyTargetCancelled?.call();
   }
 
   @override
   void onPointerMove(PointerMoveEvent event) {
     _lastPointerPos = event.localPosition;
     combatVisualSystem?.updatePointer(_lastPointerPos);
+    if (_awaitingEnemyTarget) {
+      highlightEnemy(_livingEnemyAt(_lastPointerPos));
+    }
   }
 
+  EnemyCard? _livingEnemyAt(Vector2 canvasPos) {
+    for (final enemy in enemyCards) {
+      if (_isAlive(enemy) && enemy.containsPoint(canvasPos)) return enemy;
+    }
+    return null;
+  }
+
+  bool _isAlive(EnemyCard enemy) => !enemy.isDead && !enemy.isPendingDeath;
+
+  /// Ne recoit que les touchers du decor : un ennemi, le heros ou une carte
+  /// arretent la propagation de l evenement.
   @override
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
+    _cancelEnemyTarget();
     setFocusedCard(null);
   }
 
@@ -296,6 +336,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
           return;
         }
       }
+      return;
+    }
+
+    // Un ennemi mort ou mourant laisse l attente en place : l ecran ne
+    // verifie pas l ennemi qu on lui rapporte, seul un vivant l est donc.
+    if (_awaitingEnemyTarget && _isAlive(target)) {
+      awaitingEnemyTarget = false;
+      onSelectEnemy(target.id);
     }
   }
 

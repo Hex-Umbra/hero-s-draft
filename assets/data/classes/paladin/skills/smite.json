@@ -5,8 +5,8 @@
   "description_en": "Deal 6 damage and gain 4 Block.",
   "description_fr": "Inflige 6 dégâts et donne 4 d'Armure.",
   "cost": 1,
+  "cooldown": 2,
   "type": "attack",
-  "rarity": "unique",
   "target": "singleEnemy",
   "animation": "melee",
   "effects": [

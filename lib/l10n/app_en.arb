@@ -724,5 +724,29 @@
   "volumeMaster": "Master volume",
   "volumeSfx": "Sound effects",
   "volumeMusic": "Music",
-  "muteAll": "Mute all"
+  "muteAll": "Mute all",
+
+  "signatureCostAndCooldown": "Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}",
+  "@signatureCostAndCooldown": {
+    "description": "Cost and cooldown line of a class signature.",
+    "placeholders": {
+      "cost": { "type": "int" },
+      "cooldown": { "type": "int" }
+    }
+  },
+  "signatureChooseTarget": "Choose a target",
+  "@signatureChooseTarget": {
+    "description": "Prompt under the signature bar while a signature waits for an enemy target."
+  },
+  "signatureTurnsLeft": "{count, plural, =1{1 turn} other{{count} turns}}",
+  "@signatureTurnsLeft": {
+    "description": "Turns left before a signature can be played again.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "signatures": "Signatures",
+  "@signatures": {
+    "description": "Title of the class signatures block and of the dictionary tab."
+  }
 }

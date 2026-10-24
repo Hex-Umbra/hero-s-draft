@@ -6,6 +6,8 @@ import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
@@ -26,7 +28,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -39,7 +40,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -52,7 +52,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -65,7 +64,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -78,7 +76,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -91,7 +88,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -104,7 +100,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -117,7 +112,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -130,7 +124,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -143,23 +136,7 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
-      target: CardTarget.self,
-      effects: [],
-    ),
-    // Class specific cards (will be auto-added)
-    const CardData(
-      id: 'holy_shield',
-      nameEn: 'Holy Shield',
-      nameFr: 'Bouclier Sacré',
-      descriptionEn: 'Gain 8 armor and heal 2 HP',
-      descriptionFr: 'Gagne 8 armure et soigne 2 PV',
-      cost: 2,
-      type: CardType.skill,
-      category: CardCategory.characterSpecific,
-      heroClass: 'paladin',
-      rarity: CardRarity.rare,
       target: CardTarget.self,
       effects: [],
     ),
@@ -202,6 +179,19 @@ void main() {
     relics: [],
     forgeUpgrades: [],
     xpCurve: const XpCurveData([115, 200]),
+    signatures: const [
+      SignatureData(
+        id: 'holy_shield',
+        heroClass: 'paladin',
+        nameEn: 'Holy Shield',
+        nameFr: 'Bouclier Sacré',
+        cost: 1,
+        cooldown: 2,
+        type: CardType.skill,
+        target: CardTarget.self,
+        effects: [],
+      ),
+    ],
   );
 
   testWidgets('StarterDeckDraftScreen allows independent duplicate card selection', (
@@ -277,49 +267,48 @@ void main() {
     await tester.tap(enterButton);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // After starting, the run should be initialized and the deck should contain 6 cards:
-    // 5 drafted global cards + 1 class-specific card ('Bouclier Sacré')
+    // Le deck de depart est fait des 5 cartes choisies, rien d'autre : la
+    // signature du paladin ('holy_shield') n'est plus une carte du deck.
     final deckState = container.read(deckProvider);
-    expect(deckState.masterDeck.length, 6);
-
-    // The first card should be the class specific card
-    expect(deckState.masterDeck[0].data.id, 'holy_shield');
-
-    // The other 5 cards should be Slash or Shield variants
-    for (int i = 1; i < 6; i++) {
-      final id = deckState.masterDeck[i].data.id;
+    expect(deckState.masterDeck.length, 5);
+    for (final card in deckState.masterDeck) {
+      final id = card.data.id;
       expect(id.startsWith('slash') || id.startsWith('shield'), isTrue);
     }
+    expect(
+      deckState.masterDeck.map((c) => c.data.id),
+      isNot(contains('holy_shield')),
+    );
+    expect(
+      container.read(runProvider).signatures.map((s) => s.data.id),
+      ['holy_shield'],
+    );
     container.dispose();
   });
 
   testWidgets(
-    'le draft de depart n offre que des cartes globales, jamais une signature de classe',
+    'le pool du draft de depart est celui d isOfferable : tout sauf un statut',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Le pool porte deux cartes de signature : celle du paladin qui joue, et
-      // celle d'une autre classe. Aucune des deux ne doit apparaitre au draft —
-      // celle du paladin est deja ajoutee d'office par getHeroCards, l'offrir
-      // ici la rendrait prenable deux fois.
+      // Le pool porte un statut : il ne doit pas apparaitre au draft. Les
+      // signatures ne sont plus des cartes : rien ne peut les y faire figurer.
       final registry = GameDataRegistry(
         enemies: const [],
         heroes: [mockHero],
         cards: [
           ...mockCards,
           const CardData(
-            id: 'fireball',
-            nameEn: 'Fireball',
-            nameFr: 'Boule de Feu',
-            cost: 2,
-            type: CardType.attack,
-            category: CardCategory.characterSpecific,
-            heroClass: 'mage',
-            rarity: CardRarity.rare,
-            target: CardTarget.singleEnemy,
+            id: 'blessure',
+            nameEn: 'Wound',
+            nameFr: 'Blessure',
+            cost: 1,
+            type: CardType.status,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
             effects: [],
           ),
         ],
@@ -357,7 +346,7 @@ void main() {
 
       expect(find.byType(UiCard), findsNWidgets(10));
       expect(find.text('BOUCLIER SACRÉ'), findsNothing);
-      expect(find.text('BOULE DE FEU'), findsNothing);
+      expect(find.text('BLESSURE'), findsNothing);
     },
   );
 

@@ -5,11 +5,10 @@
   "description_en": "Gain 1 Mana and draw 1 card.",
   "description_fr": "Gagne 1 Mana et pioche 1 carte.",
   "cost": 0,
+  "cooldown": 2,
   "type": "skill",
-  "rarity": "unique",
   "target": "self",
   "animation": "buff",
-  "isExhaust": true,
   "effects": [
     {
       "type": "gain_mana",

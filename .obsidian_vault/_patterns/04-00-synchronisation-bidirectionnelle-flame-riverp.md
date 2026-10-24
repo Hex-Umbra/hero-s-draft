@@ -16,12 +16,13 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 
 ### 4.2. Remontée d'Événements (Flame → Riverpod)
 
-**13 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **re-compté le 2026-09-05** : `grep -cE "^\s+final (void Function|bool Function|VoidCallback)" lib/game/heros_draft_game.dart` :
+**14 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **re-compté le 2026-10-16** sur la branche de la vague 4 (13 le 2026-09-05) : `grep -cE "^\s+final (void Function|bool Function|VoidCallback)" lib/game/heros_draft_game.dart` :
 
 | Callback | Déclencheur |
 |:---|:---|
 | `onPlayCard` | Carte jouée (drop sur ennemi valide) |
-| `onSelectEnemy` / `onUpdateEnemyStats` | Clic/tap sur ennemi |
+| `onSelectEnemy` / `onUpdateEnemyStats` | Clic/tap sur ennemi — `onSelectEnemy` n'était appelé par aucun code Flame avant le lot E4 de P-43 ; il rapporte désormais l'ennemi vivant touché pendant qu'une signature attend sa cible (ci-dessous) |
+| `onEnemyTargetCancelled` | *Branche de la vague 4.* Le jeu abandonne l'attente d'une cible — carte focalisée ou saisie, toucher du décor —, jamais quand l'écran la lève |
 | `onPhaseChanged` | Changement de phase |
 | `onStartEnemyTurn` / `onEndEnemyTurn` | Début/fin de phase ennemie |
 | `onResolveEnemyIntent` | Résolution séquentielle d'intention |
@@ -29,6 +30,17 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 | `onEnemiesSpawned` | Spawn initial |
 | `onAnimationStateChanged` | Changement d'état d'animation Flame (force un rebuild HUD) |
 | `onShowTooltip` / `onHideTooltip` | Tooltips contextuels |
+
+> [!IMPORTANT]
+> **Le ciblage d'une signature — le contrat entre la barre et Flame** (lot E4 de P-43, branche de
+> la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)). `GameScreen` arme une
+> signature à cible unique en posant `awaitingEnemyTarget = true` (accesseur et mutateur de
+> `HerosDraftGame` ; `false` éteint l'illumination sans rappel). Dans `_handlePlayerTargeting`,
+> **une carte focalisée garde la priorité** ; sinon, un ennemi **vivant** touché est rapporté par
+> `onSelectEnemy` et l'attente cesse — un ennemi mort ou mourant est ignoré, l'attente demeure.
+> Pendant l'attente, l'ennemi survolé s'illumine (`onPointerMove`). **Flame ne connaît ni
+> `SignatureInstance` ni la barre ; la barre ne lit aucun composant Flame.** Le glisser depuis la
+> barre, écarté, aurait demandé à Flutter de lire les positions des composants Flame.
 
 > [!NOTE]
 > **Six callbacks ont été supprimés depuis la rédaction initiale**, en trois vagues.

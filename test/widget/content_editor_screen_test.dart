@@ -70,19 +70,20 @@ void main() {
     );
   }
 
-  /// Un neutre et deux classes colorees. Le bleu du paladin compte : c'est sur
-  /// lui que le seuil de `ThemeData.estimateBrightnessForColor` laisserait un
-  /// texte blanc, a 3,1:1.
+  /// Une carte neutre et deux classes colorees, chacune portant une
+  /// signature. Le bleu du paladin compte : c'est sur lui que le seuil de
+  /// `ThemeData.estimateBrightnessForColor` laisserait un texte blanc, a
+  /// 3,1:1.
   void seedOwners() {
     Directory('$root/assets/data/cards').createSync(recursive: true);
     File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
-    for (final (id, color, card) in const [
+    for (final (id, color, signature) in const [
       ('mage', '#9C27B0', 'eclair'),
       ('paladin', '#2196F3', 'bouclier'),
     ]) {
-      Directory('$root/assets/data/classes/$id/cards')
+      Directory('$root/assets/data/classes/$id/skills')
           .createSync(recursive: true);
-      File('$root/assets/data/classes/$id/cards/$card.json')
+      File('$root/assets/data/classes/$id/skills/$signature.json')
           .writeAsStringSync('{}');
       File('$root/assets/data/classes/$id/class.json').writeAsStringSync(
         '{"id":"$id","name_fr":"$id","name_en":"$id",'
@@ -123,12 +124,12 @@ void main() {
     expect(find.text('Écrire'), findsNothing);
   });
 
-  testWidgets('les huit types sont des boutons, visibles d emblee',
+  testWidgets('les neuf types sont des boutons, visibles d emblee',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
 
     for (final label in const [
-      'Carte', 'Relique', 'Événement', 'Passif',
+      'Carte', 'Signature', 'Relique', 'Événement', 'Passif',
       'Amélioration de forge', 'Récompense de niveau', 'Classe', 'Ennemi',
     ]) {
       expect(find.text(label), findsOneWidget, reason: 'type manquant : $label');
@@ -147,7 +148,7 @@ void main() {
 
     expect(find.text('Créer'), findsOneWidget);
     expect(find.text('Modifier'), findsOneWidget);
-    // Les huit types restent la : rien ne se replie vers le haut.
+    // Les neuf types restent la : rien ne se replie vers le haut.
     expect(find.text('Ennemi'), findsOneWidget);
   });
 
@@ -284,7 +285,15 @@ void main() {
       seedOwners();
       await tester.pumpWidget(harness(projectRoot: root));
 
+      // La carte neutre se range seule, sous le groupe neutre.
       await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier'));
+      await tester.pumpAndSettle();
+      expectReadable(const ['frappe']);
+
+      // Les signatures, sous la couleur de leur classe.
+      await tester.tap(find.text('Signature'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Modifier'));
       await tester.pumpAndSettle();
@@ -292,7 +301,8 @@ void main() {
       await tester.tap(find.text('eclair'));
       await tester.pumpAndSettle();
       expectReadable(const [
-        'Carte', 'Relique', 'Créer', 'Modifier', 'frappe', 'eclair', 'bouclier',
+        'Carte', 'Signature', 'Relique', 'Créer', 'Modifier', 'eclair',
+        'bouclier',
       ]);
 
       await tester.tap(find.text('Créer'));
@@ -339,9 +349,9 @@ void main() {
       expect(underline('Carte').color, Colors.transparent);
 
       // Changer de type deplace la selection, et referme le mode choisi dessous.
-      await tester.tap(find.text('Carte'));
+      await tester.tap(find.text('Signature'));
       await tester.pumpAndSettle();
-      expect(tester.getSemantics(buttonOf('Carte')), chosen(true));
+      expect(tester.getSemantics(buttonOf('Signature')), chosen(true));
       expect(tester.getSemantics(buttonOf('Relique')), chosen(false));
       expect(tester.getSemantics(buttonOf('Créer')), chosen(false));
 
@@ -369,11 +379,15 @@ void main() {
       seedOwners();
       await tester.pumpWidget(harness(projectRoot: root));
 
-      await tester.tap(find.text('Carte'));
+      await tester.tap(find.text('Signature'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
-      expect(title(), allOf(contains('Créer'), contains('Carte')));
+      expect(title(), allOf(contains('Créer'), contains('Signature')));
+      expect(
+        find.byKey(const Key('editeur-proprietaire-neutre')),
+        findsOneWidget,
+      );
 
       // La confusion d'origine : un formulaire de carte pris pour celui d'une
       // classe, que seul le chemin distinguait. Celui de la classe le dit, et
@@ -426,13 +440,14 @@ void main() {
     });
   });
 
-  testWidgets('les cartes portent la couleur de leur proprietaire',
+  testWidgets('les signatures portent la couleur de leur proprietaire',
       (tester) async {
     Directory('$root/assets/data/cards').createSync(recursive: true);
     File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
-    Directory('$root/assets/data/classes/mage/cards')
+    Directory('$root/assets/data/classes/mage/skills')
         .createSync(recursive: true);
-    File('$root/assets/data/classes/mage/cards/eclair.json').writeAsStringSync('{}');
+    File('$root/assets/data/classes/mage/skills/eclair.json')
+        .writeAsStringSync('{}');
     File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
       '"description_fr":".","description_en":".",'
@@ -455,16 +470,26 @@ void main() {
             .decoration! as BoxDecoration)
         .color!;
 
-    // Chaque carte se range sous son proprietaire, qui porte sa couleur.
-    expect(find.descendant(of: group('mage'), matching: find.text('eclair')),
-        findsOneWidget);
+    // La carte neutre se range sous le groupe neutre, qui porte sa couleur ;
+    // la signature du mage n'est pas une carte.
     expect(find.descendant(of: group('neutre'), matching: find.text('frappe')),
         findsOneWidget);
+    expect(find.text('eclair'), findsNothing);
+    expect(dotOf('neutre'), kNeutralOwnerColor);
+
+    await tester.tap(find.text('Signature'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+
+    // Chaque signature se range sous sa classe, qui porte sa couleur.
+    expect(find.descendant(of: group('mage'), matching: find.text('eclair')),
+        findsOneWidget);
+    expect(find.text('frappe'), findsNothing);
     // Sans cette assertion, la couleur pourrait etre uniforme et le test
     // passerait quand meme : c'est la *difference* qui porte l'information.
-    expect(dotOf('mage'), isNot(dotOf('neutre')));
+    expect(dotOf('mage'), isNot(kNeutralOwnerColor));
     expect(dotOf('mage'), const Color(0xFF9C27B0));
-    expect(dotOf('neutre'), kNeutralOwnerColor);
   });
 
   testWidgets('le chemin calcule est affiche et suit la categorie',
@@ -614,7 +639,7 @@ void main() {
     expect(find.textContaining('flutter run'), findsNothing);
   });
 
-  testWidgets('creer une classe ecrit ses cartes et referme skills',
+  testWidgets('creer une classe ecrit ses signatures et referme skills',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
     await tester.tap(find.text('Classe'));
@@ -638,7 +663,7 @@ void main() {
     ) as Map<String, dynamic>;
     expect(classJson['skills'], ['all_in', 'bluff']);
     expect(
-      File('$root/assets/data/classes/gambler/cards/bluff.json').existsSync(),
+      File('$root/assets/data/classes/gambler/skills/bluff.json').existsSync(),
       isTrue,
     );
     // L'emplacement de l'icone, garde par defaut, est ecrit.
@@ -653,7 +678,7 @@ void main() {
     await tester.tap(find.text('Créer'));
     await tester.pumpAndSettle();
 
-    // Sans une seule carte de signature : le passif est garanti par la
+    // Sans une seule signature : le passif est garanti par la
     // recette elle-meme, pas par ce que l'auteur pense a saisir.
     await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
     await tester.tap(find.text('Écrire'));
@@ -721,7 +746,7 @@ void main() {
   });
 
   testWidgets(
-      'deux cartes de signature identiques sont refusees, rien n est ecrit',
+      'deux signatures identiques sont refusees, rien n est ecrit',
       (tester) async {
     // Sans le controle de la recette, les deux passeraient chacune la
     // validation individuelle (ni l'une ni l'autre n'existe encore sur le
@@ -745,7 +770,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Écrit :'), findsNothing);
-    expect(inIssue(find.textContaining('deux cartes de signature')),
+    expect(inIssue(find.textContaining('deux signatures')),
         findsOneWidget);
     expect(
       Directory('$root/assets/data/classes').existsSync(),
@@ -760,7 +785,7 @@ void main() {
     // ou reproche une faute que le remplissage allait effacer. Les deux
     // controles partent donc du **meme** document.
 
-    testWidgets('Valider voit le doublon de cartes de signature',
+    testWidgets('Valider voit le doublon de signatures',
         (tester) async {
       await tester.pumpWidget(harness(projectRoot: root));
       await tester.tap(find.text('Classe'));
@@ -782,11 +807,11 @@ void main() {
 
       // C'est la faute que « Écrire » leve sur ce meme formulaire, deux tests
       // plus haut. Valider ne peut pas rester muet la ou Ecrire refuse.
-      expect(inIssue(find.textContaining('deux cartes de signature')),
+      expect(inIssue(find.textContaining('deux signatures')),
           findsOneWidget);
     });
 
-    testWidgets('Valider voit la carte de signature non nommee',
+    testWidgets('Valider voit la signature non nommee',
         (tester) async {
       await tester.pumpWidget(harness(projectRoot: root));
       await tester.tap(find.text('Classe'));
@@ -798,15 +823,15 @@ void main() {
       await tester.enterText(
           find.byKey(const Key('editeur-nombre-cartes')), '1');
       await tester.pump();
-      // L'identifiant de la carte reste vide : le brouillon de classe seul est
-      // pourtant parfaitement valide, et c'est exactement le piege.
+      // L'identifiant de la signature reste vide : le brouillon de classe seul
+      // est pourtant parfaitement valide, et c'est exactement le piege.
 
       await tester.tap(find.text('Valider'));
       await tester.pump();
 
       expect(inIssue(find.textContaining('un identifiant est requis')),
           findsOneWidget);
-      // La faute est celle de la carte : la rangee `id` de la classe, dont
+      // La faute est celle de la signature : la rangee `id` de la classe, dont
       // l'identifiant est valide, n'en dit rien.
       expect(inIdRow(find.textContaining('un identifiant est requis')),
           findsNothing);
@@ -835,9 +860,9 @@ void main() {
     });
   });
 
-  testWidgets('une faute de carte de signature vise son panneau, pas la classe',
+  testWidgets('une faute de signature vise son panneau, pas la classe',
       (tester) async {
-    // Une carte de signature n'a pas de rangee a elle : sa faute `id` bordait
+    // Une signature n'a pas de rangee a elle : sa faute `id` bordait
     // de rouge l'identifiant de la classe, pourtant valide, et y ramenait.
     await tester.pumpWidget(harness(projectRoot: root));
     await tester.tap(find.text('Classe'));
@@ -861,12 +886,13 @@ void main() {
       isNot(AppColors.danger),
     );
     expect(inIdRow(find.byIcon(Icons.error)), findsNothing);
-    expect(inIssue(find.textContaining('carte 1 :')), findsOneWidget);
+    expect(inIssue(find.textContaining('signature 1 :')), findsOneWidget);
   });
 
-  testWidgets('le proprietaire d une carte est un champ, pas un niveau',
+  testWidgets('le proprietaire d une signature est un champ, pas un niveau',
       (tester) async {
-    Directory('$root/assets/data/classes/mage/cards').createSync(recursive: true);
+    Directory('$root/assets/data/classes/mage/skills')
+        .createSync(recursive: true);
     File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
       '"description_fr":".","description_en":".",'
@@ -875,7 +901,7 @@ void main() {
     );
 
     await tester.pumpWidget(harness(projectRoot: root));
-    await tester.tap(find.text('Carte'));
+    await tester.tap(find.text('Signature'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Créer'));
     await tester.pumpAndSettle();
@@ -888,7 +914,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      File('$root/assets/data/classes/mage/cards/eclair.json').existsSync(),
+      File('$root/assets/data/classes/mage/skills/eclair.json').existsSync(),
       isTrue,
       reason: 'le propriétaire choisi décide du répertoire',
     );
@@ -1070,9 +1096,9 @@ void main() {
     // change pas.
     Directory('$root/assets/data/cards').createSync(recursive: true);
     File('$root/assets/data/cards/frappe.json').writeAsStringSync('{}');
-    Directory('$root/assets/data/classes/mage/cards')
+    Directory('$root/assets/data/classes/mage/skills')
         .createSync(recursive: true);
-    File('$root/assets/data/classes/mage/cards/eclair.json')
+    File('$root/assets/data/classes/mage/skills/eclair.json')
         .writeAsStringSync('{}');
     File('$root/assets/data/classes/mage/class.json').writeAsStringSync(
       '{"id":"mage","name_fr":"Mage","name_en":"Mage",'
@@ -1083,7 +1109,10 @@ void main() {
 
     final fs = _CountingFileSystem();
     await tester.pumpWidget(harness(projectRoot: root, fs: fs));
-    await tester.tap(find.text('Carte'));
+    // La signature, et non la carte : seul son groupe de proprietaire lit un
+    // `class.json` pour sa couleur, et c'est cette lecture que l'assertion
+    // sur `fs.reads` doit voir se retenir.
+    await tester.tap(find.text('Signature'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Modifier'));
     await tester.pumpAndSettle();
@@ -1091,6 +1120,8 @@ void main() {
     final listings = fs.listings;
     final reads = fs.reads;
     expect(listings, greaterThan(0), reason: 'le niveau 2 a bien lu le disque');
+    expect(reads, greaterThan(0),
+        reason: 'la couleur du groupe a bien lu un class.json');
 
     for (final typed in const ['e', 'ec', 'ecl']) {
       await tester.enterText(find.byKey(const Key('editeur-id')), typed);
@@ -1183,7 +1214,7 @@ void main() {
     expect(find.text('VALEURS DÉJÀ UTILISÉES'), findsOneWidget);
   });
 
-  testWidgets('plus et moins reglent le nombre de cartes de signature',
+  testWidgets('plus et moins reglent le nombre de signatures',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
     await tester.tap(find.text('Classe'));
@@ -1351,16 +1382,17 @@ void main() {
       expect(find.text('Amulette'), findsOneWidget);
     });
 
-    testWidgets('choisir une carte de classe la charge depuis son dossier',
+    testWidgets('choisir une signature la charge depuis son dossier',
         (tester) async {
       seedOwners();
-      File('$root/assets/data/classes/mage/cards/eclair.json').writeAsStringSync(
+      File('$root/assets/data/classes/mage/skills/eclair.json')
+          .writeAsStringSync(
         '{"id":"eclair","name_fr":"Éclair","name_en":"Bolt",'
-        '"description_fr":".","description_en":".","cost":5,"type":"attack",'
-        '"rarity":"common","effects":[{"type":"damage","value":77}]}',
+        '"description_fr":".","description_en":".","cost":5,"cooldown":2,'
+        '"type":"attack","effects":[{"type":"damage","value":77}]}',
       );
       await tester.pumpWidget(harness(projectRoot: root));
-      await tester.tap(find.text('Carte'));
+      await tester.tap(find.text('Signature'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Modifier'));
       await tester.pumpAndSettle();
@@ -1416,10 +1448,10 @@ void main() {
         (tester) async {
       // Le geste reel : on choisit d'abord Modifier, on change ensuite de
       // type. Rien ne doit se figer — c'est l'invariant meme de l'arbre : les
-      // huit types restent la, quel que soit le mode. Avant l'arbre, un bug
+      // neuf types restent la, quel que soit le mode. Avant l'arbre, un bug
       // gelait la liste deroulante des lors qu'on avait bascule sur Modifier,
       // rendant toute entite hors de la categorie par defaut inatteignable.
-      Directory('$root/assets/data/classes/gambler/cards')
+      Directory('$root/assets/data/classes/gambler/skills')
           .createSync(recursive: true);
       File('$root/assets/data/classes/gambler/class.json').writeAsStringSync(
         const JsonEncoder.withIndent('  ').convert({
@@ -1736,7 +1768,7 @@ void main() {
     });
 
     testWidgets('importer une icone de classe ecrit iconPath', (tester) async {
-      Directory('$root/assets/data/classes/mage/cards')
+      Directory('$root/assets/data/classes/mage/skills')
           .createSync(recursive: true);
       File('$root/assets/data/classes/mage/mage.png')
           .writeAsStringSync('carte');
@@ -1786,12 +1818,12 @@ void main() {
     });
 
     testWidgets(
-        'une faute d import de classe n est pas repetee par ses cartes',
+        'une faute d import de classe n est pas repetee par ses signatures',
         (tester) async {
       // `EntityValidator` juge un import en attente contre chaque brouillon,
-      // carte de signature comprise : sans le filtre de `_judge`, ce fichier
+      // signature comprise : sans le filtre de `_judge`, ce fichier
       // introuvable serait rapporte une fois pour la classe, et une fois de
-      // plus, taguee « carte 1 : », pour sa seule carte.
+      // plus, taguee « signature 1 : », pour sa seule signature.
       final missing = '$root/import/introuvable.png';
       await tester.pumpWidget(
           harness(projectRoot: root, picker: _FakePicker(missing)));
@@ -1819,7 +1851,7 @@ void main() {
         inIssue(find.textContaining('fichier introuvable')),
         findsOneWidget,
       );
-      expect(inIssue(find.textContaining('carte 1 :')), findsNothing);
+      expect(inIssue(find.textContaining('signature 1 :')), findsNothing);
     });
   });
 }

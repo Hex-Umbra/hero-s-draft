@@ -12,6 +12,7 @@ import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/reward_controller.dart';
 import '../../models/combat_state.dart';
 import '../../models/map_node.dart';
+import '../../models/signature_instance.dart';
 import '../../game/services/effect_resolver.dart';
 import 'boss_card_draft_screen.dart';
 import '../../services/game_data_service.dart';
@@ -20,6 +21,7 @@ import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/card_data.dart';
+import '../widgets/class_identity.dart';
 import '../widgets/debug/debug_drawer.dart';
 import '../widgets/hud/dialogs/pause_dialog.dart';
 import '../widgets/hud/death_overlay.dart';
@@ -29,6 +31,7 @@ import '../widgets/hud/turn_control_panel.dart';
 import '../widgets/hud/combat_side_panels.dart';
 import '../widgets/hud/combat_phase_banner.dart';
 import '../widgets/hud/combat_tooltip_overlay.dart';
+import '../widgets/hud/signature_bar.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/relic_carousel/relic_carousel_screen.dart';
 
@@ -66,6 +69,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   bool _showManaWarning = false;
   bool _showRemainingManaWarning = false;
   bool _isVictoryHandled = false;
+
+  /// La signature à cible unique qui attend un ennemi, s'il y en a une.
+  SignatureInstance? _armedSignature;
 
   void _handleCombatVictory() {
     if (_isVictoryHandled) return;
@@ -352,26 +358,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           card,
         );
 
-        setState(() {
-          _showRemainingManaWarning = false;
-        });
-
-        if (runController.currentState.heroStats.currentMana > 0) {
-          setState(() {
-            _showManaWarning = false;
-          });
-        } else if (previousMana > 0 &&
-            runController.currentState.heroStats.currentMana == 0) {
-          Future.delayed(const Duration(milliseconds: 600), () {
-            if (mounted &&
-                ref.read(combatProvider).enemies.isNotEmpty &&
-                ref.read(runProvider).heroStats.currentMana == 0) {
-              setState(() {
-                _showManaWarning = true;
-              });
-            }
-          });
-        }
+        _refreshManaWarnings(previousMana);
 
         return true;
       },
@@ -390,8 +377,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         _startPlayerNewTurn();
       },
       onSelectEnemy: (enemyId) {
-        ref.read(combatProvider.notifier).selectEnemy(enemyId);
+        final armed = _armedSignature;
+        if (armed == null || enemyId == null) return;
+        // Flame a déjà cessé d'attendre : seul l'écran désarme.
+        setState(() => _armedSignature = null);
+        _playSignature(armed, enemyId: enemyId);
       },
+      onEnemyTargetCancelled: () => setState(() => _armedSignature = null),
       onUpdateEnemyStats: (enemyId, stats) {
         ref.read(combatProvider.notifier).updateEnemyStats(enemyId, stats);
       },
@@ -410,6 +402,72 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         }
       },
     );
+  }
+
+  /// Après un coup qui a payé du mana, carte ou signature : l'avertissement
+  /// « mana restant » tombe, et « plus de mana » suit le mana qui reste.
+  void _refreshManaWarnings(int previousMana) {
+    final currentMana = ref.read(runProvider).heroStats.currentMana;
+
+    setState(() {
+      _showRemainingManaWarning = false;
+    });
+
+    if (currentMana > 0) {
+      setState(() {
+        _showManaWarning = false;
+      });
+    } else if (previousMana > 0 && currentMana == 0) {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted &&
+            ref.read(combatProvider).enemies.isNotEmpty &&
+            ref.read(runProvider).heroStats.currentMana == 0) {
+          setState(() {
+            _showManaWarning = true;
+          });
+        }
+      });
+    }
+  }
+
+  /// Une signature à cible unique attend qu'on touche un ennemi. Défocaliser
+  /// la carte n'annule rien côté Flame ; l'attente commence sans carte
+  /// focalisée, qui garderait sinon la priorité sur le toucher.
+  void _armSignature(SignatureInstance signature) {
+    setState(() => _armedSignature = signature);
+    _game.setFocusedCard(null);
+    _game.awaitingEnemyTarget = true;
+  }
+
+  void _disarmSignature() {
+    setState(() => _armedSignature = null);
+    _game.awaitingEnemyTarget = false;
+  }
+
+  /// Joue une signature (spec P-43 E4, §5.4). Un refus du moteur ne laisse
+  /// aucune trace : la règle vit dans `playSignature`, l'écran ne la double
+  /// pas.
+  void _playSignature(SignatureInstance signature, {String? enemyId}) {
+    final previousMana = ref.read(runProvider).heroStats.currentMana;
+    if (!ref
+        .read(combatProvider.notifier)
+        .playSignature(signature, enemyId: enemyId)) {
+      return;
+    }
+
+    if (signature.data.type == CardType.attack) {
+      _game.heroCard?.dashAnimation();
+    } else {
+      final hasArmor = signature.data.effects.any((e) => e.type == 'armor');
+      _game.heroCard?.buffAnimation(hasArmor ? 'defend' : 'buff');
+    }
+    // Une carte reçoit ce son de son animation Flame, qu'une signature n'a
+    // pas.
+    ref
+        .read(audioDirectorProvider)
+        .onMoment(GameMoment.cardPlay, source: signature.data);
+
+    _refreshManaWarnings(previousMana);
   }
 
   void _triggerPhaseBanner(String text) async {
@@ -484,6 +542,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final double hudHeight = (baseHudHeight * textScaleFactor).clamp(88.0, 140.0);
     final double hudWidth = isMobile ? screenWidth * 0.90 : screenWidth * 0.52;
 
+    // Tour du joueur côté état et côté Flame, sans animation de carte : ce
+    // qui permet de finir le tour, et de jouer une signature.
+    final bool isPlayerActionable = combatState.turnPhase == TurnPhase.player &&
+        _game.currentPhase == TurnPhase.player &&
+        !_game.isCardAnimating;
+
     return PopScope(
       canPop: isCompleted || runState.isDead,
       child: Scaffold(
@@ -534,10 +598,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                   if (!runState.isDead && !_showDraft)
                     TurnControlPanel(
-                      canEndTurn:
-                          combatState.turnPhase == TurnPhase.player &&
-                          _game.currentPhase == TurnPhase.player &&
-                          !_game.isCardAnimating,
+                      canEndTurn: isPlayerActionable,
                       onEndTurnTap: () {
                         final currentMana = runState.heroStats.currentMana;
                         if (currentMana > 0 && !_showRemainingManaWarning) {
@@ -551,6 +612,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           _showManaWarning = false;
                           _showRemainingManaWarning = false;
                         });
+                        _disarmSignature();
                         ref.read(runProvider.notifier).endTurn();
                         ref.read(deckProvider.notifier).discardHand();
                         _game.executeTurn();
@@ -568,13 +630,43 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       enemies: combatState.enemies,
                     ),
 
+                  // La barre passe au-dessus du panneau de statuts du héros.
+                  if (!runState.isDead &&
+                      !_showDraft &&
+                      runState.signatures.isNotEmpty)
+                    SignatureBar(
+                      signatures: runState.signatures,
+                      combatState: combatState,
+                      currentMana: runState.heroStats.currentMana,
+                      interactive:
+                          isPlayerActionable && !combatState.isCombatEnded,
+                      classColor: ClassIdentity.colorOf(
+                        gameData.heroes.firstWhere(
+                          (h) => h.id == runState.heroClassId,
+                        ),
+                      ),
+                      armedId: _armedSignature?.data.id,
+                      onPlay: (signature) {
+                        // Un seul geste à la fois : jouer une signature
+                        // désarme celle qui attendait une cible.
+                        if (_armedSignature != null) _disarmSignature();
+                        _playSignature(signature);
+                      },
+                      onArm: _armSignature,
+                      onDisarm: _disarmSignature,
+                      onInsufficientMana: () => ref
+                          .read(audioDirectorProvider)
+                          .onMoment(GameMoment.insufficientMana),
+                    ),
+
                   // Phase Banner Overlay (Centre)
                   if (_showPhaseBanner)
                     CombatPhaseBanner(text: _phaseBannerText ?? ''),
 
-                  // Tooltip Overlay
+                  // Tooltip Overlay. Jamais visible à la mort du héros : une
+                  // infobulle encore ouverte ne couvre pas l'écran de mort.
                   CombatTooltipOverlay(
-                    visible: _showTooltip,
+                    visible: _showTooltip && !runState.isDead,
                     title: _tooltipTitle,
                     description: _tooltipDescription,
                     borderColor: _getTooltipBorderColor(),

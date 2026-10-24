@@ -7,11 +7,11 @@ import 'entity_draft.dart';
 import 'entity_validator.dart';
 import 'placeholder_filler.dart';
 
-/// Une carte de signature telle qu'on la saisit : un identifiant, et la prose
-/// qu'on veut bien donner tout de suite.
+/// Une signature telle qu'on la saisit : un identifiant, et la prose qu'on
+/// veut bien donner tout de suite.
 @immutable
-class SignatureCardInput {
-  const SignatureCardInput({required this.id, this.bilingual = const {}});
+class SignatureInput {
+  const SignatureInput({required this.id, this.bilingual = const {}});
 
   final String id;
   final Map<String, String> bilingual;
@@ -20,16 +20,16 @@ class SignatureCardInput {
 /// Une classe complete, en un geste.
 ///
 /// Ce que la recette apporte n'est pas le lien `skills` — `EntityWriter` le
-/// tient deja — mais **l'atomicite et l'ordre** : les identifiants des cartes
-/// sont decides d'avance, la classe est ecrite avant elles, et l'ensemble
-/// partage une transaction.
+/// tient deja — mais **l'atomicite et l'ordre** : les identifiants des
+/// signatures sont decides d'avance, la classe est ecrite avant elles, et
+/// l'ensemble partage une transaction.
 @immutable
 class ClassRecipe {
   const ClassRecipe({
     required this.id,
     required this.bilingual,
     required this.mechanics,
-    required this.signatureCards,
+    required this.signatures,
     this.withIcon = true,
   });
 
@@ -44,7 +44,7 @@ class ClassRecipe {
   /// complete.
   final String mechanics;
 
-  final List<SignatureCardInput> signatureCards;
+  final List<SignatureInput> signatures;
 
   /// L'identifiant du passif de depart que la recette ecrit.
   ///
@@ -59,16 +59,16 @@ class ClassRecipe {
 
   /// Les brouillons, **dans l'ordre d'ecriture**.
   ///
-  /// La classe d'abord : `_registerSignatureCard` leve `StateError` si une
-  /// carte de classe est ecrite avant le `class.json` qui doit la declarer,
-  /// et le passif de depart la **nomme**, donc elle doit exister avant lui.
-  /// Son `skills` reste absent : l'ecrivain l'alimente carte par carte, si
-  /// bien que chaque etat intermediaire respecte la bijection exigee par
-  /// `EntityValidator._signatureCards`.
+  /// La classe d'abord : `_registerSignature` leve `StateError` si une
+  /// signature est ecrite avant le `class.json` qui doit la declarer, et le
+  /// passif de depart la **nomme**, donc elle doit exister avant lui. Son
+  /// `skills` reste absent : l'ecrivain l'alimente signature par signature,
+  /// si bien que chaque etat intermediaire respecte la bijection exigee par
+  /// `EntityValidator._signatures`.
   List<EntityDraft> toDrafts() {
     final classDescriptor = kEntityDescriptors[EntityCategory.heroClass]!;
     final passiveDescriptor = kEntityDescriptors[EntityCategory.passive]!;
-    final cardDescriptor = kEntityDescriptors[EntityCategory.card]!;
+    final signatureDescriptor = kEntityDescriptors[EntityCategory.signature]!;
 
     return [
       fillPlaceholders(
@@ -90,12 +90,14 @@ class ClassRecipe {
           mechanics: _starterPassiveMechanics,
         ),
       ),
-      for (final card in signatureCards)
+      // Corps vide : `fillPlaceholders` le complete du gabarit de la
+      // signature.
+      for (final signature in signatures)
         fillPlaceholders(
           EntityDraft(
-            descriptor: cardDescriptor,
-            id: card.id,
-            bilingual: card.bilingual,
+            descriptor: signatureDescriptor,
+            id: signature.id,
+            bilingual: signature.bilingual,
             mechanics: '{}',
             heroClass: id,
           ),
@@ -119,8 +121,8 @@ class ClassRecipe {
 
   /// Les fautes que seul l'ensemble de la recette peut voir.
   ///
-  /// `EntityValidator` juge un brouillon a la fois : deux cartes de signature
-  /// portant le meme identifiant lui paraissent chacune valide, puisque ni
+  /// `EntityValidator` juge un brouillon a la fois : deux signatures portant
+  /// le meme identifiant lui paraissent chacune valide, puisque ni
   /// l'une ni l'autre n'est encore sur le disque au moment ou elles sont
   /// jugees. C'est a l'ecriture qu'elles se telescopent : `writeAll` les
   /// ecrit au meme chemin l'une apres l'autre, et la seconde ecrase la
@@ -129,24 +131,25 @@ class ClassRecipe {
   ///
   /// Le passif de depart n'y figure pas : son identifiant est celui de la
   /// classe, que `EntityValidator._identity` juge deja, et il ne peut donc ni
-  /// etre vide ni faire doublon avec une carte de signature — qui vit dans un
-  /// autre repertoire.
+  /// etre vide ni faire doublon avec une signature — qui vit dans un autre
+  /// repertoire.
   List<ValidationFault> faults() {
     final seen = <String>{};
     final duplicates = <String>{};
-    for (final card in signatureCards) {
+    for (final signature in signatures) {
       // Un identifiant pas encore saisi n'est pas un doublon d'un autre
-      // identifiant pas encore saisi. Sans cette garde, demander trois cartes
-      // et n'en nommer qu'une ferait crier le formulaire pendant la frappe —
-      // par-dessus la faute « un identifiant est requis », qui elle est juste
-      // et que `EntityValidator._identity` produit deja pour chaque brouillon.
-      if (card.id.isEmpty) continue;
-      if (!seen.add(card.id)) duplicates.add(card.id);
+      // identifiant pas encore saisi. Sans cette garde, demander trois
+      // signatures et n'en nommer qu'une ferait crier le formulaire pendant la
+      // frappe — par-dessus la faute « un identifiant est requis », qui elle
+      // est juste et que `EntityValidator._identity` produit deja pour chaque
+      // brouillon.
+      if (signature.id.isEmpty) continue;
+      if (!seen.add(signature.id)) duplicates.add(signature.id);
     }
     return [
       for (final id in duplicates)
         ValidationFault(
-          'deux cartes de signature portent l\'identifiant "$id"',
+          'deux signatures portent l\'identifiant "$id"',
           field: 'skills',
         ),
     ];

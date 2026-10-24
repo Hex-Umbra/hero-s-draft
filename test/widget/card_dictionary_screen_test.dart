@@ -5,11 +5,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/card_dictionary_screen.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/models/data/signature_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-// Seed catalogue: a mix of global cards and hero-specific ("unique") cards
+// Seed catalogue: a mix of cards
 // spread across the CardType groups the screen renders (attack/skill/power).
 const _cards = [
   CardData(
@@ -20,7 +22,6 @@ const _cards = [
     descriptionFr: 'Inflige des dégâts.',
     cost: 1,
     type: CardType.attack,
-    category: CardCategory.global,
     rarity: CardRarity.common,
     target: CardTarget.singleEnemy,
     effects: [],
@@ -33,9 +34,7 @@ const _cards = [
     descriptionFr: 'Une attaque réservée au paladin.',
     cost: 2,
     type: CardType.attack,
-    category: CardCategory.characterSpecific,
-    heroClass: 'paladin',
-    rarity: CardRarity.unique,
+    rarity: CardRarity.rare,
     target: CardTarget.singleEnemy,
     effects: [],
   ),
@@ -47,7 +46,6 @@ const _cards = [
     descriptionFr: 'Gagne de l\'armure.',
     cost: 1,
     type: CardType.skill,
-    category: CardCategory.global,
     rarity: CardRarity.common,
     target: CardTarget.self,
     effects: [],
@@ -60,9 +58,7 @@ const _cards = [
     descriptionFr: 'Un pouvoir réservé au mage.',
     cost: 3,
     type: CardType.power,
-    category: CardCategory.characterSpecific,
-    heroClass: 'mage',
-    rarity: CardRarity.unique,
+    rarity: CardRarity.epic,
     target: CardTarget.self,
     effects: [],
   ),
@@ -108,9 +104,12 @@ final _mockRegistry = GameDataRegistry(
 Future<ProviderContainer> _buildAndReady(
   WidgetTester tester, {
   Locale locale = const Locale('en', ''),
+  GameDataRegistry? registry,
 }) async {
   final container = ProviderContainer(
-    overrides: [gameDataLoaderProvider.overrideWith((ref) => _mockRegistry)],
+    overrides: [
+      gameDataLoaderProvider.overrideWith((ref) => registry ?? _mockRegistry),
+    ],
   );
   addTearDown(container.dispose);
 
@@ -180,6 +179,92 @@ void main() {
       expect(find.text('RARES'), findsOneWidget);
       expect(find.text('Lucky Coin'), findsOneWidget);
       expect(find.text('War Banner'), findsOneWidget);
+    },
+  );
+
+  testWidgets('le dictionnaire a trois onglets : Cartes, Reliques, Signatures', (
+    WidgetTester tester,
+  ) async {
+    await _buildAndReady(tester);
+
+    final tabs = find.byType(Tab);
+    expect(tabs, findsNWidgets(3));
+    final textes = [
+      for (var i = 0; i < 3; i++)
+        tester.widget<Tab>(tabs.at(i)).text,
+    ];
+    expect(textes, ['Cards', 'Relics', 'Signatures']);
+  });
+
+  testWidgets(
+    'l onglet Signatures range les signatures par classe, dans l ordre de '
+    'displayOrder, a la couleur de la classe',
+    (WidgetTester tester) async {
+      const berserker = HeroData(
+        id: 'berserker',
+        nameEn: 'Berserker',
+        classCard: 'hero_berserker.png',
+        maxHp: 80,
+        maxMana: 3,
+        themeColor: 0xFFF44336,
+        displayOrder: 2,
+        skills: ['rage_t'],
+      );
+      const paladin = HeroData(
+        id: 'paladin',
+        nameEn: 'Paladin',
+        classCard: 'hero_paladin.png',
+        maxHp: 100,
+        maxMana: 3,
+        themeColor: 0xFF2196F3,
+        displayOrder: 1,
+        skills: ['smite_t'],
+      );
+      const rage = SignatureData(
+        id: 'rage_t',
+        heroClass: 'berserker',
+        nameEn: 'Rage T',
+        descriptionEn: 'Fury.',
+        cost: 1,
+        cooldown: 2,
+        type: CardType.attack,
+        effects: [],
+      );
+      const smite = SignatureData(
+        id: 'smite_t',
+        heroClass: 'paladin',
+        nameEn: 'Smite T',
+        descriptionEn: 'Strike.',
+        cost: 1,
+        cooldown: 2,
+        type: CardType.attack,
+        effects: [],
+      );
+      await _buildAndReady(
+        tester,
+        registry: GameDataRegistry(
+          enemies: const [],
+          heroes: const [berserker, paladin],
+          cards: const [],
+          events: const [],
+          passives: const [],
+          relics: const [],
+          forgeUpgrades: const [],
+          signatures: const [rage, smite],
+        ),
+      );
+
+      await tester.tap(find.byType(Tab).at(2));
+      await tester.pumpAndSettle();
+
+      double dy(String texte) => tester.getTopLeft(find.text(texte)).dy;
+      expect(dy('Paladin'), lessThan(dy('Smite T')));
+      expect(dy('Smite T'), lessThan(dy('Berserker')));
+      expect(dy('Berserker'), lessThan(dy('Rage T')));
+      expect(
+        tester.widget<Text>(find.text('Paladin')).style?.color,
+        const Color(0xFF2196F3),
+      );
     },
   );
 

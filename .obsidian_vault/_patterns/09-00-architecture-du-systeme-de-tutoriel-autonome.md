@@ -77,7 +77,7 @@ une étape ne décale pas le câblage. `baseStatsForHero()` dérive les statisti
 la classe choisie (`maxHp`, `maxMana`, `mastery`, `luck`) et ne retombe sur les valeurs
 de repli 80 PV / 3 mana que tant que l'étape 02 n'a pas été franchie.
 
-**Le palier d'XP n'est plus un champ** (branche de la vague 3 —
+**Le palier d'XP n'est plus un champ** (vague 3 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A8, A27) : `mockState.xpToNextLevel`
 et sa formule géométrique ont disparu ; le getter **`TutorialEngine.xpThreshold`** rend
 `data.xpCurve!.thresholdFor(1)` — la fonction pure du jeu, sur le registre du tutoriel, qui passe
@@ -99,6 +99,12 @@ résout contre le `GameDataRegistry` par `firstWhere` **sans `orElse`** : renomm
 dans `assets/data/` fait échouer le tutoriel bruyamment, au lieu de le laisser afficher une
 valeur périmée. Le tutoriel manipule ensuite les vrais modèles du jeu — `CardInstance`,
 `EnemyInstance`, `EntityStats` — et fait passer ses dégâts par `DamagePipeline`.
+
+Sur la branche de la vague 4 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), les
+signatures ne sont plus des cartes : `TutorialFixtures.signature(id)` les résout, de même
+fail-fast, dans `registry.signatures`, pour le bandeau de l'étape « Votre deck de départ » ;
+`starterPool` filtre par `CardData.isOfferable`, sans id de classe ; et `setStarterDeck` ne pose
+plus que les 5 cartes choisies.
 
 Les POJOs `TutorialCard` et `TutorialEnemy`, qui recopiaient ces données à la main, sont
 supprimés : c'est leur dérive silencieuse qui avait produit les 50 écarts corrigés par P-45.
@@ -124,8 +130,7 @@ invaliderait la classe et le deck déjà consommés en aval. Le test de bord est
 accepte `**gras**`, rendu par `parseBoldSegments` + `Text.rich` dans `TutorialScreen`.
 **Les chiffres que la donnée porte passent par des placeholders**, remplis par des fonctions
 pures de `tutorial_prose.dart` que `TutorialScreen` enchaîne sur son registre :
-`fillRewardPlaceholders` (les récompenses de niveau, ADR-098 D7) puis, sur la branche de la
-vague 3, `fillXpPlaceholders(body, curve)` — `{xpAct1}`, `{xpAct2}`, le prix d'un niveau aux
+`fillRewardPlaceholders` (les récompenses de niveau, ADR-098 D7) puis, depuis la vague 3, `fillXpPlaceholders(body, curve)` — `{xpAct1}`, `{xpAct2}`, le prix d'un niveau aux
 actes 1 et 2 (A26). En
 revanche les libellés de jeu (raretés, récompenses de draft, types de nœuds) ne sont pas
 réécrits : ils sont partagés avec les écrans de production.

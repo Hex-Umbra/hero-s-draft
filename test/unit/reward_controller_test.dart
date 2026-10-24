@@ -91,7 +91,6 @@ void main() {
         id: 'c_normal',
         cost: 1,
         type: CardType.attack,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
         effects: [],
@@ -100,19 +99,8 @@ void main() {
         id: 'c_status',
         cost: 1,
         type: CardType.status,
-        category: CardCategory.global,
         rarity: CardRarity.common,
         target: CardTarget.self,
-        effects: [],
-      ),
-      CardData(
-        id: 'c_unique',
-        cost: 1,
-        type: CardType.attack,
-        category: CardCategory.characterSpecific,
-        rarity: CardRarity.unique,
-        target: CardTarget.singleEnemy,
-        heroClass: 'paladin',
         effects: [],
       ),
     ];
@@ -175,8 +163,7 @@ void main() {
       // Hors d'un boss « XP », aucune rune ne monte (spec P-43 E3, §4.6).
       expect(rewardController.state.sharpenedRunes, isNull);
       // La trouvaille (spec P-43 E3, §4.1) : `c_normal`, la seule carte que
-      // le paladin puisse recevoir — `c_status` est un statut, `c_unique`
-      // une signature.
+      // le paladin puisse recevoir — `c_status` est un statut.
       expect(
         rewardController.state.foundCards.map((c) => c.data.id),
         ['c_normal'],
@@ -297,25 +284,6 @@ void main() {
         act: 1,
       );
       expect(rewardController.state.rolledCards, isEmpty);
-    });
-
-    test('handleVictory ne propose jamais de carte unique au draft de boss', () {
-      deckNotifier.addCardToMasterDeck(CardInstance(data: allCards[0]));
-      deckNotifier.addCardToMasterDeck(CardInstance(data: allCards[2]));
-
-      rewardController.handleVictory(
-        defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
-        currentNode: makeNode(bossRewardType: BossRewardType.cards),
-        allRelics: allRelics,
-        allCards: allCards,
-        luck: 0,
-        act: 1,
-      );
-
-      expect(
-        rewardController.state.rolledCards.map((c) => c.data.id),
-        ['c_normal'],
-      );
     });
 
     test('le boss XP ne donne plus de carte : sa victoire attend la collecte '
@@ -508,7 +476,6 @@ void main() {
           id: 'c_rare',
           cost: 1,
           type: CardType.attack,
-          category: CardCategory.global,
           rarity: CardRarity.rare,
           target: CardTarget.singleEnemy,
           effects: [],
@@ -553,38 +520,26 @@ void main() {
         expect(container.read(deckProvider).masterDeck, hasLength(2));
       });
 
-      test('la trouvaille ne tire que ce que la classe peut recevoir, jamais '
-          'une unique', () {
-        const mage = HeroData(
-          id: 'mage',
-          nameEn: 'Mage',
-          nameFr: 'Mage',
-          classCard: 'mage.png',
-          maxHp: 80,
-          maxMana: 4,
-          luck: 0,
-          mastery: 0,
-        );
-        runController.startNewRun(mage);
-
-        CardData classCard(String id, String heroClass, CardRarity rarity) =>
-            CardData(
-              id: id,
-              cost: 1,
-              type: CardType.attack,
-              category: CardCategory.characterSpecific,
-              heroClass: heroClass,
-              rarity: rarity,
-              target: CardTarget.singleEnemy,
-              effects: const [],
-            );
-        final mixedCards = [
+      test('la trouvaille ne tire que des cartes offertes, jamais un statut',
+          () {
+        const mixedCards = [
           ...allCards,
-          classCard('mage_rare', 'mage', CardRarity.rare),
-          classCard('paladin_rare', 'paladin', CardRarity.rare),
-          classCard('berserker_rare', 'berserker', CardRarity.rare),
-          // Une unique de la classe du joueur : sa signature.
-          classCard('mage_signature', 'mage', CardRarity.unique),
+          CardData(
+            id: 'c_rare_x',
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.rare,
+            target: CardTarget.singleEnemy,
+            effects: [],
+          ),
+          CardData(
+            id: 'c_power',
+            cost: 1,
+            type: CardType.power,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            effects: [],
+          ),
         ];
         final rng = Random(11);
         final seen = <String>{};
@@ -599,28 +554,23 @@ void main() {
             act: 1,
             random: rng,
           );
-          // La donnee de la carte, jamais `card.rarity` : l'instance est
-          // construite commune (spec §4.1), l'assertion ne garderait rien.
           for (final card in rewardController.state.foundCards) {
-            expect(card.data.heroClass, anyOf(isNull, 'mage'),
-                reason: card.data.id);
-            expect(card.data.rarity, isNot(CardRarity.unique),
-                reason: card.data.id);
             seen.add(card.data.id);
           }
         }
 
-        // Les cartes de la classe du joueur sont admises.
-        expect(seen, contains('mage_rare'));
+        expect(seen, everyElement(isIn(['c_normal', 'c_rare_x', 'c_power'])));
+        expect(seen, isNot(contains('c_status')));
+        expect(seen, containsAll(['c_rare_x', 'c_power']));
       });
 
       test('sans carte offerte, la trouvaille ne donne rien, sans lever', () {
-        // Seulement un statut et une signature : aucune carte offerte.
+        // Seulement un statut : aucune carte offerte.
         rewardController.handleVictory(
           defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
           currentNode: makeNode(type: MapNodeType.elite),
           allRelics: allRelics,
-          allCards: [allCards[1], allCards[2]],
+          allCards: [allCards[1]],
           luck: 0,
           act: 1,
           random: ScriptedRandom([0]),

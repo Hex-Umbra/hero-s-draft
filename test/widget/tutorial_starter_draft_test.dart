@@ -55,7 +55,7 @@ void main() {
     expect(engine.mockState.masterDeck, isEmpty);
   });
 
-  testWidgets('sélectionner 5 cartes remplit le deck avec les cartes de classe', (tester) async {
+  testWidgets('selectionner 5 cartes remplit le deck des 5 cartes choisies, sans signature', (tester) async {
     final engine = await _pump(tester);
     final pool = engine.fixtures.starterPool;
 
@@ -65,12 +65,22 @@ void main() {
     }
 
     expect(find.text('5 / 5'), findsOneWidget);
-    // 5 choisies + 2 cartes de classe du Paladin.
-    expect(engine.mockState.masterDeck, hasLength(7));
+    // Les signatures du Paladin ne sont plus des cartes du deck.
+    expect(engine.mockState.masterDeck, hasLength(5));
     expect(
       engine.mockState.masterDeck.map((c) => c.data.id),
-      containsAll(<String>['holy_shield', 'smite']),
+      isNot(anyOf(contains('holy_shield'), contains('smite'))),
     );
+  });
+
+  testWidgets('le bandeau nomme les signatures de la classe, toujours disponibles en combat', (tester) async {
+    await _pump(tester);
+
+    expect(
+      find.text('Vos signatures, toujours disponibles en combat : Bouclier Sacré, Châtiment'),
+      findsOneWidget,
+    );
+    expect(find.textContaining("Ajoutées d'office"), findsNothing);
   });
 
   testWidgets('la sélection est bornée à 5', (tester) async {
@@ -83,6 +93,6 @@ void main() {
     }
 
     expect(find.text('5 / 5'), findsOneWidget);
-    expect(engine.mockState.masterDeck, hasLength(7));
+    expect(engine.mockState.masterDeck, hasLength(5));
   });
 }

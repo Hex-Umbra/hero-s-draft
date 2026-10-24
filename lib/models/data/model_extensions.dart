@@ -20,8 +20,6 @@ extension CardRarityExtension on CardRarity {
         return l10n.rarityEpic;
       case CardRarity.legendary:
         return l10n.rarityLegendary;
-      case CardRarity.unique:
-        return 'Unique';
     }
   }
 
@@ -37,8 +35,6 @@ extension CardRarityExtension on CardRarity {
         return AppColors.rarityEpic;
       case CardRarity.legendary:
         return AppColors.rarityLegendary;
-      case CardRarity.unique:
-        return AppColors.rarityUnique;
     }
   }
 }

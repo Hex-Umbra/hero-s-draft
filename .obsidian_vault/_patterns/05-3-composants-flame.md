@@ -16,7 +16,7 @@ Afin de nettoyer la classe `CardComponent` de ses centaines de lignes de dessin 
 - **`CardComponent`** (`lib/game/components/card_component.dart`) :
   - Classe façade principale qui coordonne les initialisations et les interactions de haut niveau (callbacks de jeu, effets de shake).
 - **`CardRenderer`** (`lib/game/components/widgets/card_renderer.dart`) :
-  - Encapsule tout le dessin 2D de la face avant de la carte (fond avec coins arrondis, dégradés selon le type de carte, liseré et halo de rareté de carte, effet foil polychromatique rotatif pour la rareté `unique`, et dessin des fentes de runes de forge avec wrapping Canvas).
+  - Encapsule tout le dessin 2D de la face avant de la carte (fond avec coins arrondis, dégradés selon le type de carte, liseré et halo de rareté de carte, et dessin des fentes de runes de forge avec wrapping Canvas).
   - Délègue le dessin des textes à `CardTextRenderer`.
 - **`CardInteractionHandler`** (`lib/game/components/widgets/card_interaction_handler.dart`) :
   - Centralise la gestion des gestes du pointeur : détection du survol (`hover`), calcul du glissement (`drag`), détection d'entrée dans la zone d'annulation (`cancel zone`) et détection de survol d'un ennemi pour ciblage.

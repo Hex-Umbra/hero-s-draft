@@ -24,9 +24,19 @@
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
        ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par shock/vulnerable, jet de coup critique pour dégâts/soins)
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
-       ├→ TraitSystem.onCardPlayed(runCtrl, card)
-       ├→ applyRelics(onCardPlayed)
-       └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
+       └→ _afterCardPlayed(card, enemyId:) — la suite commune :
+           ├→ TraitSystem : onCardPlayed, puis l'événement du type
+           ├→ applyRelics(onCardPlayed), puis l'événement du type
+           └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
+
+2 bis. JOUEUR JOUE UNE SIGNATURE (branche de la vague 4 — ADR-109)
+   └→ SignatureBar → GameScreen._playSignature(signature, enemyId:) — une signature à cible
+      unique s'arme d'abord, et l'ennemi arrive par onSelectEnemy (_patterns/04-00)
+       └→ CombatController.playSignature(signature, enemyId:)
+           ├→ refus sans effet : tour ennemi, combat fini, pas prête, pas de cible, mana
+           ├→ EffectResolver.resolveCard(signature.asCard) → consomme mana, applique effets
+           ├→ signaturesReadyOn[id] = turnCount + cooldown — aucune pile touchée
+           └→ _afterCardPlayed(card, enemyId:) — la même suite que la carte
 
 3. FIN DE TOUR JOUEUR
    └→ Clic sur le bouton de fin de tour (GameScreen)
@@ -54,9 +64,9 @@
    └→ _cleanDeadEnemies() détecte 0 ennemis
        ├→ isCombatEnded = true, isVictory = true
        └→ onEnemiesDead callback → UI (GameScreen) délègue la gestion des récompenses à RewardController :
-           ├→ RewardController.handleVictory() : calcule l'XP et l'or de façon unifiée (scaling par niveau de monstre de +10% par niveau), et résout les tirages de reliques ou de cartes selon bossRewardType — et, branche de la vague 3, la trouvaille (foundCards) d'un combat normal ou d'une élite.
+           ├→ RewardController.handleVictory() : calcule l'XP et l'or de façon unifiée (scaling par niveau de monstre de +10% par niveau), et résout les tirages de reliques ou de cartes selon bossRewardType — et, vague 3, la trouvaille (foundCards) d'un combat normal ou d'une élite.
            ├→ Le joueur clique pour récupérer l'XP et l'or : RewardController.collectGoldAndXp()
-           │   └→ branche de la vague 3 : cartes trouvées ajoutées au deck ; boss « XP » : runes montées (sharpenedRunes) ;
+           │   └→ vague 3 : cartes trouvées ajoutées au deck ; boss « XP » : runes montées (sharpenedRunes) ;
            │      une notification par carte et par rune, NotificationNotifier.maxVisible = 5 (4 avant)
            ├→ SI LEVEL UP : Déclenche l'affichage en plein écran de la bannière festive « LEVEL UP ! »
            │   └→ Redirection du joueur vers l'écran DraftScreen amélioré (sélection de récompense de niveau)
@@ -71,5 +81,5 @@
 > l'ordre `RunController` **puis** `DeckNotifier` est un invariant : l'inverser décalerait
 > toute relique `startOfTurn` d'un tour entier. Voir
 > [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). La borne de
-> main passée aux deux pioches est `RunState.maxHandSize` sur la branche de la vague 3, et non
+> main passée aux deux pioches est `RunState.maxHandSize` depuis la vague 3, et non
 > plus la constante 10 ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)).

@@ -70,7 +70,7 @@ graph TD
     P40["P-40 Nettoyage héros & cartes ✅ clos"] -.annule un tiers de.-> P26[P-26 Lot d'hygiène]
     P41[P-41 Identité de classe] -.son lot A précède.-> P49[P-49 Passifs partagés]
     P49 -.précède le lot B de.-> P41
-    P41 --> P43[P-43 Économie unifiée]
+    P41 --> P43["P-43 Économie unifiée ✅ clos, E4 sur branche"]
     P43 --> P42[P-42 Catalogue par lots de passif]
     P43 --> P44["P-44 Profondeur — lot 1, livré avec la tranche 1 de P-42"]
     P05 -.lots 2 à 4 de P-44.-> P44
@@ -258,7 +258,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
 | **P-41** | **Identité de classe** — Puissance orientée par la classe, `statRules`, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** — ✅ **livré en entier, fusionné dans `main` le 2026-09-20 (PR #45 pour le dernier)** *(voir §4)* · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée les 2026-09-16 et 2026-09-17 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
 | **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · ✅ **Fusionné dans `main` le 2026-09-17 (PR #39)** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | *non chiffré* | ★★★☆☆ | 🔥🔥 |
-| **P-43** | **Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4** · **premier chantier du programme** *(redécoupé le 2026-10-01, voir §4)* · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | *une spec par lot* | ★★★★☆ | 🔥🔥🔥 |
+| ~~**P-43**~~ | ~~**Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4**~~ ✅ **Clos le 2026-10-16 avec son dernier lot, E4 : livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire** — les lots E0 à E3 sont dans `main` · [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md) pour E4 · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | — | — | — |
 | **P-42** | **Catalogue par lots de passif** — un lot de cartes par passif, rangé sous `cards/<passif>/`, et les évolutions de signature · **trois tranches**, après P-43 *(redécoupé le 2026-10-01, voir §4)* · même brainstorm, même fichier d'orchestration | *une spec par tranche* | ★★★★☆ | 🔥🔥🔥 |
 | **P-44** | **Profondeur de cartes** — **quatre lots** : 1 (`scaleWith`, multi-coups, statuts proportionnels, coûts combinés, runes de pipeline) **livré avec la tranche 1 de P-42** ; 2 (malédictions, étourdissement, épines), 3 (mots-clés, production de cartes) et 4 (effets interactifs, cible `none`) **après le programme, derrière P-05** *(redécoupé le 2026-10-01, voir §4)* | *lot 1 : avec P-42 ; lots 2-4 : à chiffrer* | ★★★★☆ | 🔥🔥 |
 | ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
@@ -395,8 +395,8 @@ deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
 | *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (passage unique des gains) |
 | S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
-| S3 — Économie unifiée *(cinq lots, E0 → E4)* | **P-43** | **P-41** (livré) |
-| S4 — Catalogue par lots de passif *(trois tranches)* | **P-42** | **P-43**, son lot E4 |
+| S3 — Économie unifiée *(cinq lots, E0 → E4)* | ~~**P-43**~~ ✅ clos le 2026-10-16 — E4 livré sur la branche de la vague 4, en attente du propriétaire | **P-41** (livré) |
+| S4 — Catalogue par lots de passif *(trois tranches)* | **P-42** | **P-43**, son lot E4 (livré sur branche) |
 | S5 — Profondeur de cartes *(quatre lots)* | **P-44** | Lot 1 : livré avec la tranche 1 de **P-42** · lots 2 à 4 : **P-05**, après le programme |
 
 **Périmètre des vagues, et ce qui reste dehors** *(2026-10-01)*. Les vagues couvrent ce que le
@@ -474,7 +474,8 @@ l'autre. Une conséquence à garder en tête au moment d'écrire ces cartes : **
 cesse d'être `unique`, elle devient achetable en boutique et tirable au bonus de boss** — par sa
 propre classe seulement, mais quand même. C'est le prédicat qui le décide, plus la rareté.
 *(Depuis le 2026-10-01 la question change de forme : les signatures cessent d'être des cartes —
-brainstorm v3, D49, lot E4 de P-43.)*
+brainstorm v3, D49, lot E4 de P-43. **Réglé par E4**, livré sur la branche de la vague 4 : les signatures ne sont plus dans `registry.cards`, aucun pool ne les voit —
+[ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md).)*
 
 ---
 

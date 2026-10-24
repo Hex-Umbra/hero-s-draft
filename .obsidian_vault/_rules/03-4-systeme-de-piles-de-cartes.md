@@ -39,8 +39,7 @@ pour ne rien donner au joueur.
 
 L'ordre de ces deux tests d'arrêt compte : main pleine est évaluée **avant** pioche vide.
 
-**La main maximale est une stat de run** depuis le lot E3 de P-43 (branche de la vague 3,
-en attente du propriétaire — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), qui
+**La main maximale est une stat de run** depuis le lot E3 de P-43 (vague 3, fusionnée dans `main` le 2026-10-04 — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), qui
 amende ADR-078 D3) : `RunState.maxHandSize`, sérialisée, vaut
 `GameConstants.startingMaxHandSize` (**10**) au départ de chaque run ; seul le champ
 « Main max » du menu de debug l'écrit — aucune relique ni récompense ne la modifie encore. Sur
@@ -57,7 +56,7 @@ main à 7.
 |:---|:---|:---|
 | Main d'ouverture d'un combat | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerCombat()` |
 | Début de chaque tour joueur | `RunState.cardsPerTurn` | `TurnPhaseManager.startPlayerTurn()` |
-| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet ; `quick` : 1 par niveau, plafonnée au niveau 1 — au niveau 2 si *Transcendance* a relevé son plafond (branche de la vague 3, [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) | `DrawEffectStrategy`, pour l'une comme pour l'autre : la pioche de `quick` est un effet que la rune ajoute, résolu avant ceux de la carte par la même stratégie — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) |
+| Effet de carte (`draw`) ou rune `quick` | valeur de l'effet ; `quick` : 1 par niveau, plafonnée au niveau 1 — au niveau 2 si *Transcendance* a relevé son plafond (vague 3, [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) | `DrawEffectStrategy`, pour l'une comme pour l'autre : la pioche de `quick` est un effet que la rune ajoute, résolu avant ceux de la carte par la même stratégie — [ADR-105](../_adr/ADR-105-moteur-de-runes-data-driven.md) |
 
 `cardsPerTurn` vaut **5** par défaut et se modifie par relique — voir
 [03-5-systeme-de-reliques.md](03-5-systeme-de-reliques.md), `scholars_satchel`.

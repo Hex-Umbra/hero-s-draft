@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/entity_stats.dart';
+import '../../models/data/game_data_registry.dart';
 import '../../models/data/hero_data.dart';
+import '../../models/data/hero_skills_link.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/passive_data.dart';
+import '../../models/data/signature_data.dart';
 import '../../models/data/stat_rule.dart';
+import '../../models/signature_instance.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
@@ -71,6 +75,14 @@ class RunState {
   /// une run qui n'en tiendrait pas compte.
   final List<StatRule> statRules;
 
+  /// Les signatures de la run (spec P-43 E4, §9 ; A8), dans l'ordre de
+  /// `HeroData.skills`. Hors du deck : le `masterDeck` n'en porte jamais.
+  ///
+  /// **Jamais sérialisées**, comme [statRules] : une signature d'E4 est du
+  /// contenu, que `fromJsonWithReport` relit de la classe. La vague 5 y
+  /// ajoutera ses évolutions — et leur sauvegarde — sans déplacer le champ.
+  final List<SignatureInstance> signatures;
+
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
 
@@ -104,6 +116,7 @@ class RunState {
     this.extraBossRuneSharpens = 0,
     this.runeCapBonus = const {},
     this.statRules = const [],
+    this.signatures = const [],
   });
 
   RunState copyWith({
@@ -123,6 +136,7 @@ class RunState {
     int? extraBossRuneSharpens,
     Map<String, int>? runeCapBonus,
     List<StatRule>? statRules,
+    List<SignatureInstance>? signatures,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -143,6 +157,7 @@ class RunState {
           extraBossRuneSharpens ?? this.extraBossRuneSharpens,
       runeCapBonus: runeCapBonus ?? this.runeCapBonus,
       statRules: statRules ?? this.statRules,
+      signatures: signatures ?? this.signatures,
     );
   }
 
@@ -216,9 +231,23 @@ class RunState {
       statRules:
           HeroData.getById(json['heroClassId'] as String)?.statRules ??
               const [],
+      signatures: _signaturesOf(json['heroClassId'] as String),
     );
 
     return (run, missing);
+  }
+
+  /// Les signatures de la classe [heroClassId], relues du registre chargé.
+  /// Registre absent ou classe inconnue : aucune, comme `statRules`. Un id de
+  /// `skills` absent du registre lève (`getSignatures`, fail-fast) : la
+  /// sauvegarde est alors illisible, et `SaveService.load` l'efface.
+  static List<SignatureInstance> _signaturesOf(String heroClassId) {
+    final hero = HeroData.getById(heroClassId);
+    if (hero == null) return const [];
+    return [
+      for (final data in hero.getSignatures(GameDataRegistry.instance!))
+        SignatureInstance(data),
+    ];
   }
 }
 
@@ -264,7 +293,11 @@ class RunController extends Notifier<RunState> {
   }
 
   /// Démarre une nouvelle partie avec la classe choisie
-  void startNewRun(HeroData chosenClass, [PassiveData? activePassive]) {
+  void startNewRun(
+    HeroData chosenClass, [
+    PassiveData? activePassive,
+    List<SignatureData> signatures = const [],
+  ]) {
     final generatedMap = MapGeneratorService.generateMap(act: 1);
     state = RunState(
       currentLevel: 1,
@@ -287,6 +320,7 @@ class RunController extends Notifier<RunState> {
       currentNodeId: null,
       pendingDrafts: 0,
       statRules: chosenClass.statRules,
+      signatures: [for (final data in signatures) SignatureInstance(data)],
     );
 
     // Réinitialise l'inventaire avec 50 d'or de départ

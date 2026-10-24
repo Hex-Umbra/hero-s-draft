@@ -60,9 +60,14 @@ void main() {
       expect(faults.first.message, contains('aucun fichier à modifier'));
     });
 
-    test('un identifiant deja dans le registre est refuse, chemin libre', () {
-      // Le cas que le controle disque **ne peut pas** voir : une carte neutre
-      // homonyme d'une carte de classe. Le chargeur, lui, le rejette.
+    test('un identifiant que le registre porte et que le disque ne montre pas '
+        'est refuse', () {
+      // Le cas que le controle disque **ne peut pas** voir : un identifiant
+      // deja porte par une entite de la categorie, sous un chemin que ce bac
+      // a sable ne contient pas. Une carte neutre homonyme d'une **signature**
+      // n'est pas de ce ressort : les deux categories ont chacune leur
+      // registre, et seul `referential_integrity_test` exige que leurs
+      // identifiants soient disjoints.
       final descriptor = kEntityDescriptors[EntityCategory.card]!;
       final draft = EntityDraft(
         descriptor: descriptor,
@@ -78,13 +83,117 @@ void main() {
 
       // Le chemin `assets/data/cards/smite.json` est libre…
       expect(File('$root/${draft.path}').existsSync(), isFalse);
-      // …mais le registre porte deja `smite`, sous le dossier du paladin.
+      // …mais le registre porte deja la carte neutre `smite`.
       final faults = validatorWith(
         registry: fixtureRegistry(cards: [fixtureCard('smite')]),
       ).validate(draft);
 
       expect(faults, isNotEmpty);
       expect(faults.first.message, contains('smite'));
+    });
+  });
+
+  group('une signature (spec P-43 E4, §8)', () {
+    test('une signature neuve sans proprietaire est refusee, nommee heroClass',
+        () {
+      final counting = _TouchCountingFileSystem();
+      final faults = EntityValidator(
+        fs: counting,
+        rootPath: root,
+        registry: fixtureRegistry(),
+      ).validate(fixtureSignatureDraft(heroClass: null));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'heroClass');
+      // Refusee a la famille 1, avant tout controle d'existence : le chemin
+      // de repli `assets/data/skills/<id>.json` n'est celui d'aucune
+      // signature, et le juger n'aurait aucun sens.
+      expect(counting.touches, 0);
+    });
+
+    test('une signature homonyme d une signature du registre est refusee', () {
+      final faults = validatorWith(
+        registry: fixtureRegistry(signatures: [fixtureSignature('smite')]),
+      ).validate(fixtureSignatureDraft(id: 'smite', heroClass: 'mage'));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'id');
+      expect(faults.single.message, contains('smite'));
+    });
+
+    test('une signature portant rarity ou isExhaust est refusee', () {
+      final mechanics = {
+        ...kEntityDescriptors[EntityCategory.signature]!.decodeTemplate(),
+        'rarity': 'rare',
+        'isExhaust': false,
+      };
+      final faults = validatorWith().validate(
+        fixtureSignatureDraft(mechanics: jsonEncode(mechanics)),
+      );
+
+      expect(
+        faults.map((f) => f.field),
+        containsAll(['rarity', 'isExhaust']),
+      );
+    });
+
+    test('une signature valide passe la construction, heroClass ajoute au '
+        'document construit', () {
+      final draft = fixtureSignatureDraft();
+
+      // `SignatureData.fromJson` exige `heroClass` : la famille 7 ne passe
+      // que si le validateur l'ajoute au document qu'il construit…
+      expect(validatorWith().validate(draft), isEmpty);
+      // …sans que le document ecrit le porte : le repertoire l'impose.
+      expect(draft.compose().containsKey('heroClass'), isFalse);
+    });
+
+    test('un descripteur sans propriete de classe ne recoit pas heroClass', () {
+      Map<String, dynamic>? constructed;
+      final descriptor = EntityDescriptor(
+        category: EntityCategory.relic,
+        label: 'Relique de test',
+        directory: 'relics',
+        requiredKeys: const {},
+        bilingualBases: const [],
+        construct: (json) => constructed = json,
+        template: '{}',
+      );
+
+      // Sans classe : une injection sans garde ajouterait une cle
+      // `heroClass` valant null, que `containsKey` verrait.
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: descriptor,
+        id: 'temoin',
+        bilingual: const {},
+        mechanics: '{}',
+      ));
+
+      expect(faults, isEmpty);
+      expect(constructed, isNotNull);
+      expect(constructed!.containsKey('heroClass'), isFalse);
+    });
+
+    test('une carte neutre portant une classe est refusee, nommee heroClass',
+        () {
+      // Seule une signature a un proprietaire : une carte portant une classe
+      // serait ecrite a plat, puis inscrite dans les `skills` de la classe.
+      final descriptor = kEntityDescriptors[EntityCategory.card]!;
+      final faults = validatorWith().validate(EntityDraft(
+        descriptor: descriptor,
+        id: 'coup_bas',
+        heroClass: 'mage',
+        bilingual: const {
+          'name_fr': 'x',
+          'name_en': 'x',
+          'description_fr': 'x',
+          'description_en': 'x',
+        },
+        mechanics: descriptor.template,
+      ));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'heroClass');
     });
   });
 
@@ -406,13 +515,13 @@ void main() {
     });
   });
 
-  group('bijection skills <-> cards/', () {
-    /// Une classe sur le disque, avec deux cartes dans son dossier.
-    void seedClassWithTwoCards() {
-      Directory('$root/assets/data/classes/gambler/cards')
+  group('_signatures — bijection skills <-> skills/', () {
+    /// Une classe sur le disque, avec deux signatures dans son dossier.
+    void seedClassWithTwoSignatures() {
+      Directory('$root/assets/data/classes/gambler/skills')
           .createSync(recursive: true);
       for (final id in const ['bluff', 'all_in']) {
-        File('$root/assets/data/classes/gambler/cards/$id.json')
+        File('$root/assets/data/classes/gambler/skills/$id.json')
             .writeAsStringSync('{}');
       }
       File('$root/assets/data/classes/gambler/class.json')
@@ -438,29 +547,41 @@ void main() {
         );
 
     test('un skills exact est accepte', () {
-      seedClassWithTwoCards();
+      seedClassWithTwoSignatures();
       final faults =
           validatorWith().validate(classDraft('["all_in", "bluff"]'));
       expect(faults, isEmpty);
     });
 
-    test('une carte declaree mais absente du dossier est refusee', () {
-      seedClassWithTwoCards();
+    test('une signature declaree mais absente du dossier est refusee', () {
+      seedClassWithTwoSignatures();
       final faults = validatorWith()
           .validate(classDraft('["all_in", "bluff", "fantome"]'));
-      expect(faults.map((f) => f.toString()).join(), contains('fantome'));
+      expect(
+        faults.map((f) => f.toString()).join(),
+        allOf(
+          contains('la signature "fantome"'),
+          contains('absente de skills/'),
+        ),
+      );
     });
 
-    // L'autre sens compte autant : une carte presente et non declaree serait
-    // chargee dans le pool de la classe sans que rien ne le dise, et
+    // L'autre sens compte autant : une signature presente et non declaree
+    // serait chargee sans que rien ne le dise, et
     // referential_integrity_test rougirait bien plus tard.
-    test('une carte presente mais absente de skills est refusee', () {
-      seedClassWithTwoCards();
+    test('une signature presente mais absente de skills est refusee', () {
+      seedClassWithTwoSignatures();
       final faults = validatorWith().validate(classDraft('["bluff"]'));
-      expect(faults.map((f) => f.toString()).join(), contains('all_in'));
+      expect(
+        faults.map((f) => f.toString()).join(),
+        allOf(
+          contains('la signature "all_in"'),
+          contains('est dans skills/'),
+        ),
+      );
     });
 
-    test('une classe creee, sans dossier cards/ ni skills, passe', () {
+    test('une classe creee, sans dossier skills/ ni champ skills, passe', () {
       final faults = validatorWith().validate(
         EntityDraft(
           descriptor: kEntityDescriptors[EntityCategory.heroClass]!,
@@ -495,10 +616,13 @@ void main() {
   test('tous les gabarits franchissent les sept familles', () {
     // Chaque categorie est testee avec sa prose minimale : un gabarit qui ne
     // passerait pas sa propre validation serait un piege servi a l'ouverture.
+    // Une signature recoit une classe : sans proprietaire, elle est refusee
+    // des la famille 1, avant que son gabarit ne soit juge.
     for (final descriptor in kEntityDescriptors.values) {
       final draft = EntityDraft(
         descriptor: descriptor,
         id: 'entite_de_test',
+        heroClass: descriptor.supportsHeroClass ? 'paladin' : null,
         bilingual: {
           for (final base in descriptor.bilingualBases) ...{
             '${base}_fr': 'texte',
@@ -767,7 +891,7 @@ void main() {
     test('une image optionnelle declaree sans fichier est refusee en '
         'modification', () {
       final hero = kEntityDescriptors[EntityCategory.heroClass]!;
-      Directory('$root/assets/data/classes/barde/cards')
+      Directory('$root/assets/data/classes/barde/skills')
           .createSync(recursive: true);
       File('$root/assets/data/classes/barde/class.json')
           .writeAsStringSync('{}');
@@ -921,7 +1045,7 @@ void main() {
     });
 
     test('la meme classe, annoncee pendante, passe', () {
-      // Le trou que `_signatureCards` decrit depuis P-30 : la classe que la
+      // Le trou que `_signatures` decrit depuis P-30 : la classe que la
       // recette vient d'ecrire n'est pas dans le registre charge au
       // demarrage, et un controle par reference refuserait la sortie meme de
       // l'outil.
@@ -976,4 +1100,34 @@ void main() {
           reason: faults.join(' ; '));
     });
   });
+}
+
+/// Le vrai disque, augmente d'un compteur d'acces : prouve qu'un refus est
+/// rendu avant toute lecture.
+class _TouchCountingFileSystem extends IoContentFileSystem {
+  int touches = 0;
+
+  @override
+  bool fileExists(String path) {
+    touches++;
+    return super.fileExists(path);
+  }
+
+  @override
+  bool directoryExists(String path) {
+    touches++;
+    return super.directoryExists(path);
+  }
+
+  @override
+  String readFile(String path) {
+    touches++;
+    return super.readFile(path);
+  }
+
+  @override
+  List<String> listDirectory(String path) {
+    touches++;
+    return super.listDirectory(path);
+  }
 }

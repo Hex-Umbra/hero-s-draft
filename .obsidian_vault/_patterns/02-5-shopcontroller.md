@@ -25,7 +25,8 @@ P-43 E2, vague 2, fusionnée dans `main` le 2026-10-03) :
 **Responsabilités & Logique métier** :
 - `initializeShop(allCards, bonusShopCards)` : appelé à chaque création de `ShopScreen`. **Ne fait
   rien si `state.nodeId` égale le nœud courant non nul** — l'écran rend alors l'étal retenu. Sinon,
-  tire `3 + bonusShopCards` cartes proposables (`CardData.isOfferableTo`,
+  tire `3 + bonusShopCards` cartes proposables (`CardData.isOfferable`, sans paramètre depuis la branche de la vague 4 —
+  [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) ;
   [ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) scalées par
   l'acte, la copie du deck, et note le nœud. Sans nœud courant — les tests unitaires —, chaque appel
   tire.
@@ -36,7 +37,7 @@ P-43 E2, vague 2, fusionnée dans `main` le 2026-10-03) :
 - `_rollRandomUpgrade(card, rng)` (privé) : une rune par `ForgeRuneRules.drawRunes(card, catalogue,
   rng, count: 1)` — le tirage de la fusion, sur la carte **avec les runes déjà tirées**, au rang de
   la carte —, puis un niveau 1, 2 ou 3 à 80/15/5 %, **borné par `maxLevel`** — par le plafond
-  effectif sur la branche de la vague 3 : `boundLevel(tier, capBonus:)`, le bonus lu sur
+  effectif depuis la vague 3 : `boundLevel(tier, capBonus:)`, le bonus lu sur
   `ref.read(runProvider).runeCapBonus` ([ADR-107](../_adr/ADR-107-trouvaille-et-progression.md)).
   Une rune ne se repose jamais deux fois sur une même pré-forgée.
 - `_drawDeckCopy(rng)` (privé) et `buyDeckCopy()` : la copie (D46) — une carte uniforme de

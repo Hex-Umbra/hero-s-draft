@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 ///
 /// Le motif de chemin porte a la fois la **selection** et l **injection** :
 /// les segments captures alimentent [inject]. C est ce qui permet a
-/// `classes/paladin/cards/smite.json` d etre, par construction, une carte du
-/// paladin — sans qu aucun champ du fichier n ait a le dire.
+/// `classes/paladin/skills/smite.json` d etre, par construction, une
+/// signature du paladin — sans qu aucun champ du fichier n ait a le dire.
 class EntitySource<T> {
   const EntitySource(
     this.pattern,
@@ -23,7 +23,7 @@ class EntitySource<T> {
   /// finissant par `.json`, capture sans son extension).
   ///
   /// Le nombre de segments doit correspondre exactement : c est ce qui
-  /// separe `classes/*/class.json` de `classes/*/cards/*.json`.
+  /// separe `classes/*/class.json` de `classes/*/skills/*.json`.
   ///
   /// La profondeur ne suffit pas a ecarter les assets de paquets : un paquet
   /// peut en declarer un a la meme profondeur que nos motifs. Ceux-la tombent

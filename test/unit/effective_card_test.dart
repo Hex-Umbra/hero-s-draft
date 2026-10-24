@@ -10,7 +10,6 @@ CardData _card(List<CardEffect> effects) => CardData(
       id: 'test_card',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: effects,
@@ -77,16 +76,6 @@ void main() {
         ladder(const CardEffect(
             type: 'apply_status', value: 1, statusId: 'poison', duration: 2)),
         [1, 2, 3, 4, 5],
-      );
-    });
-
-    test('unique rend la base', () {
-      expect(
-        EffectiveCard.apply(_card([_damage(1)]), CardRarity.unique, const [])
-            .effects
-            .single
-            .value,
-        1,
       );
     });
 
@@ -221,7 +210,6 @@ void main() {
           id: 'test_card',
           cost: cost,
           type: CardType.attack,
-          category: CardCategory.global,
           rarity: CardRarity.common,
           target: CardTarget.singleEnemy,
           effects: [_damage(6)],
@@ -311,7 +299,6 @@ void main() {
             id: 'test_card',
             cost: 2,
             type: CardType.attack,
-            category: CardCategory.global,
             rarity: CardRarity.common,
             target: CardTarget.singleEnemy,
             isExhaust: isExhaust,

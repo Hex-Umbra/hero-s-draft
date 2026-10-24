@@ -10,16 +10,15 @@ Configuration minimaliste utilisant les règles standard de `flutter_lints` (v6.
 
 ### 8.2. Typage Fort par Énumérations
 
-Le codebase utilise exhaustivement des enums pour éliminer les typos et optimiser les branchements `switch` :
+Le codebase utilise exhaustivement des enums pour éliminer les typos et optimiser les branchements `switch` — valeurs re-lues le 2026-10-16 sur la branche de la vague 4 ; `CardCategory` et la rareté `unique` y ont disparu ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)) :
 
 | Enum | Fichier | Valeurs |
 |:---|:---|:---|
 | `CardType` | `card_data.dart` | `attack`, `skill`, `power`, `status` |
-| `CardCategory` | `card_data.dart` | `global`, `characterSpecific` |
-| `CardRarity` | `card_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary`, `unique` |
+| `CardRarity` | `card_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary` |
 | `CardTarget` | `card_data.dart` | `singleEnemy`, `allEnemies`, `self`, `none` |
-| `MapNodeType` | `map_node.dart` | `combat`, `elite`, `shop`, `rest`, `event`, `boss` |
-| `IntentType` | `enemy_intent.dart` | `attack`, `defend`, `buff`, `debuffDeck` |
+| `MapNodeType` | `map_node.dart` | `combat`, `elite`, `shop`, `rest`, `event`, `boss`, `relicExchange`, `forgeFusion` |
+| `IntentType` | `enemy_intent.dart` | `attack`, `defend`, `buff` |
 | `StatusType` | `status_effect.dart` | `buff`, `debuff` |
 | `TurnPhase` | `combat_state.dart` | `player`, `enemy` |
 | `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`, `onEnemyKilled` |

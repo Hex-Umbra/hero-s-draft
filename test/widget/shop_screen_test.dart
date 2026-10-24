@@ -25,7 +25,6 @@ void main() {
       descriptionFr: 'Inflige 6 dégâts',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -38,7 +37,6 @@ void main() {
       descriptionFr: 'Gagne 5 armure',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
@@ -51,7 +49,6 @@ void main() {
       descriptionFr: 'Libère le pouvoir',
       cost: 2,
       type: CardType.power,
-      category: CardCategory.global,
       rarity: CardRarity.rare,
       target: CardTarget.none,
       effects: [],
@@ -64,7 +61,6 @@ void main() {
       descriptionFr: 'Une carte extra',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
       effects: [],
@@ -77,27 +73,11 @@ void main() {
       descriptionFr: 'Une autre carte extra',
       cost: 1,
       type: CardType.skill,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.self,
       effects: [],
     ),
   ];
-
-  const signatureCard = CardData(
-    id: 'holy_shield',
-    nameEn: 'Holy Shield',
-    nameFr: 'Bouclier Sacre',
-    descriptionEn: 'Gain armor',
-    descriptionFr: 'Gagne de l armure',
-    cost: 1,
-    type: CardType.skill,
-    category: CardCategory.characterSpecific,
-    heroClass: 'paladin',
-    rarity: CardRarity.unique,
-    target: CardTarget.self,
-    effects: [],
-  );
 
   final mockHero = const HeroData(
     id: 'paladin',
@@ -310,61 +290,6 @@ void main() {
       expect(container.read(shopProvider).cloneOptions, isEmpty);
 
       // Pump to let any notification timers expire
-      await tester.pump(const Duration(seconds: 5));
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
-
-  testWidgets(
-    'Le Miroir Magique ne propose jamais de copier une carte unique',
-    (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final container = ProviderContainer(
-        overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
-      );
-      addTearDown(container.dispose);
-
-      container.read(runProvider.notifier).startNewRun(mockHero);
-      container.read(inventoryProvider.notifier).reset(initialGold: 200);
-
-      final deckNotifier = container.read(deckProvider.notifier);
-      deckNotifier.addCardToMasterDeck(CardInstance(data: mockCards[0]));
-      deckNotifier.addCardToMasterDeck(CardInstance(data: signatureCard));
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('en', ''), Locale('fr', '')],
-            locale: const Locale('fr', ''),
-            home: const Scaffold(body: ShopScreen()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Miroir Magique'));
-      await tester.pumpAndSettle();
-
-      expect(
-        container.read(shopProvider).cloneOptions.map((c) => c.data.id),
-        ['strike'],
-      );
-
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpWidget(const SizedBox());
     },

@@ -41,7 +41,6 @@ class AppColors {
   static const Color rarityRare = Color(0xFF42A5F5);
   static const Color rarityEpic = Color(0xFFAB47BC);
   static const Color rarityLegendary = Color(0xFFFFB300);
-  static const Color rarityUnique = Color(0xFF00E5FF);
 
   // --- Stat Colors ---
   static const Color statHp = Color(0xFFEF5350);

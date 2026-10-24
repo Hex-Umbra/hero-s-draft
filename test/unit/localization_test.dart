@@ -14,7 +14,6 @@ void main() {
           'description_fr': 'Inflige 6 dégâts.',
           'cost': 1,
           'type': 'attack',
-          'category': 'global',
           'rarity': 'common',
           'target': 'singleEnemy',
           'isExhaust': false,

@@ -136,7 +136,6 @@ class CardComponent extends PositionComponent
 
   Color getRarityColor() {
     final r = card.data.rarity.name.toLowerCase();
-    if (r.contains('unique')) return const Color(0xFFFFD700);
     if (r.contains('legendary')) return Colors.orangeAccent;
     if (r.contains('epic')) return Colors.purpleAccent;
     if (r.contains('rare')) return Colors.blueAccent;
@@ -145,26 +144,6 @@ class CardComponent extends PositionComponent
   }
 
   List<Color> getRarityShineColors() {
-    // Rareté Unique → arc-en-ciel progressif basé sur le nombre d'upgrades
-    if (card.data.rarity.name.toLowerCase().contains('unique')) {
-      final baseColor = getRarityColor();
-      final pool = [
-        baseColor,
-        Colors.white70,
-        Colors.greenAccent,
-        Colors.blueAccent,
-        Colors.purpleAccent,
-        Colors.orangeAccent,
-        Colors.red,
-        Colors.yellow,
-        Colors.cyan,
-        Colors.pink,
-      ];
-      final upgradeCount = card.forgeUpgrades.length;
-      final count = (upgradeCount + 1).clamp(1, pool.length);
-      final colors = pool.sublist(0, count);
-      return [...colors, colors.first];
-    }
     final baseColor = getRarityColor();
     final hsv = HSVColor.fromColor(baseColor);
     if (hsv.saturation < 0.15 || hsv.value < 0.15) {
@@ -305,9 +284,6 @@ class CardComponent extends PositionComponent
         break;
       case CardRarity.legendary:
         rarityText = getTranslation((l) => l.rarityLegendary, fallback: 'Legendary');
-        break;
-      case CardRarity.unique:
-        rarityText = activeLocale == 'fr' ? 'Unique' : 'Unique';
         break;
     }
     details += '$rarityHeader$rarityText\n';

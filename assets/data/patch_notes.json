@@ -1,5 +1,38 @@
 [
   {
+    "version": "0.5.6",
+    "date": "2026-10-16",
+    "title": "Les Signatures de Classe",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Chaque classe possède désormais deux compétences de classe, les signatures : ce ne sont plus des cartes, elles ne sont jamais piochées et ne fusionnent pas.",
+          "Les signatures sont toujours disponibles en combat, dès le premier tour, dans une barre à gauche de l'écran : jouer une signature coûte son mana, puis elle se recharge pendant 2 tours.",
+          "Une signature qui vise un ennemi se joue en touchant la signature, puis l'ennemi.",
+          "Les signatures figurent sur la carte de classe à la sélection et dans un nouvel onglet « Signatures » du dictionnaire, et le tutoriel les présente à l'étape « Votre deck de départ »."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le draft de départ se fait désormais sur 5 cartes du pool commun : les signatures n'y sont plus proposées."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Le Projectile Magique devient une Compétence et ne déclenche plus la Marque du Mage.",
+          "Le Bouclier Sacré et la Surtension de Mana ne s'épuisent plus.",
+          "Une signature jouée compte comme une carte de son type, pour les passifs comme pour les reliques."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.5",
     "date": "2026-10-04",
     "title": "Le Temps des Trouvailles",

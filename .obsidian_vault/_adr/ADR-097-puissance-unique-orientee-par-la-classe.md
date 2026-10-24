@@ -9,8 +9,7 @@
 **Complété le 2026-10-02 par [ADR-104](ADR-104-un-statut-par-source-et-ratio-de-conversion.md)**
 (P-43, lot E0, fusionné dans `main` le 2026-10-02 par la PR #47) : la règle de stat gagne un `ratio`,
 la Puissance une source — aucune décision ci-dessous n'est amendée.
-**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, livré
-sur la branche de la vague 3, en attente du propriétaire) sur D3 : la tranche de *Bénédiction* se lit
+**Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) sur D3 : la tranche de *Bénédiction* se lit
 dans la donnée, `threshold: 5`, au lieu d'une constante de sa stratégie.
 
 ### Contexte

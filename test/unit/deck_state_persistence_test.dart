@@ -14,21 +14,8 @@ void main() {
       nameEn: 'Strike',
       cost: 1,
       type: CardType.attack,
-      category: CardCategory.global,
       rarity: CardRarity.common,
       target: CardTarget.singleEnemy,
-      effects: [],
-    );
-
-    const holyShield = CardData(
-      id: 'holy_shield',
-      nameFr: 'Bouclier Sacre',
-      nameEn: 'Holy Shield',
-      cost: 1,
-      type: CardType.skill,
-      category: CardCategory.characterSpecific,
-      rarity: CardRarity.unique,
-      target: CardTarget.self,
       effects: [],
     );
 
@@ -36,7 +23,7 @@ void main() {
       GameDataRegistry(
         enemies: [],
         heroes: [],
-        cards: [strike, holyShield],
+        cards: [strike],
         events: [],
         passives: [],
         relics: [],
@@ -81,7 +68,6 @@ void main() {
           nameEn: 'Old Card',
           cost: 1,
           type: CardType.attack,
-          category: CardCategory.global,
           rarity: CardRarity.common,
           target: CardTarget.singleEnemy,
           effects: [],
@@ -121,31 +107,6 @@ void main() {
           category: 'forgeUpgrade',
         ),
       ]);
-    });
-
-    test('une carte neutre rendue unique par l ancienne fusion de legendaires revient legendaire', () {
-      final damaged = CardInstance(
-        uniqueId: 'card-4',
-        data: strike,
-        rarity: CardRarity.unique,
-        forgeUpgrades: const ['sharp:1'],
-      );
-      final json = DeckState(masterDeck: [damaged]).toJson();
-
-      final (restored, missing) = DeckState.fromJsonWithReport(json);
-
-      expect(restored.masterDeck.single.rarity, CardRarity.legendary);
-      expect(restored.masterDeck.single.forgeUpgrades, ['sharp:1']);
-      expect(missing, isEmpty);
-    });
-
-    test('une carte de classe reste unique au chargement', () {
-      final signature = CardInstance(uniqueId: 'card-5', data: holyShield);
-      final json = DeckState(masterDeck: [signature]).toJson();
-
-      final (restored, _) = DeckState.fromJsonWithReport(json);
-
-      expect(restored.masterDeck.single.rarity, CardRarity.unique);
     });
   });
 }
