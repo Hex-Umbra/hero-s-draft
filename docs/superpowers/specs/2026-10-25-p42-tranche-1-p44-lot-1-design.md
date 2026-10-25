@@ -401,7 +401,7 @@ déplacée, *Trait de Glace* et *Marque du Mage* recalibrés ; le draft de dépa
 | `hpCost`, `armorCost` sur une carte sans `passive` | Refusés (A8, D17) |
 | `effects[].hits` | Entier ≥ 1, défaut 1 ; sur `damage` seulement |
 | `effects[].mightRatio` | Nombre dans ]0, 1], défaut 1 ; sur `damage` seulement |
-| `effects[].scaleWith` | A11 ; `ratio` > 0, et, sous 1, d'inverse entier à 10⁻⁹ près ; refusé sur `draw` et `gain_mana` (ce que G2 gèle ne grandit pas), sur un effet à `hits ≥ 2`, et — pour `targetStatus`, `targetMissingHp` — sur une carte dont la cible n'est pas `singleEnemy` |
+| `effects[].scaleWith` | A11, la règle du `ratio` comprise ; refusé sur `draw` et `gain_mana` (ce que G2 gèle ne grandit pas), sur un effet à `hits ≥ 2`, et — pour `targetStatus`, `targetMissingHp` — sur une carte dont la cible n'est pas `singleEnemy` |
 | `passive` | Injecté (A2) ; jamais écrit dans un fichier |
 
 `toJson` écrit `passive` s'il n'est pas nul, `costs` ou `cost` (A9), et chaque champ d'effet hors de son défaut.
@@ -667,9 +667,9 @@ somme des entrées de même id. La Puissance « altération » (`power_rules.dar
 ces trois statuts. Recalibrés pour garder leur effet au premier usage : *Trait de Glace* (§3.5), `freezing`
 (§3.6), *Marque du Mage* (§3.3). Le barème vit en un seul endroit, à côté du pipeline — par statut, le
 pourcentage par point et le plafond en points —, que lisent le pipeline, l'intention effective et les textes : les
-parenthèses des deux infobulles (§5.2) et la galerie des statuts du tutoriel (§6.2) passent ces deux nombres, et le
-plafond en pourcentage qu'ils donnent, aux clés paramétrées de §6.1 ; aucun de ces trois textes n'écrit plus un
-pourcentage en dur.
+parenthèses des deux infobulles (§5.2) et la galerie et le tableau des statuts du tutoriel (§6.2) passent ces deux
+nombres, et le plafond en pourcentage qu'ils donnent, aux clés paramétrées de §6.1 ; aucun de ces textes n'écrit
+plus un pourcentage en dur, et le corps des étapes du tutoriel qui décrivent le Gel ne le chiffre plus (§6.2).
 
 ### 4.5. Un seul bonus de Puissance de statut par résolution (Q11)
 
@@ -794,7 +794,7 @@ un accesseur de `RunState`.
 | Rendu | Changement | Partie |
 |:---|:---|:---:|
 | Parenthèses des statuts — infobulle Flutter (`ui_card_helpers.dart:374-404`) et infobulle Flame (`card_component.dart:371-401`) | Faiblesse, Vulnérable et Gel disent le barème par point, par les clés paramétrées de §6.1 remplies depuis le barème (§4.4) ; les deux infobulles perdent leurs pourcentages en dur | 1 |
-| Galerie des statuts du tutoriel (`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`, affichée par `tutorial_screen.dart:112`) | Ses trois descriptions — Gel « 50% », Vulnérable « +50 % », Faiblesse « −25 % » — lisent les mêmes clés et le même barème ; les entrées cessent d'être `const` (§6.2) | 1 |
+| La galerie et le tableau des statuts du tutoriel | Lisent les mêmes clés et le même barème : §6.2 | 1 |
 | Médaillon de coût — `CardManaMedallion` (Flutter), `CardComponent` (Flame) | Un médaillon de plus par coût non nul : PV (goutte rouge) et Armure (écu acier), à côté du mana ; en combat, le médaillon d'une ressource qui manque passe au rouge, comme le mana (`card_component.dart:53-60`) | 2 |
 | Badge de dégâts — `CardCompactDescription` (Flutter) et `CardTextRenderer` (Flame, `card_text_renderer.dart:96-110`) | `valeur×coups` pour un multi-coups (`3×3`) ; la Puissance ajoutée par coup est `floor(bonus × mightRatio)` (A13), là où le badge Flame ajoute aujourd'hui `damageBonusFor` entier (`:96`) ; la valeur d'un effet à `scaleWith` d'une source du héros inclut le terme calculé sur l'état courant quand le héros est connu (combat), la valeur de base sinon | 2 |
 | Infobulle Flutter (`ui_card_helpers.dart:338-412`) | La ligne de coût dit PV et Armure en plus du mana ; la ligne de dégâts dit les coups (`cardDescDamageHits`) et la Puissance par coup ; une ligne de croissance par `scaleWith` (§6.1) | 2 |
@@ -848,8 +848,8 @@ Chaque source a ses deux formes : un ratio inférieur à 1 s'écrit en tranches,
 (`per = 1 / ratio`, entier par la règle de chargement d'A11 : 5 pour *Fortification* et *Dernier souffle*, 10
 pour *Fureur sanguine*) ; un ratio d'au moins 1 s'écrit tel quel (*Rempart brisé* : « +1 par point d'Armure »).
 Les trois clés `status…Hint` remplacent les textes en dur des deux infobulles (`ui_card_helpers.dart:374-404`,
-`card_component.dart:371-401`), qui les mettent entre parenthèses, et ceux de la galerie des statuts du tutoriel
-(`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`, §6.2) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a) : 25 et 50, 25 et
+`card_component.dart:371-401`), qui les mettent entre parenthèses, et ceux de la galerie et du tableau des statuts
+du tutoriel (§6.2) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a) : 25 et 50, 25 et
 100, 25 et 75.
 
 **Le draft de départ** : `draftDeckSnackbarMax` (`app_fr.arb:227`, lu à `starter_deck_draft_screen.dart:79`)
@@ -865,7 +865,8 @@ remplacent ; `draftDeckSelectedCount` (`app_fr.arb:225`, lu à `:130`) reste le 
 | `tutorial_starter_deck_widget.dart:55` | « Choisissez 5 cartes » → les deux sections et leurs compteurs, comme le jeu |
 | `TutorialFixtures.starterPool` | `isOfferable(activePassive?.id)` |
 | Leçon de jeu (`tutorial_engine.dart:247-258`) | A30 |
-| Galerie des statuts (`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`) | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; partie 1, avec le barème. Sous P-1 (b) ou (c), les mêmes clés suivent le barème retenu, sans texte à réécrire |
+| La galerie des statuts (`tutorial_elements_widget.dart:65-66`, Gel « 50% ») et le tableau des statuts qu'elle ne montre pas (`_missingStatuses`, `:78-80` ; `:86-87`, Vulnérable « +50 % », `:94-95`, Faiblesse « −25 % »), affichés par `tutorial_screen.dart:112` | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; les entrées cessent d'être `const` ; partie 1, avec le barème. Sous P-1 (b), les mêmes clés suivent le barème retenu ; sous (c), `statusVulnerableHint` perd sa borne (§1.4). La simulation de la galerie (`tutorial_elements_widget.dart:221`, « 10 -> 5 ») reste juste : deux points de Gel sous (a), ce que pose *Trait de Glace* (§3.5) |
+| Le corps des étapes « Les Effets Élémentaires » (`tutorial_data.dart:227-228`, `:236-237`) et « Les Intentions Ennemies » (`:255`, `:267-268`) | Le Gel ne se chiffre plus dans la prose, la galerie le chiffre. FR : « • ❄️ Gel : réduit leur prochaine attaque, d'autant plus qu'il compte de points. La durée ne décrémente qu'une fois qu'ils ont attaqué. » — EN : « • ❄️ Freeze: weakens their next attack, more with each point. The duration only ticks down once they have attacked. » ; et FR « …et baisse tant qu'il est Gelé. » — EN « …and drops while they are Frozen. » ; partie 1, avec le barème |
 
 ---
 

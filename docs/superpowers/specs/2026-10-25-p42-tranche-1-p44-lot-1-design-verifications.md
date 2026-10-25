@@ -88,6 +88,12 @@ Remontés par la vérification de la spec — des trous de test, pas des constat
 - Écho sur une carte `singleEnemy` dont la cible meurt à la première résolution : le sort de ses effets sur soi (l'Armure de *Châtiment*) (tour 2).
 - Écran d'évolution, mineure déjà prise : `{val}` au prochain niveau (*Zèle* 1 → 2 affiche « +4 dégâts ») et la ligne « 1 → 2 » (tour 2).
 - Infobulle Flame : les trois parenthèses de statut lues sur le barème, en partie 1 (tour 2).
+- `scale_with_test` : 0,3 refusé au chargement ; 0,2, 0,1, 1 et un ratio supérieur à 1 acceptés (tour 3).
+- La galerie (Gel) et le tableau (Vulnérable, Faiblesse) du tutoriel lus sur le barème : un test de widget plutôt que `damage_pipeline_test.dart` (tour 3).
+- Le corps des étapes « Les Effets Élémentaires » et « Les Intentions Ennemies » ne chiffre plus le Gel (tour 3).
+- Infobulle Flame sans `buildContext` : le `fallback` de `getTranslation` (`card_component.dart:110-122`, vide par défaut) donnerait « () » — le remplir depuis le barème, ou ne rien écrire (tour 3).
+- `{val}` d'une majeure `reduceCost` : `min(coût, valuePerLevel)` (*Dévotion* sur *Châtiment*, coût 1 → 1) (tour 3).
+- `raisableCaps` sur `lifesteal` 4 et `echo` 6 : proposés, le relèvement a encore un effet (tour 3).
 
 ## Le journal des tours
 
@@ -95,3 +101,4 @@ Remontés par la vérification de la spec — des trous de test, pas des constat
 |:---:|:---|:---|---:|---:|---:|---:|:---|:---|
 | 1 | complet | neuf, seul | 0 | 2 | 16 | 2 | Les 18 constats à corriger, par la rédactrice reprise ; aucun contesté. Les deux moyens : Q11 appliquée par statut alors que la réponse dit « par carte » ; l'infobulle et le badge de la face Flame absents du rendu | **Tranchés par l'orchestrateur** : C1.1 (T), C1.2 (T), C1.3 (T, lecture de D45) ; n° 3 et n° 6 reclassés **P** → P-2, P-3 ; n° 5 (lecture de Q9) sans correction, au compte rendu. Confirmés : C1.4 à C1.7, tranchés à la correction |
 | 2 | différentiel | neuf, seul | 0 | 2 | 2 | 3 | Les sept, par la rédactrice reprise ; aucun contesté. Les deux moyens : la saturation de *Transcendance* oubliait `lifesteal` et `echo` ; la galerie des statuts du tutoriel gardait son barème en dur | Confirmés : C2.1, C2.2, tranchés à la correction. Les corrections du tour 1 tiennent, P-1 à P-3 tiennent sous leur option provisoire |
+| 3 | différentiel | neuf, seul | 0 | 1 | 1 | 2 | Les six corrections du tour 2 tiennent. Le moyen : le corps des étapes « Les Effets Élémentaires » et « Les Intentions Ennemies » écrit encore « divise par deux » pour le Gel ; le mineur : « sans texte à réécrire » faux sous P-1 (c) ; deux rédactions (un fait écrit trois fois, la règle du `ratio` deux fois) | **Trois tours sans convergence, constats T seulement — autonomie `continu`** : l'orchestrateur applique la correction recommandée de chacun, telle quelle (consignée à part dans le compte rendu) — §4.4, §5.2, §6.1, §6.2 (deux lignes), §3.1 —, puis un dernier tour différentiel |
