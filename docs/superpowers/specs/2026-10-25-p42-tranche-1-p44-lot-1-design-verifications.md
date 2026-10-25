@@ -63,6 +63,8 @@ Tenu par l'orchestrateur (ADR-108 D4) : les options que la spec a écartées, pu
 | C1.5 | Majeure ramenée à 1 ou retirée pour exclusion, à la reprise (rédacteur, n° 14) | T | La signaler dans `MissingSaveItem` · une catégorie et un message neufs (filtre 6) | Sans rapport : le message existant dirait faux |
 | C1.6 | Les clés du draft de départ (rédacteur, n° 12) | T | Garder les deux · supprimer les deux (`CardDraftLayout` exige un compteur) (filtre 5) | `draftDeckSnackbarMax` supprimée ; `draftDeckSelectedCount` gardée |
 | C1.7 | Formes en tranches de `scaleWith` (rédacteur, n° 11) | T | Un format ICU paramétré par la forme (filtre 6) | Deux clés par source |
+| C2.1 | Un `ratio` sous 1 dont l'inverse n'est pas entier (rédacteur, tour 2 n° 3) | T | Arrondir `per` dans le texte, qui afficherait une tranche fausse · une forme décimale qui tait l'arrondi (filtre 6) | Refusé au chargement, à 10⁻⁹ près |
+| C2.2 | Les textes de la galerie des statuts du tutoriel (rédacteur, tour 2 n° 2) | T | Des clés sœurs propres à la galerie : deux textes pour un barème (filtre 5) | Les mêmes clés `status…Hint`, sans parenthèses |
 
 ## Pour le Review Focus des plans
 
@@ -80,9 +82,16 @@ Remontés par la vérification de la spec — des trous de test, pas des constat
 - Refus à l'écran par `hero_card.dart:87` (carte sur soi) et `signature_bar.dart:114` (`signature.cost` évolué) (tour 1).
 - `consumeResource` : la signature du relais `run_controller.dart:558` change ; son appelant est `passives_mage_test.dart:141` (tour 1).
 - D50 : le test compte par passif pourvu d'un lot, signatures exclues (tour 1).
+- `raisableCaps` : `piercing` à 4, `lifesteal` à 5 et `echo` à 7 écartés ; `splash` 3 et `echo` 4 proposés (tour 2).
+- Q11 sur une signature qui porte deux statuts d'évolution (*Projectile Magique* avec `ember` et `exposure`) : un seul bonus, sur le premier dans l'ordre des effets ajoutés (tour 2).
+- La galerie des statuts du tutoriel lit le barème : changer une valeur du barème change son texte (tour 2).
+- Écho sur une carte `singleEnemy` dont la cible meurt à la première résolution : le sort de ses effets sur soi (l'Armure de *Châtiment*) (tour 2).
+- Écran d'évolution, mineure déjà prise : `{val}` au prochain niveau (*Zèle* 1 → 2 affiche « +4 dégâts ») et la ligne « 1 → 2 » (tour 2).
+- Infobulle Flame : les trois parenthèses de statut lues sur le barème, en partie 1 (tour 2).
 
 ## Le journal des tours
 
 | Tour | Mode | Vérificateur | Bloquants | Moyens | Mineurs | Rédaction | Corrigé | Contesté, tranché |
 |:---:|:---|:---|---:|---:|---:|---:|:---|:---|
 | 1 | complet | neuf, seul | 0 | 2 | 16 | 2 | Les 18 constats à corriger, par la rédactrice reprise ; aucun contesté. Les deux moyens : Q11 appliquée par statut alors que la réponse dit « par carte » ; l'infobulle et le badge de la face Flame absents du rendu | **Tranchés par l'orchestrateur** : C1.1 (T), C1.2 (T), C1.3 (T, lecture de D45) ; n° 3 et n° 6 reclassés **P** → P-2, P-3 ; n° 5 (lecture de Q9) sans correction, au compte rendu. Confirmés : C1.4 à C1.7, tranchés à la correction |
+| 2 | différentiel | neuf, seul | 0 | 2 | 2 | 3 | Les sept, par la rédactrice reprise ; aucun contesté. Les deux moyens : la saturation de *Transcendance* oubliait `lifesteal` et `echo` ; la galerie des statuts du tutoriel gardait son barème en dur | Confirmés : C2.1, C2.2, tranchés à la correction. Les corrections du tour 1 tiennent, P-1 à P-3 tiennent sous leur option provisoire |

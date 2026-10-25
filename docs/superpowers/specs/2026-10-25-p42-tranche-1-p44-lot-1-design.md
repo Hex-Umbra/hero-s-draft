@@ -107,8 +107,8 @@ statuts posés, l'un de ses coûts ou l'une de ses sources de `scaleWith` y figu
 pure que lisent le test de données et l'éditeur (A31). Les neuf valeurs : §3.3.
 
 Compter un coût combiné comme une touche est une **lecture** de D45, non un amendement *(tranché par
-l'orchestrateur, C1.3, T, filtre 1)* : le coût est une part de la résolution de la carte — débité par `playCard`,
-hors du pipeline (brainstorm §9.1) —, donc un de ses effets au sens de D45. Sans cette lecture, *Percée*, que le
+l'orchestrateur, C1.3, T, filtre 1)* : le coût est une part de la résolution de la carte — débité par `resolveCard`
+(§4.1), hors du pipeline (brainstorm §9.1) —, donc un de ses effets au sens de D45. Sans cette lecture, *Percée*, que le
 brainstorm range dans Rempart (§7.1), et *Sang versé*, *Pacte de sang*, *Éclat de bouclier*, qui ne touchent leur
 passif que par leur coût, échoueraient au test de D45.
 
@@ -139,7 +139,9 @@ porte les trois ressources ; `canPlayCard` et `CardComponent.canAfford` l'appell
 `"scaleWith": { "source": "<source>", "ratio": <nombre > 0>, "statusId": "<id>" }`, `statusId` exigé pour
 `targetStatus` seulement. Le terme vaut `floor(quantité × ratio)` (tolérance 10⁻⁹, comme
 `StatRule.convertedAmount`), calculé par le résolveur avant la stratégie (ADR-061) et ajouté à la valeur
-**après** la rareté et les runes — la rareté ne le multiplie jamais. Les sources et leurs bornes : §4.2.
+**après** la rareté et les runes — la rareté ne le multiplie jamais. Un `ratio` inférieur à 1 dont l'inverse
+n'est pas entier, à 10⁻⁹ près, est refusé au chargement : le texte l'écrit en tranches de `1 / ratio` (§6.1), qui
+doivent être entières — 0,2 et 0,1 donnent 5 et 10 ; 0,3 est refusé. Les sources et leurs bornes : §4.2.
 
 **A12 — Les cartes jouées ce tour se dérivent, elles ne se décomptent pas** *(T, filtre 8)*. `CombatState`
 gagne deux entiers, le tour du dernier jeu et le nombre de jeux de ce tour ; `cardsPlayedThisTurn` rend le
@@ -220,7 +222,11 @@ Mais une rune dont le relèvement n'aurait aucun effet n'est pas proposée : `pi
 l'Armure. Le tirage — `ForgeRuneRules.raisableCaps` (`forge_rune_rules.dart:155-175`), lu par le draft de niveau
 (`draft_screen.dart:116-120`) et par la modale de *Transcendance* (`:678`) — écarte, en plus des runes `binary`
 (`:170`), une rune dont **chaque delta est saturé** à son plafond effectif. La saturation est une propriété de la
-sorte de delta, non un cas par id : seule `armorPierce` en a une, à 100 % (§4.6).
+sorte de delta, non un cas par id. Trois sortes en ont une, toutes trois des pourcentages qui valent 100 au plus :
+`armorPierce`, `lifestealPercent` et `echoChance` sont saturées au plafond `c` quand
+`valuePercentPerLevel × c ≥ 100` — `piercing` à 4, `lifesteal` à 5 (le soin vaut alors les dégâts, A18), `echo` à
+7. Le bonus de *Transcendance* s'additionnant à chaque tirage (`run_controller.dart:485-489`), `lifesteal` 5 et
+`echo` 7 sont atteignables ; ils ne se proposent plus (§4.6).
 
 **A23 — `freezing` perd son plafond, et gagne deux points par niveau** *(T, sous P-1)*. `maxLevel: null` (fiche
 8.5, brainstorm §8) ; `valuePerLevel` passe à 2 pour que le niveau 1 garde l'effet d'aujourd'hui sous le barème
@@ -300,7 +306,7 @@ lit.
 Gel 1, `freezing` à 1 point par niveau (A23 se réduit à `maxLevel: null`), *Marque du Mage* à Vulnérable 1 ; les
 cartes de lot écrites à 2 points pour l'effet d'un seul d'aujourd'hui — *Nova de givre* (Gel 2), *Décharge*
 (Vulnérable 2), et l'évolution *Mise à nu* (Vulnérable 2) — doublent leur effet, et descendent à 1 point pour le
-garder ; deux points de Gel (−100 %) annulent l'attaque ; les paramètres des textes (§6.1, §5.2), la note (§11) et
+garder ; deux points de Gel (−100 %) annulent l'attaque ; les paramètres des textes (§6.1, §5.2, la galerie du tutoriel §6.2), la note (§11) et
 les tests du barème (§9) suivent. Sous (c) : la valeur par point reste à choisir (25 % par défaut) ; Faiblesse et
 Gel atteignent −100 % dès 4 points, et la Puissance d'altération du Paladin ou du Mage y mène en un seul jeu ; les
 mêmes sections suivent.
@@ -395,7 +401,7 @@ déplacée, *Trait de Glace* et *Marque du Mage* recalibrés ; le draft de dépa
 | `hpCost`, `armorCost` sur une carte sans `passive` | Refusés (A8, D17) |
 | `effects[].hits` | Entier ≥ 1, défaut 1 ; sur `damage` seulement |
 | `effects[].mightRatio` | Nombre dans ]0, 1], défaut 1 ; sur `damage` seulement |
-| `effects[].scaleWith` | A11 ; refusé sur `draw` et `gain_mana` (ce que G2 gèle ne grandit pas), sur un effet à `hits ≥ 2`, et — pour `targetStatus`, `targetMissingHp` — sur une carte dont la cible n'est pas `singleEnemy` |
+| `effects[].scaleWith` | A11 ; `ratio` > 0, et, sous 1, d'inverse entier à 10⁻⁹ près ; refusé sur `draw` et `gain_mana` (ce que G2 gèle ne grandit pas), sur un effet à `hits ≥ 2`, et — pour `targetStatus`, `targetMissingHp` — sur une carte dont la cible n'est pas `singleEnemy` |
 | `passive` | Injecté (A2) ; jamais écrit dans un fichier |
 
 `toJson` écrit `passive` s'il n'est pas nul, `costs` ou `cost` (A9), et chaque champ d'effet hors de son défaut.
@@ -545,7 +551,7 @@ Une évolution :
 |:---|:---|
 | `evolutions` | Exigée ; ids uniques, en `snake_case` ; au moins une mineure |
 | `tier` | `minor` ou `major` |
-| `name_*`, `description_*` | Les quatre, bilingues ; `{val}` vaut ce que le premier delta porteur d'un nombre (`flatBonus`, `addEffect`, `reduceCost`, `critBonus` : `valuePerLevel × L`) ajoute au niveau de l'évolution — la règle de `_valueAdded` des runes (`forge_upgrade_data.dart:275-289`), que l'évolution soit chiffrée ou verbale au sens d'A25 |
+| `name_*`, `description_*` | Les quatre, bilingues ; `{val}` vaut ce que le premier delta porteur d'un nombre ajoute au niveau de l'évolution, selon la règle de `_valueAdded` des runes (`forge_upgrade_data.dart:275-289`) — `valuePerLevel × L` pour `flatBonus`, `addEffect`, `critBonus` ; pour `reduceCost`, la baisse réelle du coût, bornée à 0, comme `_costCut` (`:282`, `:308-318`) —, que l'évolution soit chiffrée ou verbale au sens d'A25 |
 | `deltas` | Sortes admises : `flatBonus`, `addEffect`, `reduceCost`, `critBonus` — celles qu'emploient les six pools ; toute autre refusée, nommée, `percentBonus` compris tant qu'aucune évolution ne l'emploie. `flatBonus` : `effect`, `valuePerLevel` > 0, `statusId` facultatif pour viser un `apply_status` |
 | `target` | Majeure seulement ; `allEnemies` seulement, sur une signature `singleEnemy` (une signature sur soi enverrait ses statuts aux ennemis) |
 | `cooldown` | Majeure seulement ; entier non nul ; la recharge évoluée ne descend jamais sous 1 (D54) |
@@ -558,7 +564,7 @@ Une évolution :
 
 | Signature | Mineures | Majeures |
 |:---|:---|:---|
-| **Châtiment** (`smite`, 1, Attaque : 6 + 4 Armure) | `zeal` Zèle / Zeal — ch., `flatBonus damage 2`, « +{val} dégâts » / « +{val} damage » · `aegis` Égide / Aegis — ch., `flatBonus armor 2`, « +{val} Armure » / « +{val} Block » · `ardor` Ardeur / Ardor — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » | `haste` Célérité / Haste — ch., `cooldown −1`, « Recharge réduite d'un tour » / « Cooldown one turn shorter » · `sentence` Sentence / Sentence — v., `addEffect weakness 1`, 2 tours, « Applique 1 Faiblesse pendant 2 tours » / « Apply 1 Weak for 2 turns » · `radiance` Rayonnement / Radiance — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `devotion` Dévotion / Devotion — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
+| **Châtiment** (`smite`, 1, Attaque : 6 + 4 Armure) | `zeal` Zèle / Zeal — ch., `flatBonus damage 2`, « +{val} dégâts » / « +{val} damage » · `aegis` Égide / Aegis — ch., `flatBonus armor 2`, « +{val} Armure » / « +{val} Block » · `ardor` Ardeur / Ardor — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » | `haste` Célérité / Haste — ch., `cooldown −1`, « Recharge réduite d'un tour » / « Cooldown one turn shorter » · `sentence` Sentence / Sentence — v., `addEffect weakness 1`, 2 tours, « Applique 1 Faiblesse pendant 2 tours » / « Apply 1 Weakness for 2 turns » · `radiance` Rayonnement / Radiance — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `devotion` Dévotion / Devotion — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
 | **Bouclier Sacré** (`holy_shield`, 1, Compétence : 8 Armure + soin 2) | `ward` Garde / Ward — ch., `flatBonus armor 2`, « +{val} Armure » / « +{val} Block » · `mercy` Miséricorde / Mercy — ch., `flatBonus heal 1`, « +{val} PV soignés » / « +{val} HP healed » · `resolve` Résolution / Resolve — v., `addEffect might 1`, 1 tour par niveau, « Gagne {val} Puissance » / « Gain {val} Might » | `haste` · `consecration` Consécration / Consecration — v., `addEffect might 2`, 2 tours, « Gagne 2 Puissance pendant 2 tours » / « Gain 2 Might for 2 turns » · `inspiration` Inspiration / Inspiration — v., `addEffect draw 1`, « Pioche 1 carte » / « Draw 1 card » · `lasting_aegis` Égide durable / Lasting Aegis — v., `addEffect armor_regen 3`, 2 tours, « Pendant 2 tours, gagne 3 Armure au début du tour » / « For 2 turns, gain 3 Block at the start of your turn » |
 | **Frappe Téméraire** (`reckless_strike`, 2, Attaque : 15) | `brutality` Brutalité / Brutality — ch., `flatBonus damage 3`, « +{val} dégâts » / « +{val} damage » · `instinct` Instinct / Instinct — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » · `shatter` Fracas / Shatter — v., `addEffect vulnerable 1`, 1 tour par niveau, « Applique {val} Vulnérable » / « Apply {val} Vulnerable » | `haste` (`excludes: ["devastation"]`) · `devastation` Dévastation — ch., `flatBonus damage 10` et `cooldown +1` (`excludes: ["haste"]`) · `cleave` Fauchage / Cleave — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `composure` Sang-froid / Composure — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
 | **Posture de Rage** (`rage_form`, 1, Compétence : Puissance 2 ce tour + pioche 1) | `anger` Colère / Anger — ch., `flatBonus apply_status might 1`, « +{val} Puissance » / « +{val} Might » · `hide` Carapace / Thick Hide — v., `addEffect armor 2`, « Gagne {val} Armure » / « Gain {val} Block » (chez lui, de la Puissance) · `second_wind` Second souffle / Second Wind — v., `addEffect heal 2`, « Soigne {val} PV » / « Heal {val} HP » | `haste` · `berserk` Démence / Berserk — v., `addEffect might_regen 1`, 3 tours, « Pendant 3 tours, gagne 1 Puissance au début du tour » / « For 3 turns, gain 1 Might at the start of your turn » · `rally` Ralliement / Rally — ch., `flatBonus draw 1`, « Pioche 1 carte de plus » / « Draw 1 more card » · `fury` Furie / Fury — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
@@ -661,8 +667,9 @@ somme des entrées de même id. La Puissance « altération » (`power_rules.dar
 ces trois statuts. Recalibrés pour garder leur effet au premier usage : *Trait de Glace* (§3.5), `freezing`
 (§3.6), *Marque du Mage* (§3.3). Le barème vit en un seul endroit, à côté du pipeline — par statut, le
 pourcentage par point et le plafond en points —, que lisent le pipeline, l'intention effective et les textes : les
-parenthèses des infobulles (§5.2) passent ces deux nombres, et le plafond en pourcentage qu'ils donnent, aux clés
-paramétrées de §6.1 ; aucun pourcentage n'est écrit en dur dans un texte.
+parenthèses des deux infobulles (§5.2) et la galerie des statuts du tutoriel (§6.2) passent ces deux nombres, et le
+plafond en pourcentage qu'ils donnent, aux clés paramétrées de §6.1 ; aucun de ces trois textes n'écrit plus un
+pourcentage en dur.
 
 ### 4.5. Un seul bonus de Puissance de statut par résolution (Q11)
 
@@ -674,10 +681,10 @@ seconde résolution : son premier `apply_status` reçoit son propre bonus (C1.1)
 
 | Rune | Lecteur | Règle |
 |:---|:---|:---|
-| `piercing` | `takeDamage(…, armorPiercePercent:)` (A16) | Armure ignorée = `min(A, max((p × A + 50) ~/ 100, L))`, `A` l'Armure de la cible au coup, `p = min(100, 25 × L)` : la demie vers le haut, en arithmétique entière, et le plancher « au moins +L » de D33 borné par l'Armure présente — comme `lifesteal` (A18) *(T, filtre 1)* ; la part non ignorée absorbe comme aujourd'hui. `armorPierce` est saturée à `p = 100` (A22) |
-| `lifesteal` | `DamageEffectStrategy`, après les coups | A18 : `min(D, max((20 × L × D + 50) ~/ 100, L))`, `D` les dégâts infligés, si `D ≥ 1` |
+| `piercing` | `takeDamage(…, armorPiercePercent:)` (A16) | Armure ignorée = `min(A, max((p × A + 50) ~/ 100, L))`, `A` l'Armure de la cible au coup, `p = min(100, 25 × L)` : la demie vers le haut, en arithmétique entière, et le plancher « au moins +L » de D33 borné par l'Armure présente — comme `lifesteal` (A18) *(T, filtre 1)* ; la part non ignorée absorbe comme aujourd'hui. `armorPierce` est saturée à `p = 100`, soit L ≥ 4 (A22) |
+| `lifesteal` | `DamageEffectStrategy`, après les coups | A18 : `min(D, max((20 × L × D + 50) ~/ 100, L))`, `D` les dégâts infligés, si `D ≥ 1` ; `lifestealPercent` est saturée à L ≥ 5, le soin valant alors les dégâts (A22) |
 | `splash` | `DamageEffectStrategy`, à chaque coup | A17 |
-| `echo` | `resolveCard`, après les effets | A19 : jet de `15 × L` % sur un générateur injectable (`resolveCard` gagne un `Random` facultatif, pour les tests) |
+| `echo` | `resolveCard`, après les effets | A19 : jet de `15 × L` % sur un générateur injectable (`resolveCard` gagne un `Random` facultatif, pour les tests) ; `echoChance` est saturée à L ≥ 7, la chance valant alors 100 % (A22) |
 | `transfusion` | `resolveCard`, en dernier | A20 |
 
 `EffectiveCard` (`effective_card.dart:11-95`) expose les cinq lectures, sommées sur les deltas.
@@ -787,6 +794,7 @@ un accesseur de `RunState`.
 | Rendu | Changement | Partie |
 |:---|:---|:---:|
 | Parenthèses des statuts — infobulle Flutter (`ui_card_helpers.dart:374-404`) et infobulle Flame (`card_component.dart:371-401`) | Faiblesse, Vulnérable et Gel disent le barème par point, par les clés paramétrées de §6.1 remplies depuis le barème (§4.4) ; les deux infobulles perdent leurs pourcentages en dur | 1 |
+| Galerie des statuts du tutoriel (`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`, affichée par `tutorial_screen.dart:112`) | Ses trois descriptions — Gel « 50% », Vulnérable « +50 % », Faiblesse « −25 % » — lisent les mêmes clés et le même barème ; les entrées cessent d'être `const` (§6.2) | 1 |
 | Médaillon de coût — `CardManaMedallion` (Flutter), `CardComponent` (Flame) | Un médaillon de plus par coût non nul : PV (goutte rouge) et Armure (écu acier), à côté du mana ; en combat, le médaillon d'une ressource qui manque passe au rouge, comme le mana (`card_component.dart:53-60`) | 2 |
 | Badge de dégâts — `CardCompactDescription` (Flutter) et `CardTextRenderer` (Flame, `card_text_renderer.dart:96-110`) | `valeur×coups` pour un multi-coups (`3×3`) ; la Puissance ajoutée par coup est `floor(bonus × mightRatio)` (A13), là où le badge Flame ajoute aujourd'hui `damageBonusFor` entier (`:96`) ; la valeur d'un effet à `scaleWith` d'une source du héros inclut le terme calculé sur l'état courant quand le héros est connu (combat), la valeur de base sinon | 2 |
 | Infobulle Flutter (`ui_card_helpers.dart:338-412`) | La ligne de coût dit PV et Armure en plus du mana ; la ligne de dégâts dit les coups (`cardDescDamageHits`) et la Puissance par coup ; une ligne de croissance par `scaleWith` (§6.1) | 2 |
@@ -828,19 +836,20 @@ Deux sections dans la grille, titrées « Cartes de {passif} » et « Cartes neu
 | `cardScaleTargetStatusPer` | +1 par tranche de {per} points de {status} de la cible | +1 per {per} points of {status} on the target |
 | `cardScaleTargetMissingHp` | +{ratio} par PV manquant de la cible | +{ratio} per missing HP on the target |
 | `cardScaleTargetMissingHpPer` | +1 par tranche de {per} PV manquants de la cible | +1 per {per} missing HP on the target |
-| `statusWeaknessHint` | (−{percent} % de dégâts infligés par point, jusqu'à −{max} %) | (−{percent}% damage dealt per point, down to −{max}%) |
-| `statusVulnerableHint` | (+{percent} % de dégâts subis par point, jusqu'à +{max} %) | (+{percent}% damage taken per point, up to +{max}%) |
-| `statusFreezeHint` | (−{percent} % à la prochaine attaque par point, jusqu'à −{max} %) | (−{percent}% to the next attack per point, down to −{max}%) |
+| `statusWeaknessHint` | −{percent} % de dégâts infligés par point, jusqu'à −{max} % | −{percent}% damage dealt per point, down to −{max}% |
+| `statusVulnerableHint` | +{percent} % de dégâts subis par point, jusqu'à +{max} % | +{percent}% damage taken per point, up to +{max}% |
+| `statusFreezeHint` | −{percent} % à la prochaine attaque par point, jusqu'à −{max} % | −{percent}% to the next attack per point, down to −{max}% |
 | `evolutionScreenTitle` | Évolution de {signature} | {signature} evolves |
 | `evolutionScreenSubtitle` | Choisissez une évolution | Choose an evolution |
 | `evolutionTierMinor`, `evolutionTierMajor` | MINEURE, MAJEURE | MINOR, MAJOR |
 | `evolutionLevelUp` | Niveau {from} → {to} | Level {from} → {to} |
 
 Chaque source a ses deux formes : un ratio inférieur à 1 s'écrit en tranches, par la clé `…Per`
-(`per = 1 / ratio`, entier par construction de la donnée livrée : 5 pour *Fortification* et *Dernier souffle*, 10
+(`per = 1 / ratio`, entier par la règle de chargement d'A11 : 5 pour *Fortification* et *Dernier souffle*, 10
 pour *Fureur sanguine*) ; un ratio d'au moins 1 s'écrit tel quel (*Rempart brisé* : « +1 par point d'Armure »).
-Les trois clés `status…Hint` remplacent les parenthèses en dur des deux infobulles (`ui_card_helpers.dart:374-404`,
-`card_component.dart:371-401`) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a) : 25 et 50, 25 et
+Les trois clés `status…Hint` remplacent les textes en dur des deux infobulles (`ui_card_helpers.dart:374-404`,
+`card_component.dart:371-401`), qui les mettent entre parenthèses, et ceux de la galerie des statuts du tutoriel
+(`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`, §6.2) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a) : 25 et 50, 25 et
 100, 25 et 75.
 
 **Le draft de départ** : `draftDeckSnackbarMax` (`app_fr.arb:227`, lu à `starter_deck_draft_screen.dart:79`)
@@ -856,6 +865,7 @@ remplacent ; `draftDeckSelectedCount` (`app_fr.arb:225`, lu à `:130`) reste le 
 | `tutorial_starter_deck_widget.dart:55` | « Choisissez 5 cartes » → les deux sections et leurs compteurs, comme le jeu |
 | `TutorialFixtures.starterPool` | `isOfferable(activePassive?.id)` |
 | Leçon de jeu (`tutorial_engine.dart:247-258`) | A30 |
+| Galerie des statuts (`tutorial_elements_widget.dart:65-66`, `:86-87`, `:94-95`) | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; partie 1, avec le barème. Sous P-1 (b) ou (c), les mêmes clés suivent le barème retenu, sans texte à réécrire |
 
 ---
 
@@ -898,7 +908,7 @@ la classe (`_signaturesOf`, `:244-251`), dans cet ordre, pour chaque signature :
    arrivée est gardée, comme `consolidate` (`forge_rune_rules.dart:32-45`) ;
 6. la signature est reconstruite avec la liste qui reste, dans l'ordre lu.
 
-Seul l'étape 3 écrit dans le rapport. Une majeure ramenée à 1 (étape 4) ou retirée pour exclusion (étape 5) n'y
+Seule l'étape 3 écrit dans le rapport. Une majeure ramenée à 1 (étape 4) ou retirée pour exclusion (étape 5) n'y
 entre pas *(T, filtre 6)* : le rapport s'affiche au joueur comme « des éléments ne sont plus disponibles suite à
 une mise à jour » (`missingItemsMessage`, `app_fr.arb:162`), ce qui serait faux pour une évolution qui existe
 toujours et qu'une sauvegarde incohérente portait mal ; ces deux cas ne naissent que d'une sauvegarde écrite à la
@@ -924,9 +934,9 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 | **Coûts — tâche à risque** | `test/unit/card_costs_test.dart` *(nouveau)* | `fromJson` : `cost` et `costs` ensemble refusés ; `costs` sans `mana`, sans `hp` ni `armor`, avec `discard`, ou à `hp: 0` refusé ; aller-retour `toJson`/`fromJson`. `canAfford` : PV = coût refusé, coût + 1 accepté ; Armure = coût acceptée ; mana d'abord. `resolveCard` : une carte refusée n'écrit rien ; payée, mana, PV et Armure débités en une écriture ; aucun `onDamageTaken` (*Ferveur* ne monte pas) ; *Rage* lit les PV perdus au tour suivant ; `cheap` ne touche que le mana ; `transfusion` rend 2 sur 3, borné aux PV max | 1 |
 | `scaleWith` | `test/unit/scale_with_test.dart` *(nouveau)* | Les six sources ; arrondi vers le bas ; la rareté ne multiplie pas le terme (épique : valeur × rareté + terme) ; refus sur `draw`, `gain_mana`, multi-coups, cible non unique pour les sources de cible ; l'ordre des effets | 1 |
 | Multi-coups | `test/unit/multi_hit_test.dart` *(nouveau)* | Critique, Électrocution et Puissance × `mightRatio` par coup ; arrondi vers le bas ; cible morte en cours ; AoE ; A14 (*Tranchant* 1 et 5 sur 3 × 3) | 1 |
-| Statuts proportionnels | `test/unit/damage_pipeline_test.dart` ; l'intention effective (`EnemyInstance.effectiveIntent`), dans le test qui la couvre ou un neuf | Le barème et ses plafonds ; somme des entrées ; *Trait de Glace* et `freezing` 1 gardent −50 % ; les parenthèses de l'infobulle Flutter lisent le barème (une valeur changée du barème change le texte) | 1 |
+| Statuts proportionnels | `test/unit/damage_pipeline_test.dart` ; l'intention effective (`EnemyInstance.effectiveIntent`), dans le test qui la couvre ou un neuf | Le barème et ses plafonds ; somme des entrées ; *Trait de Glace* et `freezing` 1 gardent −50 % ; les parenthèses de l'infobulle Flutter et la galerie des statuts du tutoriel lisent le barème (une valeur changée du barème change le texte) | 1 |
 | Q11 | `test/unit/effect_resolver_test.dart` | Un seul `apply_status` par résolution reçoit le bonus, tous statuts confondus : *Boule de Feu* + *Brûlant* et *Coup de Tonnerre* + *Brûlant*, un bonus chacune, sur le statut de la rune ; un écho, un second bonus ; un premier statut posé sur soi consomme le bonus | 1 |
-| Les cinq runes | `forge_upgrades_catalog_test.dart` (matrice de l'offre), `rune_resolution_test.dart`, `rune_eligibility_test.dart` | Chaque rune : son effet, son plafond, son éligibilité (`eligibleTargets`, `requiresCost`, exclusions d'`echo`) ; `piercing` borné à 100 %, demie vers le haut, plancher L borné par l'Armure ; `lifesteal` : plancher L borné par les dégâts ; `freezing` sans plafond ; `raisableCaps` écarte `piercing` à 4 et propose `splash` 3, `echo` 4 à leur plafond | 1 (17 cartes) · 2 (33) |
+| Les cinq runes | `forge_upgrades_catalog_test.dart` (matrice de l'offre), `rune_resolution_test.dart`, `rune_eligibility_test.dart` | Chaque rune : son effet, son plafond, son éligibilité (`eligibleTargets`, `requiresCost`, exclusions d'`echo`) ; `piercing` borné à 100 %, demie vers le haut, plancher L borné par l'Armure ; `lifesteal` : plancher L borné par les dégâts ; `freezing` sans plafond ; `raisableCaps` écarte `piercing` à 4, `lifesteal` à 5 et `echo` à 7, et propose `splash` 3, `echo` 4 à leur plafond | 1 (17 cartes) · 2 (33) |
 | Budget de Puissance (D38) | `test/unit/card_catalog_test.dart` *(nouveau)* | Σ `hits` × `mightRatio` ≤ coût en mana + 1 et `hits ≥ 2 ⇒ mightRatio < 1`, sur toutes les cartes et les signatures (A33) | 1 |
 | Données de lot (D17, D45, D50, A7) | `card_catalog_test.dart` | Aucune neutre à coût non-mana ; chaque carte de lot touche son `feeds` ; par classe et passif disponible, au plus deux cartes à coût total nul, toutes `isExhaust` ; aucun lot n'en porte plus d'une ; aucune `costs.armor` sous une classe qui convertit l'armure | 2 |
 | Chargeur | `test/unit/game_data_loader_injection_test.dart`, `game_data_loader_test.dart` | `cards/*/*.json` injecte `passive` ; `passive` déclaré dans une carte de lot ou une neutre refusé ; même id sous deux dossiers refusé | 2 |
@@ -952,7 +962,7 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 **Partie 1 — le moteur de P-44 lot 1, sur les 17 neutres.** Le modèle (`costs`, `hits`, `mightRatio`,
 `scaleWith`), `canAfford` et le paiement, la résolution de §4.7, A12, A14, A15, A16 ; les statuts proportionnels
 et leurs recalibrages (*Trait de Glace*, `freezing`, *Marque du Mage*), avec les parenthèses de statut des deux
-infobulles et leurs clés `status…Hint` (§5.2, §6.1) — le barème change ce que lit le joueur dès cette partie ; les
+infobulles, la galerie des statuts du tutoriel et leurs clés `status…Hint` (§5.2, §6.1, §6.2) — le barème change ce que lit le joueur dès cette partie ; les
 cinq runes, leurs sortes de delta, `eligibleTargets`, `requiresCost`, la saturation lue par `raisableCaps` (A22) ;
 le descripteur de rune ; le test de D38 ; les tests marqués 1.
 
