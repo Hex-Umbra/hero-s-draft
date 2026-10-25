@@ -866,7 +866,7 @@ remplacent ; `draftDeckSelectedCount` (`app_fr.arb:225`, lu à `:130`) reste le 
 | `TutorialFixtures.starterPool` | `isOfferable(activePassive?.id)` |
 | Leçon de jeu (`tutorial_engine.dart:247-258`) | A30 |
 | La galerie des statuts (`tutorial_elements_widget.dart:65-66`, Gel « 50% ») et le tableau des statuts qu'elle ne montre pas (`_missingStatuses`, `:78-80` ; `:86-87`, Vulnérable « +50 % », `:94-95`, Faiblesse « −25 % »), affichés par `tutorial_screen.dart:112` | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; les entrées cessent d'être `const` ; partie 1, avec le barème. Sous P-1 (b), les mêmes clés suivent le barème retenu ; sous (c), `statusVulnerableHint` perd sa borne (§1.4). La simulation de la galerie (`tutorial_elements_widget.dart:221`, « 10 -> 5 ») reste juste : deux points de Gel sous (a), ce que pose *Trait de Glace* (§3.5) |
-| Le corps des étapes « Les Effets Élémentaires » (`tutorial_data.dart:227-228`, `:236-237`) et « Les Intentions Ennemies » (`:255`, `:267-268`) | Le Gel ne se chiffre plus dans la prose, la galerie le chiffre. FR : « • ❄️ Gel : réduit leur prochaine attaque, d'autant plus qu'il compte de points. La durée ne décrémente qu'une fois qu'ils ont attaqué. » — EN : « • ❄️ Freeze: weakens their next attack, more with each point. The duration only ticks down once they have attacked. » ; et FR « …et baisse tant qu'il est Gelé. » — EN « …and drops while they are Frozen. » ; partie 1, avec le barème |
+| Le corps des étapes « Les Effets Élémentaires » (`tutorial_data.dart:227-228`, `:236-237`) et « Les Intentions Ennemies » (`:255`, `:267-268`) | Le Gel ne se chiffre plus dans la prose, la galerie le chiffre. FR : « • ❄️ Gel : réduit leur prochaine attaque, d'autant plus qu'il compte de points, jusqu'à un plafond. La durée ne décrémente qu'une fois qu'ils ont attaqué. » — EN : « • ❄️ Freeze: reduces their next attack, more with each point, up to a cap. The duration only ticks down once they have attacked. » ; et FR « …et baisse tant qu'il est Gelé. » — EN « …and drops while they are Frozen. » ; partie 1, avec le barème |
 
 ---
 
@@ -963,7 +963,7 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 **Partie 1 — le moteur de P-44 lot 1, sur les 17 neutres.** Le modèle (`costs`, `hits`, `mightRatio`,
 `scaleWith`), `canAfford` et le paiement, la résolution de §4.7, A12, A14, A15, A16 ; les statuts proportionnels
 et leurs recalibrages (*Trait de Glace*, `freezing`, *Marque du Mage*), avec les parenthèses de statut des deux
-infobulles, la galerie des statuts du tutoriel et leurs clés `status…Hint` (§5.2, §6.1, §6.2) — le barème change ce que lit le joueur dès cette partie ; les
+infobulles, la galerie et le tableau des statuts du tutoriel, le corps de ses deux étapes qui décrivent le Gel, et leurs clés `status…Hint` (§5.2, §6.1, §6.2) — le barème change ce que lit le joueur dès cette partie ; les
 cinq runes, leurs sortes de delta, `eligibleTargets`, `requiresCost`, la saturation lue par `raisableCaps` (A22) ;
 le descripteur de rune ; le test de D38 ; les tests marqués 1.
 
