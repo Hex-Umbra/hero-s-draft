@@ -113,7 +113,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-[`2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md`](2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md) — 21 tests, à remplir par le propriétaire.
+[`2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md`](2026-10-16-economie-et-catalogue-vague-4-tests-manuels.md) — 21 tests, **non remplis** : la vague a été fusionnée et taguée le 24/10 sans résultats reportés (noté par la vague 5, le 25/10).
 
 ## 4. Trouvé périmé, et pour la file
 
