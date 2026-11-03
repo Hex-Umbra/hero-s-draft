@@ -299,13 +299,13 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     category: EntityCategory.passive,
     label: 'Passif',
     directory: 'passives',
-    requiredKeys: const {'trigger', 'effectType', 'value'},
+    requiredKeys: const {'trigger', 'effectType', 'value', 'classes', 'feeds'},
     enumKeys: {
       'trigger': _names(RelicTrigger.values),
       'mastery.field': PassiveMastery.fields,
     },
-    // Absente du gabarit : sans `classes`, le passif est ouvert a toutes les
-    // classes (spec P-49, §3.2).
+    // Exigee, une seule classe (A5) ; la recette de classe remplace le
+    // `paladin` du gabarit par la classe creee.
     referenceListKeys: const {'classes': EntityCategory.heroClass},
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
@@ -314,9 +314,12 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // main de sa classe. Tant que l'ecran de choix de passif n'existe pas
     // (lot ulterieur), le premier de l'ordre d'affichage est le passif de
     // depart du heros : un passif cree depuis ce gabarit sans ajuster cette
-    // valeur devient donc silencieusement le passif de depart.
+    // valeur devient donc silencieusement le passif de depart. La
+    // disponibilite exige aussi un lot de cartes sous `cards/<passif>/` (O5).
     template: '''
 {
+  "classes": ["paladin"],
+  "feeds": ["armor"],
   "trigger": "startOfTurn",
   "effectType": "gain_armor",
   "value": 2,

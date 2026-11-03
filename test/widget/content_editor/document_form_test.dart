@@ -153,7 +153,7 @@ void main() {
     };
 
     testWidgets('absente, elle se coche', (tester) async {
-      final document = templateOf(passive);
+      final document = templateOf(passive)..root.remove('classes');
       await pump(tester, document, passive, references: catalogue);
 
       await tester.tap(find.text('paladin'));
@@ -172,7 +172,7 @@ void main() {
     });
 
     testWidgets('decocher la derniere retire la cle', (tester) async {
-      // `[]` est refuse au chargement : l'absence vaut « toutes ».
+      // `[]` et l'absence font echouer le chargement (A5).
       final document = EditorDocument({
         ...passive.decodeTemplate(),
         'classes': ['paladin'],

@@ -425,7 +425,11 @@ void main() {
 
     EntityDraft passiveDraft(Object? classes) {
       final mechanics = passive.decodeTemplate();
-      if (classes != null) mechanics['classes'] = classes;
+      if (classes != null) {
+        mechanics['classes'] = classes;
+      } else {
+        mechanics.remove('classes');
+      }
       return EntityDraft(
         descriptor: passive,
         id: 'garde',
@@ -445,20 +449,19 @@ void main() {
           ),
         );
 
-    test('sans classes, le passif est ouvert a toutes et passe', () {
-      expect(withClasses().validate(passiveDraft(null)), isEmpty);
+    test('sans classes, le passif est refuse', () {
+      final faults = withClasses().validate(passiveDraft(null));
+      expect(faults, hasLength(1));
+      expect(faults.first.field, 'classes');
     });
 
-    test('des classes existantes passent', () {
-      expect(
-        withClasses().validate(passiveDraft(['paladin', 'mage'])),
-        isEmpty,
-      );
+    test('une classe existante passe', () {
+      expect(withClasses().validate(passiveDraft(['paladin'])), isEmpty);
     });
 
     test('une classe inconnue est refusee', () {
       final faults =
-          withClasses().validate(passiveDraft(['paladin', 'paladn']));
+          withClasses().validate(passiveDraft(['paladn']));
       expect(faults, hasLength(1));
       expect(faults.first.field, 'classes');
       expect(faults.first.message, contains('paladn'));
@@ -618,6 +621,10 @@ void main() {
     // passerait pas sa propre validation serait un piege servi a l'ouverture.
     // Une signature recoit une classe : sans proprietaire, elle est refusee
     // des la famille 1, avant que son gabarit ne soit juge.
+    // Le gabarit d'un passif vise `paladin` (A5) : la classe doit exister.
+    final validator = validatorWith(
+      registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+    );
     for (final descriptor in kEntityDescriptors.values) {
       final draft = EntityDraft(
         descriptor: descriptor,
@@ -632,9 +639,9 @@ void main() {
         mechanics: descriptor.template,
       );
       expect(
-        validatorWith().validate(draft),
+        validator.validate(draft),
         isEmpty,
-        reason: '${descriptor.label} : ${validatorWith().validate(draft)}',
+        reason: '${descriptor.label} : ${validator.validate(draft)}',
       );
     }
   });

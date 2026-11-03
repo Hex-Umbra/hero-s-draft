@@ -39,7 +39,11 @@ SignatureData fixtureSignature(String id, {String heroClass = 'paladin'}) =>
       ],
     });
 
-PassiveData fixturePassive(String id) => PassiveData.fromJson({
+PassiveData fixturePassive(
+  String id, {
+  String heroClass = 'paladin',
+  List<String> feeds = const ['armor'],
+}) => PassiveData.fromJson({
       'id': id,
       'name_en': 'x',
       'name_fr': 'x',
@@ -48,6 +52,8 @@ PassiveData fixturePassive(String id) => PassiveData.fromJson({
       'trigger': 'startOfTurn',
       'effectType': 'gain_armor',
       'value': 1,
+      'classes': [heroClass],
+      'feeds': feeds,
     });
 
 HeroData fixtureHero(String id) => HeroData.fromJson({

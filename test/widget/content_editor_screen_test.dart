@@ -692,8 +692,8 @@ void main() {
 
     final json = jsonDecode(passif.readAsStringSync()) as Map<String, dynamic>;
     expect(json['id'], 'gambler');
-    // Il ne vise que la classe creee : sans `classes`, il serait ouvert a
-    // toutes et polluerait le pool des trois livrees (spec P-49, §3.2).
+    // Il ne vise que la classe creee : la recette remplace le `["paladin"]`
+    // du gabarit (sans `classes`, le chargement echoue, A5).
     expect(json['classes'], ['gambler']);
     // Sa prose est voyante, jamais inventee.
     expect(json['name_fr'], startsWith(kProsePlaceholderPrefix));

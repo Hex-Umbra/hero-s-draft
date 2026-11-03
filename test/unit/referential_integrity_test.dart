@@ -128,6 +128,38 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
+  test('chaque status:<id> de feeds est fabrique par createStatus', () {
+    final offenders = [
+      for (final passive in registry.passives)
+        for (final entry in passive.feeds)
+          if (entry.startsWith('status:') &&
+              EffectResolver.createStatus(entry.substring(7), 1, 1) == null)
+            '${passive.id} → "$entry" que createStatus ne fabrique pas',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('les feeds livres sont ceux de spec §3.3', () {
+    expect({for (final p in registry.passives) p.id: p.feeds}, {
+      'regen_armor': ['armor', 'status:armor_regen', 'scale:armor', 'cost:armor'],
+      'fervor': ['armor', 'attack'],
+      'blessing': ['armor', 'status:armor_regen', 'status:weakness', 'heal'],
+      'rage': [
+        'cost:hp',
+        'scale:missingHp',
+        'armor',
+        'status:might',
+        'status:might_regen',
+      ],
+      'bloodthirst': ['attack'],
+      'frenzy': ['scale:targetMissingHp', 'scale:enemiesAlive'],
+      'mana_flux': ['skill'],
+      'channeling': ['power'],
+      'mage_mark': ['damage', 'status:vulnerable', 'scale:targetStatus'],
+    });
+  });
+
   test('toute classe declaree par un passif existe', () {
     final known = registry.heroes.map((h) => h.id).toSet();
     final offenders = <String>[];

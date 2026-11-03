@@ -275,6 +275,8 @@ void main() {
         'emoji',
       },
       EntityCategory.passive: {
+        'classes',
+        'feeds',
         'trigger',
         'effectType',
         'value',
@@ -347,9 +349,10 @@ void main() {
     });
   });
 
-  test('classes est atteignable par le catalogue, pas par le gabarit', () {
+  test('classes et feeds sont exiges, et au gabarit (A5, A6)', () {
     final descriptor = kEntityDescriptors[EntityCategory.passive]!;
-    expect(descriptor.decodeTemplate().containsKey('classes'), isFalse);
+    expect(descriptor.requiredKeys, containsAll(['classes', 'feeds']));
+    expect(descriptor.decodeTemplate().keys, containsAll(['classes', 'feeds']));
     expect(descriptor.referenceListKeys, {'classes': EntityCategory.heroClass});
   });
 

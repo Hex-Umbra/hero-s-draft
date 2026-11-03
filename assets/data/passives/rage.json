@@ -5,6 +5,7 @@
   "description_en": "At the start of your turn, gain 1 Might for the turn, plus 1 per 10 missing HP.",
   "description_fr": "Au début du tour, gagne 1 Puissance pour le tour, plus 1 par tranche de 10 PV manquants.",
   "classes": ["berserker"],
+  "feeds": ["cost:hp", "scale:missingHp", "armor", "status:might", "status:might_regen"],
   "trigger": "startOfTurn",
   "effectType": "rage",
   "value": 1,

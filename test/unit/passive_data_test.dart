@@ -13,6 +13,8 @@ void main() {
         'trigger': 'endOfTurn',
         'effectType': 'gain_armor',
         'value': 2,
+        'classes': ['paladin'],
+        'feeds': ['armor'],
       };
 
   Map<String, dynamic> masteryJson() => {
@@ -26,23 +28,75 @@ void main() {
       PassiveData.fromJson({...passiveJson(), 'mastery': masteryJson()});
 
   group('classes', () {
-    test('absente : le passif est ouvert a toutes les classes', () {
-      expect(PassiveData.fromJson(passiveJson()).classes, isNull);
-    });
-
-    test('une liste : les classes declarees', () {
-      final passive = PassiveData.fromJson({
-        ...passiveJson(),
-        'classes': ['paladin', 'mage'],
-      });
-      expect(passive.classes, ['paladin', 'mage']);
-    });
-
-    test('une liste vide est refusee', () {
+    test('absente : refusee, nommee', () {
+      final json = passiveJson()..remove('classes');
       expect(
-        () => PassiveData.fromJson({...passiveJson(), 'classes': <String>[]}),
-        throwsFormatException,
+        () => PassiveData.fromJson(json),
+        throwsA(
+          isA<FormatException>().having((e) => e.message, 'message', contains('classes')),
+        ),
       );
+    });
+
+    test('une classe : lue', () {
+      expect(PassiveData.fromJson(passiveJson()).classes, ['paladin']);
+    });
+
+    test('vide ou de deux classes : refusee', () {
+      for (final classes in [
+        <String>[],
+        ['paladin', 'mage'],
+      ]) {
+        expect(
+          () => PassiveData.fromJson({...passiveJson(), 'classes': classes}),
+          throwsA(
+            isA<FormatException>().having((e) => e.message, 'message', contains('classes')),
+          ),
+          reason: '$classes',
+        );
+      }
+    });
+  });
+
+  group('feeds', () {
+    Matcher namesFeeds(String what) => throwsA(
+          isA<FormatException>().having((e) => e.message, 'message', allOf(contains('feeds'), contains(what))),
+        );
+
+    test('feeds absente, vide ou non textuelle est refusee', () {
+      final absent = passiveJson()..remove('feeds');
+      expect(() => PassiveData.fromJson(absent), namesFeeds('feeds'));
+      for (final feeds in [
+        <Object>[],
+        [1],
+      ]) {
+        expect(
+          () => PassiveData.fromJson({...passiveJson(), 'feeds': feeds}),
+          namesFeeds('feeds'),
+          reason: '$feeds',
+        );
+      }
+    });
+
+    test('feeds admet ses cinq formes', () {
+      final feeds = ['attack', 'gain_mana', 'status:burn', 'cost:hp', 'scale:missingHp'];
+      expect(PassiveData.fromJson({...passiveJson(), 'feeds': feeds}).feeds, feeds);
+    });
+
+    test('une entree hors des cinq formes est refusee, nommee', () {
+      for (final entry in ['block', 'status:', 'cost:mana', 'scale:speed', 'status']) {
+        expect(
+          () => PassiveData.fromJson({...passiveJson(), 'feeds': [entry]}),
+          namesFeeds('"$entry"'),
+          reason: entry,
+        );
+      }
+    });
+
+    test('la Maitrise garde classes et feeds', () {
+      final mastered = regen().withMastery(2);
+      expect(mastered.classes, regen().classes);
+      expect(mastered.feeds, regen().feeds);
     });
   });
 

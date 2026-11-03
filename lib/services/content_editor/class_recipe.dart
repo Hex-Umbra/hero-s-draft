@@ -108,8 +108,8 @@ class ClassRecipe {
   /// Le corps du passif de depart : le gabarit de la categorie, plus la seule
   /// cle que la recette impose — `classes`.
   ///
-  /// Sans elle, le passif serait ouvert a **toutes** les classes (spec P-49,
-  /// §3.2) et viendrait polluer le pool des trois livrees. C'est la meme
+  /// Le gabarit porte deja `classes` (A5, sans elle le chargement echoue) ;
+  /// la recette remplace son `["paladin"]` par la classe creee. C'est la meme
   /// doctrine que `iconPath` : ce que le geste impose, la recette l'ecrit.
   String get _starterPassiveMechanics {
     final decoded = jsonDecode(

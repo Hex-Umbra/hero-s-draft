@@ -5,6 +5,7 @@
   "description_en": "At the start of your turn, every 5 points of surviving Block becomes 1 HP.",
   "description_fr": "Au début du tour, chaque tranche de 5 points d'Armure survivante devient 1 PV.",
   "classes": ["paladin"],
+  "feeds": ["armor", "status:armor_regen", "status:weakness", "heal"],
   "trigger": "startOfTurn",
   "effectType": "blessing",
   "value": 1,
