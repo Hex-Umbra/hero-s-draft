@@ -60,6 +60,7 @@ Toute référence `fichier:ligne` de ce document a été lue le 2026-10-25 sur `
 | **Q11** | Un seul bonus de Puissance par carte : une carte qui pose `burn` et porte la rune `burning` ne compte la Puissance qu'une fois |
 | **O5** | Le masquage : un passif dont le dossier `cards/<passif>/` est vide n'est pas proposé à la sélection — une règle dans `availablePassivesFor`, sans liste en dur ; la note de version dira que six passifs quittent la sélection jusqu'à ce que leur lot arrive |
 | **P-1** *(répondue le 03/11, née à l'écriture)* | Option (a) — 25 % par point, plafonnés : Vulnérable +25 % de dégâts subis par point, 4 points au plus (+100 %) ; Faiblesse −25 % de dégâts infligés par point, 2 au plus (−50 %) ; Gel −25 % à l'attaque par point, 3 au plus (−75 %) ; *Trait de Glace* Gel 1 → 2, `freezing` 2 points par niveau, *Marque du Mage* Vulnérable 1 → 2 (§4.4). Le propriétaire ajoute que les charges élémentaires (P-53 de la ROADMAP, [étude](../../possible_upgrades/03-11-2026_charges_elementaires_Opus5.md)) relèveront le Gel, le Feu et la Foudre en `0.6.0` : ce barème est celui de `0.5.7` |
+| **P-2** *(répondue le 03/11, née à l'écriture)* | Option (c) — **un badge de niveau et une icône par évolution prise, sur la tuile de la signature**. Motif du propriétaire : « c'est celle qui donne le plus d'informations au joueur, rien n'est caché ». Forme : A35 à A38, §3.7, §5.2 |
 | **L'écran d'évolution** | Le carrousel de la montée de niveau (`DraftScreen`, `DraftCardReel`), trois rouleaux, une fois par signature, déclenché par `pendingDrafts`. Chaque rouleau montre : le nom de l'évolution, sa description, son palier (« Mineure » / « Majeure ») et, pour une mineure déjà prise, son niveau « 1 → 2 » ; l'en-tête de l'écran nomme la signature concernée. Les détails de mise en page que ce contenu ne fixe pas (tailles, polices, couleurs) suivent le carrousel existant et sont de classe T |
 
 ### 1.3. Les arbitrages
@@ -246,8 +247,8 @@ six descriptions deviennent des gabarits — `{damage}`, `{armor}`, `{heal}`, `{
 — remplis par la valeur évoluée du premier effet propre de ce type. Une évolution est **chiffrée** (`flatBonus`,
 `reduceCost`, `cooldown` : elle ne change que des chiffres que la tuile montre déjà — gabarit, médaillon de coût,
 recharge) ou **verbale** (`addEffect`, `critBonus`, `target`) ; jamais les deux. Une verbale ajoute sa phrase à la
-description ; une chiffrée, rien. Tout autre affichage des évolutions hors de leur écran — badge de niveau,
-icônes — est P-2 (§1.4) ; ce document applique à titre provisoire la recommandation, aucun affichage neuf.
+description ; une chiffrée, rien. S'y ajoutent, par la réponse du propriétaire à P-2 (§1.2), le badge de niveau
+et une icône par évolution prise sur la tuile de combat : A35 à A38.
 
 **A26 — Un tirage montre toujours trois évolutions tant qu'il en existe trois** *(T, filtre 1)*. D19 dit « 3
 améliorations tirées ». Au palier mineur, trois mineures. Au palier majeur, les majeures éligibles — ni prises,
@@ -285,27 +286,82 @@ chaque signature évoluée.
 
 **A34 — Le découpage en trois parties** *(T, filtre 7)* : §10.
 
+**A35 — L'icône d'une évolution : un champ en donnée qui nomme une entrée d'un registre Dart fermé** *(T, filtres
+4 et 5)*. Re-mesuré : les runes font déjà ainsi — le fichier porte `"icon"` et `"color"` (`forge_upgrades/
+freezing.json`, `"icon": "ac_unit_rounded"`, `"color": "lightBlueAccent"`), et `rune_style.dart` les traduit par
+deux tables `const` de noms vers `Icons.…` et `Colors.…`, que garde le test d'intégrité
+(`referential_integrity_test.dart:85-96`). Ces références `const` survivent à l'élagage des icônes du build
+release, ce qu'une `IconData` construite à l'exécution depuis une chaîne ne ferait pas. Chaque évolution porte
+donc `icon` et `color`, deux noms ; deux tables `const` à elles, `evolutionIcons` et `evolutionColors`
+(`lib/ui/widgets/signature_evolution_style.dart`), les traduisent — un nom inconnu retombe, comme pour une rune,
+sur `Icons.help_outline` et du gris. Des tables propres plutôt que celles des runes : runes et évolutions ne
+partagent ni donnée ni affichage (brainstorm §8, A24). Une table par id d'évolution est écartée : *Célérité*
+partage son id sur cinq pools, mais une évolution neuve à l'icône existante demanderait du Dart, quand un nom en
+donnée n'en demande pas (filtre 4).
+
+**A36 — Le badge de niveau : le nombre de choix faits, au bout de la ligne du type** *(T, filtre 6)*. Le niveau
+d'une signature est `SignatureInstance.level` (§4.10), la somme des niveaux de ses évolutions — le nombre de
+paliers atteints et choisis, un par tranche de 5 niveaux du héros (D19). En combat il ne diffère jamais des paliers
+atteints, hors du menu de debug (§8) : le rideau ferme la carte tant qu'une évolution attend (A27). Le badge lit la
+clé existante `levelLabel` (§6.1), réécrite sur l'abréviation du jeu (`enemy_intents_panel.dart:181-182`,
+`hero_mini_stats_panel.dart:210`) ; elle n'avait aucun lecteur et en gagne un. Il se pose au bout de la ligne du **type** (`signature_bar.dart:257-266`), plus courte que le nom : la ligne du
+nom (`:246-255`), à une ligne et à points de suspension (S9 de la vague 4), garde toute sa largeur — sur la tuile
+étroite, « Surtension de Mana » ou « Projectile Magique » y tiennent à peine et passeraient en « … » si le badge la
+partageait. Aucune hauteur de plus. Absent au niveau 0. Les largeurs se vérifient à l'écran, au test manuel : les
+tests widget rendent une police carrée qui ne les mesure pas.
+
+**A37 — Les icônes : une rangée sous la description, une puce par évolution distincte** *(T, filtres 6 et 8)*.
+Dans l'ordre de la première prise, lue sur `SignatureInstance.taken` (§4.10) ; une majeure dans un anneau de sa
+couleur, une mineure nue, avec son niveau en petit chiffre en bas à droite dès 2 — l'anneau distingue deux
+évolutions de même icône sur une tuile (*Harmonie* et *Exaltation* sur *Surtension de Mana*) — dans les six pools,
+deux évolutions d'une même signature qui partagent une icône sont toujours une mineure et une majeure (§3.7). Une
+signature porte au plus sept évolutions distinctes (son pool) : à 16 px la puce et 2 d'écart, sept puces font
+124 px, qui tiennent dans la colonne de texte de la tuile étroite — 170 px, moins la marge et la bordure (2 × 8,
+`signature_bar.dart:374-384` : la bordure armée prend sur la marge), le médaillon (20) et son écart (6), soit
+128 px ; à 18 px, 138 px dans les 178 de la large. La rangée ne déborde donc jamais : ni coupure, ni « +k ». Elle
+ajoute une ligne de 16 ou 18 px, selon la tuile, dès la première évolution.
+
+**A38 — La barre reste centrée à mi-hauteur, et ne se décale ou ne se réduit que si elle sort de sa bande** *(T,
+filtres 1 et 6)*. A6 d'E4 pose la barre à mi-hauteur, en miroir du bouton de fin de tour
+(`docs/superpowers/specs/2026-10-15-p43-e4-signatures-design.md:78`, `:341` ; `turn_control_panel.dart:101-104`,
+`top: screenHeight / 2 - 25`) : cette place ne change pas. Mais la tuile grandit avec ses phrases verbales (A25) et
+sa rangée d'icônes ; au niveau 30 du héros, l'horizon de D67, deux tuiles mesurent environ 300 px, et la colonne
+centrée (`signature_bar.dart:60-66`) passerait sous le panneau des statuts du héros (`combat_side_panels.dart:71-75`)
+sur un écran de moins de 700 px de haut. La colonne a donc une **bande** : de `bandTop` sous le haut à `bandBottom =
+statusPanelBottom + statusPanelReserve` au-dessus du bas. `statusPanelBottom` (80) et `statusPanelReserve` (120, la
+place de deux rangées de statuts) deviennent deux constantes nommées de `CombatSidePanels`, qui pose le panneau
+(`combat_side_panels.dart:72` lit aujourd'hui `bottom: 80` en dur) ; la barre les lit. `bandTop` (80, sous la barre
+du haut posée à `top: 10`, `combat_top_bar.dart:33-86`) est de même une constante nommée de `CombatTopBar`.
+
+**`H`** est la hauteur que reçoit la barre — celle de son `Positioned.fill`, dans le `Stack` du `SafeArea`
+(`game_screen.dart:559-560`), celle que lit l'`Align` d'aujourd'hui —, jamais `MediaQuery` (que lit
+`turn_control_panel.dart:25`, pas la barre) ; le panneau étant posé dans le même `Stack`, `bandBottom` se compte
+dans le même repère. Avec `h` la hauteur naturelle de la colonne et `bande = H − bandTop − bandBottom` :
+
+1. l'échelle : `s = clamp(bande / h, 0.75, 1)` — 1 tant que la colonne tient dans la bande ;
+2. la hauteur posée : `h' = s × h` ;
+3. la position : `top = max(bandTop, min(H/2 − h'/2, H − bandBottom − h'))` — à mi-hauteur quand elle tient, décalée
+   vers le haut seulement si elle sortirait de la bande par le bas, jamais au-dessus de `bandTop`.
+
+La colonne se mesure **avant** d'être posée : une mise en page qui connaît `h`, `Flow` ou un `RenderBox` propre à
+la barre — le plan tranche entre les deux ; un `FittedBox` ne connaît pas `h` et ne tiendrait pas le plancher.
+**0,75 est un plancher de lisibilité**, sous lequel le coût du médaillon (12 px, `signature_bar.dart:433`) tomberait
+sous 9 px. Au plancher, la colonne dépasse la bande par le bas, toujours peinte au-dessus du panneau (S11 de la
+vague 4). C'est le cas d'un écran bas — un téléphone en paysage, que l'iOS autorise (`ios/Runner/Info.plist:56-60`)
+et qu'Android ne restreint pas (aucune `screenOrientation`), ou une fenêtre réduite : à `H ≈ 400`, la bande fait
+≈ 120 px contre ≈ 176 pour deux tuiles au niveau 0. **Une limite acceptée** : sur un écran d'environ 400 px de haut,
+en fin de run, avec ≈ 300 px de tuiles, la colonne au plancher descend à ≈ 95 px du bord et peut couvrir le haut du
+HUD du bas — cristaux de mana et PV (`game_screen.dart:541-542`, `hudHeight` 100 en mobile, borné de 88 à 140 ;
+`combat_bottom_hud.dart:30-35`) ; elle reste peinte au-dessus et jouable.
+
+L'invite « Choisissez une cible » pend toujours sous la colonne sans la déplacer (S10 de la vague 4).
+
 Les cartes, les pools d'évolutions et leurs textes sont des choix du rôle `game_designer` (fiche 8.5) ; deux
 choix de conception y portent une raison qu'il faut lire : *Surtension de Mana* n'a pas *Célérité* — à recharge
 1, elle rendrait +1 Mana à chaque tour, la *Sagesse* que D11 relègue en mythique — ; et chaque carte à
 `scaleWith` garde une valeur de base d'au moins 1, sans quoi la fusion (G1) ne changerait aucun chiffre.
 
 ### 1.4. Les questions ouvertes
-
-**P-2 — L'affichage des évolutions hors de leur écran** *(P, née à l'écriture)*. Le brainstorm (§4.4) propose
-« un badge de niveau et les icônes d'évolution » ; aucune décision ne l'acquiert, et le joueur le verrait.
-- (a) **Aucun affichage neuf** : la description de la signature porte ses valeurs évoluées et la phrase de chaque
-  évolution verbale (A25) ; les chiffrées se lisent dans le gabarit, le médaillon de coût et la recharge.
-- (b) En plus, **un badge de niveau** de signature sur la tuile (barre de combat) : un chiffre, `level`.
-- (c) **Badge et icônes** : une icône par évolution prise sur la tuile ; chaque évolution gagne `icon` (et
-  `color`) en donnée, comme les runes (`rune_style.dart`).
-
-**Ce qui change** — sous (a) : rien de plus. Sous (b) : un élément de tuile, une ligne de test widget, aucune
-donnée. Sous (c) : le champ `icon` dans les six pools (42 entrées) et ses tables de style, le descripteur de
-signature, un test d'intégrité des icônes, et une tuile plus haute.
-
-**Recommandation : (a)**, appliquée à titre provisoire : la description évoluée dit déjà tout ce qui change, sans
-second canal à tenir à jour ; (b) se rajoute sans toucher la donnée si le test du propriétaire le demande.
 
 **P-3 — L'écho déclenche-t-il les événements « carte jouée » ?** *(P, née à l'écriture)*. *Flux de Mana* compte
 les Compétences jouées, *Soif de Sang* s'arme sur une Attaque, quatre reliques réagissent à une carte jouée
@@ -323,6 +379,20 @@ seconde carte.
 
 **Recommandation : (a)**, appliquée à titre provisoire : jouer une carte est un geste, que l'écho ne refait pas ;
 (b) rouvrirait par l'écho le mana gratuit que ses exclusions ferment.
+
+**P-4 — L'icône de l'évolution sur le rouleau de l'écran d'évolution** *(P, née à l'amendement de P-2)*. La
+réponse à P-2 met une icône par évolution prise sur la tuile de combat ; le contenu de l'écran d'évolution, fixé par
+le propriétaire (§1.2), n'en porte pas.
+- (a) **L'icône de l'évolution sur chaque rouleau** : forme au §5.1.
+- (b) **Aucune icône sur le rouleau.**
+
+**Ce qui change** — sous (a) : `DraftCardReel` et `DraftChoiceCard` gagnent un paramètre facultatif, que le tutoriel
+ne passe pas ; une ligne du test de l'écran (§9) ;
+la partie 3 (§10). Sous (b) : rien de cela, mais **aucun endroit du jeu ne relie une icône de tuile à son
+évolution** — la tuile n'a ni infobulle ni survol propre à ses icônes (O4 de la vague 4, §5.2), et l'écran d'évolution est le seul
+où l'évolution est nommée.
+
+**Recommandation : (a)**, appliquée à titre provisoire : sans elle, les icônes de la tuile se liraient sans clé.
 
 **Aucune question de classe D** : rien n'exige d'amender une décision acquise.
 
@@ -535,6 +605,7 @@ Une évolution :
 | `cooldown` | Majeure seulement ; entier non nul ; la recharge évoluée ne descend jamais sous 1 (D54) |
 | `excludes` | Majeure seulement ; ids de majeures du même pool, pas elle-même ; lu dans les deux sens |
 | Au moins un changement | `deltas` non vide, `target` ou `cooldown` |
+| `icon`, `color` | Exigés, deux textes non vides (A35) ; que le nom figure dans `evolutionIcons` / `evolutionColors`, le modèle ne le voit pas — les tables vivent dans `lib/ui/` — : le test d'intégrité le garde (§9), comme pour les runes |
 | Chiffrée ou verbale | A25 : une évolution qui porte `addEffect`, `critBonus` ou `target` ne porte ni `flatBonus`, ni `reduceCost`, ni `cooldown` |
 | Gabarits | Chaque `{…}` des deux descriptions désigne un effet propre ; chaque effet que vise un `flatBonus` du pool a son `{…}` dans les deux |
 
@@ -545,12 +616,33 @@ Une évolution :
 | **Châtiment** (`smite`, 1, Attaque : 6 + 4 Armure) | `zeal` Zèle / Zeal — ch., `flatBonus damage 2`, « +{val} dégâts » / « +{val} damage » · `aegis` Égide / Aegis — ch., `flatBonus armor 2`, « +{val} Armure » / « +{val} Block » · `ardor` Ardeur / Ardor — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » | `haste` Célérité / Haste — ch., `cooldown −1`, « Recharge réduite d'un tour » / « Cooldown one turn shorter » · `sentence` Sentence / Sentence — v., `addEffect weakness 1`, 2 tours, « Applique 1 Faiblesse pendant 2 tours » / « Apply 1 Weakness for 2 turns » · `radiance` Rayonnement / Radiance — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `devotion` Dévotion / Devotion — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
 | **Bouclier Sacré** (`holy_shield`, 1, Compétence : 8 Armure + soin 2) | `ward` Garde / Ward — ch., `flatBonus armor 2`, « +{val} Armure » / « +{val} Block » · `mercy` Miséricorde / Mercy — ch., `flatBonus heal 1`, « +{val} PV soignés » / « +{val} HP healed » · `resolve` Résolution / Resolve — v., `addEffect might 1`, 1 tour par niveau, « Gagne {val} Puissance » / « Gain {val} Might » | `haste` · `consecration` Consécration / Consecration — v., `addEffect might 2`, 2 tours, « Gagne 2 Puissance pendant 2 tours » / « Gain 2 Might for 2 turns » · `inspiration` Inspiration / Inspiration — v., `addEffect draw 1`, « Pioche 1 carte » / « Draw 1 card » · `lasting_aegis` Égide durable / Lasting Aegis — v., `addEffect armor_regen 3`, 2 tours, « Pendant 2 tours, gagne 3 Armure au début du tour » / « For 2 turns, gain 3 Block at the start of your turn » |
 | **Frappe Téméraire** (`reckless_strike`, 2, Attaque : 15) | `brutality` Brutalité / Brutality — ch., `flatBonus damage 3`, « +{val} dégâts » / « +{val} damage » · `instinct` Instinct / Instinct — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » · `shatter` Fracas / Shatter — v., `addEffect vulnerable 1`, 1 tour par niveau, « Applique {val} Vulnérable » / « Apply {val} Vulnerable » | `haste` (`excludes: ["devastation"]`) · `devastation` Dévastation — ch., `flatBonus damage 10` et `cooldown +1` (`excludes: ["haste"]`) · `cleave` Fauchage / Cleave — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `composure` Sang-froid / Composure — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
-| **Posture de Rage** (`rage_form`, 1, Compétence : Puissance 2 ce tour + pioche 1) | `anger` Colère / Anger — ch., `flatBonus apply_status might 1`, « +{val} Puissance » / « +{val} Might » · `hide` Carapace / Thick Hide — v., `addEffect armor 2`, « Gagne {val} Armure » / « Gain {val} Block » (chez lui, de la Puissance) · `second_wind` Second souffle / Second Wind — v., `addEffect heal 2`, « Soigne {val} PV » / « Heal {val} HP » | `haste` · `berserk` Démence / Berserk — v., `addEffect might_regen 1`, 3 tours, « Pendant 3 tours, gagne 1 Puissance au début du tour » / « For 3 turns, gain 1 Might at the start of your turn » · `rally` Ralliement / Rally — ch., `flatBonus draw 1`, « Pioche 1 carte de plus » / « Draw 1 more card » · `fury` Furie / Fury — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
+| **Posture de Rage** (`rage_form`, 1, Compétence : Puissance 2 ce tour + pioche 1) | `anger` Colère / Anger — ch., `flatBonus apply_status might 1`, « +{val} Puissance » / « +{val} Might » · `hide` Carapace / Thick Hide — v., `addEffect armor 2`, « Gagne {val} Armure » / « Gain {val} Block » (chez lui, de la Puissance ; son icône reste le bouclier, celle de ce qu'écrit l'évolution — table des icônes, ci-dessous) · `second_wind` Second souffle / Second Wind — v., `addEffect heal 2`, « Soigne {val} PV » / « Heal {val} HP » | `haste` · `berserk` Démence / Berserk — v., `addEffect might_regen 1`, 3 tours, « Pendant 3 tours, gagne 1 Puissance au début du tour » / « For 3 turns, gain 1 Might at the start of your turn » · `rally` Ralliement / Rally — ch., `flatBonus draw 1`, « Pioche 1 carte de plus » / « Draw 1 more card » · `fury` Furie / Fury — ch., `reduceCost 1`, « Coûte 1 Mana de moins » / « Costs 1 less Mana » |
 | **Projectile Magique** (`magic_missile`, 1, Compétence : 5 + pioche 1) | `acuity` Acuité / Acuity — ch., `flatBonus damage 2`, « +{val} dégâts » / « +{val} damage » · `precision` Précision / Precision — v., `critBonus 5`, « +{val} % de critique » / « +{val}% critical chance » · `ember` Braise / Ember — v., `addEffect burn 1`, 2 tours par niveau, « Applique {val} Brûlure » / « Apply {val} Burn » | `haste` (`excludes: ["overload"]`) · `overload` Surcharge / Overload — ch., `flatBonus damage 8` et `cooldown +1` (`excludes: ["haste"]`), « +8 dégâts, recharge allongée d'un tour » / « +8 damage, cooldown one turn longer » · `nova` Nova / Nova — v., `target allEnemies`, « Touche tous les ennemis » / « Hits all enemies » · `exposure` Mise à nu / Exposure — v., `addEffect vulnerable 2`, 2 tours, « Applique 2 Vulnérable pendant 2 tours » / « Apply 2 Vulnerable for 2 turns » |
 | **Surtension de Mana** (`mana_surge`, 0, Compétence : +1 Mana + pioche 1) | `mana_shield` Bouclier de mana / Mana Shield — v., `addEffect armor 2`, « Gagne {val} Armure » / « Gain {val} Block » · `attunement` Harmonie / Attunement — v., `addEffect might 1`, 1 tour par niveau, « Gagne {val} Puissance » / « Gain {val} Might » · `clarity` Clarté / Clarity — v., `addEffect heal 1`, « Soigne {val} PV » / « Heal {val} HP » | **pas de *Célérité*** (§1.3) · `foresight` Prescience / Foresight — ch., `flatBonus draw 1`, « Pioche 1 carte de plus » / « Draw 1 more card » · `glyph` Glyphe de garde / Ward Glyph — v., `addEffect armor_regen 3`, 2 tours, « Pendant 2 tours, gagne 3 Armure au début du tour » / « For 2 turns, gain 3 Block at the start of your turn » · `empower` Exaltation / Exaltation — v., `addEffect might 2`, 2 tours, « Gagne 2 Puissance pendant 2 tours » / « Gain 2 Might for 2 turns » · `serenity` Sérénité / Serenity — v., `addEffect heal 4`, « Soigne 4 PV » / « Heal 4 HP » |
 
 `haste` porte dans chaque pool le même id et le même texte : il reste propre à chaque signature (D7), déclaré
 dans son fichier.
+
+**Les icônes** (A35) — une par sorte d'effet, la même d'un pool à l'autre : quinze icônes, quatorze couleurs, pour
+les 42 évolutions.
+
+| Ce que fait l'évolution | `icon` | `color` | Évolutions |
+|:---|:---|:---|:---|
+| + dégâts | `gavel_rounded` | `redAccent` | `zeal`, `brutality`, `acuity` |
+| + Armure, ou Armure ajoutée | `shield_rounded` | `blueAccent` | `aegis`, `ward`, `hide`, `mana_shield` |
+| + soin, ou soin ajouté | `favorite_rounded` | `greenAccent` | `mercy`, `second_wind`, `clarity`, `serenity` |
+| + critique | `gps_fixed_rounded` | `amber` | `ardor`, `instinct`, `precision` |
+| + Puissance, ou Puissance ajoutée | `fitness_center_rounded` | `orangeAccent` | `resolve`, `anger`, `attunement`, `consecration`, `empower` |
+| Éveil de Puissance (`might_regen`) | `trending_up_rounded` | `orangeAccent` | `berserk` |
+| Armure au début du tour (`armor_regen`) | `autorenew_rounded` | `lightBlueAccent` | `lasting_aegis`, `glyph` |
+| Faiblesse | `arrow_downward_rounded` | `purpleAccent` | `sentence` |
+| Vulnérable | `heart_broken_rounded` | `pinkAccent` | `shatter`, `exposure` |
+| Brûlure | `local_fire_department_rounded` | `deepOrangeAccent` | `ember` |
+| Pioche | `style_rounded` | `amberAccent` | `inspiration`, `rally`, `foresight` |
+| Recharge réduite (*Célérité*) | `fast_forward_rounded` | `tealAccent` | `haste` (cinq pools) |
+| Dégâts accrus, recharge allongée | `bolt_rounded` | `yellowAccent` | `devastation`, `overload` |
+| Touche tous les ennemis | `all_out_rounded` | `deepPurpleAccent` | `radiance`, `cleave`, `nova` |
+| Coûte moins | `savings_rounded` | `cyanAccent` | `devotion`, `composure`, `fury` |
 
 ### 3.8. Les comptes
 
@@ -723,6 +815,7 @@ première prise, lues par l'analyseur unique `ForgeUpgradeData.parseRef` / `leve
 | Lecture | Règle |
 |:---|:---|
 | `level` | Somme des niveaux de ses évolutions |
+| `taken` | La liste ordonnée, par première prise, des paires (`SignatureEvolutionData`, niveau) — les références relues dans le pool de la signature une fois pour toutes ; `asCard` en tire ses deltas, sa cible et ses phrases, la tuile ses puces (A37) — le badge lit `level` (A36) : aucun widget n'analyse une référence ni ne cherche dans le pool |
 | `asCard` | La vue d'E4 ; sa cible est celle de la dernière majeure `target` prise, sinon la sienne ; ses `extraDeltas`, les deltas des évolutions à leur niveau, dans l'ordre (A24) ; sa description, le gabarit rempli suivi des phrases verbales (A25) |
 | `cost` | `asCard.currentCost` — `asCard` construit sa `CardData` sur `data.cost`, le coût de la donnée, et le delta `reduceCost` des évolutions le réduit par `effective` ; il ne lit plus `cost` (`signature_instance.dart:27` le lit aujourd'hui, `:12` rendant `data.cost`), sans quoi les deux lectures s'appelleraient l'une l'autre |
 | `cooldown` | `max(1, data.cooldown + Σ cooldown des majeures prises)` |
@@ -757,6 +850,7 @@ les deux mineures, puis les deux majeures.
 |:---|:---|
 | En-tête | « Évolution de {signature} » / « {signature} evolves », puis « Choisissez une évolution » / « Choose an evolution » |
 | Un rouleau par évolution tirée | `title` : son nom ; `description` : sa description à son prochain niveau, et, pour une mineure déjà prise, une dernière ligne « Niveau 1 → 2 » / « Level 1 → 2 » ; `rarity` : son palier, « MINEURE » / « MAJEURE » — un libellé que le rouleau ne reconnaît ni légendaire ni mythique, donc au style ordinaire |
+| Icône du rouleau *(sous P-4, provisoire)* | Voir le paragraphe ci-dessous |
 | Décor du rouleau (`spinPool`) | Les évolutions du pool de la signature, nom et description |
 | Toucher un rouleau posé | `chooseSignatureEvolution`, puis retour à la carte |
 
@@ -766,6 +860,13 @@ entre deux ouvertures. **Le rideau de la carte** (`map_screen.dart:302-316`) s'a
 sinon l'évolution de `nextPendingEvolution`. Chaque écran fermé rend la carte ; le rideau, toujours là, ouvre le
 suivant : deux écrans successifs au niveau 5. Les deux gardes de nœud (`:380`, `:403`) lisent la même condition,
 un accesseur de `RunState`.
+
+**L'icône sur le rouleau** est P-4 (§1.4), appliquée à titre provisoire : l'icône de l'évolution, à sa couleur,
+au-dessus du nom — dans l'anneau pour une majeure, comme sur la tuile (A37) —, posée une fois le rouleau arrêté.
+`DraftCardReel` (`relic_carousel/draft_card_reel.dart:11-37`) gagne un paramètre facultatif, l'icône et sa couleur,
+qu'il passe à `DraftChoiceCard`, qui dessine le titre du rouleau arrêté (`:294-295`) et gagne le même paramètre
+facultatif ; le draft de niveau ne le passe pas, ni le tutoriel, qui emploie aussi `DraftChoiceCard`
+(`tutorial_draft_widget.dart:130`) : ni l'un ni l'autre ne change.
 
 ### 5.2. Les cartes
 
@@ -777,7 +878,8 @@ un accesseur de `RunState`.
 | Badge de dégâts — `CardCompactDescription` (Flutter) et `CardTextRenderer` (Flame, `card_text_renderer.dart:96-110`) | `valeur×coups` pour un multi-coups (`3×3`) ; la Puissance ajoutée par coup est `floor(bonus × mightRatio)` (A13), là où le badge Flame ajoute aujourd'hui `damageBonusFor` entier (`:96`) ; la valeur d'un effet à `scaleWith` d'une source du héros inclut le terme calculé sur l'état courant quand le héros est connu (combat), la valeur de base sinon | 2 |
 | Infobulle Flutter (`ui_card_helpers.dart:338-412`) | La ligne de coût dit PV et Armure en plus du mana ; la ligne de dégâts dit les coups (`cardDescDamageHits`) et la Puissance par coup ; une ligne de croissance par `scaleWith` (§6.1) | 2 |
 | Infobulle Flame (`card_component.dart:296-298`, `:326-336`) | Mêmes lignes : la ligne de coût, aujourd'hui `'$costHeader${card.currentCost} Mana'` (`:298`), ajoute `cardCostHp`, `cardCostArmor` ; les lignes de dégâts (`:329-336`), qui ajoutent aujourd'hui `damageBonus` entier, passent à `floor(bonus × mightRatio)` par coup et à `cardDescDamageHits` ; la ligne de croissance | 2 |
-| Tuile de signature (`signature_tile.dart`, `hud/signature_bar.dart`) | Lit `SignatureInstance` : coût, recharge, cible et description évolués ; la description n'est plus bornée à deux lignes, la tuile suit son contenu ; hors combat (carte de classe, dictionnaire), le gabarit rempli des valeurs de base ; rien d'autre sous P-2 (a) | 3 |
+| Tuile de combat (`_SignatureTile`, `hud/signature_bar.dart:126-410`) | Lit `SignatureInstance` : coût, recharge, cible et description évolués ; la description n'est plus bornée à deux lignes (`:270`), la tuile suit son contenu. Par P-2 (c) : le badge de niveau au bout de la ligne du type (A36), la rangée d'icônes sous la description et au-dessus du compte de recharge (A37). États : **inactive**, toute la tuile à 0,45 comme aujourd'hui, icônes et badge compris ; **en recharge** et **sans le mana**, icônes, anneaux, chiffres de niveau des mineures et badge passent au gris pâle du texte (`Colors.white38`), comme le nom ; **disponible** et **armée**, à leurs couleurs. Ni toucher ni survol propres aux icônes : la tuile seule répond, et aucune infobulle ne revient (O4 de la vague 4). La barre : A38 | 3 |
+| Tuile hors combat (`SignatureTile`, `signature_tile.dart`) | Carte de classe et dictionnaire : la signature de base, le gabarit rempli des valeurs du fichier, **sans badge ni icône** — hors d'une run, elle n'a pas d'évolution (`signature_tile.dart:7-8` lit la donnée, jamais une instance) | 3 |
 | Dictionnaire | Inchangé : les cartes de lot y sont rangées avec les autres. Aucun regroupement par lot n'est ajouté (filtre 7) | — |
 
 ### 5.3. Le draft de départ
@@ -821,6 +923,7 @@ Deux sections dans la grille, titrées « Cartes de {passif} » et « Cartes neu
 | `evolutionScreenSubtitle` | Choisissez une évolution | Choose an evolution |
 | `evolutionTierMinor`, `evolutionTierMajor` | MINEURE, MAJEURE | MINOR, MAJOR |
 | `evolutionLevelUp` | Niveau {from} → {to} | Level {from} → {to} |
+| `levelLabel` *(réécrite : « Niv {level} » / « Lvl {level} », `app_fr.arb:176`, `app_en.arb:446`, prend le point de l'abréviation du jeu ; aucune clé neuve, et elle gagne son premier lecteur, le badge, A36)* | Niv. {level} | Lvl. {level} |
 
 Chaque source a ses deux formes : un ratio inférieur à 1 s'écrit en tranches, par la clé `…Per`
 (`per = 1 / ratio`, entier par la règle de chargement d'A11 : 5 pour *Fortification* et *Dernier souffle*, 10
@@ -857,7 +960,7 @@ remplacent ; `draftDeckSelectedCount` (`app_fr.arb:225`, lu à `:130`) reste le 
 | **`EntityCategory.lotCard`**, « Carte de lot » (A31) | Chemin `cards/<passif>/<id>.json` ; la propriété de la signature, `supportsHeroClass`, devient une propriété à deux sortes — classe pour la signature, passif pour la carte de lot — : catalogue par propriétaire (`entity_catalog.dart:7-83`), choix du propriétaire à l'écran, propriétaire exigé et existant ; `construct` reçoit le document augmenté de `passive`, jamais écrit dans le fichier — le précédent de `heroClass` (spec E4, §8) ; mêmes clés que la carte | 2 |
 | Validateur | Pour une carte de lot, la fonction pure d'A6 et A7 : `feeds` touché, `costs.armor` refusé sous une classe qui convertit l'armure | 2 |
 | Descripteur de passif | `feeds`, liste exigée | 2 |
-| Descripteur de signature | `evolutions` et leurs clés ; `evolutions[].tier`, `evolutions[].target`, `evolutions[].deltas[].type` en énumérations lues sur le modèle | 3 |
+| Descripteur de signature | `evolutions` et leurs clés ; `evolutions[].tier`, `evolutions[].target`, `evolutions[].deltas[].type` en énumérations lues sur le modèle ; `evolutions[].icon` et `evolutions[].color` en clés de vocabulaire, admises si un fichier livré les emploie déjà — la forme d'`icon` et `color` des runes (`entity_descriptor.dart:376-390`), qui ne lit pas les tables de `lib/ui/` | 3 |
 | `entity_descriptor_test.dart:17-36` | Dix catégories, dix sources | 2 |
 
 ---
@@ -928,11 +1031,13 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 | Rendu | `test/widget/ui_card_values_test.dart` ; la face Flame au test manuel, faute de banc | Sur `UiCard` : médaillons PV et Armure, badge `3×3`, lignes de l'infobulle ; sur la face Flame, médaillons rouges et terme de `scaleWith`, au test manuel | 2 |
 | Comptes | `entity_id_convention_test.dart:65-73`, `real_bundle_load_test.dart:36`, `:97` | 115 fichiers ; 15 neutres à la profondeur 4, 18 cartes de lot à la profondeur 5 ; `registry.cards` 33 ; forge 16 | 1 (forge) · 2 |
 | Éditeur | `entity_descriptor_test.dart`, tests de `content_editor/` dont `shipped_entities_round_trip_test.dart` | Dix catégories, dix sources ; carte de lot sous `cards/<passif>/`, propriétaire exigé, `passive` jamais écrit ; chaque fichier livré — runes, cartes de lot, signatures à évolutions — repasse la validation et se réécrit à l'identique | 1 · 2 · 3 |
-| Évolutions : donnée | `test/unit/signature_evolution_data_test.dart` *(nouveau)* | Chaque règle de §3.7, refus nommés ; trois mineures et quatre majeures par signature livrée (Q6) ; `cooldown` sur une mineure refusé (D54) | 3 |
+| Évolutions : donnée | `test/unit/signature_evolution_data_test.dart` *(nouveau)* | Chaque règle de §3.7, refus nommés ; trois mineures et quatre majeures par signature livrée (Q6) ; `cooldown` sur une mineure refusé (D54) ; `icon` ou `color` absents refusés | 3 |
+| Icônes d'évolution | `test/unit/referential_integrity_test.dart`, à côté du test des icônes de rune (`:85-96`) | Chaque `icon` et chaque `color` d'évolution livrée est connue d'`evolutionIcons` et `evolutionColors` ; deux évolutions d'une même signature de même icône ne sont jamais deux mineures ni deux majeures (A37) | 3 |
+| Tuile de combat | `test/widget/signature_bar_test.dart` | Badge absent au niveau 0, « Niv. 3 » (`levelLabel`) au niveau 3, sur la ligne du type ; une puce par évolution distincte, dans l'ordre ; anneau sur une majeure ; chiffre sur une mineure dès 2 ; sept puces sans débordement à 170 et à 220 px ; gris en recharge et sans le mana, chiffre de niveau compris ; la colonne centrée à mi-hauteur quand elle tient, décalée quand elle sortirait de la bande, réduite quand elle dépasse sa hauteur, à l'échelle 0,75 au plus bas et alors sortie par le bas — un cas à `H ≈ 400` (A38) | 3 |
 | Évolutions : moteur | `test/unit/signature_instance_test.dart` | `asCard` évolué : dégâts, Armure, coût, cible, recharge (plancher 1) ; description remplie et phrases verbales ; `pendingFor` ; `nextTier` 5 → mineure, 10 → majeure | 3 |
 | Évolutions : tirage et choix | `test/unit/signature_evolution_rules_test.dart` *(nouveau)* | Trois mineures ; majeures non prises ; exclusion dans les deux sens (`haste` ↔ `devastation`) ; complément par des mineures sous trois majeures ; repli quand elles sont épuisées ; `chooseSignatureEvolution` refuse sans rien écrire, monte une mineure prise, sauve | 3 |
 | **Évolutions : sauvegarde — tâche à risque** | `test/unit/save_service_test.dart` | Aller-retour exact ; signature sans évolution : aucune clé ; sauvegarde sans la clé ; id inconnu retiré et signalé ; référence mal formée ignorée ; doublons additionnés ; majeure ramenée à 1 et paire exclue, la première gardée, sans entrée au rapport ; clé d'une signature absente ignorée | 3 |
-| Écran et rideau | `test/widget/signature_evolution_screen_test.dart` *(nouveau)*, `test/widget/map_screen_test.dart` | En-tête au nom de la signature ; trois rouleaux, palier et « Niveau 1 → 2 » ; le toucher choisit et rend la carte ; rideau et nœuds fermés tant qu'une évolution attend ; draft de niveau d'abord | 3 |
+| Écran et rideau | `test/widget/signature_evolution_screen_test.dart` *(nouveau)*, `test/widget/map_screen_test.dart` | En-tête au nom de la signature ; trois rouleaux, palier, icône (sous P-4) et « Niveau 1 → 2 » ; le toucher choisit et rend la carte ; rideau et nœuds fermés tant qu'une évolution attend ; draft de niveau d'abord | 3 |
 
 ---
 
@@ -952,8 +1057,9 @@ Flame — ; le draft de départ et le tutoriel ;
 l'éditeur (`lotCard`) ; `CLAUDE.md` et `README.md` (§11) ; les tests marqués 2.
 
 **Partie 3 — les évolutions.** `flatBonus`, `extraDeltas`, `SignatureEvolutionData`, les gabarits et les six
-pools ; `SignatureInstance`, le tirage, le choix, l'attente ; la sauvegarde ; l'écran, le rideau, la tuile ; le
-descripteur de signature ; les tests marqués 3.
+pools, avec leurs icônes et les tables `evolutionIcons` / `evolutionColors` ; `SignatureInstance`, le tirage, le
+choix, l'attente ; la sauvegarde ; l'écran, son icône de rouleau (sous P-4), le rideau ; la tuile de combat, son badge, sa
+rangée d'icônes et la bande de la barre (A35 à A38) ; le descripteur de signature ; les tests marqués 3.
 
 **L'invariant** : à la fin de chaque partie, **toute donnée livrée a son moteur, son rendu et ses tests dans la
 même partie**, et la suite est verte. Après la partie 1, le jeu est celui de `0.5.6` avec cinq runes de plus à la
@@ -971,7 +1077,7 @@ donnée et celle qui touche la sauvegarde ne se mêlent pas.
 | Quoi | Où, par qui |
 |:---|:---|
 | ADR « forme C et lots par passif » — **amende ADR-101** D1 (le prédicat lit le passif actif) et **ADR-096** D1 (`classes` exactement une, absente refusée) et D2 (disponible = éligible et pourvu d'un lot) ; **complète ADR-086** (`cards/*/*.json` injecte `passive` ; la source neutre l'injecte à `null`) et ADR-109 (la carte de lot dans l'éditeur, dixième catégorie) | `memory-bank-sync` |
-| ADR « évolutions de signature » — **complète ADR-109** (`SignatureInstance.evolutions`, sauvegardées ; l'écran) et **ADR-105** D1 (la couture : `extraDeltas`, `flatBonus`) | `memory-bank-sync` |
+| ADR « évolutions de signature » — **complète ADR-109** (`SignatureInstance.evolutions`, sauvegardées ; l'écran ; le badge et les icônes de la tuile, P-2) et **ADR-105** D1 (la couture : `extraDeltas`, `flatBonus`) | `memory-bank-sync` |
 | ADR « profondeur, lot 1 » — **complète ADR-061** (multi-coups dans la stratégie ; la Puissance de statut au résolveur), **ADR-105** D1 et D8 (cinq sortes de delta ; `eligibleTargets`, `requiresCost`), **ADR-097** (Puissance × `mightRatio` par coup ; un seul bonus de statut par résolution, Q11) | `memory-bank-sync` |
 | Fiches `_rules/02-3` (catalogue de cartes), `04-00` (statuts), `03-3` (pipeline : `piercing`, barème), `03-1` (coûts), `02-2` (signatures), `03-13` (persistance), `01-00` et `03-10` (draft de départ, écran d'évolution), `07-00` (forme C) ; `_patterns/20-00` (le script ignore `cards/*/*.json`) — un minimum : le diff périme aussi `_rules/03-8`, `08-00` et `_patterns/02-1`, `03-3`, `03-4`, `05-9`, `17-00`, `19-00` | `memory-bank-sync` |
 | **P-44 lot 1 se clôt** dans `docs/ROADMAP.md` | `memory-bank-sync` |
@@ -983,7 +1089,7 @@ cartes (*Régénération d'Armure* et le Rempart, *Rage* et le Sang, *Flux de Ma
 départ à 2 cartes du lot et 3 neutres ; des cartes qui coûtent des PV ou de l'Armure, qui frappent plusieurs fois,
 qui grandissent avec l'Armure ou les PV perdus ; Vulnérable, Faiblesse et Gel qui comptent leurs points, et la
 Puissance d'altération qui les renforce ; cinq runes de plus à la fusion ; les signatures qui évoluent tous les
-cinq niveaux, sur un écran à trois rouleaux. **À dire dans la note** : six passifs quittent la sélection jusqu'à
+cinq niveaux, sur un écran à trois rouleaux, et montrent en combat leur niveau et une icône par évolution prise. **À dire dans la note** : six passifs quittent la sélection jusqu'à
 ce que leur lot de cartes arrive, dans les versions suivantes — trois en `0.5.8`, les trois derniers en `0.6.0` (D76) ; *Focalisation* disparaît ; *Forme
 Démoniaque* devient une carte du Sang ; *Trait de Glace* applique 2 Gel pour le même effet.
 

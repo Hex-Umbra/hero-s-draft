@@ -49,8 +49,9 @@ Tenu par l'orchestrateur (ADR-108 D4) : les options que la spec a écartées, pu
 | # | Question | Options | Recommandation du rédacteur | Réponse du propriétaire |
 |:---:|:---|:---|:---|:---|
 | P-1 | Le barème des statuts proportionnels : ce que vaut un point de Vulnérable, de Faiblesse, de Gel | (a) 25 % par point, plafonnés — Vulnérable 4 (+100 %), Faiblesse 2 (−50 %), Gel 3 (−75 %) ; *Trait de Glace* Gel 1 → 2, `freezing` 2 points par niveau, *Marque du Mage* Vulnérable 1 → 2, pour garder l'effet d'aujourd'hui au premier usage · (b) un point vaut l'effet d'aujourd'hui, plafond 2 · (c) sans plafond | (a), appliquée à titre provisoire (§1.4, §4.4) | **(a)**, le 03/11 — écartées : (b), le Gel n'a plus qu'un pas utile et deux points annulent l'attaque ; (c), Faiblesse et Gel à −100 % en un seul jeu. Le propriétaire transfère les charges élémentaires (P-53) au développement de `0.6.0` |
-| P-2 | L'affichage des évolutions hors de leur écran (tour 1, n° 3) | (a) aucun affichage neuf : la description porte les valeurs évoluées et la phrase des évolutions verbales · (b) un badge de niveau sur la tuile · (c) badge et icônes (brainstorm §4.4) | (a), appliquée à titre provisoire | — |
+| P-2 | L'affichage des évolutions hors de leur écran (tour 1, n° 3) | (a) aucun affichage neuf : la description porte les valeurs évoluées et la phrase des évolutions verbales · (b) un badge de niveau sur la tuile · (c) badge et icônes (brainstorm §4.4) | (a), appliquée à titre provisoire | **(c)**, le 03/11 — « rien n'est caché » ; écartées : (a), aucun affichage neuf, et (b), le badge seul. La spec est amendée (A35 à A38) puis revérifiée, deux tours |
 | P-3 | L'écho déclenche-t-il les événements « carte jouée » — *Flux de Mana*, reliques qui comptent les cartes ? (tour 1, n° 6) | (a) aucun événement : une seconde résolution seule · (b) tous les événements · (c) les passifs seulement | (a), appliquée à titre provisoire | — |
+| P-4 | L'icône de l'évolution sur chaque rouleau de l'écran d'évolution (née de P-2 (c), tour 1 de l'amendement, n° 1) | (a) l'icône sur le rouleau · (b) aucune — et rien ne relie alors une icône de tuile à son évolution | (a), appliquée à titre provisoire | — |
 
 **Arbitrages de l'orchestrateur, tour 1** — options écartées :
 
@@ -65,6 +66,15 @@ Tenu par l'orchestrateur (ADR-108 D4) : les options que la spec a écartées, pu
 | C1.7 | Formes en tranches de `scaleWith` (rédacteur, n° 11) | T | Un format ICU paramétré par la forme (filtre 6) | Deux clés par source |
 | C2.1 | Un `ratio` sous 1 dont l'inverse n'est pas entier (rédacteur, tour 2 n° 3) | T | Arrondir `per` dans le texte, qui afficherait une tranche fausse · une forme décimale qui tait l'arrondi (filtre 6) | Refusé au chargement, à 10⁻⁹ près |
 | C2.2 | Les textes de la galerie des statuts du tutoriel (rédacteur, tour 2 n° 2) | T | Des clés sœurs propres à la galerie : deux textes pour un barème (filtre 5) | Les mêmes clés `status…Hint`, sans parenthèses |
+
+**Arbitrages de l'amendement P-2 (c), 03/11** — options écartées :
+
+| # | Question | Classe | Options écartées, et le filtre qui les écarte | Retenu |
+|:---:|:---|:---:|:---|:---|
+| A35 | Où vit l'icône d'une évolution | T | Une table Dart par id d'évolution · une `IconData` construite depuis une chaîne, élaguée en release · les tables des runes · valider les noms au chargement, le modèle lirait `lib/ui/` (filtres 4, 5) | `icon` et `color` en donnée, qui nomment deux tables `const` propres, gardées par le test d'intégrité, comme les runes |
+| A36 | Le badge de niveau | T | Sous le médaillon de coût · une ligne à lui · ⌊niveau / 5⌋ · des étoiles · au bout de la ligne du nom, qui coupait les noms longs sur la tuile étroite (tour 1, n° 5) (filtre 6) | `SignatureInstance.level`, « Niv. N » au bout de la ligne du type, par `levelLabel` réécrite ; absent au niveau 0 |
+| A37 | La rangée d'icônes | T | Une colonne sous le médaillon · une rangée qui passe à la ligne · une puce « +k » · « ×2 » à côté de l'icône · aucune distinction mineure / majeure (filtres 6, 8) | Une puce par évolution distincte, ordre de prise, anneau sur une majeure, chiffre sur une mineure dès 2 ; sept puces au plus, sans débordement |
+| A38 | La hauteur de la barre | T | Centrer dans la bande (la barre montait de 60 px et perdait le miroir du bouton de fin de tour, tour 1, n° 2) · borner la description · un défilement · peindre sous le panneau (filtres 6, 7) | Centrée à mi-hauteur, décalée seulement si elle sort de la bande, réduite d'un bloc mesuré, plancher 0,75 ; au plancher, sur un écran d'environ 400 px, elle peut couvrir le haut du HUD du bas — limite acceptée par l'orchestrateur |
 
 ## Pour le Review Focus des plans
 
@@ -97,6 +107,17 @@ Remontés par la vérification de la spec — des trous de test, pas des constat
 - `test/tutorial/tutorial_prose_test.dart` : en français et en anglais, ni « divise par deux », ni « halves », ni pourcentage dans les étapes `elements` et `enemies` (tour 4).
 - Le tableau `_missingStatuses`, rendu en `:465`, une fois ses entrées non `const` : le test de widget couvre Vulnérable et Faiblesse, en plus du Gel de la galerie ; §9 range encore cette lecture dans `damage_pipeline_test.dart` (tour 4).
 
+Remontés par la vérification de l'amendement P-2 (c), le 03/11 — partie 3 :
+
+- *Célérité* porte la même `icon`, la même `color` et le même texte dans ses cinq pools : un test « même id ⇒ même icône, même couleur, même texte ».
+- Le gabarit d'éditeur de la signature (`entity_descriptor.dart:264-274`) n'a pas d'`evolutions` : avec `evolutions`, `icon` et `color` exigés, `entity_validator_test.dart:616`, `entity_descriptor_test.dart:247` et `:390` rougissent — le gabarit porte une évolution complète.
+- La barre réduite (`FittedBox`) : un toucher sur une tuile réduite joue ou arme encore, l'invite reste visible sous la colonne (S10) ; un cas à H ≈ 400.
+- Au niveau 0 et en 1280 × 800, la colonne n'a pas bougé par rapport à `0.5.6`.
+- Le badge sur la tuile étroite, à la vraie police : à vérifier à la main (tests manuels).
+- L'aller-retour de sauvegarde garde l'ordre de première prise, que la rangée lit.
+- Chaque entrée d'`evolutionIcons` et d'`evolutionColors` sert au moins une évolution.
+- Sous P-4 (a) : le paramètre de `DraftCardReel` est facultatif, le draft de niveau ne change pas.
+
 ## Le journal des tours
 
 | Tour | Mode | Vérificateur | Bloquants | Moyens | Mineurs | Rédaction | Corrigé | Contesté, tranché |
@@ -106,3 +127,5 @@ Remontés par la vérification de la spec — des trous de test, pas des constat
 | 3 | différentiel | neuf, seul | 0 | 1 | 1 | 2 | Les six corrections du tour 2 tiennent. Le moyen : le corps des étapes « Les Effets Élémentaires » et « Les Intentions Ennemies » écrit encore « divise par deux » pour le Gel ; le mineur : « sans texte à réécrire » faux sous P-1 (c) ; deux rédactions (un fait écrit trois fois, la règle du `ratio` deux fois) | **Trois tours sans convergence, constats T seulement — autonomie `continu`** : l'orchestrateur applique la correction recommandée de chacun, telle quelle (consignée à part dans le compte rendu) — §4.4, §5.2, §6.1, §6.2 (deux lignes), §3.1 —, puis un dernier tour différentiel |
 | 4 | différentiel, dernier tour de l'autonomie `continu` | neuf, seul | 0 | 0 | 2 | 1 | **Prête.** Les quatre corrections du tour 3 tiennent ; 2 mineurs (« jusqu'à un plafond » dans la prose du Gel ; §10 nomme le tableau et la prose du tutoriel en partie 1) et 1 rédaction (« reduces », pas « weakens », en anglais) corrigés au passage par l'orchestrateur | — |
 | — | réponse du propriétaire, 03/11 | — | — | — | — | — | P-1 (a) écrite en §1.2, retirée de §1.4 ; A23 et le titre de §4.4 alignés. **Pas de tour de vérification** : la réponse est la recommandation déjà appliquée. P-2 et P-3 restent ouvertes | — |
+| P-2 · 1 | différentiel, amendement P-2 (c) | neuf, seul | 0 | 2 | 7 | 2 | Les onze, par la rédactrice reprise. Les deux moyens : l'icône du rouleau verrouillée sans question (→ **P-4**, classe P) ; la barre qui montait de 60 px à tous les niveaux | n° 9 (l'icône de *Carapace*) reclassé de D en T par l'orchestrateur : les icônes relèvent du rôle `game_designer`, comme les valeurs et les noms. Tranchés à la correction et confirmés : l'échelle plancher 0,75, la constante du haut de bande sur `CombatTopBar` |
+| P-2 · 2 | différentiel, les onze corrections | neuf, seul | 0 | 0 | 6 | 6 | **Prête.** Six mineurs (l'ordre du calcul d'A38, la raison du plancher, la définition de H, le HUD du bas au plancher, `DraftChoiceCard`, le point de « Niv. ») et six rédactions corrigés au passage par la rédactrice reprise | Choix de l'orchestrateur : le plancher reste 0,75 ; le recouvrement du HUD du bas au plancher est une limite acceptée ; `levelLabel` réécrite avec le point |
