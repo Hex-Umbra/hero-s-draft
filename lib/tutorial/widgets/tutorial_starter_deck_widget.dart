@@ -64,6 +64,7 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
                       title: l10n.draftDeckLotSection(passive.getName(locale)),
                       cards: draft.lot,
                       quota: draft.lotQuota,
+                      draft: draft,
                       locale: locale,
                       l10n: l10n,
                     ),
@@ -72,6 +73,7 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
                       title: l10n.draftDeckNeutralSection,
                       cards: draft.neutrals,
                       quota: draft.neutralQuota,
+                      draft: draft,
                       locale: locale,
                       l10n: l10n,
                     ),
@@ -106,6 +108,7 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
     required String title,
     required List<CardData> cards,
     required int quota,
+    required StarterDraft draft,
     required String locale,
     required AppLocalizations l10n,
   }) {
@@ -141,15 +144,23 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
           spacing: 8,
           runSpacing: 8,
           children: cards.map((card) {
+            final isSelected = _selected.contains(card);
+            // Le plafond se lit par groupe : une carte du lot reste claire
+            // tant que le lot n'est pas plein, même si les neutres le sont.
+            final isGroupFull = !isSelected && !draft.accepts(_selected, card);
             return SizedBox(
               key: ValueKey('tutorial-pool-${card.id}'),
               width: 84,
-              child: UiCard.fromData(
-                card: card,
-                locale: locale,
-                l10n: l10n,
-                isSelected: _selected.contains(card),
-                onTap: () => _toggle(card),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: isGroupFull ? 0.4 : 1.0,
+                child: UiCard.fromData(
+                  card: card,
+                  locale: locale,
+                  l10n: l10n,
+                  isSelected: isSelected,
+                  onTap: () => _toggle(card),
+                ),
               ),
             );
           }).toList(),

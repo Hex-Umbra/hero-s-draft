@@ -132,8 +132,8 @@ void main() {
 
       // L'etape enseigne un choix (spec P-43 E2, A18) : SUIVANT attend la
       // rune. La carte semee est la premiere du deck dont la fusion en offre
-      // une. Tant que l'offre est
-      // pendante, le bouton n'est pas SUIVANT : il reste a l'etat AGIR.
+      // une. Tant que l'offre est pendante, le bouton n'est pas SUIVANT : il
+      // reste a l'etat AGIR.
       expect(find.text('SUIVANT'), findsNothing);
       expect(find.text('AGIR'), findsOneWidget);
       await tester.tap(find

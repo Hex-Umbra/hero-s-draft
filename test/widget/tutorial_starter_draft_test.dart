@@ -110,7 +110,20 @@ void main() {
     final engine = await _pump(tester);
     final draft = engine.fixtures.starterDraft(engine.mockState.activePassive?.id);
 
-    await _tapAll(tester, [...draft.lot.take(3), ...draft.neutrals.take(4)]);
+    double opacityOf(CardData card) => tester
+        .widget<AnimatedOpacity>(find.descendant(
+          of: find.byKey(ValueKey('tutorial-pool-${card.id}')),
+          matching: find.byType(AnimatedOpacity),
+        ))
+        .opacity;
+
+    // Le lot plein se grise, les neutres pas encore pleins restent clairs.
+    await _tapAll(tester, draft.lot.take(3));
+    expect(opacityOf(draft.lot[2]), 0.4);
+    expect(opacityOf(draft.lot[0]), 1.0);
+    expect(opacityOf(draft.neutrals.first), 1.0);
+
+    await _tapAll(tester, draft.neutrals.take(4));
 
     expect(find.text('2/2'), findsOneWidget);
     expect(find.text('3/3'), findsOneWidget);
