@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/cost_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -204,6 +205,15 @@ void main() {
         expect(EffectResolver.canAfford(card(armor: 4), hero()), isTrue);
         setHero(armor: 3);
         expect(EffectResolver.canAfford(card(armor: 4), hero()), isFalse);
+      });
+
+      test('missingFor nomme la seule ressource qui manque', () {
+        setHero(mana: 3, pv: 4, armor: 2);
+        expect(hero().missingFor(mana: 1, hp: 4, armor: 3),
+            {CostResource.hp, CostResource.armor});
+        expect(hero().missingFor(mana: 4, hp: 3, armor: 2),
+            {CostResource.mana});
+        expect(hero().missingFor(mana: 3, hp: 3, armor: 2), isEmpty);
       });
 
       test('le mana d abord : sans mana, refusee malgre PV et Armure', () {

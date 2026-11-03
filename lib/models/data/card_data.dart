@@ -214,6 +214,12 @@ class CardEffect {
     );
   }
 
+  /// La part de la Puissance [damageBonus] que reçoit chaque coup : arrondie
+  /// vers le bas, avec la tolérance de [ScaleWith.termFor] (A13). Lue par la
+  /// résolution, le badge et l'infobulle.
+  int mightPerHit(int damageBonus) =>
+      (damageBonus * mightRatio + 1e-9).floor();
+
   /// Cet effet à la valeur [value], tous ses autres champs gardés.
   CardEffect copyWithValue(int value) => CardEffect(
         type: type,

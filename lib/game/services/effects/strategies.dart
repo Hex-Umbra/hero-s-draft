@@ -48,9 +48,7 @@ class DamageEffectStrategy implements EffectStrategy {
         final heroStats = runController.currentState.heroStats;
         // La part de Puissance du coup, arrondie vers le bas (A13).
         final might =
-            (heroStats.damageBonusFor(card.data.type) * effect.mightRatio +
-                    1e-9)
-                .floor();
+            effect.mightPerHit(heroStats.damageBonusFor(card.data.type));
         final initialDamage = scaledValue + might;
         dealt += _strike(
           combatController,

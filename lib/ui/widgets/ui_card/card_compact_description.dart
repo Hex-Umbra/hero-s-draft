@@ -67,6 +67,14 @@ class CardCompactDescription extends StatelessWidget {
                   effect.statusId == 'might_regen' ||
                   effect.statusId == 'armor_regen'));
       final shouldDouble = isAllEnemies && !isPlayerEffect;
+      // Un multi-coups dit `valeur×coups` ; la rune garde sa place entre les deux.
+      final hitsText =
+          effect.type == 'damage' && effect.hits >= 2 ? '×${effect.hits}' : '';
+      const valueStyle = TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      );
 
       final effectMainRow = Row(
         mainAxisSize: MainAxisSize.min,
@@ -92,14 +100,7 @@ class CardCompactDescription extends StatelessWidget {
           ],
           const SizedBox(width: 4),
           if (bonusValue > 0) ...[
-            Text(
-              '$baseValue',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('$baseValue', style: valueStyle),
             Text(
               ' +$bonusValue🔨',
               style: const TextStyle(
@@ -108,15 +109,9 @@ class CardCompactDescription extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (hitsText.isNotEmpty) Text(hitsText, style: valueStyle),
           ] else ...[
-            Text(
-              '${baseValue + bonusValue}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('${baseValue + bonusValue}$hitsText', style: valueStyle),
           ],
         ],
       );

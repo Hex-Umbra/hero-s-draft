@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../game/services/card_rule_texts.dart';
 import '../../../game/services/proportional_status.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
@@ -314,6 +315,12 @@ String buildDetailedDescription(
     final costHeader = activeLocale == 'fr' ? '💎 Coût : ' : '💎 Cost: ';
     details += '$costHeader$cost Mana\n';
   }
+  // Les coûts en PV et en Armure, sous la ligne de mana.
+  if (data != null) {
+    for (final line in CardRuleTexts.extraCosts(l10n, data)) {
+      details += '  $line\n';
+    }
+  }
 
   // Add elemental header if applicable
   String desc = details.isNotEmpty ? '$details\n' : '';
@@ -341,11 +348,12 @@ String buildDetailedDescription(
     final scaledValue = effect.value;
 
     if (effect.type == 'damage') {
-      if (target == 'Tous les ennemis' || target == 'allEnemies') {
-        desc += '${l10n.cardDescDamageAll(scaledValue)}\n';
-      } else {
-        desc += '${l10n.cardDescDamage(scaledValue)}\n';
-      }
+      desc += '${CardRuleTexts.damage(
+        l10n,
+        amount: scaledValue,
+        hits: effect.hits,
+        allEnemies: target == 'Tous les ennemis' || target == 'allEnemies',
+      )}\n';
     }
     if (effect.type == 'heal') desc += '${l10n.cardDescHeal(scaledValue)}\n';
     if (effect.type == 'armor') {
@@ -409,6 +417,10 @@ String buildDetailedDescription(
               : '  (Takes extra damage equal to Shock on every hit)\n';
           break;
       }
+    }
+    final scale = effect.scaleWith;
+    if (scale != null) {
+      desc += '  (${CardRuleTexts.scale(l10n, scale)})\n';
     }
   }
 

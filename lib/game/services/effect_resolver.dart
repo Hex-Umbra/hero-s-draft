@@ -232,8 +232,11 @@ class EffectResolver {
   }) {
     final scale = effect.scaleWith;
     if (scale == null) return 0;
-    final target =
-        combat.enemies.where((e) => e.id == targetId).firstOrNull?.stats;
+    // Une cible morte ou absente ne nourrit rien (compte rendu §4).
+    final target = combat.enemies
+        .where((e) => e.id == targetId && e.stats.currentPv > 0)
+        .firstOrNull
+        ?.stats;
     final quantity = switch (scale.source) {
       ScaleSource.armor => hero.armure,
       ScaleSource.missingHp => hero.maxPv - hero.currentPv,

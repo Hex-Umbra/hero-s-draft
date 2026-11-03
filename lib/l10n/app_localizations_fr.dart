@@ -1048,4 +1048,79 @@ class AppLocalizationsFr extends AppLocalizations {
   String statusFreezeHint(int percent, int max) {
     return '−$percent % à la prochaine attaque par point, jusqu\'à −$max %';
   }
+
+  @override
+  String cardCostHp(int amount) {
+    return 'Coûte $amount PV';
+  }
+
+  @override
+  String cardCostArmor(int amount) {
+    return 'Coûte $amount Armure';
+  }
+
+  @override
+  String cardDescDamageHits(int amount, int hits) {
+    return 'Inflige $amount dégâts $hits fois.';
+  }
+
+  @override
+  String cardScaleArmor(String ratio) {
+    return '+$ratio par point d\'Armure';
+  }
+
+  @override
+  String cardScaleArmorPer(int per) {
+    return '+1 par tranche de $per d\'Armure';
+  }
+
+  @override
+  String cardScaleMissingHp(String ratio) {
+    return '+$ratio par PV manquant';
+  }
+
+  @override
+  String cardScaleMissingHpPer(int per) {
+    return '+1 par tranche de $per PV manquants';
+  }
+
+  @override
+  String cardScaleCardsPlayed(String ratio) {
+    return '+$ratio par carte jouée ce tour';
+  }
+
+  @override
+  String cardScaleCardsPlayedPer(int per) {
+    return '+1 par tranche de $per cartes jouées ce tour';
+  }
+
+  @override
+  String cardScaleEnemiesAlive(String ratio) {
+    return '+$ratio par ennemi';
+  }
+
+  @override
+  String cardScaleEnemiesAlivePer(int per) {
+    return '+1 par tranche de $per ennemis';
+  }
+
+  @override
+  String cardScaleTargetStatus(String ratio, String status) {
+    return '+$ratio par point de $status de la cible';
+  }
+
+  @override
+  String cardScaleTargetStatusPer(int per, String status) {
+    return '+1 par tranche de $per points de $status de la cible';
+  }
+
+  @override
+  String cardScaleTargetMissingHp(String ratio) {
+    return '+$ratio par PV manquant de la cible';
+  }
+
+  @override
+  String cardScaleTargetMissingHpPer(int per) {
+    return '+1 par tranche de $per PV manquants de la cible';
+  }
 }

@@ -277,5 +277,20 @@
   "signatures": "Signatures",
   "statusWeaknessHint": "−{percent} % de dégâts infligés par point, jusqu'à −{max} %",
   "statusVulnerableHint": "+{percent} % de dégâts subis par point, jusqu'à +{max} %",
-  "statusFreezeHint": "−{percent} % à la prochaine attaque par point, jusqu'à −{max} %"
+  "statusFreezeHint": "−{percent} % à la prochaine attaque par point, jusqu'à −{max} %",
+  "cardCostHp": "Coûte {amount} PV",
+  "cardCostArmor": "Coûte {amount} Armure",
+  "cardDescDamageHits": "Inflige {amount} dégâts {hits} fois.",
+  "cardScaleArmor": "+{ratio} par point d'Armure",
+  "cardScaleArmorPer": "+1 par tranche de {per} d'Armure",
+  "cardScaleMissingHp": "+{ratio} par PV manquant",
+  "cardScaleMissingHpPer": "+1 par tranche de {per} PV manquants",
+  "cardScaleCardsPlayed": "+{ratio} par carte jouée ce tour",
+  "cardScaleCardsPlayedPer": "+1 par tranche de {per} cartes jouées ce tour",
+  "cardScaleEnemiesAlive": "+{ratio} par ennemi",
+  "cardScaleEnemiesAlivePer": "+1 par tranche de {per} ennemis",
+  "cardScaleTargetStatus": "+{ratio} par point de {status} de la cible",
+  "cardScaleTargetStatusPer": "+1 par tranche de {per} points de {status} de la cible",
+  "cardScaleTargetMissingHp": "+{ratio} par PV manquant de la cible",
+  "cardScaleTargetMissingHpPer": "+1 par tranche de {per} PV manquants de la cible"
 }

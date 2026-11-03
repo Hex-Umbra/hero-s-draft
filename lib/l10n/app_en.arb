@@ -769,5 +769,98 @@
       "percent": { "type": "int" },
       "max": { "type": "int" }
     }
+  },
+  "cardCostHp": "Costs {amount} HP",
+  "@cardCostHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardCostArmor": "Costs {amount} Block",
+  "@cardCostArmor": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescDamageHits": "Deal {amount} damage {hits} times.",
+  "@cardDescDamageHits": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "hits": { "type": "int" }
+    }
+  },
+  "cardScaleArmor": "+{ratio} per point of Block",
+  "@cardScaleArmor": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleArmorPer": "+1 per {per} Block",
+  "@cardScaleArmorPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleMissingHp": "+{ratio} per missing HP",
+  "@cardScaleMissingHp": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleMissingHpPer": "+1 per {per} missing HP",
+  "@cardScaleMissingHpPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleCardsPlayed": "+{ratio} per card played this turn",
+  "@cardScaleCardsPlayed": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleCardsPlayedPer": "+1 per {per} cards played this turn",
+  "@cardScaleCardsPlayedPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleEnemiesAlive": "+{ratio} per enemy",
+  "@cardScaleEnemiesAlive": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleEnemiesAlivePer": "+1 per {per} enemies",
+  "@cardScaleEnemiesAlivePer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleTargetStatus": "+{ratio} per point of {status} on the target",
+  "@cardScaleTargetStatus": {
+    "placeholders": {
+      "ratio": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "cardScaleTargetStatusPer": "+1 per {per} points of {status} on the target",
+  "@cardScaleTargetStatusPer": {
+    "placeholders": {
+      "per": { "type": "int" },
+      "status": { "type": "String" }
+    }
+  },
+  "cardScaleTargetMissingHp": "+{ratio} per missing HP on the target",
+  "@cardScaleTargetMissingHp": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleTargetMissingHpPer": "+1 per {per} missing HP on the target",
+  "@cardScaleTargetMissingHpPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
   }
 }

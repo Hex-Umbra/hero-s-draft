@@ -1717,6 +1717,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'−{percent}% to the next attack per point, down to −{max}%'**
   String statusFreezeHint(int percent, int max);
+
+  /// No description provided for @cardCostHp.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs {amount} HP'**
+  String cardCostHp(int amount);
+
+  /// No description provided for @cardCostArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs {amount} Block'**
+  String cardCostArmor(int amount);
+
+  /// No description provided for @cardDescDamageHits.
+  ///
+  /// In en, this message translates to:
+  /// **'Deal {amount} damage {hits} times.'**
+  String cardDescDamageHits(int amount, int hits);
+
+  /// No description provided for @cardScaleArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per point of Block'**
+  String cardScaleArmor(String ratio);
+
+  /// No description provided for @cardScaleArmorPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} Block'**
+  String cardScaleArmorPer(int per);
+
+  /// No description provided for @cardScaleMissingHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per missing HP'**
+  String cardScaleMissingHp(String ratio);
+
+  /// No description provided for @cardScaleMissingHpPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} missing HP'**
+  String cardScaleMissingHpPer(int per);
+
+  /// No description provided for @cardScaleCardsPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per card played this turn'**
+  String cardScaleCardsPlayed(String ratio);
+
+  /// No description provided for @cardScaleCardsPlayedPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} cards played this turn'**
+  String cardScaleCardsPlayedPer(int per);
+
+  /// No description provided for @cardScaleEnemiesAlive.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per enemy'**
+  String cardScaleEnemiesAlive(String ratio);
+
+  /// No description provided for @cardScaleEnemiesAlivePer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} enemies'**
+  String cardScaleEnemiesAlivePer(int per);
+
+  /// No description provided for @cardScaleTargetStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per point of {status} on the target'**
+  String cardScaleTargetStatus(String ratio, String status);
+
+  /// No description provided for @cardScaleTargetStatusPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} points of {status} on the target'**
+  String cardScaleTargetStatusPer(int per, String status);
+
+  /// No description provided for @cardScaleTargetMissingHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per missing HP on the target'**
+  String cardScaleTargetMissingHp(String ratio);
+
+  /// No description provided for @cardScaleTargetMissingHpPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} missing HP on the target'**
+  String cardScaleTargetMissingHpPer(int per);
 }
 
 class _AppLocalizationsDelegate

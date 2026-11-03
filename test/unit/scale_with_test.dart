@@ -302,6 +302,35 @@ void main() {
       expect(enemy().currentPv, 60 - 5);
     });
 
+    test('une cible morte ne nourrit ni targetStatus ni targetMissingHp', () {
+      int term(CardEffect effect) => EffectResolver.scaleTerm(
+            effect,
+            hero: hero(),
+            combat: combat.currentState,
+            targetId: enemyId,
+          );
+      final missing = grows(ScaleSource.targetMissingHp, 1);
+      final vulnerable =
+          grows(ScaleSource.targetStatus, 1, statusId: 'vulnerable');
+      final marked = EffectResolver.createStatus('vulnerable', 2, 2)!;
+
+      fight([foe(pv: 0)]);
+      expect(term(missing), 0);
+      fight([foe(pv: 60)]);
+      expect(term(missing), 40);
+
+      final dead = foe(pv: 0);
+      fight([
+        dead.copyWith(stats: dead.stats.copyWith(statuses: [marked])),
+      ]);
+      expect(term(vulnerable), 0);
+      final alive = foe();
+      fight([
+        alive.copyWith(stats: alive.stats.copyWith(statuses: [marked])),
+      ]);
+      expect(term(vulnerable), 2);
+    });
+
     test('la rarete ne multiplie pas le terme', () {
       setHero((h) => h.copyWith(armure: 4));
       play([grows(ScaleSource.armor, 1, value: 5)],

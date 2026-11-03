@@ -8,6 +8,7 @@ import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import '../services/card_rule_texts.dart';
 import '../services/effect_resolver.dart';
 import '../services/proportional_status.dart';
 import '../systems/power_rules.dart';
@@ -252,6 +253,21 @@ class CardComponent extends PositionComponent
     }
   }
 
+  /// Le terme de croissance de [effect] sur les sources du héros, tel que le
+  /// moteur le lirait maintenant ; 0 sans run ni combat. Une source de cible,
+  /// sans cible avant le jeu, vaut 0. Lu par le badge et l'infobulle.
+  int heroScaleTerm(CardEffect effect) {
+    final heroStats = game.currentRunState?.heroStats;
+    final combat = game.currentCombatState;
+    if (heroStats == null || combat == null) return 0;
+    return EffectResolver.scaleTerm(
+      effect,
+      hero: heroStats,
+      combat: combat,
+      targetId: null,
+    );
+  }
+
   String buildDetailedDescription() {
     String desc = '';
 
@@ -307,6 +323,11 @@ class CardComponent extends PositionComponent
     // 4. Cost
     final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
     details += '$costHeader${card.currentCost} Mana\n';
+    // Les coûts en PV et en Armure, sous la ligne de mana ; sans contexte, la
+    // traduction est vide et la ligne ne s'écrit pas.
+    details += getTranslation((l) => CardRuleTexts.extraCosts(l, card.data)
+        .map((line) => '  $line\n')
+        .join());
 
     desc += '$details\n';
 
@@ -336,14 +357,21 @@ class CardComponent extends PositionComponent
     for (final effect in card.effective.effects) {
       final scaledValue = effect.value;
       if (effect.type == 'damage') {
-        final totalDmg = scaledValue + damageBonus;
-        if (card.data.target == CardTarget.allEnemies) {
-          desc +=
-              '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
-        } else {
-          desc +=
-              '• ${getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
-        }
+        // La valeur jouée, le terme de croissance des sources du héros, puis
+        // la part de Puissance de chaque coup.
+        final totalDmg = scaledValue +
+            heroScaleTerm(effect) +
+            effect.mightPerHit(damageBonus);
+        final line = getTranslation(
+          (l) => CardRuleTexts.damage(
+            l,
+            amount: totalDmg,
+            hits: effect.hits,
+            allEnemies: card.data.target == CardTarget.allEnemies,
+          ),
+          fallback: 'Inflige $totalDmg dégâts.',
+        );
+        desc += '• $line\n';
       }
       if (effect.type == 'heal') {
         desc +=
@@ -419,6 +447,13 @@ class CardComponent extends PositionComponent
                 : '  (Takes extra damage equal to Shock on every hit)\n';
             break;
         }
+      }
+      // La croissance de l'effet, en parenthèse ; vide sans contexte, la ligne
+      // ne s'écrit pas.
+      final scale = effect.scaleWith;
+      if (scale != null) {
+        final text = getTranslation((l) => CardRuleTexts.scale(l, scale));
+        if (text.isNotEmpty) desc += '  ($text)\n';
       }
     }
 
