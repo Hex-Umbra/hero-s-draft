@@ -27,6 +27,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 | P-1 | Le barème des statuts proportionnels | P | (a) 25 % par point, plafonds 4 / 2 / 3 (propriétaire, 03/11) | — |
 | P-2 · P-4 | L'affichage des évolutions ; l'icône sur le rouleau | P | (c) badge et icônes, « rien n'est caché » ; (a) l'icône sur le rouleau (propriétaire, 03/11) | — |
 | P-3 | L'écho et les événements « carte jouée » | P | (a) aucun événement (propriétaire, 03/11) | — |
+| PN12 · PN13 | Les phrases d'évolution ; la couleur du badge | P | (d), une option du propriétaire : en combat, des icônes avec leur valeur à la place du texte, la description déroulée en liste par appui long ; l'ambre (propriétaire, 03/11, devant des [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx)) | — |
 | D76 | Une vague pour les charges élémentaires | D | Vague 7, `0.5.9` ; la tranche 3 en vague 8 (propriétaire, 03/11 ; [étude](../../possible_upgrades/03-11-2026_charges_elementaires_Opus5.md)) | — |
 | A1-A5 | Forme C : `passive` seul ; seconde source qui l'injecte ; `isOfferable(p)` ; masquage mesuré sur le registre ; `classes` à une classe | T | spec §1.3 | 5 |
 | A6-A10 | `feeds` à préfixes ; validateur `costs.armor` par la `statRule` ; D17 au chargement ; forme de `costs` ; une règle `canAfford` | T | spec §1.3 | 1, 4, 5 |
@@ -34,6 +35,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 | A17-A23 | `splash` avant pipeline ; les deux vols de vie ; écho seconde résolution ; `transfusion` après l'écho ; `eligibleTargets` ; *Transcendance* et la saturation ; `freezing` sans plafond | T | spec §1.3 | 1, 4, 6, 7 |
 | A24-A34 | Modèle `deltas` des évolutions ; gabarits ; mineures en repli ; attente dérivée ; `signatureEvolutions` ; quotas ; tutoriel ; `lotCard` ; rendu ; D38 et signatures ; découpage | T | spec §1.3 | 1, 5, 6, 7, 8 |
 | A35-A38 | Icône en donnée ; badge sur la ligne du type ; rangée d'icônes ; barre centrée, réduite, plancher 0,75 | T | spec §1.3 | 4, 5, 6, 7 |
+| A25 · A39-A42 | Hors combat, la jointure (a) de PN12 ; l'icône d'un effet par sa sorte, `effect_icons.json` ; la bande, trois par ligne ; une phrase par sorte, 13 clés ; l'appui long en calque | T | spec §1.3 | 4, 5, 6, 8 |
 | C1.1-C1.3 | Q11 à la lettre, l'écho a son bonus ; *Transcendance* sur les runes neuves ; un coût touche `feeds` (lecture de D45) | T | orchestrateur, tour 1 | 1, 6 |
 | C1.4-C2.2 | Plancher de D33 ; sauvegarde sans rapport ; clés du draft ; tranches de `scaleWith` ; ratio sous 1 ; textes de la galerie | T | rédactrice, confirmés | 1, 5, 6 |
 | PL1-PL8 | Plan, partie 1 : id `lifesteal` exclu nommément ; écho et cible morte ; infobulle Flame sans contexte ; `statusId` ; son de refus ; dégâts « infligés » ; galerie ; tests de Q11 | T | rédacteur, confirmés | 1, 5, 6, 8 |
@@ -76,6 +78,8 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 - **Pour la partie 3** : `ProportionalStatus`, importé par `enemy_instance.dart` depuis `lib/game/` (Review Focus ou file) ; la règle de mana propre à `signature_bar.dart:114`.
 
 ## 5. Les leçons
+
+- **Autonomie `continu`, amendement PN12 (d) et PN13 (c) de la spec** : trois tours sans convergence (0/5/9/6, 0/2/6/5, 0/3/5/5), constats de classe T seulement ; l'orchestrateur a appliqué les corrections recommandées du troisième (la face Flame rendue publique avec son type, le renversement de P-6 réécrit, les conséquences de P-5 sur le calque, cinq mineurs, cinq rédactions) ; le dernier tour différentiel rend **prête** (0/0/4/6, corrigés au passage).
 
 1. **Les trois amendements de méthode du propriétaire** (prompt de lancement) : le tri des mineurs visibles à chaque tâche d'interface (S2), la tâche de vérification jouée par l'orchestrateur (S5), le contenu des écrans neufs tranché avant la vague — *bilan en fin de vague*.
 
