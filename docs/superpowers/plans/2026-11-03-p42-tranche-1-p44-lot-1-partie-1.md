@@ -158,7 +158,7 @@ Groupe `la vue jouee` (cartes construites par le constructeur, registre de runes
 - `targetStatus et targetMissingHp refuses hors d une cible unique` — `CardData.fromJson` d'une carte `allEnemies`, puis `self`, et `SignatureData.fromJson` d'une signature `allEnemies` : clé `scaleWith.source`.
 - `toJson ecrit scaleWith, et l aller-retour le garde` — `CardEffect.fromJson(e.toJson())` rend même source, ratio, statusId.
 
-`test/unit/card_catalog_test.dart` *(nouveau ; sur `loadGameDataRegistry(rootBundle)`, la partie 2 y ajoutera D17, D45, D50)* :
+`test/unit/card_catalog_test.dart` *(nouveau ; sur `loadGameDataRegistry(rootBundle)` ; la Task 7 y ajoute le garde de D17 sur les cartes livrées, la partie 2 le restreindra aux neutres et ajoutera D45, D50)* :
 - `D38 : la somme hits x mightRatio ne depasse pas le cout en mana + 1, cartes et signatures` — pour chaque `registry.cards` (coût `cost`) et chaque `registry.signatures` (coût `cost`, A33), Σ sur les effets `damage` de `hits × mightRatio` ≤ coût + 1 (à 10⁻⁹ près) ; la liste des fautives est vide.
 - `D38 : un effet a plusieurs coups declare mightRatio < 1` — aucun effet de carte ni de signature à `hits ≥ 2` et `mightRatio ≥ 1`.
 
@@ -510,7 +510,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 - `jet reussi : les effets se resolvent une seconde fois, sans rien payer` — `strike_basic` + `echo:1`, `ScriptedRandom([0])`, mana 9 : ennemi à 88, mana 8.
 - `jet manque : une seule resolution` — `ScriptedRandom([99])` : ennemi à 94.
 - `un seul jet : jamais de troisieme resolution` — `echo:7` (105 %), `ScriptedRandom([0, 0])` : ennemi à 88.
-- `la cible meurt a la premiere resolution : les degats se perdent, les effets sur soi se rejouent` — deux ennemis, la cible à 6 PV et un second, vivant, à 100 PV ; Attaque `singleEnemy` `[damage 6, armor 3]` + `echo:7` sur la cible : elle est à 0, **le second reste à 100** (l'écho vise la même cible, jamais une autre), héros à 6 Armure (décision T, voir le compte rendu : « sur la même cible si elle vit » vise les effets qui la frappent ; un effet sur soi se rejoue).
+- `la cible meurt a la premiere resolution : les degats se perdent, les effets sur soi se rejouent` — deux ennemis, lus par index (l'aide `enemy()` du fichier suppose un seul ennemi), la cible à 6 PV et un second, vivant, à 100 PV ; Attaque `singleEnemy` `[damage 6, armor 3]` + `echo:7` sur la cible : elle est à 0, **le second reste à 100** (l'écho vise la même cible, jamais une autre), héros à 6 Armure (décision T, voir le compte rendu : « sur la même cible si elle vit » vise les effets qui la frappent ; un effet sur soi se rejoue).
 - `l echo ne declenche aucun evenement carte jouee` — le Mage sous le `mana_flux` livré (seuil 3), deux Compétences `self` `[armor 1]` à coût 0 portant `echo:7`, mises en main et jouées par `combat.applyPlayerCardPlay` : mana inchangé (quatre Compétences comptées l'auraient monté de 1), `cardsPlayedThisTurn` 2, défausse de 2 cartes (P-3 (a)).
 
 `effect_resolver_test.dart`, groupe `Q11` :
@@ -535,7 +535,7 @@ Expected: échec — `echoChance`, `echo.json` et le paramètre `random` n'exist
 
 - [ ] **Step 4: Lancer les tests, constater le succès**
 
-Run: la commande du Step 2, plus `test/unit/real_bundle_load_test.dart test/unit/entity_id_convention_test.dart test/unit/rune_ids_in_code_test.dart test/unit/referential_integrity_test.dart test/widget/deck_screen_test.dart`
+Run: la commande du Step 2, plus `test/unit/real_bundle_load_test.dart test/unit/entity_id_convention_test.dart test/unit/rune_ids_in_code_test.dart test/unit/referential_integrity_test.dart test/widget/deck_screen_test.dart test/unit/content_editor/shipped_entities_round_trip_test.dart`
 Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
@@ -555,7 +555,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 **Files:**
 - Create: `lib/game/systems/cost_rules.dart`, `assets/data/forge_upgrades/transfusion.json`, `test/unit/card_costs_test.dart`
 - Modify: `lib/models/data/card_data.dart:105-211`, `lib/game/services/effect_resolver.dart:103-155`, `lib/game/controllers/run/player_stats_manager.dart:500-522`, `lib/game/controllers/run_controller.dart:557-560`, `lib/game/components/card_component.dart:53-57`, `lib/models/data/card_delta.dart`, `lib/models/effective_card.dart`, `lib/models/data/forge_upgrade_data.dart`, `lib/game/services/forge_rune_rules.dart:67-111`, `lib/ui/widgets/forge/rune_style.dart`, `lib/services/content_editor/entity_descriptor.dart:361-428`
-- Test: `test/unit/card_costs_test.dart`, `test/unit/card_catalog_test.dart`, `test/unit/forge_upgrade_data_test.dart`, `test/unit/rune_eligibility_test.dart`, `test/unit/content_editor/entity_descriptor_test.dart`, `test/unit/forge_upgrades_catalog_test.dart`, `test/unit/real_bundle_load_test.dart:101-104`, et les comptes
+- Test: `test/unit/card_costs_test.dart`, `test/unit/card_catalog_test.dart`, `test/unit/forge_upgrade_data_test.dart`, `test/unit/rune_eligibility_test.dart`, `test/unit/content_editor/entity_descriptor_test.dart`, `test/unit/forge_upgrades_catalog_test.dart`, `test/unit/real_bundle_load_test.dart:101-104`, `test/unit/referential_integrity_test.dart:16-23`, et les comptes
 
 **Interfaces:**
 - Consumes : `_resolveEffects`, `resolveCard(…, {Random? random})`, `EffectiveCard.echoChance` (Tasks 2, 6).
@@ -868,7 +868,7 @@ void main() {
 }
 ```
 
-Les quatre autres :
+Les cinq autres :
 - `forge_upgrade_data_test.dart` — `requiresCost n admet que hp ; refundHpCost se lit et s ecrit ; {val} Transfusion vaut 50` : `'armor'` et `'mana'` → clé `requiresCost` ; « Rend 50 % du coût en PV ».
 - `rune_eligibility_test.dart` — `requiresCost hp : Transfusion refuse une carte sans cout en PV` : une Attaque peu commune à `hpCost` 3 acceptée, la même à `hpCost` 0 refusée ; et `requiresMinCost lit le mana : une carte a 0 mana et 4 Armure ne recoit ni Allege ni Econome` (spec §4.1, la ligne `cheap` : *Percée*, rare, à `cost` 0 et `armorCost` 4).
 - `card_catalog_test.dart` — `aucune carte livree ne porte hpCost ni armorCost` : sur le registre livré, aucune `registry.cards` à `hpCost` ou `armorCost` non nul (D17 et l'invariant de spec §10 ; la partie 2 restreindra le test aux neutres, quand les lots en porteront).
