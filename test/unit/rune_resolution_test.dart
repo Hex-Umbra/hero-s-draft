@@ -410,12 +410,19 @@ void main() {
     });
 
     test('un critique se tire pour chaque cible', () {
-      run.updateState(run.currentState
-          .copyWith(heroStats: hero().copyWith(critChance: 100)));
+      // Le heros n'a aucun critique : seul le bonus de Precis (20 niveaux de
+      // 5 points, soit 100 %) peut en donner, et il doit atteindre chaque
+      // cible touchee.
+      expect(hero().effectiveCritChance, 0);
       playOnFirst(
           card('strike_basic', runes: const ['precise:20', 'splash:1']));
       // La base de l'eclaboussure, 2, est prise avant le pipeline : 2 x 1,5.
       expect(pvs(), [100 - 9, 100 - 3, 100 - 3]);
+
+      // Sans la rune, aucune des trois cibles ne critique.
+      faceEnemies();
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 98]);
     });
   });
 
