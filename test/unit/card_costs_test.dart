@@ -20,10 +20,11 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  /// Une carte à `costs` telle qu'un fichier la porte. La partie 2 ajoutera
-  /// ici `passive` : A8 refusera un coût en PV sur une neutre.
+  /// Une carte à `costs` telle qu'un fichier la porte. Elle porte `passive` :
+  /// A8 refuse un coût en PV ou en Armure sur une neutre.
   Map<String, dynamic> costed(Object? costs) => {
         'id': 'test_costs',
+        'passive': 'rage',
         'type': 'attack',
         'target': 'singleEnemy',
         'effects': [
@@ -40,6 +41,24 @@ void main() {
       expect(
         () => CardData.fromJson({...costed({'mana': 0, 'hp': 3}), 'cost': 1}),
         refused('"cost" et "costs"'),
+      );
+    });
+
+    test('A8 : un cout en PV ou en Armure sur une neutre est refuse', () {
+      expect(
+        () => CardData.fromJson(costed({'mana': 0, 'hp': 3})..remove('passive')),
+        refused('passive'),
+      );
+      expect(
+        () => CardData.fromJson(costed({'mana': 0, 'armor': 3})..remove('passive')),
+        refused('passive'),
+      );
+    });
+
+    test('ni cost ni costs : refuse, nomme', () {
+      expect(
+        () => CardData.fromJson(costed(null)..remove('costs')),
+        refused('"cost" ou "costs"'),
       );
     });
 

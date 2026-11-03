@@ -55,6 +55,17 @@ void main() {
           _refusing('category'));
     });
 
+    test('toJson ecrit passive s il n est pas nul, et l aller-retour le garde ; '
+        'une neutre ne l ecrit pas', () {
+      final data = CardData.fromJson({..._json(), 'passive': 'rage'});
+      expect(data.toJson()['passive'], 'rage');
+
+      final instance = CardInstance(data: data);
+      expect(CardInstance.fromJson(instance.toJson()).data.passive, 'rage');
+
+      expect(CardData.fromJson(_json()).toJson().containsKey('passive'), isFalse);
+    });
+
     test('toJson n ecrit ni heroClass ni category, et une CardInstance sauvee se relit',
         () {
       final data = CardData.fromJson(_json());

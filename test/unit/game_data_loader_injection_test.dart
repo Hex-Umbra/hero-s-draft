@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 // `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
 // les reexporte : pas d import `dart:typed_data`, comme dans
@@ -139,6 +141,61 @@ void main() {
           })),
         );
       });
+    });
+  });
+
+  group('la forme C (A2)', () {
+    const minimal = '{"cost": 1, "type": "skill", "target": "self", "effects": []}';
+
+    Future<(GameDataLoader, List<CardData>)> load(Map<String, String> files) async {
+      final loader = GameDataLoader(FakeBundle(files));
+      return (loader, await loader.loadAll<CardData>(cardSources));
+    }
+
+    Matcher refusing(String key, String path) => throwsA(isA<Exception>().having(
+        (e) => '$e', 'message', allOf(contains(key), contains(path))));
+
+    test('cards/<passif>/<id>.json injecte passive, cards/<id>.json l injecte a null',
+        () async {
+      final (loader, cards) = await load({
+        'assets/data/cards/mana_flux/kindle.json': minimal,
+        'assets/data/cards/strike.json': minimal,
+      });
+
+      loader.throwIfFailed();
+      expect(
+        {for (final c in cards) (c.id, c.passive)},
+        {('kindle', 'mana_flux'), ('strike', null)},
+      );
+    });
+
+    test('passive declare dans une carte de lot est refuse, nomme', () async {
+      const path = 'assets/data/cards/mana_flux/kindle.json';
+      final (loader, _) = await load({
+        path:
+            '{"passive": "mana_flux", "cost": 1, "type": "skill", "target": "self", "effects": []}',
+      });
+
+      expect(loader.throwIfFailed, refusing('passive', path));
+    });
+
+    test('une neutre qui declare passive, meme a null, est refusee', () async {
+      const path = 'assets/data/cards/strike.json';
+      final (loader, _) = await load({
+        path:
+            '{"passive": null, "cost": 1, "type": "skill", "target": "self", "effects": []}',
+      });
+
+      expect(loader.throwIfFailed, refusing('passive', path));
+    });
+
+    test('un meme id sous deux dossiers est refuse', () async {
+      final (loader, _) = await load({
+        'assets/data/cards/strike.json': minimal,
+        'assets/data/cards/rage/strike.json': minimal,
+      });
+
+      expect(loader.throwIfFailed, refusing('declare deux fois', 'strike.json'));
     });
   });
 

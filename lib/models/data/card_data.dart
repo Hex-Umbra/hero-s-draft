@@ -280,6 +280,11 @@ class CardData implements AudioSource {
   final bool isExhaust;
   final List<CardEffect> effects;
 
+  /// Le passif dont la carte est du lot : injecté par le répertoire
+  /// (`cards/<passif>/`), jamais écrit dans un fichier (A2). `null` veut dire
+  /// neutre (A1).
+  final String? passive;
+
   const CardData({
     required this.id,
     this.nameEn = '',
@@ -297,6 +302,7 @@ class CardData implements AudioSource {
     this.sfx,
     this.isExhaust = false,
     required this.effects,
+    this.passive,
   });
 
   String getName(String locale) => locale == 'fr' ? nameFr : nameEn;
@@ -318,6 +324,14 @@ class CardData implements AudioSource {
       }
     }
     final (mana, hpCost, armorCost) = _readCosts(json);
+    final passive = json['passive'] as String?;
+    // A8 : payer en PV ou en Armure n'est permis qu'à une carte de lot.
+    if (passive == null && (hpCost > 0 || armorCost > 0)) {
+      throw FormatException(
+        'CardData "${json['id']}": un coût en PV ou en Armure exige un '
+        '"passive" — une carte neutre ne peut pas en porter',
+      );
+    }
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
     final dEn =
@@ -360,6 +374,7 @@ class CardData implements AudioSource {
       sfx: json['sfx'] as String?,
       isExhaust: json['isExhaust'] as bool? ?? false,
       effects: effects,
+      passive: passive,
     );
   }
 
@@ -372,7 +387,10 @@ class CardData implements AudioSource {
     FormatException fault(String why) =>
         FormatException('CardData "${json['id']}": $why');
 
-    if (!json.containsKey('costs')) return (json['cost'] as int, 0, 0);
+    if (!json.containsKey('costs')) {
+      if (!json.containsKey('cost')) throw fault('"cost" ou "costs" est exigé');
+      return (json['cost'] as int, 0, 0);
+    }
     if (json.containsKey('cost')) {
       throw fault('"cost" et "costs" ensemble sont refusés : l\'un ou l\'autre');
     }
@@ -406,6 +424,7 @@ class CardData implements AudioSource {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        if (passive != null) 'passive': passive,
         'name_en': nameEn,
         'name_fr': nameFr,
         'description_en': descriptionEn,
