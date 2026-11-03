@@ -471,7 +471,7 @@ void main() {
     });
 
     test('le deck drafté survit aux changements d\'étape', () {
-      final pool = engine.fixtures.starterPool(null).take(5).toList();
+      final pool = engine.fixtures.starterDraft(null).pool.take(5).toList();
       engine.chooseHero(engine.fixtures.heroes.first);
       engine.setStarterDeck(pool);
 
@@ -487,7 +487,7 @@ void main() {
         // TutorialStarterDeckWidget appelle setStarterDeck([]) tant que la
         // cible de 5 n'est pas atteinte : masterDeck.isNotEmpty ne doit pas
         // devenir vrai dès la première carte cochée.
-        final pool = engine.fixtures.starterPool(null).take(5).toList();
+        final pool = engine.fixtures.starterDraft(null).pool.take(5).toList();
         engine.chooseHero(engine.fixtures.heroes.first);
         engine.setStarterDeck(pool);
         expect(engine.mockState.masterDeck, isNotEmpty);
@@ -517,7 +517,7 @@ void main() {
         final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
 
         engine.chooseHero(paladin);
-        final pool = engine.fixtures.starterPool(null).take(5).toList();
+        final pool = engine.fixtures.starterDraft(null).pool.take(5).toList();
         engine.setStarterDeck(pool);
         expect(engine.mockState.masterDeck, hasLength(5));
 
@@ -660,6 +660,48 @@ void main() {
         );
       },
     );
+
+    test('la lecon ecarte une carte a couts, a coups ou a scaleWith', () {
+      final multiHit = CardData.fromJson({
+        'id': 'multi_hit_test',
+        'name_en': 'Flurry',
+        'name_fr': 'Rafale',
+        'cost': 1,
+        'type': 'attack',
+        'target': 'singleEnemy',
+        'effects': [
+          {'type': 'damage', 'value': 2, 'hits': 2, 'mightRatio': 0.5},
+        ],
+      });
+      // Coût en PV, croissance et coups : aucune attaque valide, mais Mur de
+      // fer est une Compétence d'Armure valide. Chaque critère oublié ferait
+      // entrer sa carte en main à côté de lui.
+      engine.setStarterDeck([
+        engine.fixtures.card('bloodletting'),
+        engine.fixtures.card('rampart_slam'),
+        multiHit,
+        engine.fixtures.card('iron_wall'),
+      ]);
+      engine.prepareStep(7);
+      expect(
+        engine.mockState.hand.map((c) => c.data.id).toList(),
+        [TutorialFixtureIds.strike, TutorialFixtureIds.defend],
+      );
+
+      // Un coût en Armure écarte Percée des attaques, la croissance de
+      // Fortification l'écarte des Compétences d'Armure.
+      engine.setStarterDeck([
+        engine.fixtures.card('breach'),
+        engine.fixtures.card('heavy_strike'),
+        engine.fixtures.card('fortify'),
+        engine.fixtures.card('iron_wall'),
+      ]);
+      engine.prepareStep(7);
+      expect(
+        engine.mockState.hand.map((c) => c.data.id).toList(),
+        ['heavy_strike', 'iron_wall'],
+      );
+    });
 
     test(
       'Jouer des cartes se replie sur les fixtures si le deck ne fournit pas les deux gestes',

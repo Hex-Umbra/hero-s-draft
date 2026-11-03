@@ -33,15 +33,17 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Your Starting Deck',
     titleFr: 'Votre deck de départ',
     bodyEn:
-        'Pick 5 cards from the common pool: they form your starting deck, the '
-        'one you will play the rest of the tutorial with.\n\n'
+        'Pick 2 cards from your passive\'s set and 3 neutral cards: they form '
+        'your starting deck, the one you will play the rest of the tutorial '
+        'with.\n\n'
         'Your class also brings its two **signatures**, which are not cards: '
         'never drawn, they never merge. In combat they wait in a bar on the '
         'left of the screen, from the first turn; playing a signature costs '
         'Mana, then it recharges for a few turns before it comes back.',
     bodyFr:
-        'Choisissez 5 cartes dans le pool commun : elles forment votre deck de '
-        'départ, celui avec lequel vous jouerez le reste du tutoriel.\n\n'
+        'Choisissez 2 cartes du lot de votre passif et 3 cartes neutres : '
+        'elles forment votre deck de départ, celui avec lequel vous jouerez le '
+        'reste du tutoriel.\n\n'
         'Votre classe apporte en plus ses deux **signatures**, qui ne sont pas '
         'des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles '
         'vous attendent dans une barre à gauche de l\'écran, dès le premier '

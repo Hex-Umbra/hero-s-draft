@@ -2,21 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/game/systems/starter_draft.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_screen.dart';
 
 import '../tutorial/tutorial_test_registry.dart';
-
-/// Les cartes du pool de départ portent une clé stable
-/// (`tutorial-pool-<id>`, posée par `TutorialStarterDeckWidget`) : ce test
-/// n'a besoin que d'en taper les 5 premières, jamais de connaître leurs ids.
-Finder _poolCards() {
-  return find.byWidgetPredicate(
-    (widget) =>
-        widget is SizedBox &&
-        (widget.key?.toString() ?? '').contains('tutorial-pool-'),
-  );
-}
 
 /// Avance d'une étape via le bouton SUIVANT, puis laisse l'animation de 300 ms
 /// de la `PageView` se dérouler. Jamais de `pumpAndSettle()` dans ce fichier :
@@ -70,10 +60,12 @@ void main() {
       await tester.pump();
       await _tapNext(tester);
 
-      // Étape 2 : drafter 5 cartes du pool commun.
-      final pool = _poolCards();
-      for (var i = 0; i < 5; i++) {
-        await tester.tap(pool.at(i));
+      // Étape 2 : drafter 2 cartes du lot du passif et 3 neutres. Les cartes
+      // portent une clé stable (`tutorial-pool-<id>`, posée par
+      // `TutorialStarterDeckWidget`).
+      final draft = StarterDraft.of(data.cards, 'regen_armor');
+      for (final card in [...draft.lot.take(2), ...draft.neutrals.take(3)]) {
+        await tester.tap(find.byKey(ValueKey('tutorial-pool-${card.id}')));
         await tester.pump();
       }
       await _tapNext(tester);

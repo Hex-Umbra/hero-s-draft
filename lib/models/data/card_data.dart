@@ -316,8 +316,8 @@ class CardData implements AudioSource {
       locale == 'fr' ? descriptionFr : descriptionEn;
 
   /// Le prédicat d'offre unique (ADR-101 D1) : boutique, trouvaille, draft de
-  /// départ, `starterPool` du tutoriel. Une carte est offerte si elle n'est pas
-  /// un statut et si elle est neutre ou du lot du passif actif de la run
+  /// départ et tutoriel (par `StarterDraft`). Une carte est offerte si elle n'est
+  /// pas un statut et si elle est neutre ou du lot du passif actif de la run
   /// ([activePassiveId]) ; une run sans passif ne se voit offrir que des neutres.
   bool isOfferable(String? activePassiveId) =>
       type != CardType.status && (passive == null || passive == activePassiveId);
@@ -470,8 +470,8 @@ class CardData implements AudioSource {
 
   /// Ordre d'affichage canonique : rareté, puis coût, puis id.
   ///
-  /// Partagé par `CardDictionaryScreen`, `StarterDeckDraftScreen` et le
-  /// tutoriel (`TutorialFixtures.starterPool`) pour que les trois pools
+  /// Partagé par `CardDictionaryScreen`, l'écran du draft de départ et le
+  /// tutoriel (tous deux par `StarterDraft`) pour que les trois pools
   /// s'affichent dans un ordre choisi, et non dans celui — alphabétique par
   /// `id` — que le chargeur donne au registre.
   static int compareByDisplayOrder(CardData a, CardData b) {

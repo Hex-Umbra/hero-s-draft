@@ -122,13 +122,16 @@ void main() {
     });
 
     test('le pool de départ est celui du prédicat d offre', () {
-      final pool = fixtures.starterPool('regen_armor');
+      final draft = fixtures.starterDraft('regen_armor');
+      final pool = draft.pool;
       expect(pool, isNotEmpty);
       expect(pool.length, greaterThanOrEqualTo(5));
       expect(pool.every((c) => c.isOfferable('regen_armor')), isTrue);
-      final expected = data.cards.where((c) => c.isOfferable('regen_armor')).toList()
+      final offered = data.cards.where((c) => c.isOfferable('regen_armor')).toList()
         ..sort(CardData.compareByDisplayOrder);
-      expect(pool, expected);
+      expect(draft.lot, offered.where((c) => c.passive != null).toList());
+      expect(draft.neutrals, offered.where((c) => c.passive == null).toList());
+      expect(draft.neutrals, hasLength(15));
     });
   });
 

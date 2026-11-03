@@ -1,4 +1,5 @@
 import '../game/systems/passive_availability.dart';
+import '../game/systems/starter_draft.dart';
 import '../models/data/card_data.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/game_data_registry.dart';
@@ -63,9 +64,8 @@ class TutorialFixtures {
   List<PassiveData> passivesFor(HeroData hero) =>
       availablePassivesFor(hero, registry);
 
-  /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
-  List<CardData> starterPool(String? activePassiveId) => registry.cards
-      .where((c) => c.isOfferable(activePassiveId))
-      .toList()
-    ..sort(CardData.compareByDisplayOrder);
+  /// Le draft de départ, celui de `StarterDeckDraftScreen` : le lot du passif
+  /// actif et les neutres, chacun à son quota.
+  StarterDraft starterDraft(String? activePassiveId) =>
+      StarterDraft.of(registry.cards, activePassiveId);
 }

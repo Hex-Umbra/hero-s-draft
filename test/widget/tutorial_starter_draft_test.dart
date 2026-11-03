@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/tutorial/tutorial_engine.dart';
 import 'package:roguelike_card_game/tutorial/widgets/tutorial_starter_deck_widget.dart';
 
@@ -33,38 +34,60 @@ Future<TutorialEngine> _pump(WidgetTester tester) async {
   return engine;
 }
 
+Future<void> _tapAll(WidgetTester tester, Iterable<CardData> cards) async {
+  for (final card in cards) {
+    await tester.tap(find.byKey(ValueKey('tutorial-pool-${card.id}')));
+    await tester.pump();
+  }
+}
+
 void main() {
-  testWidgets('le compteur démarre à 0/5', (tester) async {
+  testWidgets('deux sections, le lot de Regeneration d Armure puis les neutres, compteurs 0/2 et 0/3', (tester) async {
+    final engine = await _pump(tester);
+    final draft = engine.fixtures.starterDraft('regen_armor');
+
+    expect(find.text("Cartes de Régénération d'Armure"), findsOneWidget);
+    expect(find.text('Cartes neutres'), findsOneWidget);
+    expect(find.text('0/2'), findsOneWidget);
+    expect(find.text('0/3'), findsOneWidget);
+    for (final card in draft.lot) {
+      expect(find.byKey(ValueKey('tutorial-pool-${card.id}')), findsOneWidget);
+    }
+    for (final other in ['rage', 'mana_flux']) {
+      for (final card in engine.fixtures.starterDraft(other).lot) {
+        expect(find.byKey(ValueKey('tutorial-pool-${card.id}')), findsNothing);
+      }
+    }
+  });
+
+  testWidgets('les compteurs demarrent a 0/2 et 0/3', (tester) async {
     await _pump(tester);
-    expect(find.text('0 / 5'), findsOneWidget);
+    expect(find.text('0/2'), findsOneWidget);
+    expect(find.text('0/3'), findsOneWidget);
   });
 
   testWidgets('sélectionner 1 seule carte laisse le deck vide', (tester) async {
-    // Régression : `_toggle` appelle `setStarterDeck([])` tant que la
-    // sélection n'atteint pas 5 ; le deck ne doit pas se remplir avant que
-    // le compte soit atteint, sans quoi le bouton SUIVANT se débloquerait
-    // avec un deck incomplet et le joueur resterait bloqué dessus (verrou
-    // d'amont dès l'étape suivante).
+    // Régression : `_toggle` appelle `setStarterDeck([])` tant que les quotas
+    // ne sont pas remplis ; le deck ne doit pas se remplir avant, sans quoi le
+    // bouton SUIVANT se débloquerait avec un deck incomplet et le joueur
+    // resterait bloqué dessus (verrou d'amont dès l'étape suivante).
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
+    final draft = engine.fixtures.starterDraft(engine.mockState.activePassive?.id);
 
-    await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[0].id}')));
-    await tester.pump();
+    await _tapAll(tester, [draft.lot.first]);
 
-    expect(find.text('1 / 5'), findsOneWidget);
+    expect(find.text('1/2'), findsOneWidget);
     expect(engine.mockState.masterDeck, isEmpty);
   });
 
-  testWidgets('selectionner 5 cartes remplit le deck des 5 cartes choisies, sans signature', (tester) async {
+  testWidgets('selectionner 2 cartes du lot et 3 neutres remplit le deck des 5 cartes choisies, sans signature', (tester) async {
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
+    final draft = engine.fixtures.starterDraft(engine.mockState.activePassive?.id);
 
-    for (var i = 0; i < 5; i++) {
-      await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[i].id}')));
-      await tester.pump();
-    }
+    await _tapAll(tester, [...draft.lot.take(2), ...draft.neutrals.take(3)]);
 
-    expect(find.text('5 / 5'), findsOneWidget);
+    expect(find.text('2/2'), findsOneWidget);
+    expect(find.text('3/3'), findsOneWidget);
     // Les signatures du Paladin ne sont plus des cartes du deck.
     expect(engine.mockState.masterDeck, hasLength(5));
     expect(
@@ -83,16 +106,14 @@ void main() {
     expect(find.textContaining("Ajoutées d'office"), findsNothing);
   });
 
-  testWidgets('la sélection est bornée à 5', (tester) async {
+  testWidgets('la sélection est bornee par les quotas', (tester) async {
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
+    final draft = engine.fixtures.starterDraft(engine.mockState.activePassive?.id);
 
-    for (var i = 0; i < 6; i++) {
-      await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[i].id}')));
-      await tester.pump();
-    }
+    await _tapAll(tester, [...draft.lot.take(3), ...draft.neutrals.take(4)]);
 
-    expect(find.text('5 / 5'), findsOneWidget);
+    expect(find.text('2/2'), findsOneWidget);
+    expect(find.text('3/3'), findsOneWidget);
     expect(engine.mockState.masterDeck, hasLength(5));
   });
 }
