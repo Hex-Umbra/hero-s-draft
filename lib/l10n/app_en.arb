@@ -546,15 +546,40 @@
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",
-  "draftDeckSubtitle": "Select exactly 5 global cards to build your starting deck and launch the run.",
+  "draftDeckSubtitle": "Pick 2 cards from your passive and 3 neutral cards to build your starting deck.",
   "draftDeckSelectedCount": "Selected cards: {count} / 5",
   "@draftDeckSelectedCount": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
+  "draftDeckLotSection": "{passive} cards",
+  "@draftDeckLotSection": {
+    "placeholders": {
+      "passive": { "type": "String" }
+    }
+  },
+  "draftDeckNeutralSection": "Neutral cards",
+  "draftDeckQuota": "{picked}/{quota}",
+  "@draftDeckQuota": {
+    "placeholders": {
+      "picked": { "type": "int" },
+      "quota": { "type": "int" }
+    }
+  },
   "draftDeckProceed": "ENTER THE UMBRA",
-  "draftDeckSnackbarMax": "You can only select up to 5 cards.",
+  "draftDeckSnackbarMaxLot": "You already picked your {quota} passive cards.",
+  "@draftDeckSnackbarMaxLot": {
+    "placeholders": {
+      "quota": { "type": "int" }
+    }
+  },
+  "draftDeckSnackbarMaxNeutral": "You already picked your {quota} neutral cards.",
+  "@draftDeckSnackbarMaxNeutral": {
+    "placeholders": {
+      "quota": { "type": "int" }
+    }
+  },
   "mergeLabel": "MERGE ({count})",
   "@mergeLabel": {
     "placeholders": {

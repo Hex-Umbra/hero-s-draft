@@ -811,7 +811,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get draftDeckSubtitle =>
-      'Sélectionnez précisément 5 cartes globales pour constituer votre deck de départ et lancer la run.';
+      'Choisissez 2 cartes de votre passif et 3 cartes neutres pour constituer votre deck de départ.';
 
   @override
   String draftDeckSelectedCount(int count) {
@@ -819,11 +819,30 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String draftDeckLotSection(String passive) {
+    return 'Cartes de $passive';
+  }
+
+  @override
+  String get draftDeckNeutralSection => 'Cartes neutres';
+
+  @override
+  String draftDeckQuota(int picked, int quota) {
+    return '$picked/$quota';
+  }
+
+  @override
   String get draftDeckProceed => 'ENTRER DANS L\'UMBRA';
 
   @override
-  String get draftDeckSnackbarMax =>
-      'Vous pouvez sélectionner jusqu\'à 5 cartes maximum.';
+  String draftDeckSnackbarMaxLot(int quota) {
+    return 'Vous avez déjà choisi vos $quota cartes de passif.';
+  }
+
+  @override
+  String draftDeckSnackbarMaxNeutral(int quota) {
+    return 'Vous avez déjà choisi vos $quota cartes neutres.';
+  }
 
   @override
   String mergeLabel(int count) {

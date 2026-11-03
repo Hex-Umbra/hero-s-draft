@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
+import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
@@ -140,6 +141,34 @@ void main() {
       target: CardTarget.self,
       effects: [],
     ),
+    // Le lot du passif de l'ecran, et une carte d'un autre lot.
+    for (var i = 1; i <= 3; i++)
+      CardData(
+        id: 'lot_$i',
+        nameEn: 'Lot $i',
+        nameFr: 'Lot $i',
+        descriptionEn: 'Regen card',
+        descriptionFr: 'Carte de regen',
+        cost: 1,
+        type: CardType.skill,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        effects: const [],
+        passive: 'regen_armor',
+      ),
+    const CardData(
+      id: 'fervor_1',
+      nameEn: 'Fervor 1',
+      nameFr: 'Ferveur 1',
+      descriptionEn: 'Fervor card',
+      descriptionFr: 'Carte de ferveur',
+      cost: 1,
+      type: CardType.skill,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: [],
+      passive: 'fervor',
+    ),
   ];
 
   final mockHero = const HeroData(
@@ -194,11 +223,131 @@ void main() {
     ],
   );
 
+  // Les deux sections sont dans un seul defilement : une fenetre haute les
+  // garde toutes a l'ecran, et `tapCard` fait defiler au besoin.
+  Future<void> tapCard(WidgetTester tester, int index) async {
+    final card = find.byType(UiCard).at(index);
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+  }
+
+  Future<ProviderContainer> pumpDraft(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [gameDataLoaderProvider.overrideWith((ref) => mockRegistry)],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', ''), Locale('fr', '')],
+          locale: const Locale('fr', ''),
+          home: StarterDeckDraftScreen(
+            playerClass: mockHero,
+            passive: mockPassive,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return container;
+  }
+
+  AppLocalizations frL10n(WidgetTester tester) =>
+      AppLocalizations.of(tester.element(find.byType(CardDraftLayout)))!;
+
+  testWidgets('deux sections titrees, chacune son compteur', (tester) async {
+    await pumpDraft(tester);
+    final l10n = frL10n(tester);
+
+    expect(
+      find.text(l10n.draftDeckLotSection("Régénération d'Armure")),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.draftDeckNeutralSection), findsOneWidget);
+    expect(find.text('0/2'), findsOneWidget);
+    expect(find.text('0/3'), findsOneWidget);
+
+    await tapCard(tester, 0);
+
+    expect(find.text('1/2'), findsOneWidget);
+    expect(find.text('0/3'), findsOneWidget);
+  });
+
+  testWidgets('au-dela d un quota, refus et notification', (tester) async {
+    final container = await pumpDraft(tester);
+    final l10n = frL10n(tester);
+    // L'ecran ne monte pas le GameNotificationOverlay : on lit la file.
+    final notifier = container.read(notificationProvider.notifier);
+    List<NotificationType> types() =>
+        container.read(notificationProvider).map((n) => n.type).toList();
+    List<String> messages() =>
+        container.read(notificationProvider).map((n) => n.message).toList();
+
+    for (final i in [0, 1, 2]) {
+      await tapCard(tester, i);
+    }
+    expect(find.text('2/2'), findsOneWidget);
+    expect(
+      tester.widget<UiCard>(find.byType(UiCard).at(2)).isSelected,
+      isFalse,
+    );
+    expect(messages(), [l10n.draftDeckSnackbarMaxLot(2)]);
+    expect(types(), [NotificationType.warning]);
+
+    for (final i in [3, 4, 5, 6]) {
+      await tapCard(tester, i);
+    }
+    expect(find.text('3/3'), findsOneWidget);
+    expect(
+      tester.widget<UiCard>(find.byType(UiCard).at(6)).isSelected,
+      isFalse,
+    );
+    expect(messages().last, l10n.draftDeckSnackbarMaxNeutral(3));
+    expect(types().last, NotificationType.warning);
+
+    // Les minuteurs d auto-fermeture ne sont annules que par le dispose.
+    notifier.clearAll();
+  });
+
+  testWidgets('Valider ne s active qu a 2 + 3', (tester) async {
+    await pumpDraft(tester);
+    bool enabled() => tester
+        .widget<CardDraftLayout>(find.byType(CardDraftLayout))
+        .isConfirmEnabled;
+
+    for (final i in [0, 1, 3, 4]) {
+      await tapCard(tester, i);
+    }
+    expect(enabled(), isFalse); // 2 + 2
+
+    await tapCard(tester, 1); // 1 + 2
+    await tapCard(tester, 5); // 1 + 3
+    expect(enabled(), isFalse);
+
+    await tapCard(tester, 1); // 2 + 3
+    expect(enabled(), isTrue);
+  });
+
   testWidgets('StarterDeckDraftScreen allows independent duplicate card selection', (
     WidgetTester tester,
   ) async {
     // Set a large screen size
-    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.physicalSize = const Size(1200, 2000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -233,27 +382,23 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Since our pool now directly contains all global non-status cards:
-    // With 10 mock global cards, the generator will show exactly those 10 cards.
-    // Let's verify that 10 cards are shown in the grid.
-    expect(find.byType(UiCard), findsNWidgets(10));
+    // 3 cartes du lot de regen_armor puis 10 neutres ; la carte de fervor
+    // n'est pas offerte.
+    expect(find.byType(UiCard), findsNWidgets(13));
 
     // Tap the first card in the grid (index 0)
-    await tester.tap(find.byType(UiCard).at(0));
-    await tester.pumpAndSettle();
+    await tapCard(tester, 0);
 
     // Check that exactly 1 card is selected
     expect(find.text('Cartes sélectionnées : 1 / 5'), findsOneWidget);
 
     // Tap it again to deselect
-    await tester.tap(find.byType(UiCard).at(0));
-    await tester.pumpAndSettle();
+    await tapCard(tester, 0);
     expect(find.text('Cartes sélectionnées : 0 / 5'), findsOneWidget);
 
-    // Tap 5 distinct cards in the grid to satisfy the 5 cards requirement
-    for (int i = 0; i < 5; i++) {
-      await tester.tap(find.byType(UiCard).at(i));
-      await tester.pumpAndSettle();
+    // Deux cartes du lot (indexes 0 et 1) puis trois neutres (3, 4 et 5).
+    for (final i in [0, 1, 3, 4, 5]) {
+      await tapCard(tester, i);
     }
 
     expect(find.text('Cartes sélectionnées : 5 / 5'), findsOneWidget);
@@ -273,8 +418,15 @@ void main() {
     expect(deckState.masterDeck.length, 5);
     for (final card in deckState.masterDeck) {
       final id = card.data.id;
-      expect(id.startsWith('slash') || id.startsWith('shield'), isTrue);
+      expect(
+        id.startsWith('slash') || id.startsWith('shield') || id.startsWith('lot'),
+        isTrue,
+      );
     }
+    expect(
+      deckState.masterDeck.map((c) => c.data.id),
+      ['lot_1', 'lot_2', 'shield_1', 'shield_2', 'shield_3'],
+    );
     expect(
       deckState.masterDeck.map((c) => c.data.id),
       isNot(contains('holy_shield')),
@@ -368,7 +520,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(UiCard), findsNWidgets(11));
+      Finder cardsOf(String section) => find.descendant(
+        of: find.byKey(ValueKey(section)),
+        matching: find.byType(UiCard),
+      );
+      expect(cardsOf('starter-draft-lot'), findsNWidgets(4));
+      expect(cardsOf('starter-draft-neutral'), findsNWidgets(10));
+      expect(find.byType(UiCard), findsNWidgets(14));
       expect(find.text('BOUCLIER SACRÉ'), findsNothing);
       expect(find.text('BLESSURE'), findsNothing);
     },

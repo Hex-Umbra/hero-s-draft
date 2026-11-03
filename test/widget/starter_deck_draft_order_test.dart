@@ -7,6 +7,8 @@ import 'package:roguelike_card_game/ui/screens/starter_deck_draft_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -71,7 +73,72 @@ const _pool = [
     target: CardTarget.singleEnemy,
     effects: [],
   ),
+  // Le lot du passif de l'ecran, declare dans le desordre lui aussi, et une
+  // carte d'un autre lot que l'ecran ne montre pas.
+  CardData(
+    id: 'z_lot_rare',
+    nameEn: 'Lot Rare',
+    nameFr: 'Lot Rare',
+    descriptionEn: 'A rare lot card.',
+    descriptionFr: 'Une carte de lot rare.',
+    cost: 1,
+    type: CardType.attack,
+    rarity: CardRarity.rare,
+    target: CardTarget.singleEnemy,
+    effects: [],
+    passive: 'rage',
+  ),
+  CardData(
+    id: 'y_lot_cost2',
+    nameEn: 'Lot Two',
+    nameFr: 'Lot Deux',
+    descriptionEn: 'A common lot card at cost 2.',
+    descriptionFr: 'Une carte de lot commune à coût 2.',
+    cost: 2,
+    type: CardType.attack,
+    rarity: CardRarity.common,
+    target: CardTarget.singleEnemy,
+    effects: [],
+    passive: 'rage',
+  ),
+  CardData(
+    id: 'x_lot_cost1',
+    nameEn: 'Lot One',
+    nameFr: 'Lot Un',
+    descriptionEn: 'A common lot card at cost 1.',
+    descriptionFr: 'Une carte de lot commune à coût 1.',
+    cost: 1,
+    type: CardType.attack,
+    rarity: CardRarity.common,
+    target: CardTarget.singleEnemy,
+    effects: [],
+    passive: 'rage',
+  ),
+  CardData(
+    id: 'a_other_lot',
+    nameEn: 'Other Lot',
+    nameFr: 'Autre Lot',
+    descriptionEn: 'A card of another passive.',
+    descriptionFr: "Une carte d'un autre passif.",
+    cost: 1,
+    type: CardType.attack,
+    rarity: CardRarity.common,
+    target: CardTarget.singleEnemy,
+    effects: [],
+    passive: 'fervor',
+  ),
 ];
+
+const _mockPassive = PassiveData(
+  id: 'rage',
+  nameEn: 'Rage',
+  nameFr: 'Rage',
+  descriptionEn: 'Rage passive.',
+  descriptionFr: 'Passif de rage.',
+  trigger: RelicTrigger.endOfTurn,
+  effectType: 'gain_armor',
+  value: 1,
+);
 
 const _mockHero = HeroData(
   id: 'paladin',
@@ -87,7 +154,7 @@ final _mockRegistry = GameDataRegistry(
   heroes: const [_mockHero],
   cards: _pool,
   events: const [],
-  passives: const [],
+  passives: const [_mockPassive],
   relics: const [],
   forgeUpgrades: const [],
 );
@@ -121,22 +188,27 @@ void main() {
             locale: const Locale('en', ''),
             home: const StarterDeckDraftScreen(
               playerClass: _mockHero,
-              passive: null,
+              passive: _mockPassive,
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      // L'ordre de rendu de la grille suit l'ordre de `_draftPool` (même
-      // hypothèse que `starter_deck_draft_screen_test.dart`, qui sélectionne
-      // déjà par `find.byType(UiCard).at(index)`).
+      // L'ordre de rendu des grilles suit celui de `StarterDraft.pool`, le lot
+      // puis les neutres (même hypothèse que
+      // `starter_deck_draft_screen_test.dart`, qui sélectionne déjà par
+      // `find.byType(UiCard).at(index)`).
       final titles = tester
           .widgetList<UiCard>(find.byType(UiCard))
           .map((card) => card.title)
           .toList();
 
       expect(titles, [
+        'Lot One', // lot, commun, coût 1
+        'Lot Two', // lot, commun, coût 2
+        'Lot Rare', // lot, rare — chaque section a son propre tri
+
         'Common One A', // commun, coût 1, id "a" — départage par id
         'Common One B', // commun, coût 1, id "b"
         'Common Two', // commun, coût 2 — départage par coût

@@ -1391,7 +1391,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftDeckSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Select exactly 5 global cards to build your starting deck and launch the run.'**
+  /// **'Pick 2 cards from your passive and 3 neutral cards to build your starting deck.'**
   String get draftDeckSubtitle;
 
   /// No description provided for @draftDeckSelectedCount.
@@ -1400,17 +1400,41 @@ abstract class AppLocalizations {
   /// **'Selected cards: {count} / 5'**
   String draftDeckSelectedCount(int count);
 
+  /// No description provided for @draftDeckLotSection.
+  ///
+  /// In en, this message translates to:
+  /// **'{passive} cards'**
+  String draftDeckLotSection(String passive);
+
+  /// No description provided for @draftDeckNeutralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral cards'**
+  String get draftDeckNeutralSection;
+
+  /// No description provided for @draftDeckQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'{picked}/{quota}'**
+  String draftDeckQuota(int picked, int quota);
+
   /// No description provided for @draftDeckProceed.
   ///
   /// In en, this message translates to:
   /// **'ENTER THE UMBRA'**
   String get draftDeckProceed;
 
-  /// No description provided for @draftDeckSnackbarMax.
+  /// No description provided for @draftDeckSnackbarMaxLot.
   ///
   /// In en, this message translates to:
-  /// **'You can only select up to 5 cards.'**
-  String get draftDeckSnackbarMax;
+  /// **'You already picked your {quota} passive cards.'**
+  String draftDeckSnackbarMaxLot(int quota);
+
+  /// No description provided for @draftDeckSnackbarMaxNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'You already picked your {quota} neutral cards.'**
+  String draftDeckSnackbarMaxNeutral(int quota);
 
   /// No description provided for @mergeLabel.
   ///
