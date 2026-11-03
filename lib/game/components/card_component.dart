@@ -355,13 +355,13 @@ class CardComponent extends PositionComponent
     // Les valeurs que la carte joue — rareté et runes comprises — viennent de
     // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
     for (final effect in card.effective.effects) {
-      final scaledValue = effect.value;
+      // La valeur jouée plus le terme de croissance des sources du héros, le
+      // même que le badge ; 0 hors combat.
+      final scaledValue =
+          CardTextRenderer.playedValue(effect, heroScaleTerm(effect));
       if (effect.type == 'damage') {
-        // La valeur jouée, le terme de croissance des sources du héros, puis
-        // la part de Puissance de chaque coup.
-        final totalDmg = scaledValue +
-            heroScaleTerm(effect) +
-            effect.mightPerHit(damageBonus);
+        // Puis la part de Puissance de chaque coup.
+        final totalDmg = scaledValue + effect.mightPerHit(damageBonus);
         final line = getTranslation(
           (l) => CardRuleTexts.damage(
             l,

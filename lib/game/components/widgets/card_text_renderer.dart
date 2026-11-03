@@ -255,6 +255,11 @@ class CardTextRenderer {
     )..layout();
   }
 
+  /// La valeur jouée d'un effet en combat : sa valeur plus [scaleTerm]. Lue
+  /// par le badge et par les lignes de l'infobulle Flame.
+  static int playedValue(CardEffect effect, int scaleTerm) =>
+      effect.value + scaleTerm;
+
   /// Le chiffre du badge d'un effet : sa valeur plus le terme de croissance,
   /// plus la part de Puissance par coup pour un `damage`, suivi de `×coups` dès
   /// deux coups.
@@ -264,8 +269,7 @@ class CardTextRenderer {
     int scaleTerm = 0,
   }) {
     final isDamage = effect.type == 'damage';
-    final value = effect.value +
-        scaleTerm +
+    final value = playedValue(effect, scaleTerm) +
         (isDamage ? effect.mightPerHit(damageBonus) : 0);
     return isDamage && effect.hits >= 2 ? '$value×${effect.hits}' : '$value';
   }
