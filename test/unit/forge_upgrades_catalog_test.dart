@@ -16,6 +16,7 @@ const _allTypes = ['attack', 'skill', 'power'];
 Map<String, Object?> _declared(ForgeUpgradeData rune) => {
       'minFusionRank': rune.minFusionRank,
       'eligibleCardTypes': rune.eligibleCardTypes,
+      'eligibleTargets': rune.eligibleTargets,
       'eligibleEffects': rune.eligibleEffects,
       'excludesEffects': rune.excludesEffects,
       'requiresExhaust': rune.requiresExhaust,
@@ -29,6 +30,7 @@ Map<String, Object?> _declared(ForgeUpgradeData rune) => {
 Map<String, Object?> _rune({
   int minFusionRank = 1,
   List<String>? eligibleCardTypes,
+  List<String>? eligibleTargets,
   List<String>? eligibleEffects,
   List<String> excludesEffects = const [],
   bool requiresExhaust = false,
@@ -41,6 +43,7 @@ Map<String, Object?> _rune({
     {
       'minFusionRank': minFusionRank,
       'eligibleCardTypes': eligibleCardTypes,
+      'eligibleTargets': eligibleTargets,
       'eligibleEffects': eligibleEffects,
       'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
@@ -171,6 +174,15 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 50,
   ),
+  'splash': _rune(
+    eligibleTargets: const ['singleEnemy'],
+    eligibleEffects: const ['damage'],
+    maxLevel: 3,
+    deltas: const [
+      {'type': 'splashPercent', 'valuePercentPerLevel': 25},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
@@ -188,18 +200,22 @@ const _attackRank1 = {
 };
 const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
+/// Une attaque à cible unique reçoit de plus Ricochant.
+const _singleTargetRank1 = {..._attackRank1, 'splash'};
+const _singleTargetRank2 = {..._attackRank2, 'splash'};
+
 /// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
-  'strike_basic': (_attackRank1, _attackRank2),
-  'heavy_strike': (_attackRank1, _attackRank2),
-  'fireball': (_attackRank1, _attackRank2),
-  'ice_bolt': (_attackRank1, _attackRank2),
-  'poison_stab': (_attackRank1, _attackRank2),
-  'quick_attack': (_attackRank1, _attackRank2),
+  'strike_basic': (_singleTargetRank1, _singleTargetRank2),
+  'heavy_strike': (_singleTargetRank1, _singleTargetRank2),
+  'fireball': (_singleTargetRank1, _singleTargetRank2),
+  'ice_bolt': (_singleTargetRank1, _singleTargetRank2),
+  'poison_stab': (_singleTargetRank1, _singleTargetRank2),
+  'quick_attack': (_singleTargetRank1, _singleTargetRank2),
   'sweep': (_attackRank1, _attackRank2),
-  'thunder_clap': (_attackRank1, _attackRank2),
+  'thunder_clap': (_singleTargetRank1, _singleTargetRank2),
   'warcry': ({..._attackRank1, 'hardened'}, {..._attackRank2, 'hardened'}),
   'awakening': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
   'defend_basic': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
@@ -211,7 +227,7 @@ const _offers = <String, (Set<String>, Set<String>)>{
   'focus': (<String>{}, {'quick'}),
 };
 
-/// Les onze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
+/// Les quatorze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -253,6 +269,7 @@ void main() {
       'color',
       'minFusionRank',
       'eligibleCardTypes',
+      'eligibleTargets',
       'eligibleEffects',
       'excludesEffects',
       'requiresExhaust',
@@ -276,8 +293,8 @@ void main() {
   });
 
   // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
-  test('enduring et cheap sont binaires, les onze autres non', () {
-    expect(registry.forgeUpgrades, hasLength(13));
+  test('enduring et cheap sont binaires, les douze autres non', () {
+    expect(registry.forgeUpgrades, hasLength(14));
     expect(
       {
         for (final rune in registry.forgeUpgrades)

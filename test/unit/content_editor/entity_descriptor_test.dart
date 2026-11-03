@@ -288,6 +288,7 @@ void main() {
         'color',
         'minFusionRank',
         'eligibleCardTypes',
+        'eligibleTargets',
         'eligibleEffects',
         'excludesEffects',
         'requiresExhaust',
@@ -438,5 +439,12 @@ void main() {
     expect(forge.referenceListKeys,
         {'excludesRunes': EntityCategory.forgeUpgrade});
     expect(forge.decodeTemplate().containsKey('excludesRunes'), isFalse);
+  });
+
+  test('eligibleTargets est une liste de CardTarget, au gabarit', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    final targets = [for (final t in CardTarget.values) t.name];
+    expect(forge.enumListKeys['eligibleTargets'], targets);
+    expect(forge.decodeTemplate()['eligibleTargets'], targets);
   });
 }

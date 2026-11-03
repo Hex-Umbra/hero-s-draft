@@ -72,6 +72,11 @@ class ForgeRuneRules {
     final types = rune.eligibleCardTypes;
     if (types != null && !types.contains(card.data.type.name)) return false;
 
+    final targets = rune.eligibleTargets;
+    if (targets != null && !targets.contains(card.data.target.name)) {
+      return false;
+    }
+
     // Les effets propres de la carte, jamais ceux qu'une rune lui ajoute.
     final own = {for (final effect in card.data.effects) effect.type};
     final wanted = rune.eligibleEffects;

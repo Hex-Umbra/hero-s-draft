@@ -253,7 +253,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Peu commune : Tranchant, Brulant, Congelant, Surcharge, Allege, Precis,
-    // Spectral, Perforant et Vampirique s'offrent ; trois sont tirees.
+    // Spectral, Perforant, Vampirique et Ricochant s'offrent ; trois sont
+    // tirees.
     expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
     expect(find.byType(ForgeSlotRow), findsNWidgets(3));
     expect(messagesOf(container), isEmpty);
@@ -278,6 +279,7 @@ void main() {
         'spectral',
         'piercing',
         'lifesteal',
+        'splash',
       ]),
     );
     expect(messagesOf(container),

@@ -23,6 +23,10 @@ class ForgeUpgradeData {
   final int minFusionRank;
   final List<String>? eligibleCardTypes;
 
+  /// Les cibles (`CardTarget`) que la carte doit viser ; `null` : toute cible.
+  /// Jamais vide : `[]` serait « éligible à rien » (spec §4.6, A21).
+  final List<String>? eligibleTargets;
+
   /// Les types d'effet dont la carte doit porter au moins un, parmi ses effets
   /// propres ; `null` : toute carte (D61). Jamais vide : `[]` serait « éligible
   /// à rien ».
@@ -69,6 +73,7 @@ class ForgeUpgradeData {
     required this.color,
     this.minFusionRank = 1,
     this.eligibleCardTypes,
+    this.eligibleTargets,
     this.eligibleEffects,
     this.excludesEffects = const [],
     this.requiresExhaust = false,
@@ -96,6 +101,7 @@ class ForgeUpgradeData {
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
+      eligibleTargets: _readTargets(id, json),
       eligibleEffects:
           _readNames(id, json, 'eligibleEffects', allowEmpty: false),
       excludesEffects:
@@ -132,6 +138,22 @@ class ForgeUpgradeData {
       );
     }
     return List<String>.unmodifiable(raw);
+  }
+
+  /// `eligibleTargets` : absente, toute cible ; sinon une liste non vide de
+  /// noms de `CardTarget` (spec §4.6, A21).
+  static List<String>? _readTargets(String id, Map<String, dynamic> json) {
+    final targets = _readNames(id, json, 'eligibleTargets', allowEmpty: false);
+    final unknown = targets?.where(
+      (name) => CardTarget.values.every((target) => target.name != name),
+    );
+    if (unknown != null && unknown.isNotEmpty) {
+      throw FormatException(
+        '$id : eligibleTargets nomme "${unknown.first}" — attendu : '
+        '${CardTarget.values.map((target) => target.name).join(', ')}',
+      );
+    }
+    return targets;
   }
 
   static int _readMinCost(String id, Object? raw) {
@@ -232,6 +254,7 @@ class ForgeUpgradeData {
       'color': color,
       'minFusionRank': minFusionRank,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
+      if (eligibleTargets != null) 'eligibleTargets': eligibleTargets,
       if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
       if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
@@ -284,6 +307,7 @@ class ForgeUpgradeData {
         AddExhaustDelta() => null,
         ArmorPierceDelta() => min(100, delta.valuePercentPerLevel * level),
         LifestealPercentDelta() => delta.valuePercentPerLevel * level,
+        SplashPercentDelta() => delta.valuePercentPerLevel * level,
       };
       if (value != null) return value;
     }

@@ -23,6 +23,7 @@ sealed class CardDelta {
     'addExhaust',
     'armorPierce',
     'lifestealPercent',
+    'splashPercent',
   ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
@@ -45,6 +46,9 @@ sealed class CardDelta {
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       'lifestealPercent' => LifestealPercentDelta(
+          valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
+        ),
+      'splashPercent' => SplashPercentDelta(
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       _ => throw FormatException(
@@ -239,6 +243,21 @@ final class LifestealPercentDelta extends CardDelta {
   @override
   Map<String, dynamic> toJson() => {
         'type': 'lifestealPercent',
+        'valuePercentPerLevel': valuePercentPerLevel,
+      };
+}
+
+/// Chaque coup de la carte éclabousse les autres ennemis vivants de
+/// `valuePercentPerLevel × L` % de sa valeur initiale (spec §3.6, §4.6, A17) :
+/// `splash`. Sans saturation : le pourcentage n'a pas de borne.
+final class SplashPercentDelta extends CardDelta {
+  const SplashPercentDelta({required this.valuePercentPerLevel});
+
+  final int valuePercentPerLevel;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'splashPercent',
         'valuePercentPerLevel': valuePercentPerLevel,
       };
 }

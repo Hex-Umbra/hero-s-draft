@@ -367,7 +367,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // P-43 E2, A8) — sont refusees par `ForgeUpgradeData.fromJson` lui-meme,
     // que la famille 7 appelle. Un fait a un seul endroit.
     requiredKeys: const {},
-    enumListKeys: {'eligibleCardTypes': _names(CardType.values)},
+    enumListKeys: {
+      'eligibleCardTypes': _names(CardType.values),
+      'eligibleTargets': _names(CardTarget.values),
+    },
     // Le type d'un delta, lu sur le parseur (ADR-100 D1).
     enumKeys: {'deltas[].type': CardDelta.typeNames},
     // `excludesRunes` nomme des runes : une liste non vide d'ids existants,
@@ -399,7 +402,8 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // filtre que si elle est presente), tandis qu'une liste vide n'aurait
     // rendu l'amelioration eligible a **rien**. Les quatre types enumeres sont
     // le seul equivalent honnete de l'absence, et l'auteur n'a qu'a retirer ce
-    // qu'il ne veut pas.
+    // qu'il ne veut pas. `eligibleTargets` suit la meme raison, avec les
+    // quatre cibles.
     //
     // `maxLevel` y vaut 1, une valeur prudente : un plafond oublie ne laisse
     // pas monter une rune sans fin (spec P-43 E1, §6). `binary` y vaut false :
@@ -414,6 +418,7 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "color": "amberAccent",
   "minFusionRank": 1,
   "eligibleCardTypes": ["attack", "skill", "power", "status"],
+  "eligibleTargets": ["singleEnemy", "allEnemies", "self", "none"],
   "eligibleEffects": ["damage"],
   "excludesEffects": [],
   "requiresExhaust": false,

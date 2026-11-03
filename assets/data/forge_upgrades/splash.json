@@ -1,0 +1,25 @@
+{
+  "id": "splash",
+  "name_en": "Ricocheting",
+  "name_fr": "Ricochant",
+  "description_en": "Also hits the other enemies for {val}% of the damage",
+  "description_fr": "Touche aussi les autres ennemis pour {val} % des dégâts",
+  "icon": "scatter_plot_rounded",
+  "color": "limeAccent",
+  "minFusionRank": 1,
+  "eligibleTargets": [
+    "singleEnemy"
+  ],
+  "eligibleEffects": [
+    "damage"
+  ],
+  "maxLevel": 3,
+  "deltas": [
+    {
+      "type": "splashPercent",
+      "valuePercentPerLevel": 25
+    }
+  ],
+  "weight": 50,
+  "emoji": "💥"
+}

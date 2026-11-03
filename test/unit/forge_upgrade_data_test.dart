@@ -129,6 +129,33 @@ void main() {
       }
     });
 
+    test('splashPercent se lit et s ecrit ; {val} Ricochant 3 vaut 75', () {
+      final json = [
+        {'type': 'splashPercent', 'valuePercentPerLevel': 25},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<SplashPercentDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 25),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        () => ForgeUpgradeData.fromJson(_json({
+          'deltas': [
+            {'type': 'splashPercent', 'valuePercentPerLevel': 0},
+          ],
+        })),
+        _refused('valuePercentPerLevel'),
+      );
+      expect(
+        shippedRune('splash').getDescription(
+            3, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        'Touche aussi les autres ennemis pour 75 % des dégâts',
+      );
+    });
+
     test('refuse une rune sans deltas', () {
       expect(() => ForgeUpgradeData.fromJson(_json()..remove('deltas')),
           _refused('deltas'));
@@ -541,6 +568,24 @@ void main() {
       expect(rune.excludesEffects, isEmpty);
       expect(rune.requiresMinCost, 0);
       expect(rune.excludesRunes, isEmpty);
+    });
+
+    test('eligibleTargets : absente toute cible ; vide ou nom inconnu '
+        'refuses ; aller-retour', () {
+      final absent = ForgeUpgradeData.fromJson(_json());
+      expect(absent.eligibleTargets, isNull);
+      expect(absent.toJson().containsKey('eligibleTargets'), isFalse);
+      for (final bad in [<String>[], ['enemy']]) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({'eligibleTargets': bad})),
+          _refused('eligibleTargets'),
+          reason: '$bad',
+        );
+      }
+      final rune = ForgeUpgradeData.fromJson(
+          _json({'eligibleTargets': ['singleEnemy']}));
+      expect(rune.eligibleTargets, ['singleEnemy']);
+      expect(rune.toJson()['eligibleTargets'], ['singleEnemy']);
     });
 
     test('refuse eligibleEffects vide, eligible a rien', () {

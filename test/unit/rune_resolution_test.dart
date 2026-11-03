@@ -287,6 +287,138 @@ void main() {
     });
   });
 
+  // Ricochant : chaque autre ennemi vivant prend une part du coup, par coup,
+  // sur le pipeline de sa propre cible (spec §3.6, §4.6, A17).
+  group('Ricochant', () {
+    late List<String> ids;
+
+    EntityStats stats(int pv) =>
+        EntityStats(maxPv: 100, currentPv: pv, armure: 0, might: 0);
+
+    void faceEnemies([List<int> pvs = const [100, 100, 100]]) {
+      final enemies = [
+        for (final pv in pvs)
+          EnemyInstance(data: registry.enemies.first, stats: stats(pv)),
+      ];
+      ids = [for (final e in enemies) e.id];
+      combat.state = CombatState(
+        enemies: enemies,
+        selectedEnemyId: ids.first,
+        turnPhase: TurnPhase.player,
+      );
+    }
+
+    EntityStats statsOf(int index) => combat.currentState.enemies
+        .singleWhere((e) => e.id == ids[index])
+        .stats;
+
+    List<int> pvs() => [for (var i = 0; i < ids.length; i++) statsOf(i).currentPv];
+
+    void edit(int index, EntityStats Function(EntityStats) change) =>
+        combat.updateEnemyStats(ids[index], change(statsOf(index)));
+
+    void playOnFirst(CardInstance played) {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentMana: 9)));
+      expect(
+        EffectResolver.resolveCard(
+          played,
+          run,
+          deck,
+          combat,
+          ids.first,
+          container.read(effectRegistryProvider),
+        ),
+        isTrue,
+      );
+    }
+
+    CardInstance custom(int damage, List<String> runes) => CardInstance(
+          data: CardData(
+            id: 'test_hit',
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'damage', value: damage)],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    setUp(faceEnemies);
+
+    test('Ricochant 1 : chaque autre ennemi vivant prend 25 % du coup, demie '
+        'vers le haut, au moins 1', () {
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 98]);
+
+      faceEnemies();
+      playOnFirst(custom(1, const ['splash:1']));
+      expect(pvs(), [99, 99, 99]);
+
+      faceEnemies(const [100, 100, 0]);
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 0]);
+    });
+
+    test('l eclaboussure passe le pipeline de sa cible : son Electrocution et '
+        'sa Vulnerabilite', () {
+      edit(
+        1,
+        (s) => s.copyWith(statuses: const [
+          StatusEffect(
+              id: 'shock',
+              name: 'shock',
+              type: StatusType.debuff,
+              value: 2,
+              duration: 2),
+          StatusEffect(
+              id: 'vulnerable',
+              name: 'vulnerable',
+              type: StatusType.debuff,
+              value: 2,
+              duration: 2),
+        ]),
+      );
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      // (2 + 2) x 1,5 = 6 ; le troisieme ennemi n'a rien de tout cela.
+      expect(pvs(), [94, 94, 98]);
+    });
+
+    test('l eclaboussure est absorbee par l Armure de sa cible, Perforant '
+        'compris', () {
+      edit(1, (s) => s.copyWith(armure: 5));
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect((statsOf(1).currentPv, statsOf(1).armure), (100, 3));
+
+      faceEnemies();
+      edit(1, (s) => s.copyWith(armure: 5));
+      playOnFirst(
+          card('strike_basic', runes: const ['splash:1', 'piercing:4']));
+      expect((statsOf(1).currentPv, statsOf(1).armure), (98, 5));
+    });
+
+    test('les eclaboussures comptent dans le vol de vie, statut et rune', () {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+      run.applyLifestealBuff(value: 99, duration: 3);
+      playOnFirst(
+          card('strike_basic', runes: const ['splash:1', 'lifesteal:1']));
+      // 6 + 2 + 2 = 10 degats : le statut soigne 10, la rune 20 % = 2.
+      expect(pvs(), [94, 98, 98]);
+      expect(hero().currentPv, 50 + 10 + 2);
+    });
+
+    test('un critique se tire pour chaque cible', () {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(critChance: 100)));
+      playOnFirst(
+          card('strike_basic', runes: const ['precise:20', 'splash:1']));
+      // La base de l'eclaboussure, 2, est prise avant le pipeline : 2 x 1,5.
+      expect(pvs(), [100 - 9, 100 - 3, 100 - 3]);
+    });
+  });
+
   test('G1 : un Coup Empoisonne legendaire inflige 7 degats et pose 5 Poison',
       () {
     play(card('poison_stab', rarity: CardRarity.legendary));

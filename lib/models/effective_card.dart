@@ -20,6 +20,7 @@ class EffectiveCard {
     required this.armorPierceLevel,
     required this.lifestealPercent,
     required this.lifestealLevel,
+    required this.splashPercent,
   });
 
   /// Les effets que les deltas ajoutent, résolus avant ceux de la carte.
@@ -56,6 +57,10 @@ class EffectiveCard {
   final int lifestealPercent;
   final int lifestealLevel;
 
+  /// Le pourcentage du coup dont chaque autre ennemi vivant est éclaboussé
+  /// (spec §4.6, A17).
+  final int splashPercent;
+
   /// La couture commune aux runes et, en vague 5, aux évolutions de
   /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
   /// reçoit des paires *(delta, niveau)*.
@@ -77,6 +82,7 @@ class EffectiveCard {
     var armorPierceLevel = 0;
     var lifestealPercent = 0;
     var lifestealLevel = 0;
+    var splashPercent = 0;
 
     for (final (delta, level) in deltas) {
       switch (delta) {
@@ -110,6 +116,8 @@ class EffectiveCard {
         case LifestealPercentDelta():
           lifestealPercent += delta.valuePercentPerLevel * level;
           lifestealLevel += level;
+        case SplashPercentDelta():
+          splashPercent += delta.valuePercentPerLevel * level;
       }
     }
 
@@ -124,6 +132,7 @@ class EffectiveCard {
       armorPierceLevel: armorPierceLevel,
       lifestealPercent: lifestealPercent,
       lifestealLevel: lifestealLevel,
+      splashPercent: splashPercent,
     );
   }
 

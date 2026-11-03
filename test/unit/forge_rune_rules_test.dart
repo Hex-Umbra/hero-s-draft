@@ -340,6 +340,20 @@ void main() {
       );
     });
 
+    test('Ricochant a son plafond 3 est propose', () {
+      final splash = _rune('splash', maxLevel: 3, deltas: const [
+        SplashPercentDelta(valuePercentPerLevel: 25),
+      ]);
+      expect(
+        [
+          for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+              [_cardWith(['splash:3'])], [splash]))
+            (rune.id, cap),
+        ],
+        [('splash', 3)],
+      );
+    });
+
     test('Vampirique 4 reste proposee', () {
       expect(
         saturableCandidates([_cardWith(['lifesteal:4'])],

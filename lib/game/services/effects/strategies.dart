@@ -3,6 +3,7 @@ import '../../../models/card_instance.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/effective_card.dart';
 import '../../../models/enemy_instance.dart';
+import '../../../models/entity_stats.dart';
 import '../../../models/status_effect.dart';
 import '../../controllers/run_controller.dart';
 import '../../controllers/deck_controller.dart';
@@ -27,9 +28,8 @@ class DamageEffectStrategy implements EffectStrategy {
     required String? selectedEnemyId,
   }) {
     int dealt = 0;
-    // Le critique que les runes de la carte ajoutent (spec P-43 E2, §4.2).
+    // Les runes de la carte : critique, perforation, éclaboussure.
     final effective = card.effective;
-    final critChanceBonus = effective.critChanceBonus;
 
     for (var hit = 0; hit < effect.hits; hit++) {
       // Les ennemis sont relus à chaque coup : un mort ne reçoit plus rien.
@@ -51,27 +51,68 @@ class DamageEffectStrategy implements EffectStrategy {
             (heroStats.damageBonusFor(card.data.type) * effect.mightRatio +
                     1e-9)
                 .floor();
-        final (finalDmg, isCrit) = DamagePipeline.calculate(
-          initialDamage: scaledValue + might,
-          attackerStats: heroStats,
-          defenderStats: enemy.stats,
-          critChanceBonus: critChanceBonus,
+        final initialDamage = scaledValue + might;
+        dealt += _strike(
+          combatController,
+          effective,
+          enemy,
+          heroStats,
+          initialDamage,
         );
-        combatController.updateEnemyStats(
-          enemy.id,
-          enemy.stats.takeDamage(
-            finalDmg,
-            isCrit: isCrit,
-            armorPiercePercent: effective.armorPiercePercent,
-            armorPierceFloor: effective.armorPierceLevel,
-          ),
-        );
-        dealt += finalDmg;
+        // Ricochant : la cible frappée, les autres ennemis vivants prennent
+        // leur part du coup (spec §4.6, A17).
+        if (card.data.target == CardTarget.singleEnemy &&
+            effective.splashPercent > 0) {
+          final base = max(
+            1,
+            (effective.splashPercent * initialDamage + 50) ~/ 100,
+          );
+          final others = combatController.currentState.enemies
+              .where((e) => e.id != enemy.id && e.stats.currentPv > 0)
+              .toList();
+          for (final other in others) {
+            dealt += _strike(
+              combatController,
+              effective,
+              other,
+              heroStats,
+              base,
+            );
+          }
+        }
       }
     }
 
     _payLifesteal(runController, dealt);
     _payRuneLifesteal(runController, effective, dealt);
+  }
+
+  /// Un coup de [initialDamage] sur [enemy] : le pipeline contre **ses**
+  /// statuts, puis l'Armure, perforation de la carte comprise. Rend les dégâts
+  /// de pipeline, ceux que le vol de vie compte.
+  int _strike(
+    CombatController combatController,
+    EffectiveCard effective,
+    EnemyInstance enemy,
+    EntityStats heroStats,
+    int initialDamage,
+  ) {
+    final (finalDmg, isCrit) = DamagePipeline.calculate(
+      initialDamage: initialDamage,
+      attackerStats: heroStats,
+      defenderStats: enemy.stats,
+      critChanceBonus: effective.critChanceBonus,
+    );
+    combatController.updateEnemyStats(
+      enemy.id,
+      enemy.stats.takeDamage(
+        finalDmg,
+        isCrit: isCrit,
+        armorPiercePercent: effective.armorPiercePercent,
+        armorPierceFloor: effective.armorPierceLevel,
+      ),
+    );
+    return finalDmg;
   }
 
   /// Le soin de la rune Vampirique : `p × L` % des dégâts infligés, la demie

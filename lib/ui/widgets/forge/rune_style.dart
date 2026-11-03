@@ -15,6 +15,7 @@ const Map<String, IconData> runeIcons = {
   'savings_rounded': Icons.savings_rounded,
   'gps_fixed_rounded': Icons.gps_fixed_rounded,
   'blur_on_rounded': Icons.blur_on_rounded,
+  'scatter_plot_rounded': Icons.scatter_plot_rounded,
   'navigation_rounded': Icons.navigation_rounded,
   'water_drop_rounded': Icons.water_drop_rounded,
 };
@@ -36,4 +37,5 @@ const Map<String, Color> runeColors = {
   'purpleAccent': Colors.purpleAccent,
   'indigoAccent': Colors.indigoAccent,
   'deepOrangeAccent': Colors.deepOrangeAccent,
+  'limeAccent': Colors.limeAccent,
 };

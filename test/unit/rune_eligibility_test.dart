@@ -5,6 +5,8 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 
+import 'shipped_data.dart';
+
 ForgeUpgradeData _rune(
   String id, {
   List<String>? eligibleCardTypes,
@@ -70,6 +72,15 @@ bool _eligible(
 
 /// Le prédicat d'éligibilité, condition par condition (spec P-43 E1, §4.6).
 void main() {
+  test('eligibleTargets : Ricochant refuse une carte allEnemies, accepte une '
+      'singleEnemy', () {
+    final splash = shippedRune('splash');
+    CardInstance shipped(String id) =>
+        CardInstance(data: shippedCard(id), rarity: CardRarity.uncommon);
+    expect(_eligible(splash, shipped('strike_basic')), isTrue);
+    expect(_eligible(splash, shipped('sweep')), isFalse);
+  });
+
   test('le type de carte', () {
     final rune = _rune('burning', eligibleCardTypes: const ['attack']);
     expect(_eligible(rune, _card()), isTrue);
