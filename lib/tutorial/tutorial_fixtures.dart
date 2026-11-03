@@ -64,8 +64,8 @@ class TutorialFixtures {
       availablePassivesFor(hero, registry);
 
   /// Le pool du draft de départ, filtré et trié comme `StarterDeckDraftScreen`.
-  List<CardData> get starterPool => registry.cards
-      .where((c) => c.isOfferable)
+  List<CardData> starterPool(String? activePassiveId) => registry.cards
+      .where((c) => c.isOfferable(activePassiveId))
       .toList()
     ..sort(CardData.compareByDisplayOrder);
 }

@@ -453,7 +453,7 @@ void main() {
     });
 
     test('le deck drafté survit aux changements d\'étape', () {
-      final pool = engine.fixtures.starterPool.take(5).toList();
+      final pool = engine.fixtures.starterPool(null).take(5).toList();
       engine.chooseHero(engine.fixtures.heroes.first);
       engine.setStarterDeck(pool);
 
@@ -469,7 +469,7 @@ void main() {
         // TutorialStarterDeckWidget appelle setStarterDeck([]) tant que la
         // cible de 5 n'est pas atteinte : masterDeck.isNotEmpty ne doit pas
         // devenir vrai dès la première carte cochée.
-        final pool = engine.fixtures.starterPool.take(5).toList();
+        final pool = engine.fixtures.starterPool(null).take(5).toList();
         engine.chooseHero(engine.fixtures.heroes.first);
         engine.setStarterDeck(pool);
         expect(engine.mockState.masterDeck, isNotEmpty);
@@ -499,7 +499,7 @@ void main() {
         final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
 
         engine.chooseHero(paladin);
-        final pool = engine.fixtures.starterPool.take(5).toList();
+        final pool = engine.fixtures.starterPool(null).take(5).toList();
         engine.setStarterDeck(pool);
         expect(engine.mockState.masterDeck, hasLength(5));
 

@@ -10,6 +10,8 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/relic_data.dart';
 
 import 'shipped_data.dart';
 
@@ -208,6 +210,43 @@ void main() {
       expect(inventoryController.state.gold, 85); // 100 - 15 = 85
       // La liste de cartes a été régénérée
       expect(shopController.state.cardsForSale.length, 3);
+    });
+
+    test('deux cents etals n offrent jamais la carte d un autre lot', () {
+      CardData lotCard(String id, String passive) => CardData(
+            id: id,
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: const [],
+            passive: passive,
+          );
+      final registry = [
+        ...testCardPool,
+        lotCard('rage_1', 'rage'),
+        lotCard('rage_2', 'rage'),
+        lotCard('fervor_1', 'fervor'),
+        lotCard('fervor_2', 'fervor'),
+      ];
+      runController.startNewRun(
+        dummyHero,
+        const PassiveData(
+          id: 'rage',
+          trigger: RelicTrigger.endOfTurn,
+          effectType: 'gain_armor',
+          value: 1,
+        ),
+      );
+
+      final seen = <String?>{};
+      for (var i = 0; i < 200; i++) {
+        shopController.rerollCards(0, registry, 0);
+        seen.addAll(shopController.state.cardsForSale.map((c) => c.data.passive));
+      }
+
+      expect(seen, isNot(contains('fervor')));
+      expect(seen, contains('rage'));
     });
 
     test('purgeCard successfully purges card from deck', () {

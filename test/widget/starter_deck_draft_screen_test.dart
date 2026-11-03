@@ -287,7 +287,8 @@ void main() {
   });
 
   testWidgets(
-    'le pool du draft de depart est celui d isOfferable : tout sauf un statut',
+    'le pool du draft de depart est celui d isOfferable : neutres et lot du '
+    'passif choisi, jamais un statut',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -310,6 +311,29 @@ void main() {
             rarity: CardRarity.common,
             target: CardTarget.self,
             effects: [],
+          ),
+          // Une carte du lot du passif de l'ecran, une d'un autre lot.
+          const CardData(
+            id: 'lot_regen',
+            nameEn: 'Regen Card',
+            nameFr: 'Carte Regen',
+            cost: 1,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            effects: [],
+            passive: 'regen_armor',
+          ),
+          const CardData(
+            id: 'lot_fervor',
+            nameEn: 'Fervor Card',
+            nameFr: 'Carte Ferveur',
+            cost: 1,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: CardTarget.self,
+            effects: [],
+            passive: 'fervor',
           ),
         ],
         events: const [],
@@ -344,7 +368,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(UiCard), findsNWidgets(10));
+      expect(find.byType(UiCard), findsNWidgets(11));
       expect(find.text('BOUCLIER SACRÉ'), findsNothing);
       expect(find.text('BLESSURE'), findsNothing);
     },

@@ -46,7 +46,7 @@ void main() {
     // avec un deck incomplet et le joueur resterait bloqué dessus (verrou
     // d'amont dès l'étape suivante).
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool;
+    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
 
     await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[0].id}')));
     await tester.pump();
@@ -57,7 +57,7 @@ void main() {
 
   testWidgets('selectionner 5 cartes remplit le deck des 5 cartes choisies, sans signature', (tester) async {
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool;
+    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
 
     for (var i = 0; i < 5; i++) {
       await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[i].id}')));
@@ -85,7 +85,7 @@ void main() {
 
   testWidgets('la sélection est bornée à 5', (tester) async {
     final engine = await _pump(tester);
-    final pool = engine.fixtures.starterPool;
+    final pool = engine.fixtures.starterPool(engine.mockState.activePassive?.id);
 
     for (var i = 0; i < 6; i++) {
       await tester.tap(find.byKey(ValueKey('tutorial-pool-${pool[i].id}')));

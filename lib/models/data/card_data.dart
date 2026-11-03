@@ -310,8 +310,11 @@ class CardData implements AudioSource {
       locale == 'fr' ? descriptionFr : descriptionEn;
 
   /// Le prédicat d'offre unique (ADR-101 D1) : boutique, trouvaille, draft de
-  /// départ, `starterPool` du tutoriel ; la vague 5 lui donnera le passif actif.
-  bool get isOfferable => type != CardType.status;
+  /// départ, `starterPool` du tutoriel. Une carte est offerte si elle n'est pas
+  /// un statut et si elle est neutre ou du lot du passif actif de la run
+  /// ([activePassiveId]) ; une run sans passif ne se voit offrir que des neutres.
+  bool isOfferable(String? activePassiveId) =>
+      type != CardType.status && (passive == null || passive == activePassiveId);
 
   factory CardData.fromJson(Map<String, dynamic> json) {
     // L'appartenance vient du répertoire (A10) : une carte ne la déclare pas.

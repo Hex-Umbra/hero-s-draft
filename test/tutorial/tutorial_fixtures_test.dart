@@ -121,12 +121,13 @@ void main() {
     });
 
     test('le pool de départ est celui du prédicat d offre', () {
-      expect(fixtures.starterPool, isNotEmpty);
-      expect(fixtures.starterPool.length, greaterThanOrEqualTo(5));
-      expect(fixtures.starterPool.every((c) => c.isOfferable), isTrue);
-      final expected = data.cards.where((c) => c.isOfferable).toList()
+      final pool = fixtures.starterPool('regen_armor');
+      expect(pool, isNotEmpty);
+      expect(pool.length, greaterThanOrEqualTo(5));
+      expect(pool.every((c) => c.isOfferable('regen_armor')), isTrue);
+      final expected = data.cards.where((c) => c.isOfferable('regen_armor')).toList()
         ..sort(CardData.compareByDisplayOrder);
-      expect(fixtures.starterPool, expected);
+      expect(pool, expected);
     });
   });
 

@@ -35,14 +35,44 @@ void main() {
     test('toute carte qui n est pas un statut est offerte, a toute rarete', () {
       for (final type in [CardType.attack, CardType.skill, CardType.power]) {
         for (final rarity in CardRarity.values) {
-          expect(_card(id: 'c', type: type, rarity: rarity).isOfferable, isTrue,
+          expect(
+              _card(id: 'c', type: type, rarity: rarity).isOfferable(null),
+              isTrue,
               reason: '$type $rarity');
         }
       }
     });
 
     test('une carte de statut n est jamais offerte', () {
-      expect(_card(id: 'wound', type: CardType.status).isOfferable, isFalse);
+      expect(_card(id: 'wound', type: CardType.status).isOfferable(null),
+          isFalse);
+    });
+
+    test('une carte de lot n est offerte qu a son passif ; sans passif, aucune',
+        () {
+      final card = CardData(
+        id: 'c',
+        cost: 1,
+        type: CardType.attack,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: const [],
+        passive: 'rage',
+      );
+      expect(card.isOfferable('rage'), isTrue);
+      expect(card.isOfferable('fervor'), isFalse);
+      expect(card.isOfferable(null), isFalse);
+
+      final status = CardData(
+        id: 'c',
+        cost: 1,
+        type: CardType.status,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        effects: const [],
+        passive: 'rage',
+      );
+      expect(status.isOfferable('rage'), isFalse);
     });
 
     test('CardData.fromJson refuse heroClass, en le nommant', () {

@@ -217,7 +217,9 @@ class RewardController extends Notifier<RewardState> {
     // vide : aucune carte, sans repli (ADR-101 D4).
     final run = ref.read(runProvider);
     final rng = random ?? Random();
-    final offerable = allCards.where((c) => c.isOfferable).toList();
+    final activePassiveId = run.activePassive?.id;
+    final offerable =
+        allCards.where((c) => c.isOfferable(activePassiveId)).toList();
     final foundCards = <CardInstance>[];
     if (offerable.isNotEmpty) {
       // Les deux règles des reliques : C (+1 carte garantie) au seul combat

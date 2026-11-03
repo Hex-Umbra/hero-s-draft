@@ -38,7 +38,8 @@ class _TutorialStarterDeckWidgetState extends State<TutorialStarterDeckWidget> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final isFrench = locale == 'fr';
-    final pool = widget.engine.fixtures.starterPool;
+    final pool = widget.engine.fixtures
+        .starterPool(widget.engine.mockState.activePassive?.id);
     final signatures = widget.engine.mockState.chosenHero?.skills
             .map(widget.engine.fixtures.signature)
             .toList() ??

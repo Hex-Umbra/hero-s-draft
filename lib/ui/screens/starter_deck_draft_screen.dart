@@ -51,9 +51,9 @@ class _StarterDeckDraftScreenState
   void _generateDraftPool() {
     final gameData = ref.read(gameDataLoaderProvider).requireValue;
 
-    // 1. Filtrer par le predicat d'offre : tout sauf un statut
+    // 1. Filtrer par le predicat d'offre : neutres et lot du passif choisi
     final offerableCards = gameData.cards
-        .where((c) => c.isOfferable)
+        .where((c) => c.isOfferable(widget.passive?.id))
         .toList()
       // Le pool est affiché et sélectionné par index, sans mélange : sans tri
       // explicite, le premier choix d'une run suivrait l'ordre du registre,

@@ -10,6 +10,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
@@ -518,6 +519,52 @@ void main() {
         // Idempotent : un second appel n'ajoute rien.
         rewardController.collectGoldAndXp();
         expect(container.read(deckProvider).masterDeck, hasLength(2));
+      });
+
+      test('deux cents trouvailles n offrent jamais la carte d un autre lot', () {
+        CardData lotCard(String id, String passive) => CardData(
+              id: id,
+              cost: 1,
+              type: CardType.attack,
+              rarity: CardRarity.common,
+              target: CardTarget.singleEnemy,
+              effects: const [],
+              passive: passive,
+            );
+        final registry = [
+          ...allCards,
+          lotCard('rage_1', 'rage'),
+          lotCard('rage_2', 'rage'),
+          lotCard('fervor_1', 'fervor'),
+          lotCard('fervor_2', 'fervor'),
+        ];
+        runController.startNewRun(
+          dummyHero,
+          const PassiveData(
+            id: 'rage',
+            trigger: RelicTrigger.endOfTurn,
+            effectType: 'gain_armor',
+            value: 1,
+          ),
+        );
+        final rng = Random(5);
+        final seen = <String?>{};
+
+        for (var i = 0; i < 200; i++) {
+          rewardController.handleVictory(
+            defeatedEnemies: [makeEnemy(xp: 10, gold: 10)],
+            currentNode: makeNode(),
+            allRelics: allRelics,
+            allCards: registry,
+            luck: 0,
+            act: 1,
+            random: rng,
+          );
+          seen.addAll(rewardController.state.foundCards.map((c) => c.data.passive));
+        }
+
+        expect(seen, isNot(contains('fervor')));
+        expect(seen, contains('rage'));
       });
 
       test('la trouvaille ne tire que des cartes offertes, jamais un statut',
