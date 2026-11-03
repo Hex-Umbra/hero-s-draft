@@ -25,9 +25,9 @@ Tenu par l'orchestrateur (ADR-108 D4) : les questions nées à l'écriture, puis
 | PN16 | Un choix refusé depuis l'écran (l'état a changé) | L'écran se ferme ; le rideau rouvre ce qui reste | 8 |
 | PN17 | Quand change le gabarit d'éditeur de la signature | Dès la Task 2, avec une évolution verbale (`ardor`) ; le reste du descripteur en Task 8 | 5 |
 
-### Classe P — au propriétaire
+### Classe P — répondues par le propriétaire le 03/11
 
-Le plan s'écrit sous l'option recommandée, marquée **(provisoire)** aux Tasks 3 et 7 ; il se vérifie autour d'elles (§5 : dans le doute entre T et P, P).
+Le plan s'est écrit et vérifié sous l'option recommandée, marquée **(provisoire)** aux Tasks 3 et 7 (§5 : dans le doute entre T et P, P). Le propriétaire a répondu devant des [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx) : **PN12 (d)**, une option à lui — des icônes à la place du texte sur la tuile de combat, la description complète déroulée en liste par appui long, avec les quatre précisions recommandées (la valeur sur l'icône, relâcher replie, la durée dans la liste seulement, le texte gardé hors combat) ; **PN13 (c)**, l'ambre. Réponses écrites en §1.2 de la spec, qui s'amende et se revérifie ; puis le plan se reprend.
 
 | # | Question | Options | Recommandation |
 |:---:|:---|:---|:---|
