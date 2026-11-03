@@ -50,7 +50,7 @@ class EntityForm extends StatelessWidget {
     this.identityColor,
     this.resources,
     this.faults = const {},
-    this.ownerClassIds = const [],
+    this.ownerIds = const [],
     this.selectedOwner,
     this.onOwnerSelected,
     this.ownerColorOf,
@@ -89,13 +89,14 @@ class EntityForm extends StatelessWidget {
   final Map<String, String> faults;
   final FieldAnchors anchors;
 
-  /// Rangee de pastilles de proprietaire, pour une signature en creation
-  /// seulement : `Key('editeur-proprietaire-<classe>')` et
-  /// `Key('editeur-proprietaire-neutre')`.
-  final List<String> ownerClassIds;
+  /// Rangee de pastilles de proprietaire, pour une signature (une par classe)
+  /// ou une carte de lot (une par passif) en creation seulement :
+  /// `Key('editeur-proprietaire-<id>')`, et `Key('editeur-proprietaire-neutre')`
+  /// pour la seule signature, la carte de lot ne pouvant etre neutre.
+  final List<String> ownerIds;
   final String? selectedOwner;
   final ValueChanged<String?>? onOwnerSelected;
-  final Color? Function(String classId)? ownerColorOf;
+  final Color? Function(String ownerId)? ownerColorOf;
 
   /// La recette de classe, pour une classe en creation seulement.
   final bool showSignatures;
@@ -279,41 +280,43 @@ class EntityForm extends StatelessWidget {
             ),
           ),
         ),
-        if (descriptor.supportsHeroClass)
+        if (descriptor.ownerKind != null)
           KeyedSubtree(
-            key: anchors.keyFor('heroClass'),
+            key: anchors.keyFor('owner'),
             child: isModification ? _lockedOwner() : _ownerPills(),
           ),
       ],
     );
   }
 
-  /// Le proprietaire d'une signature est un champ du formulaire, pas un niveau
-  /// de l'arbre : la neutralite et chaque classe sont des pastilles, colorees
-  /// par le `themeColor` de la classe.
+  /// Le proprietaire d'une signature ou d'une carte de lot est un champ du
+  /// formulaire, pas un niveau de l'arbre : chaque classe (et la neutralite)
+  /// ou chaque passif est une pastille, coloree par le `themeColor` de la
+  /// classe.
   Widget _ownerPills() {
     return PropertyRow(
       label: 'propriétaire',
       alignTop: true,
-      errorText: faults['heroClass'],
+      errorText: faults['owner'],
       child: Wrap(
         spacing: 6,
         runSpacing: 6,
         children: [
-          ChoiceButton(
-            key: const Key('editeur-proprietaire-neutre'),
-            label: 'Neutre',
-            isSelected: selectedOwner == null,
-            onTap: () => onOwnerSelected?.call(null),
-            identityColor: kNeutralOwnerColor,
-          ),
-          for (final classId in ownerClassIds)
+          if (descriptor.ownerKind == EntityOwnerKind.heroClass)
             ChoiceButton(
-              key: Key('editeur-proprietaire-$classId'),
-              label: classId,
-              isSelected: selectedOwner == classId,
-              onTap: () => onOwnerSelected?.call(classId),
-              identityColor: ownerColorOf?.call(classId) ?? kNeutralOwnerColor,
+              key: const Key('editeur-proprietaire-neutre'),
+              label: 'Neutre',
+              isSelected: selectedOwner == null,
+              onTap: () => onOwnerSelected?.call(null),
+              identityColor: kNeutralOwnerColor,
+            ),
+          for (final ownerId in ownerIds)
+            ChoiceButton(
+              key: Key('editeur-proprietaire-$ownerId'),
+              label: ownerId,
+              isSelected: selectedOwner == ownerId,
+              onTap: () => onOwnerSelected?.call(ownerId),
+              identityColor: ownerColorOf?.call(ownerId) ?? kNeutralOwnerColor,
             ),
         ],
       ),

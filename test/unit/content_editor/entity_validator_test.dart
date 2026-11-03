@@ -94,17 +94,17 @@ void main() {
   });
 
   group('une signature (spec P-43 E4, §8)', () {
-    test('une signature neuve sans proprietaire est refusee, nommee heroClass',
+    test('une signature neuve sans proprietaire est refusee, nommee owner',
         () {
       final counting = _TouchCountingFileSystem();
       final faults = EntityValidator(
         fs: counting,
         rootPath: root,
         registry: fixtureRegistry(),
-      ).validate(fixtureSignatureDraft(heroClass: null));
+      ).validate(fixtureSignatureDraft(owner: null));
 
       expect(faults, hasLength(1));
-      expect(faults.single.field, 'heroClass');
+      expect(faults.single.field, 'owner');
       // Refusee a la famille 1, avant tout controle d'existence : le chemin
       // de repli `assets/data/skills/<id>.json` n'est celui d'aucune
       // signature, et le juger n'aurait aucun sens.
@@ -114,7 +114,7 @@ void main() {
     test('une signature homonyme d une signature du registre est refusee', () {
       final faults = validatorWith(
         registry: fixtureRegistry(signatures: [fixtureSignature('smite')]),
-      ).validate(fixtureSignatureDraft(id: 'smite', heroClass: 'mage'));
+      ).validate(fixtureSignatureDraft(id: 'smite', owner: 'mage'));
 
       expect(faults, hasLength(1));
       expect(faults.single.field, 'id');
@@ -174,7 +174,7 @@ void main() {
       expect(constructed!.containsKey('heroClass'), isFalse);
     });
 
-    test('une carte neutre portant une classe est refusee, nommee heroClass',
+    test('une carte neutre portant une classe est refusee, nommee owner',
         () {
       // Seule une signature a un proprietaire : une carte portant une classe
       // serait ecrite a plat, puis inscrite dans les `skills` de la classe.
@@ -182,7 +182,7 @@ void main() {
       final faults = validatorWith().validate(EntityDraft(
         descriptor: descriptor,
         id: 'coup_bas',
-        heroClass: 'mage',
+        owner: 'mage',
         bilingual: const {
           'name_fr': 'x',
           'name_en': 'x',
@@ -193,7 +193,118 @@ void main() {
       ));
 
       expect(faults, hasLength(1));
-      expect(faults.single.field, 'heroClass');
+      expect(faults.single.field, 'owner');
+    });
+  });
+
+  group('la carte de lot (A31)', () {
+    final registry = fixtureRegistry(
+      heroes: [fixtureHero('paladin'), fixtureConvertingHero('berserker')],
+      passives: [
+        fixturePassive('regen_armor', feeds: ['armor', 'cost:armor']),
+        fixturePassive('rage',
+            heroClass: 'berserker', feeds: ['cost:hp', 'cost:armor']),
+      ],
+    );
+
+    EntityDraft lotDraft({
+      EntityCategory category = EntityCategory.lotCard,
+      String? owner,
+      required String mechanics,
+    }) =>
+        EntityDraft(
+          descriptor: kEntityDescriptors[category]!,
+          id: 'carte_de_lot',
+          owner: owner,
+          bilingual: const {
+            'name_fr': 'x',
+            'name_en': 'x',
+            'description_fr': 'x',
+            'description_en': 'x',
+          },
+          mechanics: mechanics,
+        );
+
+    const armorSkill = '{"cost": 1, "type": "skill", "effects": '
+        '[{"type": "armor", "value": 5}]}';
+
+    // Le vocabulaire d'un type d'effet est celui des fichiers livres : le bac
+    // a sable en porte un qui emploie `armor` et `draw`.
+    setUp(() {
+      Directory('$root/assets/data/cards').createSync(recursive: true);
+      File('$root/assets/data/cards/vocabulaire.json').writeAsStringSync(
+        '{"id": "vocabulaire", "cost": 1, "type": "skill", "effects": ['
+        '{"type": "armor", "value": 5}, {"type": "draw", "value": 1}]}',
+      );
+    });
+
+    test('sans proprietaire, refusee', () {
+      final faults = validatorWith(registry: registry)
+          .validate(lotDraft(mechanics: armorSkill));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'owner');
+    });
+
+    test('un passif proprietaire inconnu est refuse', () {
+      final faults = validatorWith(registry: registry)
+          .validate(lotDraft(owner: 'zeal', mechanics: armorSkill));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'owner');
+      expect(faults.single.message, contains('zeal'));
+
+      // Sans registre, ni le passif inconnu ni la famille ne se jugent ; la
+      // forme du proprietaire, elle, reste exigee.
+      final bare = EntityValidator(fs: fs, rootPath: root);
+      expect(
+        bare.validate(lotDraft(owner: 'zeal', mechanics: armorSkill)),
+        isEmpty,
+      );
+      expect(
+        bare.validate(lotDraft(mechanics: armorSkill)).single.field,
+        'owner',
+      );
+    });
+
+    test('une carte de lot qui ne touche pas feeds est refusee', () {
+      expect(
+        validatorWith(registry: registry)
+            .validate(lotDraft(owner: 'regen_armor', mechanics: armorSkill)),
+        isEmpty,
+        reason: 'la meme carte, nourrissant son passif, est bonne',
+      );
+
+      final faults = validatorWith(registry: registry).validate(lotDraft(
+        owner: 'regen_armor',
+        mechanics: '{"cost": 1, "type": "skill", "effects": '
+            '[{"type": "draw", "value": 1}]}',
+      ));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.message, contains('regen_armor'));
+    });
+
+    test('costs.armor sous une classe qui convertit l Armure est refuse', () {
+      final faults = validatorWith(registry: registry).validate(lotDraft(
+        owner: 'rage',
+        mechanics: '{"costs": {"mana": 0, "armor": 4}, "type": "attack", '
+            '"effects": [{"type": "damage", "value": 9}]}',
+      ));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.message, contains('berserker'));
+    });
+
+    test('une neutre a costs.hp est refusee par le modele (A8)', () {
+      final faults = validatorWith(registry: registry).validate(lotDraft(
+        category: EntityCategory.card,
+        mechanics: '{"costs": {"mana": 0, "hp": 3}, "type": "attack", '
+            '"effects": [{"type": "damage", "value": 9}]}',
+      ));
+
+      expect(faults, hasLength(1));
+      expect(faults.single.message, contains('passive'));
     });
   });
 
@@ -621,15 +732,24 @@ void main() {
     // passerait pas sa propre validation serait un piege servi a l'ouverture.
     // Une signature recoit une classe : sans proprietaire, elle est refusee
     // des la famille 1, avant que son gabarit ne soit juge.
-    // Le gabarit d'un passif vise `paladin` (A5) : la classe doit exister.
+    // Le gabarit d'un passif vise `paladin` (A5) : la classe doit exister. Le
+    // gabarit d'une carte de lot est une attaque : son passif proprietaire
+    // nourrit `attack`.
     final validator = validatorWith(
-      registry: fixtureRegistry(heroes: [fixtureHero('paladin')]),
+      registry: fixtureRegistry(
+        heroes: [fixtureHero('paladin')],
+        passives: [fixturePassive('regen_armor', feeds: ['attack'])],
+      ),
     );
     for (final descriptor in kEntityDescriptors.values) {
       final draft = EntityDraft(
         descriptor: descriptor,
         id: 'entite_de_test',
-        heroClass: descriptor.supportsHeroClass ? 'paladin' : null,
+        owner: switch (descriptor.ownerKind) {
+          EntityOwnerKind.heroClass => 'paladin',
+          EntityOwnerKind.passive => 'regen_armor',
+          null => null,
+        },
         bilingual: {
           for (final base in descriptor.bilingualBases) ...{
             '${base}_fr': 'texte',

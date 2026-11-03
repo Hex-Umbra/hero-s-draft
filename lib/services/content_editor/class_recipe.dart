@@ -49,12 +49,12 @@ class ClassRecipe {
   /// L'identifiant du passif de depart que la recette ecrit.
   ///
   /// **Derive de l'identifiant de la classe**, comme le chemin de son icone :
-  /// il ne se saisit pas. Une classe sans aucun passif disponible afficherait
-  /// un choix vide a la selection et ferait rougir
-  /// `referential_integrity_test` (spec P-41, §9.2) ; la garantir revient a
-  /// ecrire ce passif dans la meme transaction. L'auteur le renomme ensuite
-  /// comme n'importe quelle entite, et sa prose `[A REMPLIR]` le lui
-  /// rappellera.
+  /// il ne se saisit pas. La recette ecrit ce passif, mais aucune carte : un
+  /// passif sans lot n'est propose a aucune classe (O5), et la classe creee
+  /// n'a donc de passif jouable qu'une fois une carte de lot de ce passif
+  /// ecrite (categorie `lotCard`) — jusque-la, sa selection n'offre aucun
+  /// passif. L'auteur le renomme ensuite comme n'importe quelle entite, et sa
+  /// prose `[A REMPLIR]` le lui rappellera.
   String get starterPassiveId => id;
 
   /// Les brouillons, **dans l'ordre d'ecriture**.
@@ -99,7 +99,7 @@ class ClassRecipe {
             id: signature.id,
             bilingual: signature.bilingual,
             mechanics: '{}',
-            heroClass: id,
+            owner: id,
           ),
         ),
     ];

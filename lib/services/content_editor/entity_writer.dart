@@ -268,11 +268,12 @@ class EntityWriter {
   /// ajoutee seule y serait orpheline et ferait rougir la suite — a tous les
   /// coups, et jamais au moment de l'ecriture. Les deux fichiers, ou aucun.
   ///
-  /// La garde porte sur le descripteur, et non sur la seule presence d'une
-  /// classe : seule une signature s'inscrit dans `skills`.
+  /// La garde porte sur la sorte de proprietaire, et non sur la seule presence
+  /// d'un proprietaire : seule une signature s'inscrit dans `skills`, et une
+  /// carte de lot a un passif pour proprietaire.
   void _registerSignature(EntityDraft draft, List<WriteStep> steps) {
-    final heroClass = draft.heroClass;
-    if (!draft.descriptor.supportsHeroClass ||
+    final heroClass = draft.owner;
+    if (draft.descriptor.ownerKind != EntityOwnerKind.heroClass ||
         heroClass == null ||
         draft.isModification) {
       return;

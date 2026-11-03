@@ -30,9 +30,6 @@ void main() {
     Map<String, dynamic> file,
   ) {
     final segments = relative.split('/');
-    final isSignature = descriptor.supportsHeroClass &&
-        segments.length > 4 &&
-        segments[2] == 'classes';
     final id = descriptor.folderFile != null
         ? segments[segments.length - 2]
         : segments.last.substring(0, segments.last.length - '.json'.length);
@@ -57,7 +54,9 @@ void main() {
     return fillPlaceholders(EntityDraft(
       descriptor: descriptor,
       id: id,
-      heroClass: isSignature ? segments[3] : null,
+      // `classes/<classe>/skills/<id>.json` et `cards/<passif>/<id>.json` :
+      // le proprietaire est le quatrieme segment des deux.
+      owner: descriptor.ownerKind != null ? segments[3] : null,
       isModification: true,
       bilingual: prose,
       mechanics: EditorDocument(

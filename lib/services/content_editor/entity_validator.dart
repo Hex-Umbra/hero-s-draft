@@ -2,7 +2,11 @@ import 'dart:convert';
 
 import 'package:meta/meta.dart';
 
+import '../../models/data/card_data.dart';
 import '../../models/data/game_data_registry.dart';
+import '../../models/data/hero_data.dart';
+import '../../models/data/lot_rules.dart';
+import '../../models/data/passive_data.dart';
 import 'audio_catalog.dart';
 import 'content_file_system.dart';
 import 'entity_descriptor.dart';
@@ -94,6 +98,7 @@ class EntityValidator {
       () => _assets(draft, mechanics),
       () => _signatures(draft, mechanics),
       () => _construct(draft),
+      () => _lotCard(draft),
     ]) {
       final faults = family();
       if (faults.isNotEmpty) return faults;
@@ -115,35 +120,58 @@ class EntityValidator {
         ),
       ];
     }
-    final heroClass = draft.heroClass;
-    if (heroClass != null && !_idPattern.hasMatch(heroClass)) {
+    final owner = draft.owner;
+    if (owner != null && !_idPattern.hasMatch(owner)) {
       return [
-        ValidationFault('nom de classe invalide : "$heroClass"',
-            field: 'heroClass'),
+        ValidationFault('nom de propriétaire invalide : "$owner"',
+            field: 'owner'),
       ];
     }
-    // Une signature n'existe que sous une classe : sans proprietaire, son
-    // chemin de repli `assets/data/skills/<id>.json` n'est celui d'aucune
-    // signature, et le controle d'existence qui suit n'aurait aucun sens.
-    if (draft.descriptor.supportsHeroClass && heroClass == null) {
-      return const [
+    // Une signature n'existe que sous une classe, une carte de lot que sous un
+    // passif : sans proprietaire, leur chemin de repli (`assets/data/skills/
+    // <id>.json`) n'est celui d'aucune d'elles, et le controle d'existence qui
+    // suit n'aurait aucun sens.
+    final kind = draft.descriptor.ownerKind;
+    if (kind != null && owner == null) {
+      return [
         ValidationFault(
-          'une signature appartient à une classe : choisissez son propriétaire',
-          field: 'heroClass',
+          switch (kind) {
+            EntityOwnerKind.heroClass =>
+              'une signature appartient à une classe : choisissez son '
+                  'propriétaire',
+            EntityOwnerKind.passive =>
+              'une carte de lot appartient à un passif : choisissez son '
+                  'propriétaire',
+          },
+          field: 'owner',
         ),
       ];
     }
-    // L'inverse : seule une signature a un proprietaire. Une autre entite
-    // portant une classe serait ecrite a plat, et l'ecrivain n'a pas a deviner
-    // ce que la classe voulait dire.
-    if (!draft.descriptor.supportsHeroClass && heroClass != null) {
+    // L'inverse : seules une signature et une carte de lot ont un
+    // proprietaire. Une autre entite portant le sien serait ecrite a plat, et
+    // l'ecrivain n'a pas a deviner ce qu'il voulait dire.
+    if (kind == null && owner != null) {
       return [
         ValidationFault(
-          '« ${draft.descriptor.label} » n\'appartient à aucune classe : seule '
-          'une signature a un propriétaire',
-          field: 'heroClass',
+          '« ${draft.descriptor.label} » n\'a pas de propriétaire : seules une '
+          'signature et une carte de lot en ont un',
+          field: 'owner',
         ),
       ];
+    }
+    // Un passif proprietaire inconnu : sa carte de lot serait rangee sous un
+    // dossier que rien ne reference. Sans registre, on ne devine pas ; les
+    // identifiants pendants de la meme transaction comptent.
+    if (kind == EntityOwnerKind.passive && owner != null) {
+      final passives = _idsOf(EntityCategory.passive);
+      if (passives != null && !passives.contains(owner)) {
+        return [
+          ValidationFault(
+            'aucun passif ne porte l\'identifiant "$owner"',
+            field: 'owner',
+          ),
+        ];
+      }
     }
 
     final faults = <ValidationFault>[];
@@ -564,16 +592,14 @@ class EntityValidator {
   /// un `choices` absent, un effet malforme. Elle ne les remplace pas — les
   /// familles 4 et 5 existent precisement parce qu'elle est trop permissive.
   ///
-  /// Le document d'une signature est augmente de sa classe : `compose()`
-  /// n'ecrit jamais `heroClass`, que le dossier impose, et
-  /// `SignatureData.fromJson` l'exige. L'editeur la tient comme le chargeur,
-  /// qui l'injecte depuis le chemin ; le document **ecrit** ne change pas.
+  /// Le document d'une signature est augmente de sa classe, celui d'une carte
+  /// de lot de son passif : `compose()` n'ecrit jamais `heroClass` ni
+  /// `passive`, que le dossier impose, et les modeles les exigent. L'editeur
+  /// les tient comme le chargeur, qui les injecte depuis le chemin ; le
+  /// document **ecrit** ne change pas.
   List<ValidationFault> _construct(EntityDraft draft) {
     try {
-      draft.descriptor.construct({
-        ...draft.compose(),
-        if (draft.descriptor.supportsHeroClass) 'heroClass': draft.heroClass,
-      });
+      draft.descriptor.construct(_augmented(draft));
     } catch (e) {
       return [
         ValidationFault(
@@ -582,6 +608,64 @@ class EntityValidator {
       ];
     }
     return const [];
+  }
+
+  /// Le document que le chargeur construirait : celui de [draft], plus le
+  /// champ que le dossier du proprietaire impose.
+  Map<String, dynamic> _augmented(EntityDraft draft) {
+    final document = draft.compose();
+    switch (draft.descriptor.ownerKind) {
+      case EntityOwnerKind.heroClass:
+        document['heroClass'] = draft.owner;
+      case EntityOwnerKind.passive:
+        document['passive'] = draft.owner;
+      case null:
+        break;
+    }
+    return document;
+  }
+
+  /// Famille 8 — les regles d'une carte de lot (A31), en dernier : la carte
+  /// est bien formee, reste a voir si elle est **de ce lot**.
+  ///
+  /// `LotRules` est la regle que le test du catalogue applique aux lots
+  /// livres ; l'editeur l'avance au moment de l'ecriture. Sans registre, ni le
+  /// passif ni sa classe ne se lisent : la famille est sautee, jamais devinee.
+  List<ValidationFault> _lotCard(EntityDraft draft) {
+    final r = registry;
+    final owner = draft.owner;
+    if (draft.descriptor.ownerKind != EntityOwnerKind.passive ||
+        r == null ||
+        owner == null) {
+      return const [];
+    }
+
+    PassiveData? passive;
+    for (final candidate in r.passives) {
+      if (candidate.id == owner) passive = candidate;
+    }
+    // Un passif que la meme transaction va ecrire : le registre ne le connait
+    // pas encore, ses `feeds` non plus.
+    if (passive == null) return const [];
+
+    // Un passif de lot n'a qu'une classe (A5). S'il n'en a pas une seule dans
+    // le registre, la regle de la classe ne se juge pas.
+    HeroData? heroClass;
+    final classes = passive.classes;
+    if (classes != null && classes.length == 1) {
+      for (final hero in r.heroes) {
+        if (hero.id == classes.single) heroClass = hero;
+      }
+    }
+
+    return [
+      for (final fault in LotRules.faultsOf(
+        CardData.fromJson(_augmented(draft)),
+        passive: passive,
+        heroClass: heroClass,
+      ))
+        ValidationFault(fault),
+    ];
   }
 
   /// L'ensemble pris en compte pour une reference (famille 6) : le registre
@@ -604,7 +688,10 @@ class EntityValidator {
     final r = registry;
     if (r == null) return null;
     switch (category) {
+      // Un identifiant de carte ne se repete pas d'un dossier a l'autre (A2) :
+      // la neutre et celle d'un lot partagent un seul ensemble.
       case EntityCategory.card:
+      case EntityCategory.lotCard:
         return r.cards.map((e) => e.id).toSet();
       case EntityCategory.signature:
         return r.signatures.map((e) => e.id).toSet();

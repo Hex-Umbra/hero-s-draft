@@ -6,7 +6,7 @@ import 'entity_descriptor.dart';
 
 /// Ce que l'ecran compose et que le validateur juge.
 ///
-/// Le triangle d'identite ([id], [heroClass]) et la prose ([bilingual]) sont
+/// Le triangle d'identite ([id], [owner]) et la prose ([bilingual]) sont
 /// saisis dans des champs ; la mecanique reste du **texte** JSON, que le
 /// validateur decode lui-meme afin de pouvoir dire pourquoi il ne decode pas.
 @immutable
@@ -16,16 +16,17 @@ class EntityDraft {
     required this.id,
     required this.bilingual,
     required this.mechanics,
-    this.heroClass,
+    this.owner,
     this.isModification = false,
   });
 
   final EntityDescriptor descriptor;
   final String id;
 
-  /// La classe proprietaire d'une signature, celle du dossier ; `null` pour
-  /// toute autre categorie.
-  final String? heroClass;
+  /// Le proprietaire, celui du dossier : la classe d'une signature, le passif
+  /// d'une carte de lot (`descriptor.ownerKind`) ; `null` pour toute autre
+  /// categorie.
+  final String? owner;
 
   /// Les champs bilingues, sous leur cle complete : `name_fr`, `title_en`…
   final Map<String, String> bilingual;
@@ -37,7 +38,7 @@ class EntityDraft {
   /// le fichier, et le deplacer serait un renommage — hors perimetre (E1).
   final bool isModification;
 
-  String get path => descriptor.pathOf(id, heroClass: heroClass);
+  String get path => descriptor.pathOf(id, owner: owner);
 
   /// Le document final, dans l'ordre des fichiers existants : identifiant,
   /// prose, mecanique.

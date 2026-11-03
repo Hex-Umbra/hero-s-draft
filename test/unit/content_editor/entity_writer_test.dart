@@ -194,7 +194,7 @@ void main() {
     return EntityDraft(
       descriptor: descriptor,
       id: id,
-      heroClass: heroClass,
+      owner: heroClass,
       bilingual: const {
         'name_fr': 'Frappe',
         'name_en': 'Strike',
@@ -274,7 +274,7 @@ void main() {
         EntityDraft(
           descriptor: kEntityDescriptors[EntityCategory.signature]!,
           id: 'coup_saint',
-          heroClass: 'paladin',
+          owner: 'paladin',
           isModification: true,
           bilingual: const {
             'name_fr': 'Frappe renforcee',
@@ -307,7 +307,7 @@ void main() {
       final report = await writerHere().write(EntityDraft(
         descriptor: card,
         id: 'coup_bas',
-        heroClass: 'paladin',
+        owner: 'paladin',
         bilingual: const {
           'name_fr': 'Coup bas',
           'name_en': 'Low Blow',

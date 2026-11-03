@@ -16,12 +16,15 @@ import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
 
-/// Les neuf categories d'entites editables, en regard exact des neuf sources
+/// Les dix categories d'entites editables, en regard exact des dix sources
 /// de `loadGameDataRegistry` : une par categorie, sans ecart. La carte est
-/// neutre seulement ; la signature de classe a sa propre source (spec P-43 E4,
-/// §8). L'audio n'en est pas une, c'est un document de configuration.
+/// neutre seulement ; la carte d'un lot a la sienne, `lotCard`, et un passif
+/// pour proprietaire (spec P-42 T1 / P-44 lot 1, A31) ; la signature de classe
+/// a sa propre source (spec P-43 E4, §8). L'audio n'en est pas une, c'est un
+/// document de configuration.
 enum EntityCategory {
   card,
+  lotCard,
   signature,
   relic,
   event,
@@ -30,6 +33,16 @@ enum EntityCategory {
   levelUpReward,
   heroClass,
   enemy,
+}
+
+/// Ce a quoi une entite appartient, quand elle appartient a quelque chose : le
+/// dossier du proprietaire la range (A31).
+enum EntityOwnerKind {
+  /// Une signature : `classes/<classe>/skills/<id>.json`.
+  heroClass,
+
+  /// Une carte de lot : `cards/<passif>/<id>.json`.
+  passive,
 }
 
 /// Ce qu'est une ressource : un son declare dans `audio.json`, ou une image
@@ -85,7 +98,8 @@ class EntityDescriptor {
     this.hexColorKeys = const {},
     this.assetKeys = const {},
     this.vocabularyKeys = const {},
-    this.supportsHeroClass = false,
+    this.ownerKind,
+    this.alternativeKeys = const {},
     this.folderFile,
   });
 
@@ -150,10 +164,16 @@ class EntityDescriptor {
   /// La mecanique pre-remplie, montree dans l'editeur au moment de creer.
   final String template;
 
-  /// Vrai pour la seule signature, qui appartient toujours a une classe : le
-  /// dossier de la classe la range, et le validateur refuse une signature
-  /// sans proprietaire.
-  final bool supportsHeroClass;
+  /// La sorte de proprietaire, pour les seules categories qui en ont un : la
+  /// signature appartient toujours a une classe, la carte de lot a un passif.
+  /// Le dossier du proprietaire la range, et le validateur refuse une entite
+  /// sans proprietaire. `null` : aucune n'appartient a rien.
+  final EntityOwnerKind? ownerKind;
+
+  /// Cle du gabarit -> cle qui la remplace : le remplissage ne pose pas la
+  /// premiere quand la seconde est saisie. `cost` et `costs` d'une carte sont
+  /// exclusifs (A9) ; poser les deux ferait refuser la carte.
+  final Map<String, String> alternativeKeys;
 
   /// Pour les categories qui sont un **dossier** : le nom du fichier qu'il
   /// porte (`class.json`, `enemy.json`).
@@ -171,12 +191,19 @@ class EntityDescriptor {
     return slot != null && slot.kind == AssetKind.image && slot.isRequired;
   }
 
-  /// Le chemin du fichier, relatif a la racine du projet. Sans classe, une
-  /// signature retombe sur le chemin a plat : le validateur la refuse avant
-  /// que ce chemin ne serve.
-  String pathOf(String id, {String? heroClass}) {
-    if (supportsHeroClass && heroClass != null) {
-      return 'assets/data/classes/$heroClass/$directory/$id.json';
+  /// Le chemin du fichier, relatif a la racine du projet. Sans proprietaire,
+  /// une entite qui en exige un retombe sur le chemin a plat : le validateur
+  /// la refuse avant que ce chemin ne serve.
+  String pathOf(String id, {String? owner}) {
+    if (owner != null) {
+      switch (ownerKind) {
+        case EntityOwnerKind.heroClass:
+          return 'assets/data/classes/$owner/$directory/$id.json';
+        case EntityOwnerKind.passive:
+          return 'assets/data/$directory/$owner/$id.json';
+        case null:
+          break;
+      }
     }
     if (folderFile != null) {
       return 'assets/data/$directory/$id/$folderFile';
@@ -203,32 +230,19 @@ class EntityDescriptor {
 List<String> _names(List<Enum> values) =>
     values.map((e) => e.name).toList(growable: false);
 
-/// **La declaration des categories editables.** A tenir en regard des neuf
-/// sources de `loadGameDataRegistry`, une par categorie ; un test verifie
-/// qu'aucune ne manque.
-final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
-  EntityCategory.card: EntityDescriptor(
-    category: EntityCategory.card,
-    label: 'Carte',
-    directory: 'cards',
-    requiredKeys: const {'cost', 'type'},
-    // Le repertoire impose l'appartenance : declarer ces cles fait echouer le
-    // chargement, `CardData.fromJson` les refuse.
-    forbiddenKeys: const {'heroClass', 'category'},
-    enumKeys: {
-      'type': _names(CardType.values),
-      'rarity': _names(CardRarity.values),
-      'target': _names(CardTarget.values),
-    },
-    bilingualBases: const ['name', 'description'],
-    construct: CardData.fromJson,
-    assetKeys: const {'sfx': AssetSlot.sound()},
-    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
-    // Le gabarit ne porte que ce qu'une carte emploie (spec §3.1) : ni
-    // `spritePath`, qu'aucune carte ne porte et qu'aucun ecran n'affiche, ni
-    // `sfx`, choisi dans le champ de ressource et absent tant qu'aucun son ne
-    // l'est.
-    template: '''
+final Map<String, List<String>> _cardEnumKeys = {
+  'type': _names(CardType.values),
+  'rarity': _names(CardRarity.values),
+  'target': _names(CardTarget.values),
+  'effects[].scaleWith.source': _names(ScaleSource.values),
+};
+
+// Le gabarit ne porte que ce qu'une carte emploie (spec §3.1) : ni
+// `spritePath`, qu'aucune carte ne porte et qu'aucun ecran n'affiche, ni
+// `sfx`, choisi dans le champ de ressource et absent tant qu'aucun son ne
+// l'est. `hits`, `mightRatio` et `costs` n'y figurent pas : absents, ils
+// valent leur defaut, et le formulaire les rend selon leur type JSON.
+const String _cardTemplate = '''
 {
   "cost": 1,
   "type": "attack",
@@ -239,14 +253,54 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
   "effects": [
     { "type": "damage", "value": 6 }
   ]
-}''',
+}''';
+
+/// **La declaration des categories editables.** A tenir en regard des dix
+/// sources de `loadGameDataRegistry`, une par categorie ; un test verifie
+/// qu'aucune ne manque.
+final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
+  EntityCategory.card: EntityDescriptor(
+    category: EntityCategory.card,
+    label: 'Carte',
+    directory: 'cards',
+    // `cost` ou `costs`, jamais les deux (A9) : aucune des deux n'est exigee
+    // ici, `CardData.fromJson` nomme l'absence des deux.
+    requiredKeys: const {'type'},
+    // Le repertoire impose l'appartenance : declarer ces cles fait echouer le
+    // chargement, `CardData.fromJson` les refuse. `passive` en est une : une
+    // carte neutre n'a pas de passif (A8).
+    forbiddenKeys: const {'heroClass', 'category', 'passive'},
+    enumKeys: _cardEnumKeys,
+    bilingualBases: const ['name', 'description'],
+    construct: CardData.fromJson,
+    assetKeys: const {'sfx': AssetSlot.sound()},
+    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
+    alternativeKeys: const {'cost': 'costs'},
+    template: _cardTemplate,
+  ),
+  // La carte d'un lot de passif (A31) : celle de la carte neutre, rangee sous
+  // `cards/<passif>/`. Le passif est impose par le dossier, jamais ecrit.
+  EntityCategory.lotCard: EntityDescriptor(
+    category: EntityCategory.lotCard,
+    label: 'Carte de lot',
+    directory: 'cards',
+    ownerKind: EntityOwnerKind.passive,
+    requiredKeys: const {'type'},
+    forbiddenKeys: const {'heroClass', 'category', 'passive'},
+    enumKeys: _cardEnumKeys,
+    bilingualBases: const ['name', 'description'],
+    construct: CardData.fromJson,
+    assetKeys: const {'sfx': AssetSlot.sound()},
+    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
+    alternativeKeys: const {'cost': 'costs'},
+    template: _cardTemplate,
   ),
   EntityCategory.signature: EntityDescriptor(
     category: EntityCategory.signature,
     label: 'Signature',
     // Le sous-dossier de chaque classe : `classes/<classe>/skills/<id>.json`.
     directory: 'skills',
-    supportsHeroClass: true,
+    ownerKind: EntityOwnerKind.heroClass,
     requiredKeys: const {'cost', 'cooldown', 'type'},
     // `heroClass` est impose par le dossier de la classe ; `rarity`,
     // `isExhaust` et `category` appartiennent a une carte, et
@@ -310,12 +364,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     bilingualBases: const ['name', 'description'],
     construct: PassiveData.fromJson,
     vocabularyKeys: const {'effectType'},
-    // `displayOrder: 0` place ce passif avant les trois deja classes a la
-    // main de sa classe. Tant que l'ecran de choix de passif n'existe pas
-    // (lot ulterieur), le premier de l'ordre d'affichage est le passif de
-    // depart du heros : un passif cree depuis ce gabarit sans ajuster cette
-    // valeur devient donc silencieusement le passif de depart. La
-    // disponibilite exige aussi un lot de cartes sous `cards/<passif>/` (O5).
+    // `displayOrder: 0` place ce passif avant ceux deja classes a la main de
+    // sa classe, dans le choix de passif. Mais un passif sans lot n'est
+    // propose a aucune classe (O5) : celui-ci ne se choisit qu'une fois une
+    // carte de lot ecrite sous `cards/<passif>/` (categorie `lotCard`).
     template: '''
 {
   "classes": ["paladin"],

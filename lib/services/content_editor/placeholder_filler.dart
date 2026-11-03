@@ -37,7 +37,7 @@ EntityDraft fillPlaceholders(EntityDraft draft) {
       id: draft.id,
       bilingual: bilingual,
       mechanics: draft.mechanics,
-      heroClass: draft.heroClass,
+      owner: draft.owner,
       isModification: true,
     );
   }
@@ -45,7 +45,12 @@ EntityDraft fillPlaceholders(EntityDraft draft) {
   var mechanics = draft.mechanics;
   try {
     final decoded = jsonDecode(mechanics) as Map<String, dynamic>;
+    final alternatives = draft.descriptor.alternativeKeys;
     draft.descriptor.decodeTemplate().forEach((key, fallback) {
+      // `cost` du gabarit cede la place a `costs` saisi : les deux ensemble
+      // seraient refuses (A9).
+      final alternative = alternatives[key];
+      if (alternative != null && decoded[alternative] != null) return;
       final value = decoded[key];
       if (value == null || (value is String && value.trim().isEmpty)) {
         decoded[key] = fallback;
@@ -62,7 +67,7 @@ EntityDraft fillPlaceholders(EntityDraft draft) {
     id: draft.id,
     bilingual: bilingual,
     mechanics: mechanics,
-    heroClass: draft.heroClass,
+    owner: draft.owner,
     isModification: draft.isModification,
   );
 }

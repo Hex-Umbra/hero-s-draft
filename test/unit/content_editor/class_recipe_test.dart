@@ -112,7 +112,7 @@ void main() {
   test('chaque signature appartient a la classe et porte une prose non vide',
       () {
     final signature = recipe().toDrafts()[2];
-    expect(signature.heroClass, 'gambler');
+    expect(signature.owner, 'gambler');
     expect(signature.bilingual['name_fr'], isNotEmpty);
     expect(signature.bilingual['name_en'], isNotEmpty);
   });
@@ -261,7 +261,7 @@ void main() {
         final faults = validator.validate(EntityDraft(
           descriptor: signature,
           id: id,
-          heroClass: 'gambler',
+          owner: 'gambler',
           isModification: true,
           bilingual: prose,
           mechanics: jsonEncode({

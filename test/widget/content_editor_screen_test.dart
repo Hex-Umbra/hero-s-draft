@@ -124,12 +124,12 @@ void main() {
     expect(find.text('Écrire'), findsNothing);
   });
 
-  testWidgets('les neuf types sont des boutons, visibles d emblee',
+  testWidgets('les dix types sont des boutons, visibles d emblee',
       (tester) async {
     await tester.pumpWidget(harness(projectRoot: root));
 
     for (final label in const [
-      'Carte', 'Signature', 'Relique', 'Événement', 'Passif',
+      'Carte', 'Carte de lot', 'Signature', 'Relique', 'Événement', 'Passif',
       'Amélioration de forge', 'Récompense de niveau', 'Classe', 'Ennemi',
     ]) {
       expect(find.text(label), findsOneWidget, reason: 'type manquant : $label');
@@ -148,7 +148,7 @@ void main() {
 
     expect(find.text('Créer'), findsOneWidget);
     expect(find.text('Modifier'), findsOneWidget);
-    // Les neuf types restent la : rien ne se replie vers le haut.
+    // Les dix types restent la : rien ne se replie vers le haut.
     expect(find.text('Ennemi'), findsOneWidget);
   });
 
@@ -678,15 +678,15 @@ void main() {
     await tester.tap(find.text('Créer'));
     await tester.pumpAndSettle();
 
-    // Sans une seule signature : le passif est garanti par la
-    // recette elle-meme, pas par ce que l'auteur pense a saisir.
+    // Sans une seule signature : le passif est ecrit par la recette elle-meme,
+    // pas par ce que l'auteur pense a saisir.
     await tester.enterText(find.byKey(const Key('editeur-id')), 'gambler');
     await tester.tap(find.text('Écrire'));
     await tester.pumpAndSettle();
 
-    // Une classe sans passif disponible afficherait un choix vide a l'ecran
-    // de selection, et ferait rougir `referential_integrity_test` apres coup
-    // (spec P-41, §9.2).
+    // La recette ecrit ce passif, mais aucune carte : la classe creee n'a de
+    // passif jouable qu'une fois une carte de lot de ce passif ecrite
+    // (categorie `lotCard`). Jusque-la, sa selection n'offre aucun passif.
     final passif = File('$root/assets/data/passives/gambler.json');
     expect(passif.existsSync(), isTrue);
 
@@ -934,6 +934,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(buttonOf('barde'), findsOneWidget);
+  });
+
+  testWidgets('Carte de lot : les pastilles de proprietaire sont les passifs',
+      (tester) async {
+    File('$root/assets/data/passives/regen_armor.json').writeAsStringSync('{}');
+    File('$root/assets/data/passives/rage.json').writeAsStringSync('{}');
+
+    await tester.pumpWidget(harness(projectRoot: root));
+    await tester.tap(find.text('Carte de lot'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Créer'));
+    await tester.pumpAndSettle();
+
+    final regen = find.byKey(const Key('editeur-proprietaire-regen_armor'));
+    final rage = find.byKey(const Key('editeur-proprietaire-rage'));
+    expect(regen, findsOneWidget);
+    expect(rage, findsOneWidget);
+    expect(find.byKey(const Key('editeur-proprietaire-neutre')), findsNothing);
+
+    await tester.ensureVisible(rage);
+    await tester.tap(rage);
+    await tester.enterText(find.byKey(const Key('editeur-id')), 'saignee');
+    await tester.pump();
+
+    expect(
+      find.textContaining('assets/data/cards/rage/saignee.json'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('une saisie non entiere est une faute, et rien n est ecrit',
@@ -1619,6 +1647,11 @@ void main() {
 
     testWidgets('importer une image d ennemi remplace son sprite',
         (tester) async {
+      // Dix onglets de type : la barre prend une ligne de plus que neuf, et le
+      // formulaire de ces deux tests, serre sur 600 de haut, deborderait.
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       seedGobelin();
       final source = sourceFile('gobelin.png', 'nouvelle');
       await tester.pumpWidget(
@@ -1768,6 +1801,11 @@ void main() {
     });
 
     testWidgets('importer une icone de classe ecrit iconPath', (tester) async {
+      // Dix onglets de type : la barre prend une ligne de plus que neuf, et le
+      // formulaire de ces deux tests, serre sur 600 de haut, deborderait.
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       Directory('$root/assets/data/classes/mage/skills')
           .createSync(recursive: true);
       File('$root/assets/data/classes/mage/mage.png')

@@ -130,7 +130,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   /// [_ensureCatalog].
   EntityCategory? _catalogFor;
   Map<String?, List<String>> _byOwner = const {};
-  List<String> _ownerClassIds = const [];
+  List<String> _ownerIds = const [];
   Map<String, List<String>> _references = const {};
   final Map<String, Map<String, dynamic>?> _ownerJson = {};
 
@@ -261,7 +261,7 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   EntityDraft _draft() => EntityDraft(
         descriptor: _descriptor,
         id: _id.text.trim(),
-        heroClass: _descriptor.supportsHeroClass ? _targetOwner : null,
+        owner: _descriptor.ownerKind != null ? _targetOwner : null,
         isModification: _mode == _EditorMode.modify,
         bilingual: {
           for (final entry in _prose.entries) entry.key: entry.value.text,
@@ -813,16 +813,17 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     );
   }
 
-  /// `themeColor` de `assets/data/classes/<owner>/class.json`. `null` si le
-  /// fichier manque ou ne decode pas — un dossier incomplet ne doit pas faire
-  /// tomber l'ecran.
+  /// `themeColor` de la classe du proprietaire : la sienne pour une signature,
+  /// celle de son passif pour une carte de lot. `null` si un fichier manque ou
+  /// ne decode pas — un dossier incomplet ne doit pas faire tomber l'ecran.
   Color? _ownerColor(String root, String owner) {
     final hex = _ownerClassJson(root, owner)?['themeColor'];
     return hex is String ? hexToColor(hex) : null;
   }
 
-  /// Le contenu decode de `assets/data/classes/<owner>/class.json`, ou `null`
-  /// si le fichier manque ou ne decode pas.
+  /// Le contenu decode de `assets/data/classes/<classe>/class.json`, ou `null`
+  /// si le fichier manque ou ne decode pas. La classe est le proprietaire d'une
+  /// signature ; pour une carte de lot, c'est l'unique classe de son passif.
   ///
   /// Retenu par proprietaire, et vide par [_ensureCatalog] : l'explorateur,
   /// les pastilles et l'en-tete demandent chacun sa couleur, et `build` est
@@ -831,18 +832,32 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
   Map<String, dynamic>? _ownerClassJson(String root, String owner) {
     if (_ownerJson.containsKey(owner)) return _ownerJson[owner];
 
-    final fs = ref.read(contentFileSystemProvider)!;
-    final path = '$root/assets/data/classes/$owner/class.json';
-    Map<String, dynamic>? result;
-    if (fs.fileExists(path)) {
-      try {
-        final decoded = jsonDecode(fs.readFile(path));
-        if (decoded is Map<String, dynamic>) result = decoded;
-      } catch (_) {
-        // Un dossier incomplet ne doit pas faire tomber l'ecran.
-      }
+    String? classId = owner;
+    if (_descriptor.ownerKind == EntityOwnerKind.passive) {
+      final passive = _readJsonMap('$root/assets/data/passives/$owner.json');
+      final classes = passive?['classes'];
+      classId =
+          classes is List && classes.length == 1 && classes.single is String
+              ? classes.single as String
+              : null;
     }
-    return _ownerJson[owner] = result;
+    return _ownerJson[owner] = classId == null
+        ? null
+        : _readJsonMap('$root/assets/data/classes/$classId/class.json');
+  }
+
+  /// Le contenu decode d'un fichier JSON objet, ou `null` s'il manque ou ne
+  /// decode pas.
+  Map<String, dynamic>? _readJsonMap(String path) {
+    final fs = ref.read(contentFileSystemProvider)!;
+    if (!fs.fileExists(path)) return null;
+    try {
+      final decoded = jsonDecode(fs.readFile(path));
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      // Un dossier incomplet ne doit pas faire tomber l'ecran.
+      return null;
+    }
   }
 
   /// Lit le disque **une fois par categorie**, et retient ce qu'il a vu.
@@ -861,18 +876,21 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     _byOwner = entityIdsByOwner(fs, root, _descriptor);
 
     // (b) La rangee de pastilles de proprietaire n'existe que pour une
-    // signature, et seulement en creation : `EntityForm` ne la montre pas
-    // autrement. Enumerer les classes en modification etait un calcul pur perdu.
-    _ownerClassIds = _descriptor.supportsHeroClass
-        ? (List<String>.from(
-            entityIdsByOwner(
-                  fs,
-                  root,
-                  kEntityDescriptors[EntityCategory.heroClass]!,
-                )[null] ??
+    // signature (une pastille par classe) ou une carte de lot (une par
+    // passif), et seulement en creation : `EntityForm` ne la montre pas
+    // autrement. Enumerer les proprietaires en modification etait un calcul
+    // pur perdu.
+    final ownerCategory = switch (_descriptor.ownerKind) {
+      EntityOwnerKind.heroClass => EntityCategory.heroClass,
+      EntityOwnerKind.passive => EntityCategory.passive,
+      null => null,
+    };
+    _ownerIds = ownerCategory == null
+        ? const []
+        : (List<String>.from(
+            entityIdsByOwner(fs, root, kEntityDescriptors[ownerCategory]!)[null] ??
                 const <String>[],
-          )..sort())
-        : const [];
+          )..sort());
 
     // Le catalogue de chaque `referenceKeys` et `referenceListKeys` du
     // descripteur — tire de `entityIdsByOwner`, jamais de `knownValues` : ce
@@ -908,11 +926,12 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
     return byField;
   }
 
-  /// La teinte de la tuile d'en-tete : la classe proprietaire d'une
-  /// signature, ou le `themeColor` d'une classe. `null` : l'accent.
+  /// La teinte de la tuile d'en-tete : la classe du proprietaire d'une
+  /// signature ou d'une carte de lot, ou le `themeColor` d'une classe. `null` :
+  /// l'accent.
   Color? _identityColor(String root) {
     final owner = _targetOwner;
-    if (_descriptor.supportsHeroClass && owner != null) {
+    if (_descriptor.ownerKind != null && owner != null) {
       return _ownerColor(root, owner);
     }
     if (_category == EntityCategory.heroClass && !_rawView) {
@@ -962,10 +981,10 @@ class _ContentEditorScreenState extends ConsumerState<ContentEditorScreen> {
               : EntityFileStatus.notLoaded,
       identityColor: _identityColor(root),
       proseControllers: _prose,
-      ownerClassIds: isModification ? const [] : _ownerClassIds,
+      ownerIds: isModification ? const [] : _ownerIds,
       selectedOwner: _targetOwner,
       onOwnerSelected: (value) => setState(() => _targetOwner = value),
-      ownerColorOf: (classId) => _ownerColor(root, classId),
+      ownerColorOf: (ownerId) => _ownerColor(root, ownerId),
       mechanics: _mechanicsView(root, faults),
       rawView: _rawView,
       onToggleRaw: _toggleRaw,

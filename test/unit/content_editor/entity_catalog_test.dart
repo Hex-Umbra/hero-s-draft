@@ -99,4 +99,37 @@ void main() {
 
     expect(byOwner[null] ?? const [], isEmpty);
   });
+
+  test('les cartes de lot se rangent sous leur passif, les neutres sans '
+      'proprietaire', () {
+    Directory('$root/assets/data/cards/rage').createSync(recursive: true);
+    Directory('$root/assets/data/cards/mana_flux').createSync(recursive: true);
+    File('$root/assets/data/cards/strike.json').writeAsStringSync('{}');
+    File('$root/assets/data/cards/rage/bloodletting.json')
+        .writeAsStringSync('{}');
+    File('$root/assets/data/cards/mana_flux/kindle.json')
+        .writeAsStringSync('{}');
+
+    expect(
+      entityIdsByOwner(
+        const IoContentFileSystem(),
+        root,
+        kEntityDescriptors[EntityCategory.lotCard]!,
+      ),
+      {
+        'mana_flux': ['kindle'],
+        'rage': ['bloodletting'],
+      },
+    );
+    expect(
+      entityIdsByOwner(
+        const IoContentFileSystem(),
+        root,
+        kEntityDescriptors[EntityCategory.card]!,
+      ),
+      {
+        null: ['strike'],
+      },
+    );
+  });
 }
