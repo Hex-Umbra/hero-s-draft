@@ -73,6 +73,7 @@ graph TD
     P41 --> P43["P-43 Économie unifiée ✅ clos, E4 sur branche"]
     P43 --> P42[P-42 Catalogue par lots de passif]
     P43 --> P44["P-44 Profondeur — lot 1, livré avec la tranche 1 de P-42"]
+    P44 -.statuts proportionnels du lot 1, relus.-> P53["P-53 Charges élémentaires"]
     P05 -.lots 2 à 4 de P-44.-> P44
     P49 -.pose le point d'accès aux passifs.-> P13
     P41 -.pose la chaîne de migration.-> P13
@@ -261,6 +262,7 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | ~~**P-43**~~ | ~~**Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4**~~ ✅ **Clos le 2026-10-16 avec son dernier lot, E4 : livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire** — les lots E0 à E3 sont dans `main` · [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md) pour E4 · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | — | — | — |
 | **P-42** | **Catalogue par lots de passif** — un lot de cartes par passif, rangé sous `cards/<passif>/`, et les évolutions de signature · **trois tranches**, après P-43 *(redécoupé le 2026-10-01, voir §4)* · même brainstorm, même fichier d'orchestration | *une spec par tranche* | ★★★★☆ | 🔥🔥🔥 |
 | **P-44** | **Profondeur de cartes** — **quatre lots** : 1 (`scaleWith`, multi-coups, statuts proportionnels, coûts combinés, runes de pipeline) **livré avec la tranche 1 de P-42** ; 2 (malédictions, étourdissement, épines), 3 (mots-clés, production de cartes) et 4 (effets interactifs, cible `none`) **après le programme, derrière P-05** *(redécoupé le 2026-10-01, voir §4)* | *lot 1 : avec P-42 ; lots 2-4 : à chiffrer* | ★★★★☆ | 🔥🔥 |
+| **P-53** | **Charges élémentaires** — Gel, Feu et Foudre deviennent des charges à seuil, un cadre commun en donnée, utilisable par le héros comme par de futurs ennemis élémentaires ; Faiblesse et Poison inchangés · **exploré le 2026-11-03, non programmé**, hors de la vague 5 *(voir §4)* · [étude](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md) | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥🔥 |
 | ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
@@ -476,6 +478,10 @@ propre classe seulement, mais quand même. C'est le prédicat qui le décide, pl
 *(Depuis le 2026-10-01 la question change de forme : les signatures cessent d'être des cartes —
 brainstorm v3, D49, lot E4 de P-43. **Réglé par E4**, livré sur la branche de la vague 4 : les signatures ne sont plus dans `registry.cards`, aucun pool ne les voit —
 [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md).)*
+
+### P-53 — Charges élémentaires
+
+Né pendant l'arrêt de la vague 5, sur la question P-1 de sa spec : **Gel et Faiblesse font la même chose** — tous deux réduisent ce que l'ennemi inflige —, et Brûlure et Poison sont deux dégâts sur la durée. L'idée : un statut élémentaire s'accumule en points et, à un seuil, provoque une rupture propre à son élément — le Gel ôte une action, le Feu explose sur le porteur et ses voisins, la Foudre amplifie chaque coup reçu —, dans un **cadre commun en donnée, symétrique** : le héros le pose aujourd'hui, de futurs ennemis élémentaires le poseront sur lui. **Hors de la vague 5, par choix du propriétaire** (T3) : `0.5.7` garde les statuts proportionnels de P-44 lot 1, que P-53 relira. Le moment reste à fixer — au plus tôt pendant le développement de `0.6.0`, avec le lot *Marque* de la vague 7 ou après le programme. Les règles, les orientations du propriétaire, la faisabilité et les questions ouvertes : [l'étude](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md).
 
 ---
 
