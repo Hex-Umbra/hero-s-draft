@@ -134,6 +134,10 @@ class ScaleWith {
     );
   }
 
+  /// Ce que [quantity] ajoute à la valeur : `quantity x ratio`, arrondi vers
+  /// le bas, avec la tolérance de `StatRule.convertedAmount` (A11).
+  int termFor(int quantity) => (quantity * ratio + 1e-9).floor();
+
   Map<String, dynamic> toJson() => {
         'source': source.name,
         'ratio': ratio,

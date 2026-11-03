@@ -1,6 +1,20 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/services/effect_resolver.dart';
+import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/signature_data.dart';
+import 'package:roguelike_card_game/models/enemy_instance.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/status_effect.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Refuse un chargement en nommant [key] (spec P-44 lot 1, §3.1).
 Matcher _refuses(String key) => throwsA(
@@ -22,6 +36,16 @@ Map<String, dynamic> _card(String target, Map<String, dynamic> scaleWith) => {
 
 void main() {
   group('chargement', () {
+    test('termFor arrondit vers le bas', () {
+      int term(double ratio, int quantity) =>
+          ScaleWith(source: ScaleSource.armor, ratio: ratio).termFor(quantity);
+      expect(term(0.2, 14), 2);
+      expect(term(0.1, 30), 3);
+      expect(term(0.2, 15), 3);
+      expect(term(1, 7), 7);
+      expect(term(1.5, 3), 4);
+    });
+
     test('scaleWith se lit : source, ratio, statusId', () {
       final card = CardData.fromJson(_card('singleEnemy', {
         'source': 'targetStatus',
@@ -139,6 +163,159 @@ void main() {
       expect(back.source, ScaleSource.targetStatus);
       expect(back.ratio, 0.5);
       expect(back.statusId, 'poison');
+    });
+  });
+
+  group('resolution', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    late GameDataRegistry registry;
+    late ProviderContainer container;
+    late RunController run;
+    late CombatController combat;
+    late DeckNotifier deck;
+    late String enemyId;
+
+    // `setUpAll` : `GameDataRegistry` ecrit un singleton statique.
+    setUpAll(() async {
+      registry = await loadGameDataRegistry(rootBundle);
+    });
+
+    EnemyInstance foe({int pv = 100}) => EnemyInstance(
+          data: registry.enemies.first,
+          stats: EntityStats(maxPv: 100, currentPv: pv, armure: 0, might: 0),
+        );
+
+    void fight(List<EnemyInstance> enemies) {
+      enemyId = enemies.first.id;
+      combat.state = CombatState(
+        enemies: enemies,
+        selectedEnemyId: enemyId,
+        turnPhase: TurnPhase.player,
+      );
+    }
+
+    setUp(() {
+      container = ProviderContainer();
+      run = container.read(runProvider.notifier);
+      combat = container.read(combatProvider.notifier);
+      deck = container.read(deckProvider.notifier);
+      run.startNewRun(registry.heroes.singleWhere((h) => h.id == 'paladin'));
+      fight([foe()]);
+    });
+
+    tearDown(() => container.dispose());
+
+    EntityStats hero() => run.currentState.heroStats;
+    EntityStats enemy([int index = 0]) =>
+        combat.currentState.enemies[index].stats;
+
+    void setHero(EntityStats Function(EntityStats) change) => run.updateState(
+        run.currentState.copyWith(heroStats: change(hero())));
+
+    void play(List<CardEffect> effects,
+        {CardRarity rarity = CardRarity.common,
+        CardTarget target = CardTarget.singleEnemy}) {
+      setHero((h) => h.copyWith(currentMana: 9));
+      final played = EffectResolver.resolveCard(
+        CardInstance(
+          data: CardData(
+            id: 'test',
+            cost: 1,
+            type: CardType.attack,
+            rarity: rarity,
+            target: target,
+            effects: effects,
+          ),
+        ),
+        run,
+        deck,
+        combat,
+        enemyId,
+        container.read(effectRegistryProvider),
+      );
+      expect(played, isTrue);
+    }
+
+    CardEffect grows(ScaleSource source, double ratio,
+            {String? statusId, String type = 'damage', int value = 1}) =>
+        CardEffect(
+          type: type,
+          value: value,
+          scaleWith:
+              ScaleWith(source: source, ratio: ratio, statusId: statusId),
+        );
+
+    test('armor : le terme lit l Armure du heros', () {
+      setHero((h) => h.copyWith(armure: 7));
+      play([grows(ScaleSource.armor, 1, value: 2)]);
+      expect(enemy().currentPv, 100 - 9);
+    });
+
+    test('missingHp : PV max moins PV courants', () {
+      setHero((h) => h.copyWith(maxPv: 100, currentPv: 70));
+      play([grows(ScaleSource.missingHp, 0.2, value: 4)]);
+      expect(enemy().currentPv, 100 - 10);
+    });
+
+    test('cardsPlayedThisTurn : les jeux d avant celui-ci', () {
+      combat.state = combat.currentState
+          .recordCardPlayed()
+          .recordCardPlayed();
+      play([grows(ScaleSource.cardsPlayedThisTurn, 1)]);
+      expect(enemy().currentPv, 100 - 3);
+    });
+
+    test('enemiesAlive : un ennemi a 0 PV ne compte pas', () {
+      fight([foe(), foe(), foe(pv: 0)]);
+      play([grows(ScaleSource.enemiesAlive, 1)],
+          target: CardTarget.allEnemies);
+      expect(enemy(0).currentPv, 100 - 3);
+      expect(enemy(1).currentPv, 100 - 3);
+      expect(enemy(2).currentPv, 0);
+    });
+
+    test('targetStatus : la somme des entrees du statut sur la cible', () {
+      StatusEffect poison(int value, String source) => StatusEffect(
+            id: 'poison',
+            name: 'Poison',
+            type: StatusType.debuff,
+            value: value,
+            duration: 2,
+            sourceId: source,
+          );
+      final target = foe();
+      fight([
+        target.copyWith(
+          stats: target.stats.copyWith(
+            statuses: [poison(2, 'card:a'), poison(3, 'card:b')],
+          ),
+        ),
+      ]);
+      play([grows(ScaleSource.targetStatus, 1, statusId: 'poison')]);
+      expect(enemy().currentPv, 100 - 6);
+    });
+
+    test('targetMissingHp : les PV manquants de la cible', () {
+      fight([foe(pv: 60)]);
+      play([grows(ScaleSource.targetMissingHp, 0.1)]);
+      expect(enemy().currentPv, 60 - 5);
+    });
+
+    test('la rarete ne multiplie pas le terme', () {
+      setHero((h) => h.copyWith(armure: 4));
+      play([grows(ScaleSource.armor, 1, value: 5)],
+          rarity: CardRarity.epic);
+      expect(enemy().currentPv, 100 - (8 + 4));
+    });
+
+    test('l Armure d un effet precedent compte pour le suivant', () {
+      setHero((h) => h.copyWith(armure: 0));
+      play([
+        const CardEffect(type: 'armor', value: 5),
+        grows(ScaleSource.armor, 1, type: 'armor'),
+      ], target: CardTarget.self);
+      expect(hero().armure, 11);
     });
   });
 }
