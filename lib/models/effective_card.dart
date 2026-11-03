@@ -66,10 +66,14 @@ class EffectiveCard {
           // pourcentages sur un même effet ne se composent pas.
           for (var i = 0; i < effects.length; i++) {
             if (effects[i].type != delta.effect) continue;
-            effects[i] = _withValue(
-              effects[i],
-              effects[i].value + delta.bonusFor(atRarity[i].value, level),
-            );
+            final hits = effects[i].hits;
+            final base = atRarity[i].value;
+            // A14 : à plusieurs coups, le bonus se calcule sur le total des
+            // coups, plancher compris, puis se répartit vers le haut.
+            final perHit = hits == 1
+                ? delta.bonusFor(base, level)
+                : (delta.bonusFor(base * hits, level) + hits - 1) ~/ hits;
+            effects[i] = effects[i].copyWithValue(effects[i].value + perHit);
           }
         case AddEffectDelta():
           added.add(delta.effectAt(level));
@@ -134,12 +138,5 @@ class EffectiveCard {
   static CardEffect _atRarity(CardEffect effect, CardRarity rarity) =>
       _frozenByRarity.contains(effect.type)
           ? effect
-          : _withValue(effect, rarity.scaleValue(effect.value));
-
-  static CardEffect _withValue(CardEffect effect, int value) => CardEffect(
-        type: effect.type,
-        value: value,
-        statusId: effect.statusId,
-        duration: effect.duration,
-      );
+          : effect.copyWithValue(rarity.scaleValue(effect.value));
 }

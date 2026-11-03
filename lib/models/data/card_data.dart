@@ -72,26 +72,174 @@ enum CardRarity {
 
 enum CardTarget { singleEnemy, allEnemies, self, none }
 
+/// Ce qu'une croissance (`ScaleWith`) lit pour grandir (spec P-44 lot 1, §4.2).
+enum ScaleSource {
+  armor,
+  missingHp,
+  cardsPlayedThisTurn,
+  enemiesAlive,
+  targetStatus,
+  targetMissingHp,
+}
+
+/// La croissance d'un effet : sa valeur gagne `ratio` fois ce que [source]
+/// vaut au moment de la résolution (spec P-44 lot 1, §3.1).
+class ScaleWith {
+  final ScaleSource source;
+  final double ratio;
+
+  /// Le statut que [source] lit : exigé par `targetStatus`, refusé ailleurs.
+  final String? statusId;
+
+  const ScaleWith({required this.source, required this.ratio, this.statusId});
+
+  factory ScaleWith.fromJson(Map<String, dynamic> json) {
+    final name = json['source'];
+    final source = ScaleSource.values.where((s) => s.name == name).firstOrNull;
+    if (source == null) {
+      throw FormatException(
+        'CardEffect: "scaleWith.source" inconnue : $name',
+      );
+    }
+    final ratio = json['ratio'];
+    if (ratio is! num || ratio <= 0) {
+      throw FormatException(
+        'CardEffect: "scaleWith.ratio" doit etre un nombre > 0 : $ratio',
+      );
+    }
+    // A11 : sous 1, le texte écrit `1 / ratio` en tranches entières.
+    final inverse = 1 / ratio;
+    if (ratio < 1 && (inverse - inverse.round()).abs() > 1e-9) {
+      throw FormatException(
+        'CardEffect: "scaleWith.ratio" sous 1 doit etre l\'inverse d\'un '
+        'entier : $ratio',
+      );
+    }
+    final statusId = json['statusId'];
+    if (source == ScaleSource.targetStatus) {
+      if (statusId is! String || statusId.isEmpty) {
+        throw const FormatException(
+          'CardEffect: "scaleWith.statusId" est exigee par targetStatus',
+        );
+      }
+    } else if (statusId != null) {
+      throw FormatException(
+        'CardEffect: "scaleWith.statusId" est refusee avec ${source.name}',
+      );
+    }
+    return ScaleWith(
+      source: source,
+      ratio: ratio.toDouble(),
+      statusId: statusId as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'source': source.name,
+        'ratio': ratio,
+        if (statusId != null) 'statusId': statusId,
+      };
+}
+
 class CardEffect {
   final String type;
   final int value;
   final String? statusId;
   final int? duration;
 
+  /// Le nombre de coups d'un effet `damage` (spec P-44 lot 1, §3.1).
+  final int hits;
+
+  /// La part de Puissance que chaque coup d'un `damage` reçoit, dans ]0, 1].
+  final double mightRatio;
+
+  /// La croissance de l'effet, `null` s'il ne grandit pas.
+  final ScaleWith? scaleWith;
+
   const CardEffect({
     required this.type,
     required this.value,
     this.statusId,
     this.duration,
+    this.hits = 1,
+    this.mightRatio = 1,
+    this.scaleWith,
   });
 
   factory CardEffect.fromJson(Map<String, dynamic> json) {
+    final type = json['type'] as String;
+    FormatException fault(String key, String why) =>
+        FormatException('CardEffect "$type": "$key" $why');
+
+    for (final key in const ['hits', 'mightRatio']) {
+      if (json.containsKey(key) && type != 'damage') {
+        throw fault(key, 'n\'est permis que sur un effet damage');
+      }
+    }
+    final rawHits = json['hits'];
+    if (json.containsKey('hits') && (rawHits is! int || rawHits < 1)) {
+      throw fault('hits', 'doit etre un entier >= 1 : $rawHits');
+    }
+    final rawRatio = json['mightRatio'];
+    if (json.containsKey('mightRatio') &&
+        (rawRatio is! num || rawRatio <= 0 || rawRatio > 1)) {
+      throw fault('mightRatio', 'doit etre dans ]0, 1] : $rawRatio');
+    }
+    final hits = rawHits as int? ?? 1;
+
+    final rawScale = json['scaleWith'];
+    if (rawScale != null) {
+      if (type == 'draw' || type == 'gain_mana') {
+        throw fault('scaleWith', 'est refuse : la rarete gele cet effet');
+      }
+      if (hits >= 2) {
+        throw fault('scaleWith', 'est refuse sur un effet a plusieurs coups');
+      }
+    }
+
     return CardEffect(
-      type: json['type'] as String,
+      type: type,
       value: json['value'] as int,
       statusId: json['statusId'] as String?,
       duration: json['duration'] as int?,
+      hits: hits,
+      mightRatio: (rawRatio as num?)?.toDouble() ?? 1,
+      scaleWith: rawScale == null
+          ? null
+          : ScaleWith.fromJson(rawScale as Map<String, dynamic>),
     );
+  }
+
+  /// Cet effet à la valeur [value], tous ses autres champs gardés.
+  CardEffect copyWithValue(int value) => CardEffect(
+        type: type,
+        value: value,
+        statusId: statusId,
+        duration: duration,
+        hits: hits,
+        mightRatio: mightRatio,
+        scaleWith: scaleWith,
+      );
+
+  /// Une croissance qui lit la cible n'a de sens que sur une cible unique
+  /// (spec P-44 lot 1, §3.1 : la cible étant la sienne). [owner] nomme la
+  /// carte ou la signature fautive.
+  static void checkScaleTarget(
+    Iterable<CardEffect> effects,
+    CardTarget target, {
+    required String owner,
+  }) {
+    if (target == CardTarget.singleEnemy) return;
+    for (final effect in effects) {
+      final source = effect.scaleWith?.source;
+      if (source == ScaleSource.targetStatus ||
+          source == ScaleSource.targetMissingHp) {
+        throw FormatException(
+          '"$owner": "scaleWith.source" ${source!.name} exige une cible '
+          'unique (cible : ${target.name})',
+        );
+      }
+    }
   }
 
   Map<String, dynamic> toJson() => {
@@ -99,6 +247,9 @@ class CardEffect {
         'value': value,
         if (statusId != null) 'statusId': statusId,
         if (duration != null) 'duration': duration,
+        if (hits != 1) 'hits': hits,
+        if (mightRatio != 1) 'mightRatio': mightRatio,
+        if (scaleWith != null) 'scaleWith': scaleWith!.toJson(),
       };
 }
 
@@ -166,6 +317,17 @@ class CardData implements AudioSource {
         json['description'] as String? ??
         '';
 
+    final target = CardTarget.values.firstWhere(
+      (e) => e.name == json['target'],
+      orElse: () => CardTarget.singleEnemy,
+    );
+    final effects =
+        (json['effects'] as List<dynamic>?)
+            ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        <CardEffect>[];
+    CardEffect.checkScaleTarget(effects, target, owner: json['id'] as String);
+
     return CardData(
       id: json['id'] as String,
       nameEn: nEn,
@@ -178,19 +340,12 @@ class CardData implements AudioSource {
         (e) => e.name == json['rarity'],
         orElse: () => CardRarity.common,
       ),
-      target: CardTarget.values.firstWhere(
-        (e) => e.name == json['target'],
-        orElse: () => CardTarget.singleEnemy,
-      ),
+      target: target,
       spritePath: json['spritePath'] as String?,
       animation: json['animation'] as String?,
       sfx: json['sfx'] as String?,
       isExhaust: json['isExhaust'] as bool? ?? false,
-      effects:
-          (json['effects'] as List<dynamic>?)
-              ?.map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      effects: effects,
     );
   }
 

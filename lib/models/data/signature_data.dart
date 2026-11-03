@@ -107,6 +107,15 @@ class SignatureData implements AudioSource {
       throw fault('effects', 'doit etre une liste non vide');
     }
 
+    final target = CardTarget.values.firstWhere(
+      (e) => e.name == json['target'],
+      orElse: () => CardTarget.singleEnemy,
+    );
+    final effects = [
+      for (final e in rawEffects) CardEffect.fromJson(e as Map<String, dynamic>),
+    ];
+    CardEffect.checkScaleTarget(effects, target, owner: id);
+
     return SignatureData(
       id: id,
       heroClass: heroClass,
@@ -117,15 +126,10 @@ class SignatureData implements AudioSource {
       cost: cost,
       cooldown: cooldown,
       type: type,
-      target: CardTarget.values.firstWhere(
-        (e) => e.name == json['target'],
-        orElse: () => CardTarget.singleEnemy,
-      ),
+      target: target,
       animation: json['animation'] as String?,
       sfx: json['sfx'] as String?,
-      effects: rawEffects
-          .map((e) => CardEffect.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      effects: effects,
     );
   }
 }
