@@ -163,13 +163,17 @@ void main() {
       registry = await loadGameDataRegistry(rootBundle);
     });
 
-    EnemyInstance foe({int pv = 100, List<StatusEffect> statuses = const []}) =>
+    EnemyInstance foe({
+      int pv = 100,
+      int armor = 0,
+      List<StatusEffect> statuses = const [],
+    }) =>
         EnemyInstance(
           data: registry.enemies.first,
           stats: EntityStats(
             maxPv: 100,
             currentPv: pv,
-            armure: 0,
+            armure: armor,
             might: 0,
             statuses: statuses,
           ),
@@ -211,24 +215,10 @@ void main() {
     void setHero(EntityStats Function(EntityStats) change) => run.updateState(
         run.currentState.copyWith(heroStats: change(hero())));
 
-    void play(
-      List<CardEffect> effects, {
-      CardTarget target = CardTarget.singleEnemy,
-      List<String> runes = const [],
-    }) {
+    void playCard(CardData data, {List<String> runes = const []}) {
       setHero((h) => h.copyWith(currentMana: 9));
       final played = EffectResolver.resolveCard(
-        CardInstance(
-          data: CardData(
-            id: 'test',
-            cost: 1,
-            type: CardType.skill,
-            rarity: CardRarity.common,
-            target: target,
-            effects: effects,
-          ),
-          forgeUpgrades: runes,
-        ),
+        CardInstance(data: data, forgeUpgrades: runes),
         run,
         deck,
         combat,
@@ -237,6 +227,26 @@ void main() {
       );
       expect(played, isTrue);
     }
+
+    void play(
+      List<CardEffect> effects, {
+      CardTarget target = CardTarget.singleEnemy,
+      List<String> runes = const [],
+    }) =>
+        playCard(
+          CardData(
+            id: 'test',
+            cost: 1,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: target,
+            effects: effects,
+          ),
+          runes: runes,
+        );
+
+    void playShipped(String id, {List<String> runes = const []}) =>
+        playCard(registry.cards.singleWhere((c) => c.id == id), runes: runes);
 
     const volley = CardEffect(
       type: 'damage',
@@ -293,6 +303,45 @@ void main() {
       expect(enemy(0).currentPv, 100 - 6);
       expect(enemy(1).currentPv, 0);
       expect(hero().currentPv, 56);
+    });
+
+    test('Rafale d etincelles et Ricochant : chaque coup eclabousse', () {
+      setHero((h) => h.copyWith(might: 0));
+      fight([foe(), foe(), foe()]);
+      playShipped('spark_barrage', runes: const ['splash:1']);
+      // L'Electrocution est posee d'abord : 3 + 1 par coup sur la cible, et
+      // 1 par coup (le plancher) sur chacun des deux autres.
+      expect(enemy(0).currentPv, 88);
+      expect(enemy(1).currentPv, 97);
+      expect(enemy(2).currentPv, 97);
+    });
+
+    test('allEnemies : un ennemi mort au premier coup ne recoit pas le second',
+        () {
+      setHero((h) => h.copyWith(
+            might: 0,
+            maxPv: 100,
+            currentPv: 50,
+            statuses: [status('lifesteal', 99)],
+          ));
+      fight([foe(), foe(pv: 2)]);
+      play(
+        [const CardEffect(type: 'damage', value: 3, hits: 2, mightRatio: 0.5)],
+        target: CardTarget.allEnemies,
+      );
+      expect((enemy(0).currentPv, enemy(1).currentPv), (94, 0));
+      // Trois coups comptes, pas quatre.
+      expect(hero().currentPv, 59);
+    });
+
+    test('Rafale d etincelles : l Armure de la cible absorbe coup apres coup',
+        () {
+      setHero((h) => h.copyWith(might: 0));
+      fight([foe(armor: 5)]);
+      playShipped('spark_barrage');
+      // Chaque coup vaut 4 (3 + l'Electrocution posee d'abord) : le premier
+      // laisse 1 Armure, le deuxieme la prend puis 3 PV, le troisieme 4 PV.
+      expect((enemy().currentPv, enemy().armure), (93, 0));
     });
   });
 }

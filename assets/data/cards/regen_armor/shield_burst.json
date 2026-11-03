@@ -1,0 +1,21 @@
+{
+  "id": "shield_burst",
+  "name_en": "Shield Burst",
+  "name_fr": "Éclat de bouclier",
+  "description_en": "Costs 6 Block. Deal 8 damage to all enemies.",
+  "description_fr": "Coûte 6 Armure. Inflige 8 dégâts à tous les ennemis.",
+  "costs": {
+    "mana": 1,
+    "armor": 6
+  },
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 8
+    }
+  ]
+}

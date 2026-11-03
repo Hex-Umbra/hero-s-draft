@@ -224,7 +224,35 @@ const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 const _singleTargetRank1 = {..._attackRank1, 'splash'};
 const _singleTargetRank2 = {..._attackRank2, 'splash'};
 
-/// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
+/// Une Compétence de dégâts n'a ni Brûlant, ni Glaçant, ni Électrisant,
+/// réservés aux Attaques.
+const _skillDamageRank1 = {
+  'sharp',
+  'precise',
+  'spectral',
+  'piercing',
+  'lifesteal',
+  'cheap',
+};
+const _skillDamageRank2 = {..._skillDamageRank1, 'quick', 'eco'};
+
+/// Une attaque à cible unique à 0 mana : celles de `_singleTargetRank1` sans
+/// `cheap` (rien à rendre), plus Écho ; `quick` n'y vient qu'au rang 2 et
+/// `eco` jamais.
+const _breachRank1 = {
+  'sharp',
+  'burning',
+  'freezing',
+  'shocking',
+  'precise',
+  'spectral',
+  'piercing',
+  'lifesteal',
+  'splash',
+  'echo',
+};
+
+/// La matrice de l'offre aux 33 cartes livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
@@ -275,10 +303,59 @@ const _offers = <String, (Set<String>, Set<String>)>{
   'demon_form': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
   'metallicize': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
   'concentration': (<String>{}, {'quick'}),
-  'focus': (<String>{}, {'quick'}),
+  'bulwark': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'fortify': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'bastion': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'blood_fury': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'trance': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'kindle': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'frost_nova': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'rampart_slam': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'last_breath': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'shield_burst': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  // 0 mana : ni Economique, ni Allegee.
+  'breach': (_breachRank1, {..._breachRank1, 'quick'}),
+  // 0 mana, 4 PV : Transfusion s'y ajoute.
+  'bloodletting': (
+    {..._breachRank1, 'transfusion'},
+    {..._breachRank1, 'quick', 'transfusion'},
+  ),
+  // Elle pioche : Resonant la refuse.
+  'blood_pact': (
+    {'cheap', 'transfusion'},
+    {'cheap', 'transfusion', 'quick', 'eco'},
+  ),
+  'arcane_shard': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'spark_barrage': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'discharge': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'arcane_wave': (
+    {..._skillDamageRank1, 'echo'},
+    {..._skillDamageRank2, 'echo'},
+  ),
 };
 
-/// Les seize runes livrées, et l'offre qu'elles font aux 17 cartes livrées
+/// Les seize runes livrées, et l'offre qu'elles font aux 33 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -356,7 +433,7 @@ void main() {
     );
   });
 
-  test('la matrice couvre les 17 cartes livrees', () {
+  test('la matrice couvre les 33 cartes livrees', () {
     expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
   });
 

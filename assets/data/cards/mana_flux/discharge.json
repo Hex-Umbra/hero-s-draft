@@ -1,0 +1,24 @@
+{
+  "id": "discharge",
+  "name_en": "Discharge",
+  "name_fr": "Décharge",
+  "description_en": "Deal 12 damage. Apply 2 Vulnerable for 2 turns.",
+  "description_fr": "Inflige 12 dégâts. Applique 2 Vulnérable pendant 2 tours.",
+  "cost": 3,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "lightning",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 12
+    },
+    {
+      "type": "apply_status",
+      "statusId": "vulnerable",
+      "value": 2,
+      "duration": 2
+    }
+  ]
+}

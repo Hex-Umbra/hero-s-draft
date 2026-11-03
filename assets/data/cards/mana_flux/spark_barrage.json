@@ -1,0 +1,26 @@
+{
+  "id": "spark_barrage",
+  "name_en": "Spark Barrage",
+  "name_fr": "Rafale d'étincelles",
+  "description_en": "Apply 1 Shock, then deal 3 damage 3 times.",
+  "description_fr": "Applique 1 Électrocution, puis inflige 3 dégâts 3 fois.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "lightning",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "shock",
+      "value": 1,
+      "duration": 1
+    },
+    {
+      "type": "damage",
+      "value": 3,
+      "hits": 3,
+      "mightRatio": 0.5
+    }
+  ]
+}

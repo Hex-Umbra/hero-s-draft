@@ -34,6 +34,9 @@ flutter:
     - assets/audio/sfx/
     - assets/data/
     - assets/data/cards/
+    - assets/data/cards/mana_flux/
+    - assets/data/cards/rage/
+    - assets/data/cards/regen_armor/
     - assets/data/classes/berserker/
     - assets/data/classes/berserker/skills/
     - assets/data/classes/mage/

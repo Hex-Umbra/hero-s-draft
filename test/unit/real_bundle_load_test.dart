@@ -22,7 +22,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 99 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 115 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -33,7 +33,8 @@ void main() {
         .where((a) => a.startsWith(prefix) && a.split('/').length == depth)
         .length;
 
-    expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
+    expect(countUnder('assets/data/cards/', 4), 15, reason: 'cartes neutres');
+    expect(countUnder('assets/data/cards/', 5), 18, reason: 'cartes de lot');
     expect(countUnder('assets/data/relics/', 4), 28, reason: 'reliques');
     expect(countUnder('assets/data/events/', 4), 7, reason: 'evenements');
     expect(countUnder('assets/data/forge_upgrades/', 4), 16, reason: 'forge');
@@ -94,7 +95,7 @@ void main() {
     // Canari delibere, comme countUnder('assets/data/classes/', 6) plus
     // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
-    expect(registry.cards, hasLength(17)); // les signatures n en sont plus
+    expect(registry.cards, hasLength(33)); // 15 neutres + 18 de lot ; les signatures n en sont plus
     expect(registry.relics, hasLength(28));
     expect(registry.events, hasLength(7));
     expect(registry.forgeUpgrades, hasLength(16));

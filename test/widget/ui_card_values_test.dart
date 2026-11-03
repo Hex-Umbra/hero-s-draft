@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/proportional_status.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card/card_compact_description.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card/card_cost_medallion.dart';
@@ -56,6 +58,27 @@ Finder _body(String text) => find.descendant(
 void main() {
   setUpAll(() => shippedRuneRegistry(
       const ['enduring', 'quick', 'sharp', 'spectral']));
+
+  testWidgets(
+      'les cartes livrees se rendent : Percee montre son medaillon d Armure, '
+      'Rafale d etincelles son 3×3', (tester) async {
+    final registry =
+        (await tester.runAsync(() => loadGameDataRegistry(rootBundle)))!;
+    CardInstance shipped(String id) =>
+        CardInstance(data: registry.cards.singleWhere((c) => c.id == id));
+    Finder medallionText(String text) => find.descendant(
+          of: find.byType(CardCostMedallion),
+          matching: find.text(text),
+        );
+
+    await _pumpCard(tester, shipped('breach'));
+    expect(find.byType(CardCostMedallion), findsNWidgets(2));
+    expect(medallionText('0'), findsOneWidget);
+    expect(medallionText('4'), findsOneWidget);
+
+    await _pumpCard(tester, shipped('spark_barrage'));
+    expect(_body('3×3'), findsOneWidget);
+  });
 
   testWidgets('une Frappe legendaire portant Tranchant 2 montre 16 degats',
       (tester) async {

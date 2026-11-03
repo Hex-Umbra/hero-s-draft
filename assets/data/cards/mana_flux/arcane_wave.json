@@ -1,0 +1,18 @@
+{
+  "id": "arcane_wave",
+  "name_en": "Arcane Wave",
+  "name_fr": "Onde",
+  "description_en": "Deal 4 damage to all enemies.",
+  "description_fr": "Inflige 4 dégâts à tous les ennemis.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    }
+  ]
+}

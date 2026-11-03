@@ -77,6 +77,7 @@ assets/data/
 │   xp_curve.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
+├── cards/<passive>/<id>.json       # lot cards: the folder is the passive
 ├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
@@ -86,7 +87,7 @@ To add or modify a card, signature (a file under `classes/<id>/skills/`), enemy,
 1. **Create a file** in the right directory, shaped like a neighbouring entry. The filename **is** the `id` (`relics/iron_talisman.json` → `"id": "iron_talisman"`), in lowercase ASCII `snake_case` — enforced by `test/unit/entity_id_convention_test.dart`. For a class or an enemy it is a **folder** you create, image included, and the `id` comes from the folder name.
 2. **Run `dart run tool/sync_assets.dart`** to regenerate `pubspec.yaml`'s `assets:` section — a new class or enemy folder needs its own line, and an undeclared one fails silently at build time.
 
-No business-logic code needs to change for pure content additions. Never write a field the directory imposes: `heroClass` in a signature file fails the load, and so do `heroClass` and `category` in a card file. Only `id` may be restated, and only identically — it makes the file readable out of context.
+No business-logic code needs to change for pure content additions. Never write a field the directory imposes: `heroClass` in a signature file fails the load, and so do `heroClass`, `category` and `passive` in any card file. Only `id` may be restated, and only identically — it makes the file readable out of context.
 
 `patch_notes.json` is the one exception to all of the above — it stays flat (array order *is* the semantics: index 0 is the current version) and is agent-managed; see below.
 

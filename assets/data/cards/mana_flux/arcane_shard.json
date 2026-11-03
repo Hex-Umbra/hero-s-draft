@@ -1,0 +1,18 @@
+{
+  "id": "arcane_shard",
+  "name_en": "Arcane Shard",
+  "name_fr": "Éclat",
+  "description_en": "Deal 5 damage.",
+  "description_fr": "Inflige 5 dégâts.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 5
+    }
+  ]
+}

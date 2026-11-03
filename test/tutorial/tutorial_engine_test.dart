@@ -563,9 +563,18 @@ void main() {
 
     test('sans carte dont la fusion offre une rune, la Fusion seme la '
         'premiere carte fusionnable', () {
+      // Une legendaire n'a pas de rareté suivante : elle ne fusionne pas.
+      const legendary = CardData(
+        id: 'legendary_test',
+        cost: 0,
+        type: CardType.skill,
+        rarity: CardRarity.legendary,
+        target: CardTarget.self,
+        effects: [],
+      );
       engine.setStarterDeck([
+        legendary,
         engine.fixtures.card('concentration'),
-        engine.fixtures.card('focus'),
       ]);
 
       engine.prepareStep(11);

@@ -1,0 +1,21 @@
+{
+  "id": "breach",
+  "name_en": "Breach",
+  "name_fr": "Percée",
+  "description_en": "Costs 4 Block. Deal 10 damage.",
+  "description_fr": "Coûte 4 Armure. Inflige 10 dégâts.",
+  "costs": {
+    "mana": 0,
+    "armor": 4
+  },
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 10
+    }
+  ]
+}

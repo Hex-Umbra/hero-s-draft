@@ -1,0 +1,24 @@
+{
+  "id": "blood_fury",
+  "name_en": "Blood Fury",
+  "name_fr": "Fureur sanguine",
+  "description_en": "Gain 1 Might this turn, +1 per 10 missing HP.",
+  "description_fr": "Gagne 1 Puissance ce tour, +1 par tranche de 10 PV manquants.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "might",
+      "value": 1,
+      "duration": 1,
+      "scaleWith": {
+        "source": "missingHp",
+        "ratio": 0.1
+      }
+    }
+  ]
+}
