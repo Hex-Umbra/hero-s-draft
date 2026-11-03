@@ -16,6 +16,10 @@ class EffectiveCard {
     required this.cost,
     required this.critChanceBonus,
     required this.addsExhaust,
+    required this.armorPiercePercent,
+    required this.armorPierceLevel,
+    required this.lifestealPercent,
+    required this.lifestealLevel,
   });
 
   /// Les effets que les deltas ajoutent, résolus avant ceux de la carte.
@@ -41,6 +45,17 @@ class EffectiveCard {
   /// P-43 E2, A10).
   final bool addsExhaust;
 
+  /// Le pourcentage de l'Armure de la cible que les coups de la carte ignorent,
+  /// et le niveau total des deltas qui le donnent : plancher de l'Armure
+  /// ignorée (spec §4.6, A16).
+  final int armorPiercePercent;
+  final int armorPierceLevel;
+
+  /// Le pourcentage des dégâts infligés que la carte rend en PV, et le niveau
+  /// total des deltas qui le donnent : plancher du soin (spec §4.6, A18).
+  final int lifestealPercent;
+  final int lifestealLevel;
+
   /// La couture commune aux runes et, en vague 5, aux évolutions de
   /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
   /// reçoit des paires *(delta, niveau)*.
@@ -58,6 +73,10 @@ class EffectiveCard {
     var costReduction = 0;
     var critChanceBonus = 0;
     var addsExhaust = false;
+    var armorPiercePercent = 0;
+    var armorPierceLevel = 0;
+    var lifestealPercent = 0;
+    var lifestealLevel = 0;
 
     for (final (delta, level) in deltas) {
       switch (delta) {
@@ -85,6 +104,12 @@ class EffectiveCard {
           critChanceBonus += delta.valuePerLevel * level;
         case AddExhaustDelta():
           addsExhaust = true;
+        case ArmorPierceDelta():
+          armorPiercePercent += delta.valuePercentPerLevel * level;
+          armorPierceLevel += level;
+        case LifestealPercentDelta():
+          lifestealPercent += delta.valuePercentPerLevel * level;
+          lifestealLevel += level;
       }
     }
 
@@ -95,6 +120,10 @@ class EffectiveCard {
       cost: max(0, data.cost - costReduction),
       critChanceBonus: critChanceBonus,
       addsExhaust: addsExhaust,
+      armorPiercePercent: armorPiercePercent,
+      armorPierceLevel: armorPierceLevel,
+      lifestealPercent: lifestealPercent,
+      lifestealLevel: lifestealLevel,
     );
   }
 

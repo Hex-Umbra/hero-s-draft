@@ -282,6 +282,8 @@ class ForgeUpgradeData {
         ReduceCostDelta() => _costCut(card, rarity, level, carried, delta),
         CritBonusDelta() => delta.valuePerLevel * level,
         AddExhaustDelta() => null,
+        ArmorPierceDelta() => min(100, delta.valuePercentPerLevel * level),
+        LifestealPercentDelta() => delta.valuePercentPerLevel * level,
       };
       if (value != null) return value;
     }

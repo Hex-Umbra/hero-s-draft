@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
@@ -15,6 +16,7 @@ ForgeUpgradeData _rune(
   bool binary = false,
   int minFusionRank = 1,
   int weight = 10,
+  List<CardDelta> deltas = const [],
 }) =>
     ForgeUpgradeData(
       id: id,
@@ -28,6 +30,7 @@ ForgeUpgradeData _rune(
       maxLevel: maxLevel,
       binary: binary,
       weight: weight,
+      deltas: deltas,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -303,6 +306,45 @@ void main() {
           _cardWith(['eco:1', 'capped:1']),
         ]),
         [('eco', 1), ('capped', 2)],
+      );
+    });
+
+    // Une rune dont chaque delta est sature n'a plus rien a donner (A22).
+    final saturable = [
+      _rune('piercing', maxLevel: 4, deltas: const [
+        ArmorPierceDelta(valuePercentPerLevel: 25),
+      ]),
+      _rune('lifesteal', maxLevel: 3, deltas: const [
+        LifestealPercentDelta(valuePercentPerLevel: 20),
+      ]),
+    ];
+
+    List<(String, int)> saturableCandidates(
+      List<CardInstance> deck, {
+      Map<String, int> capBonus = const {},
+    }) =>
+        [
+          for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+              deck, saturable,
+              capBonus: capBonus))
+            (rune.id, cap),
+        ];
+
+    test('une rune dont chaque delta est sature n est pas proposee : '
+        'Perforant a 4, Vampirique a 5', () {
+      expect(saturableCandidates([_cardWith(['piercing:4'])]), isEmpty);
+      expect(
+        saturableCandidates([_cardWith(['lifesteal:5'])],
+            capBonus: {'lifesteal': 2}),
+        isEmpty,
+      );
+    });
+
+    test('Vampirique 4 reste proposee', () {
+      expect(
+        saturableCandidates([_cardWith(['lifesteal:4'])],
+            capBonus: {'lifesteal': 1}),
+        [('lifesteal', 4)],
       );
     });
 

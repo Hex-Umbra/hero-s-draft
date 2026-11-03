@@ -149,8 +149,8 @@ class ForgeRuneRules {
   /// Les runes de [deck] que *Transcendance* peut relever (spec P-43 E3,
   /// §4.8 ; D42(c), A15, A16) : celles qu'une carte porte à leur plafond
   /// effectif — `maxLevel` plus [capBonus] pour leur id —, ni sans plafond
-  /// ni `binary`, une fois chacune, dans l'ordre du [catalog], avec ce
-  /// plafond. Lues par l'écran de draft, pour la condition `raisableRune`
+  /// ni `binary` ni saturée à ce plafond (A22), une fois chacune, dans
+  /// l'ordre du [catalog], avec ce plafond. Lues par l'écran de draft, pour la condition `raisableRune`
   /// et pour la modale.
   static List<RaisableCap> raisableCaps(
     Iterable<CardInstance> deck,
@@ -169,10 +169,17 @@ class ForgeRuneRules {
         if (rune.maxLevel case final maxLevel?
             when !rune.binary &&
                 (carried[rune.id] ?? 0) >=
-                    maxLevel + (capBonus[rune.id] ?? 0))
+                    maxLevel + (capBonus[rune.id] ?? 0) &&
+                !_saturatedAt(rune, maxLevel + (capBonus[rune.id] ?? 0)))
           (rune: rune, cap: maxLevel + (capBonus[rune.id] ?? 0)),
     ];
   }
+
+  /// Vrai si chaque delta de [rune] est saturé au niveau [cap] (A22) : un
+  /// niveau de plus n'y ajouterait rien. Une rune sans delta déclaré ne l'est
+  /// jamais.
+  static bool _saturatedAt(ForgeUpgradeData rune, int cap) =>
+      rune.deltas.isNotEmpty && rune.deltas.every((d) => d.saturatesAt(cap));
 
   /// `b`, le coût d'un niveau d'affûtage par niveau porté (D63 ; spec P-43
   /// E2, §4.7).

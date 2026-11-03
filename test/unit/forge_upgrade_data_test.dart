@@ -95,6 +95,40 @@ void main() {
       }
     });
 
+    test('armorPierce et lifestealPercent se lisent et s ecrivent ; un '
+        'pourcentage nul est refuse', () {
+      final json = [
+        {'type': 'armorPierce', 'valuePercentPerLevel': 25},
+        {'type': 'lifestealPercent', 'valuePercentPerLevel': 20},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      final [pierce, steal] = rune.deltas;
+      expect(
+        pierce,
+        isA<ArmorPierceDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 25),
+      );
+      expect(
+        steal,
+        isA<LifestealPercentDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 20),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+
+      for (final type in ['armorPierce', 'lifestealPercent']) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({
+            'deltas': [
+              {'type': type, 'valuePercentPerLevel': 0},
+            ],
+          })),
+          _refused('valuePercentPerLevel'),
+          reason: type,
+        );
+      }
+    });
+
     test('refuse une rune sans deltas', () {
       expect(() => ForgeUpgradeData.fromJson(_json()..remove('deltas')),
           _refused('deltas'));
@@ -448,6 +482,16 @@ void main() {
         ],
       }));
       expect(rune.getDescription(3, 'fr', strike, CardRarity.common), '+15%');
+    });
+
+    test('{val} : Perforant 1 vaut 25, Perforant 5 borne a 100, Vampirique 2 '
+        'vaut 40', () {
+      final card = shippedCard('strike_basic');
+      String text(String id, int level) =>
+          shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
+      expect(text('piercing', 1), "Ignore 25 % de l'Armure de la cible");
+      expect(text('piercing', 5), "Ignore 100 % de l'Armure de la cible");
+      expect(text('lifesteal', 2), 'Soigne 40 % des dégâts infligés');
     });
 
     test('les cinq runes a effet ajoute disent leur valeur, que l ecran '

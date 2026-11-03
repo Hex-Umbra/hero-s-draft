@@ -21,6 +21,8 @@ sealed class CardDelta {
     'reduceCost',
     'critBonus',
     'addExhaust',
+    'armorPierce',
+    'lifestealPercent',
   ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
@@ -39,6 +41,12 @@ sealed class CardDelta {
       'critBonus' =>
         CritBonusDelta(valuePerLevel: _positive(json, 'valuePerLevel')),
       'addExhaust' => const AddExhaustDelta(),
+      'armorPierce' => ArmorPierceDelta(
+          valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
+        ),
+      'lifestealPercent' => LifestealPercentDelta(
+          valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
+        ),
       _ => throw FormatException(
           'deltas.type : valeur "$type" inconnue — attendu : '
           '${typeNames.join(', ')}',
@@ -47,6 +55,12 @@ sealed class CardDelta {
   }
 
   Map<String, dynamic> toJson();
+
+  /// Vrai si la rune portée au niveau [level] ne peut plus rien donner par un
+  /// niveau de plus : une sorte en pourcentage qui vaut 100 au plus le
+  /// surcharge (A22). *Transcendance* ne propose pas une rune dont chaque delta
+  /// est saturé.
+  bool saturatesAt(int level) => false;
 
   static String _text(Map<String, dynamic> json, String key) {
     final value = json[key];
@@ -193,4 +207,38 @@ final class AddExhaustDelta extends CardDelta {
 
   @override
   Map<String, dynamic> toJson() => {'type': 'addExhaust'};
+}
+
+/// Les coups de la carte ignorent `valuePercentPerLevel × L` % de l'Armure de
+/// la cible, au plus 100 % (spec §3.6, §4.6, A16) : `piercing`.
+final class ArmorPierceDelta extends CardDelta {
+  const ArmorPierceDelta({required this.valuePercentPerLevel});
+
+  final int valuePercentPerLevel;
+
+  @override
+  bool saturatesAt(int level) => valuePercentPerLevel * level >= 100;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'armorPierce',
+        'valuePercentPerLevel': valuePercentPerLevel,
+      };
+}
+
+/// La carte soigne le héros de `valuePercentPerLevel × L` % des dégâts qu'elle
+/// inflige, au plus 100 % (spec §3.6, §4.6, A18) : `lifesteal`.
+final class LifestealPercentDelta extends CardDelta {
+  const LifestealPercentDelta({required this.valuePercentPerLevel});
+
+  final int valuePercentPerLevel;
+
+  @override
+  bool saturatesAt(int level) => valuePercentPerLevel * level >= 100;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'lifestealPercent',
+        'valuePercentPerLevel': valuePercentPerLevel,
+      };
 }

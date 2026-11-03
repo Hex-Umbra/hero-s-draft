@@ -252,8 +252,8 @@ void main() {
     await tester.tap(find.text('FUSIONNER (3)'));
     await tester.pumpAndSettle();
 
-    // Peu commune : Tranchant, Brulant, Congelant, Surcharge, Allege, Precis
-    // et Spectral s'offrent ; trois sont tirees.
+    // Peu commune : Tranchant, Brulant, Congelant, Surcharge, Allege, Precis,
+    // Spectral, Perforant et Vampirique s'offrent ; trois sont tirees.
     expect(find.byType(ForgeUpgradeDialog), findsOneWidget);
     expect(find.byType(ForgeSlotRow), findsNWidgets(3));
     expect(messagesOf(container), isEmpty);
@@ -276,6 +276,8 @@ void main() {
         'cheap',
         'precise',
         'spectral',
+        'piercing',
+        'lifesteal',
       ]),
     );
     expect(messagesOf(container),

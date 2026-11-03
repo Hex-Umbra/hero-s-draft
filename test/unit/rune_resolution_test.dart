@@ -207,6 +207,86 @@ void main() {
     });
   });
 
+  // Perforant : une part de l'Armure ne protège pas et n'est pas consommée
+  // (spec §4.6, A16).
+  group('Perforant', () {
+    void armEnemy(int armor) {
+      combat.updateEnemyStats(enemyId, enemy().copyWith(armure: armor));
+    }
+
+    (int, int) afterPlaying(CardInstance played) {
+      play(played);
+      return (enemy().currentPv, enemy().armure);
+    }
+
+    test('Perforant 1 contre 10 Armure : 3 ignores', () {
+      armEnemy(10);
+      expect(afterPlaying(card('heavy_strike', runes: const ['piercing:1'])),
+          (95, 3));
+      armEnemy(10);
+      combat.updateEnemyStats(enemyId, enemy().copyWith(currentPv: 100));
+      expect(afterPlaying(card('heavy_strike')), (98, 0));
+    });
+
+    test('Perforant : au moins L, jamais plus que l Armure presente', () {
+      armEnemy(1);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:1'])),
+          (94, 1));
+      combat.updateEnemyStats(enemyId, enemy().copyWith(currentPv: 100));
+      armEnemy(0);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:1'])),
+          (94, 0));
+    });
+
+    test('Perforant 4 : toute l Armure ignoree, et gardee', () {
+      armEnemy(10);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:4'])),
+          (94, 10));
+    });
+  });
+
+  // Vampirique : le soin de la rune, une fois par carte, sans critique (A18).
+  group('Vampirique', () {
+    CardInstance custom(int damage, List<String> runes) => CardInstance(
+          data: CardData(
+            id: 'test_hit',
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'damage', value: damage)],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    setUp(() {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+    });
+
+    test('Vampirique 1 : 20 % des degats infliges, demie vers le haut', () {
+      play(card('heavy_strike', runes: const ['lifesteal:1']));
+      expect(hero().currentPv, 52);
+    });
+
+    test('Vampirique : au moins L, jamais plus que les degats infliges', () {
+      play(custom(1, const ['lifesteal:1']));
+      expect(hero().currentPv, 51);
+
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+      play(custom(2, const ['lifesteal:3']));
+      expect(hero().currentPv, 52);
+    });
+
+    test('Vampirique et le Vol de vie de Soif de Sang soignent tous deux, une '
+        'fois par carte', () {
+      run.applyLifestealBuff(value: 2, duration: 3);
+      play(card('strike_basic', runes: const ['lifesteal:1']));
+      expect(hero().currentPv, 50 + 2 + 1);
+    });
+  });
+
   test('G1 : un Coup Empoisonne legendaire inflige 7 degats et pose 5 Poison',
       () {
     play(card('poison_stab', rarity: CardRarity.legendary));

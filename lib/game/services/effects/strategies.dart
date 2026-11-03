@@ -1,6 +1,7 @@
 import 'dart:math';
 import '../../../models/card_instance.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/effective_card.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/status_effect.dart';
 import '../../controllers/run_controller.dart';
@@ -27,7 +28,8 @@ class DamageEffectStrategy implements EffectStrategy {
   }) {
     int dealt = 0;
     // Le critique que les runes de la carte ajoutent (spec P-43 E2, §4.2).
-    final critChanceBonus = card.effective.critChanceBonus;
+    final effective = card.effective;
+    final critChanceBonus = effective.critChanceBonus;
 
     for (var hit = 0; hit < effect.hits; hit++) {
       // Les ennemis sont relus à chaque coup : un mort ne reçoit plus rien.
@@ -57,13 +59,32 @@ class DamageEffectStrategy implements EffectStrategy {
         );
         combatController.updateEnemyStats(
           enemy.id,
-          enemy.stats.takeDamage(finalDmg, isCrit: isCrit),
+          enemy.stats.takeDamage(
+            finalDmg,
+            isCrit: isCrit,
+            armorPiercePercent: effective.armorPiercePercent,
+            armorPierceFloor: effective.armorPierceLevel,
+          ),
         );
         dealt += finalDmg;
       }
     }
 
     _payLifesteal(runController, dealt);
+    _payRuneLifesteal(runController, effective, dealt);
+  }
+
+  /// Le soin de la rune Vampirique : `p × L` % des dégâts infligés, la demie
+  /// vers le haut, au moins `L`, jamais plus que les dégâts — une fois par
+  /// carte, après le Vol de vie du statut, sans critique (spec §4.6, A18).
+  void _payRuneLifesteal(
+    RunController runController,
+    EffectiveCard effective,
+    int dealt,
+  ) {
+    if (effective.lifestealLevel <= 0 || dealt < 1) return;
+    final share = (effective.lifestealPercent * dealt + 50) ~/ 100;
+    runController.heal(min(dealt, max(share, effective.lifestealLevel)));
   }
 
   /// Le soin du Vol de vie, après la résolution des dégâts (spec P-41, §1.2).

@@ -155,6 +155,22 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 50,
   ),
+  'piercing': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: 4,
+    deltas: const [
+      {'type': 'armorPierce', 'valuePercentPerLevel': 25},
+    ],
+    weight: 50,
+  ),
+  'lifesteal': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: 3,
+    deltas: const [
+      {'type': 'lifestealPercent', 'valuePercentPerLevel': 20},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
@@ -167,6 +183,8 @@ const _attackRank1 = {
   'cheap',
   'precise',
   'spectral',
+  'piercing',
+  'lifesteal',
 };
 const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
@@ -258,8 +276,8 @@ void main() {
   });
 
   // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
-  test('enduring et cheap sont binaires, les neuf autres non', () {
-    expect(registry.forgeUpgrades, hasLength(11));
+  test('enduring et cheap sont binaires, les onze autres non', () {
+    expect(registry.forgeUpgrades, hasLength(13));
     expect(
       {
         for (final rune in registry.forgeUpgrades)

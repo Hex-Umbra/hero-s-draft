@@ -20,6 +20,8 @@ String? _effectOf(CardDelta delta) => switch (delta) {
       ReduceCostDelta() => null,
       CritBonusDelta() => null,
       AddExhaustDelta() => null,
+      ArmorPierceDelta() => null,
+      LifestealPercentDelta() => null,
     };
 
 /// Sans ce fichier, le probleme §2.2 de la spec n est pas resolu : un dossier
