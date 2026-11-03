@@ -3,7 +3,7 @@
 **Chantier** : refaire la manière dont un deck se construit, puis donner à chaque classe ses compétences et ses cartes — P-43, P-42 et P-44 lot 1 de `docs/ROADMAP.md`
 **Versions** : de `0.5.2` à `0.6.0`
 **Ouvert le** : 01/10/2026
-**Avancement** : 5 vagues livrées sur 8 — dernière : vague 4, le 16/10/2026
+**Avancement** : 5 vagues livrées sur 9 — dernière : vague 4, le 16/10/2026 ; une vague ajoutée le 03/11/2026, `0.5.9`, pour les charges élémentaires
 **Ce qui fait foi techniquement** : le [fichier d'orchestration](../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) — son journal (§2) donne l'état de chaque vague ; ses décisions de conception sont dans le [brainstorm v3](../possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §1
 **Modèle** : [`_modele_suivi.md`](_modele_suivi.md)
 

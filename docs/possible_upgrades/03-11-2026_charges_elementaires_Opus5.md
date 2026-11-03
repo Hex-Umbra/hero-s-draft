@@ -1,8 +1,8 @@
 # Les charges élémentaires — Gel, Feu, Foudre : un seuil plutôt qu'un pourcentage
 
 **Date** : 03/11/2026 — étude née pendant l'arrêt de la vague 5 (`0.5.7`), sur la question P-1 de sa spec.
-**Statut** : **exploré, orienté par le propriétaire, non programmé.** Les points marqués *tranché par le propriétaire* sont ses orientations du 02-03/11 ; ils ne sont pas des décisions acquises du brainstorm v3 et ne s'appliqueront qu'une fois le chantier spécifié. Rien n'est implémenté. Chantier **P-53** de [`docs/ROADMAP.md`](../ROADMAP.md).
-**Calendrier** : **pas en `0.5.7`** (option T3, §8) — la vague 5 ne porte que les cartes et le joueur ; les charges élémentaires touchent le gameplay fondamental des cartes. **Le propriétaire les transfère au développement de `0.6.0`** (03/11) ; dans la vague 7 ou à côté reste à arrêter avant elle (C9).
+**Statut** : **exploré, orienté par le propriétaire, programmé le 03/11 par D76** (brainstorm v3, §1) : **vague 7, `0.5.9`**. Les points marqués *tranché par le propriétaire* sont ses orientations du 02-03/11 ; ils ne sont pas des décisions acquises du brainstorm v3 et ne s'appliqueront qu'une fois le chantier spécifié. Rien n'est implémenté. Chantier **P-53** de [`docs/ROADMAP.md`](../ROADMAP.md) ; fiche 8.7 du [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md).
+**Calendrier** : **pas en `0.5.7`** (option T3, §8) — la vague 5 ne porte que les cartes et le joueur ; les charges élémentaires touchent le gameplay fondamental des cartes. **Une vague à elles, la vague 7, `0.5.9`** (D76, 03/11) : la tranche 3 passe en vague 8, `0.6.0`.
 **Vérifié contre** : la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1` à `4377a0a` (code de `main` à `d99cd81`, `0.5.6`). Chaque constat de code porte le `fichier:ligne` qui l'établit.
 **Sources** : la spec de la vague 5, [`2026-10-25-p42-tranche-1-p44-lot-1-design.md`](../superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md), §1.4 (P-1) et §4.4 ; sa présentation, [`2026-10-26_vague_5_trois_questions_p.pptx`](../presentations/2026-10-26_vague_5_trois_questions_p.pptx) ; le [brainstorm v3](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §7, §8, §9.2.
 
@@ -135,7 +135,7 @@ Le propriétaire a envisagé de la changer en « +5 % de dégâts subis ». **É
 
 **Ce que T3 implique pour la vague 5.** La spec de `0.5.7` garde ses statuts proportionnels : **P-1 est répondue (a) le 03/11** — 25 % par point, plafonnés —, et le Gel de `0.5.7` suit ce barème. Ce barème sera remplacé pour le Gel par la charge élémentaire quand P-53 sera spécifié ; *Trait de Glace*, *Nova de givre*, *Embrasement*, *Rafale d'étincelles* et les runes élémentaires écrites ou recalibrées en vague 5 seront relues à ce moment.
 
-**Où P-53 se loge.** Le propriétaire le transfère au développement de `0.6.0` (03/11). Deux formes, à arrêter avant la vague 7 :
+**Où P-53 se loge — tranché le 03/11 (D76)** : une vague à lui, la vague 7, `0.5.9`, avant la tranche 3, qui devient la vague 8, `0.6.0`. Le lot *Marque* s'écrit ainsi sur les charges. Les deux formes envisagées avant D76 :
 - avec la vague 7 (`0.6.0`), dont le lot *Marque* rassemble les quatre cartes élémentaires — mais la fiche de la vague 7 (orchestration, §8.7) ne le prévoit pas, et l'y ajouter élargit une vague, ce que seul le propriétaire décide ;
 - après `0.6.0`, comme un lot propre, à côté de P-44 lot 2 (étourdissement, épines), avec lequel il se croise : le gel est un étourdissement à seuil, L2 rejoignait les épines.
 
@@ -162,9 +162,9 @@ Quand P-53 sera ouvert, ses arbitrages s'écriront comme des décisions numérot
 | C6 | Le Feu et la réaction en chaîne | §4 |
 | C7 | Le voisinage quand un ennemi meurt | §4 |
 | C8 | La Foudre : durée, surcharge, déclin, seuil | §5 |
-| C9 | P-53 en `0.6.0` (transféré le 03/11) : dans la vague 7, avec le lot *Marque*, ou un lot à côté ? | §8 |
+| C9 | ~~Où loger P-53~~ — ✅ tranché le 03/11 (D76) : vague 7, `0.5.9`, avant la tranche 3 | §8 |
 | C10 | Les valeurs — seuils, 4 par point, 12 par tranche, +3 par coup : des ordres de grandeur, que le test du propriétaire corrigera | §3 à §5 |
 
 ---
 
-*Étude. Rien n'est implémenté ; ce document ne vaut décision que pour les points que le propriétaire a tranchés, et seulement une fois P-53 spécifié. Prochaine étape : poursuivre la discussion sur la Foudre (§5), puis programmer P-53 (§8).*
+*Étude. Rien n'est implémenté ; ce document ne vaut décision que pour les points que le propriétaire a tranchés, et seulement une fois P-53 spécifié. Prochaine étape : poursuivre la discussion sur la Foudre (§5) et trancher C1 à C10, pour écrire les décisions et compléter la fiche 8.7 du fichier d'orchestration avant la vague 7.*

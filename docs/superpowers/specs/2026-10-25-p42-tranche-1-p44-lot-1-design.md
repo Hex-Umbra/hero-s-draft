@@ -984,7 +984,7 @@ départ à 2 cartes du lot et 3 neutres ; des cartes qui coûtent des PV ou de l
 qui grandissent avec l'Armure ou les PV perdus ; Vulnérable, Faiblesse et Gel qui comptent leurs points, et la
 Puissance d'altération qui les renforce ; cinq runes de plus à la fusion ; les signatures qui évoluent tous les
 cinq niveaux, sur un écran à trois rouleaux. **À dire dans la note** : six passifs quittent la sélection jusqu'à
-ce que leur lot de cartes arrive, dans les deux versions suivantes ; *Focalisation* disparaît ; *Forme
+ce que leur lot de cartes arrive, dans les versions suivantes — trois en `0.5.8`, les trois derniers en `0.6.0` (D76) ; *Focalisation* disparaît ; *Forme
 Démoniaque* devient une carte du Sang ; *Trait de Glace* applique 2 Gel pour le même effet.
 
 **Ce que le vérificateur contrôle** :

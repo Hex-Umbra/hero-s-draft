@@ -2,8 +2,9 @@
 
 **Date** : 01/10/2026 — réécrit le même jour pour la méthode par vagues (brainstorm, D69), puis corrigé après la cinquième passe de revue (revue §14 ; brainstorm, D70 et D71) et après la sixième (revue §15 ; D72 à D74), puis après un contrôle ciblé du texte neuf (revue §16 ; D75).
 **Amendé le 13/10/2026 par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)**, après la mesure des trois vagues livrées ([audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md)) : les plans consignent des décisions, pas du code (§3.4, §4.3, §4.4) ; la vérification est différentielle dès le deuxième tour, avec une grille de gravité à critères (§3.3, §4.2) ; chaque question a une classe T · P · D et un niveau d'autonomie (§5, §6) ; la spec ne garde que ses choix, l'historique va dans un fichier de vérifications (§3.3) ; **la simulation n'est plus relancée par une vague** (§3.6, §7.3) ; le compte rendu est plafonné à 150 lignes et le cahier de test devient un fichier que le propriétaire remplit (§3.8) ; l'outillage est noté (§3.1). La vague 4 est l'essai mesuré de ces changements.
-**Statut** : **ce fichier fait foi pour le déroulé du chantier** — l'ordre des vagues, ce que chacune livre, sa version, son état. **Les décisions de conception ne sont pas ici** : leur source de vérité est le brainstorm v3, [`22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md`](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §1 (D1 à D75). Ce fichier les cite, il ne les recopie pas ; en cas d'écart, le brainstorm a raison sur le *quoi*, ce fichier sur le *comment* et le *quand*.
-**Périmètre** : ce qui a été brainstormé — **P-43** « Économie unifiée » (lots E0 à E4), **P-42** « Catalogue par lots de passif » (tranches 1 à 3) et **P-44 lot 1**. Hors périmètre, après `0.6.0` : P-44 lots 2 à 4 (derrière P-05) et P-16 (calibration).
+**Amendé le 03/11/2026 par D76** (brainstorm v3, §1), à la demande du propriétaire : **une vague de plus**, la vague 7, `0.5.9`, pour les **charges élémentaires** (P-53) ; la tranche 3 devient la vague 8, toujours `0.6.0` (§1, §2, §8.7, §8.8).
+**Statut** : **ce fichier fait foi pour le déroulé du chantier** — l'ordre des vagues, ce que chacune livre, sa version, son état. **Les décisions de conception ne sont pas ici** : leur source de vérité est le brainstorm v3, [`22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md`](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §1 (D1 à D76). Ce fichier les cite, il ne les recopie pas ; en cas d'écart, le brainstorm a raison sur le *quoi*, ce fichier sur le *comment* et le *quand*.
+**Périmètre** : ce qui a été brainstormé — **P-43** « Économie unifiée » (lots E0 à E4), **P-42** « Catalogue par lots de passif » (tranches 1 à 3) et **P-44 lot 1** ; depuis D76 (03/11), **P-53** « Charges élémentaires ». Hors périmètre, après `0.6.0` : P-44 lots 2 à 4 (derrière P-05) et P-16 (calibration).
 **Sources** : le brainstorm v3 ; sa revue, [`29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md`](29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md) ; le rapport de simulation, [`30-09-2026_simulation_D26_economie_Fable5.md`](30-09-2026_simulation_D26_economie_Fable5.md), et la sortie de référence du script, `tool/simulations/d26_reference_output.md` ; `docs/ROADMAP.md` §4.
 **Ce que les vagues écrivent** : le journal (§2, ici) ; un compte rendu technique par vague, dans `docs/superpowers/reports/` ; et le suivi en clair du chantier, [`docs/suivi_vagues_chantier/economie_unifiee_et_catalogue.md`](../suivi_vagues_chantier/economie_unifiee_et_catalogue.md) — ce que chaque vague apporte au jeu et pourquoi (D71).
 **Vérifié contre** : `main` à `25c36ba` (01/10) — `lib/`, `test/` et `assets/` identiques à `3b8c66f`, `tool/` a gagné le script de simulation ; 1187 tests verts, `dart analyze` propre. Relu par la cinquième passe de la revue (§14) : les 136 références de code des fiches, le cycle contre la CI/CD et les skills, les renvois documentaires. Relu par la sixième (§15), sur l'arbre d'après correction : la porte d'entrée de la vague 1 jouée commande par commande, la simulation relancée en entier — identique à sa référence —, la fiche 8.1 lue à la place des agents qui la recevront. Contrôlé une dernière fois sur ce texte neuf (§16) : la porte d'entrée rejouée, le cycle à deux lots déroulé pour E0 puis E1, les gabarits remplis avec la fiche 8.1, ses références ajoutées sondées dans le code.
@@ -16,7 +17,7 @@
 
 1. Lis `CLAUDE.md`, puis ce fichier en entier, puis le brainstorm v3 — au moins son en-tête, §1, §3 et §11.
 2. **Trouve ta vague.** Le journal (§2) vit dans ce fichier et tous les commits d'une vague vont sur sa branche : sur `main`, une vague commencée reste « à faire » jusqu'à sa fusion. Regarde donc d'abord les branches — `git fetch`, puis `git branch -a --list '*feat/v0.*' '*docs/cloture-chantier-*' --no-merged origin/main` (le second motif est celui de la branche de clôture) :
-   - **aucune branche de vague non fusionnée** : bascule sur `main` et tire-le en avance rapide (permis, §3.1), puis lis son journal — ta vague est **la première ligne à l'état « à faire »**. Une vague que le journal de `main` dit « livrée sur branche » est fusionnée : c'est la précédente, que ta porte d'entrée contrôle (§3.1) et que tu passes à « close » en §3.2. Passe la porte d'entrée et déroule le cycle (§3). **Après la vague 7, la première ligne « à faire » est la clôture** : tu es la session de clôture (§8.8, D74) ;
+   - **aucune branche de vague non fusionnée** : bascule sur `main` et tire-le en avance rapide (permis, §3.1), puis lis son journal — ta vague est **la première ligne à l'état « à faire »**. Une vague que le journal de `main` dit « livrée sur branche » est fusionnée : c'est la précédente, que ta porte d'entrée contrôle (§3.1) et que tu passes à « close » en §3.2. Passe la porte d'entrée et déroule le cycle (§3). **Après la vague 8, la première ligne « à faire » est la clôture** : tu es la session de clôture (§8.9, D74) ;
    - **une branche de vague existe** : la vague est commencée. Bascule dessus et lis le journal **de la branche**. « En cours » : reprends à l'étape que le journal indique — une reprise ne repasse pas la porte d'entrée, elle vérifie seulement que l'arbre est propre, que `dart analyze` est propre et que `flutter test` est vert. **Une reprise ne détruit rien** : si seuls les fichiers générés de §3.5 sont modifiés, restaure-les ; un arbre sale pour une autre raison se range par `git stash push -u`, noté sur la ligne « Arrêts » (§2) ; un commit rouge se corrige par un commit, jamais par une réécriture de l'historique — et si tu ne sais pas le corriger, arrête-toi (§6). En 3.5, l'étape exacte se lit dans le registre de SDD (`.superpowers/sdd/`, un dossier par plan) et dans `git log` ; de 3.6 à 3.8, dans le journal et dans `git log` — un commit de `patch-notes-writer` sur la branche dit que la note est écrite, et le skill ne réécrit jamais une version. **Une ligne « Arrêts » ouverte pour ta vague** (§6) : lis son motif ; ne reprends que si le propriétaire dit, dans le prompt, ce qui a levé l'arrêt, et que la levée est sur la branche — note-la sur la même ligne ; sinon, arrête-toi de nouveau et dis-le, sans rien écrire. « Livrée sur branche » : tu es une session de correction (§3.10), et tu attends du propriétaire la liste de ce qu'il a trouvé.
 3. **Passe la porte d'entrée** (§3.1) quand tu ouvres une vague. Si elle ne passe pas, arrête-toi et dis pourquoi : ne commence jamais une vague sur une base que tu n'as pas vérifiée.
 4. **Déroule le cycle** (§3), dans l'ordre, en **déléguant** la rédaction, la vérification et l'implémentation à des agents (§4). Tu gardes le fil, pas le détail.
@@ -46,12 +47,13 @@ Le jeu est en `0.5.2`. Chaque vague, sauf la vague 0, livre une version ; `0.6.0
 | **4** | **`0.5.6`** | **E4** | Deux compétences de classe hors du deck, dès le premier tour, à recharge | `feat/v0.5.6-p43-e4-signatures` | Lourd : une spec, deux parties |
 | **5** | **`0.5.7`** | **Tranche 1** et **P-44 lot 1** | Trois lots de cartes (Rempart, Sang, Arcaniste), les mécanismes de profondeur, les évolutions de signature | `feat/v0.5.7-p42-tranche-1-p44-lot-1` | Le plus lourd : une spec, trois parties |
 | **6** | **`0.5.8`** | **Tranche 2** | Trois lots de cartes de plus (Croisé, Vampire, Voile), Canalisation en banque de mana | `feat/v0.5.8-p42-tranche-2` | Moyen : une spec, un plan |
-| **7** | **`0.6.0`** | **Tranche 3** | Les trois derniers lots de cartes (Sanctifié, Carnage, Marque) : neuf passifs jouables | `feat/v0.6.0-p42-tranche-3` | Moyen : une spec, un plan |
-| **Clôture** | — | — | Rien | `docs/cloture-chantier-economie-et-catalogue` | Documentation seule (§8.8) |
+| **7** | **`0.5.9`** | **P-53** | Les charges élémentaires : le Gel, le Feu et la Foudre s'accumulent jusqu'à un seuil qui les fait rompre (D76) | `feat/v0.5.9-p53-charges-elementaires` | À fixer par sa fiche (§8.7) |
+| **8** | **`0.6.0`** | **Tranche 3** | Les trois derniers lots de cartes (Sanctifié, Carnage, Marque) : neuf passifs jouables | `feat/v0.6.0-p42-tranche-3` | Moyen : une spec, un plan |
+| **Clôture** | — | — | Rien | `docs/cloture-chantier-economie-et-catalogue` | Documentation seule (§8.9) |
 
 **Un lot, dans ce fichier, est ce qui reçoit une spec** : E0, E1, E2, E3, E4, et chaque tranche — la tranche 1 et P-44 lot 1 n'en font qu'une, en trois parties. Un **lot de cartes** (Rempart, Sang, Arcaniste…) n'est pas un lot au sens du cycle : les trois lots de cartes d'une tranche s'écrivent dans la même spec.
 
-**Pourquoi cet ordre est forcé.** E1 avant E2 : la fusion propose une rune que seul l'applicateur d'E1 sait appliquer. E2 avant E3 : les cartes trouvées ont besoin de leur puits, la fusion (D56). E3 avant E4 : c'est D31, dans E3, qui rend les signatures-cartes invisibles (D53). E4 avant la tranche 1 : l'écran d'évolution écrit sur `SignatureInstance`, qu'E4 crée. P-44 lot 1 avec la tranche 1 : sans `costs.hp` ni `scaleWith`, le lot Sang tombe à deux cartes (brainstorm §11, ligne P-44). Les tranches 2 et 3 s'écrivent sur les mécanismes que la tranche 1 a livrés.
+**Pourquoi cet ordre est forcé.** E1 avant E2 : la fusion propose une rune que seul l'applicateur d'E1 sait appliquer. E2 avant E3 : les cartes trouvées ont besoin de leur puits, la fusion (D56). E3 avant E4 : c'est D31, dans E3, qui rend les signatures-cartes invisibles (D53). E4 avant la tranche 1 : l'écran d'évolution écrit sur `SignatureInstance`, qu'E4 crée. P-44 lot 1 avec la tranche 1 : sans `costs.hp` ni `scaleWith`, le lot Sang tombe à deux cartes (brainstorm §11, ligne P-44). Les tranches 2 et 3 s'écrivent sur les mécanismes que la tranche 1 a livrés. Les charges élémentaires avant la tranche 3 (D76) : le lot *Marque* rassemble les quatre cartes élémentaires, qui s'écrivent alors une seule fois, sur leurs règles.
 
 **Dans une vague, tout se déroule en série.** Un lot après l'autre, une partie après l'autre : la spec ou le plan suivant s'écrit sur le code que le précédent a laissé sur la branche, jamais sur une prévision.
 
@@ -74,10 +76,11 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 | 4 | `0.5.6` | **close** | — | `feat/v0.5.6-p43-e4-signatures` | [E4](../superpowers/specs/2026-10-15-p43-e4-signatures-design.md) | [E4 partie 1](../superpowers/plans/2026-10-15-p43-e4-signatures-partie-1.md) · [E4 partie 2](../superpowers/plans/2026-10-16-p43-e4-signatures-partie-2.md) | 1625 → 1663 → 1694 → 1701 | 16/10, corrigée le 16/10 | 24/10 |
 | 5 | `0.5.7` | **en cours** | Tranche 1 · 3.3 · spec prête au quatrième tour, arrêt (P-2, P-3 ; P-1 répondue le 03/11) | `feat/v0.5.7-p42-tranche-1-p44-lot-1` | [Tranche 1 et P-44 lot 1](../superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md) | — | 1701 | — | — |
 | 6 | `0.5.8` | à faire | — | — | — | — | — | — | — |
-| 7 | `0.6.0` | à faire | — | — | — | — | — | — | — |
+| 7 | `0.5.9` | à faire — sa fiche est à compléter avant elle (§8.7) | — | — | — | — | — | — | — |
+| 8 | `0.6.0` | à faire | — | — | — | — | — | — | — |
 | Clôture | — | à faire | — | — | — | — | — | — | — |
 
-**La ligne « Clôture » n'a que deux états** : *à faire*, puis *faite* avec sa date. Sa branche ne porte ni code, ni version, ni tag : le seul geste qui lui reste est sa fusion, et ce qu'elle écrit devient vrai sur `main` au moment où elle y entre (§8.8).
+**La ligne « Clôture » n'a que deux états** : *à faire*, puis *faite* avec sa date. Sa branche ne porte ni code, ni version, ni tag : le seul geste qui lui reste est sa fusion, et ce qu'elle écrit devient vrai sur `main` au moment où elle y entre (§8.9).
 
 **Arrêts** — une ligne par vague arrêtée avant sa porte de sortie : la date, l'étape, le motif (§6) — et, à la reprise, ce qui a levé l'arrêt (§0.2) ; une reprise y note aussi le `stash` qu'elle a fait, et ce qu'il range.
 
@@ -97,7 +100,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 
 **La cinquième passe de revue est appliquée** (01/10, revue §14) : le cycle, les gabarits et les fiches ci-dessous en portent les corrections ; la sortie de référence de la simulation est produite (§3.6) ; le suivi des vagues est ouvert (D71) ; la méthode amendée est consignée dans ADR-103.
 
-**La sixième passe de revue est appliquée** (01/10, revue §15) : la porte d'entrée de la vague 1 a été jouée et passe ; la simulation relancée rend sa référence à l'identique. Vingt-six constats corrigés ici, et trois décisions : `maxLevel` partout où un niveau s'écrit (D72, fiche 8.1), la simulation en deux temps (D73, §3.6), la session de clôture (D74, §8.8).
+**La sixième passe de revue est appliquée** (01/10, revue §15) : la porte d'entrée de la vague 1 a été jouée et passe ; la simulation relancée rend sa référence à l'identique. Vingt-six constats corrigés ici, et trois décisions : `maxLevel` partout où un niveau s'écrit (D72, fiche 8.1), la simulation en deux temps (D73, §3.6), la session de clôture (D74, §8.9).
 
 **Le contrôle ciblé est appliqué** (01/10, revue §16) : rejoué sur le texte neuf de la sixième passe, il a trouvé trois défauts de la fiche E1 et douze retouches du cycle et des gabarits — quinze constats corrigés ici, et une décision : un plafond atteint sur une carte ne se repropose pas (D75, fiche 8.1).
 
@@ -107,7 +110,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 
 ## 3. Le cycle d'une vague
 
-**3.3 à 3.5 forment une boucle, lot par lot puis partie par partie** : pour une vague à deux lots, la spec, le plan et l'implémentation du premier sont finis avant que la spec du second s'écrive. La 3.6 est retirée (ADR-108) ; 3.7 à 3.9 se font une fois, le code de la vague terminé. La vague 0 n'avait ni spec, ni plan, ni code, ni version : elle n'avait à faire que 3.1, 3.2, sa fiche (§8.0), 3.8 et 3.9 — et elle a été faite sans branche ni compte rendu en fichier (§2). La session de clôture est du même genre : 3.1, 3.2, sa fiche (§8.8), puis elle s'arrête.
+**3.3 à 3.5 forment une boucle, lot par lot puis partie par partie** : pour une vague à deux lots, la spec, le plan et l'implémentation du premier sont finis avant que la spec du second s'écrive. La 3.6 est retirée (ADR-108) ; 3.7 à 3.9 se font une fois, le code de la vague terminé. La vague 0 n'avait ni spec, ni plan, ni code, ni version : elle n'avait à faire que 3.1, 3.2, sa fiche (§8.0), 3.8 et 3.9 — et elle a été faite sans branche ni compte rendu en fichier (§2). La session de clôture est du même genre : 3.1, 3.2, sa fiche (§8.9), puis elle s'arrête.
 
 ### 3.1. La porte d'entrée
 
@@ -184,8 +187,8 @@ Dans cet ordre, une fois le code terminé et vert, chacun délégué à un agent
 2. **`memory-bank-sync`** : mettre à jour `activeContext.md` et `progress.md` avec des chiffres re-mesurés, ouvrir les ADR et corriger les fiches `_rules` et `_patterns` que la fiche de la vague nomme. Quatre précisions :
    - **la liste de la fiche est un minimum** : le skill corrige toute fiche que le diff de la branche périme (`git diff main...HEAD --stat`) ;
    - **« amender un ADR »** veut dire : le nouvel ADR porte l'amendement, l'ancien ne change que de Statut et lie son successeur — un ADR publié ne se réécrit pas ;
-   - **`docs/ROADMAP.md` ne bouge que lorsqu'une de ses lignes se clôt** : P-43 en vague 4, P-42 en vague 7 — et P-44 lot 1 en vague 5, seul lot de P-44 dans le programme, que la ROADMAP nomme. Jamais pour un lot E ni pour une tranche : elle ne garde qu'une ligne par chantier ; l'avancement par lot reste au journal (§2), nulle part ailleurs ;
-   - **la livraison se note « livrée sur la branche `<branche>` — vague N du fichier d'orchestration, en attente du test, de la PR, de la fusion et du tag du propriétaire »** — jamais « fusionnée » ni « publiée », ce n'est pas encore vrai. Le numéro de version ne se recopie pas dans le vault : il n'y apparaît que comme clé de l'historique des releases de `progress.md` (règle du skill). À partir de la vague 2, il note aussi la clôture de la vague précédente, que la porte d'entrée a constatée ; celle de la vague 7 est notée par la session de clôture (§8.8).
+   - **`docs/ROADMAP.md` ne bouge que lorsqu'une de ses lignes se clôt** : P-43 en vague 4, P-53 en vague 7, P-42 en vague 8 — et P-44 lot 1 en vague 5, seul lot de P-44 dans le programme, que la ROADMAP nomme. Jamais pour un lot E ni pour une tranche : elle ne garde qu'une ligne par chantier ; l'avancement par lot reste au journal (§2), nulle part ailleurs ;
+   - **la livraison se note « livrée sur la branche `<branche>` — vague N du fichier d'orchestration, en attente du test, de la PR, de la fusion et du tag du propriétaire »** — jamais « fusionnée » ni « publiée », ce n'est pas encore vrai. Le numéro de version ne se recopie pas dans le vault : il n'y apparaît que comme clé de l'historique des releases de `progress.md` (règle du skill). À partir de la vague 2, il note aussi la clôture de la vague précédente, que la porte d'entrée a constatée ; celle de la vague 7 est notée par la session de clôture (§8.9).
 
 Commite chacun sur la branche, la ligne du journal dans le même commit : `3.7 · en cours` après la note, `3.7 · fait` après la mémoire.
 
@@ -209,7 +212,7 @@ Les lignes du compte rendu (depuis §3.5) et des tests manuels sont dans `docs/I
 
 ### 3.9. La porte de sortie
 
-**Arrête-toi.** La suite est au propriétaire, dans cet ordre (D70) : il teste à la main, ouvre la PR, **la fusionne dans `main` par un commit de fusion**, puis **pose le tag `v<version>` sur ce commit de fusion** et le pousse — c'est le tag qui déclenche la release. La vague suivante ne s'ouvre que lorsque sa porte d'entrée constate tout cela. **Après la vague 7, c'est la session de clôture qui le constate** (§8.8) : le propriétaire colle le même prompt une fois de plus.
+**Arrête-toi.** La suite est au propriétaire, dans cet ordre (D70) : il teste à la main, ouvre la PR, **la fusionne dans `main` par un commit de fusion**, puis **pose le tag `v<version>` sur ce commit de fusion** et le pousse — c'est le tag qui déclenche la release. La vague suivante ne s'ouvre que lorsque sa porte d'entrée constate tout cela. **Après la vague 8, c'est la session de clôture qui le constate** (§8.9) : le propriétaire colle le même prompt une fois de plus.
 
 Si le test du propriétaire fait remonter un défaut, ou s'il renverse un arbitrage, il rouvre une session sur la même branche, **avant la fusion** : c'est une session de correction (§3.10), et la vague reste « livrée sur branche ».
 
@@ -368,7 +371,7 @@ La fiche classe les questions qu'elle pose ; le rédacteur classe celles qui nai
 
 Pour une question de classe T, écris les options, puis passe-les dans l'ordre par ces filtres ; le premier qui départage tranche.
 
-1. **Une décision acquise.** Une option qui contredit une décision de D1 à D75 est écartée. Si *toutes* les options en contredisent une, ce n'est plus un arbitrage : c'est une question D, arrête la vague (§6).
+1. **Une décision acquise.** Une option qui contredit une décision de D1 à D76 est écartée. Si *toutes* les options en contredisent une, ce n'est plus un arbitrage : c'est une question D, arrête la vague (§6).
 2. **Une valeur mesurée.** Les valeurs de D56 à D62 et de D67 sont des décisions acquises comme les autres : une option qui en change une est écartée, et la simulation n'est plus relancée (ADR-108 D5). **Les valeurs de D63 sont des valeurs de spec, non mesurées**, comme les défauts que le script a joués sans qu'une décision les fixe (rapport §1.2 ; les fiches les nomment) : visibles du joueur, elles sont de classe P.
 3. **Les trois principes du brainstorm** (§3) : P1 — pas de contenu qui ne porte pas de décision ; P2 — chaque carte d'un lot nourrit son passif ; P3 — la fusion est le moteur de progression, rien ne court-circuite la chaîne trouvaille → fusion → rune → affûtage.
 4. **Le mécanisme plutôt que le cas.** Entre une règle en donnée, réutilisable, et un cas écrit en Dart pour une carte ou une rune, la règle en donnée. Si les options sont les valeurs d'un même mécanisme, livre le mécanisme et choisis la valeur.
@@ -392,7 +395,7 @@ Pour une question de classe T, écris les options, puis passe-les dans l'ordre p
 - éditer `assets/data/patch_notes.json` à la main, ou changer une version autrement que par `patch-notes-writer` ;
 - lancer `dart format`, utiliser un worktree, sauter un hook, écrire du code par heredoc ;
 - détruire pour ranger : ni `git reset --hard`, ni `git clean`, ni réécriture d'un commit — un arbre sale se range par `git stash push -u`, un commit rouge se corrige par un commit (§0.2) ;
-- dire clos ce qui ne l'est pas : une vague est « livrée sur branche » jusqu'à ce qu'une porte d'entrée constate sa fusion et son tag, et le chantier ne se dit clos que dans la session de clôture (§8.8) ;
+- dire clos ce qui ne l'est pas : une vague est « livrée sur branche » jusqu'à ce qu'une porte d'entrée constate sa fusion et son tag, et le chantier ne se dit clos que dans la session de clôture (§8.9) ;
 - faire de la compatibilité des sauvegardes un sujet : avant la `1.0.0` elles ne se transfèrent pas d'une version à l'autre.
 
 **Quand la vague s'arrête et rend la main**, avec l'état exact dans le journal et le motif sur la ligne « Arrêts » — commités sur la branche. À la porte d'entrée, aucune branche n'existe encore : rien ne s'écrit, le motif est dit au propriétaire dans le message d'arrêt :
@@ -424,9 +427,10 @@ Les décisions du §1 du brainstorm ont été relues une à une contre la table 
 | Signatures | D7 (forme), D41, D49, D53 ; D28 (`magic_missile` en Compétence) | E4 | 4 |
 | Catalogue et profondeur | D4 et D18 (les runes de mécanisme), D7 (les évolutions), D8, D9, D10, D12, D15, D16, D17, D19, D21, D28 (`focus` supprimée), D33 et D35 (`piercing`, `lifesteal`), D34 (ordre des tranches), D38, D40, D44 (`requiresCost` de `transfusion`), D45, D50, D54, D63 (Q9), D65 (cinq runes), D66 | Tranche 1 + P-44 lot 1 | 5 |
 | Tranche 2 | D30 (Voile), D35 (Vampire) | Tranche 2 | 6 |
-| Tranche 3 | D34 (déclencheur de Marque), D55 (*Prière*) | Tranche 3 | 7 |
+| Charges élémentaires | D76 (le périmètre ; les règles sont à décider avant la vague, §8.7) | P-53 | 7 |
+| Tranche 3 | D34 (déclencheur de Marque), D55 (*Prière*) | Tranche 3 | 8 |
 | Après `0.6.0` | D29, D52, D56 ; Q4, Q18 ; §9.2 #5 à #9 ; D65 (`retain`) | P-16 · P-44 lots 2 à 4 | — |
-| Méthode | D26 (faite), D64, D65, D66, D68, D69, D70, D71, D73, D74 | Ce fichier | 0 |
+| Méthode | D26 (faite), D64, D65, D66, D68, D69, D70, D71, D73, D74, D76 | Ce fichier | 0 ; D76 le 03/11, pendant la vague 5 |
 
 Les items non numérotés ont aussi leur vague : `wisdom.json` en `mythic` (§5) en vague 3 ; `EntitySource('cards/*/*.json')`, `isOfferableTo` étendu, `PassiveData.classes` à une seule classe (§6) et le validateur `costs.armor` (§7.4) en vague 5.
 
@@ -439,9 +443,11 @@ Les items non numérotés ont aussi leur vague : `wisdom.json` en `mythic` (§5)
 | E2 → E3 | La forge du feu a disparu, la trouvaille n'existe pas encore : les runes ne viennent que de la fusion, les doublons du boss « cartes » et de la boutique seulement — **en `0.5.4` les fusions sont rares** | Voulu (brainstorm §11, ligne E3). La spec E2 et la note joueur le disent |
 | E3 → E4 | Les signatures sont encore des cartes : exclues de la trouvaille par `unique` (`isOfferableTo`), sans rune, `fusionRank` 0 pour la DDA | Un test dans E3 le garde |
 | E4 → tranche 1 | Les signatures sont des compétences sans évolution ; le deck ne connaît que les 17 neutres | La tranche 1 ajoute `evolutions` et l'écran |
-| E4 → tranche 3 | `magic_missile` devient une Compétence en `0.5.6` (D28) : *Marque du Mage*, encore sur `onAttackPlayed`, **ne se déclenche plus sur la signature du Mage** ; le passif est ensuite masqué en `0.5.7` et `0.5.8` | Voulu — arbitré le 01/10 (revue §14, A2) : le déclencheur de D34 reste en vague 7, le périmètre des vagues ne bouge pas. La spec E4 et la note de `0.5.6` le disent |
+| E4 → tranche 3 | `magic_missile` devient une Compétence en `0.5.6` (D28) : *Marque du Mage*, encore sur `onAttackPlayed`, **ne se déclenche plus sur la signature du Mage** ; le passif est ensuite masqué de `0.5.7` à `0.5.9` | Voulu — arbitré le 01/10 (revue §14, A2) : le déclencheur de D34 reste avec le lot Marque, en vague 8 depuis D76. La spec E4 et la note de `0.5.6` le disent |
 | Tranche 1 → 2 → 3 | Six passifs masqués, puis trois — le joueur perd en `0.5.7` six passifs qu'il avait en `0.5.6`, la note le dit ; `fireball` reste neutre jusqu'au lot Marque, son id de tutoriel ne change pas | Le masquage est arbitré en vague 5 (O5) |
-| Tranches → P-44 lots 2 à 4 | Trois cartes attendent un mécanisme hors périmètre : Rempart (épines), Voile (`retain`), Carnage (*Forge de guerre*) | **Elles ne s'écrivent pas avant `0.6.0`** ; chaque lot atteint ses 5 cartes sans elles ; la session de clôture les porte en ROADMAP sur la ligne de P-44 (§8.8) |
+| Tranche 2 → charges élémentaires *(D76)* | En `0.5.7` et `0.5.8`, Gel, Brûlure et Électrocution suivent les statuts proportionnels de P-44 lot 1 (barème de P-1, spec de la vague 5) ; les cartes et runes qui les posent — *Trait de Glace*, *Boule de Feu*, *Coup de Tonnerre*, *Nova de givre*, *Embrasement*, *Rafale d'étincelles*, les runes élémentaires — sont relues en vague 7 | La fiche 8.7 ; Vulnérable, Faiblesse et Poison ne changent pas ([étude](03-11-2026_charges_elementaires_Opus5.md), §1) |
+| Charges élémentaires → tranche 3 *(D76)* | Les quatre élémentaires du lot *Marque* et les cartes de *Sanctifié* qui posent de la Faiblesse s'écrivent sur les règles livrées en vague 7 | La fiche 8.8 |
+| Tranches → P-44 lots 2 à 4 | Trois cartes attendent un mécanisme hors périmètre : Rempart (épines), Voile (`retain`), Carnage (*Forge de guerre*) | **Elles ne s'écrivent pas avant `0.6.0`** ; chaque lot atteint ses 5 cartes sans elles ; la session de clôture les porte en ROADMAP sur la ligne de P-44 (§8.9) |
 
 ### 7.3. Le script de simulation — hors du cycle
 
@@ -565,7 +571,7 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **La spec doit fixer** : `classes/<id>/skills/<id>.json`, l'`EntitySource`, `sync_assets` ; la recharge dans l'état de combat, remise à zéro à chaque combat, jamais sauvegardée ; la résolution — mana, `resolveCard`, mise en recharge ; la suppression de `CardRarity.unique`, d'`isAcquirable` et de `CardCategory.characterSpecific` ; la barre au HUD et ses états ; le tutoriel (`:175`, `:41`) ; le draft de départ à 5 cartes ; la sauvegarde (les signatures sortent du `masterDeck`, sans migration) ; l'onglet du dictionnaire ; la carte de classe ; `magic_missile` en `type: skill`, **et ce que cela fait à *Marque du Mage* en `0.5.6`** (§7.2 : le passif ne se déclenche plus sur la signature, voulu) ; les tests.
 **À arbitrer** : **le modèle** — un `SignatureData` propre ou un `CardData` restreint ; **une signature compte-t-elle comme une carte jouée pour les déclencheurs de passif** — `onSkillPlayed` de Flux de Mana avec `magic_missile`, `onAttackPlayed` de Soif de Sang avec `reckless_strike` et de *Marque du Mage* avec les signatures restées des Attaques ; « résolue comme une carte » penche pour oui ; le coût et la recharge de chaque signature — la recharge de 2 pour les six et leurs coûts d'aujourd'hui sont des valeurs de spec (rapport §1.2), visibles du joueur : **classe P**, à confirmer ou à remplacer par le propriétaire ; ce que devient l'enum `CardCategory` si `global` reste seule ; les signatures dans l'éditeur de contenu, ou non pour ce lot ; les noms du modèle — ADR-084 a supprimé une chaîne de compétences à recharge et interdit ses noms dans le vault (`SkillData`, `SkillController`, `tickCooldowns`…) : d'autres noms, ou l'ADR de la vague lève l'interdit ; le découpage en parties.
 **Parties proposées** : (1) donnée, modèle, moteur, sauvegarde, tests ; (2) HUD, tutoriel, draft, dictionnaire, sélection de classe.
-**Ne pas absorber** : le modèle d'évolution, les pools et l'écran (vague 5) ; **le déclencheur `onDamagingCardPlayed` de D34** (vague 7 — il n'existe pas aujourd'hui) ; toute carte, toute rune ; un rééquilibrage des six signatures.
+**Ne pas absorber** : le modèle d'évolution, les pools et l'écran (vague 5) ; **le déclencheur `onDamagingCardPlayed` de D34** (vague 7 — vague 8 depuis D76 ; il n'existe pas aujourd'hui) ; toute carte, toute rune ; un rééquilibrage des six signatures.
 **Point propre au vérificateur** : plus aucune signature dans le `masterDeck` ni dans un pool d'offre ; `unique` et `characterSpecific` n'ont plus d'occurrence (`git grep -w`) ; le déclencheur de *Marque du Mage* n'a pas changé.
 **Ce que le joueur voit en `0.5.6`** : deux compétences de classe toujours disponibles, dès le premier tour, avec un temps de recharge. **À dire dans la note** : le Projectile Magique devient une Compétence et ne déclenche plus *Marque du Mage*.
 **Pour `memory-bank-sync`** : ADR « signatures hors du deck », qui amende ADR-094, ADR-101 et ADR-084 ; fiches `_rules/02-3`, `02-2` (les cartes de signature), `07-00` ; `_patterns/20-00` ; **P-43 se clôt dans `docs/ROADMAP.md`**.
@@ -581,8 +587,8 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **Parties proposées** : (1) **le moteur P-44 lot 1 sur les 17 neutres**, avec les cinq runes — rien de visible, tout testé ; (2) **la forme C et les trois lots**, le masquage, les tests de données ; (3) **les évolutions et leur écran**.
 **Ne pas absorber** : les six autres lots, D30, le déclencheur de D34, D55 ; P-44 lots 2 à 4 ; P-16 ; `maxMana` reste 3.
 **Point propre au vérificateur** : chaque carte de lot touche une entrée de `feeds` ; aucune neutre ne porte de coût autre que du mana (D17) ; aucun lot ne dépasse une carte à coût total nul.
-**Ce que le joueur voit en `0.5.7`** : le deckbuilding existe — trois passifs jouables avec leur lot, les mécanismes de profondeur, les évolutions de signature. **À dire dans la note** : six passifs quittent la sélection jusqu'à ce que leur lot de cartes arrive, dans les deux versions suivantes.
-**Pour `memory-bank-sync`** : ADR « forme C et lots par passif » ; ADR « évolutions de signature » ; ADR « profondeur, lot 1 » ; les fiches `_rules` des cartes et des statuts ; `_patterns/20-00` ; **P-44 lot 1 se clôt dans `docs/ROADMAP.md`**.
+**Ce que le joueur voit en `0.5.7`** : le deckbuilding existe — trois passifs jouables avec leur lot, les mécanismes de profondeur, les évolutions de signature. **À dire dans la note** : six passifs quittent la sélection jusqu'à ce que leur lot de cartes arrive, dans les versions suivantes — trois en `0.5.8`, les trois derniers en `0.6.0` (D76).
+**Pour `memory-bank-sync`** : ADR « forme C et lots par passif » ; ADR « évolutions de signature » ; ADR « profondeur, lot 1 » ; les fiches `_rules` des cartes et des statuts ; `_patterns/20-00` ; **P-44 lot 1 se clôt dans `docs/ROADMAP.md`** ; **D76** — un ADR qui amende la méthode du chantier (ADR-102) pour sa vague de plus, et les mentions « vague 7 » du vault pour le déclencheur de D34 qui deviennent « vague 8 » (`_rules/02-2`, `activeContext.md` ; ADR-109, publié, ne se réécrit pas).
 
 ### 8.6. Vague 6 — `0.5.8` — la tranche 2
 
@@ -591,32 +597,45 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 **À lire** : brainstorm §7.1 ligne Croisé, §7.2 ligne Vampire, §7.3 ligne Voile et la note, §7.4, §5, §1 (D30, D35) ; revue §7 idées 2.5, 2.7, 2.8, §12 T6 (*Barrière* re-valuée), annexe B.3 et B.4 ; la spec, les ADR et le compte rendu de la vague 5.
 **La spec doit fixer** : **D30** — Canalisation devient une banque de mana : `channeling.json` change d'`effectType`, `startTurn` lit la réserve, plafond `maxMana` plus 1 par point de Maîtrise, Mage uniquement ; le statut `mana_regen` sur le modèle de `might_regen` (*Méditation*) ; les cartes — Croisé (*Riposte*, *Jugement*, *Marteau sacré* en multi-coups), Vampire (Attaques à 1 qui piochent : *Morsure*, *Curée* ; *Lacération*, la carte à 0 du lot ; *Frénésie sanglante* en `scaleWith: cardsPlayedThisTurn`), Voile (*Barrière*, *Méditation*, *Sceau*) — complétées à 5 ou 6 par lot ; le démasquage des trois passifs ; les textes joueur de Canalisation.
 **À arbitrer** : les cartes qui complètent chaque lot ; la courbe de coûts de Voile (des tours à 5-6 mana, sans carte à 0) ; les cartes-pont si Q8 les a retenues.
-**Ne pas absorber** : la carte `retain` de Voile (P-44 lot 3, après `0.6.0`) ; la tranche 3.
+**Ne pas absorber** : la carte `retain` de Voile (P-44 lot 3, après `0.6.0`) ; les charges élémentaires (vague 7, D76) ; la tranche 3.
 **Point propre au vérificateur** : D50 tient pour Berserker · Vampire (`concentration` et *Lacération*, deux cartes gratuites, épuisables) ; aucune carte ne suppose un mécanisme hors périmètre.
 **Ce que le joueur voit en `0.5.8`** : trois passifs de plus avec leurs cartes ; Canalisation garde le mana non dépensé pour le tour suivant.
 **Pour `memory-bank-sync`** : ADR pour la banque de mana si le mécanisme le justifie ; les fiches des passifs.
 
-### 8.7. Vague 7 — `0.6.0` — la tranche 3
+### 8.7. Vague 7 — `0.5.9` — les charges élémentaires (P-53)
+
+> **Fiche à compléter avant la vague** (D76, 03/11). Les règles des charges ne sont pas des décisions acquises : l'[étude](03-11-2026_charges_elementaires_Opus5.md) porte les orientations du propriétaire et ses questions ouvertes — la Foudre (§5), C1 à C10 (§10). Elles deviennent des décisions numérotées du brainstorm, avec l'accord du propriétaire, dans une session de documentation avant la vague ; cette fiche se complète alors sur le modèle des autres. **Tant que cette note est là, la porte d'entrée de la vague 7 ne passe pas** : l'orchestrateur s'arrête et le dit (§6).
+
+**Un lot** — P-53. **Décisions** : D76 (le périmètre et la place de la vague) ; les règles, à décider. Branche `feat/v0.5.9-p53-charges-elementaires`. **Fichiers** : `<AAAA-MM-JJ>-p53-charges-elementaires-design.md` pour la spec ; le plan, ou les plans, selon le découpage que la spec propose.
+
+**Ce qui est acquis à ce jour** (étude, §2 à §5 ; orientations du propriétaire, à écrire en décisions) : un cadre commun en donnée — seuil, montée du seuil, plafond de pose, déclin, moment et sorte de la rupture —, **symétrique** : il vit sur le porteur, héros ou ennemi, pour que de futurs ennemis élémentaires posent ces charges sur le héros. **Gel** : seuil 3, le porteur perd sa prochaine action puis retombe à 0, −1 point à son tour s'il n'a pas gelé, seuil +1 à chaque gel pour le combat, pose plafonnée au restant. **Feu** : surcharge libre, seuil fixe ; au tour du porteur, 4 dégâts par point au porteur et 12 par tranche de 3 points à ses voisins seulement. **Foudre** : l'option L1 retenue en principe — au seuil, chaque coup reçu fait plus —, à préciser. Vulnérable, Faiblesse et Poison ne changent pas.
+**À lire** : l'étude en entier ; la spec de la vague 5, §1.2 (P-1) et §4.4 ; brainstorm §7.3, §8 (les runes élémentaires), §9.2 ; les ADR de la vague 5 sur les statuts.
+**État mesuré** : l'étude, §7 — à revérifier sur la branche, les vagues 5 et 6 ayant déplacé les lignes.
+**Ne pas absorber** : la tranche 3 et ses cartes (vague 8) ; l'étourdissement et les épines (P-44 lot 2) ; P-16 ; un ennemi élémentaire — le cadre est symétrique, mais aucun ennemi ne pose de charge dans cette vague.
+**Point propre au vérificateur** : la symétrie — un test pose chaque charge sur le héros et sur un ennemi ; Vulnérable, Faiblesse et Poison n'ont pas changé.
+**Ce que le joueur voit en `0.5.9`** : le Gel, le Feu et la Foudre s'accumulent sur l'ennemi jusqu'à rompre — le Gel lui fait perdre son tour, le Feu explose sur lui et ses voisins, la Foudre fait plus mal à chaque coup ; trois passifs restent masqués jusqu'à `0.6.0`.
+**Pour `memory-bank-sync`** : ADR « charges élémentaires » ; les fiches `_rules` des statuts ; **P-53 se clôt dans `docs/ROADMAP.md`**.
+
+### 8.8. Vague 8 — `0.6.0` — la tranche 3
 
 **Un lot, trois lots de cartes** — une spec, un plan : **Sanctifié** (Paladin, *Bénédiction*), **Carnage** (Berserker, *Frénésie*), **Marque** (Mage, *Marque du Mage*). **Décisions** : D34 (le déclencheur), D55, D43 (la variante « armure conservée », qui attendait ce lot), D16, D17, D45, D50. Branche `feat/v0.6.0-p42-tranche-3`. **Fichiers** : `<AAAA-MM-JJ>-p42-tranche-3-design.md` pour la spec, le même nom sans `-design` pour le plan.
 
-**À lire** : brainstorm §7.1 ligne Sanctifié et la note, §7.2 ligne Carnage et la note, §7.3 ligne Marque et « Une tension levée, une gardée », §13 Q11 et Q12, §1 (D34, D43, D55, D60) ; revue §8.1 R6 et R8, §12 T6 (*Vigile* retirée), annexe B.1 ; les specs et les comptes rendus des vagues 5 et 6.
+**À lire** : brainstorm §7.1 ligne Sanctifié et la note, §7.2 ligne Carnage et la note, §7.3 ligne Marque et « Une tension levée, une gardée », §13 Q11 et Q12, §1 (D34, D43, D55, D60) ; revue §8.1 R6 et R8, §12 T6 (*Vigile* retirée), annexe B.1 ; les specs et les comptes rendus des vagues 5, 6 et 7 — la vague 7 a livré les charges élémentaires sur lesquelles s'écrivent les élémentaires du lot Marque et la Faiblesse de Sanctifié.
 **La spec doit fixer** : **D34** — *Marque du Mage* se déclenche sur la première **carte de dégâts** du tour (`onDamagingCardPlayed`, à créer), Attaque ou Compétence — ce qui rend au passif la signature du Mage, perdue en `0.5.6` (§7.2) ; les quatre élémentaires déplacées dans le lot Marque — **`fireball` garde son id**, le tutoriel le lit (`tutorial_fixtures.dart:17-19`) ; **D55** — *Prière* et le statut `hp_regen` ; `weakness`, le dernier orphelin d'août, posé par *Sommation* et *Édit* ; `metallicize` déplacée dans Sanctifié, `warcry` dans Carnage ; les cartes — Sanctifié, Carnage (*Moulinet*, *Tourbillon*, *Coup de grâce*, *Exécution* en `scaleWith: targetMissingHp`), Marque (*Exploitation* en `scaleWith: targetStatus`, *Salve* en multi-coups) — complétées à 5 ou 6 ; les neuf passifs démasqués.
 **À arbitrer** : Q12 (les élémentaires restent des Attaques — le brainstorm penche pour oui) ; Q11 si la vague 5 l'a laissée ouverte ; la variante « armure conservée » de D43 pour Sanctifié, ou rien ; les cartes qui complètent.
-**Ne pas absorber** : *Forge de guerre* de Carnage (production de cartes, P-44 lot 3) ; les épines de Rempart (P-44 lot 2) ; P-16.
-**À arrêter avant la vague** *(ajouté le 03/11)* : le propriétaire transfère au développement de `0.6.0` les **charges élémentaires** — Gel, Feu et Foudre à seuil, un cadre commun symétrique héros / ennemis (P-53, [étude](03-11-2026_charges_elementaires_Opus5.md)). Elles ne sont pas dans le périmètre de cette fiche : avant la vague, le propriétaire dit si elles y entrent — le lot *Marque* rassemble les quatre cartes élémentaires — ou si elles forment un lot à côté.
+**Ne pas absorber** : *Forge de guerre* de Carnage (production de cartes, P-44 lot 3) ; les épines de Rempart (P-44 lot 2) ; P-16 ; toute règle des charges élémentaires — livrées en vague 7, la tranche 3 les lit.
 **Point propre au vérificateur** : le tutoriel tourne toujours avec `fireball` ; les neuf lots passent D45 et D50 ; aucun passif n'est resté masqué.
 **Ce que le joueur voit en `0.6.0`** : neuf passifs jouables, chacun avec son lot.
-**Pour `memory-bank-sync`** : les ADR et les fiches de la tranche ; **P-42 se clôt dans `docs/ROADMAP.md`**, comme P-43 en vague 4. La vague 7 écrit sa section dans le suivi, comme les autres, et s'arrête « livrée sur branche » : **elle ne dit pas le chantier clos** — c'est la session de clôture qui le fait, une fois `0.6.0` taguée (§8.8).
+**Pour `memory-bank-sync`** : les ADR et les fiches de la tranche ; **P-42 se clôt dans `docs/ROADMAP.md`**, comme P-43 en vague 4 et P-53 en vague 7. La vague 8 écrit sa section dans le suivi, comme les autres, et s'arrête « livrée sur branche » : **elle ne dit pas le chantier clos** — c'est la session de clôture qui le fait, une fois `0.6.0` taguée (§8.9).
 
-### 8.8. La clôture — sans version, après le tag de `0.6.0`
+### 8.9. La clôture — sans version, après le tag de `0.6.0`
 
 **Ni spec, ni plan, ni code, ni version, ni tag** (D74). Le propriétaire colle le prompt de §0 une fois de plus ; la session ne trouve plus de vague « à faire », seulement la ligne « Clôture ». Branche `docs/cloture-chantier-economie-et-catalogue`.
 
-1. **La porte d'entrée** (§3.1), entière, sur la vague 7 : fusionnée, `v0.6.0` posé sur un commit de `main`, release publiée, CI verte, trois porteurs de version à `0.6.0`, `dart analyze` et `flutter test`.
-2. **La branche** (§3.2). Premier commit, le journal : la vague 7 passe à « close », avec la date constatée ; la ligne « Clôture » passe à « faite », avec la date du jour.
-3. **`memory-bank-sync`**, délégué, avec ces consignes : noter la clôture de la vague 7 — fusionnée, taguée, CI/CD verte — et celle du chantier ; dans `docs/ROADMAP.md`, porter **les trois cartes dues** (épines, `retain`, *Forge de guerre*) sur la ligne de P-44 ; `activeContext.md` : le focus revient à la ROADMAP ; un ADR de clôture si le chantier a appris quelque chose de la méthode qui vaille pour le prochain.
-4. **Le suivi des vagues** : le « Bilan du chantier » que le modèle prévoit, et l'en-tête passe à « Chantier clos ». Tu l'écris toi-même, à partir des sept sections et des comptes rendus.
+1. **La porte d'entrée** (§3.1), entière, sur la vague 8 : fusionnée, `v0.6.0` posé sur un commit de `main`, release publiée, CI verte, trois porteurs de version à `0.6.0`, `dart analyze` et `flutter test`.
+2. **La branche** (§3.2). Premier commit, le journal : la vague 8 passe à « close », avec la date constatée ; la ligne « Clôture » passe à « faite », avec la date du jour.
+3. **`memory-bank-sync`**, délégué, avec ces consignes : noter la clôture de la vague 8 — fusionnée, taguée, CI/CD verte — et celle du chantier ; dans `docs/ROADMAP.md`, porter **les trois cartes dues** (épines, `retain`, *Forge de guerre*) sur la ligne de P-44 ; `activeContext.md` : le focus revient à la ROADMAP ; un ADR de clôture si le chantier a appris quelque chose de la méthode qui vaille pour le prochain.
+4. **Le suivi des vagues** : le « Bilan du chantier » que le modèle prévoit, et l'en-tête passe à « Chantier clos ». Tu l'écris toi-même, à partir des huit sections et des comptes rendus.
 5. **Ce fichier** : son en-tête passe à « chantier clos le `<JJ/MM/AAAA>` » et sa ligne de fin le dit. **Il ne se déplace pas** : une douzaine de fichiers y renvoient par chemin.
 6. **Arrête-toi.** Message au propriétaire : la branche, ce qu'elle écrit. Il ouvre la PR et la fusionne — pas de test manuel, pas de tag. Ce que la branche dit clos le devient sur `main` au moment où elle y entre.
 
@@ -626,7 +645,7 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 | # | Quoi | État |
 |:---:|:---|:---|
-| O1 | D34, le déclencheur de *Marque du Mage*, sans lot | **Vague 7**, avec le lot Marque — confirmé le 01/10 (revue §14, A2) ; la transition de `0.5.6` est en §7.2 ; ✅ graphe du brainstorm retouché le 01/10 |
+| O1 | D34, le déclencheur de *Marque du Mage*, sans lot | **Vague 8** depuis D76 (vague 7 jusque-là), avec le lot Marque — confirmé le 01/10 (revue §14, A2) ; la transition de `0.5.6` est en §7.2 ; ✅ graphe du brainstorm retouché le 01/10 |
 | O2 | P-44 lot 4 absent du graphe du brainstorm | ✅ **Retouché le 01/10** ; le lot lui-même est hors périmètre |
 | O3 | La composition des tranches 2 et 3 | **Fixée par défaut** : Croisé, Vampire, Voile puis Sanctifié, Carnage, Marque ; re-arbitrable en vague 6 |
 | O4 | Arcaniste sans carte multi-coups | **Vague 5** |
@@ -636,11 +655,12 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 | O8 | Le commit du dossier | ✅ **Fait le 01/10** |
 | O9 | La relecture de ce fichier avant la vague 1 | ✅ **Faite et appliquée trois fois le 01/10** : revue §14 (V1 à V26) — l'ordre des gestes de sortie est D70, la référence de simulation est produite ; revue §15 (W1 à W26), porte d'entrée jouée et simulation relancée — D72, D73, D74 ; contrôle ciblé du texte neuf, revue §16 (X1 à X15) — D75 |
 | O10 | Un suivi lisible sans technique | ✅ **Ouvert le 01/10** (D71) : `docs/suivi_vagues_chantier/`, un fichier par chantier selon le modèle du répertoire ; celui de ce chantier reçoit une section par vague, écrite en §3.8 |
-| O11 | Qui clôt le chantier après la vague 7 | ✅ **Tranché le 01/10** (D74) : une session de clôture, par le même prompt, sur une branche de documentation — §8.8 |
+| O11 | Qui clôt le chantier après la dernière vague | ✅ **Tranché le 01/10** (D74) : une session de clôture, par le même prompt, sur une branche de documentation — §8.9 |
 | O12 | Où `maxLevel` s'applique dès E1 | ✅ **Tranché le 01/10** (D72) : aux quatre endroits qui écrivent un niveau de rune — fiche 8.1 |
 | O13 | Le critère de la simulation quand une vague change une valeur | ✅ Tranché le 01/10 (D73), puis **retiré le 13/10 par ADR-108 D5** : aucune vague ne relance la simulation — §3.6, §7.3 |
 | O14 | Deux exemplaires d'une rune plafonnée sur une même carte, en `0.5.3` | ✅ **Tranché le 01/10** (D75) : le prédicat d'E1 ne repropose plus une rune dont le plafond est atteint sur la carte, exemplaires additionnés — fiche 8.1 |
+| O15 | Gel et Faiblesse font la même chose ; une vague pour les charges élémentaires | ✅ **Tranché le 03/11 par le propriétaire** (D76) : vague 7, `0.5.9`, la tranche 3 en vague 8 ; les règles des charges sont à décider avant la vague — fiche 8.7, [étude](03-11-2026_charges_elementaires_Opus5.md) |
 
 ---
 
-*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Prochaine étape : la vague 4, par le prompt de §0, sous la méthode amendée par ADR-108.*
+*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Prochaine étape : la reprise de la vague 5, arrêtée sur P-2 et P-3 (§2, « Arrêts »), puis les vagues 6 à 8 et la clôture (D76).*
