@@ -38,7 +38,7 @@ void main() {
   }
 
   test('aucun id de rune livree n est ecrit en litteral dans lib', () {
-    expect(shipped, hasLength(14), reason: 'les quatorze runes livrees');
+    expect(shipped, hasLength(15), reason: 'les quinze runes livrees');
     final offenders =
         offendersOf(RegExp('''['"](${runeIds.join('|')})['"]'''));
     expect(offenders, isEmpty, reason: offenders.join('\n'));

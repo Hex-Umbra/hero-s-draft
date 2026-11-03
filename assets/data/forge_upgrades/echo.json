@@ -1,0 +1,27 @@
+{
+  "id": "echo",
+  "name_en": "Echoing",
+  "name_fr": "Résonant",
+  "description_en": "{val}% chance to play again",
+  "description_fr": "{val} % de chances de se rejouer",
+  "icon": "replay_rounded",
+  "color": "deepPurpleAccent",
+  "minFusionRank": 1,
+  "excludesEffects": [
+    "draw",
+    "gain_mana"
+  ],
+  "excludesRunes": [
+    "eco",
+    "quick"
+  ],
+  "maxLevel": 4,
+  "deltas": [
+    {
+      "type": "echoChance",
+      "valuePercentPerLevel": 15
+    }
+  ],
+  "weight": 50,
+  "emoji": "🔁"
+}

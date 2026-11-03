@@ -1,3 +1,4 @@
+import 'dart:math';
 
 import '../../models/card_instance.dart';
 import '../../models/combat_state.dart';
@@ -122,15 +123,17 @@ class EffectResolver {
     return true;
   }
 
-  /// Résout les effets d'une carte
+  /// Résout les effets d'une carte. [random] tire le jet de l'écho ; `Random()`
+  /// par défaut.
   static bool resolveCard(
     CardInstance card,
     RunController runController,
     DeckNotifier deckController,
     CombatController combatController,
     String? selectedEnemyId,
-    EffectRegistry registry,
-  ) {
+    EffectRegistry registry, {
+    Random? random,
+  }) {
     if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
       return false;
     }
@@ -151,6 +154,23 @@ class EffectResolver {
       selectedEnemyId,
       registry,
     );
+
+    // L'écho (spec §4.7) : un seul jet, après la première résolution, puis une
+    // seconde résolution — même cible, sans paiement, sans second jet. Elle ne
+    // rejoue pas la carte : les piles et les événements « carte jouée » restent
+    // au contrôleur, qui ne voit qu'un jeu (P-3 (a)).
+    final echoChance = card.effective.echoChance;
+    if (echoChance > 0 && (random ?? Random()).nextInt(100) < echoChance) {
+      _resolveEffects(
+        card,
+        card.effective,
+        runController,
+        deckController,
+        combatController,
+        selectedEnemyId,
+        registry,
+      );
+    }
 
     return true;
   }

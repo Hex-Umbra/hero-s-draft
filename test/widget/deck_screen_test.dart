@@ -280,6 +280,7 @@ void main() {
         'piercing',
         'lifesteal',
         'splash',
+        'echo',
       ]),
     );
     expect(messagesOf(container),

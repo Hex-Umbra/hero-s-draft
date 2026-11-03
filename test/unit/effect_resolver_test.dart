@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +18,8 @@ import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
+
+import 'scripted_random.dart';
 
 void main() {
   group('EntityStats & StatusEffect', () {
@@ -356,7 +360,8 @@ void main() {
 
     tearDown(() => container.dispose());
 
-    void play(CardData data, {List<String> runes = const []}) {
+    void play(CardData data,
+        {List<String> runes = const [], Random? random}) {
       final played = EffectResolver.resolveCard(
         CardInstance(data: data, forgeUpgrades: runes),
         run,
@@ -364,6 +369,7 @@ void main() {
         combat,
         enemyId,
         container.read(effectRegistryProvider),
+        random: random,
       );
       expect(played, isTrue);
     }
@@ -393,6 +399,14 @@ void main() {
 
       expect(onEnemy('burn').single.value, 3);
       expect(onEnemy('shock').single.value, 1);
+    });
+
+    test('l echo recoit son propre bonus de statut', () {
+      play(shipped('poison_stab'),
+          runes: const ['echo:7'], random: ScriptedRandom([0]));
+
+      // Deux resolutions de 1 Poison, chacune avec la Puissance 2 : 2 x (1 + 2).
+      expect(onEnemy('poison').single.value, 6);
     });
 
     test('sans rune, le premier statut de la carte recoit le bonus', () {

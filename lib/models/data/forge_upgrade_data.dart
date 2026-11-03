@@ -308,6 +308,7 @@ class ForgeUpgradeData {
         ArmorPierceDelta() => min(100, delta.valuePercentPerLevel * level),
         LifestealPercentDelta() => delta.valuePercentPerLevel * level,
         SplashPercentDelta() => delta.valuePercentPerLevel * level,
+        EchoChanceDelta() => delta.valuePercentPerLevel * level,
       };
       if (value != null) return value;
     }

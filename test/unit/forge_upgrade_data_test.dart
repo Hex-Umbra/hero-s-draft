@@ -156,6 +156,33 @@ void main() {
       );
     });
 
+    test('echoChance se lit et s ecrit ; {val} Resonant 2 vaut 30', () {
+      final json = [
+        {'type': 'echoChance', 'valuePercentPerLevel': 15},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<EchoChanceDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 15),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        () => ForgeUpgradeData.fromJson(_json({
+          'deltas': [
+            {'type': 'echoChance', 'valuePercentPerLevel': 0},
+          ],
+        })),
+        _refused('valuePercentPerLevel'),
+      );
+      expect(
+        shippedRune('echo').getDescription(
+            2, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        '30 % de chances de se rejouer',
+      );
+    });
+
     test('refuse une rune sans deltas', () {
       expect(() => ForgeUpgradeData.fromJson(_json()..remove('deltas')),
           _refused('deltas'));

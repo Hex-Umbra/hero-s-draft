@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,8 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+
+import 'scripted_random.dart';
 
 /// Les runes livrées, jouées sur les vraies cartes par
 /// `EffectResolver.resolveCard` (spec P-43 E1, §4.4, §4.8).
@@ -74,7 +78,7 @@ void main() {
   List<StatusEffect> enemyStatuses(String id) =>
       enemy().statuses.where((s) => s.id == id).toList();
 
-  void play(CardInstance card) {
+  void play(CardInstance card, {Random? random}) {
     // Assez de mana pour jouer plusieurs cartes dans un meme cas.
     run.updateState(run.currentState
         .copyWith(heroStats: hero().copyWith(currentMana: 9)));
@@ -85,6 +89,7 @@ void main() {
       combat,
       enemyId,
       container.read(effectRegistryProvider),
+      random: random,
     );
     expect(played, isTrue);
   }
@@ -423,6 +428,112 @@ void main() {
       faceEnemies();
       playOnFirst(card('strike_basic', runes: const ['splash:1']));
       expect(pvs(), [94, 98, 98]);
+    });
+  });
+
+  // L'echo : une seconde resolution des effets, pas un second jeu (spec §4.7,
+  // A15, P-3 (a)).
+  group('Resonant', () {
+    test('jet reussi : les effets se resolvent une seconde fois, sans rien '
+        'payer', () {
+      play(card('strike_basic', runes: const ['echo:1']),
+          random: ScriptedRandom([0]));
+
+      expect(enemy().currentPv, 100 - 12);
+      expect(hero().currentMana, 9 - 1);
+    });
+
+    test('jet manque : une seule resolution', () {
+      play(card('strike_basic', runes: const ['echo:1']),
+          random: ScriptedRandom([99]));
+
+      expect(enemy().currentPv, 100 - 6);
+    });
+
+    test('un seul jet : jamais de troisieme resolution', () {
+      // 7 niveaux de 15 % : 105 %, le jet reussit toujours.
+      play(card('strike_basic', runes: const ['echo:7']),
+          random: ScriptedRandom([0, 0]));
+
+      expect(enemy().currentPv, 100 - 12);
+    });
+
+    test('la cible meurt a la premiere resolution : les degats se perdent, '
+        'les effets sur soi se rejouent', () {
+      final enemies = [
+        for (final pv in [6, 100])
+          EnemyInstance(
+            data: registry.enemies.first,
+            stats: EntityStats(maxPv: 100, currentPv: pv, armure: 0, might: 0),
+          ),
+      ];
+      combat.state = CombatState(
+        enemies: enemies,
+        selectedEnemyId: enemies.first.id,
+        turnPhase: TurnPhase.player,
+      );
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentMana: 9)));
+      final attack = CardInstance(
+        data: const CardData(
+          id: 'test_hit',
+          cost: 1,
+          type: CardType.attack,
+          rarity: CardRarity.common,
+          target: CardTarget.singleEnemy,
+          effects: [
+            CardEffect(type: 'damage', value: 6),
+            CardEffect(type: 'armor', value: 3),
+          ],
+        ),
+        forgeUpgrades: const ['echo:7'],
+      );
+
+      expect(
+        EffectResolver.resolveCard(attack, run, deck, combat,
+            enemies.first.id, container.read(effectRegistryProvider),
+            random: ScriptedRandom([0])),
+        isTrue,
+      );
+
+      final left = combat.currentState.enemies;
+      expect(left[0].stats.currentPv, 0);
+      expect(left[1].stats.currentPv, 100);
+      expect(hero().armure, 6);
+    });
+
+    test('l echo ne declenche aucun evenement carte jouee', () {
+      final flux = registry.passives.singleWhere((p) => p.id == 'mana_flux');
+      run.startNewRun(registry.heroes.singleWhere((h) => h.id == 'mage'), flux);
+      final skills = [
+        for (var i = 0; i < 2; i++)
+          CardInstance(
+            data: CardData(
+              id: 'test_skill_$i',
+              cost: 0,
+              type: CardType.skill,
+              rarity: CardRarity.common,
+              target: CardTarget.self,
+              effects: const [CardEffect(type: 'armor', value: 1)],
+            ),
+            forgeUpgrades: const ['echo:7'],
+          ),
+      ];
+      deck.state = deck.state.copyWith(hand: skills, discardPile: const []);
+      combat.state = CombatState(
+        enemies: combat.currentState.enemies,
+        turnPhase: TurnPhase.player,
+      );
+      final mana = hero().currentMana;
+
+      for (final skill in skills) {
+        combat.applyPlayerCardPlay(skill);
+      }
+
+      // Quatre Competences comptees (seuil 3) auraient monte le mana de 1.
+      expect(hero().currentMana, mana);
+      expect(combat.currentState.cardsPlayedThisTurn, 2);
+      expect(deck.state.discardPile, hasLength(2));
     });
   });
 

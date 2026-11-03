@@ -81,6 +81,24 @@ void main() {
     expect(_eligible(splash, shipped('sweep')), isFalse);
   });
 
+  test('Resonant : refuse une carte qui pioche ou rend du mana, ou qui porte '
+      'Econome ou Veloce', () {
+    final echo = shippedRune('echo');
+    final eco = shippedRune('eco');
+    final quick = shippedRune('quick');
+    CardInstance shipped(String id, [List<String> runes = const []]) =>
+        CardInstance(
+            data: shippedCard(id),
+            rarity: CardRarity.rare,
+            forgeUpgrades: runes);
+    expect(_eligible(echo, shipped('quick_attack')), isFalse);
+    expect(_eligible(echo, shipped('defend_basic', const ['eco:1']), [eco]),
+        isFalse);
+    expect(_eligible(echo, shipped('defend_basic', const ['quick:1']), [quick]),
+        isFalse);
+    expect(_eligible(echo, shipped('defend_basic')), isTrue);
+  });
+
   test('le type de carte', () {
     final rune = _rune('burning', eligibleCardTypes: const ['attack']);
     expect(_eligible(rune, _card()), isTrue);

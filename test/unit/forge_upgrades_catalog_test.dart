@@ -183,6 +183,15 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 50,
   ),
+  'echo': _rune(
+    excludesEffects: const ['draw', 'gain_mana'],
+    excludesRunes: const ['eco', 'quick'],
+    maxLevel: 4,
+    deltas: const [
+      {'type': 'echoChance', 'valuePercentPerLevel': 15},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
@@ -208,26 +217,57 @@ const _singleTargetRank2 = {..._attackRank2, 'splash'};
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
-  'strike_basic': (_singleTargetRank1, _singleTargetRank2),
-  'heavy_strike': (_singleTargetRank1, _singleTargetRank2),
-  'fireball': (_singleTargetRank1, _singleTargetRank2),
-  'ice_bolt': (_singleTargetRank1, _singleTargetRank2),
-  'poison_stab': (_singleTargetRank1, _singleTargetRank2),
+  'strike_basic': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'heavy_strike': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'fireball': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'ice_bolt': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'poison_stab': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  // Elle pioche : Resonant la refuse.
   'quick_attack': (_singleTargetRank1, _singleTargetRank2),
-  'sweep': (_attackRank1, _attackRank2),
-  'thunder_clap': (_singleTargetRank1, _singleTargetRank2),
-  'warcry': ({..._attackRank1, 'hardened'}, {..._attackRank2, 'hardened'}),
+  'sweep': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  'thunder_clap': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'warcry': (
+    {..._attackRank1, 'hardened', 'echo'},
+    {..._attackRank2, 'hardened', 'echo'},
+  ),
   'awakening': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'defend_basic': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'iron_wall': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'heal_potion': ({'enduring', 'cheap'}, {'enduring', 'cheap', 'quick', 'eco'}),
-  'demon_form': ({'cheap'}, {'cheap', 'quick', 'eco'}),
-  'metallicize': ({'cheap'}, {'cheap', 'quick', 'eco'}),
+  'defend_basic': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'iron_wall': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'heal_potion': (
+    {'enduring', 'cheap', 'echo'},
+    {'enduring', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'demon_form': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'metallicize': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
   'concentration': (<String>{}, {'quick'}),
   'focus': (<String>{}, {'quick'}),
 };
 
-/// Les quatorze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
+/// Les quinze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -293,8 +333,8 @@ void main() {
   });
 
   // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
-  test('enduring et cheap sont binaires, les douze autres non', () {
-    expect(registry.forgeUpgrades, hasLength(14));
+  test('enduring et cheap sont binaires, les treize autres non', () {
+    expect(registry.forgeUpgrades, hasLength(15));
     expect(
       {
         for (final rune in registry.forgeUpgrades)

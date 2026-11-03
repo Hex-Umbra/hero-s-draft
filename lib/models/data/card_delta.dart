@@ -24,6 +24,7 @@ sealed class CardDelta {
     'armorPierce',
     'lifestealPercent',
     'splashPercent',
+    'echoChance',
   ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
@@ -49,6 +50,9 @@ sealed class CardDelta {
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       'splashPercent' => SplashPercentDelta(
+          valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
+        ),
+      'echoChance' => EchoChanceDelta(
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       _ => throw FormatException(
@@ -258,6 +262,24 @@ final class SplashPercentDelta extends CardDelta {
   @override
   Map<String, dynamic> toJson() => {
         'type': 'splashPercent',
+        'valuePercentPerLevel': valuePercentPerLevel,
+      };
+}
+
+/// Après sa première résolution, la carte se résout une seconde fois avec
+/// `valuePercentPerLevel × L` % de chances, au plus 100 % (spec §3.6, §4.7,
+/// A19) : `echo`.
+final class EchoChanceDelta extends CardDelta {
+  const EchoChanceDelta({required this.valuePercentPerLevel});
+
+  final int valuePercentPerLevel;
+
+  @override
+  bool saturatesAt(int level) => valuePercentPerLevel * level >= 100;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'echoChance',
         'valuePercentPerLevel': valuePercentPerLevel,
       };
 }

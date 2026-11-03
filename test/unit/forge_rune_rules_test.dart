@@ -354,6 +354,21 @@ void main() {
       );
     });
 
+    test('Resonant : propose a 4 et a 6, ecarte a 7', () {
+      final echo = _rune('echo', maxLevel: 4, deltas: const [
+        EchoChanceDelta(valuePercentPerLevel: 15),
+      ]);
+      List<(String, int)> caps(String level, Map<String, int> capBonus) => [
+            for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+                [_cardWith(['echo:$level'])], [echo],
+                capBonus: capBonus))
+              (rune.id, cap),
+          ];
+      expect(caps('4', const {}), [('echo', 4)]);
+      expect(caps('6', const {'echo': 2}), [('echo', 6)]);
+      expect(caps('7', const {'echo': 3}), isEmpty);
+    });
+
     test('Vampirique 4 reste proposee', () {
       expect(
         saturableCandidates([_cardWith(['lifesteal:4'])],
