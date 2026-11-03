@@ -22,6 +22,7 @@ class EffectiveCard {
     required this.lifestealLevel,
     required this.splashPercent,
     required this.echoChance,
+    required this.hpRefundPercent,
   });
 
   /// Les effets que les deltas ajoutent, résolus avant ceux de la carte.
@@ -66,6 +67,10 @@ class EffectiveCard {
   /// §4.7, A19).
   final int echoChance;
 
+  /// Le pourcentage du coût en PV que la carte rend après sa résolution (spec
+  /// §4.1, A20).
+  final int hpRefundPercent;
+
   /// La couture commune aux runes et, en vague 5, aux évolutions de
   /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
   /// reçoit des paires *(delta, niveau)*.
@@ -89,6 +94,7 @@ class EffectiveCard {
     var lifestealLevel = 0;
     var splashPercent = 0;
     var echoChance = 0;
+    var hpRefundPercent = 0;
 
     for (final (delta, level) in deltas) {
       switch (delta) {
@@ -126,6 +132,8 @@ class EffectiveCard {
           splashPercent += delta.valuePercentPerLevel * level;
         case EchoChanceDelta():
           echoChance += delta.valuePercentPerLevel * level;
+        case RefundHpCostDelta():
+          hpRefundPercent += delta.valuePercentPerLevel * level;
       }
     }
 
@@ -142,6 +150,7 @@ class EffectiveCard {
       lifestealLevel: lifestealLevel,
       splashPercent: splashPercent,
       echoChance: echoChance,
+      hpRefundPercent: hpRefundPercent,
     );
   }
 

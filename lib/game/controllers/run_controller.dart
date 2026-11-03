@@ -554,10 +554,12 @@ class RunController extends Notifier<RunState> {
     startTurn();
   }
 
-  /// Consomme les ressources nécessaires. Retourne false si insuffisant.
-  bool consumeResource({int mana = 0, int hpPercent = 0}) {
-    return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
-  }
+  /// Débite le coût d'une carte ; voir `PlayerStatsManager.consumeResource`.
+  bool consumeResource({int mana = 0, int hp = 0, int armor = 0}) =>
+      _playerStatsManager.consumeResource(mana: mana, hp: hp, armor: armor);
+
+  /// Le remboursement de *Transfusion* ; voir `PlayerStatsManager.refundHp`.
+  void refundHp(int amount) => _playerStatsManager.refundHp(amount);
 
   /// Arme le Vol de vie pour une valeur et une durée données
   void applyLifestealBuff({required int value, required int duration}) {

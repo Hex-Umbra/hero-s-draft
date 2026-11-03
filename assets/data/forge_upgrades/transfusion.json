@@ -1,0 +1,21 @@
+{
+  "id": "transfusion",
+  "name_en": "Transfusion",
+  "name_fr": "Transfusion",
+  "description_en": "Refunds {val}% of the HP cost",
+  "description_fr": "Rend {val} % du coût en PV",
+  "icon": "bloodtype_rounded",
+  "color": "red",
+  "minFusionRank": 1,
+  "requiresCost": "hp",
+  "maxLevel": 1,
+  "binary": true,
+  "deltas": [
+    {
+      "type": "refundHpCost",
+      "valuePercentPerLevel": 50
+    }
+  ],
+  "weight": 50,
+  "emoji": "💉"
+}

@@ -8,6 +8,7 @@ import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import '../services/effect_resolver.dart';
 import '../services/proportional_status.dart';
 import '../systems/power_rules.dart';
 import 'entities/enemy_card.dart';
@@ -53,8 +54,10 @@ class CardComponent extends PositionComponent
 
   bool get canAfford {
     if (!isLoaded || !isMounted) return true;
-    final currentMana = game.currentRunState?.heroStats.currentMana ?? 0;
-    return currentMana >= card.currentCost;
+    final heroStats = game.currentRunState?.heroStats;
+    // Sans run, la règle d'avant : seule une carte gratuite passe.
+    if (heroStats == null) return card.currentCost <= 0;
+    return EffectResolver.canAfford(card, heroStats);
   }
 
   Color getTypeColor() {

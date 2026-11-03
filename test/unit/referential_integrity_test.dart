@@ -24,6 +24,7 @@ String? _effectOf(CardDelta delta) => switch (delta) {
       LifestealPercentDelta() => null,
       SplashPercentDelta() => null,
       EchoChanceDelta() => null,
+      RefundHpCostDelta() => null,
     };
 
 /// Sans ce fichier, le probleme §2.2 de la spec n est pas resolu : un dossier

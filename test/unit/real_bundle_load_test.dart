@@ -22,7 +22,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 98 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 99 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -36,7 +36,7 @@ void main() {
     expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
     expect(countUnder('assets/data/relics/', 4), 28, reason: 'reliques');
     expect(countUnder('assets/data/events/', 4), 7, reason: 'evenements');
-    expect(countUnder('assets/data/forge_upgrades/', 4), 15, reason: 'forge');
+    expect(countUnder('assets/data/forge_upgrades/', 4), 16, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
     expect(countUnder('assets/data/level_up_rewards/', 4), 9,
         reason: 'recompenses de niveau');
@@ -97,10 +97,10 @@ void main() {
     expect(registry.cards, hasLength(17)); // les signatures n en sont plus
     expect(registry.relics, hasLength(28));
     expect(registry.events, hasLength(7));
-    expect(registry.forgeUpgrades, hasLength(15));
+    expect(registry.forgeUpgrades, hasLength(16));
     expect(
       registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),
-      ['cheap', 'eco', 'enduring', 'quick'],
+      ['cheap', 'eco', 'enduring', 'quick', 'transfusion'],
     );
     expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));

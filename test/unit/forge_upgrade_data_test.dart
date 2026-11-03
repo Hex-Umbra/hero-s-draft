@@ -183,6 +183,39 @@ void main() {
       );
     });
 
+    test('requiresCost n admet que hp ; refundHpCost se lit et s ecrit ; {val} '
+        'Transfusion vaut 50', () {
+      final json = [
+        {'type': 'refundHpCost', 'valuePercentPerLevel': 50},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<RefundHpCostDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 50),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        shippedRune('transfusion').getDescription(
+            1, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        'Rend 50 % du coût en PV',
+      );
+
+      expect(ForgeUpgradeData.fromJson(_json()).requiresCost, isNull);
+      final costed = ForgeUpgradeData.fromJson(_json({'requiresCost': 'hp'}));
+      expect(costed.requiresCost, 'hp');
+      expect(costed.toJson()['requiresCost'], 'hp');
+      expect(ForgeUpgradeData.fromJson(_json()).toJson().containsKey(
+          'requiresCost'), isFalse);
+      for (final value in ['armor', 'mana']) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({'requiresCost': value})),
+          _refused('requiresCost'),
+        );
+      }
+    });
+
     test('refuse une rune sans deltas', () {
       expect(() => ForgeUpgradeData.fromJson(_json()..remove('deltas')),
           _refused('deltas'));

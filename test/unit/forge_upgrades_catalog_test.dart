@@ -21,6 +21,7 @@ Map<String, Object?> _declared(ForgeUpgradeData rune) => {
       'excludesEffects': rune.excludesEffects,
       'requiresExhaust': rune.requiresExhaust,
       'requiresMinCost': rune.requiresMinCost,
+      'requiresCost': rune.requiresCost,
       'excludesRunes': rune.excludesRunes,
       'maxLevel': rune.maxLevel,
       'deltas': [for (final delta in rune.deltas) delta.toJson()],
@@ -35,6 +36,7 @@ Map<String, Object?> _rune({
   List<String> excludesEffects = const [],
   bool requiresExhaust = false,
   int requiresMinCost = 0,
+  String? requiresCost,
   List<String> excludesRunes = const [],
   required int? maxLevel,
   required List<Map<String, Object?>> deltas,
@@ -48,6 +50,7 @@ Map<String, Object?> _rune({
       'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
+      'requiresCost': requiresCost,
       'excludesRunes': excludesRunes,
       'maxLevel': maxLevel,
       'deltas': deltas,
@@ -192,6 +195,14 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 50,
   ),
+  'transfusion': _rune(
+    requiresCost: 'hp',
+    maxLevel: 1,
+    deltas: const [
+      {'type': 'refundHpCost', 'valuePercentPerLevel': 50},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
@@ -267,7 +278,7 @@ const _offers = <String, (Set<String>, Set<String>)>{
   'focus': (<String>{}, {'quick'}),
 };
 
-/// Les quinze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
+/// Les seize runes livrées, et l'offre qu'elles font aux 17 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -314,6 +325,7 @@ void main() {
       'excludesEffects',
       'requiresExhaust',
       'requiresMinCost',
+      'requiresCost',
       'excludesRunes',
       'maxLevel',
       'binary',
@@ -333,14 +345,14 @@ void main() {
   });
 
   // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
-  test('enduring et cheap sont binaires, les treize autres non', () {
-    expect(registry.forgeUpgrades, hasLength(15));
+  test('enduring, cheap et transfusion sont binaires, les treize autres non', () {
+    expect(registry.forgeUpgrades, hasLength(16));
     expect(
       {
         for (final rune in registry.forgeUpgrades)
           if (rune.binary) rune.id,
       },
-      {'enduring', 'cheap'},
+      {'enduring', 'cheap', 'transfusion'},
     );
   });
 

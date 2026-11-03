@@ -25,6 +25,7 @@ sealed class CardDelta {
     'lifestealPercent',
     'splashPercent',
     'echoChance',
+    'refundHpCost',
   ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
@@ -53,6 +54,9 @@ sealed class CardDelta {
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       'echoChance' => EchoChanceDelta(
+          valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
+        ),
+      'refundHpCost' => RefundHpCostDelta(
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
       _ => throw FormatException(
@@ -280,6 +284,21 @@ final class EchoChanceDelta extends CardDelta {
   @override
   Map<String, dynamic> toJson() => {
         'type': 'echoChance',
+        'valuePercentPerLevel': valuePercentPerLevel,
+      };
+}
+
+/// Après la résolution de la carte, le héros récupère `valuePercentPerLevel ×
+/// L` % de son coût en PV, la demie vers le haut, borné aux PV max (spec §4.1,
+/// A20) : `transfusion`. Non saturant : la rune est binaire.
+final class RefundHpCostDelta extends CardDelta {
+  const RefundHpCostDelta({required this.valuePercentPerLevel});
+
+  final int valuePercentPerLevel;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'refundHpCost',
         'valuePercentPerLevel': valuePercentPerLevel,
       };
 }

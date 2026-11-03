@@ -93,6 +93,7 @@ class ForgeRuneRules {
       EffectiveCard.runeDeltas(card.forgeUpgrades, catalog),
     ).cost;
     if (cost < rune.requiresMinCost) return false;
+    if (rune.requiresCost == 'hp' && card.data.hpCost < 1) return false;
 
     // D48 : le rang de la carte qui reçoit la rune ; une commune, de
     // rang 0, n'en reçoit aucune.

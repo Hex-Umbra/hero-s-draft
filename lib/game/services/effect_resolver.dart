@@ -7,6 +7,7 @@ import '../../models/effective_card.dart';
 import '../../models/entity_stats.dart';
 import '../../models/status_effect.dart';
 import '../controllers/run_controller.dart';
+import '../systems/cost_rules.dart';
 import '../systems/power_rules.dart';
 import '../controllers/deck_controller.dart';
 import '../controllers/combat_controller.dart';
@@ -105,26 +106,37 @@ class EffectResolver {
     }
   }
 
-  /// Vérifie si la carte peut être jouée
+  /// La seule règle d'accessibilité d'une carte (A10) : le mana courant,
+  /// runes appliquées ; les coûts en PV et en Armure de la donnée, que ni la
+  /// rareté ni une rune ne changent (D40). `canPlayCard` et
+  /// `CardComponent.canAfford` la lisent.
+  static bool canAfford(CardInstance card, EntityStats heroStats) =>
+      heroStats.canPay(
+        mana: card.currentCost,
+        hp: card.data.hpCost,
+        armor: card.data.armorCost,
+      );
+
+  /// Vérifie si la carte peut être jouée : ses coûts, puis les deux règles
+  /// d'aujourd'hui — une carte Statut ne se joue pas, une cible unique exige
+  /// un ennemi.
   static bool canPlayCard(
     CardInstance card,
     RunState runState,
     String? selectedEnemyId,
   ) {
-    if (runState.heroStats.currentMana < card.currentCost) {
-      return false;
-    }
-    if (card.data.type == CardType.status) {
-      return false;
-    }
+    if (!canAfford(card, runState.heroStats)) return false;
+    if (card.data.type == CardType.status) return false;
     if (card.data.target == CardTarget.singleEnemy && selectedEnemyId == null) {
       return false;
     }
     return true;
   }
 
-  /// Résout les effets d'une carte. [random] tire le jet de l'écho ; `Random()`
-  /// par défaut.
+  /// Joue une carte, dans l'ordre de spec §4.7 : (1) refusée, rien n'est
+  /// écrit ; (2) le paiement ; (3) les effets ; (4) l'écho ; (5)
+  /// *Transfusion*. Une carte payée se résout jusqu'au bout. [random] tire le
+  /// jet de l'écho ; `Random()` par défaut.
   static bool resolveCard(
     CardInstance card,
     RunController runController,
@@ -134,44 +146,38 @@ class EffectResolver {
     EffectRegistry registry, {
     Random? random,
   }) {
+    // 1.
     if (!canPlayCard(card, runController.currentState, selectedEnemyId)) {
       return false;
     }
 
-    runController.consumeResource(mana: card.currentCost);
-
-    // Les effets que les runes ajoutent d'abord, puis ceux de la carte, à leur
-    // valeur jouée — rareté et runes comprises : l'applicateur est seul à la
-    // calculer, et les stratégies du registre seules à résoudre un effet,
-    // ceux des runes compris (spec P-43 E1, A2, §4.4). Les statuts des runes
-    // sont donc posés par `addStatus`, sans source (spec P-43 E0, A4).
-    _resolveEffects(
-      card,
-      card.effective,
-      runController,
-      deckController,
-      combatController,
-      selectedEnemyId,
-      registry,
-    );
-
-    // L'écho (spec §4.7) : un seul jet, après la première résolution, puis une
-    // seconde résolution — même cible, sans paiement, sans second jet. Elle ne
-    // rejoue pas la carte : les piles et les événements « carte jouée » restent
-    // au contrôleur, qui ne voit qu'un jeu (P-3 (a)).
-    final echoChance = card.effective.echoChance;
-    if (echoChance > 0 && (random ?? Random()).nextInt(100) < echoChance) {
-      _resolveEffects(
-        card,
-        card.effective,
-        runController,
-        deckController,
-        combatController,
-        selectedEnemyId,
-        registry,
-      );
+    // 2. Une écriture, hors du pipeline. Le contrôle de l'étape 1 porte sur
+    // le même état : le débit réussit.
+    final hpCost = card.data.hpCost;
+    if (!runController.consumeResource(
+      mana: card.currentCost,
+      hp: hpCost,
+      armor: card.data.armorCost,
+    )) {
+      return false;
     }
 
+    // 3. et 4. Une seconde résolution au plus, sans coût ni second jet (A19).
+    // Elle ne rejoue pas la carte : les piles et les événements « carte
+    // jouée » restent au contrôleur (P-3 (a)).
+    final effective = card.effective;
+    void resolveOnce() => _resolveEffects(card, effective, runController,
+        deckController, combatController, selectedEnemyId, registry);
+    resolveOnce();
+    if (effective.echoChance > 0 &&
+        (random ?? Random()).nextInt(100) < effective.echoChance) {
+      resolveOnce();
+    }
+
+    // 5. La moitié du coût en PV, la demie vers le haut, une fois (A20).
+    if (hpCost > 0 && effective.hpRefundPercent > 0) {
+      runController.refundHp((effective.hpRefundPercent * hpCost + 50) ~/ 100);
+    }
     return true;
   }
 

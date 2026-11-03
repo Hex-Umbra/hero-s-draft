@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
@@ -439,6 +440,12 @@ void main() {
     expect(forge.referenceListKeys,
         {'excludesRunes': EntityCategory.forgeUpgrade});
     expect(forge.decodeTemplate().containsKey('excludesRunes'), isFalse);
+  });
+
+  test('requiresCost : hp seulement, absente du gabarit', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    expect(forge.enumKeys['requiresCost'], ForgeUpgradeData.requiresCostValues);
+    expect(forge.decodeTemplate().containsKey('requiresCost'), isFalse);
   });
 
   test('eligibleTargets est une liste de CardTarget, au gabarit', () {

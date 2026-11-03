@@ -31,6 +31,14 @@ void main() {
     expect(faulty, isEmpty);
   });
 
+  test('aucune carte livree ne porte hpCost ni armorCost', () {
+    final faulty = [
+      for (final c in registry.cards)
+        if (c.hpCost != 0 || c.armorCost != 0) c.id,
+    ];
+    expect(faulty, isEmpty);
+  });
+
   test('D38 : un effet a plusieurs coups declare mightRatio < 1', () {
     final faulty = [
       for (final (id, _, effects) in _costed(registry))

@@ -372,7 +372,10 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       'eligibleTargets': _names(CardTarget.values),
     },
     // Le type d'un delta, lu sur le parseur (ADR-100 D1).
-    enumKeys: {'deltas[].type': CardDelta.typeNames},
+    enumKeys: {
+      'deltas[].type': CardDelta.typeNames,
+      'requiresCost': ForgeUpgradeData.requiresCostValues,
+    },
     // `excludesRunes` nomme des runes : une liste non vide d'ids existants,
     // une case par rune (spec P-43 E1, §6). Absente : aucune.
     referenceListKeys: const {'excludesRunes': EntityCategory.forgeUpgrade},
@@ -410,8 +413,9 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // une rune binaire le declare, avec `maxLevel: 1` (spec P-43 E3, A16).
     // `minFusionRank` y vaut 1 : la rune s'offre des la premiere fusion ;
     // `eco` et `quick` en demandent 2 (spec P-43 E2, D48). `eligibleEffects`
-    // y porte l'exemple du delta, `damage` ; `excludesRunes` n'y figure pas :
-    // absente, elle vaut « aucune », comme `classes` d'un passif.
+    // y porte l'exemple du delta, `damage` ; `excludesRunes` et `requiresCost`
+    // n'y figurent pas : absentes, elles valent « aucune », comme `classes` d'un
+    // passif.
     template: '''
 {
   "icon": "flash_on_rounded",

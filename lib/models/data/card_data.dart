@@ -264,6 +264,11 @@ class CardData implements AudioSource {
   final String descriptionEn;
   final String descriptionFr;
   final int cost;
+
+  /// Le coût en PV et en Armure (D40) : jamais lu par la rareté, jamais
+  /// touché par une rune — `cheap` ne réduit que [cost], le mana.
+  final int hpCost;
+  final int armorCost;
   final CardType type;
   final CardRarity rarity;
   final CardTarget target;
@@ -282,6 +287,8 @@ class CardData implements AudioSource {
     this.descriptionEn = '',
     this.descriptionFr = '',
     required this.cost,
+    this.hpCost = 0,
+    this.armorCost = 0,
     required this.type,
     required this.rarity,
     required this.target,
@@ -310,6 +317,7 @@ class CardData implements AudioSource {
         );
       }
     }
+    final (mana, hpCost, armorCost) = _readCosts(json);
     final nEn = json['name_en'] as String? ?? json['name'] as String? ?? '';
     final nFr = json['name_fr'] as String? ?? json['name'] as String? ?? '';
     final dEn =
@@ -338,7 +346,9 @@ class CardData implements AudioSource {
       nameFr: nFr,
       descriptionEn: dEn,
       descriptionFr: dFr,
-      cost: json['cost'] as int,
+      cost: mana,
+      hpCost: hpCost,
+      armorCost: armorCost,
       type: CardType.values.firstWhere((e) => e.name == json['type']),
       rarity: CardRarity.values.firstWhere(
         (e) => e.name == json['rarity'],
@@ -353,13 +363,61 @@ class CardData implements AudioSource {
     );
   }
 
+  static const _costKeys = {'mana', 'hp', 'armor'};
+
+  /// A9 : `cost` (le mana seul) ou `costs`, jamais les deux. `costs` exige
+  /// `mana` (entier >= 0) et au moins un de `hp`, `armor` (entier >= 1) ;
+  /// toute autre clé est refusée, nommée — `discard` est P-44 lot 4.
+  static (int, int, int) _readCosts(Map<String, dynamic> json) {
+    FormatException fault(String why) =>
+        FormatException('CardData "${json['id']}": $why');
+
+    if (!json.containsKey('costs')) return (json['cost'] as int, 0, 0);
+    if (json.containsKey('cost')) {
+      throw fault('"cost" et "costs" ensemble sont refusés : l\'un ou l\'autre');
+    }
+    final costs = json['costs'];
+    if (costs is! Map<String, dynamic>) {
+      throw fault('"costs" doit être un objet — reçu : $costs');
+    }
+    for (final key in costs.keys) {
+      if (!_costKeys.contains(key)) throw fault('"costs.$key" est refusée');
+    }
+    final mana = costs['mana'];
+    if (mana is! int || mana < 0) {
+      throw fault('"costs.mana" doit être un entier >= 0 — reçu : $mana');
+    }
+    int extra(String key) {
+      final value = costs[key];
+      if (value == null) return 0;
+      if (value is! int || value < 1) {
+        throw fault('"costs.$key" doit être un entier >= 1 — reçu : $value');
+      }
+      return value;
+    }
+
+    final hp = extra('hp');
+    final armor = extra('armor');
+    if (hp == 0 && armor == 0) {
+      throw fault('"costs" sans "hp" ni "armor" : écrire "cost"');
+    }
+    return (mana, hp, armor);
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'name_en': nameEn,
         'name_fr': nameFr,
         'description_en': descriptionEn,
         'description_fr': descriptionFr,
-        'cost': cost,
+        if (hpCost > 0 || armorCost > 0)
+          'costs': {
+            'mana': cost,
+            if (hpCost > 0) 'hp': hpCost,
+            if (armorCost > 0) 'armor': armorCost,
+          }
+        else
+          'cost': cost,
         'type': type.name,
         'rarity': rarity.name,
         'target': target.name,

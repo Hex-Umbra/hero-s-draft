@@ -40,6 +40,12 @@ class ForgeUpgradeData {
   /// une carte gratuite.
   final int requiresMinCost;
 
+  /// Le coût que la carte doit porter en plus du mana : `'hp'` exige un coût
+  /// en PV d'au moins 1 (A20) ; `null` : aucune exigence. `'armor'` n'aurait
+  /// pas de lecteur.
+  final String? requiresCost;
+  static const requiresCostValues = ['hp'];
+
   /// Les runes avec lesquelles celle-ci ne cohabite pas sur une carte (D51) ;
   /// le prédicat lit la règle dans les deux sens (D61).
   final List<String> excludesRunes;
@@ -78,6 +84,7 @@ class ForgeUpgradeData {
     this.excludesEffects = const [],
     this.requiresExhaust = false,
     this.requiresMinCost = 0,
+    this.requiresCost,
     this.excludesRunes = const [],
     this.maxLevel,
     this.binary = false,
@@ -109,6 +116,7 @@ class ForgeUpgradeData {
               const [],
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       requiresMinCost: _readMinCost(id, json['requiresMinCost']),
+      requiresCost: _readRequiresCost(id, json['requiresCost']),
       excludesRunes: _readExcludedRunes(id, json),
       maxLevel: maxLevel,
       binary: _readBinary(id, json['binary'], maxLevel),
@@ -161,6 +169,17 @@ class ForgeUpgradeData {
     if (raw is! int || raw < 0) {
       throw FormatException(
         '$id : requiresMinCost vaut un entier d\'au moins 0 — reçu : $raw',
+      );
+    }
+    return raw;
+  }
+
+  static String? _readRequiresCost(String id, Object? raw) {
+    if (raw == null) return null;
+    if (raw is! String || !requiresCostValues.contains(raw)) {
+      throw FormatException(
+        '$id : requiresCost vaut ${requiresCostValues.join(', ')} — reçu : '
+        '$raw',
       );
     }
     return raw;
@@ -259,6 +278,7 @@ class ForgeUpgradeData {
       if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
+      if (requiresCost != null) 'requiresCost': requiresCost,
       if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
       'maxLevel': maxLevel,
       'binary': binary,
@@ -309,6 +329,7 @@ class ForgeUpgradeData {
         LifestealPercentDelta() => delta.valuePercentPerLevel * level,
         SplashPercentDelta() => delta.valuePercentPerLevel * level,
         EchoChanceDelta() => delta.valuePercentPerLevel * level,
+        RefundHpCostDelta() => delta.valuePercentPerLevel * level,
       };
       if (value != null) return value;
     }
