@@ -59,6 +59,7 @@ Toute référence `fichier:ligne` de ce document a été lue le 2026-10-25 sur `
 | **Q9** | Le draft de départ propose 2 cartes du lot du passif choisi et 3 neutres (la valeur de D63) |
 | **Q11** | Un seul bonus de Puissance par carte : une carte qui pose `burn` et porte la rune `burning` ne compte la Puissance qu'une fois |
 | **O5** | Le masquage : un passif dont le dossier `cards/<passif>/` est vide n'est pas proposé à la sélection — une règle dans `availablePassivesFor`, sans liste en dur ; la note de version dira que six passifs quittent la sélection jusqu'à ce que leur lot arrive |
+| **P-1** *(répondue le 03/11, née à l'écriture)* | Option (a) — 25 % par point, plafonnés : Vulnérable +25 % de dégâts subis par point, 4 points au plus (+100 %) ; Faiblesse −25 % de dégâts infligés par point, 2 au plus (−50 %) ; Gel −25 % à l'attaque par point, 3 au plus (−75 %) ; *Trait de Glace* Gel 1 → 2, `freezing` 2 points par niveau, *Marque du Mage* Vulnérable 1 → 2 (§4.4). Le propriétaire ajoute que les charges élémentaires (P-53 de la ROADMAP, [étude](../../possible_upgrades/03-11-2026_charges_elementaires_Opus5.md)) relèveront le Gel, le Feu et la Foudre en `0.6.0` : ce barème est celui de `0.5.7` |
 | **L'écran d'évolution** | Le carrousel de la montée de niveau (`DraftScreen`, `DraftCardReel`), trois rouleaux, une fois par signature, déclenché par `pendingDrafts`. Chaque rouleau montre : le nom de l'évolution, sa description, son palier (« Mineure » / « Majeure ») et, pour une mineure déjà prise, son niveau « 1 → 2 » ; l'en-tête de l'écran nomme la signature concernée. Les détails de mise en page que ce contenu ne fixe pas (tailles, polices, couleurs) suivent le carrousel existant et sont de classe T |
 
 ### 1.3. Les arbitrages
@@ -228,9 +229,9 @@ sorte de delta, non un cas par id. Trois sortes en ont une, toutes trois des pou
 7. Le bonus de *Transcendance* s'additionnant à chaque tirage (`run_controller.dart:485-489`), `lifesteal` 5 et
 `echo` 7 sont atteignables ; ils ne se proposent plus (§4.6).
 
-**A23 — `freezing` perd son plafond, et gagne deux points par niveau** *(T, sous P-1)*. `maxLevel: null` (fiche
+**A23 — `freezing` perd son plafond, et gagne deux points par niveau** *(T, sous P-1, répondue)*. `maxLevel: null` (fiche
 8.5, brainstorm §8) ; `valuePerLevel` passe à 2 pour que le niveau 1 garde l'effet d'aujourd'hui sous le barème
-provisoire de P-1 (§4.4).
+de P-1 (§1.2, §4.4).
 
 **A24 — Une évolution est un delta, appliqué par l'applicateur des runes à la vue de carte** *(T, filtre 5)*.
 `SignatureEvolutionData` déclare des `deltas` dans le vocabulaire de `CardDelta`, plus deux champs que n'a pas une
@@ -290,29 +291,6 @@ choix de conception y portent une raison qu'il faut lire : *Surtension de Mana* 
 `scaleWith` garde une valeur de base d'au moins 1, sans quoi la fusion (G1) ne changerait aucun chiffre.
 
 ### 1.4. Les questions ouvertes
-
-**P-1 — Le barème des statuts proportionnels** *(P, née à l'écriture)*. Le lot doit fixer ce qu'un point de
-`vulnerable`, `weakness` et `freeze` vaut (brainstorm §9.2 n° 3) ; aucune décision ne le chiffre, et le joueur le
-lit.
-- (a) **25 % par point, plafonnés** — Vulnérable +25 % de dégâts subis par point, 4 points au plus (+100 %) ;
-  Faiblesse −25 % de dégâts infligés par point, 2 au plus (−50 %) ; Gel −25 % à l'attaque par point, 3 au plus
-  (−75 %) ; et les poseurs d'aujourd'hui recalibrés pour garder leur effet : *Trait de Glace* Gel 1 → 2,
-  `freezing` 2 points par niveau, *Marque du Mage* Vulnérable 1 → 2.
-- (b) Un point vaut l'effet d'aujourd'hui (Vulnérable +50 %, Faiblesse −25 %, Gel −50 %), plafonnés à 2 points —
-  aucun poseur ne change, mais le Gel n'a plus qu'un pas utile.
-- (c) Sans plafond.
-
-**Ce qui change sous chaque option.** Sous (a) : ce document tel qu'écrit. Sous (b) : *Trait de Glace* reste à
-Gel 1, `freezing` à 1 point par niveau (A23 se réduit à `maxLevel: null`), *Marque du Mage* à Vulnérable 1 ; les
-cartes de lot écrites à 2 points pour l'effet d'un seul d'aujourd'hui — *Nova de givre* (Gel 2), *Décharge*
-(Vulnérable 2), et l'évolution *Mise à nu* (Vulnérable 2) — doublent leur effet, et descendent à 1 point pour le
-garder ; deux points de Gel (−100 %) annulent l'attaque ; les paramètres des textes (§6.1, §5.2, la galerie du tutoriel §6.2), la note (§11) et
-les tests du barème (§9) suivent. Sous (c) : la valeur par point reste à choisir (25 % par défaut) ; Faiblesse et
-Gel atteignent −100 % dès 4 points, et la Puissance d'altération du Paladin ou du Mage y mène en un seul jeu ; les
-mêmes sections suivent.
-
-**Recommandation : (a)**, appliquée à titre provisoire dans ce document (§4.4) : elle laisse au Gel trois pas et
-à la Vulnérabilité quatre, sans que rien de ce que le joueur connaît ne s'affaiblisse au premier point.
 
 **P-2 — L'affichage des évolutions hors de leur écran** *(P, née à l'écriture)*. Le brainstorm (§4.4) propose
 « un badge de niveau et les icônes d'évolution » ; aucune décision ne l'acquiert, et le joueur le verrait.
@@ -653,7 +631,7 @@ tombe que sur une cible vivante : sur une cible unique morte, les coups restants
 
 Une rune en pourcentage sur un effet à plusieurs coups suit A14.
 
-### 4.4. Les statuts proportionnels (barème provisoire, P-1)
+### 4.4. Les statuts proportionnels (barème de P-1, §1.2)
 
 | Statut | Lecture d'aujourd'hui | Avec le lot |
 |:---|:---|:---|
@@ -849,7 +827,7 @@ Chaque source a ses deux formes : un ratio inférieur à 1 s'écrit en tranches,
 pour *Fureur sanguine*) ; un ratio d'au moins 1 s'écrit tel quel (*Rempart brisé* : « +1 par point d'Armure »).
 Les trois clés `status…Hint` remplacent les textes en dur des deux infobulles (`ui_card_helpers.dart:374-404`,
 `card_component.dart:371-401`), qui les mettent entre parenthèses, et ceux de la galerie et du tableau des statuts
-du tutoriel (§6.2) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a) : 25 et 50, 25 et
+du tutoriel (§6.2) ; `percent` et `max` viennent du barème (§4.4) — sous P-1 (a), §1.2 : 25 et 50, 25 et
 100, 25 et 75.
 
 **Le draft de départ** : `draftDeckSnackbarMax` (`app_fr.arb:227`, lu à `starter_deck_draft_screen.dart:79`)
@@ -865,7 +843,7 @@ remplacent ; `draftDeckSelectedCount` (`app_fr.arb:225`, lu à `:130`) reste le 
 | `tutorial_starter_deck_widget.dart:55` | « Choisissez 5 cartes » → les deux sections et leurs compteurs, comme le jeu |
 | `TutorialFixtures.starterPool` | `isOfferable(activePassive?.id)` |
 | Leçon de jeu (`tutorial_engine.dart:247-258`) | A30 |
-| La galerie des statuts (`tutorial_elements_widget.dart:65-66`, Gel « 50% ») et le tableau des statuts qu'elle ne montre pas (`_missingStatuses`, `:78-80` ; `:86-87`, Vulnérable « +50 % », `:94-95`, Faiblesse « −25 % »), affichés par `tutorial_screen.dart:112` | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; les entrées cessent d'être `const` ; partie 1, avec le barème. Sous P-1 (b), les mêmes clés suivent le barème retenu ; sous (c), `statusVulnerableHint` perd sa borne (§1.4). La simulation de la galerie (`tutorial_elements_widget.dart:221`, « 10 -> 5 ») reste juste : deux points de Gel sous (a), ce que pose *Trait de Glace* (§3.5) |
+| La galerie des statuts (`tutorial_elements_widget.dart:65-66`, Gel « 50% ») et le tableau des statuts qu'elle ne montre pas (`_missingStatuses`, `:78-80` ; `:86-87`, Vulnérable « +50 % », `:94-95`, Faiblesse « −25 % »), affichés par `tutorial_screen.dart:112` | Gel, Vulnérable et Faiblesse lisent `statusFreezeHint`, `statusVulnerableHint`, `statusWeaknessHint` sur le barème (§4.4), au lieu de leurs pourcentages en dur ; les entrées cessent d'être `const` ; partie 1, avec le barème. La simulation de la galerie (`tutorial_elements_widget.dart:221`, « 10 -> 5 ») reste juste : deux points de Gel sous (a), ce que pose *Trait de Glace* (§3.5) |
 | Le corps des étapes « Les Effets Élémentaires » (`tutorial_data.dart:227-228`, `:236-237`) et « Les Intentions Ennemies » (`:255`, `:267-268`) | Le Gel ne se chiffre plus dans la prose, la galerie le chiffre. FR : « • ❄️ Gel : réduit leur prochaine attaque, d'autant plus qu'il compte de points, jusqu'à un plafond. La durée ne décrémente qu'une fois qu'ils ont attaqué. » — EN : « • ❄️ Freeze: reduces their next attack, more with each point, up to a cap. The duration only ticks down once they have attacked. » ; et FR « …et baisse tant qu'il est Gelé. » — EN « …and drops while they are Frozen. » ; partie 1, avec le barème |
 
 ---
