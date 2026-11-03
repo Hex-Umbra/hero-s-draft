@@ -67,7 +67,7 @@ Cinq modes d'échec que la spec implique pour la partie 2 et qu'aucun test ne ga
 | Compte rendu §4 — `scaleTerm` lit une cible morte pour `targetStatus` et `targetMissingHp` (`effect_resolver.dart:235-236`) | Task 4 : une cible à `currentPv <= 0` vaut 0, `scale_with_test` |
 | Compte rendu §4 — `ProportionalStatus` sous `lib/game/services/`, importé par `lib/models/enemy_instance.dart` | Hors de cette partie : aucune tâche ne touche `enemy_instance.dart` ni `proportional_status.dart`. Au Review Focus de la partie 3, ou à la file de la clôture |
 | Compte rendu §4 — éclaboussure à plusieurs coups ; une cible `allEnemies` qui meurt au premier coup | Task 5, `multi_hit_test`, avec *Rafale d'étincelles* |
-| Compte rendu §4 — `takeDamage` sans test direct : l'Armure absorbée sur plusieurs coups, le plafond à 100 % | L'Armure sur plusieurs coups : Task 5, `multi_hit_test` « Rafale d etincelles : l Armure de la cible absorbe coup apres coup ». Le plafond (`p = min(100, …)`, partie 1) n'a pas de lecteur au-delà de 100 en `0.5.7` : `piercing` plafonne à 4 (100 %) et *Transcendance* ne le relève pas à 4 (A22) ; « Perforant 4 : toute l Armure ignoree, et gardee » (`rune_resolution_test`, partie 1) tient la borne atteinte |
+| Compte rendu §4 — `takeDamage` sans test direct : l'Armure absorbée sur plusieurs coups, le plafond à 100 % | L'Armure sur plusieurs coups : Task 5, `multi_hit_test` « Rafale d etincelles : l Armure de la cible absorbe coup apres coup ». Le plafond (`p = min(100, …)`, partie 1) n'a pas de lecteur au-delà de 100 en `0.5.7` : `piercing` plafonne à 4 (100 %) et *Transcendance* ne le relève pas au-delà de 4 (A22) ; « Perforant 4 : toute l Armure ignoree, et gardee » (`rune_resolution_test`, partie 1) tient la borne atteinte |
 | Compte rendu §4 — les gardes de D38 vides tant qu'aucune carte ne porte `hits` | Task 5 : *Rafale d'étincelles* les rend mordantes, sans retouche du test |
 | Compte rendu §4 — la ligne Flame vide sans contexte | Task 4 : les textes passent par `CardRuleTexts`, testé avec une vraie `AppLocalizations` ; sans `buildContext`, `getTranslation` rend `''` et la ligne ne s'écrit pas (la règle de la partie 1) ; la face Flame au test manuel |
 | `audio_catalogue_test.dart:38-52` : `Directory('assets/data/cards').listSync()` ne descend pas dans les dossiers de lot, dont les cartes peuvent porter un `sfx` | Task 5 : `recursive: true`, 71 fichiers |
@@ -238,8 +238,8 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 
 **Files:**
 - Create: `lib/models/data/passive_feeds.dart`, `lib/models/data/lot_rules.dart`, `test/unit/lot_rules_test.dart`
-- Modify: `lib/models/data/passive_data.dart:116-139`, `:192-208` (`_copyWith`), `:210-261` (`fromJson`) ; les neuf `assets/data/passives/*.json` ; `lib/services/content_editor/entity_descriptor.dart:298-334` (descripteur de passif)
-- Test: `test/unit/passive_data_test.dart`, `test/unit/referential_integrity_test.dart`, `test/unit/content_editor/fixtures.dart:42-51`, `test/unit/content_editor/entity_descriptor_test.dart:274-283`, `:347-351`, `test/unit/content_editor/entity_validator_test.dart:423-470`, `test/widget/content_editor/document_form_test.dart:155-161`
+- Modify: `lib/services/content_editor/class_recipe.dart:108-113` (commentaire) ; `lib/models/data/passive_data.dart:116-139`, `:192-208` (`_copyWith`), `:210-261` (`fromJson`) ; les neuf `assets/data/passives/*.json` ; `lib/services/content_editor/entity_descriptor.dart:298-334` (descripteur de passif)
+- Test: `test/unit/passive_data_test.dart`, `test/unit/referential_integrity_test.dart`, `test/unit/content_editor/fixtures.dart:42-51`, `test/unit/content_editor/entity_descriptor_test.dart:274-283`, `:347-351`, `test/unit/content_editor/entity_validator_test.dart:423-470`, `test/widget/content_editor/document_form_test.dart:155-161`, `test/widget/content_editor_screen_test.dart:695-696` (commentaire)
 
 **Interfaces:**
 - Produces :
@@ -253,7 +253,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
   - `abstract final class LotRules` (`lot_rules.dart`) :
     - `static bool convertsArmor(HeroData hero)` — une `statRules` de `stat == RuleStat.armor` et `mode == RuleMode.convert` (A7, lu sur la règle et non sur l'id `berserker`) ;
     - `static List<String> faultsOf(CardData card, {required PassiveData passive, HeroData? heroClass})` — vide si la carte est bonne ; sinon, dans cet ordre, « ne touche aucune entrée de `feeds` de `<passive.id>` » (D45) et, si `card.armorCost > 0` et `heroClass` convertit l'Armure, « coûte de l'Armure sous `<heroClass.id>`, qui convertit son Armure » (A7). Aucune règle sur `hpCost` (D40). Lue par `card_catalog_test` (Task 5) et le validateur de l'éditeur (Task 9).
-  - Le descripteur de passif : `requiredKeys` gagne `classes` et `feeds` ; le gabarit gagne `"classes": ["paladin"]` et `"feeds": ["armor"]` ; le commentaire « Absente du gabarit : sans `classes`, le passif est ouvert à toutes les classes » disparaît, celui de `displayOrder` dit que la disponibilité exige aussi un lot (O5). `ClassRecipe._starterPassiveMechanics` (`class_recipe.dart:114-120`) remplace déjà `classes` : inchangé.
+  - Le descripteur de passif : `requiredKeys` gagne `classes` et `feeds` ; le gabarit gagne `"classes": ["paladin"]` et `"feeds": ["armor"]` ; le commentaire « Absente du gabarit : sans `classes`, le passif est ouvert à toutes les classes » disparaît, celui de `displayOrder` dit que la disponibilité exige aussi un lot (O5). `ClassRecipe._starterPassiveMechanics` (`class_recipe.dart:114-120`) remplace déjà `classes` : son code ne change pas, mais son commentaire (`:108-113`, « Sans elle, le passif serait ouvert a **toutes** les classes ») et son pendant de test (`content_editor_screen_test.dart:695-696`) deviennent faux sous A5 ; ils disent désormais que sans `classes` le chargement échoue (A5), et que la recette remplace le `["paladin"]` du gabarit par la classe créée.
 
 Les neuf `feeds`, à écrire après `classes` dans chaque fichier, mot pour mot (spec §3.3) :
 
@@ -395,7 +395,7 @@ Tâche d'interface : les noms et textes de dix-sept cartes arrivent à l'écran 
 - Create: les 17 fichiers du tableau ci-dessous
 - Move: `git mv assets/data/cards/demon_form.json assets/data/cards/rage/demon_form.json` (contenu inchangé, `mkdir -p` du dossier d'abord)
 - Delete: `git rm assets/data/cards/focus.json`
-- Modify: `pubspec.yaml` (section `assets:`, par `dart run tool/sync_assets.dart`) ; `CLAUDE.md:78-79`, `:89` ; `README.md:69`, `:93-94`
+- Modify: `pubspec.yaml` (section `assets:`, par `dart run tool/sync_assets.dart`) ; `CLAUDE.md:78-79`, `:89` ; `README.md:69`, `:93-96`
 - Test: `test/unit/card_catalog_test.dart`, `test/unit/forge_upgrades_catalog_test.dart:227-279`, `:281`, `:359-361`, `test/unit/multi_hit_test.dart`, `test/widget/ui_card_values_test.dart`, `test/unit/real_bundle_load_test.dart:36`, `:97`, `test/unit/entity_id_convention_test.dart:67-77`, `test/unit/audio/audio_catalogue_test.dart:38-52`, `test/tutorial/tutorial_engine_test.dart:564-577`
 
 **Interfaces:**
@@ -424,7 +424,7 @@ Tâche d'interface : les noms et textes de dix-sept cartes arrivent à l'écran 
 | `mana_flux/frost_nova.json` | Nova de givre / Frost Nova | `"cost": 2` | skill, allEnemies, ice | `apply_status` `freeze` 2, `duration` 1 | « Applique 2 Gel à tous les ennemis. » / « Apply 2 Freeze to all enemies. » |
 | `mana_flux/discharge.json` | Décharge / Discharge | `"cost": 3` | skill, singleEnemy, lightning | `damage` 12 ; puis `apply_status` `vulnerable` 2, `duration` 2 | « Inflige 12 dégâts. Applique 2 Vulnérable pendant 2 tours. » / « Deal 12 damage. Apply 2 Vulnerable for 2 turns. » |
 
-**La documentation** (spec §11) : `CLAUDE.md`, après l'entrée des neutres (`:78-79`, deux lignes), `├── cards/<passive>/<id>.json         # lot cards: the folder is the passive` ; `CLAUDE.md:89`, « …and so do `heroClass` and `category` in a card file » devient « …and so do `heroClass`, `category` and `passive` in any card file » ; `README.md:69`, `├── cards/<passif>/<id>.json      # carte de lot : le dossier est le passif` ; `README.md:93-94`, la note gagne `passive` dans tout fichier de carte.
+**La documentation** (spec §11) : `CLAUDE.md`, après l'entrée des neutres (`:78-79`, deux lignes), `├── cards/<passive>/<id>.json         # lot cards: the folder is the passive` ; `CLAUDE.md:89`, « …and so do `heroClass` and `category` in a card file » devient « …and so do `heroClass`, `category` and `passive` in any card file » ; après `README.md:69`, `├── cards/<passif>/<id>.json      # carte de lot : le dossier est le passif` ; la note de `README.md:93-96` (la carte nommée en `:95`) gagne `passive` dans tout fichier de carte.
 
 - [ ] **Step 1: Écrire les tests qui échouent**
 
@@ -456,7 +456,7 @@ Le test « la matrice couvre les 17 cartes livrees » devient « … les 33 cart
 `multi_hit_test.dart`, groupe `resolution` (le Mage, Puissance 0) :
 - `Rafale d etincelles et Ricochant : chaque coup eclabousse` — trois ennemis à 100 ; la carte livrée `spark_barrage` + `splash:1` : la cible finit à 88 (l'Électrocution posée d'abord, 3 + 1 par coup), chacun des deux autres à 97 (1 par coup, le plancher).
 - `allEnemies : un ennemi mort au premier coup ne recoit pas le second` — héros à 50 sous Vol de vie (statut) à 99, ennemis à 100 et à 2 PV, carte `allEnemies [damage 3 hits 2 0.5]` : (94, 0), héros à 59 (trois coups comptés, pas quatre).
-- `Rafale d etincelles : l Armure de la cible absorbe coup apres coup` — un ennemi à 100 PV et 5 Armure ; la carte livrée `spark_barrage` sans rune : chaque coup vaut 4 (3 + l'Électrocution posée d'abord) ; après le premier, (100 PV, 1 Armure) ; le deuxième prend la dernière Armure puis 3 PV, le troisième 4 PV : l'ennemi finit à (93 PV, 0 Armure). L'aide `foe` gagne un paramètre `armor`.
+- `Rafale d etincelles : l Armure de la cible absorbe coup apres coup` — un ennemi à 100 PV et 5 Armure ; la carte livrée `spark_barrage` sans rune : assertion : l'état final, (93 PV, 0 Armure) ; le détail coup par coup en est le calcul — chaque coup vaut 4 (3 + l'Électrocution posée d'abord), le premier laisse 1 Armure, le deuxième la prend puis 3 PV, le troisième 4 PV. L'aide `foe` gagne un paramètre `armor`.
 
 `ui_card_values_test.dart` :
 - `les cartes livrees se rendent : Percee montre son medaillon d Armure, Rafale d etincelles son 3×3` — `registry.cards` livré (`loadGameDataRegistry`) : `breach` montre deux `CardCostMedallion` (`'0'`, `'4'`) ; `spark_barrage` montre `_body('3×3')`.
@@ -995,13 +995,13 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 9.
 
 **Files:**
-- Modify: `lib/tutorial/tutorial_fixtures.dart:66-70` ; `lib/models/data/card_data.dart:443-448` (le commentaire de `compareByDisplayOrder`) ; `lib/tutorial/widgets/tutorial_starter_deck_widget.dart:9-95` ; `lib/tutorial/tutorial_data.dart:36-37`, `:43-44` ; `lib/tutorial/tutorial_engine.dart:237-275` (la leçon), `:367-374` (`playCard`)
+- Modify: `lib/tutorial/tutorial_fixtures.dart:66-70` ; `lib/models/data/card_data.dart:306-308` et `:443-448` (les commentaires d'`isOfferable` et de `compareByDisplayOrder`) ; `lib/tutorial/widgets/tutorial_starter_deck_widget.dart:9-95` ; `lib/tutorial/tutorial_data.dart:36-37`, `:43-44` ; `lib/tutorial/tutorial_engine.dart:237-275` (la leçon), `:367-374` (`playCard`)
 - Test: `test/widget/tutorial_starter_draft_test.dart`, `test/tutorial/tutorial_engine_test.dart`, `test/tutorial/tutorial_fixtures_test.dart:123-130`, `test/tutorial/tutorial_prose_test.dart`
 
 **Interfaces:**
 - Consumes : `StarterDraft` (Task 7) ; `CostRules.canPay` (partie 1).
 - Produces :
-  - `StarterDraft TutorialFixtures.starterDraft(String? activePassiveId) => StarterDraft.of(registry.cards, activePassiveId)` — remplace `starterPool` (Task 2) ; ses lecteurs de test passent à `starterDraft(…).pool`. Le commentaire de `CardData.compareByDisplayOrder` (`card_data.dart:446`), qui nomme `TutorialFixtures.starterPool`, nomme `StarterDraft`, que lisent l'écran du draft et le tutoriel.
+  - `StarterDraft TutorialFixtures.starterDraft(String? activePassiveId) => StarterDraft.of(registry.cards, activePassiveId)` — remplace `starterPool` (Task 2) ; ses lecteurs de test passent à `starterDraft(…).pool`. Les commentaires de `CardData.isOfferable` (`card_data.dart:306-307`, réécrit en Task 2 sur ses quatre lecteurs) et de `CardData.compareByDisplayOrder` (`:446`), qui nomment `TutorialFixtures.starterPool`, nomment `StarterDraft` : le premier dit boutique, trouvaille et `StarterDraft` (que lisent le draft de départ et le tutoriel), le second l'écran du draft et le tutoriel par `StarterDraft`.
   - `TutorialStarterDeckWidget` : le draft de `fixtures.starterDraft(engine.mockState.activePassive?.id)` ; « Choisissez 5 cartes » et `'n / 5'` (`:55-70`) cèdent la place aux deux sections et à leurs compteurs, mêmes clés que le jeu (`draftDeckLotSection`, `draftDeckNeutralSection`, `draftDeckQuota`) ; une carte refusée au-delà de son quota ne se sélectionne pas (sans notification : le tutoriel n'en a pas) ; `setStarterDeck(isComplete ? sélection : [])`. Le commentaire de tête dit que le pool est celui de `StarterDeckDraftScreen`, par `StarterDraft`. Le bandeau des signatures ne change pas.
   - L'étape « Votre deck de départ » : la première phrase devient celle de spec §6.2, **mot pour mot** — FR « Choisissez 2 cartes du lot de votre passif et 3 cartes neutres : elles forment votre deck de départ, celui avec lequel vous jouerez le reste du tutoriel. » ; EN « Pick 2 cards from your passive's set and 3 neutral cards: they form your starting deck, the one you will play the rest of the tutorial with. » La suite, sur les signatures, ne change pas.
   - A30 : `_isEnemyTargetingAttack` et `_isArmorGivingSkill` écartent une carte « à mécanisme » — `hpCost > 0`, `armorCost > 0`, ou un effet à `hits ≥ 2` ou à `scaleWith` —, par un prédicat privé du moteur ; le repli sur les fixtures existe déjà.
@@ -1014,7 +1014,7 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 9.
 - Réécrits, même compte : « le compteur démarre à 0/5 » → « les compteurs demarrent a 0/2 et 0/3 » ; « sélectionner 1 seule carte laisse le deck vide » → une carte du lot, `'1/2'`, deck vide ; « selectionner 5 cartes remplit le deck » → deux du lot, trois neutres, `'2/2'`, `'3/3'`, deck de 5 sans signature ; « la sélection est bornée à 5 » → « … bornee par les quotas » : trois cartes du lot et quatre neutres touchées, `'2/2'`, `'3/3'`, deck de 5.
 
 `tutorial_engine_test.dart`, groupe « Semis des étapes Fusion et Jouer des cartes » :
-- `la lecon ecarte une carte a couts, a coups ou a scaleWith` — deck `[bloodletting, rampart_slam, <Attaque construite singleEnemy [damage 2, hits 2, mightRatio 0.5]>, fortify]` (le coût en PV, la croissance, les coups) : la main semée est `[strike_basic, defend_basic]` ; deck `[breach, spark_barrage, iron_wall]` : la main n'a ni `breach` ni `spark_barrage` (repli sur les fixtures).
+- `la lecon ecarte une carte a couts, a coups ou a scaleWith` — deck `[bloodletting, rampart_slam, <Attaque construite singleEnemy [damage 2, hits 2, mightRatio 0.5]>, iron_wall]` : la main semée est `[strike_basic, defend_basic]` — *Défense de fer* est une Compétence d'Armure valide, seule l'attaque manque ; chaque critère oublié (coût en PV, croissance, coups) ferait entrer sa carte en main à côté d'elle (`tutorial_engine.dart:247-275`, `attack ??=`, `armorSkill ??=`) ; deck `[breach, heavy_strike, fortify, iron_wall]` : la main semée est `[heavy_strike, iron_wall]` — `armorCost` écarte *Percée* des attaques, le `scaleWith` de *Fortification* l'écarte des Compétences d'Armure.
 
 `tutorial_prose_test.dart` :
 - `l etape du deck de depart dit 2 du lot et 3 neutres` — `TutorialStepType.starterDeck` : `bodyFr` et `bodyEn` commencent par les phrases ci-dessus, mot pour mot.
@@ -1024,7 +1024,7 @@ Réécrits, même compte : `tutorial_fixtures_test.dart:123-130` — « le pool 
 - [ ] **Step 2: Lancer les tests, constater l'échec**
 
 Run: `flutter test test/widget/tutorial_starter_draft_test.dart test/tutorial/`
-Expected: échec — `starterDraft` n'existe pas, la leçon garde `rampart_slam`, la prose dit « 5 cartes ».
+Expected: échec — `starterDraft` n'existe pas, la leçon garde `bloodletting` (la première Attaque `singleEnemy` du deck, `tutorial_engine.dart:250-253`), la prose dit « 5 cartes ».
 
 - [ ] **Step 3: Implémenter** — les fixtures, le widget, la prose, la leçon, `playCard`. `tutorial_isolation_test.dart` reste vert : `starter_draft.dart` et `cost_rules.dart` n'importent pas Riverpod.
 
@@ -1128,7 +1128,7 @@ Aucun fichier modifié : des commandes, jouées par l'orchestrateur, sans agent.
   - `dart run tool/sync_assets.dart --check` → code de sortie 0.
 - [ ] **Step 5: Les greps propres à la partie 2**
   - `git grep -n '"passive"' -- assets/data/cards` → rien (le répertoire impose `passive`).
-  - `git grep -nE "isOfferable[^(]" -- lib test` → rien qu'en commentaire ou en nom de groupe de test (`card_offer_filter_test.dart:34`, `group('CardData.isOfferable', …)`) : le prédicat prend toujours le passif actif.
+  - `git grep -nE "isOfferable[^(]" -- lib test` → rien qu'en commentaire, ou en titre de groupe ou de test (`card_offer_filter_test.dart:34`, `group('CardData.isOfferable', …)` ; `starter_deck_draft_screen_test.dart:290`, « le pool du draft de depart est celui d isOfferable … ») : le prédicat prend toujours le passif actif.
   - `git grep -n "starterPool\|supportsHeroClass\|draftDeckSnackbarMax\b\|CardManaMedallion" -- lib test` → rien.
   - `git grep -n "'focus'" -- lib test` → rien.
   - `git diff --name-only 1b2008e -- assets/data` → exactement les dix-sept cartes neuves, `cards/rage/demon_form.json`, `cards/demon_form.json` et `cards/focus.json` (supprimées) et les neuf `passives/*.json`.
