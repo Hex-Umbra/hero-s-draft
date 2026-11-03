@@ -995,7 +995,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 9.
 
 **Files:**
-- Modify: `lib/tutorial/tutorial_fixtures.dart:66-70` ; `lib/models/data/card_data.dart:306-308` et `:443-448` (les commentaires d'`isOfferable` et de `compareByDisplayOrder`) ; `lib/tutorial/widgets/tutorial_starter_deck_widget.dart:9-95` ; `lib/tutorial/tutorial_data.dart:36-37`, `:43-44` ; `lib/tutorial/tutorial_engine.dart:237-275` (la leçon), `:367-374` (`playCard`)
+- Modify: `lib/tutorial/tutorial_fixtures.dart:66-70` ; `lib/models/data/card_data.dart:306-307` et `:443-448` (les commentaires d'`isOfferable` et de `compareByDisplayOrder`) ; `lib/tutorial/widgets/tutorial_starter_deck_widget.dart:9-95` ; `lib/tutorial/tutorial_data.dart:36-37`, `:43-44` ; `lib/tutorial/tutorial_engine.dart:237-275` (la leçon), `:367-374` (`playCard`)
 - Test: `test/widget/tutorial_starter_draft_test.dart`, `test/tutorial/tutorial_engine_test.dart`, `test/tutorial/tutorial_fixtures_test.dart:123-130`, `test/tutorial/tutorial_prose_test.dart`
 
 **Interfaces:**
@@ -1014,7 +1014,7 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 9.
 - Réécrits, même compte : « le compteur démarre à 0/5 » → « les compteurs demarrent a 0/2 et 0/3 » ; « sélectionner 1 seule carte laisse le deck vide » → une carte du lot, `'1/2'`, deck vide ; « selectionner 5 cartes remplit le deck » → deux du lot, trois neutres, `'2/2'`, `'3/3'`, deck de 5 sans signature ; « la sélection est bornée à 5 » → « … bornee par les quotas » : trois cartes du lot et quatre neutres touchées, `'2/2'`, `'3/3'`, deck de 5.
 
 `tutorial_engine_test.dart`, groupe « Semis des étapes Fusion et Jouer des cartes » :
-- `la lecon ecarte une carte a couts, a coups ou a scaleWith` — deck `[bloodletting, rampart_slam, <Attaque construite singleEnemy [damage 2, hits 2, mightRatio 0.5]>, iron_wall]` : la main semée est `[strike_basic, defend_basic]` — *Défense de fer* est une Compétence d'Armure valide, seule l'attaque manque ; chaque critère oublié (coût en PV, croissance, coups) ferait entrer sa carte en main à côté d'elle (`tutorial_engine.dart:247-275`, `attack ??=`, `armorSkill ??=`) ; deck `[breach, heavy_strike, fortify, iron_wall]` : la main semée est `[heavy_strike, iron_wall]` — `armorCost` écarte *Percée* des attaques, le `scaleWith` de *Fortification* l'écarte des Compétences d'Armure.
+- `la lecon ecarte une carte a couts, a coups ou a scaleWith` — deck `[bloodletting, rampart_slam, <Attaque construite singleEnemy [damage 2, hits 2, mightRatio 0.5]>, iron_wall]` : la main semée est `[strike_basic, defend_basic]` — *Mur de fer* est une Compétence d'Armure valide, seule l'attaque manque ; chaque critère oublié (coût en PV, croissance, coups) ferait entrer sa carte en main à côté d'elle (`tutorial_engine.dart:247-275`, `attack ??=`, `armorSkill ??=`) ; deck `[breach, heavy_strike, fortify, iron_wall]` : la main semée est `[heavy_strike, iron_wall]` — `armorCost` écarte *Percée* des attaques, le `scaleWith` de *Fortification* l'écarte des Compétences d'Armure.
 
 `tutorial_prose_test.dart` :
 - `l etape du deck de depart dit 2 du lot et 3 neutres` — `TutorialStepType.starterDeck` : `bodyFr` et `bodyEn` commencent par les phrases ci-dessus, mot pour mot.
@@ -1024,7 +1024,7 @@ Réécrits, même compte : `tutorial_fixtures_test.dart:123-130` — « le pool 
 - [ ] **Step 2: Lancer les tests, constater l'échec**
 
 Run: `flutter test test/widget/tutorial_starter_draft_test.dart test/tutorial/`
-Expected: échec — `starterDraft` n'existe pas, la leçon garde `bloodletting` (la première Attaque `singleEnemy` du deck, `tutorial_engine.dart:250-253`), la prose dit « 5 cartes ».
+Expected: échec de compilation de `tutorial_engine_test`, `tutorial_fixtures_test` et `tutorial_starter_draft_test` (`starterDraft` n'existe pas) ; la prose dit « 5 cartes » ; une fois `starterDraft` écrit, la leçon garde encore `bloodletting` (la première Attaque `singleEnemy` du deck, `tutorial_engine.dart:250-253`).
 
 - [ ] **Step 3: Implémenter** — les fixtures, le widget, la prose, la leçon, `playCard`. `tutorial_isolation_test.dart` reste vert : `starter_draft.dart` et `cost_rules.dart` n'importent pas Riverpod.
 
@@ -1128,7 +1128,7 @@ Aucun fichier modifié : des commandes, jouées par l'orchestrateur, sans agent.
   - `dart run tool/sync_assets.dart --check` → code de sortie 0.
 - [ ] **Step 5: Les greps propres à la partie 2**
   - `git grep -n '"passive"' -- assets/data/cards` → rien (le répertoire impose `passive`).
-  - `git grep -nE "isOfferable[^(]" -- lib test` → rien qu'en commentaire, ou en titre de groupe ou de test (`card_offer_filter_test.dart:34`, `group('CardData.isOfferable', …)` ; `starter_deck_draft_screen_test.dart:290`, « le pool du draft de depart est celui d isOfferable … ») : le prédicat prend toujours le passif actif.
+  - `git grep -nE "isOfferable[^(]" -- lib test` → rien qu'en commentaire, ou en titre de groupe ou de test (`card_offer_filter_test.dart:34`, `group('CardData.isOfferable', …)` ; `starter_deck_draft_screen_test.dart`, le test « le pool du draft de depart est celui d isOfferable » (`:290` avant la Task 2), « le pool du draft de depart est celui d isOfferable … ») : le prédicat prend toujours le passif actif.
   - `git grep -n "starterPool\|supportsHeroClass\|draftDeckSnackbarMax\b\|CardManaMedallion" -- lib test` → rien.
   - `git grep -n "'focus'" -- lib test` → rien.
   - `git diff --name-only 1b2008e -- assets/data` → exactement les dix-sept cartes neuves, `cards/rage/demon_form.json`, `cards/demon_form.json` et `cards/focus.json` (supprimées) et les neuf `passives/*.json`.
