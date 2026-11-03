@@ -17,6 +17,7 @@ import 'package:roguelike_card_game/ui/widgets/class_identity.dart';
 import 'package:roguelike_card_game/ui/widgets/signature_tile.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
+import '../unit/lot_card_fixture.dart';
 
 const _heroes = [
   HeroData(
@@ -346,10 +347,16 @@ GameDataRegistry _registryOf(
   List<HeroData> heroes, {
   List<PassiveData> passives = const [],
   List<SignatureData> signatures = const [],
+  Set<String> withoutLot = const {},
 }) => GameDataRegistry(
   enemies: const [],
   heroes: heroes,
-  cards: const [],
+  // Un passif n'est disponible que pourvu d'un lot (O5) : chacun reçoit une
+  // carte de lot, sauf ceux que le test veut masquer.
+  cards: [
+    for (final passive in passives)
+      if (!withoutLot.contains(passive.id)) lotCardFor(passive.id),
+  ],
   events: const [],
   passives: passives,
   relics: const [],
@@ -363,6 +370,7 @@ Future<ProviderContainer> _buildAndReady(
   List<HeroData> heroes = _heroes,
   List<PassiveData> passives = const [],
   List<SignatureData> signatures = const [],
+  Set<String> withoutLot = const {},
   Size physicalSize = const Size(1600, 1200),
   // Axe non modelise par le reste de ce fichier avant le defaut 4 du
   // 2026-09-19 : aucun test ici ne fixait de `textScaler`, alors que c'est
@@ -384,7 +392,12 @@ Future<ProviderContainer> _buildAndReady(
   final container = ProviderContainer(
     overrides: [
       gameDataLoaderProvider.overrideWith(
-        (ref) => _registryOf(heroes, passives: passives, signatures: signatures),
+        (ref) => _registryOf(
+          heroes,
+          passives: passives,
+          signatures: signatures,
+          withoutLot: withoutLot,
+        ),
       ),
     ],
   );
@@ -768,6 +781,20 @@ void main() {
       await _appuyerSurLaCarte(tester, 'Berserker');
       expect(_dansLaCarte('Berserker', find.text('Ward')), findsNothing);
       expect(_dansLaCarte('Berserker', find.text('Aegis')), findsOneWidget);
+    });
+
+    testWidgets('un passif sans carte de lot n est pas propose (O5)', (
+      WidgetTester tester,
+    ) async {
+      await _buildAndReady(
+        tester,
+        passives: const [ward, aegis],
+        withoutLot: const {'aegis'},
+      );
+
+      await _appuyerSurLaCarte(tester, 'Paladin');
+      expect(_dansLaCarte('Paladin', find.text('Ward')), findsOneWidget);
+      expect(find.text('Aegis'), findsNothing);
     });
   });
 

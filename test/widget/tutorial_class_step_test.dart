@@ -7,13 +7,18 @@ import 'package:roguelike_card_game/tutorial/widgets/tutorial_class_choice_widge
 
 import '../tutorial/tutorial_test_registry.dart';
 
-Future<TutorialEngine> _pump(WidgetTester tester) async {
+Future<TutorialEngine> _pump(
+  WidgetTester tester, {
+  Set<String> openedPassives = const {},
+}) async {
   tester.view.physicalSize = const Size(1600, 1200);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final engine = TutorialEngine(data: await buildTutorialTestRegistry());
+  final engine = TutorialEngine(
+    data: await buildTutorialTestRegistry(openedPassives: openedPassives),
+  );
   engine.prepareStep(0);
 
   await tester.pumpWidget(
@@ -82,7 +87,7 @@ void main() {
   });
 
   testWidgets('toucher un passif deplie le retient', (tester) async {
-    final engine = await _pump(tester);
+    final engine = await _pump(tester, openedPassives: const {'mage_mark'});
 
     await tester.tap(find.text('Le Mage'));
     await tester.pumpAndSettle();
@@ -102,7 +107,7 @@ void main() {
     // rappelait chooseHero sans condition. Retaper le nom d'une carte deja
     // choisie (un geste plausible en comparant les classes) reinitialisait
     // donc silencieusement le passif retenu sur le premier de la classe.
-    final engine = await _pump(tester);
+    final engine = await _pump(tester, openedPassives: const {'mage_mark'});
 
     await tester.tap(find.text('Le Mage'));
     await tester.pumpAndSettle();
@@ -129,7 +134,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(engine.mockState.chosenHero?.id, 'mage');
-    expect(engine.mockState.activePassive?.id, 'channeling');
+    expect(engine.mockState.activePassive?.id, 'mana_flux');
     expect(engine.mockState.heroStats.maxPv, 60);
   });
 }

@@ -44,11 +44,12 @@ void main() {
     test('le premier passif de chaque classe est son choix par defaut', () {
       // Le premier par rang d'affichage : celui avec lequel la carte de
       // classe s'affiche repliee, et celui que `chooseHero` retient tant que
-      // le joueur n'en designe pas un autre.
+      // le joueur n'en designe pas un autre. Le Mage demarre sur Flux de
+      // Mana : le seul de ses passifs pourvu d'un lot (O5).
       const attendus = {
         'paladin': 'regen_armor',
         'berserker': 'rage',
-        'mage': 'channeling',
+        'mage': 'mana_flux',
       };
       for (final hero in fixtures.heroes) {
         expect(fixtures.passivesFor(hero).first.id, attendus[hero.id]);

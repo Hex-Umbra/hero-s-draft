@@ -1,11 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 
-/// Le point d'accès unique aux passifs d'une classe (spec P-49, §4).
+import 'lot_card_fixture.dart';
+
+/// Le point d'accès unique aux passifs d'une classe (spec P-49, §4) :
+/// disponible vaut éligible et pourvu d'un lot (spec P-42 T1 et P-44 lot 1,
+/// §4.8, O5).
 void main() {
   const paladin = HeroData(
     id: 'paladin',
@@ -34,10 +39,15 @@ void main() {
         displayOrder: displayOrder,
       );
 
-  GameDataRegistry registryOf(List<PassiveData> passives) => GameDataRegistry(
+  /// Un registre dont chaque passif a son lot, sauf si [cards] est donné.
+  GameDataRegistry registryOf(
+    List<PassiveData> passives, {
+    List<CardData>? cards,
+  }) =>
+      GameDataRegistry(
         enemies: const [],
         heroes: const [paladin, mage],
-        cards: const [],
+        cards: cards ?? [for (final p in passives) lotCardFor(p.id)],
         events: const [],
         passives: passives,
         relics: const [],
@@ -80,12 +90,9 @@ void main() {
     final registry = registryOf([passive('zeal'), passive('aegis')]);
     availablePassivesFor(paladin, registry);
     expect(registry.passives.map((p) => p.id), ['zeal', 'aegis']);
+    expect(registry.cards.map((c) => c.id), ['lot_zeal', 'lot_aegis']);
   });
 
-  // Le lot C offrira le choix entre les trois passifs d'une classe ; d'ici la,
-  // l'ecran de selection prend le premier (`class_selection_screen.dart:158`).
-  // Ce rang est donc ce qui decide du passif de depart : il est declare, pas
-  // subi de l'ordre alphabetique.
   test('le rang d affichage passe avant l id', () {
     final registry = registryOf([
       passive('aegis', displayOrder: 3),
@@ -101,5 +108,53 @@ void main() {
       passive('aegis', displayOrder: 1),
     ]);
     expect(idsFor(paladin, registry), ['aegis', 'zeal']);
+  });
+
+  group('O5 : un passif sans lot n est pas disponible', () {
+    test('sans carte de lot, absent ; avec une, present', () {
+      final ward = passive('ward', classes: ['paladin']);
+      expect(idsFor(paladin, registryOf([ward], cards: const [])), isEmpty);
+      expect(
+        idsFor(paladin, registryOf([ward], cards: [lotCardFor('ward')])),
+        ['ward'],
+      );
+    });
+
+    test('la carte de lot d un autre passif ne l ouvre pas', () {
+      final registry = registryOf(
+        [
+          passive('ward', classes: ['paladin']),
+          passive('zeal', classes: ['paladin']),
+        ],
+        cards: [lotCardFor('zeal')],
+      );
+      expect(idsFor(paladin, registry), ['zeal']);
+    });
+
+    test('une carte de lot de type quelconque suffit', () {
+      for (final type in CardType.values) {
+        final registry = registryOf(
+          [passive('ward', classes: ['paladin'])],
+          cards: [lotCardFor('ward', type: type)],
+        );
+        expect(idsFor(paladin, registry), ['ward'], reason: type.name);
+      }
+    });
+
+    test('une neutre n ouvre aucun passif', () {
+      const neutral = CardData(
+        id: 'strike',
+        cost: 1,
+        type: CardType.attack,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [],
+      );
+      final registry = registryOf(
+        [passive('ward', classes: ['paladin'])],
+        cards: const [neutral],
+      );
+      expect(idsFor(paladin, registry), isEmpty);
+    });
   });
 }

@@ -204,12 +204,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Paladin garde la Regeneration d Armure en premier choix', () async {
+    test('le Paladin ne propose que la Regeneration d Armure, seule pourvue '
+        'd un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'paladin');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['regen_armor', 'fervor', 'blessing']);
+      expect(available, ['regen_armor']);
     });
 
     // D60 (spec P-43 E3, §3.6) : la tranche en donnée, la Maîtrise sur la

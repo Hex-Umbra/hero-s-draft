@@ -246,12 +246,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Berserker garde Rage en premier choix', () async {
+    test('le Berserker ne propose que Rage, seul pourvu d un lot (O5)',
+        () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'berserker');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['rage', 'bloodthirst', 'frenzy']);
+      expect(available, ['rage']);
     });
 
     test('berserker_armor n existe plus, ni en donnee ni en strategie', () async {

@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
+import '../unit/lot_card_fixture.dart';
+
 /// Registre bati sur les vraies donnees du depot, par le vrai chargeur.
 ///
 /// Les tests du tutoriel utilisent les vraies donnees plutot que des fixtures
@@ -19,5 +21,30 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 /// mais `cache: false` (`game_data_loader.dart`) rend chaque reconstruction
 /// sure — sans lui, le `Future` de lecture mis en cache dans la zone d un
 /// test deja termine ne se resoudrait jamais depuis le suivant.
-Future<GameDataRegistry> buildTutorialTestRegistry() =>
-    loadGameDataRegistry(rootBundle);
+///
+/// Le registre livré n'ouvre qu'un passif par classe (O5, spec P-42 T1 et
+/// P-44 lot 1, §4.8). [openedPassives] en ouvre d'autres, chacun par une
+/// carte de lot de test : un test qui change de passif garde ainsi un choix
+/// à faire, au lieu de « changer » pour le même.
+Future<GameDataRegistry> buildTutorialTestRegistry({
+  Set<String> openedPassives = const {},
+}) async {
+  final shipped = await loadGameDataRegistry(rootBundle);
+  if (openedPassives.isEmpty) return shipped;
+  return GameDataRegistry(
+    enemies: shipped.enemies,
+    heroes: shipped.heroes,
+    cards: [
+      ...shipped.cards,
+      for (final id in openedPassives) lotCardFor(id),
+    ],
+    events: shipped.events,
+    passives: shipped.passives,
+    relics: shipped.relics,
+    forgeUpgrades: shipped.forgeUpgrades,
+    levelUpRewards: shipped.levelUpRewards,
+    signatures: shipped.signatures,
+    xpCurve: shipped.xpCurve,
+    audio: shipped.audio,
+  );
+}

@@ -191,6 +191,40 @@ void main() {
     );
   });
 
+  // O5 (spec P-42 T1 et P-44 lot 1, §4.8) : la disponibilité se lit sur le
+  // registre. Aucun passif n'est nommé : la tranche qui livre un lot n'a
+  // rien à réécrire ici.
+  test('un passif est disponible pour sa classe si et seulement si il a un lot',
+      () {
+    final withLot = registry.cards.map((c) => c.passive).nonNulls.toSet();
+    final offenders = <String>[];
+    for (final hero in registry.heroes) {
+      final available =
+          availablePassivesFor(hero, registry).map((p) => p.id).toSet();
+      for (final passive in registry.passives) {
+        if (!(passive.classes?.contains(hero.id) ?? true)) continue;
+        if (available.contains(passive.id) != withLot.contains(passive.id)) {
+          offenders.add('${hero.id} → ${passive.id}');
+        }
+      }
+    }
+    expect(withLot, isNotEmpty);
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Le nom du dossier est l'id du passif (spec §3.2) : un dossier mal nommé
+  // ouvrirait un passif qui n'existe pas, et n'en ouvrirait aucun.
+  test('chaque dossier de cards/ est l id d un passif', () {
+    final passiveIds = registry.passives.map((p) => p.id).toSet();
+    final folders = [
+      for (final entity in Directory('assets/data/cards').listSync())
+        if (entity is Directory)
+          entity.uri.pathSegments.where((s) => s.isNotEmpty).last,
+    ];
+    expect(folders, isNotEmpty);
+    expect(folders.where((f) => !passiveIds.contains(f)), isEmpty);
+  });
+
   test('chaque id de skills est une signature de sa classe, rangee sous elle',
       () {
     final offenders = <String>[];
