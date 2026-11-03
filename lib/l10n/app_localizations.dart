@@ -1699,6 +1699,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signatures'**
   String get signatures;
+
+  /// No description provided for @statusWeaknessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% damage dealt per point, down to −{max}%'**
+  String statusWeaknessHint(int percent, int max);
+
+  /// No description provided for @statusVulnerableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% damage taken per point, up to +{max}%'**
+  String statusVulnerableHint(int percent, int max);
+
+  /// No description provided for @statusFreezeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% to the next attack per point, down to −{max}%'**
+  String statusFreezeHint(int percent, int max);
 }
 
 class _AppLocalizationsDelegate

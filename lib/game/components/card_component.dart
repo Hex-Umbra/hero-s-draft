@@ -8,6 +8,7 @@ import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import '../services/proportional_status.dart';
 import '../systems/power_rules.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
@@ -132,6 +133,13 @@ class CardComponent extends PositionComponent
       case CardType.status:
         return getTranslation((l) => l.cardTypeStatus, fallback: 'Statut');
     }
+  }
+
+  /// La parenthèse d'un statut proportionnel. Sans contexte, la traduction
+  /// est vide et aucune ligne n'est écrite : le texte n'a pas de copie ici.
+  String _statusHintLine(String Function(AppLocalizations) hint) {
+    final text = getTranslation(hint);
+    return text.isEmpty ? '' : '  ($text)\n';
   }
 
   Color getRarityColor() {
@@ -371,16 +379,16 @@ class CardComponent extends PositionComponent
           case 'weakness':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Réduit les dégâts infligés par l\'ennemi de 25%)\n'
-                : '  (Reduces damage dealt by the enemy by 25%)\n';
+            desc += _statusHintLine((l) => l.statusWeaknessHint(
+                ProportionalStatus.weakness.percentPerPoint,
+                ProportionalStatus.weakness.maxPercent));
             break;
           case 'vulnerable':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
-                : '  (Enemy takes 50% more damage from attacks)\n';
+            desc += _statusHintLine((l) => l.statusVulnerableHint(
+                ProportionalStatus.vulnerable.percentPerPoint,
+                ProportionalStatus.vulnerable.maxPercent));
             break;
           case 'might_regen':
             desc +=
@@ -396,9 +404,9 @@ class CardComponent extends PositionComponent
           case 'freeze':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Réduit les dégâts de la prochaine attaque de l\'ennemi de 50%)\n'
-                : '  (Reduces next enemy attack damage by 50%)\n';
+            desc += _statusHintLine((l) => l.statusFreezeHint(
+                ProportionalStatus.freeze.percentPerPoint,
+                ProportionalStatus.freeze.maxPercent));
             break;
           case 'shock':
             desc +=

@@ -456,7 +456,7 @@ void main() {
       String text(String id, int level) =>
           shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
       expect(text('burning', 3), 'Applique 3 Brûlure');
-      expect(text('freezing', 1), 'Applique 1 Gel');
+      expect(text('freezing', 1), 'Applique 2 Gel');
       expect(text('shocking', 2), 'Applique 2 Électrocution');
       expect(text('quick', 1), 'Pioche +1 carte(s)');
       expect(text('eco', 1), "Gagne +1 Mana à l'utilisation");

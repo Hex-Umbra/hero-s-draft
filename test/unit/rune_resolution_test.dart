@@ -6,6 +6,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/services/proportional_status.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -185,6 +186,18 @@ void main() {
         play(card('strike_basic', runes: const ['freezing:1']));
       }
       expect(enemyStatuses('freeze'), hasLength(1));
+    });
+
+    test('Trait de Glace pose 2 Gel : -50 %, l effet d avant', () {
+      play(card('ice_bolt'));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
+      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+    });
+
+    test('Congelant 1 pose 2 Gel : -50 %', () {
+      play(card('strike_basic', runes: const ['freezing:1']));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
+      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
     });
 
     test('Boule de Feu et Brulant 1 : une brulure de 3 pour 2 tours', () {

@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
+import '../game/services/proportional_status.dart';
 import 'entity_stats.dart';
 import 'data/enemy_data.dart';
 import 'enemy_intent.dart';
@@ -25,8 +26,9 @@ class EnemyInstance {
       int finalValue = (stats.effectiveMight > (scaledValue + inBattleBonus))
           ? stats.effectiveMight
           : (scaledValue + inBattleBonus);
-      if (stats.statuses.any((s) => s.id == 'freeze')) {
-        finalValue = (finalValue * 0.5).round();
+      final freezePercent = ProportionalStatus.freeze.percentOn(stats);
+      if (freezePercent > 0) {
+        finalValue = (finalValue * (100 - freezePercent) / 100).round();
       }
       return EnemyIntent(
         type: intent.type,

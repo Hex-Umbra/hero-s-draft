@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../game/services/proportional_status.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/status_effect.dart';
 import '../../ui/widgets/hud/status_effects_panel.dart';
 import '../tutorial_engine.dart';
@@ -7,18 +9,14 @@ import '../tutorial_engine.dart';
 class ElementStatusInfo {
   final IconData icon;
   final Color color;
-  final String nameEn;
-  final String nameFr;
-  final String descEn;
-  final String descFr;
+  final String name;
+  final String desc;
 
   const ElementStatusInfo({
     required this.icon,
     required this.color,
-    required this.nameEn,
-    required this.nameFr,
-    required this.descEn,
-    required this.descFr,
+    required this.name,
+    required this.desc,
   });
 }
 
@@ -38,87 +36,95 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   bool _gelActive = true;
   int _shockHits = 0;
 
-  static const List<ElementStatusInfo> _elements = [
-    ElementStatusInfo(
-      icon: Icons.science_rounded,
-      color: Colors.greenAccent,
-      nameEn: 'Poison',
-      nameFr: 'Poison',
-      descEn:
-          'Deals its value at the start of the turn. The value holds; the duration ticks down.',
-      descFr:
-          'Inflige sa valeur au début du tour. La valeur ne baisse pas ; la durée décrémente.',
-    ),
-    ElementStatusInfo(
-      icon: Icons.local_fire_department_rounded,
-      color: Colors.orangeAccent,
-      nameEn: 'Burn',
-      nameFr: 'Brûlure',
-      descEn: 'Deals its value at the start of the enemy turn, then loses 1.',
-      descFr: 'Inflige sa valeur au début du tour ennemi, puis perd 1.',
-    ),
-    ElementStatusInfo(
-      icon: Icons.ac_unit_rounded,
-      color: Colors.lightBlueAccent,
-      nameEn: 'Freeze',
-      nameFr: 'Gel',
-      descEn: 'Reduces the enemy\'s next attack damage by 50%.',
-      descFr: 'Réduit les dégâts de la prochaine attaque ennemie de 50%.',
-    ),
-    ElementStatusInfo(
-      icon: Icons.flash_on_rounded,
-      color: Colors.amberAccent,
-      nameEn: 'Shock',
-      nameFr: 'Électrocution',
-      descEn: 'Takes bonus damage on every card hit received.',
-      descFr: 'Subit des dégâts supplémentaires à chaque coup reçu.',
-    ),
-  ];
+  // Les entrées lisent la langue active : elles ne sont pas constantes, et le
+  // barème des statuts proportionnels vient de [ProportionalStatus].
+  static List<ElementStatusInfo> _elements(AppLocalizations l10n, bool isFrench) =>
+      [
+        ElementStatusInfo(
+          icon: Icons.science_rounded,
+          color: Colors.greenAccent,
+          name: 'Poison',
+          desc: isFrench
+              ? 'Inflige sa valeur au début du tour. La valeur ne baisse pas ; la durée décrémente.'
+              : 'Deals its value at the start of the turn. The value holds; the duration ticks down.',
+        ),
+        ElementStatusInfo(
+          icon: Icons.local_fire_department_rounded,
+          color: Colors.orangeAccent,
+          name: isFrench ? 'Brûlure' : 'Burn',
+          desc: isFrench
+              ? 'Inflige sa valeur au début du tour ennemi, puis perd 1.'
+              : 'Deals its value at the start of the enemy turn, then loses 1.',
+        ),
+        ElementStatusInfo(
+          icon: Icons.ac_unit_rounded,
+          color: Colors.lightBlueAccent,
+          name: isFrench ? 'Gel' : 'Freeze',
+          desc: l10n.statusFreezeHint(
+            ProportionalStatus.freeze.percentPerPoint,
+            ProportionalStatus.freeze.maxPercent,
+          ),
+        ),
+        ElementStatusInfo(
+          icon: Icons.flash_on_rounded,
+          color: Colors.amberAccent,
+          name: isFrench ? 'Électrocution' : 'Shock',
+          desc: isFrench
+              ? 'Subit des dégâts supplémentaires à chaque coup reçu.'
+              : 'Takes bonus damage on every card hit received.',
+        ),
+      ];
 
   // Les cinq autres statuts qui circulent en combat mais que la galerie
   // ci-dessus ne montre pas.
-  static const List<ElementStatusInfo> _missingStatuses = [
-    ElementStatusInfo(
-      icon: Icons.arrow_downward,
-      color: Colors.redAccent,
-      nameEn: 'Vulnerable',
-      nameFr: 'Vulnérable',
-      descEn: '+50% damage taken',
-      descFr: '+50 % de dégâts subis',
-    ),
-    ElementStatusInfo(
-      icon: Icons.arrow_downward,
-      color: Colors.redAccent,
-      nameEn: 'Weakness',
-      nameFr: 'Faiblesse',
-      descEn: '-25% damage dealt',
-      descFr: '-25 % de dégâts infligés',
-    ),
-    ElementStatusInfo(
-      icon: Icons.flash_on,
-      color: Colors.orangeAccent,
-      nameEn: 'Might',
-      nameFr: 'Puissance',
-      descEn: 'Adds to what your class strengthens',
-      descFr: 'S\'ajoute à ce que renforce votre classe',
-    ),
-    ElementStatusInfo(
-      icon: Icons.flash_on,
-      color: Colors.orangeAccent,
-      nameEn: 'Might Awakening',
-      nameFr: 'Éveil de Puissance',
-      descEn: 'Grants Might at the start of the turn',
-      descFr: 'Donne de la Puissance au début du tour',
-    ),
-    ElementStatusInfo(
-      icon: Icons.shield,
-      color: Colors.cyanAccent,
-      nameEn: 'Plated Armor',
-      nameFr: 'Métallisation',
-      descEn: 'Grants Armor at the start of the turn',
-      descFr: 'Donne de l\'Armure au début du tour',
-    ),
-  ];
+  static List<ElementStatusInfo> _missingStatuses(
+    AppLocalizations l10n,
+    bool isFrench,
+  ) =>
+      [
+        ElementStatusInfo(
+          icon: Icons.arrow_downward,
+          color: Colors.redAccent,
+          name: isFrench ? 'Vulnérable' : 'Vulnerable',
+          desc: l10n.statusVulnerableHint(
+            ProportionalStatus.vulnerable.percentPerPoint,
+            ProportionalStatus.vulnerable.maxPercent,
+          ),
+        ),
+        ElementStatusInfo(
+          icon: Icons.arrow_downward,
+          color: Colors.redAccent,
+          name: isFrench ? 'Faiblesse' : 'Weakness',
+          desc: l10n.statusWeaknessHint(
+            ProportionalStatus.weakness.percentPerPoint,
+            ProportionalStatus.weakness.maxPercent,
+          ),
+        ),
+        ElementStatusInfo(
+          icon: Icons.flash_on,
+          color: Colors.orangeAccent,
+          name: isFrench ? 'Puissance' : 'Might',
+          desc: isFrench
+              ? 'S\'ajoute à ce que renforce votre classe'
+              : 'Adds to what your class strengthens',
+        ),
+        ElementStatusInfo(
+          icon: Icons.flash_on,
+          color: Colors.orangeAccent,
+          name: isFrench ? 'Éveil de Puissance' : 'Might Awakening',
+          desc: isFrench
+              ? 'Donne de la Puissance au début du tour'
+              : 'Grants Might at the start of the turn',
+        ),
+        ElementStatusInfo(
+          icon: Icons.shield,
+          color: Colors.cyanAccent,
+          name: isFrench ? 'Métallisation' : 'Plated Armor',
+          desc: isFrench
+              ? 'Donne de l\'Armure au début du tour'
+              : 'Grants Armor at the start of the turn',
+        ),
+      ];
 
   @override
   void initState() {
@@ -259,7 +265,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   }
 
   // Galerie 2x2 des quatre effets élémentaires, avec leur simulation animée.
-  Widget _buildGallery(bool isFrench) {
+  Widget _buildGallery(List<ElementStatusInfo> elements, bool isFrench) {
     return Center(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -293,11 +299,11 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                 mainAxisSpacing: mainAxisSpacing,
                 childAspectRatio: childAspectRatio,
               ),
-              itemCount: _elements.length,
+              itemCount: elements.length,
               itemBuilder: (context, index) {
-                final element = _elements[index];
-                final name = isFrench ? element.nameFr : element.nameEn;
-                final desc = isFrench ? element.descFr : element.descEn;
+                final element = elements[index];
+                final name = element.name;
+                final desc = element.desc;
 
                 return Container(
                   padding: EdgeInsets.symmetric(
@@ -389,9 +395,9 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   }
 
   // Une ligne du tableau des statuts absents de la galerie.
-  Widget _buildStatusRow(ElementStatusInfo status, bool isFrench) {
-    final name = isFrench ? status.nameFr : status.nameEn;
-    final desc = isFrench ? status.descFr : status.descEn;
+  Widget _buildStatusRow(ElementStatusInfo status) {
+    final name = status.name;
+    final desc = status.desc;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -438,6 +444,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isFrench = Localizations.localeOf(context).languageCode == 'fr';
 
     return SingleChildScrollView(
@@ -448,7 +455,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
         children: [
           SizedBox(
             height: 300,
-            child: _buildGallery(isFrench),
+            child: _buildGallery(_elements(l10n, isFrench), isFrench),
           ),
           const SizedBox(height: 20),
           Text(
@@ -462,7 +469,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
           ),
           const SizedBox(height: 8),
-          ..._missingStatuses.map((status) => _buildStatusRow(status, isFrench)),
+          ..._missingStatuses(l10n, isFrench).map(_buildStatusRow),
           const SizedBox(height: 16),
           Text(
             isFrench

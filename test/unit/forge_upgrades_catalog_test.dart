@@ -51,10 +51,10 @@ Map<String, Object?> _rune({
       'weight': weight,
     };
 
-Map<String, Object?> _status(String statusId) => {
+Map<String, Object?> _status(String statusId, {int valuePerLevel = 1}) => {
       'type': 'addEffect',
       'effect': 'apply_status',
-      'valuePerLevel': 1,
+      'valuePerLevel': valuePerLevel,
       'statusId': statusId,
       'durationPerLevel': 1,
     };
@@ -108,8 +108,8 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'freezing': _rune(
     eligibleCardTypes: const ['attack'],
-    maxLevel: 1,
-    deltas: [_status('freeze')],
+    maxLevel: null,
+    deltas: [_status('freeze', valuePerLevel: 2)],
     weight: 80,
   ),
   'shocking': _rune(

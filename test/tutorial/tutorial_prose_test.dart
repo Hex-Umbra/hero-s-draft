@@ -163,4 +163,36 @@ void main() {
       expect(rendu, contains('200'));
     }
   });
+
+  test('le Gel ne se chiffre plus dans les etapes elements et enemies', () {
+    String body(TutorialStepType type, {required bool fr}) {
+      final step = kTutorialSteps.singleWhere((s) => s.type == type);
+      return fr ? step.bodyFr : step.bodyEn;
+    }
+
+    for (final type in [TutorialStepType.elements, TutorialStepType.enemies]) {
+      for (final fr in [true, false]) {
+        final text = body(type, fr: fr);
+        expect(text, isNot(contains('divise par deux')));
+        expect(text, isNot(contains('halves')));
+        expect(text, isNot(contains('%')));
+      }
+    }
+    expect(
+      body(TutorialStepType.elements, fr: true),
+      contains('• ❄️ Gel : réduit leur prochaine attaque, d\'autant plus '
+          'qu\'il compte de points, jusqu\'à un plafond. La durée ne '
+          'décrémente qu\'une fois qu\'ils ont attaqué.'),
+    );
+    expect(
+      body(TutorialStepType.elements, fr: false),
+      contains('• ❄️ Freeze: reduces their next attack, more with each point, '
+          'up to a cap. The duration only ticks down once they have '
+          'attacked.'),
+    );
+    expect(body(TutorialStepType.enemies, fr: true),
+        endsWith('et baisse tant qu\'il est Gelé.'));
+    expect(body(TutorialStepType.enemies, fr: false),
+        endsWith('and drops while they are Frozen.'));
+  });
 }

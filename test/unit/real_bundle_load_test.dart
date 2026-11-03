@@ -100,7 +100,7 @@ void main() {
     expect(registry.forgeUpgrades, hasLength(11));
     expect(
       registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),
-      ['cheap', 'eco', 'enduring', 'freezing', 'quick'],
+      ['cheap', 'eco', 'enduring', 'quick'],
     );
     expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));

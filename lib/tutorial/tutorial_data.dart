@@ -224,8 +224,8 @@ const List<TutorialStep> kTutorialSteps = [
         'The value never drops — only the duration ticks down.\n'
         '• 🔥 Burn: damage at the start of their turn, then the value drops by 1. '
         'It vanishes when it reaches 0.\n'
-        '• ❄️ Freeze: halves their next attack. The duration only ticks down '
-        'once they have attacked.\n'
+        '• ❄️ Freeze: reduces their next attack, more with each point, up to a '
+        'cap. The duration only ticks down once they have attacked.\n'
         '• ⚡ Shock: adds its value to **every** hit they take while it lasts.',
     bodyFr:
         'Certaines cartes appliquent des altérations aux ennemis :\n'
@@ -233,8 +233,9 @@ const List<TutorialStep> kTutorialSteps = [
         'La valeur ne baisse jamais — seule la durée décrémente.\n'
         '• 🔥 Brûlure : inflige des dégâts au début de leur tour, puis la valeur '
         'perd 1. Elle disparaît en atteignant 0.\n'
-        '• ❄️ Gel : divise par deux leur prochaine attaque. La durée ne '
-        'décrémente qu\'une fois qu\'ils ont attaqué.\n'
+        '• ❄️ Gel : réduit leur prochaine attaque, d\'autant plus qu\'il compte '
+        'de points, jusqu\'à un plafond. La durée ne décrémente qu\'une fois '
+        'qu\'ils ont attaqué.\n'
         '• ⚡ Électrocution : ajoute sa valeur à **chaque** coup qu\'ils '
         'subissent tant qu\'elle dure.',
     type: TutorialStepType.elements,
@@ -252,7 +253,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Until an enemy has an intent, that same panel shows an hourglass and '
         '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Might, and halves while they are Frozen.',
+        'accumulated Might, and drops while they are Frozen.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
@@ -264,8 +265,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Tant qu\'un ennemi n\'a pas encore d\'intention, ce même panneau '
         'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
-        'l\'ennemi et sa Puissance accumulée, et se divise par deux tant qu\'il '
-        'est Gelé.',
+        'l\'ennemi et sa Puissance accumulée, et baisse tant qu\'il est Gelé.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(

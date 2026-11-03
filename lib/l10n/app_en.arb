@@ -748,5 +748,26 @@
   "signatures": "Signatures",
   "@signatures": {
     "description": "Title of the class signatures block and of the dictionary tab."
+  },
+  "statusWeaknessHint": "−{percent}% damage dealt per point, down to −{max}%",
+  "@statusWeaknessHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "statusVulnerableHint": "+{percent}% damage taken per point, up to +{max}%",
+  "@statusVulnerableHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "statusFreezeHint": "−{percent}% to the next attack per point, down to −{max}%",
+  "@statusFreezeHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
   }
 }

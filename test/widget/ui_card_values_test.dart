@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/services/proportional_status.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -117,6 +118,56 @@ void main() {
       contains('Tranchant 2 : +4 Dégâts sur la carte (+30% de la base, au '
           'moins +2)'),
     );
+  });
+
+  testWidgets('l infobulle dit le bareme de Faiblesse, Vulnerable et Gel',
+      (tester) async {
+    await _pumpCard(
+      tester,
+      CardInstance(
+        data: const CardData(
+          id: 'test_statuts',
+          cost: 1,
+          type: CardType.skill,
+          rarity: CardRarity.common,
+          target: CardTarget.singleEnemy,
+          effects: [
+            CardEffect(
+                type: 'apply_status', value: 1, statusId: 'weakness', duration: 1),
+            CardEffect(
+                type: 'apply_status',
+                value: 1,
+                statusId: 'vulnerable',
+                duration: 1),
+            CardEffect(
+                type: 'apply_status', value: 1, statusId: 'freeze', duration: 1),
+          ],
+        ),
+      ),
+    );
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(UiCard)))!;
+    const weakness = ProportionalStatus.weakness;
+    const vulnerable = ProportionalStatus.vulnerable;
+    const freeze = ProportionalStatus.freeze;
+    final tooltip = _tooltip(tester);
+    expect(
+      tooltip,
+      contains(
+          '(${l10n.statusWeaknessHint(weakness.percentPerPoint, weakness.maxPercent)})'),
+    );
+    expect(
+      tooltip,
+      contains(
+          '(${l10n.statusVulnerableHint(vulnerable.percentPerPoint, vulnerable.maxPercent)})'),
+    );
+    expect(
+      tooltip,
+      contains(
+          '(${l10n.statusFreezeHint(freeze.percentPerPoint, freeze.maxPercent)})'),
+    );
+    expect(tooltip, isNot(contains('25%')));
+    expect(tooltip, isNot(contains('50%')));
   });
 
   testWidgets('deux Tranchant 1 font une seule ligne, au niveau total',

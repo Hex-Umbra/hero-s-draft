@@ -1033,4 +1033,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get signatures => 'Signatures';
+
+  @override
+  String statusWeaknessHint(int percent, int max) {
+    return '−$percent % de dégâts infligés par point, jusqu\'à −$max %';
+  }
+
+  @override
+  String statusVulnerableHint(int percent, int max) {
+    return '+$percent % de dégâts subis par point, jusqu\'à +$max %';
+  }
+
+  @override
+  String statusFreezeHint(int percent, int max) {
+    return '−$percent % à la prochaine attaque par point, jusqu\'à −$max %';
+  }
 }

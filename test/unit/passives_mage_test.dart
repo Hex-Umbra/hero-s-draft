@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/services/proportional_status.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
@@ -374,6 +375,15 @@ void main() {
       expect(flux.threshold, 3);
       expect(flux.mastery!.field, 'threshold');
       expect(flux.mastery!.floor, 2);
+    });
+
+    test('mage_mark.json pose 2 Vulnerable pendant 2 tours : +50 %', () async {
+      final registry = await loadGameDataRegistry(rootBundle);
+      final mark = registry.passives.singleWhere((p) => p.id == 'mage_mark');
+      expect(mark.value, 2);
+      expect(mark.duration, 2);
+      expect(mark.trigger, RelicTrigger.onAttackPlayed);
+      expect(ProportionalStatus.vulnerable.percentPerPoint * mark.value, 50);
     });
 
     test('les neuf passifs sont livres, et spell_armor n y est plus', () async {

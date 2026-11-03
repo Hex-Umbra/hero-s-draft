@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../game/services/proportional_status.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../../../models/effective_card.dart';
@@ -374,16 +375,14 @@ String buildDetailedDescription(
         case 'weakness':
           desc +=
               '${l10n.cardDescStatusWeaknessDuration(scaledValue, duration)}\n';
-          desc += localeCode == 'fr'
-              ? '  (Réduit les dégâts infligés par l\'ennemi de 25%)\n'
-              : '  (Reduces damage dealt by the enemy by 25%)\n';
+          desc +=
+              '  (${l10n.statusWeaknessHint(ProportionalStatus.weakness.percentPerPoint, ProportionalStatus.weakness.maxPercent)})\n';
           break;
         case 'vulnerable':
           desc +=
               '${l10n.cardDescStatusVulnerableDuration(scaledValue, duration)}\n';
-          desc += localeCode == 'fr'
-              ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
-              : '  (Enemy takes 50% more damage from attacks)\n';
+          desc +=
+              '  (${l10n.statusVulnerableHint(ProportionalStatus.vulnerable.percentPerPoint, ProportionalStatus.vulnerable.maxPercent)})\n';
           break;
         case 'might_regen':
           desc +=
@@ -399,9 +398,8 @@ String buildDetailedDescription(
         case 'freeze':
           desc +=
               '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
-          desc += localeCode == 'fr'
-              ? '  (Réduit les dégâts de la prochaine attaque de l\'ennemi de 50%)\n'
-              : '  (Reduces next enemy attack damage by 50%)\n';
+          desc +=
+              '  (${l10n.statusFreezeHint(ProportionalStatus.freeze.percentPerPoint, ProportionalStatus.freeze.maxPercent)})\n';
           break;
         case 'shock':
           desc +=
