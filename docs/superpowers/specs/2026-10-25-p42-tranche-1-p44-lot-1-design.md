@@ -61,6 +61,8 @@ Toute référence `fichier:ligne` de ce document a été lue le 2026-10-25 sur `
 | **O5** | Le masquage : un passif dont le dossier `cards/<passif>/` est vide n'est pas proposé à la sélection — une règle dans `availablePassivesFor`, sans liste en dur ; la note de version dira que six passifs quittent la sélection jusqu'à ce que leur lot arrive |
 | **P-1** *(répondue le 03/11, née à l'écriture)* | Option (a) — 25 % par point, plafonnés : Vulnérable +25 % de dégâts subis par point, 4 points au plus (+100 %) ; Faiblesse −25 % de dégâts infligés par point, 2 au plus (−50 %) ; Gel −25 % à l'attaque par point, 3 au plus (−75 %) ; *Trait de Glace* Gel 1 → 2, `freezing` 2 points par niveau, *Marque du Mage* Vulnérable 1 → 2 (§4.4). Le propriétaire ajoute que les charges élémentaires (P-53 de la ROADMAP, [étude](../../possible_upgrades/03-11-2026_charges_elementaires_Opus5.md)) relèveront le Gel, le Feu et la Foudre en `0.6.0` : ce barème est celui de `0.5.7` |
 | **P-2** *(répondue le 03/11, née à l'écriture)* | Option (c) — **un badge de niveau et une icône par évolution prise, sur la tuile de la signature**. Motif du propriétaire : « c'est celle qui donne le plus d'informations au joueur, rien n'est caché ». Forme : A35 à A38, §3.7, §5.2 |
+| **P-3** *(répondue le 03/11, née à l'écriture)* | Option (a) — **l'écho ne déclenche aucun événement « carte jouée »** : il rejoue la résolution, pas le geste ; ni passif (*Flux de Mana*, *Soif de Sang*), ni relique, ni compteur de cartes jouées (A12) ne le voient (A19). Écartées : (b) tous les événements — une Compétence à écho compterait deux fois pour *Flux de Mana*, du mana hors de la courbe que D11 et les exclusions d'`echo` ferment ; (c) les passifs seulement, la même faille et une seconde règle |
+| **P-4** *(répondue le 03/11, née de P-2)* | Option (a) — **l'icône de l'évolution sur chaque rouleau de l'écran d'évolution** (§5.1). Motif du propriétaire : la philosophie de P-2, afficher toutes les informations au joueur ; sans elle, rien ne relie une icône de tuile à son évolution |
 | **L'écran d'évolution** | Le carrousel de la montée de niveau (`DraftScreen`, `DraftCardReel`), trois rouleaux, une fois par signature, déclenché par `pendingDrafts`. Chaque rouleau montre : le nom de l'évolution, sa description, son palier (« Mineure » / « Majeure ») et, pour une mineure déjà prise, son niveau « 1 → 2 » ; l'en-tête de l'écran nomme la signature concernée. Les détails de mise en page que ce contenu ne fixe pas (tailles, polices, couleurs) suivent le carrousel existant et sont de classe T |
 
 ### 1.3. Les arbitrages
@@ -199,11 +201,10 @@ celle du statut, `min(valeur, dégâts)` (`strategies.dart:78`) *(T, filtre 1)*.
 d'aujourd'hui (`strategies.dart:65`, `:73-79`). « Non cumulable » se lit : une rune par carte (D3), et pas de
 statut qui s'additionne.
 
-**A19 — `echo` : une seconde résolution, une seule** *(T, filtre 4 ; les événements sous P-3)*. Après les effets,
+**A19 — `echo` : une seconde résolution, une seule** *(T, filtre 4 ; les événements : P-3, §1.2)*. Après les effets,
 un jet ; réussi, les effets — ceux des runes et ceux de la carte — se résolvent une seconde fois, sur la même
 cible si elle vit, sans coût, sans mouvement de pile, sans second jet ni remboursement, avec son propre bonus de
-statut (A15). Qu'il déclenche ou non les événements « carte jouée » est P-3 (§1.4) ; ce document applique à titre
-provisoire la recommandation : aucun événement. Un écho sur une carte qui rend du mana ou pioche serait un moteur :
+statut (A15). Il ne déclenche aucun événement « carte jouée » (P-3, §1.2). Un écho sur une carte qui rend du mana ou pioche serait un moteur :
 la rune porte `excludesEffects: ["draw", "gain_mana"]` et `excludesRunes: ["eco", "quick"]`, des règles
 d'éligibilité en donnée, dans la forme que D44 impose à toute règle d'éligibilité.
 
@@ -363,36 +364,7 @@ choix de conception y portent une raison qu'il faut lire : *Surtension de Mana* 
 
 ### 1.4. Les questions ouvertes
 
-**P-3 — L'écho déclenche-t-il les événements « carte jouée » ?** *(P, née à l'écriture)*. *Flux de Mana* compte
-les Compétences jouées, *Soif de Sang* s'arme sur une Attaque, quatre reliques réagissent à une carte jouée
-(`_afterCardPlayed`, `combat_controller.dart:296-321` ; spec E4, Q-P1) ; le joueur lit l'effet.
-- (a) **Aucun événement** : l'écho rejoue la résolution, pas le jeu ; le compteur de cartes jouées (A12) ne
-  bouge pas.
-- (b) **Tous les événements**, comme une carte jouée : passifs, reliques, compteur.
-- (c) Les passifs seulement, pas les reliques ni le compteur.
-
-**Ce qui change** — sous (a) : ce document tel qu'écrit. Sous (b) : l'écho appelle la suite commune une seconde
-fois ; une Compétence à écho compte deux fois pour *Flux de Mana* — à `echo` 4, 60 % de Compétences de plus, donc
-du mana hors de la courbe que D11 et les exclusions d'`echo` ferment —, et les charges des reliques montent deux
-fois. Sous (c) : la même chose pour *Flux de Mana*, et une seconde règle à dire, les reliques n'y voyant pas une
-seconde carte.
-
-**Recommandation : (a)**, appliquée à titre provisoire : jouer une carte est un geste, que l'écho ne refait pas ;
-(b) rouvrirait par l'écho le mana gratuit que ses exclusions ferment.
-
-**P-4 — L'icône de l'évolution sur le rouleau de l'écran d'évolution** *(P, née à l'amendement de P-2)*. La
-réponse à P-2 met une icône par évolution prise sur la tuile de combat ; le contenu de l'écran d'évolution, fixé par
-le propriétaire (§1.2), n'en porte pas.
-- (a) **L'icône de l'évolution sur chaque rouleau** : forme au §5.1.
-- (b) **Aucune icône sur le rouleau.**
-
-**Ce qui change** — sous (a) : `DraftCardReel` et `DraftChoiceCard` gagnent un paramètre facultatif, que le tutoriel
-ne passe pas ; une ligne du test de l'écran (§9) ;
-la partie 3 (§10). Sous (b) : rien de cela, mais **aucun endroit du jeu ne relie une icône de tuile à son
-évolution** — la tuile n'a ni infobulle ni survol propre à ses icônes (O4 de la vague 4, §5.2), et l'écran d'évolution est le seul
-où l'évolution est nommée.
-
-**Recommandation : (a)**, appliquée à titre provisoire : sans elle, les icônes de la tuile se liraient sans clé.
+Aucune : P-1 à P-4 sont répondues par le propriétaire (§1.2).
 
 **Aucune question de classe D** : rien n'exige d'amender une décision acquise.
 
@@ -850,7 +822,7 @@ les deux mineures, puis les deux majeures.
 |:---|:---|
 | En-tête | « Évolution de {signature} » / « {signature} evolves », puis « Choisissez une évolution » / « Choose an evolution » |
 | Un rouleau par évolution tirée | `title` : son nom ; `description` : sa description à son prochain niveau, et, pour une mineure déjà prise, une dernière ligne « Niveau 1 → 2 » / « Level 1 → 2 » ; `rarity` : son palier, « MINEURE » / « MAJEURE » — un libellé que le rouleau ne reconnaît ni légendaire ni mythique, donc au style ordinaire |
-| Icône du rouleau *(sous P-4, provisoire)* | Voir le paragraphe ci-dessous |
+| Icône du rouleau *(P-4, §1.2)* | Voir le paragraphe ci-dessous |
 | Décor du rouleau (`spinPool`) | Les évolutions du pool de la signature, nom et description |
 | Toucher un rouleau posé | `chooseSignatureEvolution`, puis retour à la carte |
 
@@ -861,7 +833,7 @@ sinon l'évolution de `nextPendingEvolution`. Chaque écran fermé rend la carte
 suivant : deux écrans successifs au niveau 5. Les deux gardes de nœud (`:380`, `:403`) lisent la même condition,
 un accesseur de `RunState`.
 
-**L'icône sur le rouleau** est P-4 (§1.4), appliquée à titre provisoire : l'icône de l'évolution, à sa couleur,
+**L'icône sur le rouleau** (P-4, §1.2) : l'icône de l'évolution, à sa couleur,
 au-dessus du nom — dans l'anneau pour une majeure, comme sur la tuile (A37) —, posée une fois le rouleau arrêté.
 `DraftCardReel` (`relic_carousel/draft_card_reel.dart:11-37`) gagne un paramètre facultatif, l'icône et sa couleur,
 qu'il passe à `DraftChoiceCard`, qui dessine le titre du rouleau arrêté (`:294-295`) et gagne le même paramètre
@@ -1037,7 +1009,7 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 | Évolutions : moteur | `test/unit/signature_instance_test.dart` | `asCard` évolué : dégâts, Armure, coût, cible, recharge (plancher 1) ; description remplie et phrases verbales ; `pendingFor` ; `nextTier` 5 → mineure, 10 → majeure | 3 |
 | Évolutions : tirage et choix | `test/unit/signature_evolution_rules_test.dart` *(nouveau)* | Trois mineures ; majeures non prises ; exclusion dans les deux sens (`haste` ↔ `devastation`) ; complément par des mineures sous trois majeures ; repli quand elles sont épuisées ; `chooseSignatureEvolution` refuse sans rien écrire, monte une mineure prise, sauve | 3 |
 | **Évolutions : sauvegarde — tâche à risque** | `test/unit/save_service_test.dart` | Aller-retour exact ; signature sans évolution : aucune clé ; sauvegarde sans la clé ; id inconnu retiré et signalé ; référence mal formée ignorée ; doublons additionnés ; majeure ramenée à 1 et paire exclue, la première gardée, sans entrée au rapport ; clé d'une signature absente ignorée | 3 |
-| Écran et rideau | `test/widget/signature_evolution_screen_test.dart` *(nouveau)*, `test/widget/map_screen_test.dart` | En-tête au nom de la signature ; trois rouleaux, palier, icône (sous P-4) et « Niveau 1 → 2 » ; le toucher choisit et rend la carte ; rideau et nœuds fermés tant qu'une évolution attend ; draft de niveau d'abord | 3 |
+| Écran et rideau | `test/widget/signature_evolution_screen_test.dart` *(nouveau)*, `test/widget/map_screen_test.dart` | En-tête au nom de la signature ; trois rouleaux, palier, icône (P-4) et « Niveau 1 → 2 » ; le toucher choisit et rend la carte ; rideau et nœuds fermés tant qu'une évolution attend ; draft de niveau d'abord | 3 |
 
 ---
 
@@ -1058,7 +1030,7 @@ l'éditeur (`lotCard`) ; `CLAUDE.md` et `README.md` (§11) ; les tests marqués 
 
 **Partie 3 — les évolutions.** `flatBonus`, `extraDeltas`, `SignatureEvolutionData`, les gabarits et les six
 pools, avec leurs icônes et les tables `evolutionIcons` / `evolutionColors` ; `SignatureInstance`, le tirage, le
-choix, l'attente ; la sauvegarde ; l'écran, son icône de rouleau (sous P-4), le rideau ; la tuile de combat, son badge, sa
+choix, l'attente ; la sauvegarde ; l'écran, son icône de rouleau (P-4), le rideau ; la tuile de combat, son badge, sa
 rangée d'icônes et la bande de la barre (A35 à A38) ; le descripteur de signature ; les tests marqués 3.
 
 **L'invariant** : à la fin de chaque partie, **toute donnée livrée a son moteur, son rendu et ses tests dans la
