@@ -2,15 +2,15 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** À la fin de ce plan, chaque signature évolue tous les cinq niveaux du héros : un écran à trois rouleaux propose trois évolutions de son pool (trois mineures, quatre majeures), le joueur en prend une, la tuile de combat montre aussitôt les valeurs, le coût, la recharge, la cible et la description évolués, un badge de niveau et une icône par évolution prise ; les choix survivent à la sauvegarde ; l'éditeur de contenu sait écrire une évolution.
+**Goal:** À la fin de ce plan, chaque signature évolue tous les cinq niveaux du héros : un écran à trois rouleaux propose trois évolutions de son pool (trois mineures, quatre majeures), le joueur en prend une ; en combat, la tuile ne montre plus de texte au repos mais une icône chiffrée par effet de la signature évoluée — sa liste de phrases tant qu'on reste appuyé —, avec le coût, la recharge et la cible évolués, un badge de niveau ambre et une puce par évolution prise ; une seule table d'icônes par sorte d'effet, en donnée, sert la tuile, ses puces et le panneau des statuts ; les choix survivent à la sauvegarde ; l'éditeur de contenu sait écrire une évolution.
 
-**Architecture:** Une évolution est une donnée du fichier de sa signature (`SignatureEvolutionData`, sous `evolutions`), faite de deltas du vocabulaire de `CardDelta` — plus une sorte neuve, `flatBonus` — et de deux champs propres, `target` et `cooldown`. `SignatureInstance` porte ses références `id:niveau` ; sa vue de carte (`asCard`) les traduit en `CardInstance.extraDeltas`, que l'applicateur des runes (`EffectiveCard.apply`) lit après les runes : la couture d'ADR-105 D1, sans que runes et évolutions partagent stockage ni affichage. Le tirage et l'admissibilité vivent dans une règle pure (`SignatureEvolutionRules`) ; l'attente se dérive du niveau du héros, rien de neuf ne se compte ; seule la liste des références se sauvegarde, sous `signatureEvolutions`. L'écran d'évolution reprend le carrousel du draft de niveau ; la barre de signatures se mesure avant d'être posée (A38).
+**Architecture:** Une évolution est une donnée du fichier de sa signature (`SignatureEvolutionData`, sous `evolutions`), faite de deltas du vocabulaire de `CardDelta` — plus une sorte neuve, `flatBonus` — et de deux champs propres, `target` et `cooldown`. `SignatureInstance` porte ses références `id:niveau` ; sa vue de carte (`asCard`) les traduit en `CardInstance.extraDeltas`, que l'applicateur des runes (`EffectiveCard.apply`) lit après les runes : la couture d'ADR-105 D1, sans que runes et évolutions partagent stockage ni affichage. Le tirage et l'admissibilité vivent dans une règle pure (`SignatureEvolutionRules`) ; l'attente se dérive du niveau du héros, rien de neuf ne se compte ; seule la liste des références se sauvegarde, sous `signatureEvolutions`. L'écran d'évolution reprend le carrousel du draft de niveau. En combat, la tuile lit `SignatureInstance.effectLines` : une bande d'icônes par sorte d'effet (A40), traduites par un document plat, `effect_icons.json` (A39), et, à l'appui long, une liste de phrases par sorte (`EffectLineTexts`, A41) dans un calque (A42) ; la barre se mesure et se transforme pendant la mise en page (A38), ce que le calque lit.
 
 **Tech Stack:** Flutter / Dart 3, Flame (non touché), Riverpod 2 (`Notifier`), `flutter_test`, `flutter gen-l10n`.
 
-**Spec:** `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md` — §10 « Partie 3 » pour le périmètre ; §3.7 (gabarits, évolutions, pools, icônes), §4.10 (le moteur des évolutions), §5.1 (l'écran), §5.2 (les deux lignes marquées 3 : tuile de combat, tuile hors combat), §6.1 (les clés `evolution…` et `levelLabel`), §7 (la ligne marquée 3 : descripteur de signature), §8 (la sauvegarde — **tâche à risque**), §9 (les lignes marquées 3), §11. Les décisions de §1 — les réponses du propriétaire de §1.2 (dont Q6, Q7, P-2 (c), P-4 (a), l'écran d'évolution) et les arbitrages A1 à A38 de §1.3, en particulier A24 à A28 et A35 à A38 — sont acquises : aucune ne se rouvre ici. Les options écartées sont dans `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md`.
+**Spec:** `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md` — §10 « Partie 3 » pour le périmètre ; §3.7 (gabarits, évolutions, pools, icônes, et « Les icônes d'effet »), §4.10 (le moteur des évolutions), §5.1 (l'écran), §3.8 (`_configDocuments`), §5.2 (les trois lignes marquées 3 : tuile de combat, panneau des statuts, tuile hors combat), §6.1 (les clés `evolution…`, `levelLabel`, `effectValuePercent` et les treize `effectLine…`), §7 (la ligne marquée 3 : descripteur de signature), §8 (la sauvegarde — **tâche à risque**), §9 (les lignes marquées 3), §11. Les décisions de §1 — les réponses du propriétaire de §1.2 (dont Q6, Q7, P-2 (c), P-4 (a), l'écran d'évolution, et PN12 (d) et PN13 (c)) — et les arbitrages A1 à A42 de §1.3, en particulier A24 à A28 et A35 à A42 — sont acquises : aucune ne se rouvre ici. Les options écartées sont dans `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md`.
 
-Réponses du propriétaire reprises telles quelles (spec §1.2) : **Q6** — 3 mineures et 4 majeures par signature ; une majeure en manque tire une mineure (repli). **Q7** — deux majeures contradictoires s'excluent par une liste `excludes` d'ids sur l'évolution, lue dans les deux sens. **P-2 (c)** — un badge de niveau et une icône par évolution prise sur la tuile. **P-4 (a)** — l'icône de l'évolution sur chaque rouleau. **L'écran** — le carrousel `DraftScreen` / `DraftCardReel`, trois rouleaux, une fois par signature, par le rideau de `pendingDrafts` ; chaque rouleau : nom, description, palier, « 1 → 2 » pour une mineure déjà prise ; l'en-tête nomme la signature.
+Réponses du propriétaire reprises telles quelles (spec §1.2) : **Q6** — 3 mineures et 4 majeures par signature ; une majeure en manque tire une mineure (repli). **Q7** — deux majeures contradictoires s'excluent par une liste `excludes` d'ids sur l'évolution, lue dans les deux sens. **P-2 (c)** — un badge de niveau et une icône par évolution prise sur la tuile. **P-4 (a)** — l'icône de l'évolution sur chaque rouleau. **L'écran** — le carrousel `DraftScreen` / `DraftCardReel`, trois rouleaux, une fois par signature, par le rideau de `pendingDrafts` ; chaque rouleau : nom, description, palier, « 1 → 2 » pour une mineure déjà prise ; l'en-tête nomme la signature. **PN12 (d)** — en combat, la tuile écrit en icônes ce que fait la signature : une icône chiffrée par effet, trois par ligne, centrées, sans durée ; à l'appui long, la liste, une ligne par icône, repliée au relâcher, par-dessus les voisines sans déplacer la colonne ; l'appui court garde son rôle ; hors combat, le texte complet. **PN13 (c)** — le badge « Niv. n » en `Colors.amberAccent`, disponible et armée ; `Colors.white38` en recharge et sans le mana.
 
 **Les noms, valeurs, textes et icônes des 42 évolutions sont des ordres de grandeur** (fiche 8.5) : le plan les écrit tels que la spec les fixe (§3.7), le test du propriétaire les corrigera. Ce ne sont pas des questions.
 
@@ -36,21 +36,21 @@ S'y ajoutent :
 Propres à cette partie :
 
 - **La branche.** Le plan s'exécute sur `feat/v0.5.7-p42-tranche-1-p44-lot-1`, la branche courante, dans le checkout principal. Il ne crée aucune branche, n'en change pas, ne commite rien sur `main`, ne pousse rien. Pas de worktree. Le fichier d'orchestration (`docs/possible_upgrades/01-10-2026_orchestration_…`) est modifié dans l'arbre de travail par l'orchestrateur : **ne jamais l'indexer**.
-- **La base de tests** : `flutter test` rend **1916** sur la branche (mesuré le 03/11, à la fin de la partie 2). Chaque tâche donne son total cumulé ; un écart est un constat, jamais un « à peu près ». **Total attendu en fin de plan : 2003** (+87 ajoutés, aucun retiré).
+- **La base de tests** : `flutter test` rend **1916** sur la branche (mesuré le 03/11, à la fin de la partie 2). Chaque tâche donne son total cumulé ; un écart est un constat, jamais un « à peu près ». **Total attendu en fin de plan : 2039** (+123 ajoutés, aucun retiré).
 - **Les références `fichier:ligne`** ont été relues le 2026-11-03 sur `996421a`. Une tâche qui modifie un fichier décale les lignes des suivantes : l'implémenteur se fie au symbole nommé, la ligne n'est qu'un repère.
-- **La tâche à risque est la Task 5** (la sauvegarde) : son code et ses tests s'écrivent ici en entier, et le vérificateur les rejoue dans un clone. Ailleurs, seul l'algorithme d'A38 (Task 7), imposé ligne à ligne par la spec, est écrit.
+- **La tâche à risque est la Task 5** (la sauvegarde) : son code et ses tests s'écrivent ici en entier, et le vérificateur les rejoue dans un clone. Ailleurs, seul l'algorithme d'A38 (Task 8), imposé ligne à ligne par la spec, est écrit.
 - **Les cartes, les runes et le moteur de P-44 lot 1 ne changent pas** ; `tool/simulations/` ne change pas (ADR-108 D5) ; `assets/data/passives/mage_mark.json` garde `"trigger": "onAttackPlayed"` (D34).
-- **Deux réponses du propriétaire attendues** (PN12, PN13 du fichier de vérifications) : le plan s'écrit sous l'option recommandée, marquée **(provisoire)** là où elle s'applique (Task 3, Task 7).
+- **Deux réponses du propriétaire attendues : P-5, P-6** (spec §1.4, appliquées à titre provisoire sous leur option (a)) : chaque ligne du plan qui les applique est marquée **(provisoire, P-5 (a))** ou **(provisoire, P-6 (a))**, pour qu'un renversement ne touche qu'elles — P-5 en Task 9 (les états où la liste s'ouvre, l'opacité et le gris du calque) ; P-6 en Tasks 2, 6, 7, 8 et 11 (les icônes alignées sur les faces des cartes, `poison`, `freeze`, `shock` au document, le panneau des statuts, le test d'égalité avec les faces). PN12 et PN13 sont répondues (spec §1.2) : plus rien de provisoire à leur nom. **Les totaux de la Task 6 à la fin dépendent de P-6** : −1 sous (b) (le test d'égalité avec les faces), −5 sous (c) (ce test, les trois du panneau, celui du tutoriel) ; **et de P-5** : 0 sous (b), −1 sous (c), en Task 9 — le total final, 2039, et la table des totaux suivent.
 
 ## Review Focus
 
 Cinq modes d'échec que la spec implique pour la partie 3 et qu'aucun test ne garde encore, du plus probable au moins probable ; chacun est confié à la tâche qui écrit le test qui le garde.
 
-1. **Une évolution perdue ou déformée à la reprise.** L'ordre de première prise — que la rangée d'icônes lit (A37) — réordonné ; une majeure relue au niveau 2 ; deux majeures exclues relues ensemble ; une évolution supprimée d'une mise à jour qui fait échouer la relecture au lieu d'être signalée ; une sauvegarde de `0.5.6` sans la clé qui ne se relit plus. → **Task 5** (neuf tests, code en entier).
-2. **Un tirage qui offre l'interdit, ou un choix qui écrit sans droit.** Une majeure au palier mineur, une majeure exclue par une prise (dans un sens ou dans l'autre), moins de trois rouleaux quand trois évolutions existent, un `chooseSignatureEvolution` qui écrit quand rien n'attend ou qui n'appelle pas la sauvegarde. → **Task 4** (`signature_evolution_rules_test`).
-3. **Une tuile qui ment.** Le coût, la recharge, la cible ou la description de base au lieu des évolués ; l'accessibilité lue sur le coût de base (`signature_bar.dart:114`, `currentMana >= signature.cost`) ; un gabarit brut « {damage} » hors combat. → **Task 3** (`asCard`), **Task 7** (la tuile, `canAfford`), **Task 2** (`SignatureTile`).
-4. **Une évolution qui attend sans rideau, ou un rideau qui ouvre le mauvais écran.** `pendingFor` faux ; l'ordre des attentes (Châtiment puis Bouclier Sacré au niveau 5 ; les deux mineures puis les deux majeures sur un saut de 4 à 10) ; l'évolution ouverte avant le draft de niveau ; les nœuds ouverts pendant une attente. → **Task 4** (`nextPendingEvolution`, `hasPendingChoice`), **Task 6** (`map_screen_test` : le rideau, l'ordre des écrans, et « les noeuds restent fermes tant qu une evolution attend », qui lit sur le `MapNodeWidget` d'un nœud `node_0_*` son `isAvailable` faux — `map_screen.dart:380` — et son `onTap()`, appelé directement, sans effet — `:403`).
-5. **La barre qui sort de l'écran ou bouge à niveau 0 (A38).** La colonne qui monte en `1280 × 800` au niveau 0 par rapport à `0.5.6` ; une réduction sous 0,75 ; une tuile réduite qui ne répond plus au toucher, ou l'invite qui disparaît. → **Task 7** (fonction de placement, deux tests de widget dont un à `H = 400`).
+1. **Une évolution perdue ou déformée à la reprise.** L'ordre de première prise — que la rangée des puces et la bande lisent (A37, A40) — réordonné ; une majeure relue au niveau 2 ; deux majeures exclues relues ensemble ; une évolution supprimée d'une mise à jour qui fait échouer la relecture au lieu d'être signalée ; une sauvegarde de `0.5.6` sans la clé qui ne se relit plus. → **Task 5** (neuf tests, code en entier).
+2. **Une tuile qui ment, ou une bande qui déborde.** Le coût, la cible ou la valeur de base au lieu des évolués ; l'accessibilité lue sur le coût de base (`signature_bar.dart:114`) ; une durée de statut écrite sur la bande ; une ligne coupée au lieu d'être réduite d'un bloc, ou décentrée ; un texte resté au repos ; un gabarit brut hors combat. → **Task 3** (`asCard`, `effectLines`), **Task 8** (la bande, `canAfford`), **Task 2** (`SignatureTile`).
+3. **Le calque qui bouge la barre, ou qui reste ouvert.** L'ouverture qui change la hauteur, l'échelle ou la place de la colonne ; la liste qui survit à un `PointerCancelEvent` ou se replie au moindre glissement ; un appui long qui joue ou arme ; la liste du bas qui sort de l'écran au lieu de s'ouvrir vers le haut ; et, sous elle, la barre qui monte à niveau 0 en `1280 × 800` ou une tuile réduite à `H = 400` qui ne répond plus. → **Task 9** (dix tests de widget), **Task 8** (la mise en page de la barre, fonction de placement, deux tests dont un à `H = 400`).
+4. **Deux icônes pour un même effet.** La bande, la liste, la puce d'une évolution, le panneau des statuts **(provisoire, P-6 (a))** et les faces des cartes qui divergent ; une sorte produite par une signature absente du document (un `help_outline` sur la bande) ; **(provisoire, P-6 (a))** le panneau qui tombe en `help_outline` sur un registre construit à la main. → **Task 6** (`referential_integrity_test`, dont les 32 évolutions à une sorte et l'égalité avec les deux faces ; `status_effects_panel_test`).
+5. **Un tirage qui offre l'interdit, un choix qui écrit sans droit, ou une attente sans rideau.** Une majeure au palier mineur ou exclue par une prise ; moins de trois rouleaux quand trois évolutions existent ; un `chooseSignatureEvolution` qui écrit quand rien n'attend ou n'appelle pas la sauvegarde ; l'ordre des attentes (Châtiment puis Bouclier Sacré au niveau 5 ; les deux mineures puis les deux majeures sur un saut de 4 à 10) ; l'évolution ouverte avant le draft de niveau ; les nœuds ouverts pendant une attente. → **Task 4** (`signature_evolution_rules_test`), **Task 7** (`map_screen_test` : le rideau, l'ordre des écrans, et « les noeuds restent fermes tant qu une evolution attend », qui lit sur le `MapNodeWidget` d'un nœud `node_0_*` son `isAvailable` faux — `map_screen.dart:380` — et son `onTap()`, appelé directement, sans effet — `:403`).
 
 **Les autres trous** — ceux de la section « Pour le Review Focus des plans » des vérifications de la spec qui touchent la partie 3, et les points reportés des parties 1 et 2 —, chacun confié :
 
@@ -58,20 +58,23 @@ Cinq modes d'échec que la spec implique pour la partie 3 et qu'aucun test ne ga
 |:---|:---|
 | `nextPendingEvolution` : Châtiment puis Bouclier Sacré au niveau 5 ; mineures puis majeures sur un saut de 4 à 10 | Task 4 |
 | Hors combat, `SignatureTile` n'affiche jamais un gabarit brut | Task 2, `signature_tile_test` |
-| Refus à l'écran par `signature_bar.dart:114` (`signature.cost` évolué) — **point reporté** | Task 7 : la tuile lit `EffectResolver.canAfford(signature.asCard, heroStats)`, la règle unique d'A10 ; `SignatureBar` reçoit `heroStats` au lieu de `currentMana` |
+| Refus à l'écran par `signature_bar.dart:114` (`signature.cost` évolué) — **point reporté** | Task 8 : la tuile lit `EffectResolver.canAfford(signature.asCard, heroStats)`, la règle unique d'A10 ; `SignatureBar` reçoit `heroStats` au lieu de `currentMana` |
 | Q11 sur une signature à deux statuts d'évolution (*Projectile Magique*, `ember` et `exposure`) : un seul bonus, sur le premier dans l'ordre des effets ajoutés | Task 3, `effect_resolver_test` |
-| Écran : mineure déjà prise, `{val}` au prochain niveau (*Zèle* 1 → 2, « +4 dégâts ») et la ligne « 1 → 2 » | Task 2 (`{val}`), Task 6 (l'écran) |
+| Écran : mineure déjà prise, `{val}` au prochain niveau (*Zèle* 1 → 2, « +4 dégâts ») et la ligne « 1 → 2 » | Task 2 (`{val}`), Task 7 (l'écran) |
 | `{val}` d'une majeure `reduceCost` : `min(coût, valuePerLevel)` (*Dévotion* sur *Châtiment*, coût 1 → 1) | Task 2 |
 | *Célérité* : même `icon`, même `color`, même texte dans ses cinq pools | Task 2 |
 | Le gabarit d'éditeur de la signature (`entity_descriptor.dart:318-328`) sans `evolutions` : `entity_validator_test`, `entity_descriptor_test` rougiraient dès que `evolutions` est exigée | Task 2 : le gabarit porte une évolution complète, verbale (`ardor`), dans la même tâche que l'exigence |
-| La barre réduite : un toucher sur une tuile réduite arme encore, l'invite reste visible ; un cas à `H ≈ 400` | Task 7 |
-| Au niveau 0 et en `1280 × 800`, la colonne n'a pas bougé par rapport à `0.5.6` | Task 7 |
-| Le badge sur la tuile étroite, à la vraie police | Hors plan : tests manuels (les tests de widget rendent une police carrée, A36) |
+| La barre réduite : un toucher sur une tuile réduite arme encore, l'invite reste visible ; un cas à `H ≈ 400` | Task 8 |
+| Au niveau 0 et en `1280 × 800`, la colonne n'a pas bougé par rapport à `0.5.6` | Task 8 |
+| Le badge et la bande sur la tuile étroite, à la vraie police (« 10 », « 10 », « +5 % » à la limite des 154 px) | Hors plan : tests manuels (les tests de widget rendent une police carrée, A36, A40) ; la réduction d'un bloc et le centrage, Task 8 |
 | L'aller-retour de sauvegarde garde l'ordre de première prise | Task 5 |
-| Chaque entrée d'`evolutionIcons` et d'`evolutionColors` sert au moins une évolution | Task 6, `referential_integrity_test` |
-| Sous P-4 (a) : le paramètre de `DraftCardReel` est facultatif, le draft de niveau ne change pas | Task 6, `draft_card_reel_test` |
+| Chaque entrée d'`effectIcons` et d'`effectColors` sert au moins une évolution ou une sorte | Task 6, `referential_integrity_test` |
+| Soixante fichiers de test construisent `GameDataRegistry(` à la main | Task 6 : `effectIcons` facultatif, une table vide par défaut ; **(provisoire, P-6 (a))** le panneau garde alors ses icônes d'aujourd'hui, testé |
+| La face Flame `_getEffectVisuals`, privée, que le test d'égalité doit appeler | Task 6 **(provisoire, P-6 (a))** : publique, `static`, `@visibleForTesting`, son type de retour public (`RendererEffectVisuals`) |
+| Le calque lit la transformation de la tuile pendant la mise en page ; `Flow` ne l'établit qu'à la peinture | Task 8 : la barre passe par un `RenderBox` propre (PN18) ; Task 9 la lit |
+| Sous P-4 (a) : le paramètre de `DraftCardReel` est facultatif, le draft de niveau ne change pas | Task 7, `draft_card_reel_test` |
 | A33 : le budget de D38 reste vrai sur chaque signature évoluée | Task 3, `card_catalog_test` (toutes les évolutions prises) |
-| **Point reporté** — `SignatureInstance` construit un `CardData` sans `hpCost` ni `armorCost` (`signature_instance.dart:20-36`) | Task 3 : `asCard` est réécrit ; `SignatureData` n'a pas de coût autre que le mana, les défauts (0) sont justes et le commentaire d'`asCard` le dit ; la tuile lisant `canAfford` (Task 7), un coût non-mana futur serait lu sans retouche |
+| **Point reporté** — `SignatureInstance` construit un `CardData` sans `hpCost` ni `armorCost` (`signature_instance.dart:20-36`) | Task 3 : `asCard` est réécrit ; `SignatureData` n'a pas de coût autre que le mana, les défauts (0) sont justes et le commentaire d'`asCard` le dit ; la tuile lisant `canAfford` (Task 8), un coût non-mana futur serait lu sans retouche |
 | **Point reporté** — `scaleTerm` lit une cible morte pour `targetStatus` et `targetMissingHp` | **Déjà traité** en partie 2 (Task 4) : `effect_resolver.dart:235-238` filtre `currentPv > 0`, gardé par `scale_with_test.dart:305` « une cible morte ne nourrit ni targetStatus ni targetMissingHp ». Rien à faire |
 | **Point reporté** — `ProportionalStatus` vit sous `lib/game/services/` mais `lib/models/enemy_instance.dart:3` l'importe | **Laissé hors de la partie 3** : aucune tâche n'ouvre `enemy_instance.dart` ni `proportional_status.dart`, et le déplacer élargirait la vague (filtre 7). À la file de la clôture |
 | **Point reporté** — le texte de croissance `targetStatus` nomme le statut en français dans la version anglaise (`card_rule_texts.dart:65-69`, `_statusName` lit `createStatus(...).name`) | **Laissé hors de la partie 3** : aucune tâche n'ouvre `card_rule_texts.dart`, aucune carte livrée ne lit cette source ; à régler avec le lot de *Marque du Mage* (tranche 3), qui sera son premier lecteur, ou à la file |
@@ -88,32 +91,40 @@ Cinq modes d'échec que la spec implique pour la partie 3 et qu'aucun test ne ga
 | `lib/models/data/signature_evolution_data.dart` *(nouveau)* | `EvolutionTier`, `SignatureEvolutionData` et ses règles de chargement | 2 |
 | `lib/models/data/signature_data.dart` | `evolutions`, règles du pool, gabarits | 2 |
 | `assets/data/classes/{paladin,berserker,mage}/skills/*.json` (six) | Gabarits et pools | 2 |
-| `lib/models/signature_instance.dart` | `evolutions`, `level`, `taken`, `asCard`, `cost`, `cooldown`, `pendingFor`, `nextTier` ; `restore` | 3, 5 |
+| `lib/models/data/effect_kind.dart` *(nouveau)* | Le vocabulaire des sortes d'effet (A39) | 3, 6 |
+| `lib/models/signature_instance.dart` | `evolutions`, `level`, `taken`, `asCard`, `effectLines`, `cost`, `cooldown`, `pendingFor`, `nextTier` ; `restore` | 3, 5 |
 | `lib/game/systems/signature_evolution_rules.dart` *(nouveau)* | Le tirage, l'admissibilité, le choix | 4 |
 | `lib/game/controllers/run_controller.dart` | `nextPendingEvolution`, `hasPendingChoice`, `chooseSignatureEvolution` ; `signatureEvolutions` | 4, 5 |
-| `lib/ui/widgets/signature_evolution_style.dart` *(nouveau)* | `evolutionIcons`, `evolutionColors`, `EvolutionIcon` | 6 |
-| `lib/ui/screens/signature_evolution_screen.dart` *(nouveau)* | L'écran d'évolution | 6 |
-| `lib/ui/widgets/relic_carousel/draft_card_reel.dart`, `lib/ui/widgets/draft/draft_choice_card.dart` | Le paramètre `icon` facultatif | 6 |
-| `lib/ui/screens/map_screen.dart` | Le rideau et les gardes de nœud | 6 |
-| `lib/ui/widgets/hud/signature_bar.dart`, `combat_side_panels.dart`, `combat_top_bar.dart`, `lib/ui/screens/game_screen.dart` | La tuile évoluée, le badge, la rangée, la bande | 7 |
-| `lib/l10n/app_fr.arb`, `app_en.arb` (+ trois `app_localizations*.dart`) | Clés `evolution…` ; `levelLabel` réécrite | 6, 7 |
-| `lib/services/content_editor/entity_descriptor.dart` | Le gabarit (2), puis le descripteur des évolutions (8) | 2, 8 |
-| `test/unit/signature_evolution_data_test.dart`, `test/unit/signature_evolution_rules_test.dart`, `test/widget/signature_evolution_screen_test.dart` *(nouveaux)* | — | 2, 4, 6 |
-| Les autres tests touchés | Nommés tâche par tâche | 1 à 8 |
+| `assets/data/effect_icons.json`, `lib/models/data/effect_icon_table.dart` *(nouveaux)*, `game_data_registry.dart`, `lib/services/game_data_service.dart` | Le document des icônes d'effet, son modèle, son chargement | 6 |
+| `lib/ui/widgets/effect_style.dart` *(nouveau)* | `effectIcons`, `effectColors`, leurs deux lectures (6) ; `EvolutionIcon` (7) | 6, 7 |
+| `lib/ui/widgets/hud/status_effects_panel.dart`, `lib/tutorial/widgets/tutorial_elements_widget.dart` | Le panneau des statuts lit la table **(provisoire, P-6 (a))** | 6 |
+| `lib/game/components/widgets/card_text_renderer.dart` | La face Flame, `getEffectVisuals` publique **(provisoire, P-6 (a))** | 6 |
+| `CLAUDE.md` | `effect_icon_table.dart`, `effect_icons.json` (spec §11) | 6 |
+| `lib/ui/screens/signature_evolution_screen.dart` *(nouveau)* | L'écran d'évolution | 7 |
+| `lib/ui/widgets/relic_carousel/draft_card_reel.dart`, `lib/ui/widgets/draft/draft_choice_card.dart` | Le paramètre `icon` facultatif | 7 |
+| `lib/ui/screens/map_screen.dart` | Le rideau et les gardes de nœud | 7 |
+| `lib/ui/widgets/hud/signature_bar.dart`, `combat_side_panels.dart`, `combat_top_bar.dart`, `lib/ui/screens/game_screen.dart` | La tuile évoluée, la bande, le badge, les puces, la barre (8) ; la liste et le calque (9) | 6, 8, 9 |
+| `lib/game/services/effect_line_texts.dart` *(nouveau)* | Les phrases de la liste, par sorte | 9 |
+| `lib/l10n/app_fr.arb`, `app_en.arb` (+ trois `app_localizations*.dart`) | Clés `evolution…` (7) ; `levelLabel` réécrite, `effectValuePercent` (8) ; les treize `effectLine…` (9) | 7, 8, 9 |
+| `lib/services/content_editor/entity_descriptor.dart` | Le gabarit (2), puis le descripteur des évolutions (10) | 2, 10 |
+| `test/unit/signature_evolution_data_test.dart`, `signature_evolution_rules_test.dart`, `effect_icon_table_test.dart`, `effect_line_texts_test.dart`, `test/widget/status_effects_panel_test.dart`, `signature_evolution_screen_test.dart` *(nouveaux)* | — | 2, 4, 6, 7, 9 |
+| Les autres tests touchés | Nommés tâche par tâche | 1 à 10 |
 
-Ordre : la couture de l'applicateur (1) ; la donnée, ses règles et les six pools (2), qui ne changent rien au jeu tant qu'aucune signature ne porte d'évolution ; la vue évoluée (3) ; le tirage, le choix et l'attente (4) ; **la tâche à risque, la sauvegarde (5)**, avant que le joueur puisse prendre une évolution ; l'écran et le rideau (6), qui ouvrent le jeu aux évolutions ; la tuile (7) ; l'éditeur (8) ; la vérification (9).
+Ordre : la couture de l'applicateur (1) ; la donnée, ses règles et les six pools (2), qui ne changent rien au jeu tant qu'aucune signature ne porte d'évolution ; la vue évoluée et ses entrées de bande (3) ; le tirage, le choix et l'attente (4) ; **la tâche à risque, la sauvegarde (5)**, avant que le joueur puisse prendre une évolution ; le document des icônes d'effet, avec le panneau des statuts pour premier lecteur **(provisoire, P-6 (a))** (6) ; l'écran et le rideau (7), qui ouvrent le jeu aux évolutions ; la tuile et sa bande (8), puis sa liste (9) ; l'éditeur (10) ; la vérification (11).
 
 | Après la tâche | Total de tests |
 |:---:|:---:|
 | base | 1916 |
 | 1 | 1922 |
 | 2 | 1941 |
-| 3 | 1952 |
-| 4 | 1963 |
-| 5 | 1972 |
-| 6 | 1987 |
-| 7 | 1998 |
-| 8 | 2003 |
+| 3 | 1955 |
+| 4 | 1966 |
+| 5 | 1975 |
+| 6 | 1992 |
+| 7 | 2003 |
+| 8 | 2019 |
+| 9 | 2034 |
+| 10 | 2039 |
 
 ---
 
@@ -184,7 +195,7 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 3. 
 - Produces (`signature_evolution_data.dart`, couche données) :
   - `enum EvolutionTier { minor, major }`.
   - `class SignatureEvolutionData` — `const SignatureEvolutionData({required String id, required EvolutionTier tier, String nameEn = '', String nameFr = '', String descriptionEn = '', String descriptionFr = '', List<CardDelta> deltas = const [], CardTarget? target, int cooldown = 0, List<String> excludes = const [], String icon = '', String color = ''})` ; champs du même nom.
-  - `static const deltaTypeNames = ['flatBonus', 'addEffect', 'reduceCost', 'critBonus']` ; `static const targetNames = ['allEnemies']` — lus par le chargeur et par l'éditeur (Task 8).
+  - `static const deltaTypeNames = ['flatBonus', 'addEffect', 'reduceCost', 'critBonus']` ; `static const targetNames = ['allEnemies']` — lus par le chargeur et par l'éditeur (Task 10).
   - `factory SignatureEvolutionData.fromJson(Map<String, dynamic> json)` — chaque refus est une `FormatException` dont le message nomme l'id de l'évolution et la clé fautive. Règles de spec §3.7, ligne à ligne : `id` texte non vide ; `tier` `minor` ou `major` ; `name_fr`, `name_en`, `description_fr`, `description_en` textes non vides ; `deltas` **facultative** (absente : aucune — PN3), sinon une liste dont chaque `type` est dans `deltaTypeNames` (toute autre refusée, nommée, `percentBonus` compris), lue par `CardDelta.fromJson` ; `target` majeure seulement, `allEnemies` seulement ; `cooldown` majeure seulement, entier non nul ; `excludes` majeure seulement, liste non vide de textes, sans l'id lui-même ; au moins un changement (`deltas` non vide, `target` ou `cooldown`), sinon refus nommant `deltas` ; `icon` et `color` textes non vides ; **chiffrée ou verbale** (A25) : une évolution qui porte `addEffect`, `critBonus` ou `target` ne porte ni `flatBonus`, ni `reduceCost`, ni `cooldown` — le message contient `verbale`.
   - `bool get isVerbal` — `target != null` ou un delta `AddEffectDelta` / `CritBonusDelta`.
   - `bool excludesOrIsExcludedBy(SignatureEvolutionData other) => excludes.contains(other.id) || other.excludes.contains(id)` — Q7, lu dans les deux sens (Tasks 4 et 5).
@@ -196,19 +207,19 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 3. 
   - `String getDescription(String locale)` → `fillTemplate(<la description de la langue>, effects)` : la signature de base, gabarit rempli (A25 ; `SignatureTile`, spec §5.2).
 - Les six fichiers (spec §3.7, **mot pour mot**) :
   - `description_fr` / `description_en` : les gabarits de la table de spec §3.7.
-  - `evolutions` : les 42 évolutions de la table « Les six pools », mineures puis majeures, chacune avec son `id`, `tier`, ses quatre textes, et `icon` / `color` de la table « Les icônes ». La traduction des colonnes en clés :
+  - `evolutions` : les 42 évolutions de la table « Les six pools », mineures puis majeures, chacune avec son `id`, `tier`, ses quatre textes, et `icon` / `color` de la table « Les icônes » — **(provisoire, P-6 (a))** ces icônes et couleurs, alignées sur les faces des cartes ; *Carapace* et *Bouclier de mana* écrivent « Donne {val} d'Armure » / « Gain {val} Block ». La traduction des colonnes en clés :
     - `flatBonus <effet> N` → `{"type": "flatBonus", "effect": "<effet>", "valuePerLevel": N}` ; `flatBonus apply_status might 1` (*Colère*) porte en plus `"statusId": "might"` ;
     - `addEffect <statut> N, D tours` (majeure) ou `D tours par niveau` (mineure) → `{"type": "addEffect", "effect": "apply_status", "statusId": "<statut>", "valuePerLevel": N, "durationPerLevel": D}` ; `addEffect armor|heal|draw N` → `{"type": "addEffect", "effect": "<armor|heal|draw>", "valuePerLevel": N}` ;
     - `critBonus 5` → `{"type": "critBonus", "valuePerLevel": 5}` ; `reduceCost 1` → `{"type": "reduceCost", "valuePerLevel": 1}` ;
     - `cooldown −1` / `+1` → `"cooldown": -1` / `1`, sans `deltas` s'il n'y a qu'elle ; `target allEnemies` → `"target": "allEnemies"`, sans `deltas` ;
     - `excludes` : `haste` ↔ `devastation` sur *Frappe Téméraire*, `haste` ↔ `overload` sur *Projectile Magique*, déclarés des deux côtés.
-  - Exemple, *Dévastation* : `{"id": "devastation", "tier": "major", "name_fr": "Dévastation", "name_en": "Devastation", "description_fr": "+10 dégâts, recharge allongée d'un tour", "description_en": "+10 damage, cooldown one turn longer", "deltas": [{"type": "flatBonus", "effect": "damage", "valuePerLevel": 10}], "cooldown": 1, "excludes": ["haste"], "icon": "bolt_rounded", "color": "yellowAccent"}`.
-- Le gabarit d'éditeur de la signature gagne `"evolutions": [ { "id": "ardor", "tier": "minor", "name_fr": "Ardeur", "name_en": "Ardor", "description_fr": "+{val} % de critique", "description_en": "+{val}% critical chance", "deltas": [ { "type": "critBonus", "valuePerLevel": 5 } ], "icon": "gps_fixed_rounded", "color": "amber" } ]` — verbale, pour qu'une description saisie sans `{…}` reste valide ; la recette de classe (`class_recipe.dart`), qui remplit ses signatures du gabarit, en hérite.
+  - Exemple, *Dévastation* : `{"id": "devastation", "tier": "major", "name_fr": "Dévastation", "name_en": "Devastation", "description_fr": "+10 dégâts, recharge allongée d'un tour", "description_en": "+10 damage, cooldown one turn longer", "deltas": [{"type": "flatBonus", "effect": "damage", "valuePerLevel": 10}], "cooldown": 1, "excludes": ["haste"], "icon": "rocket_launch_rounded", "color": "yellowAccent"}` **(provisoire, P-6 (a) : `rocket_launch_rounded`)**.
+- Le gabarit d'éditeur de la signature gagne `"evolutions": [ { "id": "ardor", "tier": "minor", "name_fr": "Ardeur", "name_en": "Ardor", "description_fr": "+{val} % de critique", "description_en": "+{val}% critical chance", "deltas": [ { "type": "critBonus", "valuePerLevel": 5 } ], "icon": "flare_rounded", "color": "amber" } ]` **(provisoire, P-6 (a) : `flare_rounded`)** — verbale, pour qu'une description saisie sans `{…}` reste valide ; la recette de classe (`class_recipe.dart`), qui remplit ses signatures du gabarit, en hérite.
 
 - [ ] **Step 1: Écrire les tests qui échouent**
 
 `test/unit/signature_evolution_data_test.dart` *(nouveau ; l'aide `refusing(clé)` de `signature_data_test.dart:25-27`)* :
-- `une evolution complete se lit` — l'exemple *Dévastation* : `tier` major, `deltas` `[isA<FlatBonusDelta>()]` à 10, `cooldown` 1, `excludes` `['haste']`, `icon` `'bolt_rounded'`, `color` `'yellowAccent'`, `isVerbal` faux.
+- `une evolution complete se lit` — l'exemple *Dévastation* : `tier` major, `deltas` `[isA<FlatBonusDelta>()]` à 10, `cooldown` 1, `excludes` `['haste']`, `icon` `'rocket_launch_rounded'` **(provisoire, P-6 (a))**, `color` `'yellowAccent'`, `isVerbal` faux.
 - `un tier inconnu est refuse, nomme` — `'legendary'` : `refusing('tier')`.
 - `une sorte de delta hors des quatre est refusee, nommee, percentBonus compris` — `percentBonus`, `armorPierce` : `refusing(<la sorte>)`.
 - `target, cooldown et excludes sur une mineure sont refuses (D54)` — trois refus, chacun nommant sa clé.
@@ -256,16 +267,19 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 ### Task 3: La signature évoluée — `SignatureInstance`
 
 **Files:**
+- Create: `lib/models/data/effect_kind.dart`
 - Modify: `lib/models/signature_instance.dart:1-37`
 - Test: `test/unit/signature_instance_test.dart`, `test/unit/card_catalog_test.dart`, `test/unit/effect_resolver_test.dart` (groupe `Q11`, `:313`)
 
 **Interfaces:**
-- Consumes : `CardInstance.extraDeltas`, `EffectiveCard.apply` (Task 1) ; `SignatureEvolutionData`, `SignatureData.evolutions`, `SignatureData.fillTemplate` (Task 2) ; `ForgeUpgradeData.levelsOf` (`forge_upgrade_data.dart:423-432`). `signature_instance.dart`, qui n'importe aujourd'hui que `card_instance.dart`, `data/card_data.dart` et `data/signature_data.dart`, gagne ceux que ses getters et `asCard` lisent : `dart:math` (`show max`), `effective_card.dart`, `data/card_delta.dart` (seulement si le fichier nomme le type — par exemple la variable locale `List<(CardDelta, int)>` des deltas d'`asCard` ; inféré, l'import resterait sans usage et `dart analyze` le signalerait), `data/forge_upgrade_data.dart` (pour `levelsOf`) et `data/signature_evolution_data.dart` ; la Task 5 n'ajoutera que `missing_save_item.dart`.
+- Consumes : `CardInstance.extraDeltas`, `EffectiveCard.apply` (Task 1) ; `SignatureEvolutionData`, `SignatureData.evolutions`, `SignatureData.fillTemplate` (Task 2) ; `ForgeUpgradeData.levelsOf` (`forge_upgrade_data.dart:423-432`). `signature_instance.dart`, qui n'importe aujourd'hui que `card_instance.dart`, `data/card_data.dart` et `data/signature_data.dart`, gagne ceux que ses getters et `asCard` lisent : `dart:math` (`show max`), `effective_card.dart`, `data/card_delta.dart` (`effectLines` distingue `AddEffectDelta` et `CritBonusDelta`), `data/effect_kind.dart`, `data/forge_upgrade_data.dart` (pour `levelsOf`) et `data/signature_evolution_data.dart` ; la Task 5 n'ajoutera que `missing_save_item.dart`.
 - Produces (spec §4.10, ligne à ligne) :
   - `const SignatureInstance(this.data, {this.evolutions = const []})` ; `final List<String> evolutions` — des références `id:niveau`, dans l'ordre de la première prise.
   - `List<(SignatureEvolutionData, int)> get taken` — `levelsOf(evolutions)`, chaque id relu dans `data.evolutions` ; un id absent du pool est passé (la relecture, Task 5, n'en laisse aucun).
   - `int get level` — la somme des niveaux de `taken`.
-  - `CardInstance get asCard` — la `CardData` d'E4 sur `data.cost` (plus `cost`, sinon `cost` et `asCard` s'appelleraient l'un l'autre) ; sa cible : celle de la **dernière** majeure `target` prise, sinon `data.target` ; ses `extraDeltas` : les deltas de chaque évolution de `taken`, à son niveau, dans l'ordre ; ses deux descriptions : `fillTemplate(<gabarit de la langue>, <les effets propres évolués>)` — les effets d'`EffectiveCard.apply(<la CardData>, common, <ces deltas>)` —, suivi, pour chaque évolution **verbale** de `taken` dans l'ordre, de sa phrase `getDescription(niveau, langue, cost: data.cost)` ; une chiffrée n'ajoute rien (A25). **(provisoire, PN12 (a))** chaque phrase s'ajoute en `' <phrase>.'` : « Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. ». Le commentaire d'`asCard` dit qu'une signature ne coûte que du mana : `hpCost` et `armorCost` restent à 0 (point reporté).
+  - `CardInstance get asCard` — la `CardData` d'E4 sur `data.cost` (plus `cost`, sinon `cost` et `asCard` s'appelleraient l'un l'autre) ; sa cible : celle de la **dernière** majeure `target` prise, sinon `data.target` ; ses `extraDeltas` : les deltas de chaque évolution de `taken`, à son niveau, dans l'ordre ; ses deux descriptions : `fillTemplate(<gabarit de la langue>, <les effets propres évolués>)` — les effets d'`EffectiveCard.apply(<la CardData>, common, <ces deltas>)` —, suivi, pour chaque évolution **verbale** de `taken` dans l'ordre, de sa phrase `getDescription(niveau, langue, cost: data.cost)` ; une chiffrée n'ajoute rien. La jointure est celle d'A25 : chaque phrase s'ajoute en `' <phrase>.'` — « Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. ». C'est la forme **hors combat** de la signature évoluée : aucun écran de `0.5.7` ne la montre (en combat, la bande et la liste, Tasks 8 et 9), le test d'`asCard` la verrouille. Le commentaire d'`asCard` dit qu'une signature ne coûte que du mana : `hpCost` et `armorCost` restent à 0 (point reporté).
+  - `abstract final class EffectKind` (`lib/models/data/effect_kind.dart`, couche données) — la sorte d'un effet (A39) : `static const crit = 'crit'`, `static const allEnemies = 'target:allEnemies'`, `static String of(CardEffect effect)` — `status:<statusId>` pour un `apply_status`, le type sinon. La Task 6 y ajoute le reste du vocabulaire.
+  - `typedef EffectLine = ({String kind, int? value, int? duration})` (dans `signature_instance.dart`, son producteur) et `List<EffectLine> get effectLines` (A40, spec §4.10), lu sur la vue évoluée, `asCard.effective` : d'abord une entrée par effet propre, dans l'ordre du fichier — `EffectKind.of(e)`, la valeur évoluée de l'effet, la durée d'un `apply_status` (nulle sinon) ; puis, pour chaque évolution **verbale** de `taken`, dans l'ordre, une entrée par changement : chaque `AddEffectDelta`, l'effet ajouté qui lui répond dans `addedEffects` (même ordre), à sa sorte, sa valeur et sa durée ; un `CritBonusDelta`, `(kind: EffectKind.crit, value: valuePerLevel × niveau, duration: null)` ; une `target`, `(kind: EffectKind.allEnemies, value: null, duration: null)`. Une chiffrée n'en ajoute aucune ; deux effets de même sorte restent deux entrées. Aucun widget ne recalcule une valeur.
   - `int get cost => asCard.currentCost` ; `int get cooldown => max(1, data.cooldown + Σ cooldown des évolutions de taken)` (D54).
   - `int pendingFor(int heroLevel) => max(0, heroLevel ~/ 5 - level)` (A27) ; `EvolutionTier get nextTier` — mineure si `level + 1` est impair, majeure sinon (D21).
   - Les deux commentaires « La vague 5 y appliquera les évolutions » (`:11`, `:14`) disparaissent avec les getters réécrits.
@@ -279,7 +293,10 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 - `cooldown : la recharge et celle des majeures, jamais sous 1` — `haste` sur recharge 2 : 1 ; `haste` sur recharge 1 : 1 ; `devastation` sur recharge 2 : 3.
 - `asCard : la cible est celle de la derniere majeure target prise, sinon la sienne` — sans évolution : `singleEnemy` ; `['radiance:1']` : `allEnemies`.
 - `asCard : addEffect et critBonus passent par effective` — `['sentence:1', 'ardor:1']` : `addedEffects` porte `apply_status weakness` valeur 1 durée 2 ; `critChanceBonus` 5.
-- `la description : le gabarit rempli des valeurs evoluees, puis les phrases verbales ; une chiffree n ajoute rien` — **(provisoire, PN12 (a))** `['zeal:2', 'sentence:1']` : FR `« Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. »`, EN `« Deal 10 damage and gain 4 Block. Apply 1 Weakness for 2 turns. »` ; `['zeal:1']` seul : le gabarit rempli, rien d'autre.
+- `la description : le gabarit rempli des valeurs evoluees, puis les phrases verbales ; une chiffree n ajoute rien` — la forme hors combat (A25) ; `['zeal:2', 'sentence:1']` : FR `« Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. »`, EN `« Deal 10 damage and gain 4 Block. Apply 1 Weakness for 2 turns. »` ; `['zeal:1']` seul : le gabarit rempli, rien d'autre.
+- `effectLines : les effets propres puis les verbales, dans l ordre de premiere prise, a leurs valeurs evoluees` — `['zeal:2', 'sentence:1', 'ardor:1', 'radiance:1']` : `[(kind: 'damage', value: 10, duration: null), (kind: 'armor', value: 4, duration: null), (kind: 'status:weakness', value: 1, duration: 2), (kind: 'crit', value: 5, duration: null), (kind: 'target:allEnemies', value: null, duration: null)]`.
+- `effectLines : une chiffree n ajoute aucune entree` — `['zeal:1', 'devotion:1', 'haste:1']` : deux entrées, `damage` 8 et `armor` 4.
+- `effectLines : deux effets de meme sorte restent deux entrees` — une *Surtension de Mana* construite (`[gain_mana 1, draw 1]`) portant `['clarity:1', 'serenity:1']` : `gain_mana` 1, `draw` 1, `heal` 1, `heal` 4, dans cet ordre.
 - `pendingFor : niveau du heros / 5 moins level, jamais negatif` — sans évolution : 4 → 0, 5 → 1, 12 → 2 ; `['zeal:1']` à 10 → 1 ; `['zeal:3']` à 10 → 0 (menu de debug).
 - `nextTier : niveau de heros 5 -> mineure, 10 -> majeure` — `level` 0 → `minor`, 1 → `major`, 2 → `minor`, 3 → `major`.
 
@@ -296,7 +313,7 @@ Les quatre tests existants de `signature_instance_test.dart` restent verts tels 
 Run: `flutter test test/unit/signature_instance_test.dart test/unit/card_catalog_test.dart test/unit/effect_resolver_test.dart`
 Expected: échec de compilation — le paramètre `evolutions` n'existe pas.
 
-- [ ] **Step 3: Implémenter** — `SignatureInstance`, sans toucher `signature_bar.dart` (Task 7) ni `run_controller.dart` (Tasks 4, 5).
+- [ ] **Step 3: Implémenter** — `EffectKind`, puis `SignatureInstance`, sans toucher `signature_bar.dart` (Task 8) ni `run_controller.dart` (Tasks 4, 5).
 
 - [ ] **Step 4: Lancer les tests, constater le succès**
 
@@ -305,7 +322,7 @@ Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1952** (1941 + 9 + 1 + 1).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1955** (1941 + 12 + 1 + 1).
 
 - [ ] **Step 6: Commit**
 
@@ -329,7 +346,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
     - `static List<SignatureEvolutionData> offer(SignatureInstance s, Random rng)` — sans poids, sans remise : au palier mineur, `offerSize` mineures tirées ; au palier majeur, les majeures éligibles tirées jusqu'à `offerSize`, puis des mineures tirées complètent ; moins si le pool n'en a pas assez ;
     - `static List<String> withChoice(List<String> evolutions, SignatureEvolutionData chosen)` — une mineure déjà prise monte d'un niveau **à sa place** ; toute autre entre à `'<id>:1'` à la fin.
   - `RunState.nextPendingEvolution` → `SignatureInstance?` — parmi les signatures dont `pendingFor(heroStats.level) > 0`, celle dont `level + 1` est le plus bas ; à égalité, la première dans l'ordre de `signatures` (celui de `HeroData.skills`).
-  - `RunState.hasPendingChoice` → `pendingDrafts > 0 || nextPendingEvolution != null` — la condition du rideau et des deux gardes de nœud (Task 6).
+  - `RunState.hasPendingChoice` → `pendingDrafts > 0 || nextPendingEvolution != null` — la condition du rideau et des deux gardes de nœud (Task 7).
   - `bool RunController.chooseSignatureEvolution(String signatureId, String evolutionId)` — refuse **sans rien écrire** si la signature n'est pas de la run, si `pendingFor(heroStats.level) == 0`, si l'évolution n'est pas de son pool, ou si elle n'est pas dans `admissible` ; sinon remplace l'instance par `SignatureInstance(data, evolutions: withChoice(...))`, puis `ref.read(checkpointProvider.notifier).bump()` — la sauvegarde suit chaque choix, comme `decrementPendingDrafts` (`player_stats_manager.dart:159-168`).
 
 - [ ] **Step 1: Écrire les tests qui échouent**
@@ -361,7 +378,7 @@ Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1963** (1952 + 11).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1966** (1955 + 11).
 
 - [ ] **Step 6: Commit**
 
@@ -815,7 +832,7 @@ Dans `fromJsonWithReport`, la ligne `signatures: _signaturesOf(json['heroClassId
 - [ ] **Step 5: Lancer les tests, constater le succès ; vérifier la tâche**
 
 Run: `flutter test test/unit/save_service_test.dart test/unit/run_state_persistence_test.dart test/unit/checkpoint_autosave_test.dart` → tout passe (le test d'E4 « rien d ecrit » reste vert : aucune signature n'y porte d'évolution, la carte reste vide et ne nomme pas `holy_shield`).
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1972** (1963 + 9).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1975** (1966 + 9).
 
 - [ ] **Step 6: Commit**
 
@@ -823,20 +840,97 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 
 ---
 
-### Task 6 (interface): L'écran d'évolution, ses icônes et le rideau
+### Task 6 (interface): Les icônes d'effet — le document, la table, le panneau des statuts **(provisoire, P-6 (a))**
 
-Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 7. Ce que le joueur voit : au niveau 5 du héros, le rideau de la carte s'affiche ; le toucher ouvre le draft de niveau, puis, rideau toujours là, l'évolution de Châtiment, puis celle de Bouclier Sacré.
+Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 7. Ce que le joueur voit **(provisoire, P-6 (a))** : le panneau des statuts du héros, en combat et à l'étape des éléments du tutoriel, dessine la Puissance, l'Éveil de Puissance (`flash_on` → `bolt_rounded` ; `status_effects_panel.dart:106-110`), l'Armure au début du tour (`shield` cyan → `autorenew_rounded` bleu ; `:90-95`), la Faiblesse, Vulnérable, la Brûlure, le Poison, le Gel et l'Électrocution avec l'icône et la couleur des faces des cartes ; `metallicize` et `lifesteal` gardent les leurs.
 
 **Files:**
-- Create: `lib/ui/widgets/signature_evolution_style.dart`, `lib/ui/screens/signature_evolution_screen.dart`, `test/widget/signature_evolution_screen_test.dart`
-- Modify: `lib/ui/widgets/relic_carousel/draft_card_reel.dart:11-37` (paramètre), `:294-301` (le rouleau posé) ; `lib/ui/widgets/draft/draft_choice_card.dart:3-19` (paramètre), `:130-131` (l'emplacement de l'emoji) ; `lib/ui/screens/map_screen.dart:301-316` (le rideau), `:380`, `:403` (les gardes) ; `lib/l10n/app_fr.arb:280`, `lib/l10n/app_en.arb:766-770` (après `signatureTurnsLeft`)
-- Test: `test/widget/draft_card_reel_test.dart`, `test/widget/map_screen_test.dart`, `test/unit/referential_integrity_test.dart` (après `:90-101`, le test des icônes de rune)
+- Create: `assets/data/effect_icons.json`, `lib/models/data/effect_icon_table.dart`, `lib/ui/widgets/effect_style.dart`, `test/unit/effect_icon_table_test.dart`, `test/widget/status_effects_panel_test.dart` **(provisoire, P-6 (a))**
+- Modify: `lib/models/data/effect_kind.dart` (Task 3) ; `lib/models/data/game_data_registry.dart:22-57` (le champ facultatif) ; `lib/services/game_data_service.dart:152-157` (le chargement, avant `throwIfFailed`), `:169-180` (le registre) ; **(provisoire, P-6 (a))** `lib/ui/widgets/hud/status_effects_panel.dart:5-8`, `:79-146` ; `lib/ui/widgets/hud/combat_side_panels.dart:10-23`, `:71-75` ; `lib/ui/screens/game_screen.dart:626-631` ; `lib/tutorial/widgets/tutorial_elements_widget.dart:486-500` ; `lib/game/components/widgets/card_text_renderer.dart:11-15`, `:112`, `:277-357` ; `CLAUDE.md:43`, `:75-77`
+- Test: `test/unit/referential_integrity_test.dart` (après `:90-101`, le test des icônes de rune), `test/unit/game_data_loader_test.dart` (après `:328-337`), `test/unit/real_bundle_load_test.dart:72-77`, `:92`, `test/unit/entity_id_convention_test.dart:16-18`, `test/tutorial/tutorial_test_registry.dart:34-48`, `test/widget/tutorial_elements_widget_test.dart` **(provisoire, P-6 (a))**
 
 **Interfaces:**
-- Consumes : `SignatureEvolutionRules.offer`, `RunController.chooseSignatureEvolution`, `RunState.nextPendingEvolution`, `hasPendingChoice` (Task 4) ; `SignatureEvolutionData.getDescription`, `getName`, `tier`, `icon`, `color` (Task 2) ; `SignatureInstance.taken` (Task 3).
+- Consumes : `SignatureEvolutionData.icon`, `color`, `deltas`, `target`, `cooldown` (Task 2) ; `SignatureInstance.effectLines` et `EffectLine` (Task 3) ; **(provisoire, P-6 (a))** `getEffectVisuals` (`ui_card/ui_card_helpers.dart:72-152`), lu seulement par le test d'égalité.
 - Produces :
-  - `signature_evolution_style.dart` (A35) : `const Map<String, IconData> evolutionIcons` — les quinze de spec §3.7 (`gavel_rounded`, `shield_rounded`, `favorite_rounded`, `gps_fixed_rounded`, `fitness_center_rounded`, `trending_up_rounded`, `autorenew_rounded`, `arrow_downward_rounded`, `heart_broken_rounded`, `local_fire_department_rounded`, `style_rounded`, `fast_forward_rounded`, `bolt_rounded`, `all_out_rounded`, `savings_rounded`) vers les `Icons.…` du même nom ; `const Map<String, Color> evolutionColors` — les quatorze (`redAccent`, `blueAccent`, `greenAccent`, `amber`, `orangeAccent`, `lightBlueAccent`, `purpleAccent`, `pinkAccent`, `deepOrangeAccent`, `amberAccent`, `tealAccent`, `yellowAccent`, `deepPurpleAccent`, `cyanAccent`) ; un nom inconnu retombe sur `Icons.help_outline` et `Colors.grey`, comme une rune (`forge/rune_style.dart`).
-  - `class EvolutionIcon extends StatelessWidget` — `const EvolutionIcon({super.key, required SignatureEvolutionData evolution, required double size, int level = 1, Color? color})` : la puce entière, anneau compris, mesure `size` ; une **majeure** dans un anneau de sa couleur (`ValueKey('evolution-ring-<id>')`), une mineure nue ; dès `level ≥ 2`, une mineure porte son niveau en petit chiffre en bas à droite ; `color`, s'il est donné, remplace la couleur de l'évolution partout (icône, anneau, chiffre) — le gris de la tuile grisée (Task 7). La puce porte `ValueKey('evolution-icon-<id>')`. Ni toucher ni survol. Le seul dessin d'une icône d'évolution, lu par l'écran et par la tuile (PN7).
+  - `assets/data/effect_icons.json` — un document plat, les seize sortes de la table de spec §3.7 « Les icônes d'effet », `{"<sorte>": {"icon": "<nom>", "color": "<nom>"}}`, **mot pour mot** ; **(provisoire, P-6 (a))** `status:poison`, `status:freeze`, `status:shock` y figurent, et chaque sorte que dessinent les faces des cartes y prend leur icône et leur couleur. Les fichiers de premier niveau d'`assets/data/` étant déclarés (`pubspec.yaml:35`), `sync_assets` n'a rien à ajouter : `--check` passe.
+  - `lib/models/data/effect_icon_table.dart` (A39) — `class EffectIconEntry { const EffectIconEntry({required this.icon, required this.color}); final String icon; final String color; }` ; `class EffectIconTable` — `const EffectIconTable(Map<String, EffectIconEntry> entries)`, `const EffectIconTable.empty()`, `EffectIconEntry? entryOf(String kind)`, `Iterable<String> get kinds` ; `factory EffectIconTable.fromJson(Map<String, dynamic> json)` — refus nommant la clé (spec §3.7) : une clé qui n'est pas une sorte (`EffectKind.isKind`), `apply_status` nu compris ; une valeur qui n'est pas un objet à `icon` et `color`, deux textes non vides ; une clé de plus. Le document qui n'est pas un objet est déjà refusé par `GameDataLoader._read` (`game_data_loader.dart:195-200`).
+  - `buildTutorialTestRegistry(openedPassives:)` (`test/tutorial/tutorial_test_registry.dart:34-48`), qui reconstruit le registre livré à la main, passe `effectIcons: shipped.effectIcons` (aucun test de plus).
+  - `EffectKind` (`lib/models/data/effect_kind.dart`, Task 3) gagne `static const plain = {'damage', 'armor', 'heal', 'draw', 'gain_mana'}` et `static bool isKind(String key)` — un de `plain`, `crit`, `allEnemies`, ou `status:<id>` à l'id en `snake_case` ; la seule écriture du vocabulaire des sortes (A39), lue par `fromJson`.
+  - `GameDataRegistry` gagne `final EffectIconTable effectIcons` (paramètre nommé, défaut `const EffectIconTable.empty()`, comme `levelUpRewards`, `:52` — soixante fichiers de test construisent le registre à la main). `loadGameDataRegistry` le lit par `loader.loadDocument('assets/data/effect_icons.json', EffectIconTable.fromJson)`, à côté de `xp_curve.json`, **avant** `throwIfFailed` : un fichier absent ou fautif fait échouer le démarrage (PN23).
+  - `lib/ui/widgets/effect_style.dart` (A35, A39) : `const Map<String, IconData> effectIcons` — les dix-huit noms de spec §3.7 (`hardware_rounded`, `shield_rounded`, `favorite_rounded`, `flare_rounded`, `bolt_rounded`, `autorenew_rounded`, `trending_down_rounded`, `gps_fixed_rounded`, `local_fire_department_rounded`, `style_rounded`, `fast_forward_rounded`, `rocket_launch_rounded`, `all_out_rounded`, `savings_rounded`, `diamond_rounded`, `science_rounded`, `ac_unit_rounded`, `flash_on_rounded`) vers les `Icons.…` du même nom ; `const Map<String, Color> effectColors` — les quatorze (`redAccent`, `blueAccent`, `pinkAccent`, `amber`, `orangeAccent`, `purpleAccent`, `deepOrangeAccent`, `tealAccent`, `yellowAccent`, `deepPurpleAccent`, `cyanAccent`, `greenAccent`, `lightBlueAccent`, `amberAccent`) ; **(provisoire, P-6 (a))** ces deux comptes, dix-huit et quatorze. Deux lectures, la seule traduction des noms : `({IconData icon, Color color}) effectVisualsOf(EffectIconTable table, String kind)` — une sorte absente, ou un nom inconnu, retombe sur `Icons.help_outline` et `Colors.grey` (la bande, la liste) ; **(provisoire, P-6 (a))** `({IconData icon, Color color})? effectVisualsOrNull(EffectIconTable table, String kind)` — `null` pour une sorte absente (le panneau, qui garde alors son icône d'aujourd'hui) (PN25).
+  - **(provisoire, P-6 (a))** `StatusEffectsPanel` gagne `final EffectIconTable effectIcons` (défaut vide) : pour chaque statut dont `effectVisualsOrNull(effectIcons, 'status:${status.id}')` n'est pas nul, cette icône et cette couleur ; sinon, la branche d'aujourd'hui (`:79-146`), `metallicize` et `lifesteal` compris ; les libellés ne changent pas. `CombatSidePanels` gagne le même paramètre (défaut vide) et le passe au panneau (`:74`) ; `GameScreen` passe `gameData.effectIcons` (`:626-631`) ; `TutorialElementsWidget` passe `widget.engine.data.effectIcons` (`:486`).
+  - **(provisoire, P-6 (a))** la face Flame : `_RendererEffectVisuals` devient `RendererEffectVisuals` (`card_text_renderer.dart:11-15`) ; `_getEffectVisuals` devient `@visibleForTesting static RendererEffectVisuals getEffectVisuals(CardEffect effect)` (`:277`), sans état, comme `badgeValue` (`:266`), lu à `:112` ; les icônes et les couleurs rendues ne changent pas.
+  - `CLAUDE.md:43` : `effect_icon_table.dart` rejoint la liste des modèles de données ; `:75-77` : l'arbre de `assets/data/` nomme `effect_icons.json` parmi les documents plats (spec §11).
+
+- [ ] **Step 1: Écrire les tests qui échouent**
+
+`test/unit/effect_icon_table_test.dart` *(nouveau)* :
+- `un document complet se lit : chaque sorte, son icon et sa color` — l'exemple de spec §3.7 (`damage`, `status:weakness`, `crit`) : `entryOf('damage')` vaut `('hardware_rounded', 'redAccent')` ; `kinds` les trois ; `EffectKind.isKind` vrai pour `'status:weakness'`, `'crit'`, `'target:allEnemies'`.
+- `une cle hors des sortes est refusee, nommee, apply_status nu compris` — `apply_status`, `status:Weakness`, `poison`, `target:self` : quatre `FormatException` nommant la clé.
+- `une valeur sans icon ou color, vide, ou a une cle de plus est refusee` — quatre refus nommant la sorte.
+- `une sorte absente retombe sur Icons.help_outline et du gris` — `effectVisualsOf(const EffectIconTable.empty(), 'damage')` : `(Icons.help_outline, Colors.grey)` ; **(provisoire, P-6 (a))** `effectVisualsOrNull` : `null`.
+
+`game_data_loader_test.dart` :
+- `le demarrage du jeu refuse un registre sans effect_icons.json` — un `FakeBundle` qui ne porte que `assets/data/xp_curve.json` (valide) : `loadGameDataRegistry` lève, le message contient `effect_icons.json`.
+
+`real_bundle_load_test.dart` :
+- `le registre reel charge les seize sortes d effect_icons.json` **(provisoire, P-6 (a) : seize)** — `registry.effectIcons.kinds` en compte 16.
+- Réécrit, même compte : « le manifeste declare les 115 fichiers d entite » (`:72-77`) : « quatre documents de configuration », `effect_icons.json` compris.
+
+`entity_id_convention_test.dart` — réécrit, même compte : `_configDocuments` (`:18`) gagne `effect_icons.json`, son commentaire dit « quatre ».
+
+`referential_integrity_test.dart` (le registre réel du fichier ; les sortes produites se lisent sur `SignatureInstance(s, evolutions: [for (final e in s.evolutions) '${e.id}:1']).effectLines`, toutes évolutions prises) :
+- `chaque icone et chaque couleur d evolution livree et d effect_icons.json est connue d effectIcons et effectColors` — sur le modèle du test des runes (`:90-101`).
+- `chaque entree d effectIcons et d effectColors sert au moins une evolution ou une sorte`.
+- `deux evolutions d une meme signature de meme icone ne sont jamais deux mineures ni deux majeures (A37)`.
+- `chaque sorte que produit une signature livree ou une evolution de son pool figure au document ; chaque status:<id> du document est cree par createStatus`.
+- `une evolution sans cooldown qui vise une seule sorte porte son icon et sa color (A39)` — la sorte d'un `flatBonus` ou d'un `addEffect` (`EffectKind.of` de son effet), `crit` d'un `critBonus`, `target:allEnemies` d'une `target` ; une seule, sans `cooldown` : `icon` et `color` de l'entrée du document ; le compte des évolutions vérifiées vaut **32**, dont `zeal` (`damage`) et `sentence` (`status:weakness`).
+- `chaque effet qu ajoute une evolution a sa strategie, et chaque statut qu elle pose est fabrique par createStatus` — les `AddEffectDelta` et `FlatBonusDelta` des pools : `strategies.get(effect)` non nul ; `createStatus(statusId, 1, 1)` non nul.
+- **(provisoire, P-6 (a))** `les faces des cartes et le document donnent la meme icone et la meme couleur a chaque sorte commune` — pour `damage`, `armor`, `heal`, `gain_mana`, `draw` et les statuts `might`, `might_regen`, `armor_regen`, `poison`, `weakness`, `vulnerable`, `burn`, `freeze`, `shock` (un `CardEffect` construit par sorte) : `getEffectVisuals(e)` et `CardTextRenderer.getEffectVisuals(e)` rendent l'icône et la couleur d'`effectVisualsOf(registry.effectIcons, EffectKind.of(e))`.
+
+`test/widget/status_effects_panel_test.dart` *(nouveau ; **(provisoire, P-6 (a))** les trois tests)* :
+- `avec la table, might, weakness, burn et poison prennent l icone et la couleur du document` — la table du registre réel : `bolt_rounded` / `orangeAccent`, `trending_down_rounded` / `purpleAccent`, `local_fire_department_rounded` / `orangeAccent`, `science_rounded` / `greenAccent`.
+- `metallicize et lifesteal gardent leurs icones d aujourd hui` — `Icons.shield` / `Colors.cyanAccent`, `Icons.favorite` / `Colors.redAccent`.
+- `avec une table vide, chaque statut garde son icone d aujourd hui, jamais help_outline` — `might` à `Icons.flash_on`, `burn` à `Icons.whatshot` ; `find.byIcon(Icons.help_outline)` rien.
+
+`tutorial_elements_widget_test.dart` :
+- **(provisoire, P-6 (a))** `le panneau de l etape des elements lit la table de engine.data` — `poison` à `Icons.science_rounded`, `burn` à `Icons.local_fire_department_rounded`.
+
+- [ ] **Step 2: Lancer les tests, constater l'échec**
+
+Run: `flutter test test/unit/effect_icon_table_test.dart test/unit/game_data_loader_test.dart test/unit/real_bundle_load_test.dart test/unit/entity_id_convention_test.dart test/unit/referential_integrity_test.dart test/widget/status_effects_panel_test.dart test/widget/tutorial_elements_widget_test.dart`
+Expected: échec de compilation — `EffectIconTable`, `effectIcons` et, **(provisoire, P-6 (a))**, `CardTextRenderer.getEffectVisuals` n'existent pas.
+
+- [ ] **Step 3: Implémenter** — le document, le modèle, le registre et son chargement, les tables, `CLAUDE.md` ; **(provisoire, P-6 (a))** le panneau et ses deux lecteurs, la face Flame.
+
+- [ ] **Step 4: Lancer les tests, constater le succès**
+
+Run: la commande du Step 2, puis `flutter test test/widget/status_effects_panel_overflow_test.dart test/tutorial/ test/widget/debug_drawer_test.dart`.
+Expected: tout passe.
+
+- [ ] **Step 5: Vérifier la tâche**
+
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1992** (1975 + 4 + 1 + 1 + 7 + 3 + 1) **(provisoire, P-6 (a))** dont 1 test d'égalité avec les faces et 4 du panneau (trois de `status_effects_panel_test`, un du tutoriel). `dart run tool/sync_assets.dart --check` → code 0.
+
+- [ ] **Step 6: Commit**
+
+`git add` par chemin, puis `git commit` — `feat(effets): une table d icones par sorte d effet, lue par le panneau des statuts` **(provisoire, P-6 (a))**.
+
+---
+
+### Task 7 (interface): L'écran d'évolution et le rideau
+
+Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. Ce que le joueur voit : au niveau 5 du héros, le rideau de la carte s'affiche ; le toucher ouvre le draft de niveau, puis, rideau toujours là, l'évolution de Châtiment, puis celle de Bouclier Sacré.
+
+**Files:**
+- Create: `lib/ui/screens/signature_evolution_screen.dart`, `test/widget/signature_evolution_screen_test.dart`
+- Modify: `lib/ui/widgets/effect_style.dart` (`EvolutionIcon`) ; `lib/ui/widgets/relic_carousel/draft_card_reel.dart:11-37` (paramètre), `:294-301` (le rouleau posé) ; `lib/ui/widgets/draft/draft_choice_card.dart:3-19` (paramètre), `:130-131` (l'emplacement de l'emoji) ; `lib/ui/screens/map_screen.dart:301-316` (le rideau), `:380`, `:403` (les gardes) ; `lib/l10n/app_fr.arb:280`, `lib/l10n/app_en.arb:766-770` (après `signatureTurnsLeft`)
+- Test: `test/widget/draft_card_reel_test.dart`, `test/widget/map_screen_test.dart`
+
+**Interfaces:**
+- Consumes : `SignatureEvolutionRules.offer`, `RunController.chooseSignatureEvolution`, `RunState.nextPendingEvolution`, `hasPendingChoice` (Task 4) ; `SignatureEvolutionData.getDescription`, `getName`, `tier`, `icon`, `color` (Task 2) ; `SignatureInstance.taken` (Task 3) ; `effectIcons`, `effectColors` (Task 6).
+- Produces :
+  - `class EvolutionIcon extends StatelessWidget` (`effect_style.dart`) — `const EvolutionIcon({super.key, required SignatureEvolutionData evolution, required double size, int level = 1, Color? color})` : la puce entière, anneau compris, mesure `size` ; l'icône `effectIcons[evolution.icon]`, la couleur `effectColors[evolution.color]`, un nom inconnu retombant sur `Icons.help_outline` et `Colors.grey` ; une **majeure** dans un anneau de sa couleur (`ValueKey('evolution-ring-<id>')`), une mineure nue ; dès `level ≥ 2`, une mineure porte son niveau en petit chiffre en bas à droite ; `color`, s'il est donné, remplace la couleur de l'évolution partout (icône, anneau, chiffre) — le gris de la tuile grisée (Task 8). La puce porte `ValueKey('evolution-icon-<id>')`. Ni toucher ni survol. Le seul dessin d'une icône d'évolution, lu par l'écran et par la tuile (PN7).
   - `DraftChoiceCard` et `DraftCardReel` gagnent `final Widget? icon` (facultatif, défaut nul) : `DraftCardReel` ne le passe qu'au `DraftChoiceCard` du rouleau **posé** (`:294-301`), jamais aux cartes qui défilent ; `DraftChoiceCard` le dessine à la place de l'emoji (`:131`), au-dessus du titre ; nul, l'emoji d'aujourd'hui (PN7). Le draft de niveau et le tutoriel (`tutorial_draft_widget.dart:130`) ne le passent pas : rien n'y change.
   - `class SignatureEvolutionScreen extends ConsumerStatefulWidget` — `const SignatureEvolutionScreen({super.key, required SignatureInstance signature, required VoidCallback onComplete})`. Le tirage (`SignatureEvolutionRules.offer(signature, Random())`) se fait dans `initState`, rien n'est retenu entre deux ouvertures. Mise en page, survol (1,05), sélection (1,12, halo ambre), cadence et sons du `DraftScreen` (`draft_screen.dart:171-404`), recopiés dans l'écran sans toucher `DraftScreen` (PN8) ; la musique `MusicScene.map` ; le son de pose `reelLand` à la variante `common` (PN9). Spec §5.1, mot pour mot :
     - en-tête : `evolutionScreenTitle(<nom de la signature dans la langue>)`, puis `evolutionScreenSubtitle` ;
@@ -852,7 +946,7 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 7. 
 - `au palier mineur, trois rouleaux : chacun son nom, sa description et MINEURE` — niveau 5 : `'Zèle'`, `'Égide'`, `'Ardeur'`, `'+2 dégâts'`, trois `'MINEURE'`.
 - `au palier majeur, les rouleaux disent MAJEURE` — niveau 10, `['zeal:1']` : trois `'MAJEURE'`, chaque titre celui d'une majeure de *Châtiment*.
 - `une mineure deja prise montre sa description au prochain niveau et Niveau 1 -> 2` — niveau 15, `['zeal:1', 'haste:1']` : `find.textContaining('+4 dégâts')` et `find.textContaining('Niveau 1 → 2')` sur le rouleau de *Zèle*.
-- `l icone de chaque evolution parait a sa couleur une fois le rouleau arrete ; une majeure dans son anneau` — avant la pose : `find.byKey(ValueKey('evolution-icon-zeal'))` rien ; après : trouvée, son `Icon` à `Icons.gavel_rounded` et `Colors.redAccent` ; au palier majeur, `evolution-ring-<id>` pour chaque rouleau.
+- `l icone de chaque evolution parait a sa couleur une fois le rouleau arrete ; une majeure dans son anneau` — avant la pose : `find.byKey(ValueKey('evolution-icon-zeal'))` rien ; après : trouvée, son `Icon` à `Icons.hardware_rounded` et `Colors.redAccent` **(provisoire, P-6 (a))** ; au palier majeur, `evolution-ring-<id>` pour chaque rouleau.
 - `toucher un rouleau pose choisit l evolution et rend la main` — niveau 5 : toucher *Zèle* ; `onComplete` appelé une fois ; `runProvider.signatures.first.evolutions` vaut `['zeal:1']`.
 
 `draft_card_reel_test.dart` :
@@ -864,18 +958,12 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 7. 
 - `toucher le rideau ouvre le draft de niveau d abord` — niveau 5, `pendingDrafts` 1 (le registre de test, `gameDataLoaderProvider` surchargé par `mockGameDataLoaderProvider`) : `find.byType(DraftScreen)`, pas d'écran d'évolution.
 - `les noeuds restent fermes tant qu une evolution attend` — niveau 5, deux signatures construites, `pendingDrafts` 0, sur le `MapNodeWidget` d'un nœud `node_0_*` — `find.byWidgetPredicate((w) => w is MapNodeWidget && w.node.id.startsWith('node_0_'))`, les nœuds n'ayant pas de `Key` — (aucun toucher : le rideau, `Positioned.fill` opaque, le recevrait, et `MapNodeWidget` n'appelle `onTap` que si `isAvailable`, `map_node_widget.dart:139`) : (a) son `isAvailable` est faux — la garde de `_isNodeAvailable` (`map_screen.dart:380`) ; (b) `tester.widget<MapNodeWidget>(…).onTap()`, appelé directement, laisse `container.read(runProvider).currentNodeId` nul — la garde de `_onNodeTap` (`:403`), l'appel contournant `isAvailable` et le rideau.
 
-`referential_integrity_test.dart` (le registre réel du fichier) :
-- `chaque icone et chaque couleur d evolution livree est connue des tables` — sur le modèle du test des runes (`:90-101`).
-- `deux evolutions d une meme signature de meme icone ne sont jamais deux mineures ni deux majeures (A37)`.
-- `chaque entree d evolutionIcons et d evolutionColors sert au moins une evolution livree`.
-- `chaque effet qu ajoute une evolution a sa strategie, et chaque statut qu elle pose est fabrique par createStatus` — les `AddEffectDelta` et `FlatBonusDelta` des pools : `strategies.get(effect)` non nul ; `createStatus(statusId, 1, 1)` non nul.
-
 - [ ] **Step 2: Lancer les tests, constater l'échec**
 
-Run: `flutter test test/widget/signature_evolution_screen_test.dart test/widget/draft_card_reel_test.dart test/widget/map_screen_test.dart test/unit/referential_integrity_test.dart`
-Expected: échec de compilation — `SignatureEvolutionScreen`, `evolutionIcons`, le paramètre `icon` n'existent pas.
+Run: `flutter test test/widget/signature_evolution_screen_test.dart test/widget/draft_card_reel_test.dart test/widget/map_screen_test.dart`
+Expected: échec de compilation — `SignatureEvolutionScreen`, `EvolutionIcon`, le paramètre `icon` n'existent pas.
 
-- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; les tables et `EvolutionIcon` ; le paramètre des deux widgets du carrousel ; l'écran ; le rideau.
+- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; `EvolutionIcon` ; le paramètre des deux widgets du carrousel ; l'écran ; le rideau.
 
 - [ ] **Step 4: Lancer les tests, constater le succès**
 
@@ -884,7 +972,7 @@ Expected: tout passe (le draft de niveau, celui du boss et le tutoriel, qui lit 
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1987** (1972 + 6 + 1 + 4 + 4).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 2003** (1992 + 6 + 1 + 4).
 
 - [ ] **Step 6: Commit**
 
@@ -892,16 +980,16 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 
 ---
 
-### Task 7 (interface): La tuile de combat — valeurs évoluées, badge, icônes, bande
+### Task 8 (interface): La tuile de combat — la bande d'icônes, le badge, les puces, la barre
 
-Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. Ce que le joueur voit : la tuile dit le coût, la cible et la description évolués, sans borne de lignes ; le badge « Niv. n » au bout de la ligne du type ; une rangée d'icônes sous la description ; la colonne reste à mi-hauteur tant qu'elle tient dans sa bande.
+Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 9. Ce que le joueur voit : la tuile ne montre plus de texte au repos — sous l'en-tête, une icône chiffrée par effet de la signature évoluée, trois par ligne, centrées ; le badge « Niv. n » en ambre au bout de la ligne du type ; la rangée des puces d'évolution sous la bande ; le coût et la cible évolués ; la colonne reste à mi-hauteur tant qu'elle tient dans sa bande.
 
 **Files:**
-- Modify: `lib/ui/widgets/hud/signature_bar.dart:1-439` ; `lib/ui/widgets/hud/combat_side_panels.dart:10-23` (deux constantes), `:71-75` (`bottom: statusPanelBottom`) ; `lib/ui/widgets/hud/combat_top_bar.dart:7` (une constante) ; `lib/ui/screens/game_screen.dart:637-660` (`heroStats` au lieu de `currentMana`) ; `lib/l10n/app_fr.arb:176`, `lib/l10n/app_en.arb:446-451` (`levelLabel`)
+- Modify: `lib/ui/widgets/hud/signature_bar.dart:1-439` ; `lib/ui/widgets/hud/combat_side_panels.dart:10-23` (deux constantes), `:71-75` (`bottom: statusPanelBottom`) ; `lib/ui/widgets/hud/combat_top_bar.dart:7` (une constante) ; `lib/ui/screens/game_screen.dart:637-660` (`heroStats` au lieu de `currentMana`, `effectIcons`) ; `lib/l10n/app_fr.arb:176`, `lib/l10n/app_en.arb:446-451` (`levelLabel`), et après `signatureTurnsLeft` (`effectValuePercent`)
 - Test: `test/widget/signature_bar_test.dart`, `test/widget/signature_tile_test.dart`
 
 **Interfaces:**
-- Consumes : `SignatureInstance.asCard`, `cost`, `level`, `taken` (Task 3) ; `EvolutionIcon` (Task 6) ; `EffectResolver.canAfford` (`effect_resolver.dart:113-118`).
+- Consumes : `SignatureInstance.asCard`, `cost`, `level`, `taken`, `effectLines` (Task 3) ; `EffectIconTable`, `GameDataRegistry.effectIcons`, `effectVisualsOf` (Task 6) ; `EvolutionIcon` (Task 7) ; `EffectResolver.canAfford` (`effect_resolver.dart:113-118`).
 - Produces :
   - `static const double CombatSidePanels.statusPanelBottom = 80`, `static const double CombatSidePanels.statusPanelReserve = 120` ; `static const double CombatTopBar.bandTop = 80` (A38).
   - `({double scale, double top}) signatureBandPlacement({required double available, required double natural})` (top-level, `signature_bar.dart`) — l'algorithme d'A38, imposé ligne à ligne :
@@ -929,53 +1017,124 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. 
     }
     ```
 
-  - `SignatureBar` : `final EntityStats heroStats` **remplace** `currentMana` ; `affordable: EffectResolver.canAfford(signature.asCard, heroStats)` (A10, point reporté de `:114`). La colonne n'est plus posée par `Align` : un `Flow` (PN10) de délégué privé, `clipBehavior: Clip.none`, enfant unique (la colonne et son invite pendante, inchangées) contraint en largeur seulement, peint à `Matrix4.translationValues(20, top, 0)..scale(scale, scale, 1)` où `(scale, top) = signatureBandPlacement(available: <hauteur du Flow>, natural: <hauteur de l'enfant>)` ; `H` est la hauteur que le `Positioned.fill` donne, jamais `MediaQuery`. `Flow` porte le toucher à travers la transformation : une tuile réduite répond.
-  - `_SignatureTile` lit la signature évoluée : le médaillon `signature.cost` ; le toucher d'une tuile disponible arme si `signature.asCard.data.target == CardTarget.singleEnemy`, joue sinon ; la description `signature.asCard.data.getDescription(locale)`, **sans** `maxLines` ni ellipse (spec §5.2).
-  - Le badge (A36) : au bout de la ligne du type (`:257-266`, le type passe dans un `Flexible`), `levelLabel(signature.level)`, absent au niveau 0 ; même taille que le type, gras ; **(provisoire, PN13 (a))** blanc, comme le nom ; `Colors.white38` en recharge et sans le mana.
-  - La rangée (A37) : sous la description, au-dessus du compte de recharge, dès la première évolution — un `Row` de `EvolutionIcon` par paire de `taken`, dans l'ordre, `size` 16 sur la tuile étroite, 18 sur la large, 2 d'écart ; `level` de la paire ; `color: Colors.white38` en recharge et sans le mana, nulle sinon. Inactive : toute la tuile à 0,45, comme aujourd'hui.
-  - ARB : `levelLabel` réécrite, « Niv. {level} » / « Lvl. {level} » (spec §6.1).
-  - `game_screen.dart` passe `heroStats: runState.heroStats`.
+  - `SignatureBar` : `final EntityStats heroStats` **remplace** `currentMana` ; `final EffectIconTable effectIcons` (défaut vide ; `GameScreen` passe `gameData.effectIcons`) ; `affordable: EffectResolver.canAfford(signature.asCard, heroStats)` (A10, point reporté de `:114`). La colonne n'est plus posée par `Align` mais par une mise en page propre à la barre (PN18, qui remplace PN10) : `_SignatureBandLayout extends SingleChildRenderObjectWidget` et son `RenderBox` (`RenderObjectWithChildMixin<RenderBox>`) — taille `constraints.biggest` ; l'enfant unique (la colonne et son invite pendante, inchangées) contraint en largeur seulement (`maxWidth` moins 20) ; **dans `performLayout`**, `(scale, top) = signatureBandPlacement(available: size.height, natural: child.size.height)` et la transformation `Matrix4.translationValues(20, top, 0) * Matrix4.diagonal3Values(scale, scale, 1)`, comme `map_screen.dart:367-368` (le `..scale` de `vector_math` est déprécié, `deprecated_member_use`), gardée ; `paint` par `pushTransform`, `applyPaintTransform` et `hitTestChildren` (`addWithPaintTransform`) par la même ; `hitTestSelf` faux. La transformation est connue dès la mise en page — ce que le calque de la Task 9 exige (`OverlayPortal.overlayChildLayoutBuilder` lit la transformation de la tuile pendant la mise en page, quand `Flow` ne l'établit qu'à la peinture). `H` est la hauteur que le `Positioned.fill` donne, jamais `MediaQuery` ; une tuile réduite répond au toucher.
+  - `_SignatureTile` lit la signature évoluée : le médaillon `signature.cost` ; le toucher d'une tuile disponible arme si `signature.asCard.data.target == CardTarget.singleEnemy`, joue sinon. **La description quitte la tuile** (`:268-276`, PN12 (d)).
+  - **La bande** (A40), sous l'en-tête (médaillon, nom, type et badge) : une cellule par entrée de `signature.effectLines`, dans l'ordre, trois par ligne ; chaque ligne (`ValueKey('effect-row-<n>')`, `n` depuis 0 — `effect-row-<n>` et `effect-cell-<n>` se lisent sous `_tile(id)` (`find.descendant`), ou sur un harnais à une signature : celui de `signature_bar_test.dart:50` monte deux tuiles, chacune avec son `effect-row-0`) centrée dans la largeur intérieure de la tuile — 154 px sur l'étroite, 204 sur la large —, et réduite d'un bloc si elle est plus large (`FittedBox`, `BoxFit.scaleDown`) : jamais de coupure. Une cellule (`ValueKey('effect-cell-<n>')`) : l'icône `effectVisualsOf(effectIcons, line.kind)`, 24 px sur l'étroite, 28 sur la large ; puis, 4 px plus loin, sa valeur en gras, 12 et 14 px, `Colors.white` — `'${line.value}'`, le critique par `effectValuePercent(value)`, rien pour `target:allEnemies` ; la durée jamais ; 8 px entre deux cellules, 4 entre deux lignes. En recharge et sans le mana, icônes et valeurs en `Colors.white38`.
+  - Le badge (A36, PN13) : au bout de la ligne du type (`:257-266`, le type passe dans un `Flexible`), `levelLabel(signature.level)`, absent au niveau 0 ; même taille que le type, gras ; `Colors.amberAccent` disponible et armée, `Colors.white38` en recharge et sans le mana ; inactive, l'ambre, toute la tuile à 0,45.
+  - La rangée des puces (A37) : sous la bande, dans la colonne de texte, à droite du médaillon (128 et 178 px, A37 ; spec A40), au-dessus du compte de recharge, dès la première évolution — un `Row` de `EvolutionIcon` par paire de `taken`, dans l'ordre, `size` 16 sur la tuile étroite, 18 sur la large, 2 d'écart ; `level` de la paire ; `color: Colors.white38` en recharge et sans le mana, nulle sinon. Inactive : toute la tuile à 0,45, comme aujourd'hui.
+  - ARB : `levelLabel` réécrite, « Niv. {level} » / « Lvl. {level} » ; `effectValuePercent` (`value` int) « +{value} % » / « +{value}% » (spec §6.1, mot pour mot).
+  - `game_screen.dart` passe `heroStats: runState.heroStats` et `effectIcons: gameData.effectIcons`.
 
 - [ ] **Step 1: Écrire les tests qui échouent**
 
-`signature_bar_test.dart` — `_harness` reçoit `EntityStats heroStats` (mana 3 par défaut) au lieu de `currentMana` ; les tests qui passaient `currentMana: 0` passent un `heroStats` à 0 de mana (réécrits, même compte). Une *Châtiment* construite portant les sept évolutions de son pool (icônes et couleurs de spec §3.7) :
+`signature_bar_test.dart` — `_harness` reçoit `EntityStats heroStats` (mana 3 par défaut) au lieu de `currentMana`, et `EffectIconTable effectIcons` (la table du registre réel, lue en `setUpAll`) ; les tests qui passaient `currentMana: 0` passent un `heroStats` à 0 de mana, et les deux tests qui lisent la description (« la tuile montre le nom, le type et la description », `:235` ; « en recharge, nom, type, description et compte… », `:173`) lisent la bande à sa place (réécrits, même compte). Une *Châtiment* construite (`[damage 6, armor 4]`, gabarits de spec §3.7) portant les sept évolutions de son pool (icônes et couleurs de spec §3.7), et une *Surtension de Mana* construite portant les siennes :
 - `le badge : absent au niveau 0, Niv. 3 au niveau 3, sur la ligne du type` — FR, `['zeal:2', 'sentence:1']` : `find.text('Niv. 3')` trouvé, sur la même ligne (même `dy` au pixel près) que le libellé du type ; sans évolution : `find.textContaining('Niv.')` rien ; EN : `'Lvl. 3'`.
-- `une puce par evolution distincte, dans l ordre de premiere prise` — `['sentence:1', 'zeal:2', 'aegis:1']` : trois `evolution-icon-…`, abscisses croissantes dans cet ordre.
+- `le badge est ambre disponible et armee, gris pale en recharge et sans le mana (PN13)` — `Colors.amberAccent` dans les deux premiers états, `Colors.white38` dans les deux autres.
+- `une puce par evolution distincte, dans l ordre de premiere prise, sous la bande` — `['sentence:1', 'zeal:2', 'aegis:1']` : trois `evolution-icon-…`, abscisses croissantes dans cet ordre, chacune sous la dernière ligne de la bande.
 - `une majeure dans un anneau, une mineure nue ; le niveau d une mineure des 2` — `evolution-ring-sentence` trouvé, `evolution-ring-zeal` rien ; le texte `'2'` sous la puce de *Zèle* ; aucun chiffre sous *Égide* (niveau 1).
 - `sept puces tiennent sans debordement a 170 et a 220 de large` — les sept évolutions, largeurs d'écran 400 puis 1280 : `tester.takeException()` nul ; le bord droit de la dernière puce ≤ le bord droit de la tuile.
-- `en recharge et sans le mana, puces, anneaux, chiffres et badge passent au gris pale` — `['zeal:2', 'sentence:1']`, dans les deux états : chaque `Icon` des puces, le texte du badge, le `Text` `'2'` descendant de `evolution-icon-zeal` (`find.descendant`) et la bordure de `evolution-ring-sentence` à `Colors.white38` ; disponible, la puce de *Zèle* à `Colors.redAccent`.
-- `la tuile lit la signature evoluee : cout, cible, description sans borne` — `['devotion:1', 'radiance:1']` : le médaillon `'0'` ; toucher la tuile disponible appelle `onPlay`, pas `onArm` ; `['sentence:1']` : la phrase « Apply 1 Weakness for 2 turns. » **(provisoire, PN12 (a))** visible en entier, le `Text` de la description sans `maxLines`.
+- `en recharge et sans le mana, bande, puces, anneaux, chiffres et badge passent au gris pale` — `['zeal:2', 'sentence:1']`, dans les deux états : chaque `Icon` et chaque valeur de la bande, chaque `Icon` des puces, le texte du badge, le `Text` `'2'` descendant de `evolution-icon-zeal` (`find.descendant`) et la bordure de `evolution-ring-sentence` à `Colors.white38` ; disponible, la puce de *Zèle* à `Colors.redAccent` **(provisoire, P-6 (a))**.
+- `la tuile lit la signature evoluee : cout et cible ; aucune description` — `['devotion:1', 'radiance:1']` : le médaillon `'0'` ; toucher la tuile disponible appelle `onPlay`, pas `onArm` ; `find.textContaining('Inflige')` et `find.textContaining('Deal')` rien.
 - `l accessibilite lit EffectResolver.canAfford : le cout evolue` — mana 0 : sans évolution, état « sans le mana » ; `['devotion:1']`, disponible.
+- `la bande : une icone par effet, a sa valeur evoluee, dans l ordre ; ni duree ni valeur pour tous les ennemis` — *Châtiment* sans évolution : deux cellules ; `['zeal:2', 'sentence:1']` : trois, `'10'`, `'4'`, `'1'`, sur `effect-row-0`, sans `'2 tours'` ni `'2 turns'` ; avec `ardor:1` et `radiance:1` de plus : cinq, trois sur `effect-row-0` puis deux sur `effect-row-1`, la quatrième à `'+5 %'`, la cinquième sans texte.
+- `la bande : Surtension de Mana a huit icones tient en trois lignes, chacune centree, sans debordement a 170 et a 220` — les six verbales prises : `effect-row-0` à `effect-row-2`, `tester.takeException()` nul ; le milieu de `effect-row-0` (pleine) et celui de `effect-row-2` (deux cellules) au milieu de la tuile, à 1 px près, sur les deux largeurs.
+- `la bande : l icone a 24 et 28 px, plus grande que la puce a 16 et 18` — `tester.getSize` des `Icon` de la bande et des puces, tuile étroite puis large.
+- `la bande : une ligne plus large que la tuile se reduit d un bloc sur l etroite, pas sur la large` — `['zeal:1', 'ardor:1']` sur *Châtiment*, la ligne « 8 », « 4 », « +5 % » (≈ 172 px dans la police carrée des tests, plus que 154) : sur l'étroite, la largeur rendue de `effect-row-0` ≤ 154 et `tester.takeException()` nul, aucune valeur coupée ; sur la large, la largeur rendue égale la largeur naturelle.
 - `signatureBandPlacement : centree, decalee, reduite, plancher` — `(800, 176)` → `(1, 312)` ; `(800, 500)` → `(1, 100)` ; `(800, 600)` → `scale` `closeTo(520 / 600, 1e-9)`, `top` 80 ; `(400, 176)` → `(0.75, 80)`, et `80 + 0.75 × 176 > 400 − 200`.
 - `au niveau 0 en 1280 x 800, la colonne est a mi-hauteur, comme en 0.5.6` — vue `1280 × 800`, `devicePixelRatio` 1, deux tuiles : `(haut de smite − 4 + bas de holy_shield + 4) / 2` vaut `closeTo(400, 0.5)` (`tester.getRect`).
 - `a H = 400, la colonne est a l echelle 0,75, sous bandTop, sortie par le bas, et une tuile reduite arme encore` — vue `1280 × 400` : `getRect(smite).width` `closeTo(165, 0.5)`, `top ≥ 80` ; toucher *Châtiment* appelle `onArm` ; avec `armedId: 'smite'`, l'invite `signatureChooseTarget` est trouvée.
 
 `signature_tile_test.dart` :
-- `hors combat, ni badge ni puce` — la tuile d'une `SignatureData` à évolutions : `find.textContaining('Niv.')` rien, `find.byType(EvolutionIcon)` rien.
+- `hors combat, ni badge, ni puce, ni bande : le texte complet` — la tuile d'une `SignatureData` à évolutions : `find.textContaining('Niv.')` rien, `find.byType(EvolutionIcon)` rien, `find.byKey(ValueKey('effect-row-0'))` rien ; la description remplie trouvée. La garde « hors combat, la tuile garde son texte complet » reste `signature_tile_test.dart:54-62`.
 
 - [ ] **Step 2: Lancer les tests, constater l'échec**
 
 Run: `flutter test test/widget/signature_bar_test.dart test/widget/signature_tile_test.dart`
-Expected: échec de compilation — `heroStats`, `signatureBandPlacement` n'existent pas.
+Expected: échec de compilation — `heroStats`, `effectIcons` (paramètre de la barre), `signatureBandPlacement` n'existent pas.
 
-- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; les constantes ; la fonction de placement et le `Flow` ; la tuile ; `game_screen.dart`.
+- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; les constantes ; la fonction de placement et la mise en page de la barre ; la tuile, sa bande, son badge, ses puces ; `game_screen.dart`.
 
 - [ ] **Step 4: Lancer les tests, constater le succès**
 
-Run: la commande du Step 2, puis `flutter test test/widget/debug_drawer_test.dart test/unit/combat_signature_test.dart` (le premier monte `GameScreen`, qui passe désormais `heroStats` à la barre).
+Run: la commande du Step 2, puis `flutter test test/widget/debug_drawer_test.dart test/unit/combat_signature_test.dart` (le premier monte `GameScreen`, qui passe désormais `heroStats` et `effectIcons` à la barre).
 Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1998** (1987 + 10 + 1). `git grep -n "currentMana >= signature.cost" -- lib` ne rend rien.
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 2019** (2003 + 15 + 1). `git grep -n "currentMana >= signature.cost" -- lib` ne rend rien.
 
 - [ ] **Step 6: Commit**
 
-`git add` par chemin (les trois `app_localizations*.dart` compris), puis `git commit` — `feat(combat): la tuile de signature evoluee, son badge et ses icones`.
+`git add` par chemin (les trois `app_localizations*.dart` compris), puis `git commit` — `feat(combat): la tuile de signature en icones, son badge et ses puces`.
 
 ---
 
-### Task 8: L'éditeur de contenu — le descripteur des évolutions
+### Task 9 (interface): La liste de l'appui long — les phrases par sorte, le calque
+
+Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 10. Ce que le joueur voit : tant qu'il reste appuyé sur une tuile, elle déroule par-dessus ses voisines la liste de ses effets — l'icône, puis sa phrase (« Inflige 10 dégâts », « Applique 1 Faiblesse pendant 2 tours ») — ; relâcher la replie ; un appui court joue ou arme comme avant.
+
+**Files:**
+- Create: `lib/game/services/effect_line_texts.dart`, `test/unit/effect_line_texts_test.dart`
+- Modify: `lib/ui/widgets/hud/signature_bar.dart` (le geste, le calque) ; `lib/l10n/app_fr.arb`, `lib/l10n/app_en.arb` (après `effectValuePercent`)
+- Test: `test/widget/signature_bar_test.dart`, `test/unit/referential_integrity_test.dart`
+
+**Interfaces:**
+- Consumes : `SignatureInstance.effectLines`, `EffectLine` (Task 3) ; `EffectIconTable`, `effectVisualsOf` (Task 6) ; la tuile, sa bande et la mise en page de la barre (Task 8).
+- Produces :
+  - ARB, les treize clés `effectLine…` de spec §6.1, **mot pour mot**, pluriels d'ICU compris, sans point final : `effectLineDamage`, `effectLineArmor`, `effectLineHeal`, `effectLineDraw`, `effectLineGainMana` (`amount` int) ; `effectLineMight`, `effectLineMightRegen`, `effectLineArmorRegen`, `effectLineWeakness`, `effectLineVulnerable`, `effectLineBurn` (`amount`, `duration` int) ; `effectLineCrit` (`amount` int) ; `effectLineAllEnemies`.
+  - `abstract final class EffectLineTexts` (`lib/game/services/effect_line_texts.dart`, à côté de `CardRuleTexts`) — `static String? phrase(AppLocalizations l10n, EffectLine line)`, la seule écriture des lignes (A41) : `damage`, `armor`, `heal`, `draw`, `gain_mana`, `status:might`, `status:might_regen`, `status:armor_regen`, `status:weakness`, `status:vulnerable`, `status:burn`, `crit`, `target:allEnemies` vers leur clé, à la valeur et, pour un statut, à la durée de la ligne ; `null` pour toute autre sorte (`status:poison`, `status:freeze`, `status:shock` compris) — la ligne montre alors l'icône seule.
+  - Le geste (A42), sur le `GestureDetector` de la tuile (`signature_bar.dart:324-326`), comme `map_node_widget.dart:140-142` : `onLongPressStart` ouvre la liste, `onLongPressEnd` et `onLongPressCancel` la replient ; `onTap` garde `_onTap` (`:215-232`) ; un appui long ne joue, n'arme ni ne désarme. **(provisoire, P-5 (a))** la liste s'ouvre dans tous les états de la tuile, inactive comprise : le geste ne lit pas l'état.
+  - Le calque (A42, PN19) : un `OverlayPortalController` dans `_SignatureTileState` ; un `OverlayPortal.overlayChildLayoutBuilder` enveloppe le `MouseRegion` de la tuile (`:320`). Son enfant de calque : `IgnorePointer` → `CustomSingleChildLayout` (délégué privé qui reçoit l'`OverlayChildLayoutInfo`) → `Transform.scale(scale: s, alignment: Alignment.topLeft)` → la tuile déployée, à la largeur `info.childSize.width`, hauteur libre. `s = info.childPaintTransform.getMaxScaleOnAxis()` ; le haut de la tuile dans le calque, `o = MatrixUtils.transformPoint(info.childPaintTransform, Offset.zero)` ; la hauteur posée de la liste, `s × <hauteur naturelle de l'enfant>`, que le délégué lit dans `getPositionForChild` : la liste s'ouvre vers le bas depuis `o` si `o.dy + s × hauteur ≤ info.overlaySize.height`, sinon vers le haut, son bas au bas de la tuile (`o.dy + s × info.childSize.height`). La colonne de la barre ne change ni de hauteur, ni d'échelle, ni de place. La tuile retirée, l'`OverlayPortal` replie sa liste.
+  - La tuile déployée (A42) : la même construction que la tuile — un `_body({required bool expanded, required Key key})` de `_SignatureTileState`, la clé donnée par l'appelant : `ValueKey('signature-tile-<id>')` pour la tuile au repos, `ValueKey('signature-overlay-<id>')` pour la tuile déployée, jamais `signature-tile-<id>` (`signature_bar.dart:367`, `signature_bar_test.dart:96`) ; la clé posée, comme aujourd'hui, sur le `Container` du cadre (`signature_bar.dart:366-367`), que lisent `signature_bar_test.dart:132`, `:262`, `:492` — : son cadre à sa largeur, sa bordure et la pulsation armée, son gris en recharge et sans le mana **(provisoire, P-5 (a))**, son en-tête, sa rangée de puces et son compte de recharge ; la liste à la place de la bande (`ValueKey('signature-list-<id>')`) : une ligne par entrée de `effectLines`, dans l'ordre (`ValueKey('effect-line-<n>')`) — l'icône `effectVisualsOf(…)`, 16 px sur les deux tuiles, **toujours à sa couleur** ; puis, 4 px plus loin, `EffectLineTexts.phrase(l10n, line)` (rien si `null`), à la taille de l'ancienne description (10 et 11 px), `Colors.white70`, `Colors.white38` en recharge et sans le mana **(provisoire, P-5 (a))**, sur autant de lignes qu'il lui faut. **(provisoire, P-5 (a))** le calque ne prend pas l'opacité 0,45 de la tuile inactive.
+
+- [ ] **Step 1: Écrire les tests qui échouent**
+
+`test/unit/effect_line_texts_test.dart` *(nouveau ; une vraie `AppLocalizations`, comme `card_rule_texts_test`)* :
+- `les treize sortes ont leur phrase, en francais et en anglais` — `(damage, 10)` « Inflige 10 dégâts » / « Deal 10 damage » ; `(armor, 4)` « Donne 4 d'Armure » / « Gain 4 Block » ; `(status:weakness, 1, 2)` « Applique 1 Faiblesse pendant 2 tours » / « Apply 1 Weakness for 2 turns » ; `(crit, 5)` « +5 % de critique » / « +5% critical chance » ; `(target:allEnemies)` « Touche tous les ennemis » / « Hits all enemies » ; et les huit autres, chacune non nulle dans les deux langues.
+- `les pluriels se lisent sur la valeur et la duree` — `(draw, 1)` « Pioche 1 carte », `(draw, 2)` « Pioche 2 cartes » ; `(status:might, 2, 1)` « Gagne 2 Puissance ce tour-ci », `(status:might, 2, 2)` « Gagne 2 Puissance pendant 2 tours » ; `(status:burn, 1, 1)` « Applique 1 Brûlure pendant 1 tour ».
+- `aucune phrase ne finit par un point` — les treize, dans les deux langues.
+- `hors des treize sortes, aucune phrase` — `status:poison`, `status:freeze`, `status:shock` : `null`.
+
+`referential_integrity_test.dart` :
+- `chaque sorte que produit une signature livree ou une evolution de son pool a sa phrase (A41)` — sur `effectLines` de chaque signature, toutes évolutions prises : `EffectLineTexts.phrase` non nulle, en français et en anglais.
+
+`signature_bar_test.dart` (le harnais de la Task 8 ; l'appui long par `tester.startGesture` puis `tester.pump(kLongPressTimeout + const Duration(milliseconds: 50))`) :
+- `la liste : absente au repos ; un appui long l ouvre, une ligne par icone de la bande, dans son ordre, l icone puis sa phrase` — *Châtiment* `['zeal:2', 'sentence:1']` : `signature-list-smite` absente, puis trouvée ; `effect-line-0` à `effect-line-2` ; « Inflige 10 dégâts », « Donne 4 d'Armure », « Applique 1 Faiblesse pendant 2 tours » (FR).
+- `la liste se replie au relacher, et par un PointerCancelEvent apres l ouverture` — `gesture.up()` : absente ; nouvel appui long puis `gesture.cancel()` : absente.
+- `un glissement hors de la tuile, le doigt pose, ne replie pas la liste` — après l'ouverture, `gesture.moveBy(const Offset(300, 0))` : toujours trouvée.
+- `ouverte, la colonne ne bouge pas, et la tuile deployee se peint dans le calque, au-dessus de la voisine, sans prendre le pointeur` — *Châtiment* `['zeal:2', 'sentence:1']`, FR, au-dessus de `_holyShield` ; `tester.getRect` des deux tuiles inchangés avant et pendant l'ouverture ; le haut de `signature-overlay-smite` égale celui de `signature-tile-smite` à 1 px près (ouverture vers le bas) ; son rectangle chevauche celui de `signature-tile-holy_shield` (`Rect.overlaps`) ; dans le calque, par l'arbre de rendu : en remontant `parent` depuis `tester.renderObject(find.byKey(ValueKey('signature-overlay-smite')))`, on ne rencontre jamais `tester.renderObject(find.byType(SignatureBar))`, quand la même remontée depuis `_tile('holy_shield')` la rencontre ; l'`IgnorePointer` gardé : `tester.hitTestOnBinding(<un point pris dans l'intersection des deux rectangles>)` contient la `RenderBox` de `signature-tile-holy_shield` et aucune de `signature-overlay-smite`.
+- `la tuile du bas d une colonne posee bas ouvre sa liste vers le haut, son bas au bas de la tuile` — vue `1280 × 260`, `devicePixelRatio` 1 ; une *Bouclier Sacré* construite sur le modèle de la *Châtiment* de la Task 8, ses sept évolutions au niveau 1, sous `_smite` ; appui long sur elle ; précondition : le haut de `signature-tile-holy_shield` plus la hauteur rendue de `signature-overlay-holy_shield` — `tester.getRect(…).height`, dans le repère global, après l'échelle 0,75, jamais `getSize` — dépasse 260 ; le bas de `signature-overlay-holy_shield` égale celui de `signature-tile-holy_shield` à 1 px près, et son haut est ≥ 0.
+- **(provisoire, P-5 (a))** `la liste s ouvre en recharge, sans le mana et inactive` — trois appuis longs, la liste trouvée chaque fois ; aucun geste appelé.
+- **(provisoire, P-5 (a))** `en recharge, le cadre et l en-tete du calque gris, les phrases en white38, les icones de la liste a leurs couleurs ; disponible, les phrases en white70` — la bordure lue par `tester.widget<Container>(find.byKey(ValueKey('signature-overlay-smite')))`, comme `:262` : `Colors.grey` ; le reste par `find.descendant(of: find.byKey(ValueKey('signature-overlay-smite')), …)` : le nom `Colors.white38`, une phrase `Colors.white38`, l'icône de `effect-line-0` à la couleur du document ; disponible, la phrase `Colors.white70`.
+- **(provisoire, P-5 (a))** `inactive, le calque a pleine opacite` — aucun `Opacity` d'opacité 0,45 au-dessus de `signature-overlay-smite`.
+- `les icones de la liste font 16 px sur les deux tuiles` — largeurs d'écran 400 et 1280.
+- `l appui court garde son role ; un appui long ne joue, n arme ni ne desarme` — appui court : `onPlay` sur une signature sur soi, `onArm` sur une signature à cible, `onDisarm` sur une armée, `onInsufficientMana` sans le mana ; appui long sur chacune : aucun appel.
+
+Réécrit, même compte : `signature_bar_test.dart:508` « ni le survol ni l appui long n ouvrent rien » devient « ni le survol ni l appui long ne jouent rien » — l'appui long ouvre désormais la liste ; le test garde son assertion, `calls.gestures` à 0.
+
+- [ ] **Step 2: Lancer les tests, constater l'échec**
+
+Run: `flutter test test/unit/effect_line_texts_test.dart test/unit/referential_integrity_test.dart test/widget/signature_bar_test.dart`
+Expected: échec de compilation — `EffectLineTexts` et les clés `effectLine…` n'existent pas.
+
+- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; `EffectLineTexts` ; le geste, la tuile déployée et le calque.
+
+- [ ] **Step 4: Lancer les tests, constater le succès**
+
+Run: la commande du Step 2, puis `flutter test test/widget/debug_drawer_test.dart test/unit/combat_signature_test.dart`.
+Expected: tout passe.
+
+- [ ] **Step 5: Vérifier la tâche**
+
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 2034** (2019 + 4 + 1 + 10) **(provisoire, P-5 (a))**.
+
+- [ ] **Step 6: Commit**
+
+`git add` par chemin (les trois `app_localizations*.dart` compris), puis `git commit` — `feat(combat): la liste des effets d une signature a l appui long`.
+
+---
+
+### Task 10: L'éditeur de contenu — le descripteur des évolutions
 
 **Files:**
 - Modify: `lib/services/content_editor/entity_descriptor.dart:298-329` (le descripteur de la signature)
@@ -986,7 +1145,7 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 - Produces (spec §7, la ligne marquée 3) :
   - `requiredKeys` : `{'cost', 'cooldown', 'type', 'evolutions'}` (PN15 : la famille 3 nomme l'absence avant `construct`).
   - `enumKeys` gagne `'evolutions[].tier': _names(EvolutionTier.values)`, `'evolutions[].target': SignatureEvolutionData.targetNames`, `'evolutions[].deltas[].type': SignatureEvolutionData.deltaTypeNames` — lus sur le modèle, jamais recopiés.
-  - `vocabularyKeys` gagne `'evolutions[].icon'` et `'evolutions[].color'` — admis si un fichier livré ou le gabarit les emploie déjà, la forme d'`icon` et `color` des runes (`:437-455`), sans lire les tables de `lib/ui/`. Le commentaire le dit, et que le test d'intégrité (Task 6) exige que chaque évolution livrée ait les siens.
+  - `vocabularyKeys` gagne `'evolutions[].icon'` et `'evolutions[].color'` — admis si un fichier livré ou le gabarit les emploie déjà, la forme d'`icon` et `color` des runes (`:437-455`), sans lire les tables de `lib/ui/`. Le commentaire le dit, et que le test d'intégrité (Task 6) exige que chaque évolution livrée ait les siens, connus d'`effectIcons` et d'`effectColors`.
 
 - [ ] **Step 1: Écrire les tests qui échouent**
 
@@ -1014,7 +1173,7 @@ Expected: tout passe — `shipped_entities_round_trip_test` sur les six signatur
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 2003** (1998 + 2 + 3).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 2039** (2034 + 2 + 3).
 
 - [ ] **Step 6: Commit**
 
@@ -1022,22 +1181,26 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 
 ---
 
-### Task 9: Vérification finale (orchestrateur)
+### Task 11: Vérification finale (orchestrateur)
 
 Aucun fichier modifié : des commandes, jouées par l'orchestrateur, sans agent.
 
 - [ ] **Step 1: L'analyse** — `dart analyze` → `No issues found!`
-- [ ] **Step 2: La suite** — `rm -rf build/unit_test_assets` puis `flutter test` → `All tests passed!`, **2003**.
-- [ ] **Step 3: Les tests nommés de la partie** — `flutter test test/unit/save_service_test.dart test/unit/signature_evolution_data_test.dart test/unit/signature_evolution_rules_test.dart --reporter expanded` → verts, nommément : les neuf du groupe « les evolutions de signature (spec §8) », « les six pools sont ceux de spec 3.7 : trois mineures, quatre majeures (Q6) », « une majeure exclue n est pas offerte, dans les deux sens », « majeures epuisees : trois mineures au palier majeur (Q6, repli) ».
+- [ ] **Step 2: La suite** — `rm -rf build/unit_test_assets` puis `flutter test` → `All tests passed!`, **2039**.
+- [ ] **Step 3: Les tests nommés de la partie** — `flutter test test/unit/save_service_test.dart test/unit/signature_evolution_data_test.dart test/unit/signature_evolution_rules_test.dart test/unit/referential_integrity_test.dart --reporter expanded` → verts, nommément : les neuf du groupe « les evolutions de signature (spec §8) », « les six pools sont ceux de spec 3.7 : trois mineures, quatre majeures (Q6) », « une majeure exclue n est pas offerte, dans les deux sens », « majeures epuisees : trois mineures au palier majeur (Q6, repli) », « une evolution sans cooldown qui vise une seule sorte porte son icon et sa color (A39) », « chaque sorte que produit une signature livree ou une evolution de son pool a sa phrase (A41) » et, **(provisoire, P-6 (a))**, « les faces des cartes et le document donnent la meme icone et la meme couleur a chaque sorte commune ».
 - [ ] **Step 4: Les greps de la spec (§11, « Ce que le vérificateur contrôle »)**
   - `git grep -n "onDamagingCardPlayed" -- lib test assets` → rien (D34) ; `grep -c '"trigger": "onAttackPlayed"' assets/data/passives/mage_mark.json` → `1`.
   - `ls assets/data/cards/focus.json assets/data/cards/demon_form.json` → deux « No such file » ; `ls assets/data/cards/rage/demon_form.json` → le fichier.
   - `git diff main -- tool/simulations` → vide.
   - `dart run tool/sync_assets.dart --check` → code de sortie 0.
 - [ ] **Step 5: Les greps propres à la partie 3**
-  - `git diff --name-only 996421a -- assets/data` → exactement les six `classes/*/skills/*.json`.
+  - `git diff --name-only 996421a -- assets/data` → exactement les six `classes/*/skills/*.json` et `effect_icons.json`.
   - `grep -l '"evolutions"' assets/data/classes/*/skills/*.json | wc -l` → `6`.
+  - `git grep -n "evolutionIcons\|evolutionColors\|signature_evolution_style" -- lib test` → rien : les tables sont `effectIcons` et `effectColors`, dans `lib/ui/widgets/effect_style.dart`.
+  - `git grep -ln "effect_style.dart" -- lib` → `lib/ui/screens/signature_evolution_screen.dart`, `lib/ui/widgets/hud/signature_bar.dart` et, **(provisoire, P-6 (a))**, `lib/ui/widgets/hud/status_effects_panel.dart` (aucun dans `lib/game/` ni `lib/models/`).
+  - `git grep -n "effect_icons.json" -- lib/services/game_data_service.dart test/unit/entity_id_convention_test.dart CLAUDE.md` → une ligne au moins dans chacun ; `grep -o '"status:' assets/data/effect_icons.json | wc -l` → `9` **(provisoire, P-6 (a))**.
+  - `git grep -n "_getEffectVisuals\|_RendererEffectVisuals" -- lib` → rien ; `git grep -n "@visibleForTesting" -- lib/game/components/widgets/card_text_renderer.dart` → une ligne **(provisoire, P-6 (a))**.
+  - `git grep -n "maxLines: 2" -- lib/ui/widgets/hud/signature_bar.dart` → rien (la description a quitté la tuile).
   - `git grep -niE "vague 5" -- lib` → rien (les cinq commentaires au futur, `run_controller.dart:82`, `card_delta.dart:11`, `effective_card.dart:74`, `signature_instance.dart:11`, `:14`, sont au présent) ; `git grep -n "currentMana >= signature.cost" -- lib` → rien.
-  - `git grep -ln "signature_evolution_style.dart" -- lib` → `lib/ui/screens/signature_evolution_screen.dart` et `lib/ui/widgets/hud/signature_bar.dart` seulement (deux lecteurs, aucun dans `lib/game/` ni `lib/models/`).
-  - `git grep -n "package:flutter_riverpod\|package:flame" -- lib/game/systems/signature_evolution_rules.dart lib/models/signature_instance.dart lib/models/data/signature_evolution_data.dart` → rien (règle pure, couche données).
+  - `git grep -n "package:flutter_riverpod\|package:flame\|package:flutter/" -- lib/game/systems/signature_evolution_rules.dart lib/models/signature_instance.dart lib/models/data/signature_evolution_data.dart lib/models/data/effect_icon_table.dart lib/models/data/effect_kind.dart` → rien (règle pure, couche données).
   - `git status --short` → seul le fichier d'orchestration, que l'orchestrateur tient ; aucun `generated_plugin*` ni `GeneratedPluginRegistrant.swift` modifié.
