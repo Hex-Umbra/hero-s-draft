@@ -1,6 +1,7 @@
 import '../../services/audio/audio_source.dart';
 import 'card_data.dart';
 import 'card_delta.dart';
+import 'effect_kind.dart';
 import 'signature_evolution_data.dart';
 
 /// Une signature de classe : une compétence à recharge, qui n'entre jamais
@@ -54,23 +55,15 @@ class SignatureData implements AudioSource {
     this.evolutions = const [],
   });
 
-  /// Les clés `{…}` que les descriptions peuvent nommer : un type d'effet
-  /// propre de cette liste, ou le `statusId` d'un `apply_status` propre.
-  static const templateEffectTypes = {
-    'damage',
-    'armor',
-    'heal',
-    'draw',
-    'gain_mana',
-  };
-
   static final _placeholder = RegExp(r'\{([a-z_]+)\}');
   static final _snakeCase = RegExp(r'^[a-z][a-z0-9]*(_[a-z0-9]+)*$');
 
-  /// La clé `{…}` par laquelle une description désigne [effect].
+  /// La clé `{…}` par laquelle une description désigne [effect] : son type
+  /// d'effet propre ([EffectKind.plain]), ou le `statusId` d'un `apply_status`
+  /// propre.
   static String? _templateKey(CardEffect effect) => effect.type == 'apply_status'
       ? effect.statusId
-      : templateEffectTypes.contains(effect.type)
+      : EffectKind.plain.contains(effect.type)
           ? effect.type
           : null;
 

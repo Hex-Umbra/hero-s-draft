@@ -16,7 +16,7 @@ import 'missing_save_item.dart';
 typedef EffectLine = ({String kind, int? value, int? duration});
 
 /// Une signature en jeu : sa donnée, ses évolutions prises, et sa vue de
-/// carte (spec P-43 E4, §4.1 ; vague 5, §4.10).
+/// carte (spec P-43 E4, §4.1 ; spec P-42 T1 et P-44 lot 1, §4.10).
 class SignatureInstance {
   final SignatureData data;
 

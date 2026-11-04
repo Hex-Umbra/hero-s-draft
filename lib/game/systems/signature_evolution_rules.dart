@@ -4,9 +4,9 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/signature_evolution_data.dart';
 import '../../models/signature_instance.dart';
 
-/// Les règles de tirage et de choix des évolutions de signature (spec vague 5 ;
-/// A26, Q6, Q7). Pures : ni Riverpod ni état, seulement une signature et un
-/// tirage.
+/// Les règles de tirage et de choix des évolutions de signature (spec P-42 T1 et P-44
+/// lot 1, §4.10 ; A26, Q6, Q7). Pures : ni Riverpod ni état, seulement une
+/// signature et un tirage.
 abstract final class SignatureEvolutionRules {
   /// Le nombre d'évolutions proposées à chaque choix.
   static const int offerSize = 3;
@@ -37,6 +37,17 @@ abstract final class SignatureEvolutionRules {
     if (s.nextTier == EvolutionTier.minor) return minors;
     final majors = eligibleMajors(s);
     return majors.length < offerSize ? [...majors, ...minors] : majors;
+  }
+
+  /// [s] une fois l'évolution [evolutionId] prise (voir [withChoice]), ou
+  /// `null` si elle n'est pas [admissible].
+  static SignatureInstance? take(SignatureInstance s, String evolutionId) {
+    final chosen = admissible(s).where((e) => e.id == evolutionId).firstOrNull;
+    if (chosen == null) return null;
+    return SignatureInstance(
+      s.data,
+      evolutions: withChoice(s.evolutions, chosen),
+    );
   }
 
   /// Les évolutions proposées : sans poids, sans remise. Au palier mineur,

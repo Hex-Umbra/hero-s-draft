@@ -467,7 +467,7 @@ class _SignatureTileState extends State<_SignatureTile>
         Text(
           '$level',
           style: TextStyle(
-            color: color ?? effectColors[evolution.color] ?? Colors.grey,
+            color: color ?? EvolutionIcon.tintOf(evolution),
             fontSize: _typeSize,
             fontWeight: FontWeight.bold,
           ),

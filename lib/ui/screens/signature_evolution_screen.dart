@@ -16,8 +16,8 @@ import '../widgets/effect_style.dart';
 import '../widgets/relic_carousel/draft_card_reel.dart';
 
 /// Le choix d'une évolution de [signature] : trois rouleaux, comme le draft de
-/// montée de niveau (spec vague 5, §5.1). Le tirage se refait à chaque
-/// ouverture ; toucher un rouleau posé prend l'évolution, puis [onComplete].
+/// montée de niveau (spec P-42 T1 et P-44 lot 1, §5.1). Le tirage se refait
+/// à chaque ouverture ; toucher un rouleau posé prend l'évolution, puis [onComplete].
 class SignatureEvolutionScreen extends ConsumerStatefulWidget {
   final SignatureInstance signature;
   final VoidCallback onComplete;
@@ -157,47 +157,68 @@ class _SignatureEvolutionScreenState
     return PopScope(
       canPop: false,
       child: Material(
-      color: Colors.black87,
-      child: SafeArea(
-        child: Center(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isPortrait = constraints.maxWidth < 600;
-              return Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.evolutionScreenTitle(
-                        widget.signature.data.getName(locale),
+        color: Colors.black87,
+        child: SafeArea(
+          child: Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isPortrait = constraints.maxWidth < 600;
+                return Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.evolutionScreenTitle(
+                          widget.signature.data.getName(locale),
+                        ),
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                      AppSpacing.heightSm,
+                      Text(
+                        l10n.evolutionScreenSubtitle,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    AppSpacing.heightSm,
-                    Text(
-                      l10n.evolutionScreenSubtitle,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                      textAlign: TextAlign.center,
-                    ),
-                    AppSpacing.heightXl,
-                    if (isPortrait)
-                      Expanded(
-                        child: ListView(
-                          shrinkWrap: true,
+                      AppSpacing.heightXl,
+                      if (isPortrait)
+                        Expanded(
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: [
+                              for (final (index, e) in _offer.indexed)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: AppSpacing.sm,
+                                    horizontal: AppSpacing.xxl,
+                                  ),
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 160,
+                                      ),
+                                      child: _reel(l10n, spinPool, e, index),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             for (final (index, e) in _offer.indexed)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.sm,
-                                  horizontal: AppSpacing.xxl,
-                                ),
-                                child: Center(
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                  ),
                                   child: ConstrainedBox(
                                     constraints: const BoxConstraints(
                                       maxWidth: 160,
@@ -208,33 +229,12 @@ class _SignatureEvolutionScreenState
                               ),
                           ],
                         ),
-                      )
-                    else
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          for (final (index, e) in _offer.indexed)
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm,
-                                ),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 160,
-                                  ),
-                                  child: _reel(l10n, spinPool, e, index),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
       ),
       ),
     );

@@ -12,7 +12,7 @@ import 'package:roguelike_card_game/models/data/signature_evolution_data.dart';
 import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-/// Le tirage, le choix et l'attente des évolutions de signature (spec vague 5,
+/// Le tirage, le choix et l'attente des évolutions de signature (spec P-42 T1 et P-44 lot 1,
 /// partie 3) : les règles pures sur le pool livré de *Frappe Téméraire*, puis
 /// l'entrée dans `RunController` sur les vraies classes.
 void main() {

@@ -403,7 +403,7 @@ void main() {
 
   test('apply ne lit aucune rune : des paires d une autre provenance suffisent',
       () {
-    // La couture des evolutions de signature (vague 5) : un delta construit
+    // La couture des evolutions de signature (P-42 T1 et P-44 lot 1) : un delta construit
     // hors de tout fichier de rune, sans catalogue.
     final fromElsewhere = <(CardDelta, int)>[
       (const PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 50), 2),

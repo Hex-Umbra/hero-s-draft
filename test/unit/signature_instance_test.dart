@@ -256,6 +256,18 @@ void main() {
           deltas: [AddEffectDelta(effect: 'heal', valuePerLevel: 1)],
         ),
         SignatureEvolutionData(
+          id: 'hex',
+          tier: EvolutionTier.minor,
+          deltas: [
+            AddEffectDelta(
+              effect: 'apply_status',
+              valuePerLevel: 1,
+              statusId: 'weakness',
+              durationPerLevel: 2,
+            ),
+          ],
+        ),
+        SignatureEvolutionData(
           id: 'serenity',
           tier: EvolutionTier.major,
           deltas: [AddEffectDelta(effect: 'heal', valuePerLevel: 4)],
@@ -267,6 +279,16 @@ void main() {
           .effectLines
           .map((l) => (l.kind, l.value)),
       [('gain_mana', 1), ('draw', 1), ('heal', 1), ('heal', 4)],
+    );
+    // Au niveau 2, une verbale ajoutee double sa valeur et sa duree, et la
+    // ligne de critique sa valeur par niveau.
+    expect(
+      _taken(['hex:2'], data: surge).effectLines.last,
+      (kind: 'status:weakness', value: 2, duration: 4),
+    );
+    expect(
+      _taken(['ardor:2']).effectLines.last,
+      (kind: 'crit', value: 10, duration: null),
     );
   });
 

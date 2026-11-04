@@ -47,26 +47,28 @@ const Map<String, Color> effectColors = {
 };
 
 /// La puce d'une évolution de signature : son icône à sa couleur, une majeure
-/// dans un anneau, une mineure nue portant son niveau dès le deuxième. La puce
-/// entière, anneau compris, mesure [size]. [color], s'il est donné, remplace la
-/// couleur de l'évolution partout (la tuile grisée).
+/// dans un anneau, une mineure nue. La puce entière, anneau compris, mesure
+/// [size]. [color], s'il est donné, remplace la couleur de l'évolution partout
+/// (la tuile grisée).
 class EvolutionIcon extends StatelessWidget {
   final SignatureEvolutionData evolution;
   final double size;
-  final int level;
   final Color? color;
 
   const EvolutionIcon({
     super.key,
     required this.evolution,
     required this.size,
-    this.level = 1,
     this.color,
   });
 
+  /// La couleur de [evolution].
+  static Color tintOf(SignatureEvolutionData evolution) =>
+      effectColors[evolution.color] ?? Colors.grey;
+
   @override
   Widget build(BuildContext context) {
-    final tint = color ?? effectColors[evolution.color] ?? Colors.grey;
+    final tint = color ?? tintOf(evolution);
     final isMajor = evolution.tier == EvolutionTier.major;
     final ring = size * 0.06;
     final glyph = Icon(
@@ -93,20 +95,6 @@ class EvolutionIcon extends StatelessWidget {
             )
           else
             glyph,
-          if (!isMajor && level >= 2)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Text(
-                '$level',
-                style: TextStyle(
-                  color: tint,
-                  fontSize: size * 0.34,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
-                ),
-              ),
-            ),
         ],
       ),
     );

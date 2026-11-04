@@ -72,8 +72,8 @@ class EffectiveCard {
   final int hpRefundPercent;
 
   /// La couture commune aux runes et aux évolutions de signature : une
-  /// fonction pure, qui ne lit ni registre ni rune — elle
-  /// reçoit des paires *(delta, niveau)*.
+  /// fonction pure, qui ne lit ni registre ni rune — elle reçoit des paires
+  /// *(delta, niveau)*.
   static EffectiveCard apply(
     CardData data,
     CardRarity rarity,

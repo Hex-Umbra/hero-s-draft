@@ -6,9 +6,9 @@ import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../models/signature_instance.dart';
-import '../systems/signature_evolution_rules.dart';
 import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
+import '../systems/signature_evolution_rules.dart';
 import '../controllers/combat_controller.dart';
 import '../controllers/debug_run_controller.dart';
 import '../controllers/deck_controller.dart';
@@ -96,21 +96,9 @@ class DebugActions {
       runProvider,
     ).signatures.where((s) => s.data.id == signatureId).firstOrNull;
     if (signature == null) return false;
-    final evolution = SignatureEvolutionRules.admissible(
-      signature,
-    ).where((e) => e.id == evolutionId).firstOrNull;
-    if (evolution == null) return false;
-    _replaceSignature(
-      read,
-      signature,
-      SignatureInstance(
-        signature.data,
-        evolutions: SignatureEvolutionRules.withChoice(
-          signature.evolutions,
-          evolution,
-        ),
-      ),
-    );
+    final taken = SignatureEvolutionRules.take(signature, evolutionId);
+    if (taken == null) return false;
+    _replaceSignature(read, signature, taken);
     return true;
   }
 

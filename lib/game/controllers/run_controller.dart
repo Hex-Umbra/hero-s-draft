@@ -534,28 +534,19 @@ class RunController extends Notifier<RunState> {
   }
 
   /// Prend l'évolution [evolutionId] de la signature [signatureId] (spec
-  /// vague 5 ; A26). Refuse, sans rien écrire, une signature hors de la run,
-  /// aucune évolution en attente, une évolution hors du pool ou non
-  /// admissible ; sinon la sauvegarde suit le choix.
+  /// P-42 T1 et P-44 lot 1, §4.10 ; A26). Refuse, sans rien écrire, une
+  /// signature hors de la run, aucune évolution en attente, une évolution hors
+  /// du pool ou non admissible ; sinon la sauvegarde suit le choix.
   bool chooseSignatureEvolution(String signatureId, String evolutionId) {
     final signature =
         state.signatures.where((s) => s.data.id == signatureId).firstOrNull;
     if (signature == null || signature.pendingFor(state.heroStats.level) == 0) {
       return false;
     }
-    final chosen = SignatureEvolutionRules.admissible(signature)
-        .where((e) => e.id == evolutionId)
-        .firstOrNull;
-    if (chosen == null) return false;
+    final taken = SignatureEvolutionRules.take(signature, evolutionId);
+    if (taken == null) return false;
     state = state.copyWith(signatures: [
-      for (final s in state.signatures)
-        s == signature
-            ? SignatureInstance(
-                s.data,
-                evolutions:
-                    SignatureEvolutionRules.withChoice(s.evolutions, chosen),
-              )
-            : s,
+      for (final s in state.signatures) s == signature ? taken : s,
     ]);
     ref.read(checkpointProvider.notifier).bump();
     return true;
