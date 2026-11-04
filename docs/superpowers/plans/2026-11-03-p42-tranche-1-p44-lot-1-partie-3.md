@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter / Dart 3, Flame (non touché), Riverpod 2 (`Notifier`), `flutter_test`, `flutter gen-l10n`.
 
-**Spec:** `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md` — §10 « Partie 3 » pour le périmètre ; §3.7 (gabarits, évolutions, pools, icônes, et « Les icônes d'effet »), §4.10 (le moteur des évolutions), §5.1 (l'écran), §3.8 (`_configDocuments`), §5.2 (les trois lignes marquées 3 : tuile de combat, panneau des statuts, tuile hors combat), §6.1 (les clés `evolution…`, `levelLabel`, `effectValuePercent` et les treize `effectLine…`), §7 (la ligne marquée 3 : descripteur de signature), §8 (la sauvegarde — **tâche à risque**), §9 (les lignes marquées 3) et §9.1 (les tests manuels marqués 3, M7 à M33), §11. Les décisions de §1 — les réponses du propriétaire de §1.2 (dont Q6, Q7, P-2 (c), P-4 (a), l'écran d'évolution, et PN12 (d) et PN13 (c)) — et les arbitrages A1 à A42 de §1.3, en particulier A24 à A28 et A35 à A42 — sont acquises : aucune ne se rouvre ici. Les options écartées sont dans `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md`.
+**Spec:** `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md` — §10 « Partie 3 » pour le périmètre ; §3.7 (gabarits, évolutions, pools, icônes, et « Les icônes d'effet »), §4.10 (le moteur des évolutions), §5.1 (l'écran), §3.8 (`_configDocuments`), §5.2 (les trois lignes marquées 3 : tuile de combat, panneau des statuts, tuile hors combat), §6.1 (les clés `evolution…`, `levelLabel`, `effectValuePercent` et les treize `effectLine…`), §7 (la ligne marquée 3 : descripteur de signature), §8 (la sauvegarde — **tâche à risque**), §9 (les lignes marquées 3) et §9.1 (les tests manuels marqués 3, M7 à M34), §5.4 (l'entrée de debug des évolutions, P-7 (a)), §11. Les décisions de §1 — les réponses du propriétaire de §1.2 (dont Q6, Q7, P-2 (c), P-4 (a), l'écran d'évolution, et PN12 (d) et PN13 (c)) — et les arbitrages A1 à A42 de §1.3, en particulier A24 à A28 et A35 à A42 — sont acquises : aucune ne se rouvre ici. Les options écartées sont dans `docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md`.
 
 Réponses du propriétaire reprises telles quelles (spec §1.2) : **Q6** — 3 mineures et 4 majeures par signature ; une majeure en manque tire une mineure (repli). **Q7** — deux majeures contradictoires s'excluent par une liste `excludes` d'ids sur l'évolution, lue dans les deux sens. **P-2 (c)** — un badge de niveau et une icône par évolution prise sur la tuile. **P-4 (a)** — l'icône de l'évolution sur chaque rouleau. **L'écran** — le carrousel `DraftScreen` / `DraftCardReel`, trois rouleaux, une fois par signature, par le rideau de `pendingDrafts` ; chaque rouleau : nom, description, palier, « 1 → 2 » pour une mineure déjà prise ; l'en-tête nomme la signature. **PN12 (d)** — en combat, la tuile écrit en icônes ce que fait la signature : une icône chiffrée par effet, trois par ligne, centrées, sans durée ; à l'appui long, la liste, une ligne par icône, repliée au relâcher, par-dessus les voisines sans déplacer la colonne ; l'appui court garde son rôle ; hors combat, le texte complet. **PN13 (c)** — le badge « Niv. n » en `Colors.amberAccent`, disponible et armée ; `Colors.white38` en recharge et sans le mana.
 
@@ -37,10 +37,11 @@ Propres à cette partie :
 
 - **La branche.** Le plan s'exécute sur `feat/v0.5.7-p42-tranche-1-p44-lot-1`, la branche courante, dans le checkout principal. Il ne crée aucune branche, n'en change pas, ne commite rien sur `main`, ne pousse rien. Pas de worktree. Le fichier d'orchestration (`docs/possible_upgrades/01-10-2026_orchestration_…`) est modifié dans l'arbre de travail par l'orchestrateur : **ne jamais l'indexer**.
 - **D77** (brainstorm v3, §1, 04/11) : aucun nouveau test d'écran — les tests gardent les calculs, les données, les contrôleurs et la sauvegarde ; ce qu'un test d'écran aurait vérifié est un point de test manuel (spec §9.1), que reprend l'étape « Points de tests manuels » de chaque tâche d'interface ; un fichier de test supprimé par le tri du 04/11 n'est jamais recréé.
-- **La base de tests** : `flutter test` rend **1524** sur la branche (mesuré le 04/11, après le tri des tests d'écran, `5fbbe63f`). Chaque tâche donne son total cumulé ; un écart est un constat, jamais un « à peu près ». **Total attendu en fin de plan : 1607** (+83 ajoutés, aucun retiré).
+- **La base de tests** : `flutter test` rend **1524** sur la branche (mesuré le 04/11, après le tri des tests d'écran, `5fbbe63f`). Chaque tâche donne son total cumulé ; un écart est un constat, jamais un « à peu près ». **Total attendu en fin de plan : 1612** (+88 ajoutés, aucun retiré).
 - **Les références `fichier:ligne`** ont été relues le 2026-11-03 sur `996421a`. Une tâche qui modifie un fichier décale les lignes des suivantes : l'implémenteur se fie au symbole nommé, la ligne n'est qu'un repère.
 - **La tâche à risque est la Task 5** (la sauvegarde) : son code et ses tests s'écrivent ici en entier, et le vérificateur les rejoue dans un clone. Ailleurs, seul l'algorithme d'A38 (Task 8), imposé ligne à ligne par la spec, est écrit.
 - **Les cartes, les runes et le moteur de P-44 lot 1 ne changent pas** ; `tool/simulations/` ne change pas (ADR-108 D5) ; `assets/data/passives/mage_mark.json` garde `"trigger": "onAttackPlayed"` (D34).
+- **P-7 est répondue (a) par le propriétaire le 04/11** (spec §1.2, §5.4) : l'entrée de debug des évolutions, en Task 7.
 - **P-5 et P-6 sont répondues (a) par le propriétaire le 04/11** (spec §1.2), les options sous lesquelles le plan s'est écrit : plus rien de provisoire à leur nom, ni à celui de PN12 et PN13.
 
 ## Review Focus
@@ -76,6 +77,7 @@ Cinq modes d'échec que la spec implique pour la partie 3 et qu'aucun test ne ga
 | La face Flame `_getEffectVisuals`, privée, que le test d'égalité doit appeler | Task 6 : publique, `static`, `@visibleForTesting`, son type de retour public (`RendererEffectVisuals`) |
 | Le calque lit la transformation de la tuile pendant la mise en page ; `Flow` ne l'établit qu'à la peinture | Task 8 : la barre passe par un `RenderBox` propre (PN18) ; Task 9 la lit |
 | Sous P-4 (a) : le paramètre de `DraftCardReel` est facultatif, le draft de niveau ne change pas | Task 7 : `dart analyze` (le paramètre facultatif, les appelants inchangés) ; point de test manuel M11 |
+| Sous P-7 (a) : les tests manuels qui demandent un état d'évolution précis (M18 à M25, M27), inatteignable en jouant | Task 7 : l'entrée de debug des évolutions, par `admissible` et `withChoice` (`debug_actions_test`) ; la section de l'onglet, M34 |
 | A33 : le budget de D38 reste vrai sur chaque signature évoluée | Task 3, `card_catalog_test` (toutes les évolutions prises) |
 | **Point reporté** — `SignatureInstance` construit un `CardData` sans `hpCost` ni `armorCost` (`signature_instance.dart:20-36`) | Task 3 : `asCard` est réécrit ; `SignatureData` n'a pas de coût autre que le mana, les défauts (0) sont justes et le commentaire d'`asCard` le dit ; la tuile lisant `canAfford` (Task 8), un coût non-mana futur serait lu sans retouche |
 | **Point reporté** — `scaleTerm` lit une cible morte pour `targetStatus` et `targetMissingHp` | **Déjà traité** en partie 2 (Task 4) : `effect_resolver.dart:235-238` filtre `currentPv > 0`, gardé par `scale_with_test.dart:305` « une cible morte ne nourrit ni targetStatus ni targetMissingHp ». Rien à faire |
@@ -106,6 +108,7 @@ Cinq modes d'échec que la spec implique pour la partie 3 et qu'aucun test ne ga
 | `lib/ui/screens/signature_evolution_screen.dart` *(nouveau)* | L'écran d'évolution | 7 |
 | `lib/ui/widgets/relic_carousel/draft_card_reel.dart`, `lib/ui/widgets/draft/draft_choice_card.dart` | Le paramètre `icon` facultatif | 7 |
 | `lib/ui/screens/map_screen.dart` | Le rideau et les gardes de nœud | 7 |
+| `lib/game/services/debug_actions.dart`, `lib/ui/widgets/debug/tabs/debug_hero_tab.dart` | L'entrée de debug des évolutions (P-7 (a), spec §5.4) | 7 |
 | `lib/ui/widgets/hud/signature_bar.dart`, `combat_side_panels.dart`, `combat_top_bar.dart`, `lib/ui/screens/game_screen.dart` | La tuile évoluée, la bande, le badge, les puces, la barre (8) ; la liste et le calque (9) | 6, 8, 9 |
 | `lib/game/services/effect_line_texts.dart` *(nouveau)* | Les phrases de la liste, par sorte | 9 |
 | `lib/l10n/app_fr.arb`, `app_en.arb` (+ trois `app_localizations*.dart`) | Clés `evolution…` (7) ; `levelLabel` réécrite, `effectValuePercent` (8) ; les treize `effectLine…` (9) | 7, 8, 9 |
@@ -124,10 +127,10 @@ Ordre : la couture de l'applicateur (1) ; la donnée, ses règles et les six poo
 | 4 | 1574 |
 | 5 | 1583 |
 | 6 | 1596 |
-| 7 | 1596 |
-| 8 | 1597 |
-| 9 | 1602 |
-| 10 | 1607 |
+| 7 | 1601 |
+| 8 | 1602 |
+| 9 | 1607 |
+| 10 | 1612 |
 
 ---
 
@@ -921,14 +924,14 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 
 ---
 
-### Task 7 (interface): L'écran d'évolution et le rideau
+### Task 7 (interface): L'écran d'évolution, le rideau et l'entrée de debug
 
-Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. Ce que le joueur voit : au niveau 5 du héros, le rideau de la carte s'affiche ; le toucher ouvre le draft de niveau, puis, rideau toujours là, l'évolution de Châtiment, puis celle de Bouclier Sacré.
+Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. Ce que le joueur voit : au niveau 5 du héros, le rideau de la carte s'affiche ; le toucher ouvre le draft de niveau, puis, rideau toujours là, l'évolution de Châtiment, puis celle de Bouclier Sacré. Dans une run debug, l'onglet Héros pose les évolutions d'une signature (P-7 (a)). L'entrée de debug vit ici : elle lit les règles de la Task 4, cette tâche est celle qui ouvre le jeu aux évolutions, et elle précède les Tasks 8 et 9, dont les points de tests manuels se préparent par elle — la Task 10, après elles, la donnerait trop tard.
 
 **Files:**
 - Create: `lib/ui/screens/signature_evolution_screen.dart`
-- Modify: `lib/ui/widgets/effect_style.dart` (`EvolutionIcon`) ; `lib/ui/widgets/relic_carousel/draft_card_reel.dart:11-37` (paramètre), `:294-301` (le rouleau posé) ; `lib/ui/widgets/draft/draft_choice_card.dart:3-19` (paramètre), `:130-131` (l'emplacement de l'emoji) ; `lib/ui/screens/map_screen.dart:301-316` (le rideau), `:380`, `:403` (les gardes) ; `lib/l10n/app_fr.arb:280`, `lib/l10n/app_en.arb:766-770` (après `signatureTurnsLeft`)
-- Test: aucun (D77). Les règles que lisent l'écran et le rideau — `offer`, `chooseSignatureEvolution`, `nextPendingEvolution`, `hasPendingChoice` — sont gardées par la Task 4 ; `draft_card_reel_test.dart` et `map_screen_test.dart`, supprimés par le tri du 04/11, ne sont pas recréés
+- Modify: `lib/ui/widgets/effect_style.dart` (`EvolutionIcon`) ; `lib/ui/widgets/relic_carousel/draft_card_reel.dart:11-37` (paramètre), `:294-301` (le rouleau posé) ; `lib/ui/widgets/draft/draft_choice_card.dart:3-19` (paramètre), `:130-131` (l'emplacement de l'emoji) ; `lib/ui/screens/map_screen.dart:301-316` (le rideau), `:380`, `:403` (les gardes) ; `lib/l10n/app_fr.arb:280`, `lib/l10n/app_en.arb:766-770` (après `signatureTurnsLeft`) ; `lib/game/services/debug_actions.dart` (deux actions), `lib/ui/widgets/debug/tabs/debug_hero_tab.dart` (la section « Évolutions de signature »)
+- Test: `test/unit/debug_actions_test.dart` (un groupe neuf, l'entrée de debug) ; aucun test d'écran (D77). Les règles que lisent l'écran et le rideau — `offer`, `chooseSignatureEvolution`, `nextPendingEvolution`, `hasPendingChoice` — sont gardées par la Task 4 ; `draft_card_reel_test.dart` et `map_screen_test.dart`, supprimés par le tri du 04/11, ne sont pas recréés
 
 **Interfaces:**
 - Consumes : `SignatureEvolutionRules.offer`, `RunController.chooseSignatureEvolution`, `RunState.nextPendingEvolution`, `hasPendingChoice` (Task 4) ; `SignatureEvolutionData.getDescription`, `getName`, `tier`, `icon`, `color` (Task 2) ; `SignatureInstance.taken` (Task 3) ; `effectIcons`, `effectColors` (Task 6).
@@ -940,17 +943,37 @@ Tâche d'interface : l'orchestrateur trie les mineurs visibles avant la Task 8. 
     - un `DraftCardReel` par évolution tirée : `title` son nom ; `description` sa description à son **prochain** niveau (`getDescription(<niveau pris> + 1, langue, cost: signature.data.cost)`), et, pour une mineure déjà prise, une dernière ligne `'\n${evolutionLevelUp(n, n + 1)}'` ; `rarity` : `evolutionTierMinor` ou `evolutionTierMajor` ; `icon` : `EvolutionIcon(evolution: e, size: 44)` (P-4) ; `spinPool` : les évolutions du pool, nom et description au niveau 1 (PN9) ;
     - toucher un rouleau posé : `chooseSignatureEvolution(signature.data.id, e.id)`, puis `onComplete()` — même si le choix est refusé, le rideau rouvre ce qui reste (PN16).
   - ARB, textes de spec §6.1 **mot pour mot** : `evolutionScreenTitle` (`signature` String) « Évolution de {signature} » / « {signature} evolves » ; `evolutionScreenSubtitle` « Choisissez une évolution » / « Choose an evolution » ; `evolutionTierMinor` « MINEURE » / « MINOR » ; `evolutionTierMajor` « MAJEURE » / « MAJOR » ; `evolutionLevelUp` (`from`, `to` int) « Niveau {from} → {to} » / « Level {from} → {to} ».
+  - L'entrée de debug (spec §5.4, P-7 (a)), dans `DebugActions` (`lib/game/services/debug_actions.dart`), sous sa garde `_allowed` : `static bool takeSignatureEvolution(RefReader read, String signatureId, String evolutionId)` — refuse sans rien écrire si la signature n'est pas de la run, si l'évolution n'est pas de son pool, ou si elle n'est pas dans `SignatureEvolutionRules.admissible(signature)` ; sinon `updateRun` remplace l'instance par `SignatureInstance(data, evolutions: SignatureEvolutionRules.withChoice(signature.evolutions, evolution))`. Ni `pendingFor`, ni le niveau du héros, ni `checkpointProvider` : la seule règle du choix en jeu qu'elle ne lit pas est l'attente (spec §8, « menu de debug »). `static void clearSignatureEvolutions(RefReader read, String signatureId)` — la signature sans évolution. `DebugHeroTab` gagne, après le bouton « Gagner un niveau », un `Divider` puis, par signature de la run, son nom, ses références (`evolutions.join(', ')`, « aucune » si vide), un `TextButton` par évolution d'`admissible` (son nom) qui appelle `takeSignatureEvolution`, et « Retirer les évolutions » ; textes en français en dur, comme l'onglet.
   - `MapScreen` : le rideau (`LevelUpOverlay`, `:302`) s'affiche si `runState.hasPendingChoice` ; le toucher pousse `DraftScreen` si `pendingDrafts > 0` (inchangé), sinon `SignatureEvolutionScreen(signature: runState.nextPendingEvolution!, onComplete: () => Navigator.of(context).pop())`. Les deux gardes de nœud (`:380` dans `_isNodeAvailable`, `:403` dans `_onNodeTap`), qui lisent aujourd'hui `pendingDrafts > 0`, lisent `hasPendingChoice` : un draft de niveau **ou** une évolution en attente ferme les nœuds.
 
-- [ ] **Step 1: Implémenter** — ARB et `flutter gen-l10n` ; `EvolutionIcon` ; le paramètre des deux widgets du carrousel ; l'écran ; le rideau. Aucun test à écrire d'abord (D77) : les règles que lisent l'écran et le rideau sont gardées depuis la Task 4.
+- [ ] **Step 1: Écrire les tests qui échouent — l'entrée de debug**
 
-- [ ] **Step 2: Vérifier la tâche**
+`test/unit/debug_actions_test.dart`, groupe neuf `DebugActions — evolutions de signature (P-7 (a))` *(le registre réel en `setUpAll`, comme `signature_evolution_rules_test` ; une run debug sur le modèle de `_startedRun` — `requestDebugRun()`, puis `startNewRun(<classe livrée>, null, <classe livrée>.getSignatures(registry))` — du Paladin livré, ou du Berserker pour l'exclusion ; le niveau du héros laissé à 1)* :
+- `takeSignatureEvolution suit le palier : une majeure refusee d abord, admise apres une mineure` — *Châtiment* sans évolution : `haste` → `false`, rien d'écrit ; `zeal` → `true`, `['zeal:1']` ; `haste` → `true`, `['zeal:1', 'haste:1']`.
+- `une mineure reprise monte a sa place ; une majeure prise ou exclue est refusee` — Berserker, *Frappe Téméraire* : `brutality`, `haste`, `brutality` → `['brutality:2', 'haste:1']` ; au palier majeur, `devastation` (exclue par `haste`) et `haste` (prise) → `false`, rien d'écrit ; `cleave` → `true`, `['brutality:2', 'haste:1', 'cleave:1']`.
+- `l attente n est pas exigee : le niveau du heros ne bouge pas, pendingFor vaut 0, rien n est sauve` — au niveau 1, `zeal` accepté ; `heroStats.level` 1 ; `pendingFor(1)` 0 ; `container.read(checkpointProvider)` 0.
+- `hors du pool, hors de la run ou hors d une run debug, rien n est ecrit` — `ghost` sur `smite`, `zeal` sur `reckless_strike` (pas une signature du Paladin), et `zeal` sur `smite` dans une run normale (`requestNormalRun()` avant `startNewRun`) : trois `false`, `signatures` inchangées.
+- `clearSignatureEvolutions rend la signature sans evolution` — après `zeal`, `haste` : `smite` à `[]`, `holy_shield` intacte.
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1596** (inchangé : aucun test neuf, D77). `git grep -o "hasPendingChoice" -- lib/ui/screens/map_screen.dart | wc -l` → `3` (des lectures, pas des lignes) (le rideau, `_isNodeAvailable`, `_onNodeTap` ; `0` avant la tâche) : les deux gardes de nœud, qu'aucun joueur n'atteint sous le rideau opaque, sont vérifiées ici.
+- [ ] **Step 2: Lancer les tests, constater l'échec**
 
-- [ ] **Step 3: Points de tests manuels** (spec §9.1 ; aucun ne se joue ici, l'orchestrateur les porte au fichier de tests manuels de la vague)
+Run: `flutter test test/unit/debug_actions_test.dart`
+Expected: échec de compilation — `takeSignatureEvolution` et `clearSignatureEvolutions` n'existent pas. Les tests existants du fichier restent verts.
 
-- **M9** — La carte du monde : monter le héros au niveau 5, sans draft de niveau en attente → le rideau de montée de niveau s'affiche ; pendant son fondu, les nœuds restent éteints derrière le voile, sans s'éclaircir. Le toucher, lui, est bloqué par le rideau : la garde de `_onNodeTap` n'est pas à la portée du joueur, le grep du Step 2 la vérifie.
+- [ ] **Step 3: Implémenter** — ARB et `flutter gen-l10n` ; `EvolutionIcon` ; le paramètre des deux widgets du carrousel ; l'écran ; le rideau ; les deux actions de debug et la section de l'onglet Héros. L'écran et le rideau n'ont pas de test à écrire d'abord (D77) : les règles qu'ils lisent sont gardées depuis la Task 4.
+
+- [ ] **Step 4: Lancer les tests, constater le succès**
+
+Run: la commande du Step 2, puis `flutter test test/unit/signature_evolution_rules_test.dart test/unit/debug_run_test.dart`.
+Expected: tout passe.
+
+- [ ] **Step 5: Vérifier la tâche**
+
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1601** (1596 + 5). `git grep -c "hasPendingChoice" -- lib/ui/screens/map_screen.dart` → `3` (le rideau, `_isNodeAvailable`, `_onNodeTap` ; `0` avant la tâche) : les deux gardes de nœud, qu'aucun joueur n'atteint sous le rideau opaque, sont vérifiées ici. `git grep -n "SignatureEvolutionRules.admissible" -- lib/game/services/debug_actions.dart` → une ligne au moins : l'entrée de debug lit la règle du jeu.
+
+- [ ] **Step 6: Points de tests manuels** (spec §9.1 ; aucun ne se joue ici, l'orchestrateur les porte au fichier de tests manuels de la vague)
+
+- **M9** — La carte du monde : monter le héros au niveau 5, sans draft de niveau en attente → le rideau de montée de niveau s'affiche ; pendant son fondu, les nœuds restent éteints derrière le voile, sans s'éclaircir. Le toucher, lui, est bloqué par le rideau : la garde de `_onNodeTap` n'est pas à la portée du joueur, le grep du Step 5 la vérifie.
 - **M10** — La carte du monde : au niveau 5, avec un draft de niveau en attente, toucher le rideau, puis chaque fois qu'il revient → d'abord le draft de niveau ; au retour, le rideau toujours là ouvre l'évolution de *Châtiment*, puis celle de *Bouclier Sacré* ; après le dernier choix, le rideau disparaît et les nœuds s'ouvrent.
 - **M11** — Le draft de niveau : faire un draft de niveau, puis un draft de boss → les rouleaux posés montrent l'emoji d'aujourd'hui (✨) : rien n'y change.
 - **M12** — L'écran d'évolution : l'ouvrir au niveau 5, en français puis en anglais → l'en-tête « Évolution de Châtiment », puis « Choisissez une évolution » ; en anglais, « Smite evolves ».
@@ -959,8 +982,9 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 - **M15** — L'écran d'évolution : l'ouvrir au niveau 15, *Zèle* et *Célérité* prises → le rouleau de *Zèle* dit « +4 dégâts », sa description au prochain niveau, et en dernière ligne « Niveau 1 → 2 ».
 - **M16** — L'écran d'évolution : regarder les rouleaux tourner, puis s'arrêter → aucune icône pendant la rotation ; rouleau arrêté, l'icône de l'évolution à sa couleur au-dessus du nom (*Zèle* : le marteau rouge) ; une majeure dans un anneau de sa couleur.
 - **M17** — L'écran d'évolution : toucher un rouleau posé, puis entrer en combat → l'écran se ferme et la carte revient ; en combat, la tuile porte la puce de l'évolution choisie.
+- **M34** — Le menu de debug : dans une run lancée par « Run Debug », hors combat, ouvrir l'onglet Héros, section « Évolutions de signature » ; poser puis retirer des évolutions de *Châtiment*, puis de *Frappe Téméraire* (Berserker) ; entrer en combat → pour chaque signature, ses évolutions prises dans l'ordre (« zeal:2, sentence:1 ») ou « aucune » ; un bouton par évolution que le prochain palier admet — sans évolution, les trois mineures seules ; après une mineure, les quatre majeures ; une majeure prise, ou exclue (*Célérité* et *Dévastation*), n'est plus proposée ; « Retirer les évolutions » vide la liste ; le niveau du héros ne bouge pas ; en combat, la tuile porte ce qui est posé.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 7: Commit**
 
 `git add` par chemin (les trois `app_localizations*.dart` compris), puis `git commit` — `feat(evolutions): l ecran a trois rouleaux et le rideau de la carte`.
 
@@ -1032,17 +1056,17 @@ Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1597** (1596 + 1). `git grep -n "currentMana >= signature.cost" -- lib` ne rend rien ; `git grep -n "canAfford(signature.asCard" -- lib/ui/widgets/hud/signature_bar.dart` rend une ligne.
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1602** (1601 + 1). `git grep -n "currentMana >= signature.cost" -- lib` ne rend rien ; `git grep -n "canAfford(signature.asCard" -- lib/ui/widgets/hud/signature_bar.dart` rend une ligne.
 
 - [ ] **Step 6: Points de tests manuels** (spec §9.1 ; aucun ne se joue ici, l'orchestrateur les porte au fichier de tests manuels de la vague)
 
-- **M18** — Le combat, la tuile : regarder *Châtiment* sans évolution, puis avec `zeal:2`, `sentence:1`, dans les quatre états, en français puis en anglais → sans évolution, aucun « Niv. » ; avec, « Niv. 3 » (« Lvl. 3 ») au bout de la ligne du type, sur la même ligne ; ambre disponible et armée, gris pâle en recharge et sans le mana ; sur la tuile étroite, un nom long (« Surtension de Mana ») ne passe pas en « … » à cause du badge.
-- **M19** — Le combat, la tuile : prendre `sentence`, puis `zeal` deux fois, puis `aegis` ; puis les sept évolutions d'un pool, sur une fenêtre étroite (≈ 400 px de large) et une large → une puce par évolution distincte, dans l'ordre de première prise, sous la bande ; *Sentence* dans un anneau, *Zèle* nue avec un petit « 2 » en bas à droite, *Égide* sans chiffre ; sept puces tiennent sur les deux tuiles, sans débordement.
-- **M20** — Le combat, la tuile : regarder *Châtiment* sans évolution, puis avec `zeal:2`, `sentence:1`, puis avec `ardor:1` et `radiance:1` de plus → plus aucun texte de description au repos ; deux icônes (« 6 », « 4 »), puis trois (« 10 », « 4 », « 1 ») sur une ligne, sans durée (« 2 tours ») ; puis cinq, trois sur la première ligne et deux sur la seconde, le critique à « +5 % », *Rayonnement* sans chiffre.
-- **M21** — Le combat, la tuile : prendre les six verbales de *Surtension de Mana*, sur une fenêtre étroite puis large → huit icônes en trois lignes, chaque ligne centrée dans la tuile, la ligne de deux comprise ; l'icône de la bande plus grande que la puce ; rien ne déborde.
-- **M22** — Le combat, la tuile : sur la tuile étroite, *Châtiment* avec `zeal:1`, `ardor:1`, puis avec `zeal:2`, `aegis:3`, `ardor:1` → la ligne (« 8 », « 4 », « +5 % », puis « 10 », « 10 », « +5 % ») tient, ou se réduit d'un bloc : jamais coupée, jamais en débordement ; sur la large, elle tient sans réduction.
-- **M23** — Le combat, la tuile : la mettre en recharge, puis à 0 mana, puis la regarder hors du tour du joueur → en recharge et sans le mana, icônes et valeurs de la bande, puces, anneaux, chiffres et badge en gris pâle ; disponible et armée, à leurs couleurs (la puce de *Zèle* rouge) ; inactive, toute la tuile à demi effacée.
-- **M24** — Le combat, la tuile : prendre *Dévotion*, mettre le mana à 0 ; puis prendre *Rayonnement* et toucher *Châtiment* → le médaillon dit 0 et la tuile reste disponible à 0 mana ; avec *Rayonnement*, le toucher joue aussitôt sur tous les ennemis, sans demander de cible.
+- **M18** — Le combat, la tuile : regarder *Châtiment* sans évolution, puis poser par l'entrée de debug (M34) `zeal`, `sentence`, `zeal` (`zeal:2`, `sentence:1`) ; dans les quatre états, en français puis en anglais → sans évolution, aucun « Niv. » ; avec, « Niv. 3 » (« Lvl. 3 ») au bout de la ligne du type, sur la même ligne ; ambre disponible et armée, gris pâle en recharge et sans le mana ; sur la tuile étroite, un nom long (« Surtension de Mana ») ne passe pas en « … » à cause du badge.
+- **M19** — Le combat, la tuile : poser par l'entrée de debug `zeal`, `sentence`, `zeal`, `haste`, `aegis` ; puis, après « Retirer les évolutions », les sept évolutions de *Châtiment* en alternant les paliers (`zeal`, `haste`, `aegis`, `sentence`, `ardor`, `radiance`, `zeal`, `devotion`), sur une fenêtre étroite (≈ 400 px de large) et une large → une puce par évolution distincte, dans l'ordre de première prise, sous la bande : *Zèle* nue avec un petit « 2 » en bas à droite, *Sentence* et *Célérité* dans un anneau, *Égide* sans chiffre ; sept puces tiennent sur les deux tuiles, sans débordement.
+- **M20** — Le combat, la tuile : regarder *Châtiment* sans évolution ; poser par l'entrée de debug `zeal`, `sentence`, `zeal` ; puis `radiance` et `ardor` de plus → plus aucun texte de description au repos ; deux icônes (« 6 », « 4 »), puis trois (« 10 », « 4 », « 1 ») sur une ligne, sans durée (« 2 tours ») ; puis cinq, trois sur la première ligne et deux sur la seconde : *Rayonnement* sans chiffre, puis le critique à « +5 % ».
+- **M21** — Le combat, la tuile : poser par l'entrée de debug les six verbales de *Surtension de Mana* (§3.7), en alternant les paliers — une mineure déjà prise se reprend pour passer un palier mineur —, sur une fenêtre étroite puis large → huit icônes en trois lignes, chaque ligne centrée dans la tuile, la ligne de deux comprise ; l'icône de la bande plus grande que la puce ; rien ne déborde.
+- **M22** — Le combat, la tuile : sur la tuile étroite, poser par l'entrée de debug `zeal`, `haste`, `ardor` (*Célérité*, chiffrée, n'ajoute pas d'icône) ; puis, après « Retirer les évolutions », `zeal`, `haste`, `zeal`, `devotion`, `aegis`, `aegis`, `aegis`, `ardor` — les deux majeures chiffrées prises, le palier majeur admet les mineures (Q6) → la ligne (« 8 », « 4 », « +5 % », puis « 10 », « 10 », « +5 % ») tient, ou se réduit d'un bloc : jamais coupée, jamais en débordement ; sur la large, elle tient sans réduction.
+- **M23** — Le combat, la tuile : poser par l'entrée de debug `zeal`, `sentence`, `zeal` ; mettre la tuile en recharge, puis à 0 mana (onglet Combat), puis la regarder hors du tour du joueur → en recharge et sans le mana, icônes et valeurs de la bande, puces, anneaux, chiffres et badge en gris pâle ; disponible et armée, à leurs couleurs (la puce de *Zèle* rouge) ; inactive, toute la tuile à demi effacée.
+- **M24** — Le combat, la tuile : poser par l'entrée de debug `zeal`, `devotion`, mettre le mana à 0 ; puis, après « Retirer les évolutions », `zeal`, `radiance`, et toucher *Châtiment* → le médaillon dit 0 et la tuile reste disponible à 0 mana ; avec *Rayonnement*, le toucher joue aussitôt sur tous les ennemis, sans demander de cible.
 - **M30** — Le combat, la barre : au niveau 0, sur une fenêtre de 1280 × 800 → la colonne des deux tuiles est à mi-hauteur, comme en `0.5.6`, en face du bouton de fin de tour.
 - **M31** — Le combat, la barre : sur une fenêtre basse (≈ 400 px de haut), en fin de run (beaucoup d'évolutions), toucher *Châtiment* → la colonne se réduit (aux trois quarts au plus), reste sous la barre du haut et peut sortir par le bas, peinte au-dessus du HUD ; la tuile réduite s'arme, et l'invite « Choisissez une cible » reste visible sous la colonne.
 
@@ -1095,13 +1119,13 @@ Expected: tout passe.
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1602** (1597 + 4 + 1).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1607** (1602 + 4 + 1).
 
 - [ ] **Step 6: Points de tests manuels** (spec §9.1 ; aucun ne se joue ici, l'orchestrateur les porte au fichier de tests manuels de la vague)
 
-- **M25** — Le combat, la liste : rester appuyé sur *Châtiment* (`zeal:2`, `sentence:1`), au-dessus de *Bouclier Sacré* → la liste s'ouvre vers le bas, par-dessus la tuile voisine : une ligne par icône de la bande, dans son ordre, l'icône puis sa phrase (« Inflige 10 dégâts », « Donne 4 d'Armure », « Applique 1 Faiblesse pendant 2 tours ») ; la colonne des tuiles ne bouge ni ne change de taille.
+- **M25** — Le combat, la liste : rester appuyé sur *Châtiment* (`zeal:2`, `sentence:1`, posées comme en M18), au-dessus de *Bouclier Sacré* → la liste s'ouvre vers le bas, par-dessus la tuile voisine : une ligne par icône de la bande, dans son ordre, l'icône puis sa phrase (« Inflige 10 dégâts », « Donne 4 d'Armure », « Applique 1 Faiblesse pendant 2 tours ») ; la colonne des tuiles ne bouge ni ne change de taille.
 - **M26** — Le combat, la liste : relâcher ; rouvrir et glisser le doigt hors de la tuile sans le lever ; Android seulement, rouvrir et tirer le volet des notifications → relâcher replie la liste ; le glissement ne la replie pas ; le geste du système la replie (sous Windows, ce dernier cas ne se provoque pas).
-- **M27** — Le combat, la liste : sur une fenêtre basse (≈ 400 px de haut, celle de M31), *Bouclier Sacré* et ses sept évolutions sous *Châtiment*, rester appuyé sur *Bouclier Sacré* → la liste s'ouvre vers le haut, son bas au bas de la tuile.
+- **M27** — Le combat, la liste : sur une fenêtre basse (≈ 400 px de haut, celle de M31), poser par l'entrée de debug les sept évolutions de *Bouclier Sacré* en alternant les paliers (`ward`, `haste`, `mercy`, `consecration`, `resolve`, `inspiration`, `ward`, `lasting_aegis`), puis rester appuyé sur *Bouclier Sacré*, sous *Châtiment* → la liste s'ouvre vers le haut, son bas au bas de la tuile.
 - **M28** — Le combat, la liste : l'ouvrir en recharge, sans le mana, disponible, puis hors du tour du joueur — l'appui tenu pendant que l'ennemi joue, un tour court —, sur une fenêtre étroite puis large → elle s'ouvre dans les quatre états ; en recharge et sans le mana, cadre et en-tête gris, phrases en gris pâle, icônes de la liste à leurs couleurs ; disponible, phrases en blanc atténué ; inactive, la liste à pleine opacité ; les icônes de la liste petites (16 px) sur les deux tuiles.
 - **M29** — Le combat, la tuile : toucher brièvement une signature sur soi, une signature à cible, une signature armée, une signature sans le mana ; puis rester appuyé sur chacune → l'appui court joue, arme, désarme, ou refuse faute de mana, comme en `0.5.6` ; l'appui long ne joue, n'arme ni ne désarme rien.
 
@@ -1150,7 +1174,7 @@ Expected: tout passe — `shipped_entities_round_trip_test` sur les six signatur
 
 - [ ] **Step 5: Vérifier la tâche**
 
-Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1607** (1602 + 2 + 3).
+Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passed!`, **total 1612** (1607 + 2 + 3).
 
 - [ ] **Step 6: Commit**
 
@@ -1163,8 +1187,8 @@ Run: `dart analyze` → `No issues found!` ; `flutter test` → `All tests passe
 Aucun fichier modifié : des commandes, jouées par l'orchestrateur, sans agent.
 
 - [ ] **Step 1: L'analyse** — `dart analyze` → `No issues found!`
-- [ ] **Step 2: La suite** — `rm -rf build/unit_test_assets` puis `flutter test` → `All tests passed!`, **1607**.
-- [ ] **Step 3: Les tests nommés de la partie** — `flutter test test/unit/save_service_test.dart test/unit/signature_evolution_data_test.dart test/unit/signature_evolution_rules_test.dart test/unit/signature_instance_test.dart test/unit/referential_integrity_test.dart test/widget/signature_bar_test.dart --reporter expanded` → verts, nommément : les neuf du groupe « les evolutions de signature (spec §8) », « canAfford lit le cout evolue : a 0 mana, Chatiment est refusee, avec Devotion acceptee », « hasPendingChoice : un draft ou une evolution en attente », « signatureBandPlacement : centree, decalee, reduite, plancher », « les six pools sont ceux de spec 3.7 : trois mineures, quatre majeures (Q6) », « une majeure exclue n est pas offerte, dans les deux sens », « majeures epuisees : trois mineures au palier majeur (Q6, repli) », « une evolution sans cooldown qui vise une seule sorte porte son icon et sa color (A39) », « chaque sorte que produit une signature livree ou une evolution de son pool a sa phrase (A41) » et, « les faces des cartes et le document donnent la meme icone et la meme couleur a chaque sorte commune ».
+- [ ] **Step 2: La suite** — `rm -rf build/unit_test_assets` puis `flutter test` → `All tests passed!`, **1612**.
+- [ ] **Step 3: Les tests nommés de la partie** — `flutter test test/unit/save_service_test.dart test/unit/signature_evolution_data_test.dart test/unit/signature_evolution_rules_test.dart test/unit/signature_instance_test.dart test/unit/referential_integrity_test.dart test/unit/debug_actions_test.dart test/widget/signature_bar_test.dart --reporter expanded` → verts, nommément : les neuf du groupe « les evolutions de signature (spec §8) », « canAfford lit le cout evolue : a 0 mana, Chatiment est refusee, avec Devotion acceptee », « hasPendingChoice : un draft ou une evolution en attente », « signatureBandPlacement : centree, decalee, reduite, plancher », « takeSignatureEvolution suit le palier : une majeure refusee d abord, admise apres une mineure », « une mineure reprise monte a sa place ; une majeure prise ou exclue est refusee », « les six pools sont ceux de spec 3.7 : trois mineures, quatre majeures (Q6) », « une majeure exclue n est pas offerte, dans les deux sens », « majeures epuisees : trois mineures au palier majeur (Q6, repli) », « une evolution sans cooldown qui vise une seule sorte porte son icon et sa color (A39) », « chaque sorte que produit une signature livree ou une evolution de son pool a sa phrase (A41) » et, « les faces des cartes et le document donnent la meme icone et la meme couleur a chaque sorte commune ».
 - [ ] **Step 4: Les greps de la spec (§11, « Ce que le vérificateur contrôle »)**
   - `git grep -n "onDamagingCardPlayed" -- lib test assets` → rien (D34) ; `grep -c '"trigger": "onAttackPlayed"' assets/data/passives/mage_mark.json` → `1`.
   - `ls assets/data/cards/focus.json assets/data/cards/demon_form.json` → deux « No such file » ; `ls assets/data/cards/rage/demon_form.json` → le fichier.
@@ -1179,7 +1203,8 @@ Aucun fichier modifié : des commandes, jouées par l'orchestrateur, sans agent.
   - `git grep -n "_getEffectVisuals\|_RendererEffectVisuals" -- lib` → rien ; `git grep -n "@visibleForTesting" -- lib/game/components/widgets/card_text_renderer.dart` → une ligne.
   - `git grep -n "maxLines: 2" -- lib/ui/widgets/hud/signature_bar.dart` → rien (la description a quitté la tuile).
   - D77 : `git diff --name-only --diff-filter=A 5fbbe63f -- test` → exactement `test/unit/signature_evolution_data_test.dart`, `test/unit/signature_evolution_rules_test.dart`, `test/unit/effect_icon_table_test.dart` et `test/unit/effect_line_texts_test.dart` ; `git diff 5fbbe63f -- test | grep -c '^+.*testWidgets('` → `0` ; `git grep -n "canAfford(signature.asCard" -- lib/ui/widgets/hud/signature_bar.dart` → une ligne ; `git grep -o "hasPendingChoice" -- lib/ui/screens/map_screen.dart | wc -l` → `3` (des lectures, pas des lignes) (le rideau, `_isNodeAvailable`, `_onNodeTap` ; `0` avant la tâche).
+  - P-7 (a) : `git grep -n "SignatureEvolutionRules.admissible" -- lib/game/services/debug_actions.dart` → une ligne au moins.
   - `git grep -niE "vague 5" -- lib` → rien (les cinq commentaires au futur, `run_controller.dart:82`, `card_delta.dart:11`, `effective_card.dart:74`, `signature_instance.dart:11`, `:14`, sont au présent) ; `git grep -n "currentMana >= signature.cost" -- lib` → rien.
   - `git grep -n "package:flutter_riverpod\|package:flame\|package:flutter/" -- lib/game/systems/signature_evolution_rules.dart lib/models/signature_instance.dart lib/models/data/signature_evolution_data.dart lib/models/data/effect_icon_table.dart lib/models/data/effect_kind.dart` → rien (règle pure, couche données).
   - `git status --short` → seul le fichier d'orchestration, que l'orchestrateur tient ; aucun `generated_plugin*` ni `GeneratedPluginRegistrant.swift` modifié.
-- [ ] **Step 6: Les points de tests manuels** — rien ne se joue ici : M7 à M33 (spec §9.1), réunis par les étapes « Points de tests manuels » des Tasks 2, 6, 7, 8 et 9, sont ceux que le fichier de tests manuels de la vague reprend pour le propriétaire (D77).
+- [ ] **Step 6: Les points de tests manuels** — rien ne se joue ici : M7 à M34 (spec §9.1), réunis par les étapes « Points de tests manuels » des Tasks 2, 6, 7, 8 et 9, sont ceux que le fichier de tests manuels de la vague reprend pour le propriétaire (D77).
