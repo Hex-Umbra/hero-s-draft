@@ -777,6 +777,100 @@
       "value": { "type": "int" }
     }
   },
+  "effectLineDamage": "Deal {amount} damage",
+  "@effectLineDamage": {
+    "description": "A line of a signature's long-press effect list: a damage effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineArmor": "Gain {amount} Block",
+  "@effectLineArmor": {
+    "description": "A line of a signature's long-press effect list: an armor effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineHeal": "Heal {amount} HP",
+  "@effectLineHeal": {
+    "description": "A line of a signature's long-press effect list: a heal effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineDraw": "Draw {amount, plural, =1{1 card} other{{amount} cards}}",
+  "@effectLineDraw": {
+    "description": "A line of a signature's long-press effect list: a draw effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineGainMana": "Gain {amount} Mana",
+  "@effectLineGainMana": {
+    "description": "A line of a signature's long-press effect list: a mana gain effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineMight": "Gain {amount} Might {duration, plural, =1{this turn} other{for {duration} turns}}",
+  "@effectLineMight": {
+    "description": "A line of a signature's long-press effect list: the Might status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineMightRegen": "{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Might at the start of your turn",
+  "@effectLineMightRegen": {
+    "description": "A line of a signature's long-press effect list: the Might regeneration status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineArmorRegen": "{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Block at the start of your turn",
+  "@effectLineArmorRegen": {
+    "description": "A line of a signature's long-press effect list: the armor regeneration status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineWeakness": "Apply {amount} Weakness for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineWeakness": {
+    "description": "A line of a signature's long-press effect list: the Weakness status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineVulnerable": "Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineVulnerable": {
+    "description": "A line of a signature's long-press effect list: the Vulnerable status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineBurn": "Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineBurn": {
+    "description": "A line of a signature's long-press effect list: the Burn status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineCrit": "+{amount}% critical chance",
+  "@effectLineCrit": {
+    "description": "A line of a signature's long-press effect list: a critical-chance bonus.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineAllEnemies": "Hits all enemies",
+  "@effectLineAllEnemies": {
+    "description": "A line of a signature's long-press effect list: the signature now targets all enemies."
+  },
   "evolutionScreenTitle": "{signature} evolves",
   "@evolutionScreenTitle": {
     "description": "Title of the signature evolution screen.",

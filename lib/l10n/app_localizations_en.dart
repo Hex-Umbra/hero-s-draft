@@ -1047,6 +1047,111 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String effectLineDamage(int amount) {
+    return 'Deal $amount damage';
+  }
+
+  @override
+  String effectLineArmor(int amount) {
+    return 'Gain $amount Block';
+  }
+
+  @override
+  String effectLineHeal(int amount) {
+    return 'Heal $amount HP';
+  }
+
+  @override
+  String effectLineDraw(int amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      amount,
+      locale: localeName,
+      other: '$amount cards',
+      one: '1 card',
+    );
+    return 'Draw $_temp0';
+  }
+
+  @override
+  String effectLineGainMana(int amount) {
+    return 'Gain $amount Mana';
+  }
+
+  @override
+  String effectLineMight(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'for $duration turns',
+      one: 'this turn',
+    );
+    return 'Gain $amount Might $_temp0';
+  }
+
+  @override
+  String effectLineMightRegen(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'For $duration turns',
+      one: 'For 1 turn',
+    );
+    return '$_temp0, gain $amount Might at the start of your turn';
+  }
+
+  @override
+  String effectLineArmorRegen(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'For $duration turns',
+      one: 'For 1 turn',
+    );
+    return '$_temp0, gain $amount Block at the start of your turn';
+  }
+
+  @override
+  String effectLineWeakness(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Weakness for $_temp0';
+  }
+
+  @override
+  String effectLineVulnerable(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Vulnerable for $_temp0';
+  }
+
+  @override
+  String effectLineBurn(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Burn for $_temp0';
+  }
+
+  @override
+  String effectLineCrit(int amount) {
+    return '+$amount% critical chance';
+  }
+
+  @override
+  String get effectLineAllEnemies => 'Hits all enemies';
+
+  @override
   String evolutionScreenTitle(String signature) {
     return '$signature evolves';
   }

@@ -1,13 +1,16 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/services/effect_line_texts.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/components/widgets/card_text_renderer.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/effect_kind.dart';
@@ -204,6 +207,27 @@ void main() {
         if (kind.startsWith('status:') &&
             EffectResolver.createStatus(kind.substring(7), 1, 1) == null)
           '$kind → createStatus ne cree rien',
+    ];
+
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  // Une sorte sans phrase montrerait son icone seule dans la liste de
+  // l appui long (A41).
+  test(
+      'chaque sorte que produit une signature livree ou une evolution de son '
+      'pool a sa phrase (A41)', () {
+    final fr = lookupAppLocalizations(const Locale('fr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+    final offenders = [
+      for (final s in registry.signatures)
+        for (final line in SignatureInstance(
+          s,
+          evolutions: [for (final e in s.evolutions) '${e.id}:1'],
+        ).effectLines)
+          for (final l10n in [fr, en])
+            if (EffectLineTexts.phrase(l10n, line) == null)
+              '${s.id} → sorte "${line.kind}" sans phrase (${l10n.localeName})',
     ];
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));

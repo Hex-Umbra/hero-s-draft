@@ -3,6 +3,7 @@ import 'dart:math' show max, min;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../game/services/effect_line_texts.dart';
 import '../../../game/services/effect_resolver.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/combat_state.dart';
@@ -347,10 +348,29 @@ class _SignatureTileState extends State<_SignatureTile>
     }
   }
 
+  // La tuile déployée de l'appui long (A42), posée dans le calque.
+  final OverlayPortalController _list = OverlayPortalController();
+
+  // Le survol ne soulève pas la tuile sous sa liste : la tuile soulevée
+  // déborderait du calque, posé à la taille de la tuile au repos.
+  bool get _lifted =>
+      _responds(widget.state) && _hovered && !_list.isShowing;
+
+  // L'appui long ne lit pas l'état : la liste s'ouvre aussi sur une tuile
+  // inactive, et rien ne se joue, ne s'arme ni ne se désarme.
+  void _showList() => setState(_list.show);
+
+  void _hideList() => setState(_list.hide);
+
   /// Le contenu de la tuile, de haut en bas : l'en-tête (médaillon, nom, type
-  /// et badge), la bande d'icônes sur toute la largeur, puis, dans la colonne
-  /// de texte, les puces d'évolution et le compte de recharge.
-  Widget _content(BuildContext context, AppLocalizations l10n) {
+  /// et badge), la bande d'icônes sur toute la largeur — la liste des effets
+  /// sur la tuile déployée —, puis, dans la colonne de texte, les puces
+  /// d'évolution et le compte de recharge.
+  Widget _content(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool expanded,
+  }) {
     final signature = widget.signature;
     final state = widget.state;
     final grayedOut = _grayedOut(state);
@@ -373,12 +393,20 @@ class _SignatureTileState extends State<_SignatureTile>
           ],
         ),
         const SizedBox(height: 4),
-        _EffectBand(
-          lines: signature.effectLines,
-          effectIcons: widget.effectIcons,
-          compact: compact,
-          grayedOut: grayedOut,
-        ),
+        if (expanded)
+          _EffectList(
+            lines: signature.effectLines,
+            effectIcons: widget.effectIcons,
+            compact: compact,
+            grayedOut: grayedOut,
+          )
+        else
+          _EffectBand(
+            lines: signature.effectLines,
+            effectIcons: widget.effectIcons,
+            compact: compact,
+            grayedOut: grayedOut,
+          ),
         if (taken.isNotEmpty) ...[
           const SizedBox(height: 4),
           Padding(
@@ -526,97 +554,164 @@ class _SignatureTileState extends State<_SignatureTile>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  /// La tuile, ou sa forme déployée (A42) : le même cadre — sa largeur, sa
+  /// bordure et la pulsation armée, son gris — autour du même contenu, la
+  /// liste des effets à la place de la bande. Seule la tuile prend l'opacité
+  /// de l'état inactif, jamais sa forme déployée.
+  Widget _body(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool expanded,
+  }) {
     final state = widget.state;
     final grayedOut = _grayedOut(state);
     final armed = state == SignatureTileState.armed;
+    final lifted = _lifted;
 
-    final responsive = _responds(state);
-    final lifted = responsive && _hovered;
-
-    // La zone de survol est hors de l'agrandissement : elle garde la taille au
-    // repos, pour que la tuile ne clignote pas sur son propre bord.
-    return MouseRegion(
-      cursor: responsive ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _onTap,
-        // Effet de peinture seulement : la mise en page ne bouge pas.
-        child: AnimatedScale(
-          scale: lifted ? 1.05 : 1,
-          alignment: Alignment.centerLeft,
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOut,
-          child: AnimatedBuilder(
-            animation: _shake,
-            builder: (context, child) => Transform.translate(
-              offset: Offset(_shakeOffset.evaluate(_shake), 0),
-              child: child,
+    return AnimatedBuilder(
+      animation: _pulse,
+      // Le contenu ne dépend pas de l'impulsion : construit une fois.
+      child: _content(context, l10n, expanded: expanded),
+      builder: (context, content) {
+        final borderColor = switch (state) {
+          SignatureTileState.recharging ||
+          SignatureTileState.unaffordable => Colors.grey,
+          SignatureTileState.armed => Color.lerp(
+            widget.classColor,
+            Colors.white,
+            _pulse.value,
+          )!,
+          _ => widget.classColor,
+        };
+        return Opacity(
+          opacity: !expanded && state == SignatureTileState.inactive ? 0.45 : 1,
+          child: Container(
+            width: widget.compact ? 170 : 220,
+            constraints: BoxConstraints(
+              minHeight: widget.compact ? 64 : 80,
             ),
-            child: AnimatedBuilder(
-              animation: _pulse,
-              // Le contenu ne dépend pas de l'impulsion : construit une fois.
-              child: _content(context, l10n),
-              builder: (context, content) {
-                final borderColor = switch (state) {
-                  SignatureTileState.recharging ||
-                  SignatureTileState.unaffordable => Colors.grey,
-                  SignatureTileState.armed => Color.lerp(
-                    widget.classColor,
-                    Colors.white,
-                    _pulse.value,
-                  )!,
-                  _ => widget.classColor,
-                };
-                return Opacity(
-                  opacity: state == SignatureTileState.inactive ? 0.45 : 1,
-                  child: Container(
-                    width: widget.compact ? 170 : 220,
-                    constraints: BoxConstraints(
-                      minHeight: widget.compact ? 64 : 80,
-                    ),
-                    // La bordure armée, plus épaisse d'un point, le prend sur la
-                    // marge : la tuile garde sa taille, ses voisines leur place.
-                    padding: EdgeInsets.all(armed ? 5 : 6),
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: grayedOut
-                          ? const Color(0xFF2A2A2A)
-                          : neutralCardBackground,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: borderColor,
-                        width: armed ? 3 : 2,
-                      ),
-                      boxShadow: [
-                        if (state == SignatureTileState.available)
-                          BoxShadow(
-                            color: widget.classColor.withAlpha(150),
-                            blurRadius: 8,
-                          ),
-                        // Le survol intensifie la lueur de classe.
-                        if (lifted)
-                          BoxShadow(
-                            color: widget.classColor.withAlpha(230),
-                            blurRadius: 16,
-                            spreadRadius: 2,
-                          ),
-                      ],
-                    ),
-                    child: content,
+            // La bordure armée, plus épaisse d'un point, le prend sur la
+            // marge : la tuile garde sa taille, ses voisines leur place.
+            padding: EdgeInsets.all(armed ? 5 : 6),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: grayedOut ? const Color(0xFF2A2A2A) : neutralCardBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: borderColor,
+                width: armed ? 3 : 2,
+              ),
+              boxShadow: [
+                if (state == SignatureTileState.available)
+                  BoxShadow(
+                    color: widget.classColor.withAlpha(150),
+                    blurRadius: 8,
                   ),
-                );
-              },
+                // Le survol intensifie la lueur de classe.
+                if (lifted)
+                  BoxShadow(
+                    color: widget.classColor.withAlpha(230),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                  ),
+              ],
+            ),
+            child: content,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final responsive = _responds(widget.state);
+
+    // Le calque pose la tuile déployée sur la tuile, par-dessus ses voisines :
+    // la colonne ne change ni de hauteur, ni d'échelle, ni de place.
+    return OverlayPortal.overlayChildLayoutBuilder(
+      controller: _list,
+      overlayChildBuilder: (context, info) => IgnorePointer(
+        child: CustomSingleChildLayout(
+          delegate: _ExpandedTileLayout(info),
+          child: Transform.scale(
+            scale: _ExpandedTileLayout.scaleOf(info),
+            alignment: Alignment.topLeft,
+            child: _body(context, l10n, expanded: true),
+          ),
+        ),
+      ),
+      // La zone de survol est hors de l'agrandissement : elle garde la taille
+      // au repos, pour que la tuile ne clignote pas sur son propre bord.
+      child: MouseRegion(
+        cursor:
+            responsive ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _onTap,
+          onLongPressStart: (_) => _showList(),
+          onLongPressEnd: (_) => _hideList(),
+          onLongPressCancel: _hideList,
+          // Effet de peinture seulement : la mise en page ne bouge pas.
+          child: AnimatedScale(
+            scale: _lifted ? 1.05 : 1,
+            alignment: Alignment.centerLeft,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+            child: AnimatedBuilder(
+              animation: _shake,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(_shakeOffset.evaluate(_shake), 0),
+                child: child,
+              ),
+              child: _body(context, l10n, expanded: false),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Pose la tuile déployée dans le calque (A42, PN19) : à l'échelle et au haut
+/// de la tuile, à sa largeur ; vers le bas si elle tient sous ce haut, sinon
+/// vers le haut, son bas au bas de la tuile.
+class _ExpandedTileLayout extends SingleChildLayoutDelegate {
+  final OverlayChildLayoutInfo info;
+
+  const _ExpandedTileLayout(this.info);
+
+  /// L'échelle de la tuile dans le calque, lue sur sa largeur transformée :
+  /// `getMaxScaleOnAxis` lirait aussi l'axe Z, laissé à 1 par la barre, et
+  /// rendrait 1 sur une barre réduite.
+  static double scaleOf(OverlayChildLayoutInfo info) =>
+      MatrixUtils.transformRect(
+        info.childPaintTransform,
+        Offset.zero & info.childSize,
+      ).width /
+      info.childSize.width;
+
+  // La largeur de la tuile ; jamais moins haute qu'elle, pour la couvrir.
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      BoxConstraints.tightFor(width: info.childSize.width)
+          .copyWith(minHeight: info.childSize.height);
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final scale = scaleOf(info);
+    final top = MatrixUtils.transformPoint(info.childPaintTransform, Offset.zero);
+    final placed = scale * childSize.height;
+    if (top.dy + placed <= info.overlaySize.height) return top;
+    return Offset(top.dx, top.dy + scale * info.childSize.height - placed);
+  }
+
+  @override
+  bool shouldRelayout(_ExpandedTileLayout oldDelegate) =>
+      oldDelegate.info != info;
 }
 
 /// La bande d'icônes (A40) : une cellule par entrée de [lines], dans l'ordre,
@@ -697,6 +792,56 @@ class _EffectBand extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// La liste de la tuile déployée (A42) : une ligne par entrée de [lines], dans
+/// l'ordre de la bande — l'icône, toujours à sa couleur, puis sa phrase sur
+/// autant de lignes qu'il lui faut ; l'icône seule pour une sorte sans phrase.
+class _EffectList extends StatelessWidget {
+  final List<EffectLine> lines;
+  final EffectIconTable effectIcons;
+  final bool compact;
+  final bool grayedOut;
+
+  const _EffectList({
+    required this.lines,
+    required this.effectIcons,
+    required this.compact,
+    required this.grayedOut,
+  });
+
+  Widget _line(EffectLine line, AppLocalizations l10n) {
+    final visuals = effectVisualsOf(effectIcons, line.kind);
+    final phrase = EffectLineTexts.phrase(l10n, line);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 4,
+      children: [
+        Icon(visuals.icon, size: 16, color: visuals.color),
+        if (phrase != null)
+          Expanded(
+            child: Text(
+              phrase,
+              style: TextStyle(
+                color: grayedOut ? Colors.white38 : Colors.white70,
+                fontSize: compact ? 10 : 11,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 4,
+      children: [for (final line in lines) _line(line, l10n)],
     );
   }
 }

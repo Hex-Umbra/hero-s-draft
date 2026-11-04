@@ -1724,6 +1724,84 @@ abstract class AppLocalizations {
   /// **'+{value}%'**
   String effectValuePercent(int value);
 
+  /// A line of a signature's long-press effect list: a damage effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Deal {amount} damage'**
+  String effectLineDamage(int amount);
+
+  /// A line of a signature's long-press effect list: an armor effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Block'**
+  String effectLineArmor(int amount);
+
+  /// A line of a signature's long-press effect list: a heal effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Heal {amount} HP'**
+  String effectLineHeal(int amount);
+
+  /// A line of a signature's long-press effect list: a draw effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw {amount, plural, =1{1 card} other{{amount} cards}}'**
+  String effectLineDraw(int amount);
+
+  /// A line of a signature's long-press effect list: a mana gain effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Mana'**
+  String effectLineGainMana(int amount);
+
+  /// A line of a signature's long-press effect list: the Might status.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Might {duration, plural, =1{this turn} other{for {duration} turns}}'**
+  String effectLineMight(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Might regeneration status.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Might at the start of your turn'**
+  String effectLineMightRegen(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the armor regeneration status.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Block at the start of your turn'**
+  String effectLineArmorRegen(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Weakness status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Weakness for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineWeakness(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Vulnerable status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineVulnerable(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Burn status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineBurn(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: a critical-chance bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% critical chance'**
+  String effectLineCrit(int amount);
+
+  /// A line of a signature's long-press effect list: the signature now targets all enemies.
+  ///
+  /// In en, this message translates to:
+  /// **'Hits all enemies'**
+  String get effectLineAllEnemies;
+
   /// Title of the signature evolution screen.
   ///
   /// In en, this message translates to:
