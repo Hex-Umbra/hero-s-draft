@@ -442,9 +442,10 @@ class _InteractiveClassCardState extends State<_InteractiveClassCard>
           onExit: (_) => _onPointerExit(),
           // Le geste de dépliage, identique en desktop et en mobile. Le
           // bouton et les lignes de passif ont leurs propres gestes, qui
-          // gagnent sur celui-ci.
+          // gagnent sur celui-ci. Branché seulement s'il y a un autre passif
+          // à montrer : avec un seul, la carte l'affiche déjà en entier.
           child: GestureDetector(
-            onTap: widget.onTap,
+            onTap: passives.length > 1 ? widget.onTap : null,
             child: Listener(
             onPointerMove: (e) => _onPointerMove(e),
             onPointerHover: (e) => _onPointerMove(e),

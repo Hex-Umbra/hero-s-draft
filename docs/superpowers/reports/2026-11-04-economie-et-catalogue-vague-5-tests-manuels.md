@@ -353,11 +353,11 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 - **Ne doit pas changer** : or, PV, reliques, deck, position sur la carte après chaque reprise ; le draft de niveau ne revient pas une seconde fois.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## M36 — Le chevron « Passifs » à un seul passif (neuf)
-*Neuf : renvoyé au test par la revue de la partie 2 (compte rendu, S10).*
+## M36 — Un seul passif : ni badge, ni dépliage (neuf)
+*Neuf : renvoyé au test par la revue de la partie 2 (compte rendu, S10). Le propriétaire a signalé le 04/11 que le dépliage ne montrait rien de plus ; corrigé le même jour, l'attendu ci-dessous est le nouveau.*
 - **Atteindre la situation** : nouvelle partie, écran de sélection de classe.
-- **Faire** : sur chaque classe, toucher l'étiquette « Passifs » et son chevron, puis la retoucher.
-- **Attendu** : chaque classe montre un seul passif (Paladin *Régénération d'Armure*, Berserker *Rage*, Mage *Flux de Mana*) et l'étiquette « Passifs » (« Passives » en anglais) avec son chevron. Le toucher tourne le chevron et déplie le même passif, seul ; le retoucher replie ; rien ne saute, le passif retenu ne change pas. **Juger** : un chevron sans autre choix gêne-t-il (il reste une version, jusqu'en `0.5.8`) ?
+- **Faire** : sur chaque classe, regarder le bas de la carte, puis toucher la carte et son passif. Sur une fenêtre large, puis sous 600 px.
+- **Attendu** : chaque classe montre un seul passif, en entier (Paladin *Régénération d'Armure*, Berserker *Rage*, Mage *Flux de Mana*), juste sous le bouton « Sélectionner », **sans** l'étiquette « Passifs » ni son chevron, et sans espace vide en dessous. Toucher la carte ou le passif ne fait rien ; le survol garde le halo et l'inclinaison de la carte, mais le passif ne s'allume pas. Le badge et le dépliage reviennent d'eux-mêmes en `0.5.8`, quand chaque classe aura un deuxième passif.
 - **Ne doit pas changer** : le choix de la classe et du passif ; le reste de la carte.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -390,3 +390,4 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 ## Défauts trouvés
 | # | Test | Ce qui a été vu | Gravité ressentie | Corrigé par |
 |:---:|:---|:---|:---|:---|
+| 1 | M36 | Cliquer sur « Passifs » ne déplie rien : chaque classe n'a plus qu'un passif disponible (O5), déjà montré replié | Gênant | `fix(classes): sans deuxieme passif, ni badge ni depliage`, le 04/11 |
