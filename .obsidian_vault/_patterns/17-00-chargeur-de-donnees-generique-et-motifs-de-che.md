@@ -17,8 +17,10 @@
 | `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes. Depuis la vague 3, il charge aussi les **documents plats** (§17.7) |
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des neuf sources du jeu** — la neuvième est celle des signatures depuis la branche
-de la vague 4, à la place de celle des cartes de classe : le compte ne bouge pas. Le provider de production et le registre des tests du
+déclaration des dix sources du jeu** — la neuvième est celle des signatures depuis la vague 4,
+à la place de celle des cartes de classe ; **la dixième, `cards/*/*.json`, celle des cartes de
+lot, depuis la vague 5** ([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) :
+`registry.cards` est la somme de deux sources, `cardSources`. Le provider de production et le registre des tests du
 tutoriel passent tous deux par elle : une seconde déclaration serait une seconde vérité.
 
 ### 17.2. Le motif de chemin porte la sélection *et* l'injection
@@ -29,7 +31,8 @@ capturés alimentent `inject`, dans leur ordre d'apparition.
 
 | Motif | Capture | Injecte |
 |:---|:---|:---|
-| `assets/data/cards/*.json` | `[id]` | `id` — `category` n'existe plus (branche de la vague 4) |
+| `assets/data/cards/*.json` | `[id]` | `id`, `passive` → `null` — `category` n'existe plus (vague 4) |
+| `assets/data/cards/*/*.json` | `[passif, id]` | `id`, `passive` → le dossier : une carte de lot (vague 5) |
 | `assets/data/classes/*/skills/*.json` | `[classe, id]` | `id`, `heroClass` → `SignatureData`, dans `registry.signatures` |
 | `assets/data/classes/*/class.json` | `[id]` | `id` |
 | `assets/data/enemies/*/enemy.json` | `[id]` | `id` |
@@ -101,11 +104,12 @@ faire échouer le démarrage — [`_patterns/16-00`](16-00-architecture-du-syste
 `Future<T?> loadDocument<T>(String path, T Function(Map<String, dynamic>) fromJson)` charge **un
 document de configuration**, pas une catégorie d'entités : ni motif, ni injection, ni id. Il lit par
 le même `_read(key)` que les entités — généralisé d'un appariement à un chemin —, donc **avec
-`cache: false`**, pour les trois raisons de §17.5 : les tests de widget du tutoriel reconstruisent le
-registre à chaque `testWidgets`. Un fichier absent, un JSON illisible ou un `fromJson` qui lève
+`cache: false`**, pour les trois raisons de §17.5 : les tests qui reconstruisent le registre du
+tutoriel, à chaque test, en sont une. Un fichier absent, un JSON illisible ou un `fromJson` qui lève
 rendent `null` et **accumulent leur faute avec celles des entités**, que `throwIfFailed` remonte en
-une fois. Un seul document passe par là : `assets/data/xp_curve.json`, que `loadGameDataRegistry`
-charge avant `throwIfFailed` — **à la différence de l'audio, la courbe d'XP fait échouer le
+une fois. Deux documents passent par là : `assets/data/xp_curve.json` et, depuis la vague 5,
+`assets/data/effect_icons.json` ([`_patterns/05-13`](05-13-table-d-icones-d-effet.md)), que
+`loadGameDataRegistry` charge avant `throwIfFailed` — **à la différence de l'audio, la courbe d'XP fait échouer le
 démarrage** (`game_data_loader_test.dart` le garde). Le registre la porte en `xpCurve`,
 **optionnel** comme `levelUpRewards`, pour les dizaines de registres de test construits à la main :
 `loadGameDataRegistry` la renseigne toujours, et tout lecteur du palier lève sans elle —
@@ -117,7 +121,7 @@ démarrage** (`game_data_loader_test.dart` le garde). Le registre la porte en `x
 |:---|:---|
 | `tool/sync_assets.dart` | Régénère la section `assets:` du `pubspec.yaml` depuis le disque ; `--check` sort 1 sur dérive. Refuse de travailler plutôt que de deviner sur un pubspec ambigu |
 | `test/unit/real_bundle_load_test.dart` | Une **ligne de pubspec oubliée**. Les déclarations d'assets ne sont récursives à aucun niveau, et un répertoire non déclaré ne produit **aucun message** : son contenu se charge en développement et disparaît en build. Seul un chargement par le vrai bundle prouve que l'application voit les fichiers |
-| `test/unit/referential_integrity_test.dart` | Un **dossier incomplet** : classe dont `classCard` ne vaut pas `classes/<id>/<id>.png`, `skills` différent du contenu de `cards/` |
+| `test/unit/referential_integrity_test.dart` | Un **dossier incomplet** : classe dont `classCard` ne vaut pas `classes/<id>/<id>.png`, `skills` différent du contenu de `skills/` ; depuis la vague 5, un passif aux `feeds` hors des cinq formes, une carte de lot que `LotRules` refuse, une classe sans passif disponible |
 | `test/unit/flame_image_prefix_test.dart` | La **collision de clés du cache d'images de Flame**. `Images.prefix` ne fait pas partie des clés : sous un préfixe par dossier, deux images de même nom dans des dossiers distincts s'écraseraient — le cas des trois `icon.png` de classes jusqu'à leur renommage en `<id>.png` ([ADR-090](../_adr/ADR-090-identite-visuelle-de-classe-portee-par-la-donnee.md)), et toujours celui des `sprite.png` d'ennemis |
 
 > [!NOTE]

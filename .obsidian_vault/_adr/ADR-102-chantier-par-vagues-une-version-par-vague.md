@@ -18,6 +18,8 @@ compte rendu écrit et une section dans le suivi des vagues. **Amendé le 2026-1
 vérification est différentielle, bornée par une grille et par l'autonomie de la vague) et D4 (les
 questions sont classées T · P · D ; une valeur mesurée se change comme une décision acquise).
 
+**Amendé le 2026-11-04 par [ADR-110](ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)** (brainstorm v3 D76, du 2026-11-03) sur D1 et D7 : le chantier gagne une vague — les charges élémentaires (P-53) en vague 7, la tranche 3 en vague 8.
+
 ### Contexte
 
 Les trois chantiers qui restaient du programme « Identité de classe & catalogue » — P-42, P-43,

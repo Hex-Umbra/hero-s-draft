@@ -30,6 +30,8 @@ d'exécution au
 [compte rendu de la vague](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-1-compte-rendu.md),
 §2.4 à §2.6.
 
+**Complété le 2026-11-04 par [ADR-111](ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : cinq sortes de delta (`armorPierce`, `lifestealPercent`, `splashPercent`, `echoChance`, `refundHpCost`) et deux champs d'éligibilité (`eligibleTargets`, `requiresCost`) — le principe « une sorte par mécanisme » (D1) tient.
+
 ### Contexte
 
 Une rune était un fichier pour son nom, son poids et ses types de carte, et du Dart pour tout le

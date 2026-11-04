@@ -91,3 +91,27 @@ Pour l'UI Flutter (notamment le système de tutoriel), quatre patrons majeurs de
 4. **Wrap and Grid Adaptation Pattern** :
    - *Problématique* : Les rangées horizontales d'éléments larges (badges de raretés, listes de cartes) causent des débordements horizontaux.
    - *Solution* : Utiliser `Wrap` (au lieu de `Row`) pour les flux de badges, des scrollviews horizontaux pour les rangées de cartes en main, et réorganiser les grilles d'éléments denses en layouts compacts (ex. grille 3x2 pour les types de nœuds).
+
+### 8.5. Ce qu'une suite de tests garde
+
+> [!IMPORTANT]
+> **Les tests gardent les calculs, les données, les contrôleurs et la sauvegarde — pas les écrans**
+> (D77, 2026-11-04 — [ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md),
+> qui amende [ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)).
+> Un agent ne joue pas : les tests automatiques gardent ce qu'il ne verrait pas autrement —
+> dégâts, statuts, coûts, stats, probabilités, XP ; chargement, intégrité référentielle,
+> conventions d'id, `sync_assets` ; contrôleurs ; sauvegarde. **Aucun nouveau test d'écran** —
+> mise en page, opacité, couleur, durée d'animation, présence d'un widget, texte affiché : ce qu'il
+> aurait vérifié devient un point du fichier de tests manuels de la vague, que le propriétaire
+> remplit.
+
+- **Le critère, test par test** : « si ce test devenait rouge, le propriétaire le verrait-il tout
+  de suite en jouant à l'écran concerné ? » Oui : pas de test. Non — un chiffre faux de quelques
+  pour cent, un cas rare, une donnée corrompue, une sauvegarde perdue, une règle d'état — : un test
+  de calcul ou de contrôleur.
+- **Une règle logée dans un widget se sort en fonction pure** pour être testée
+  (`signatureTileStateOf`, `signatureBandPlacement`, `StarterDraft`) ; à défaut, le test d'écran qui
+  la garde reste — le soin du repos, le retour système de trois écrans, le plafond de rune relevé
+  ([rapport du tri](../../docs/superpowers/reports/2026-11-04-vague-5-tri-des-tests-d-ecran.md)).
+- **Preuve rouge avant le code** pour un test de calcul : un test écrit après son code et jamais vu
+  rouge ne prouve pas qu'il garde quelque chose (S15, vague 5).

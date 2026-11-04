@@ -2,11 +2,11 @@
 
 Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.json` + `<id>.png` + `skills/`) :
 
-| Héros | HP | Mana | Crit. | Maîtrise | Puissance oriente vers | Passif de départ | Signatures (`skills`) |
+| Héros | HP | Mana | Crit. | Maîtrise | Puissance oriente vers | Passif jouable (§Passifs) | Signatures (`skills`) |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | **Paladin** | 100 | 3 | 0 | **1** | Attaque · Compétence · Altération | `regen_armor` | `holy_shield`, `smite` |
 | **Berserker** | 80 | 3 | **10** | 0 | Attaque | `rage` | `reckless_strike`, `rage_form` |
-| **Mage** | 60 | 3 | 0 | 0 | Compétence · Altération | `channeling` | `magic_missile`, `mana_surge` |
+| **Mage** | 60 | 3 | 0 | 0 | Compétence · Altération | `mana_flux` | `magic_missile`, `mana_surge` |
 
 > [!NOTE]
 > **Colonne « Attaque » retirée le 2026-10-02** : elle portait 5, 15 et 10, des dégâts de base
@@ -17,10 +17,9 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 > **Chaque classe oriente sa Puissance** (`HeroData.mightTargets`, obligatoire dans `class.json`) —
 > [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md). Le Paladin est le
 > généraliste ; le Berserker ne frappe qu'en direct ; le Mage frappe par ses Compétences et ses
-> altérations. **Depuis le lot E4 de P-43** (branche de la vague 4, D28), la signature *Projectile
-> Magique* est une Compétence : c'est la seule source de dégâts que la Puissance du Mage renforce
-> en dehors de l'intensité de ses brûlures, gels, poisons et chocs — jusqu'aux Compétences
-> offensives de P-42.
+> altérations. **Depuis le lot E4 de P-43** (vague 4, D28), la signature *Projectile Magique* est
+> une Compétence ; **depuis la tranche 1 de P-42** (vague 5), le lot Arcaniste lui ajoute des
+> Compétences de dégâts (*Éclat*, *Onde*, *Rafale d'étincelles*, *Décharge*).
 
 > [!IMPORTANT]
 > **Le Berserker n'a plus jamais d'armure.** Son `class.json` déclare une `statRules` qui convertit
@@ -53,8 +52,8 @@ Trois classes de héros, une par dossier `assets/data/classes/<id>/` (`class.jso
 #### Signatures
 
 > [!IMPORTANT]
-> **Une signature n'est pas une carte** — lot E4 de P-43, branche de la vague 4, en attente du
-> test, de la PR, de la fusion et du tag du propriétaire —
+> **Une signature n'est pas une carte** — lot E4 de P-43, vague 4, fusionnée dans `main` le
+> 2026-10-24 par la PR #50 —
 > [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md). Chaque classe en a deux, listées par le
 > champ `skills` de `class.json` dans leur ordre d'affichage, un fichier chacune sous
 > `classes/<classe>/skills/<id>.json` ; elles ne sont **jamais** piochées, défaussées, épuisées,
@@ -82,12 +81,15 @@ Sacré* et *Surtension de Mana* se rechargent comme les quatre autres.
   `onAttackPlayed` ou `onSkillPlayed`) **et les reliques** qui écoutent une carte jouée — *Amulette
   du Mage*, *Plume de scribe*, *Shuriken*, *Croc Kunaï*. Conséquence voulue : *Marque du Mage*
   (`onAttackPlayed`) ne se déclenche plus sur *Projectile Magique*, devenu Compétence, et *Flux de
-  Mana* compte les deux signatures du Mage (D34 corrige la Marque en vague 7).
+  Mana* compte les deux signatures du Mage (D34 corrige la Marque en vague 8 depuis D76,
+  [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)).
 - **Où le joueur les voit** : une barre à gauche du HUD de combat, une tuile par signature, cinq
   états (inactive, en recharge, Mana insuffisant, armée, disponible) ; une signature à cible
   unique s'**arme** au toucher, puis se joue sur l'ennemi touché. Aussi : un bloc « Signatures »
   sur la carte de classe de l'écran de sélection, un onglet « Signatures » au dictionnaire, la
   prose de l'étape « Votre deck de départ » du tutoriel ([`_rules/08-00`](08-00-systeme-de-tutoriel-autonome.md)).
+- **Elles évoluent** tous les 5 niveaux du héros, une évolution choisie parmi trois de leur pool —
+  règle en [`_rules/02-8`](02-8-evolutions-de-signature.md), vague 5 ([ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)).
 - **Le mot `skills`** de `class.json` et le répertoire `skills/` sont les seuls à porter ce mot :
   ils n'ont **aucun rapport** avec le système de compétences héroïques supprimé par
   [ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md), dont l'interdit
@@ -117,6 +119,17 @@ le joueur **choisit le sien à l'écran de sélection de classe** : la carte dé
 `displayOrder` ne décide donc plus du passif de départ — il décide de l'ordre d'affichage et du
 choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).
 
+> [!IMPORTANT]
+> **Un passif sans lot de cartes n'est pas proposé** (O5 ; vague 5, en attente du propriétaire —
+> [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)). `availablePassivesFor` rend
+> les passifs **éligibles à la classe et pourvus d'un lot** : au moins une carte du registre porte
+> leur id dans `passive` ([`_rules/02-3`](02-3-catalogue-de-cartes.md)). Aucune liste n'est écrite :
+> un lot qui arrive ouvre son passif sans code. **Depuis la tranche 1, un seul passif par classe est
+> jouable** — `regen_armor`, `rage`, `mana_flux` ; les six autres reviennent avec leurs lots,
+> trois à la tranche 2, trois à la tranche 3. Une sauvegarde sous un passif masqué reprend avec
+> lui. Chaque passif déclare **exactement une classe** dans `classes` (D9) et, dans **`feeds`**, ce
+> qu'une carte de son lot doit toucher (D45).
+
 | Rang | ID | Classe | Trigger | EffectType | Valeurs | Mécanisme |
 |:---:|:---|:---|:---|:---|:---|:---|
 | 1 | `regen_armor` | Paladin | `endOfTurn` | `gain_armor` | 2 | +2 armure à chaque fin de tour |
@@ -126,7 +139,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 | 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
 | 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
 | 1 | `channeling` | Mage | `endOfTurn` | `channeling` | 1 | Chaque Mana non dépensé devient 1 armure |
-| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | 1, durée 2 | La **première** Attaque du tour rend sa cible Vulnérable 2 tours — une signature d'Attaque compte, aucune du Mage n'en est une |
+| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | **2**, durée 2 | La **première** Attaque du tour applique 2 Vulnérable à sa cible pendant 2 tours (1 avant la vague 5, recalibré par le barème proportionnel) — une signature d'Attaque compte, aucune du Mage n'en est une |
 | 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3, plancher 2 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour ; la Maîtrise abaisse le seuil, jamais sous 2 |
 
 > [!NOTE]

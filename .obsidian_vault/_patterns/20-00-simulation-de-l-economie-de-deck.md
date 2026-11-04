@@ -15,6 +15,13 @@
 > E4 a renommé `classes/*/skills/`, et son lecteur de dossier lève sur un dossier absent. Constaté
 > par lecture, **sans lancer le script** ; accepté par la spec E4 (§2) et ADR-108 D5 — aucune ligne
 > de `tool/simulations/` n'a changé, et il reste `dart analyze` propre.
+>
+> **La vague 5 l'éloigne encore du jeu, sans le toucher** (spec de la tranche 1, §2) : il ne lit
+> que `cards/*.json` à plat, donc aucune des 18 cartes de lot rangées sous `cards/<passif>/` ; il
+> prend encore *Focalisation*, supprimée, et *Forme Démoniaque* à sa place d'avant ; il ignore
+> `costs`, `hits`, `scaleWith`, les statuts proportionnels et les cinq runes de mécanisme. Le
+> prochain brainstorm qui en aurait besoin le réalignera sur tout cela ([ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md),
+> [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)).
 
 `tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 4 053 lignes
 (**vérifié le 2026-10-04**, `wc -l`, sur la branche de la vague 3). Il n'est ni un test, ni un

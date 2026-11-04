@@ -78,7 +78,11 @@ et `referential_integrity_test` refuse qu'un passif livré soit dans ce cas.
 
 **Éligibilité et rang** : chaque passif déclare ses `classes` (absent = toutes) ; le point d'accès
 unique `availablePassivesFor(HeroData, GameDataRegistry)` (`lib/game/systems/passive_availability.dart`)
-est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. Ses deux lecteurs ne le
+est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. **Depuis la vague 5** (vague 5, en attente du propriétaire
+— [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)), « disponible » vaut
+**éligible et pourvu d'un lot** : au moins une carte de `registry.cards` porte l'id du passif dans
+`passive` ; la règle se lit sur le registre, jamais sur une liste, et un dossier `cards/<passif>/`
+neuf ouvre son passif sans code. P-13 y ajoutera le déblocage, sans toucher aux lecteurs. Ses deux lecteurs ne le
 consomment plus de la même façon depuis le **lot C partie 2** de P-41 : l'écran de sélection de
 classe affiche **toute** la liste et laisse le joueur choisir — jamais un `take(3)`, le compte de
 trois étant celui d'aujourd'hui et non une règle —, tandis que le **tutoriel** prend encore le

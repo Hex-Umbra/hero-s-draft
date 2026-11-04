@@ -60,15 +60,18 @@ sur l'étape 01.
 1. **Accueil** : logo animé, résumé du jeu.
 2. **Choix de classe, et de son passif** *(une classe choisie)* : les 3 héros avec leurs vraies
    valeurs (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et **tous** les passifs que
-   `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/`. Le bloc dépliant est
+   `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/` — depuis la vague 5,
+   un seul par classe, le seul pourvu d'un lot ; le Mage démarre sur *Flux de Mana*. Le bloc dépliant est
    le `ClassPassiveList` de `ClassSelectionScreen` — le widget de production, pas une seconde
    implémentation : c'est le remède que demande le §1.4 de la spec de P-41. Repliée, chaque carte
    montre le passif avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
    sont cliquables, une seule à la fois. Trois cartes simples, pas le carrousel. Écrit la tranche
    persistante.
-3. **Draft du deck de départ** *(5 cartes choisies)* : les 17 cartes de `registry.cards` que
-   `CardData.isOfferable` retient (mêmes critères que `StarterDeckDraftScreen`) ; le deck est
-   **les 5 cartes choisies, rien d'autre**. Depuis le lot E4 de P-43 (branche de la vague 4,
+3. **Draft du deck de départ** *(5 cartes choisies)* : les cartes de `registry.cards` que
+   `CardData.isOfferable(passif)` retient pour le passif choisi, en **deux quotas** — 2 du lot,
+   3 neutres —, par le même `StarterDraft` que `StarterDeckDraftScreen` (vague 5,
+   [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) ; la carte d'un groupe plein
+   se grise comme au jeu ; le deck est **les 5 cartes choisies, rien d'autre**. Depuis le lot E4 de P-43 (branche de la vague 4,
    [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), la prose de l'étape présente les deux
    **signatures** de la classe — pas des cartes, jamais piochées, sans fusion, dans une barre à
    gauche de l'écran dès le premier tour, rechargées après usage — et un bandeau les nomme

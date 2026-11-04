@@ -27,7 +27,7 @@ ajoute trois sources d'affûtage hors du feu et un plafond que la run peut relev
   un nom inconnu retombe sur du gris et un point d'interrogation, et un test d'intégrité exige que
   chaque rune livrée ait les siens.
 
-#### 3.8.2. Les onze runes
+#### 3.8.2. Les seize runes
 
 Au niveau L, appliquées par un seul applicateur (`EffectiveCard`), pour le moteur comme pour tous
 les rendus :
@@ -39,10 +39,19 @@ les rendus :
 | *Spectral* (`spectral`) | `percentBonus` dégâts, 40 ; `addExhaust` | **40 % × L de la valeur à la rareté, au moins +L** — la Puissance n'y entre pas — et **la carte s'épuise** | — | 1 | 50 |
 | *Précis* (`precise`) | `critBonus`, 5 | **+5 × L points de chance critique** sur les dégâts de la carte ([`_rules/03-11`](03-11-systeme-de-coup-critique.md)) | 10 | 1 | 50 |
 | *Allégé* (`cheap`) | `reduceCost`, 1 | **La carte coûte L Mana de moins**, jamais sous 0 | 1 | 1 | 50 |
-| *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent `burn`, `freeze`, `shock` de valeur L pour L tours, par `addStatus` : ils fusionnent avec le statut que la cible porte ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3) | — · 1 · — | 1 | 80 |
+| *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent `burn`, `freeze`, `shock` de valeur L pour L tours — *Congelant* 2 points de Gel par niveau depuis la vague 5 —, par `addStatus` : ils fusionnent avec le statut que la cible porte ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3, §4.4) | — | 1 | 80 |
 | *Véloce* (`quick`) | `addEffect` `draw` | Pioche L cartes à la pose | 1 | **2** | 60 |
 | *Économe* (`eco`) | `addEffect` `gain_mana` | Rend L Mana **à la pose** — ce n'est pas une réduction de coût | 1 | **2** | 40 |
 | *Persistant* (`enduring`) | `removeExhaust` | La carte ne s'épuise plus | 1 | 1 | 30 |
+| *Perforant* (`piercing`) | `armorPierce`, 25 | La cible ignore **25 % × L de son Armure** au coup, au moins L, borné à l'Armure présente ; saturé à 100 % (L ≥ 4) | 4 | 1 | 50 |
+| *Vampirique* (`lifesteal`) | `lifestealPercent`, 20 | **Soigne 20 % × L des dégâts infligés**, au moins L, une fois par carte, après tous les coups | 3 | 1 | 50 |
+| *Ricochant* (`splash`) | `splashPercent`, 25 | Chaque coup touche aussi **les autres ennemis pour 25 % × L** de ses dégâts ; carte à cible unique seulement (`eligibleTargets`) | 3 | 1 | 50 |
+| *Résonant* (`echo`) | `echoChance`, 15 | **15 % × L de chances de rejouer la résolution**, sans aucun événement « carte jouée » (P-3) ; ni sur une carte qui pioche ou rend du Mana, ni avec *Économe* ou *Véloce* | 4 | 1 | 50 |
+| *Transfusion* (`transfusion`) | `refundHpCost`, 50 | **Rend 50 % du coût en PV** (demie vers le haut, jamais au-delà des PV max), en dernier ; carte qui coûte des PV seulement (`requiresCost: "hp"`) ; `binary` | 1 | 1 | 50 |
+
+Les cinq dernières sont les runes de mécanisme de P-44 lot 1, vague 5, en attente du propriétaire
+— [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md) ;
+leurs règles de jeu sont en [`_rules/03-14`](03-14-couts-combines-croissance-et-multi-coups.md).
 
 - **Les effets ajoutés** se résolvent **avant** ceux de la carte, par les mêmes stratégies ; ils ne
   sont ni multipliés par la rareté ni visés par un pourcentage. Deux pourcentages sur un même effet
@@ -84,18 +93,29 @@ si, à la fois :
    le rang **atteint** ; en boutique et au Puits, le rang de la carte. Une commune et une carte de
    classe, de rang 0, n'en reçoivent aucune ;
 8. **la carte ne la porte pas déjà.**
+9. son `eligibleTargets`, s'il existe, contient la cible de la carte — *Ricochant* ne va qu'à une
+   carte à cible unique (vague 5) ;
+10. son `requiresCost`, s'il existe (`"hp"` seulement), est un coût que la carte porte —
+    *Transfusion* ne va qu'à une carte qui coûte des PV ; `requiresMinCost` continue de lire le
+    seul mana (D61).
 
-Ce que le prédicat offre, sur les cartes livrées sans rune héritée — matrice gardée par
-`forge_upgrades_catalog_test.dart` :
+Ce que le prédicat offre, sur les cartes livrées sans rune héritée — résumé par famille ; la
+matrice des 33 cartes, carte par carte, est celle de `forge_upgrades_catalog_test.dart`, qui la
+garde (re-lue le 2026-11-04) :
 
 | Cartes | Première fusion (peu commune) | Deuxième fusion (rare) |
 |:---|:---|:---|
-| *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Attaque Rapide*, *Balayage*, *Coup de Tonnerre* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral* | les mêmes, *Économe*, *Véloce* |
-| *Cri de Guerre* | les mêmes et *Endurci* | et *Économe*, *Véloce* |
-| *Défense*, *Mur de Fer*, *Éveil* | *Endurci*, *Allégé* | et *Économe*, *Véloce* |
-| *Potion de Soin* | *Persistant*, *Allégé* | et *Économe*, *Véloce* — jamais avec *Persistant* |
-| *Forme Démoniaque*, *Métallisation* | *Allégé* | et *Économe*, *Véloce* |
-| *Concentration*, *Focalisation* | **aucune** | *Véloce* |
+| Attaques à cible unique : *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Coup de Tonnerre*, *Rempart brisé*, *Dernier souffle* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Ricochant*, *Résonant* | les mêmes, *Économe*, *Véloce* |
+| *Attaque Rapide* (elle pioche) | les mêmes sans *Résonant* | et *Économe*, *Véloce* |
+| Attaques à tous : *Balayage*, *Éclat de bouclier* ; *Cri de Guerre* y ajoute *Endurci* | les mêmes sans *Ricochant* | et *Économe*, *Véloce* |
+| Attaques gratuites : *Percée* ; *Sang versé* y ajoute *Transfusion* | celles d'une attaque à cible unique sans *Allégé* | et *Véloce* — jamais *Économe* |
+| Compétences de dégâts : *Éclat*, *Rafale d'étincelles*, *Décharge* ; *Onde* sans *Ricochant* | *Tranchant*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Allégé*, *Ricochant*, *Résonant* — **aucun élémentaire** | et *Économe*, *Véloce* |
+| *Défense*, *Mur de Fer*, *Muraille*, *Fortification* | *Endurci*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| *Éveil* | *Endurci*, *Allégé* | et *Économe*, *Véloce* |
+| *Potion de Soin* | *Persistant*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| Pouvoirs et altérations pures : *Forme Démoniaque*, *Métallisation*, *Bastion*, *Fureur sanguine*, *Transe*, *Embrasement*, *Nova de givre* | *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| *Pacte de sang* (il pioche) | *Allégé*, *Transfusion* | et *Économe*, *Véloce* |
+| *Concentration* | **aucune** | *Véloce* |
 
 Les six signatures ne sont pas des cartes : aucun chemin de rune ni de fusion ne les atteint (lot E4 de P-43, branche de la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 
@@ -174,8 +194,9 @@ sur toutes les cartes, pour toute la run** (`RunController.raiseRuneCap`, qui é
 `RunState.runeCapBonus[id]`). Le joueur choisit dans une modale non refermable la rune à relever
 parmi les **candidates** : les runes qu'une carte du deck porte **à leur plafond effectif**, ni sans
 plafond ni `binary`, une fois chacune, dans l'ordre du catalogue (`ForgeRuneRules.raisableCaps`) —
-dans les onze runes livrées, *Économe*, *Véloce*, *Congelant* et *Précis*, jamais *Persistant* ni
-*Allégé*. Elle n'est tirée que si une candidate existe (`requires: raisableRune`).
+dans les onze runes de la vague 3, *Économe*, *Véloce*, *Congelant* et *Précis*, jamais *Persistant*
+ni *Allégé* ; depuis la vague 5, *Congelant*, sans plafond, n'en est plus, et *Perforant*,
+*Vampirique*, *Ricochant* et *Résonant* s'y ajoutent, jamais *Transfusion*. Elle n'est tirée que si une candidate existe (`requires: raisableRune`).
 
 - **Tous les écrivains de niveau lisent le plafond effectif** : `boundLevel(…, capBonus:)`, la
   fusion (`consolidate`, par `DeckNotifier.mergeCards(…, capBonus:)` que passe l'écran de deck), les

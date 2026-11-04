@@ -122,7 +122,8 @@ Flutter : pastilles, descriptions, infobulles, badge), le prédicat et le tutori
 1. **Les effets propres** prennent leur valeur à la rareté : `CardRarity.scaleValue` (G1 : au moins
    +1 par palier), sauf `draw` et `gain_mana`, gelés (G2). `effects` garde la longueur et l'ordre de
    `CardData.effects`.
-2. **Les deltas** des runes (`CardDelta`, **six sortes** depuis ADR-106) :
+2. **Les deltas** des runes (`CardDelta`, **six sortes** depuis ADR-106, **onze** depuis la vague 5 —
+   [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)) :
    - `percentBonus` ajoute `max((p × L × B + 50) ~/ 100, L)` à chaque effet propre visé, B pris à
      l'étape 1 — deux pourcentages sur un même effet s'additionnent, sans se composer ;
    - `addEffect` remplit `addedEffects`, résolus avant les effets propres par les stratégies du
@@ -131,7 +132,13 @@ Flutter : pastilles, descriptions, infobulles, badge), le prédicat et le tutori
    - `reduceCost` retire `valuePerLevel × L` du coût de la donnée, plancher 0 → `cost`, que lit
      `CardInstance.currentCost` ;
    - `critBonus` s'additionne dans `critChanceBonus`, que `DamageEffectStrategy` passe à
-     `DamagePipeline.calculate`.
+     `DamagePipeline.calculate` ;
+   - *vague 5* : `armorPierce`, `lifestealPercent`, `splashPercent`, `echoChance` et
+     `refundHpCost` s'additionnent, en `valuePercentPerLevel × L`, dans les lectures d'`EffectiveCard`
+     — l'Armure ignorée (lue par `takeDamage`), le vol de vie et l'éclaboussure (lus par
+     `DamageEffectStrategy`), la chance d'écho et le remboursement (lus par `resolveCard`). Les
+     évolutions de signature passent par le même applicateur, leurs deltas portés par les
+     `extraDeltas` de la vue de carte ([`_patterns/03-8`](03-8-signatureevolutionrules-regles-pures-des-evolutions.md)).
 3. **`CardInstance.exhaustsOnPlay`** = pouvoir ‖ `addsExhaust` ‖ (`isExhaust` ∧ ¬`removesExhaust`) :
    un seul prédicat, que lisent le moteur, le badge « Usage unique » (Flame et Flutter) et les
    particules d'épuisement (A13).

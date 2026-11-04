@@ -11,18 +11,18 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
        ├─► [Continuer] (si sauvegarde existante) ──────────────────────┐
        │                                                                │
        ▼                                                                │
-[Sélection de Classe (ClassSelectionScreen)] — un passif choisi parmi trois │
+[Sélection de Classe (ClassSelectionScreen)] — un passif, parmi ceux qui ont un lot de cartes │
   Paladin (100 PV, 3 Mana, Maîtrise 1 — Puissance sur tout)
   Berserker (80 PV, 3 Mana, Critique 10 — Puissance sur les Attaques, armure convertie en Puissance)
   Mage (60 PV, 3 Mana — Puissance sur les Compétences et les altérations)
        │
        ▼
 [Draft Deck Initial (StarterDeckDraftScreen)]
-  Constitution du deck : 5 cartes choisies, rien d'autre ; la classe apporte ses deux signatures, hors du deck (ADR-109)
+  Constitution du deck : 5 cartes choisies — 2 du lot du passif, 3 neutres (ADR-112) ; la classe apporte ses deux signatures, hors du deck (ADR-109)
        │                                                                │
        ▼                                                                ▼
 [Carte Stratégique (MapScreen)] ◄──────────────────────────────────────┘ ◄─── Graphe Acyclique Dirigé (10 étages)
-  │   ▲ (Si pendingDrafts > 0 : Overlay Level Up bloquant → DraftScreen)
+  │   ▲ (Si pendingDrafts > 0 ou une évolution attend : rideau bloquant → DraftScreen, puis SignatureEvolutionScreen)
   │   │
   ├─► [Écrans Spécifiques] : Boutique (ShopScreen), Feu de Camp (CampfireScreen), Événement (EventScreen)
   │
@@ -43,3 +43,7 @@ La progression dans **Hero's Draft** est structurée autour d'une boucle classiq
 La carte trouvée après chaque combat, et le prix d'un niveau par acte, sont du lot E3 de P-43 —
 vague 3, fusionnée dans `main` le 2026-10-04 : règles en [`_rules/06-00`](06-00-economie-de-jeu.md)
 §6.4 et §6.5, décision en [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md).
+
+Le lot de cartes par passif, le draft à deux quotas et les évolutions de signature sont de la
+tranche 1 de P-42 — vague 5, en attente du propriétaire : règles en [`_rules/02-3`](02-3-catalogue-de-cartes.md)
+et [`_rules/02-8`](02-8-evolutions-de-signature.md).
