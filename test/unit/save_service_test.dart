@@ -188,6 +188,9 @@ void main() {
       final payload = jsonDecode(raw) as Map<String, dynamic>;
       expect((payload['run'] as Map<String, dynamic>).containsKey('signatures'),
           isFalse);
+      // PN6 : la cle est toujours ecrite, vide s il n y a rien.
+      expect((payload['run'] as Map<String, dynamic>)['signatureEvolutions'],
+          <String, dynamic>{});
       expect(raw, isNot(contains('holy_shield')),
           reason: 'aucune signature ecrite, ni dans la run ni dans le deck');
 
