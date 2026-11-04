@@ -1,5 +1,53 @@
 [
   {
+    "version": "0.5.7",
+    "date": "2026-11-04",
+    "title": "Les Signatures Évoluent",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les signatures évoluent avec votre héros : tous les 5 niveaux, chacune gagne une évolution, choisie parmi trois. Une mineure aux niveaux 5, 15, 25…, une majeure aux niveaux 10, 20…",
+          "Une mineure déjà prise peut revenir et monter de niveau ; certaines majeures s'excluent, et prendre l'une retire l'autre du tirage.",
+          "Quand une évolution attend, un voile recouvre la carte du monde et ferme les chemins : touchez-le pour choisir, après le draft de niveau s'il y en a un.",
+          "En combat, la tuile d'une signature montre ses effets en icônes avec leur valeur, un badge « Niv. n » et une puce par évolution prise. Restez appuyé dessus pour dérouler la liste complète de ses effets.",
+          "Chaque passif a désormais son propre lot de six cartes : Bastion, Percée, Muraille, Fortification, Rempart brisé et Éclat de bouclier pour la Régénération d'Armure ; Fureur sanguine, Pacte de sang, Sang versé, Forme Démoniaque, Dernier souffle et Transe pour la Rage ; Éclat, Onde, Décharge, Nova de givre, Embrasement et Rafale d'étincelles pour le Flux de Mana.",
+          "Certaines cartes coûtent des PV ou de l'Armure au lieu du mana, d'autres frappent plusieurs fois, et d'autres grandissent avec vos PV manquants ou votre Armure : leur face l'indique.",
+          "Cinq nouvelles runes à la forge : Perforant (ignore une part de l'Armure), Vampirique (soigne une part des dégâts infligés), Ricochant (touche aussi les autres ennemis), Résonant (une chance de rejouer la carte) et Transfusion (rend une part du coût en PV)."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le draft de départ propose désormais 2 cartes du lot de votre passif et 3 cartes communes.",
+          "Les icônes des statuts du héros, en combat et dans le tutoriel, sont désormais les mêmes que sur les cartes.",
+          "Le tutoriel présente les lots de cartes et le draft de départ en deux groupes."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Six passifs quittent la sélection jusqu'à ce que leur lot de cartes arrive : trois reviennent en 0.5.8, les trois derniers en 0.6.0. Il reste un passif par classe.",
+          "Le Mage commence désormais sur le Flux de Mana.",
+          "Vulnérable, Faiblesse et Gel s'accumulent par point : chaque point de Vulnérable fait subir 25 % de dégâts en plus (4 points au plus), chaque point de Faiblesse fait infliger 25 % de dégâts en moins (2 points au plus), chaque point de Gel réduit l'attaque de 25 % (3 points au plus).",
+          "Le Trait de Glace applique 2 Gel au lieu de 1, et la rune Congelant applique 2 Gel par niveau, sans plafond de niveau.",
+          "La Marque du Mage applique 2 Vulnérable au lieu de 1.",
+          "La Forme Démoniaque rejoint le lot de la Rage, et la Focalisation quitte le jeu."
+        ]
+      },
+      {
+        "category": "Technique",
+        "emoji": "🔧",
+        "entries": [
+          "L'éditeur de contenu sait créer les cartes de lot et les évolutions de signature."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.6",
     "date": "2026-10-16",
     "title": "Les Signatures de Classe",
