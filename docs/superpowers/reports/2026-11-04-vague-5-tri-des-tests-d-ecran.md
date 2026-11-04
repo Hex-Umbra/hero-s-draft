@@ -16,10 +16,10 @@ Mesures par `flutter test` (compte des tests executes, boucles comprises) :
 
 | | avant | apres |
 |:---|---:|---:|
-| Suite entiere | 1916 | 1525 |
+| Suite entiere | 1916 | 1524 |
 | dont `test/widget/` + `test/tutorial/` + `test/encounter_system_test.dart` + les 4 fichiers `test/unit/` d'affichage supprimes | 556 | 169 |
 
-391 tests de moins en net (1916 -> 1525). Fichiers de test supprimes entiers : 47 (50 au premier passage, 7 restaures, 4 supprimes en plus), plus l'aide `test/widget/content_editor/contrast.dart`, devenue sans lecteur. Les comptes par fichier ci-dessous sont ceux d'apres corrections. `dart analyze` : `No issues found!`. `flutter test` : `All tests passed!`.
+392 tests de moins en net (1916 -> 1524). Fichiers de test supprimes entiers : 48 (50 au premier passage, 7 restaures, 5 supprimes en plus), plus l'aide `test/widget/content_editor/contrast.dart`, devenue sans lecteur. Les comptes par fichier ci-dessous sont ceux d'apres corrections. `dart analyze` : `No issues found!`. `flutter test` : `All tests passed!`.
 
 Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gardent les tests gardes (la regle), ou « affichage seul » pour un fichier entierement supprime.
 
@@ -79,8 +79,8 @@ Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gar
 | `test/widget/shop_screen_test.dart` | 4 | 0 | 4 | affichage et flux ; prix, relance, Miroir, copie du deck, etal retenu gardes par shop_controller_test |
 | `test/widget/signature_bar_test.dart` | 17 | 1 | 16 | regle : priorite des etats d'une tuile de signature (inactive, recharge, mana, armee, disponible). Supprimes : 16 tests de tuile (mise en page, survol, gestes) |
 | `test/widget/signature_tile_test.dart` | 5 | 0 | 5 | affichage seul (tuile) |
-| `test/widget/starter_deck_draft_order_test.dart` | 1 | 1 | 0 | regle d'ordre : le pool du draft de depart suit rarete, cout, id, pas la declaration ; intact |
-| `test/widget/starter_deck_draft_screen_test.dart` | 6 | 0 | 6 | affichage et flux ; pool garde par card_offer_filter_test, ordre garde par starter_deck_draft_order_test |
+| `test/widget/starter_deck_draft_order_test.dart` | 1 | 0 | 1 | un ordre d'affichage (rarete, cout, id), visible des l'ecran ouvert ; supprime par l'orchestrateur avec `card_dictionary_order_test` |
+| `test/widget/starter_deck_draft_screen_test.dart` | 6 | 0 | 6 | affichage et flux ; pool garde par card_offer_filter_test, l'ordre d'affichage supprime avec starter_deck_draft_order_test |
 | `test/widget/stats_dialog_test.dart` | 2 | 0 | 2 | affichage seul (texte de Maitrise) ; libelles gardes par draft_choice_labels_test |
 | `test/widget/status_effects_panel_overflow_test.dart` | 6 | 0 | 6 | affichage seul (debordement, lignes) |
 | `test/widget/tutorial_armor_step_test.dart` | 6 | 0 | 6 | affichage ; regles gardees par tutorial_engine_test (armure, conversion, statuts remis a zero) |
@@ -115,11 +115,11 @@ Le classement a hesite sur ces tests ; le verificateur peut partir d'ici.
 8. **`content_editor_screen_test.dart` (27 gardes sur 56) et `document_form_test.dart` (9 sur 20)** : l'editeur de contenu est un outil de developpement sans controleur, son ecran *est* sa logique. Gardes : tout ce qui verifie le fichier ecrit (ou non ecrit) et le document produit. Supprimes : navigation, lisibilite, couleurs, alignement. Cas les plus discutables : « changer de type vide le champ identifiant » et « cliquer une entite au niveau 2 remplit le champ identifiant » (supprimes : etat d'ecran visible), « taper dans le champ identifiant ne relit pas le disque » et « changer de categorie relit le disque » (supprimes : comportement d'ecran, pas donnee), « choisir une entite au niveau 2 la charge » (supprime; « choisir une signature la charge depuis son dossier » est garde), « une cible absente est signalee, sans vider le formulaire » (supprime : message d'ecran).
 9. **`color_field_test.dart`, `editor_toolbar_test.dart` (`shortRoot`)** : fonctions pures de conversion et de libelle, gardees; le contraste 4,5:1 du texte choisi est supprime (lisibilite, un affichage).
 10. **`signature_bar_test.dart` : garde seulement la priorite des etats** (fonction pure `signatureTileStateOf`). Les tests de gestes (toucher une tuile en recharge n'appelle rien, mana insuffisant ne joue rien, une tuile disponible sans cible se joue aussitot) sont de l'interaction visible des le premier combat : supprimes.
-11. **`card_dictionary_order_test.dart` et `starter_deck_draft_order_test.dart` gardes** : ce sont des tests d'ecran, mais ils verifient un ordre de departage (rarete, cout, id) qu'on ne remarque pas en jouant et qui ne tient pas a la declaration. Reecrire en test unitaire exigerait que le tri soit une fonction publique de `lib/`.
+11. **`card_dictionary_order_test.dart` et `starter_deck_draft_order_test.dart` gardes** : ce sont des tests d'ecran, mais ils verifient un ordre de departage (rarete, cout, id) qu'on ne remarque pas en jouant et qui ne tient pas a la declaration. Reecrire en test unitaire exigerait que le tri soit une fonction publique de `lib/`. *Tranche apres verification : les deux supprimes par l'orchestrateur, un ordre visible des l'ecran ouvert (D77).*
 12. **`class_identity_test.dart` (widget) supprime en entier**, y compris « l'image affichee est l'icone quand elle existe, la carte sinon » et « le decodage est borne a la taille de rendu » : choix d'image et couleur, visibles a l'ecran de selection; la borne de decodage est une optimisation memoire, non un chiffre de jeu. `test/unit/class_identity_test.dart` est intact.
 13. **`tutorial_screen_bold_text_test.dart` supprime** : `parseBoldSegments` est une fonction pure de decoupage, mais son seul resultat est le gras affiche (la consigne range « la prose et le gras affiches » dans l'affichage).
 14. **`tutorial_prose_test.dart` : quatre tests de prose supprimes** (« 2 du lot et 3 neutres », signatures « mot pour mot », « la Fusion ne dit plus... », « le Gel ne se chiffre plus... »). Les huit tests de substitution des placeholders depuis le catalogue sont gardes (ils calculent le texte a partir des donnees).
-15. **`heros_draft_game_targeting_test.dart` supprime** : machine d'etats du ciblage Flame, testee sans ecran; classee entree utilisateur visible des le premier combat. C'est le cas le plus proche de la limite, car le test ne verifie pas un rendu.
+15. **`heros_draft_game_targeting_test.dart` supprime** : machine d'etats du ciblage Flame, testee sans ecran; classee entree utilisateur visible des le premier combat. C'est le cas le plus proche de la limite, car le test ne verifie pas un rendu. *Tranche apres verification : restaure en entier, sans rendu, seul garde-fou de la cible vivante.*
 16. **`flame_image_prefix_test.dart` garde en entier** : malgre son nom, il garde le chargement des images sous le prefixe vide (donnees, perte silencieuse a la compilation), pas un rendu. De meme `card_text_renderer_test.dart` (total affiche = total calcule).
 17. **`probabilities_dialog_test.dart` et `stats_dialog_test.dart` supprimes** : leurs assertions portent sur du texte rendu; les calculs sont gardes par `probabilities_test` et `draft_choice_labels_test`. La phrase « la parenthese nomme les mythiques de la donnee » n'est plus gardee cote dialogue.
 18. Premiere version : aucune regle n'etait supposee sans garde ailleurs. Fausse pour six regles, corrigee ci-dessous.
@@ -144,4 +144,4 @@ B. Restaures tels quels depuis `fa948c1a^`, avec leurs seules aides :
 
 C. Supprimes en plus (gardes a tort : texte ou ordre visible des l'ecran ouvert) : `editor_toolbar_test` (`shortRoot`), `might_targets_long_label_test` (5), `might_targets_label_test` (2), `hero_display_order_test` « le tri rend paladin, berserker, mage » (1), `card_dictionary_order_test` (3). L'aide orpheline `pumpHomeWithGameData` (et `_mockRegistry`) de `home_screen_save_test` est retiree.
 
-Comptes apres corrections : suite entiere 1916 -> 1525. Cas limites 2, 3, 4, 11 et 15 ci-dessus sont tranches par ces corrections (les tests concernes sont restaures ou reecrits; l'ordre du dictionnaire et du draft de depart reste a decider pour `starter_deck_draft_order_test`, inchange).
+Comptes apres corrections : suite entiere 1916 -> 1524 (1525 au commit des corrections, puis `starter_deck_draft_order_test` supprime par l'orchestrateur). Les cas limites 2, 3, 4, 11 et 15 ci-dessus sont tranches par ces corrections : les tests concernes sont restaures, reecrits ou, pour les deux ordres d'affichage, supprimes.
