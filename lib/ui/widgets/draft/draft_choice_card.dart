@@ -8,6 +8,9 @@ class DraftChoiceCard extends StatelessWidget {
   final bool showRarity;
   final double rarityProgress; // 0.0 = Neutral, 1.0 = Fully Rarity-themed
 
+  /// Dessiné à la place de l'emoji ; nul, l'emoji déduit du titre.
+  final Widget? icon;
+
   const DraftChoiceCard({
     super.key,
     required this.title,
@@ -16,6 +19,7 @@ class DraftChoiceCard extends StatelessWidget {
     required this.onTap,
     this.showRarity = true,
     this.rarityProgress = 1.0,
+    this.icon,
   });
 
   @override
@@ -128,7 +132,7 @@ class DraftChoiceCard extends StatelessWidget {
             ),
             const Spacer(),
             // Large Upgrade Icon
-            Text(emoji, style: const TextStyle(fontSize: 48)),
+            icon ?? Text(emoji, style: const TextStyle(fontSize: 48)),
             const Spacer(),
             // Upgrade Title
             Text(

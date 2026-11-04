@@ -1718,6 +1718,36 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
   String signatureTurnsLeft(int count);
 
+  /// Title of the signature evolution screen.
+  ///
+  /// In en, this message translates to:
+  /// **'{signature} evolves'**
+  String evolutionScreenTitle(String signature);
+
+  /// Subtitle of the signature evolution screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an evolution'**
+  String get evolutionScreenSubtitle;
+
+  /// Badge of a minor signature evolution on its reel.
+  ///
+  /// In en, this message translates to:
+  /// **'MINOR'**
+  String get evolutionTierMinor;
+
+  /// Badge of a major signature evolution on its reel.
+  ///
+  /// In en, this message translates to:
+  /// **'MAJOR'**
+  String get evolutionTierMajor;
+
+  /// Last line of a minor evolution already taken: its level before and after the choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {from} → {to}'**
+  String evolutionLevelUp(int from, int to);
+
   /// Title of the class signatures block and of the dictionary tab.
   ///
   /// In en, this message translates to:

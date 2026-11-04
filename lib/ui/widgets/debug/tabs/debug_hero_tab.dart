@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
+import '../../../../game/systems/signature_evolution_rules.dart';
 import '../../../../models/entity_stats.dart';
 import '../../../../models/might_target.dart';
 import '../../../../services/game_data_service.dart';
@@ -160,6 +161,50 @@ class DebugHeroTab extends ConsumerWidget {
           },
           child: const Text('Gagner un niveau (ouvre le draft)'),
         ),
+        const Divider(),
+        // Pose par les regles du jeu : seules les evolutions que le prochain
+        // palier admet sont proposees ; l'attente n'est pas exigee.
+        const Padding(
+          padding: AppSpacing.paddingVSm,
+          child: Text('Évolutions de signature'),
+        ),
+        for (final signature in run.signatures) ...[
+          Padding(
+            padding: AppSpacing.paddingVSm,
+            child: Text(signature.data.getName('fr')),
+          ),
+          Padding(
+            padding: AppSpacing.paddingVSm,
+            child: Text(
+              signature.evolutions.isEmpty
+                  ? 'aucune'
+                  : signature.evolutions.join(', '),
+            ),
+          ),
+          Wrap(
+            spacing: 4,
+            children: [
+              for (final evolution in SignatureEvolutionRules.admissible(
+                signature,
+              ))
+                TextButton(
+                  onPressed: () => DebugActions.takeSignatureEvolution(
+                    ref.read,
+                    signature.data.id,
+                    evolution.id,
+                  ),
+                  child: Text(evolution.getName('fr')),
+                ),
+              TextButton(
+                onPressed: () => DebugActions.clearSignatureEvolutions(
+                  ref.read,
+                  signature.data.id,
+                ),
+                child: const Text('Retirer les évolutions'),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

@@ -1042,6 +1042,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String evolutionScreenTitle(String signature) {
+    return '$signature evolves';
+  }
+
+  @override
+  String get evolutionScreenSubtitle => 'Choose an evolution';
+
+  @override
+  String get evolutionTierMinor => 'MINOR';
+
+  @override
+  String get evolutionTierMajor => 'MAJOR';
+
+  @override
+  String evolutionLevelUp(int from, int to) {
+    return 'Level $from → $to';
+  }
+
+  @override
   String get signatures => 'Signatures';
 
   @override

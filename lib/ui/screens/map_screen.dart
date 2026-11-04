@@ -12,6 +12,7 @@ import 'event_screen.dart';
 import 'relic_exchange_screen.dart';
 import 'forge_fusion_screen.dart';
 import 'draft_screen.dart';
+import 'signature_evolution_screen.dart';
 import '../../models/card_instance.dart';
 import '../../game/controllers/deck_controller.dart';
 import '../../services/audio/audio_providers.dart';
@@ -299,17 +300,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
           const Positioned(right: 20, bottom: 20, child: HeroMiniStatsPanel()),
 
           // Overlay de Level Up
-          if (runState.pendingDrafts > 0)
+          if (runState.hasPendingChoice)
             LevelUpOverlay(
               onTap: () {
+                // Un draft de niveau d'abord, puis les évolutions en attente :
+                // le rideau revient tant qu'il en reste une.
+                final evolving = runState.nextPendingEvolution;
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => DraftScreen(
-                      onDraftComplete: () {
-                        ref.read(runProvider.notifier).decrementPendingDrafts();
-                        Navigator.of(context).pop();
-                      },
-                    ),
+                    builder: (context) => runState.pendingDrafts > 0
+                        ? DraftScreen(
+                            onDraftComplete: () {
+                              ref
+                                  .read(runProvider.notifier)
+                                  .decrementPendingDrafts();
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        : SignatureEvolutionScreen(
+                            signature: evolving!,
+                            onComplete: () => Navigator.of(context).pop(),
+                          ),
                   ),
                 );
               },
@@ -377,7 +388,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     String? currentNodeId,
   ) {
     final runState = ref.read(runProvider);
-    if (runState.pendingDrafts > 0) return false;
+    if (runState.hasPendingChoice) return false;
 
     if (currentNodeId == null) {
       return node.id.startsWith('node_0_');
@@ -400,7 +411,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _onNodeTap(BuildContext context, WidgetRef ref, MapNode node) {
-    if (ref.read(runProvider).pendingDrafts > 0) return;
+    if (ref.read(runProvider).hasPendingChoice) return;
     // Apres la garde : un clic refuse ne doit pas sonner comme un depart.
     ref.read(audioDirectorProvider).onMoment(GameMoment.mapNodeSelect);
     ref.read(runProvider.notifier).travelToNode(node.id);

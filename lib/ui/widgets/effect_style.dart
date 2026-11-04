@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/data/effect_icon_table.dart';
+import '../../models/data/signature_evolution_data.dart';
 
 /// Les icônes que nomme le champ `icon` d'une évolution de signature et d'une
 /// sorte de `effect_icons.json` (spec §3.7, A35, A39). Un nom absent retombe
@@ -44,6 +45,73 @@ const Map<String, Color> effectColors = {
   'lightBlueAccent': Colors.lightBlueAccent,
   'amberAccent': Colors.amberAccent,
 };
+
+/// La puce d'une évolution de signature : son icône à sa couleur, une majeure
+/// dans un anneau, une mineure nue portant son niveau dès le deuxième. La puce
+/// entière, anneau compris, mesure [size]. [color], s'il est donné, remplace la
+/// couleur de l'évolution partout (la tuile grisée).
+class EvolutionIcon extends StatelessWidget {
+  final SignatureEvolutionData evolution;
+  final double size;
+  final int level;
+  final Color? color;
+
+  const EvolutionIcon({
+    super.key,
+    required this.evolution,
+    required this.size,
+    this.level = 1,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = color ?? effectColors[evolution.color] ?? Colors.grey;
+    final isMajor = evolution.tier == EvolutionTier.major;
+    final ring = size * 0.06;
+    final glyph = Icon(
+      effectIcons[evolution.icon] ?? Icons.help_outline,
+      size: isMajor ? size - 2 * ring - size * 0.16 : size,
+      color: tint,
+    );
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          if (isMajor)
+            Container(
+              width: size,
+              height: size,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: tint, width: ring),
+              ),
+              child: glyph,
+            )
+          else
+            glyph,
+          if (!isMajor && level >= 2)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Text(
+                '$level',
+                style: TextStyle(
+                  color: tint,
+                  fontSize: size * 0.34,
+                  fontWeight: FontWeight.bold,
+                  height: 1,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 /// L'icône et la couleur de [kind] : celles de [table], ou l'icône d'aide et
 /// le gris pour une sorte absente ou un nom inconnu.

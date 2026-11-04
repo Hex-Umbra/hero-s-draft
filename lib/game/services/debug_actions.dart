@@ -5,6 +5,8 @@ import '../../models/combat_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
+import '../../models/signature_instance.dart';
+import '../systems/signature_evolution_rules.dart';
 import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
 import '../controllers/combat_controller.dart';
@@ -76,6 +78,62 @@ class DebugActions {
     final threshold = read(xpCurveProvider).thresholdFor(run.act);
     final missing = threshold - run.heroStats.xp;
     read(runProvider.notifier).gainXp(missing > 0 ? missing : 1);
+  }
+
+  /// Pose l'evolution [evolutionId] sur la signature [signatureId], par les
+  /// regles du jeu : elle doit etre dans le pool de la signature et dans ce
+  /// que son prochain palier admet. Refuse sans rien ecrire, et le dit.
+  ///
+  /// Seule l'attente n'est pas lue (spec §8) : ni `pendingFor`, ni le niveau
+  /// du heros, ni la sauvegarde.
+  static bool takeSignatureEvolution(
+    RefReader read,
+    String signatureId,
+    String evolutionId,
+  ) {
+    if (!_allowed(read)) return false;
+    final signature = read(
+      runProvider,
+    ).signatures.where((s) => s.data.id == signatureId).firstOrNull;
+    if (signature == null) return false;
+    final evolution = SignatureEvolutionRules.admissible(
+      signature,
+    ).where((e) => e.id == evolutionId).firstOrNull;
+    if (evolution == null) return false;
+    _replaceSignature(
+      read,
+      signature,
+      SignatureInstance(
+        signature.data,
+        evolutions: SignatureEvolutionRules.withChoice(
+          signature.evolutions,
+          evolution,
+        ),
+      ),
+    );
+    return true;
+  }
+
+  /// Rend la signature [signatureId] sans aucune evolution.
+  static void clearSignatureEvolutions(RefReader read, String signatureId) {
+    final signature = read(
+      runProvider,
+    ).signatures.where((s) => s.data.id == signatureId).firstOrNull;
+    if (signature == null) return;
+    _replaceSignature(read, signature, SignatureInstance(signature.data));
+  }
+
+  static void _replaceSignature(
+    RefReader read,
+    SignatureInstance from,
+    SignatureInstance to,
+  ) {
+    updateRun(
+      read,
+      (s) => s.copyWith(
+        signatures: [for (final x in s.signatures) x == from ? to : x],
+      ),
+    );
   }
 
   static void addCard(RefReader read, CardData card) {

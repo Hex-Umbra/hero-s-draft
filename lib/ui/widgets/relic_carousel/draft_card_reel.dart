@@ -23,6 +23,9 @@ class DraftCardReel extends StatefulWidget {
   /// chaque cycle.
   final List<ReelEntry> spinPool;
 
+  /// Posée sur la carte du rouleau arrêté, jamais sur celles qui défilent.
+  final Widget? icon;
+
   const DraftCardReel({
     super.key,
     required this.title,
@@ -34,6 +37,7 @@ class DraftCardReel extends StatefulWidget {
     this.onLand,
     this.initialLanded = false,
     required this.spinPool,
+    this.icon,
   });
 
   @override
@@ -298,6 +302,7 @@ class _DraftCardReelState extends State<DraftCardReel>
             onTap: widget.onTap,
             showRarity: true,
             rarityProgress: _rarityController.value,
+            icon: widget.icon,
           );
         }
 

@@ -770,6 +770,33 @@
       "count": { "type": "int" }
     }
   },
+  "evolutionScreenTitle": "{signature} evolves",
+  "@evolutionScreenTitle": {
+    "description": "Title of the signature evolution screen.",
+    "placeholders": {
+      "signature": { "type": "String" }
+    }
+  },
+  "evolutionScreenSubtitle": "Choose an evolution",
+  "@evolutionScreenSubtitle": {
+    "description": "Subtitle of the signature evolution screen."
+  },
+  "evolutionTierMinor": "MINOR",
+  "@evolutionTierMinor": {
+    "description": "Badge of a minor signature evolution on its reel."
+  },
+  "evolutionTierMajor": "MAJOR",
+  "@evolutionTierMajor": {
+    "description": "Badge of a major signature evolution on its reel."
+  },
+  "evolutionLevelUp": "Level {from} → {to}",
+  "@evolutionLevelUp": {
+    "description": "Last line of a minor evolution already taken: its level before and after the choice.",
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
   "signatures": "Signatures",
   "@signatures": {
     "description": "Title of the class signatures block and of the dictionary tab."
