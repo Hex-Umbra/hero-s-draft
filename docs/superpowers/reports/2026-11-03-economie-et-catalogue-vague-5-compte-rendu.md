@@ -1,8 +1,8 @@
 # Vague 5 — `0.5.7` — la tranche 1 et P-44 lot 1 — compte rendu
 
-**Branche** : `feat/v0.5.7-p42-tranche-1-p44-lot-1` · **Spec** : [tranche 1 et P-44 lot 1](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md) ([vérifications](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1-verifications.md)) · [partie 2](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2-verifications.md)) · **Forme** : [README](README.md).
+**Branche** : `feat/v0.5.7-p42-tranche-1-p44-lot-1` · **Spec** : [tranche 1 et P-44 lot 1](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md) ([vérifications](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1-verifications.md)) · [partie 2](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2-verifications.md)) · [partie 3](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-3.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-3-verifications.md)) · **Tri D77** : [rapport](2026-11-04-vague-5-tri-des-tests-d-ecran.md) · **Forme** : [README](README.md).
 
-*Ouvert à la fin de la partie 1 (§3.5), complété à la fin de la partie 2 ; §0, §3 et §6 s'écrivent en fin de vague.*
+*Ouvert à la fin de la partie 1 (§3.5), complété à la fin des parties 2 et 3 ; §0, §3 et §6 s'écrivent en fin de vague.*
 
 ## 0. Pour le propriétaire
 
@@ -14,6 +14,8 @@
 |:---|---:|:---|:---|:---|:---|:---|
 | `0.5.7` | 21 (`da233ba..`), partie 1 | 1701 → **1811** | `No issues found!` | partie 1 : 61 fichiers, +3394 / −298 | 7.0.0, `bb92a77` | 2.1.301 |
 | | 14 (`b271e85..d339ce6`), partie 2 | 1811 → **1916** | `No issues found!` | partie 2 : 116 fichiers, +4431 / −709 | 7.0.0, `bb92a77` | 2.1.301 |
+| | 3 (`fa948c1a..5fbbe63f`), tri D77 | 1916 → **1524** | `No issues found!` | tri : 66 fichiers de test, +69 / −12536 | 7.0.0, `bb92a77` | 2.1.301 |
+| | 15 (`e4be0236..f9f4da3f`), partie 3 | 1524 → **1612** | `No issues found!` | partie 3 : 62 fichiers, +5379 / −286 | 7.0.0, `bb92a77` | 2.1.301 |
 
 ## 2. Les arbitrages
 
@@ -67,9 +69,23 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 | S13 | Task 10 par l'orchestrateur (amendement 2) : 1916 verts, greps conformes ; 29 fichiers de données touchés, compte lu avec `--no-renames` (*Forme démoniaque* déplacée) | T | — |
 | S14 | Revue d'ensemble : deux phrases du tutoriel, rendues fausses par O5 (« chaque classe en propose plusieurs », l'Armure « c'est votre passif »), réécrites sans compter les passifs pour rester vraies en `0.5.8` | T | Une formulation que le propriétaire réécrit (§0) |
 
+**Décisions de SDD — partie 3** (revue d'ensemble sur `d125d597..052fa3b4`, le plan prêt, « prête avec corrections » : une passe, `f9f4da3f`, aucun défaut fonctionnel ; registre recopié avant sa suppression) :
+
+| # | Décision | Classe | Coût si fausse |
+|:---|:---|:---:|:---|
+| S15 | Task 1 : le code écrit avant ses tests, sans preuve rouge ; accepté, le relecteur a vérifié que les six tests discriminent ; la preuve rouge rendue obligatoire aux implémenteurs suivants | T | Un test qui ne garde rien |
+| S16 | Task 4 : à égalité de niveau, l'ordre des attentes suit `HeroData.skills` ; le Paladin livre `[holy_shield, smite]`, donc *Bouclier Sacré* avant *Châtiment* — l'exemple inverse de la spec et du plan corrigé, et M10, M12 à M15 avec lui | T | L'ordre des deux écrans du Paladin au niveau 5 |
+| S17 | Task 5, tâche à risque : revue sur le modèle le plus capable, dix mutations, neuf attrapées ; la dixième (clé `signatureEvolutions` omise quand vide, PN6) gardée par une assertion ajoutée, sans test neuf | T | — |
+| S18 | Tri des mineurs visibles (amendement 1) — Tasks 2, 6 : rien à corriger ; durées absentes de quatre évolutions (texte de la spec), deux éclairs voisins et le bleu de l'Armure en début de tour (les faces des cartes, P-6 (a)) aux tests manuels | T | Une icône à changer dans `effect_icons.json` |
+| S19 | Task 7 : **corrigé** — le retour système quittait l'écran d'évolution sans choisir et relançait le tirage ; `PopScope`, comme l'événement et le repos ; les rouleaux posés ne rejouent plus à l'orientation. Gardés, aux tests manuels : MINEURE et MAJEURE au même gris (spec §5.1), le glyphe d'une majeure dans son anneau | T | Un palier que le joueur ne distingue pas |
+| S20 | Task 8 : **corrigé** — le chiffre de niveau des puces (5 px) écrit à leur droite, à la taille du badge ; le compte de recharge centré. Gardé : le médaillon bleu en recharge, comme avant (M23 précisé). L'échelle du calque de la Task 9 lue par la largeur transformée, `getMaxScaleOnAxis` rendant 1 sur la matrice (plan corrigé avant la Task 9) | T | — |
+| S21 | Task 9 : deux ajouts de l'implémenteur gardés (la liste jamais plus courte que la tuile ; pas de soulèvement au survol, liste ouverte) ; **corrigé** — le repli sous garde, la tuile qui retombe d'un coup, les 13 phrases testées à la lettre | T | Deux lignes à retirer |
+| S22 | Tasks 7 à 10 : revues sur le modèle le plus capable pour 7, 8 et 9 (le rideau, le `RenderBox`, le calque) ; Task 11 par l'orchestrateur (amendement 2) : 1612 verts, greps conformes sauf quatre « vague 5 » en commentaire, corrigés à la revue finale | T | — |
+| S23 | Revue finale : `EvolutionIcon.level`, devenu mort, retiré ; une seule règle de pose, `SignatureEvolutionRules.take`, lue par le jeu et le debug ; `effectLines` au niveau 2 testé ; deux résidus de forme laissés (l'ordre de deux imports, une indentation) | T | Une réindentation plus tard |
+
 ## 3. Les tests manuels
 
-*À écrire en fin de vague.* Points déjà renvoyés au test par les revues, à reprendre au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14).
+*À écrire en fin de vague.* Points déjà renvoyés au test par les revues, à reprendre au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
 
 ## 4. Trouvé périmé, et pour la file
 
@@ -77,7 +93,8 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 - **Tests faibles** : `takeDamage` sans test direct (plafond à 100 %, Armure sur plusieurs coups) ; les gardes de D38 vides tant qu'aucune carte ne porte `hits` ; la ligne Flame vide sans contexte, au test manuel.
 - **Polissage** : ordre des imports, lignes de plus de 80 colonnes, l'échafaudage de test recopié dans trois fichiers, quelques commentaires mal tournés (`saturatesAt`, `_payRuneLifesteal`).
 - **De la partie 2, pour la file** : le texte de croissance `targetStatus` nomme le statut en français dans la version anglaise (`card_rule_texts.dart:66-69` ; aucune carte livrée ne lit cette source) ; `draftDeckSubtitle` dit « 2 + 3 » quand le lot manque (texte de spec §6.1 ; atteignable seulement par une classe créée dans l'éditeur, sans lot) ; `CLAUDE.md`, étape 2 du flux de contenu, ne dit pas qu'un dossier de lot `cards/<passif>/` exige lui aussi sa ligne de `pubspec.yaml` (pour `memory-bank-sync`) ; l'éditeur accepte une carte à `costs.armor` sous un passif sans classe unique ; le singleton du registre remplacé par un groupe de `tutorial_engine_test` ; `lot_card_fixture.dart` rangé sous `test/unit/` et lu ailleurs ; pas de test de l'opacité par groupe au jeu, ni du draft à lot réduit en widget.
-- **Pour la partie 3** : `ProportionalStatus`, importé par `enemy_instance.dart` depuis `lib/game/` (Review Focus ou file) ; la règle de mana propre à `signature_bar.dart:114`.
+- **Pour la partie 3** : `ProportionalStatus`, importé par `enemy_instance.dart` depuis `lib/game/` (resté à la file) ; la règle de mana propre à `signature_bar.dart:114` (**résolue**, Task 8 : `canAfford` sur la signature évoluée).
+- **De la partie 3, pour la file** : un `flatBonus` qui vise un effet absent de sa signature est accepté en silence ; `DraftScreen` se quitte par le retour système sans choisir ; le rideau de montée de niveau est en français en dur et ne dit pas ce qui attend ; la reprise des infobulles des cartes ; les faces des cartes, les émojis des statuts ennemis et la rune *Précis* à passer sur `effect_icons.json` ; `asCard` recalculé à chaque lecture (par construction, jamais par image) ; `effectLines` couplé par l'ordre sans `assert`.
 
 ## 5. Les leçons
 
