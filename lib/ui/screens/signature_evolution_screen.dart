@@ -38,6 +38,7 @@ class _SignatureEvolutionScreenState
   late final List<SignatureEvolutionData> _offer;
   int? _selectedIndex;
   int? _hoveredIndex;
+  final Set<int> _landed = {};
 
   @override
   void initState() {
@@ -48,9 +49,14 @@ class _SignatureEvolutionScreenState
   void _reelTick() =>
       ref.read(audioDirectorProvider).onMoment(GameMoment.reelTick);
 
-  void _reelLand() => ref
-      .read(audioDirectorProvider)
-      .onMoment(GameMoment.reelLand, source: const VariantAudioSource('common'));
+  void _reelLand(int index) {
+    ref
+        .read(audioDirectorProvider)
+        .onMoment(GameMoment.reelLand, source: const VariantAudioSource('common'));
+    if (_landed.add(index) && _landed.length == _offer.length) {
+      setState(() {});
+    }
+  }
 
   /// Le niveau déjà pris de [evolution], 0 si elle n'est pas prise.
   int _takenLevel(SignatureEvolutionData evolution) => widget.signature.taken
@@ -119,7 +125,10 @@ class _SignatureEvolutionScreenState
                 ? l10n.evolutionTierMajor
                 : l10n.evolutionTierMinor,
             index: index,
-            onLand: _reelLand,
+            onLand: () => _reelLand(index),
+            // Recréés par un changement d'orientation, les rouleaux posés
+            // ne rejouent ni leur rotation ni leurs sons.
+            initialLanded: _landed.length == _offer.length,
             spinPool: spinPool,
             icon: EvolutionIcon(evolution: evolution, size: 44),
           ),
@@ -143,7 +152,11 @@ class _SignatureEvolutionScreenState
         ),
     ];
 
-    return Material(
+    // Le retour système ne sort pas sans choisir : la réouverture referait le
+    // tirage d'un choix permanent.
+    return PopScope(
+      canPop: false,
+      child: Material(
       color: Colors.black87,
       child: SafeArea(
         child: Center(
@@ -222,6 +235,7 @@ class _SignatureEvolutionScreenState
             },
           ),
         ),
+      ),
       ),
     );
   }

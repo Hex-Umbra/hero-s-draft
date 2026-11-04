@@ -82,7 +82,7 @@ class DebugActions {
 
   /// Pose l'evolution [evolutionId] sur la signature [signatureId], par les
   /// regles du jeu : elle doit etre dans le pool de la signature et dans ce
-  /// que son prochain palier admet. Refuse sans rien ecrire, et le dit.
+  /// que son prochain palier admet. Refuse sans rien ecrire (retourne `false`, que seuls les tests lisent).
   ///
   /// Seule l'attente n'est pas lue (spec §8) : ni `pendingFor`, ni le niveau
   /// du heros, ni la sauvegarde.
