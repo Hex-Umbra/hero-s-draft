@@ -16,8 +16,10 @@ import '../../services/map_generator_service.dart';
 import '../game_constants.dart';
 import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
+import '../systems/signature_evolution_rules.dart';
 import '../systems/trait_system.dart';
 import '../systems/stat_gains.dart';
+import 'checkpoint_controller.dart';
 import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
@@ -82,6 +84,24 @@ class RunState {
   /// contenu, que `fromJsonWithReport` relit de la classe. La vague 5 y
   /// ajoutera ses évolutions — et leur sauvegarde — sans déplacer le champ.
   final List<SignatureInstance> signatures;
+
+  /// La signature dont l'évolution attend le plus tôt : parmi celles dont
+  /// `pendingFor(heroStats.level)` est positif, celle dont le prochain niveau
+  /// est le plus bas ; à égalité, la première de [signatures].
+  SignatureInstance? get nextPendingEvolution {
+    SignatureInstance? next;
+    for (final s in signatures) {
+      if (s.pendingFor(heroStats.level) > 0 &&
+          (next == null || s.level < next.level)) {
+        next = s;
+      }
+    }
+    return next;
+  }
+
+  /// Vrai tant qu'un draft de carte ou une évolution de signature attend : la
+  /// condition du rideau de la carte et des gardes de nœud.
+  bool get hasPendingChoice => pendingDrafts > 0 || nextPendingEvolution != null;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -487,6 +507,34 @@ class RunController extends Notifier<RunState> {
       ...state.runeCapBonus,
       runeId: (state.runeCapBonus[runeId] ?? 0) + 1,
     });
+  }
+
+  /// Prend l'évolution [evolutionId] de la signature [signatureId] (spec
+  /// vague 5 ; A26). Refuse, sans rien écrire, une signature hors de la run,
+  /// aucune évolution en attente, une évolution hors du pool ou non
+  /// admissible ; sinon la sauvegarde suit le choix.
+  bool chooseSignatureEvolution(String signatureId, String evolutionId) {
+    final signature =
+        state.signatures.where((s) => s.data.id == signatureId).firstOrNull;
+    if (signature == null || signature.pendingFor(state.heroStats.level) == 0) {
+      return false;
+    }
+    final chosen = SignatureEvolutionRules.admissible(signature)
+        .where((e) => e.id == evolutionId)
+        .firstOrNull;
+    if (chosen == null) return false;
+    state = state.copyWith(signatures: [
+      for (final s in state.signatures)
+        s == signature
+            ? SignatureInstance(
+                s.data,
+                evolutions:
+                    SignatureEvolutionRules.withChoice(s.evolutions, chosen),
+              )
+            : s,
+    ]);
+    ref.read(checkpointProvider.notifier).bump();
+    return true;
   }
 
   void startCombat() {
