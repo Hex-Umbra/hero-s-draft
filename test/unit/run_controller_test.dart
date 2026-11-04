@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/map_node.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
@@ -190,6 +192,62 @@ void main() {
         expect(runController.state.heroStats.armure, 4);
       },
     );
+  });
+
+  group('RunController.completeCurrentNode', () {
+    const hero = HeroData(
+      id: 'paladin',
+      classCard: 'paladin.png',
+      maxHp: 100,
+      maxMana: 3,
+    );
+
+    test('resout le noeud courant et pousse un seul point de sauvegarde', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(hero);
+      final nodeId = container.read(runProvider).mapNodes.first.id;
+      run.travelToNode(nodeId);
+      expect(container.read(checkpointProvider), 0);
+
+      run.completeCurrentNode();
+
+      final state = container.read(runProvider);
+      expect(state.mapNodes.singleWhere((n) => n.id == nodeId).isCompleted,
+          isTrue);
+      expect(container.read(checkpointProvider), 1);
+    });
+
+    test('resoudre le boss ouvre l acte suivant', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(hero);
+      final actBefore = container.read(runProvider).act;
+      final boss = container
+          .read(runProvider)
+          .mapNodes
+          .firstWhere((n) => n.type == MapNodeType.boss);
+      run.travelToNode(boss.id);
+
+      run.completeCurrentNode();
+
+      expect(container.read(runProvider).act, actBefore + 1);
+      expect(container.read(runProvider).currentNodeId, isNull);
+      expect(container.read(checkpointProvider), 1);
+    });
+
+    test('sans noeud courant, rien n est resolu ni sauvegarde', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final run = container.read(runProvider.notifier);
+      run.startNewRun(hero);
+
+      run.completeCurrentNode();
+
+      expect(container.read(checkpointProvider), 0);
+    });
   });
 
   group('RunState.cardsPerTurn', () {

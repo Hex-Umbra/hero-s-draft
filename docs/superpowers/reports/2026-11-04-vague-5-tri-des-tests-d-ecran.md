@@ -8,7 +8,7 @@ D77 (brainstorm v3, section 1) : un jeu se teste a la main. Les tests automatiqu
 
 Critere pratique, test par test : « si ce test devenait rouge, le proprietaire le verrait-il tout de suite en jouant a l'ecran concerne ? » Oui : supprime. Non (un chiffre faux de quelques %, un cas rare, une donnee corrompue, une sauvegarde perdue, une regle d'etat) : garde.
 
-Methode : le tri est fait test par test. Pour chaque test d'ecran dont le nom laissait croire a une regle, on a cherche si un test unitaire la garde deja ; si oui, le test d'ecran est supprime, la regle reste gardee ailleurs (la colonne de droite nomme ce test). Aucun test n'a ete reecrit : les regles sans autre garde sont conservees telles quelles.
+Methode : le tri est fait test par test. Pour chaque test d'ecran dont le nom laissait croire a une regle, on a cherche si un test unitaire la garde deja ; si oui, le test d'ecran est supprime, la regle reste gardee ailleurs (la colonne de droite nomme ce test). Les regles sans autre garde ont ete gardees, ou reecrites en tests de controleur apres verification (voir Corrections apres verification).
 
 ## Comptes
 
@@ -16,10 +16,10 @@ Mesures par `flutter test` (compte des tests executes, boucles comprises) :
 
 | | avant | apres |
 |:---|---:|---:|
-| Suite entiere | 1916 | 1510 |
-| dont `test/widget/` + `test/tutorial/` + `test/encounter_system_test.dart` + les 4 fichiers `test/unit/` d'affichage supprimes | 556 | 150 |
+| Suite entiere | 1916 | 1525 |
+| dont `test/widget/` + `test/tutorial/` + `test/encounter_system_test.dart` + les 4 fichiers `test/unit/` d'affichage supprimes | 556 | 169 |
 
-406 tests supprimes. Fichiers de test supprimes entiers : 50, plus l'aide `test/widget/content_editor/contrast.dart`, devenue sans lecteur. Fichiers allegés : 9. Fichiers inchanges dans le perimetre : 6 (+ les 8 fichiers `test/unit/` de libelles, en fin de tableau). `dart analyze` : `No issues found!`. `flutter test` : `All tests passed!`.
+391 tests de moins en net (1916 -> 1525). Fichiers de test supprimes entiers : 47 (50 au premier passage, 7 restaures, 4 supprimes en plus), plus l'aide `test/widget/content_editor/contrast.dart`, devenue sans lecteur. Les comptes par fichier ci-dessous sont ceux d'apres corrections. `dart analyze` : `No issues found!`. `flutter test` : `All tests passed!`.
 
 Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gardent les tests gardes (la regle), ou « affichage seul » pour un fichier entierement supprime.
 
@@ -35,10 +35,10 @@ Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gar
 | `test/tutorial/tutorial_screen_bold_text_test.dart` | 3 | 0 | 3 | affichage seul (decoupage du gras) |
 | `test/unit/card_text_renderer_layout_test.dart` | 2 | 0 | 2 | affichage seul (centrage du bloc central de la carte) |
 | `test/unit/floating_text_test.dart` | 1 | 0 | 1 | affichage seul (opacite du texte flottant) |
-| `test/unit/heros_draft_game_targeting_test.dart` | 7 | 0 | 7 | entrees Flame (ciblage au toucher) : le proprietaire le voit des qu'il joue |
+| `test/unit/heros_draft_game_targeting_test.dart` | 7 | 7 | 0 | ciblage Flame, sans rendu : ennemi mort ou mourant jamais rapporte, aucune cible hors du tour du joueur, priorite d une carte focalisee ; intact (restaure) |
 | `test/unit/might_icon_test.dart` | 3 | 0 | 3 | affichage seul (icone de Puissance, lecture du source) |
 | `test/widget/boss_card_draft_screen_test.dart` | 3 | 0 | 3 | affichage seul (5 cartes, compteur, confirmation) |
-| `test/widget/card_dictionary_order_test.dart` | 3 | 3 | 0 | regle d'ordre : groupes independants de l'ordre du catalogue, cartes par rarete puis cout puis id, reliques par id ; intact |
+| `test/widget/card_dictionary_order_test.dart` | 3 | 0 | 3 | ordre visible des l ecran ouvert |
 | `test/widget/card_dictionary_screen_test.dart` | 5 | 0 | 5 | affichage seul (onglets, groupes, libelles) |
 | `test/widget/class_identity_test.dart` | 11 | 0 | 11 | affichage seul (couleur, degrade, pastille et image de classe) |
 | `test/widget/class_selection_screen_test.dart` | 66 | 0 | 66 | affichage seul (cartes de classe, depli des passifs, mise en page) ; l'acces aux passifs est garde par passive_availability_test |
@@ -51,17 +51,17 @@ Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gar
 | `test/widget/content_editor/editor_action_bar_test.dart` | 7 | 0 | 7 | affichage seul (bandeau d'issue, barre d'actions) |
 | `test/widget/content_editor/editor_primitives_test.dart` | 10 | 0 | 10 | affichage seul (rangees de propriete, boutons, ancres) |
 | `test/widget/content_editor/editor_segmented_test.dart` | 3 | 0 | 3 | affichage seul (segments) |
-| `test/widget/content_editor/editor_toolbar_test.dart` | 5 | 1 | 4 | libelle calcule : shortRoot reduit le depot a ses deux derniers dossiers. Supprimes : onglets, soulignement, barre |
+| `test/widget/content_editor/editor_toolbar_test.dart` | 5 | 0 | 5 | affichage seul (onglets, soulignement, libelle shortRoot) |
 | `test/widget/content_editor/entity_explorer_test.dart` | 5 | 0 | 5 | affichage seul (explorateur d'entites) |
 | `test/widget/content_editor/reference_panel_test.dart` | 3 | 0 | 3 | affichage seul (panneau de references) |
 | `test/widget/content_editor_screen_test.dart` | 56 | 27 | 29 | ce que l'editeur ecrit ou refuse d'ecrire sur disque : brouillon fautif refuse sans rien ecrire, creation relique et classe (signatures, passif de depart, sans son ni image), doublons de signatures, Valider juge le document que Ecrire ecrira, saisie non entiere, vue brute intacte, effet ajoute, son choisi et retire, mode Modifier (Charger, Ecrire refuse sans charge, cle inconnue gardee), tous les imports (son, image, icone, fichier ignore apres changement, faute non repetee). Supprimes : navigation, lisibilite, couleurs, alignement, relecture du disque, compteurs de signatures |
 | `test/widget/debug_drawer_test.dart` | 8 | 1 | 7 | regle : la derniere cible de Puissance ne peut pas etre retiree (etat que HeroData.fromJson refuserait de relire). Supprimes : contenu et ouverture du tiroir |
-| `test/widget/deck_screen_test.dart` | 11 | 0 | 11 | affichage et flux de fusion ; fusion, rang et plafond gardes par deck_controller_test, decoupled_forge_test, forge_rune_rules_test |
+| `test/widget/deck_screen_test.dart` | 11 | 1 | 10 | plafond de rune releve (Transcendance) : trois rares a Econome 1 fusionnent en epique a Econome 2 ; fusion, rang gardes par deck_controller_test, decoupled_forge_test, forge_rune_rules_test |
 | `test/widget/draft_card_reel_test.dart` | 3 | 0 | 3 | affichage seul (rouleau) |
-| `test/widget/draft_screen_test.dart` | 8 | 0 | 8 | affichage et flux du draft (Transcendance, Maitrise) ; regles gardees par level_up_reward_*_test et draft_choice_labels_test |
+| `test/widget/draft_screen_test.dart` | 8 | 2 | 6 | Transcendance au draft : sort quand une rune est a son plafond (7 rouleaux, la modale releve le plafond), ne sort plus quand le plafond est releve |
 | `test/widget/enemy_intents_panel_overflow_test.dart` | 6 | 0 | 6 | affichage seul (debordement) |
-| `test/widget/event_screen_test.dart` | 10 | 0 | 10 | affichage et flux ; conditions et effets des evenements gardes par event_controller_test |
-| `test/widget/forge_fusion_screen_test.dart` | 8 | 0 | 8 | affichage et flux du Puits ; regles gardees par forge_rune_rules_test et run_controller_test (exchangeRune) |
+| `test/widget/event_screen_test.dart` | 10 | 3 | 7 | cablage du retour systeme (canPop) : apres un choix il resout le noeud une seule fois, avant tout choix rien (2) ; le Remouleur affute la rune choisie sans or contre 10 % des PV max (isFree). Conditions et effets des evenements gardes par event_controller_test |
+| `test/widget/forge_fusion_screen_test.dart` | 8 | 2 | 6 | cablage du retour systeme du Puits : resout le noeud apres un echange, ferme sans resoudre sans echange ; le reste garde par forge_rune_rules_test et run_controller_test (exchangeRune) |
 | `test/widget/forge_upgrade_dialog_test.dart` | 3 | 0 | 3 | affichage seul (lignes de runes, boutons) |
 | `test/widget/game_dialog_test.dart` | 3 | 0 | 3 | affichage seul (mise en page 320 px) |
 | `test/widget/home_screen_menu_test.dart` | 6 | 0 | 6 | affichage seul (menu, QUITTER par plateforme, retours) |
@@ -72,10 +72,10 @@ Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gar
 | `test/widget/player_health_bar_test.dart` | 1 | 0 | 1 | affichage seul |
 | `test/widget/probabilities_dialog_test.dart` | 5 | 0 | 5 | affichage seul (texte des chances ; le calcul est garde par probabilities_test) |
 | `test/widget/relic_exchange_screen_test.dart` | 4 | 0 | 4 | affichage et flux ; l'echange est garde par relic_exchange_test |
-| `test/widget/rest_card_selection_screen_test.dart` | 6 | 0 | 6 | affichage seul (cartes grisees, motifs) ; eligibilite des runes gardee par rune_eligibility_test |
-| `test/widget/rest_screen_test.dart` | 11 | 2 | 9 | calcul : SE REPOSER rend 30 % des PV max (arrondi), borne aux PV max. Supprimes : boutons, Affuter, Oublier, retour systeme |
+| `test/widget/rest_card_selection_screen_test.dart` | 6 | 2 | 4 | plafond de rune releve : une rune plafonnee se grise puis ouvre le dialogue sur Niveau 1 -> 2, avec et sans or |
+| `test/widget/rest_screen_test.dart` | 11 | 7 | 4 | calcul : SE REPOSER rend 30 % des PV max (arrondi), borne aux PV max (2) ; AFFUTER s active sur une rune plafonnee quand la run releve son plafond ; retour systeme apres repos, affutage, oubli, rien avant (4) |
 | `test/widget/settings_screen_test.dart` | 3 | 0 | 3 | affichage seul ; reglages gardes par audio_settings_test |
-| `test/widget/sharpen_rune_dialog_test.dart` | 10 | 0 | 10 | affichage ; cout et plafond de l'affutage gardes par forge_rune_rules_test et run_controller_test |
+| `test/widget/sharpen_rune_dialog_test.dart` | 10 | 1 | 9 | plafond de rune releve : une rune plafonnee dit Niveau maximal, puis Niveau 1 -> 2 sous un plafond releve ; cout et plafond gardes par forge_rune_rules_test et run_controller_test |
 | `test/widget/shop_screen_test.dart` | 4 | 0 | 4 | affichage et flux ; prix, relance, Miroir, copie du deck, etal retenu gardes par shop_controller_test |
 | `test/widget/signature_bar_test.dart` | 17 | 1 | 16 | regle : priorite des etats d'une tuile de signature (inactive, recharge, mana, armee, disponible). Supprimes : 16 tests de tuile (mise en page, survol, gestes) |
 | `test/widget/signature_tile_test.dart` | 5 | 0 | 5 | affichage seul (tuile) |
@@ -96,9 +96,7 @@ Colonnes : tests avant, gardes, supprimes (comptes d'execution), puis ce que gar
 | `test/unit/card_text_renderer_test.dart` | 3 | 3 | 0 | total affiche = total calcule (valeur x coups, scaleWith, infobulle) ; intact |
 | `test/unit/draft_choice_labels_test.dart` | 7 | 7 | 0 | quel texte selon la valeur tiree, le passif actif, perPoint, le repli ; intact |
 | `test/unit/flame_image_prefix_test.dart` | 3 | 3 | 0 | chargement : prefixe vide, cache non global, 8 images sous des cles egales a leur chemin ; intact (donnees) |
-| `test/unit/hero_display_order_test.dart` | 2 | 2 | 0 | ordre d affichage des classes (regle) ; intact |
-| `test/unit/might_targets_label_test.dart` | 2 | 2 | 0 | ordre des cibles de Puissance quel que soit le Set ; intact |
-| `test/unit/might_targets_long_label_test.dart` | 5 | 5 | 0 | jointure selon le nombre de cibles (pas de joint, et, virgule puis et) ; intact |
+| `test/unit/hero_display_order_test.dart` | 2 | 1 | 1 | displayOrder distinct et non nul pour chaque classe. Supprime : le tri rend paladin, berserker, mage (ordre visible) |
 | `test/unit/stat_rule_label_test.dart` | 5 | 5 | 0 | pluriel de la duree, texte propre au mana, taux et exemple a 0,5 ; intact |
 
 Les autres fichiers de `test/unit/` ont ete parcourus par leur nom et par une recherche de `testWidgets`, `pumpWidget`, des imports `ui/` et `game/components` : aucun autre test d'affichage n'y figure (les imports `ui/` de `draft_choice_labels_test`, `card_text_renderer_test`, `notification_notifier_test` et `referential_integrity_test` servent des fonctions pures ou un controleur).
@@ -124,8 +122,26 @@ Le classement a hesite sur ces tests ; le verificateur peut partir d'ici.
 15. **`heros_draft_game_targeting_test.dart` supprime** : machine d'etats du ciblage Flame, testee sans ecran; classee entree utilisateur visible des le premier combat. C'est le cas le plus proche de la limite, car le test ne verifie pas un rendu.
 16. **`flame_image_prefix_test.dart` garde en entier** : malgre son nom, il garde le chargement des images sous le prefixe vide (donnees, perte silencieuse a la compilation), pas un rendu. De meme `card_text_renderer_test.dart` (total affiche = total calcule).
 17. **`probabilities_dialog_test.dart` et `stats_dialog_test.dart` supprimes** : leurs assertions portent sur du texte rendu; les calculs sont gardes par `probabilities_test` et `draft_choice_labels_test`. La phrase « la parenthese nomme les mythiques de la donnee » n'est plus gardee cote dialogue.
-18. **Aucune reecriture en test unitaire n'a ete faite** : chaque test conserve l'a ete tel quel, aucune regle n'etait sans garde ailleurs a un cout court et sur.
+18. Premiere version : aucune regle n'etait supposee sans garde ailleurs. Fausse pour six regles, corrigee ci-dessous.
 
 ## Code de lib devenu sans lecteur de test
 
 Aucun code de `lib/` n'est devenu utilise par un test supprime seul : les deux `@visibleForTesting` de `lib/services/audio/audio_providers.dart` et celui de `lib/services/game_data_service.dart` ont toujours des lecteurs hors des fichiers supprimes. Restent sans test, mais utilises en production : `parseBoldSegments` (tutoriel), l'opacite de `FloatingText`, `HerosDraftGame.handlePlayerTargeting`, `shortRoot` conserve. Rien n'a ete modifie dans `lib/` ni `assets/`.
+
+## Corrections apres verification
+
+Un verificateur a releve six regles que le tri avait laissees sans garde. Decisions de l'orchestrateur, appliquees dans un second commit.
+
+A. Reecrites en tests unitaires (D77 : un test de calcul ou de controleur plutot qu'un test d'ecran restaure) :
+1. `RunController.completeCurrentNode` dans `test/unit/run_controller_test.dart` (3 tests) : le noeud courant est resolu et `checkpointProvider` vaut 1 ; sans noeud courant, rien n'est resolu ni sauvegarde ; resoudre le boss ouvre l'acte suivant (`advanceToNextWorld`).
+2. Les remedes du Colporteur dans `test/unit/event_controller_test.dart` : `isChoiceSelectable` faux a 100/100 PV, vrai apres `takeDamage(60)` (l'ordre PV / PV max).
+
+B. Restaures tels quels depuis `fa948c1a^`, avec leurs seules aides :
+3. Le retour systeme : `event_screen_test` (2), `rest_screen_test` (4), `forge_fusion_screen_test` (2).
+4. Le plafond de rune releve (`runeCapBonus`, Transcendance) : `deck_screen_test` (1), `draft_screen_test` (groupe Transcendance, 2), `rest_screen_test` (AFFUTER s'active), `rest_card_selection_screen_test` (boucle, 2), `sharpen_rune_dialog_test` (1).
+5. `test/unit/heros_draft_game_targeting_test.dart` en entier (7).
+6. `event_screen_test` : le Remouleur affute la rune choisie, sans or, contre 10 % des PV max (cablage `isFree: true`).
+
+C. Supprimes en plus (gardes a tort : texte ou ordre visible des l'ecran ouvert) : `editor_toolbar_test` (`shortRoot`), `might_targets_long_label_test` (5), `might_targets_label_test` (2), `hero_display_order_test` « le tri rend paladin, berserker, mage » (1), `card_dictionary_order_test` (3). L'aide orpheline `pumpHomeWithGameData` (et `_mockRegistry`) de `home_screen_save_test` est retiree.
+
+Comptes apres corrections : suite entiere 1916 -> 1525. Cas limites 2, 3, 4, 11 et 15 ci-dessus sont tranches par ces corrections (les tests concernes sont restaures ou reecrits; l'ordre du dictionnaire et du draft de depart reste a decider pour `starter_deck_draft_order_test`, inchange).

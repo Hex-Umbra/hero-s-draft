@@ -33,14 +33,4 @@ void main() {
     final orders = heroes.map((h) => h.displayOrder).toList();
     expect(orders.toSet(), hasLength(orders.length), reason: 'doublon');
   });
-
-  test('le tri par displayOrder rend paladin, berserker, mage', () {
-    final heroes = _heroes()
-      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-
-    expect(
-      heroes.map((h) => h.id).toList(),
-      ['paladin', 'berserker', 'mage'],
-    );
-  });
 }

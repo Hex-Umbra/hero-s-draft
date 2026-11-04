@@ -320,6 +320,17 @@ void main() {
       expect(events.isChoiceSelectable(offering, const []), isTrue);
     });
 
+    test('isChoiceSelectable : les remedes ne s offrent que sous la moitie des '
+        'PV', () {
+      inventory.addRelic(relic('common', RelicRarity.common));
+      events.setEvent(peddler);
+      expect(events.isChoiceSelectable(remedies(), const []), isFalse);
+
+      run.takeDamage(60);
+
+      expect(events.isChoiceSelectable(remedies(), const []), isTrue);
+    });
+
     test('isSelectable : un choix trade_relic suit le fait hasTradedRelic', () {
       expect(sale().isSelectable(100, 0, 100, hasTradedRelic: false, hasSharpenableRune: false), isFalse);
       expect(sale().isSelectable(100, 0, 100, hasTradedRelic: true, hasSharpenableRune: false), isTrue);
