@@ -74,6 +74,41 @@ void main() {
       expect(exhaust, isA<AddExhaustDelta>());
     });
 
+    test('flatBonus se lit et se reecrit, statusId facultatif', () {
+      final plain = {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 2};
+      final status = {
+        'type': 'flatBonus',
+        'effect': 'apply_status',
+        'statusId': 'might',
+        'valuePerLevel': 1,
+      };
+      final delta = CardDelta.fromJson(plain);
+      expect(delta, isA<FlatBonusDelta>());
+      expect((delta as FlatBonusDelta).statusId, isNull);
+      expect(delta.toJson(), plain);
+      final withStatus = CardDelta.fromJson(status) as FlatBonusDelta;
+      expect(withStatus.statusId, 'might');
+      expect(withStatus.toJson(), status);
+    });
+
+    test('flatBonus sans effect, a valuePerLevel 0, ou a statusId hors '
+        'apply_status est refuse', () {
+      expect(() => CardDelta.fromJson({'type': 'flatBonus', 'valuePerLevel': 2}),
+          throwsFormatException);
+      expect(
+          () => CardDelta.fromJson(
+              {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 0}),
+          throwsFormatException);
+      expect(
+          () => CardDelta.fromJson({
+                'type': 'flatBonus',
+                'effect': 'damage',
+                'valuePerLevel': 2,
+                'statusId': 'might',
+              }),
+          throwsFormatException);
+    });
+
     test('refuse un reduceCost ou un critBonus sans valuePerLevel strictement '
         'positif', () {
       for (final type in ['reduceCost', 'critBonus']) {
@@ -530,6 +565,16 @@ void main() {
       }));
       expect(rune.getDescription(3, 'fr', strike, CardRarity.common),
           'Pioche +6');
+    });
+
+    test('le {val} d une rune flatBonus vaut valuePerLevel x L', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}',
+        'deltas': [
+          {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 3},
+        ],
+      }));
+      expect(rune.getDescription(2, 'fr', strike, CardRarity.common), '+6');
     });
 
     test('lit le premier delta chiffre', () {

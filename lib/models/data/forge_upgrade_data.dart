@@ -321,6 +321,7 @@ class ForgeUpgradeData {
         PercentBonusDelta() =>
           _percentAdded(card, rarity, level, carried, delta),
         AddEffectDelta() => delta.valuePerLevel * level,
+        FlatBonusDelta() => delta.valuePerLevel * level,
         RemoveExhaustDelta() => null,
         ReduceCostDelta() => _costCut(card, rarity, level, carried, delta),
         CritBonusDelta() => delta.valuePerLevel * level,

@@ -16,6 +16,7 @@ import 'package:roguelike_card_game/ui/widgets/forge/rune_style.dart';
 String? _effectOf(CardDelta delta) => switch (delta) {
       PercentBonusDelta(:final effect) => effect,
       AddEffectDelta(:final effect) => effect,
+      FlatBonusDelta(:final effect) => effect,
       RemoveExhaustDelta() => null,
       ReduceCostDelta() => null,
       CritBonusDelta() => null,

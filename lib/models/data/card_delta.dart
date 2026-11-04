@@ -8,8 +8,8 @@ import 'card_data.dart';
 /// Le vocabulaire est **fermé** : une sorte neuve s'écrit ici une fois, par
 /// mécanisme, avec le lecteur de son lot — jamais un `case` par rune.
 /// L'applicateur (`EffectiveCard.apply`) reçoit des paires *(delta, niveau)* ;
-/// une rune en fournit par `EffectiveCard.runeDeltas`, et la vague 5 y
-/// traduira de même les évolutions de signature.
+/// une rune en fournit par `EffectiveCard.runeDeltas`, et les évolutions de
+/// signature y sont traduites de même.
 sealed class CardDelta {
   const CardDelta();
 
@@ -26,6 +26,7 @@ sealed class CardDelta {
     'splashPercent',
     'echoChance',
     'refundHpCost',
+    'flatBonus',
   ];
 
   /// Lit une entrée de `deltas`. Lève `FormatException` sur un type inconnu ou
@@ -59,6 +60,7 @@ sealed class CardDelta {
       'refundHpCost' => RefundHpCostDelta(
           valuePercentPerLevel: _positive(json, 'valuePercentPerLevel'),
         ),
+      'flatBonus' => FlatBonusDelta._fromJson(json),
       _ => throw FormatException(
           'deltas.type : valeur "$type" inconnue — attendu : '
           '${typeNames.join(', ')}',
@@ -176,6 +178,55 @@ final class AddEffectDelta extends CardDelta {
         'valuePerLevel': valuePerLevel,
         if (statusId != null) 'statusId': statusId,
         if (durationPerLevel != null) 'durationPerLevel': durationPerLevel,
+      };
+}
+
+/// Chaque effet **propre** de la carte que [targets] vise gagne
+/// `valuePerLevel × L`, ajouté après la rareté, jamais multiplié par elle, sur
+/// chaque coup d'un multi-coups (spec A24).
+final class FlatBonusDelta extends CardDelta {
+  const FlatBonusDelta({
+    required this.effect,
+    required this.valuePerLevel,
+    this.statusId,
+  });
+
+  /// `statusId` ne vaut que pour un `apply_status`.
+  factory FlatBonusDelta._fromJson(Map<String, dynamic> json) {
+    final effect = CardDelta._text(json, 'effect');
+    final valuePerLevel = CardDelta._positive(json, 'valuePerLevel');
+    if (effect != 'apply_status') {
+      if (json.containsKey('statusId')) {
+        throw FormatException(
+          'deltas : statusId ne vaut que pour apply_status — reçu pour '
+          '"$effect"',
+        );
+      }
+      return FlatBonusDelta(effect: effect, valuePerLevel: valuePerLevel);
+    }
+    return FlatBonusDelta(
+      effect: effect,
+      valuePerLevel: valuePerLevel,
+      statusId: json.containsKey('statusId')
+          ? CardDelta._text(json, 'statusId')
+          : null,
+    );
+  }
+
+  final String effect;
+  final int valuePerLevel;
+  final String? statusId;
+
+  /// Vrai si [e] est un effet que ce delta augmente.
+  bool targets(CardEffect e) =>
+      e.type == effect && (statusId == null || e.statusId == statusId);
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': 'flatBonus',
+        'effect': effect,
+        'valuePerLevel': valuePerLevel,
+        if (statusId != null) 'statusId': statusId,
       };
 }
 

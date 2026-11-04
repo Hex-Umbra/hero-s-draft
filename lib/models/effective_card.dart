@@ -71,8 +71,8 @@ class EffectiveCard {
   /// §4.1, A20).
   final int hpRefundPercent;
 
-  /// La couture commune aux runes et, en vague 5, aux évolutions de
-  /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
+  /// La couture commune aux runes et aux évolutions de signature : une
+  /// fonction pure, qui ne lit ni registre ni rune — elle
   /// reçoit des paires *(delta, niveau)*.
   static EffectiveCard apply(
     CardData data,
@@ -111,6 +111,12 @@ class EffectiveCard {
                 ? delta.bonusFor(base, level)
                 : (delta.bonusFor(base * hits, level) + hits - 1) ~/ hits;
             effects[i] = effects[i].copyWithValue(effects[i].value + perHit);
+          }
+        case FlatBonusDelta():
+          for (var i = 0; i < effects.length; i++) {
+            if (!delta.targets(effects[i])) continue;
+            effects[i] = effects[i]
+                .copyWithValue(effects[i].value + delta.valuePerLevel * level);
           }
         case AddEffectDelta():
           added.add(delta.effectAt(level));
@@ -173,17 +179,18 @@ class EffectiveCard {
   }
 
   /// [data] à [rarity], portant [runes], sur le catalogue du registre — comme
-  /// `ForgeUpgradeData.getById`.
+  /// `ForgeUpgradeData.getById`. Les [extraDeltas] — les évolutions de
+  /// signature — s'appliquent après les runes.
   static EffectiveCard withRunes(
     CardData data,
     CardRarity rarity,
-    List<String> runes,
-  ) =>
-      apply(
-        data,
-        rarity,
-        runeDeltas(runes, GameDataRegistry.instance?.forgeUpgrades ?? const []),
-      );
+    List<String> runes, {
+    Iterable<(CardDelta, int)> extraDeltas = const [],
+  }) =>
+      apply(data, rarity, [
+        ...runeDeltas(runes, GameDataRegistry.instance?.forgeUpgrades ?? const []),
+        ...extraDeltas,
+      ]);
 
   /// G2 : la pioche et le mana rendu ne grandissent pas avec la rareté — la
   /// seule écriture de la règle (brainstorm §4.5, spec P-43 E1, A6, §4.3).
