@@ -635,7 +635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String levelLabel(int level) {
-    return 'Lvl $level';
+    return 'Lvl. $level';
   }
 
   @override
@@ -1039,6 +1039,11 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 turn',
     );
     return '$_temp0';
+  }
+
+  @override
+  String effectValuePercent(int value) {
+    return '+$value%';
   }
 
   @override

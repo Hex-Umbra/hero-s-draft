@@ -443,7 +443,7 @@
   },
   "cardCloned": "Card cloned!",
   "noCardsInStock": "Out of stock!",
-  "levelLabel": "Lvl {level}",
+  "levelLabel": "Lvl. {level}",
   "@levelLabel": {
     "placeholders": {
       "level": { "type": "int" }
@@ -768,6 +768,13 @@
     "description": "Turns left before a signature can be played again.",
     "placeholders": {
       "count": { "type": "int" }
+    }
+  },
+  "effectValuePercent": "+{value}%",
+  "@effectValuePercent": {
+    "description": "A percentage value on a signature's icon band, such as its critical-chance bonus.",
+    "placeholders": {
+      "value": { "type": "int" }
     }
   },
   "evolutionScreenTitle": "{signature} evolves",

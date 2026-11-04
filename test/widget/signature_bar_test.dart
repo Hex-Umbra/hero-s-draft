@@ -27,4 +27,23 @@ void main() {
       SignatureTileState.inactive,
     );
   });
+
+  test('signatureBandPlacement : centree, decalee, reduite, plancher', () {
+    final centered = signatureBandPlacement(available: 800, natural: 176);
+    expect(centered.scale, 1);
+    expect(centered.top, 312);
+
+    final shifted = signatureBandPlacement(available: 800, natural: 500);
+    expect(shifted.scale, 1);
+    expect(shifted.top, 100);
+
+    final reduced = signatureBandPlacement(available: 800, natural: 600);
+    expect(reduced.scale, closeTo(520 / 600, 1e-9));
+    expect(reduced.top, 80);
+
+    final floor = signatureBandPlacement(available: 400, natural: 176);
+    expect(floor.scale, 0.75);
+    expect(floor.top, 80);
+    expect(80 + 0.75 * 176 > 400 - 200, isTrue);
+  });
 }

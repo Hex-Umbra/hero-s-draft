@@ -638,7 +638,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     SignatureBar(
                       signatures: runState.signatures,
                       combatState: combatState,
-                      currentMana: runState.heroStats.currentMana,
+                      heroStats: runState.heroStats,
+                      effectIcons: gameData.effectIcons,
                       interactive:
                           isPlayerActionable && !combatState.isCombatEnded,
                       classColor: ClassIdentity.colorOf(

@@ -9,6 +9,13 @@ import 'enemy_intents_panel.dart';
 /// Piles de pioche/défausse et panneaux de statuts/intentions ennemies,
 /// ancrés en bas de l'écran de combat.
 class CombatSidePanels extends StatelessWidget {
+  /// La hauteur, depuis le bas, où se pose le panneau des statuts du héros.
+  static const double statusPanelBottom = 80;
+
+  /// La place réservée au-dessus de [statusPanelBottom] au panneau des
+  /// statuts : deux rangées. La barre des signatures n'y descend pas (A38).
+  static const double statusPanelReserve = 120;
+
   final int drawPileCount;
   final int discardPileCount;
   final List<StatusEffect> heroStatuses;
@@ -72,7 +79,7 @@ class CombatSidePanels extends StatelessWidget {
 
           // Panneau des Status/Buffs du Joueur (Bas Gauche, au-dessus de la Pioche)
           Positioned(
-            bottom: 80,
+            bottom: statusPanelBottom,
             left: 20,
             child: StatusEffectsPanel(
               statuses: heroStatuses,

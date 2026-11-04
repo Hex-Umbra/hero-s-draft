@@ -1,10 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:math' show max, min;
 
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+
+import '../../../game/services/effect_resolver.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/combat_state.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/data/effect_icon_table.dart';
+import '../../../models/data/effect_kind.dart';
+import '../../../models/entity_stats.dart';
 import '../../../models/signature_instance.dart';
+import '../effect_style.dart';
 import '../ui_card/ui_card_helpers.dart';
+import 'combat_side_panels.dart';
+import 'combat_top_bar.dart';
 
 /// Les états d'une tuile de signature, dans l'ordre de priorité de la spec
 /// P-43 E4 §5.2 : le premier qui s'applique l'emporte.
@@ -23,13 +33,37 @@ SignatureTileState signatureTileStateOf({
   return SignatureTileState.available;
 }
 
+/// L'échelle et le haut de la colonne des signatures (A38) : [available] est
+/// la hauteur que reçoit la barre, [natural] celle de la colonne mesurée.
+({double scale, double top}) signatureBandPlacement({
+  required double available,
+  required double natural,
+}) {
+  const bandTop = CombatTopBar.bandTop;
+  const bandBottom = CombatSidePanels.statusPanelBottom +
+      CombatSidePanels.statusPanelReserve;
+  final band = available - bandTop - bandBottom;
+  // 1. L'échelle : 1 tant que la colonne tient, 0,75 au plus bas.
+  final scale = (band / natural).clamp(0.75, 1.0);
+  // 2. La hauteur posée.
+  final placed = scale * natural;
+  // 3. À mi-hauteur ; décalée vers le haut si elle sortirait de la bande
+  // par le bas ; jamais au-dessus de bandTop.
+  final top = max(
+    bandTop,
+    min(available / 2 - placed / 2, available - bandBottom - placed),
+  );
+  return (scale: scale, top: top);
+}
+
 /// Les signatures du joueur, en colonne au milieu gauche de l'écran de combat,
 /// en miroir du bouton de fin de tour. Sans état : tout vient de l'appelant,
 /// qui relie les gestes au moteur.
 class SignatureBar extends StatelessWidget {
   final List<SignatureInstance> signatures;
   final CombatState combatState;
-  final int currentMana;
+  final EntityStats heroStats;
+  final EffectIconTable effectIcons;
   final bool interactive;
   final Color classColor;
   final String? armedId;
@@ -42,7 +76,8 @@ class SignatureBar extends StatelessWidget {
     super.key,
     required this.signatures,
     required this.combatState,
-    required this.currentMana,
+    required this.heroStats,
+    this.effectIcons = const EffectIconTable.empty(),
     required this.interactive,
     required this.classColor,
     required this.armedId,
@@ -58,42 +93,38 @@ class SignatureBar extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 600;
 
     return Positioned.fill(
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          // Seule la colonne des tuiles est centrée : l'invite pend sous elle,
-          // hors de sa taille, pour qu'armer ne déplace aucune tuile.
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final signature in signatures)
-                    _tileFor(signature, compact),
-                ],
-              ),
-              if (armedId != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: FractionalTranslation(
-                    translation: const Offset(0, 1),
-                    child: Text(
-                      l10n.signatureChooseTarget,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
+      child: _SignatureBandLayout(
+        // Seule la colonne des tuiles est posée : l'invite pend sous elle,
+        // hors de sa taille, pour qu'armer ne déplace aucune tuile.
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final signature in signatures)
+                  _tileFor(signature, compact),
+              ],
+            ),
+            if (armedId != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: FractionalTranslation(
+                  translation: const Offset(0, 1),
+                  child: Text(
+                    l10n.signatureChooseTarget,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -107,11 +138,12 @@ class SignatureBar extends StatelessWidget {
         signature: signature,
         compact: compact,
         classColor: classColor,
+        effectIcons: effectIcons,
         turnsLeft: turnsLeft,
         state: signatureTileStateOf(
           interactive: interactive,
           turnsLeft: turnsLeft,
-          affordable: currentMana >= signature.cost,
+          affordable: EffectResolver.canAfford(signature.asCard, heroStats),
           armed: armedId == signature.data.id,
         ),
         onPlay: () => onPlay(signature),
@@ -123,10 +155,91 @@ class SignatureBar extends StatelessWidget {
   }
 }
 
+/// Pose la colonne des signatures dans sa bande (A38, PN18) : la colonne est
+/// mesurée, puis décalée de 20 px du bord gauche, posée à la hauteur et à
+/// l'échelle de [signatureBandPlacement]. La transformation est connue dès la
+/// mise en page ; la peinture et le toucher la lisent.
+class _SignatureBandLayout extends SingleChildRenderObjectWidget {
+  const _SignatureBandLayout({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSignatureBand();
+}
+
+class _RenderSignatureBand extends RenderBox
+    with RenderObjectWithChildMixin<RenderBox> {
+  static const double _left = 20;
+
+  Matrix4 _transform = Matrix4.identity();
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  void performLayout() {
+    size = constraints.biggest;
+    final child = this.child;
+    if (child == null) return;
+    // La largeur seule est bornée : la colonne garde sa hauteur naturelle.
+    child.layout(
+      BoxConstraints(maxWidth: max(0.0, size.width - _left)),
+      parentUsesSize: true,
+    );
+    final (:scale, :top) = signatureBandPlacement(
+      available: size.height,
+      natural: child.size.height,
+    );
+    _transform = Matrix4.translationValues(_left, top, 0) *
+        Matrix4.diagonal3Values(scale, scale, 1);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) {
+      layer = null;
+      return;
+    }
+    layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      _transform,
+      (context, offset) => context.paintChild(child, offset),
+      oldLayer: layer as TransformLayer?,
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(_transform);
+  }
+
+  @override
+  bool hitTestSelf(Offset position) => false;
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null) return false;
+    return result.addWithPaintTransform(
+      transform: _transform,
+      position: position,
+      hitTest: (result, position) =>
+          child.hitTest(result, position: position),
+    );
+  }
+}
+
+// Le médaillon et son écart : la colonne de texte commence après eux.
+const double _medallionSize = 20;
+const double _medallionGap = 6;
+
 class _SignatureTile extends StatefulWidget {
   final SignatureInstance signature;
   final bool compact;
   final Color classColor;
+  final EffectIconTable effectIcons;
   final int turnsLeft;
   final SignatureTileState state;
   final VoidCallback onPlay;
@@ -138,6 +251,7 @@ class _SignatureTile extends StatefulWidget {
     required this.signature,
     required this.compact,
     required this.classColor,
+    required this.effectIcons,
     required this.turnsLeft,
     required this.state,
     required this.onPlay,
@@ -223,7 +337,8 @@ class _SignatureTileState extends State<_SignatureTile>
       case SignatureTileState.armed:
         widget.onDisarm();
       case SignatureTileState.available:
-        if (widget.signature.data.target == CardTarget.singleEnemy) {
+        // La cible évoluée : une évolution peut viser tous les ennemis.
+        if (widget.signature.asCard.data.target == CardTarget.singleEnemy) {
           widget.onArm();
         } else {
           widget.onPlay();
@@ -231,20 +346,89 @@ class _SignatureTileState extends State<_SignatureTile>
     }
   }
 
-  /// Le nom, le type, la description et, en recharge seulement, le compte :
-  /// de haut en bas, à droite du médaillon.
-  Widget _details(BuildContext context, AppLocalizations l10n) {
-    final data = widget.signature.data;
+  /// Le contenu de la tuile, de haut en bas : l'en-tête (médaillon, nom, type
+  /// et badge), la bande d'icônes sur toute la largeur, puis, dans la colonne
+  /// de texte, les puces d'évolution et le compte de recharge.
+  Widget _content(BuildContext context, AppLocalizations l10n) {
+    final signature = widget.signature;
+    final state = widget.state;
+    final grayedOut = _grayedOut(state);
+    final compact = widget.compact;
+    final taken = signature.taken;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _CostMedallion(
+              cost: signature.cost,
+              unaffordable: state == SignatureTileState.unaffordable,
+            ),
+            const SizedBox(width: _medallionGap),
+            Expanded(child: _header(context, l10n)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        _EffectBand(
+          lines: signature.effectLines,
+          effectIcons: widget.effectIcons,
+          compact: compact,
+          grayedOut: grayedOut,
+        ),
+        if (taken.isNotEmpty || widget.turnsLeft > 0)
+          Padding(
+            padding: const EdgeInsets.only(
+              left: _medallionSize + _medallionGap,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (taken.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 2,
+                    children: [
+                      for (final (evolution, level) in taken)
+                        EvolutionIcon(
+                          evolution: evolution,
+                          level: level,
+                          size: compact ? 16 : 18,
+                          color: grayedOut ? Colors.white38 : null,
+                        ),
+                    ],
+                  ),
+                ],
+                if (widget.turnsLeft > 0) ...[
+                  const SizedBox(height: 3),
+                  _turnsLeft(l10n),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Le nom, puis le type et, à son bout, le badge de niveau (A36).
+  Widget _header(BuildContext context, AppLocalizations l10n) {
+    final signature = widget.signature;
+    final data = signature.data;
     final grayedOut = _grayedOut(widget.state);
     final compact = widget.compact;
-    final locale = l10n.localeName;
+    final level = signature.level;
+    final typeSize = compact ? 9.0 : 10.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          data.getName(locale),
+          data.getName(l10n.localeName),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -254,52 +438,61 @@ class _SignatureTileState extends State<_SignatureTile>
           ),
         ),
         const SizedBox(height: 1),
-        Text(
-          getCardTypeLabel(context, data.type),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: getCardTypeColor(data.type, isGrayedOut: grayedOut),
-            fontSize: compact ? 9 : 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          data.getDescription(locale),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: grayedOut ? Colors.white38 : Colors.white70,
-            fontSize: compact ? 10 : 11,
-          ),
-        ),
-        if (widget.turnsLeft > 0) ...[
-          const SizedBox(height: 3),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.hourglass_bottom,
-                size: compact ? 11 : 12,
-                color: Colors.white,
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                getCardTypeLabel(context, data.type),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: getCardTypeColor(data.type, isGrayedOut: grayedOut),
+                  fontSize: typeSize,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(width: 3),
-              Flexible(
-                child: Text(
-                  l10n.signatureTurnsLeft(widget.turnsLeft),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: compact ? 10 : 11,
-                    fontWeight: FontWeight.bold,
-                  ),
+            ),
+            if (level > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                l10n.levelLabel(level),
+                maxLines: 1,
+                style: TextStyle(
+                  color: grayedOut ? Colors.white38 : Colors.amberAccent,
+                  fontSize: typeSize,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _turnsLeft(AppLocalizations l10n) {
+    final compact = widget.compact;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.hourglass_bottom,
+          size: compact ? 11 : 12,
+          color: Colors.white,
+        ),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            l10n.signatureTurnsLeft(widget.turnsLeft),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: compact ? 10 : 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
+        ),
       ],
     );
   }
@@ -307,7 +500,6 @@ class _SignatureTileState extends State<_SignatureTile>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final data = widget.signature.data;
     final state = widget.state;
     final grayedOut = _grayedOut(state);
     final armed = state == SignatureTileState.armed;
@@ -339,17 +531,7 @@ class _SignatureTileState extends State<_SignatureTile>
             child: AnimatedBuilder(
               animation: _pulse,
               // Le contenu ne dépend pas de l'impulsion : construit une fois.
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CostMedallion(
-                    cost: widget.signature.cost,
-                    unaffordable: state == SignatureTileState.unaffordable,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(child: _details(context, l10n)),
-                ],
-              ),
+              child: _content(context, l10n),
               builder: (context, content) {
                 final borderColor = switch (state) {
                   SignatureTileState.recharging ||
@@ -364,7 +546,6 @@ class _SignatureTileState extends State<_SignatureTile>
                 return Opacity(
                   opacity: state == SignatureTileState.inactive ? 0.45 : 1,
                   child: Container(
-                    key: ValueKey('signature-tile-${data.id}'),
                     width: widget.compact ? 170 : 220,
                     constraints: BoxConstraints(
                       minHeight: widget.compact ? 64 : 80,
@@ -409,6 +590,88 @@ class _SignatureTileState extends State<_SignatureTile>
   }
 }
 
+/// La bande d'icônes (A40) : une cellule par entrée de [lines], dans l'ordre,
+/// trois par ligne ; chaque ligne centrée dans la largeur de la tuile, et
+/// réduite d'un bloc si elle est plus large.
+class _EffectBand extends StatelessWidget {
+  final List<EffectLine> lines;
+  final EffectIconTable effectIcons;
+  final bool compact;
+  final bool grayedOut;
+
+  const _EffectBand({
+    required this.lines,
+    required this.effectIcons,
+    required this.compact,
+    required this.grayedOut,
+  });
+
+  static const int _perRow = 3;
+
+  /// La valeur affichée : le critique en pourcentage, rien pour la cible ; la
+  /// durée d'un statut jamais.
+  static String? _valueLabel(EffectLine line, AppLocalizations l10n) {
+    final value = line.value;
+    if (value == null || line.kind == EffectKind.allEnemies) return null;
+    return line.kind == EffectKind.crit
+        ? l10n.effectValuePercent(value)
+        : '$value';
+  }
+
+  Widget _cell(EffectLine line, AppLocalizations l10n) {
+    final visuals = effectVisualsOf(effectIcons, line.kind);
+    final label = _valueLabel(line, l10n);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 4,
+      children: [
+        Icon(
+          visuals.icon,
+          size: compact ? 24 : 28,
+          color: grayedOut ? Colors.white38 : visuals.color,
+        ),
+        if (label != null)
+          Text(
+            label,
+            style: TextStyle(
+              color: grayedOut ? Colors.white38 : Colors.white,
+              fontSize: compact ? 12 : 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 4,
+      children: [
+        for (var start = 0; start < lines.length; start += _perRow)
+          Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 8,
+                children: [
+                  for (final line in lines.sublist(
+                    start,
+                    min(start + _perRow, lines.length),
+                  ))
+                    _cell(line, l10n),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _CostMedallion extends StatelessWidget {
   final int cost;
   final bool unaffordable;
@@ -418,8 +681,8 @@ class _CostMedallion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 20,
-      height: 20,
+      width: _medallionSize,
+      height: _medallionSize,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,

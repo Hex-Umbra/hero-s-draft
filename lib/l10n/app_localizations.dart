@@ -1103,7 +1103,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelLabel.
   ///
   /// In en, this message translates to:
-  /// **'Lvl {level}'**
+  /// **'Lvl. {level}'**
   String levelLabel(int level);
 
   /// No description provided for @shopReroll.
@@ -1717,6 +1717,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
   String signatureTurnsLeft(int count);
+
+  /// A percentage value on a signature's icon band, such as its critical-chance bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{value}%'**
+  String effectValuePercent(int value);
 
   /// Title of the signature evolution screen.
   ///
