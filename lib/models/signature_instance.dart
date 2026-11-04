@@ -8,6 +8,7 @@ import 'data/forge_upgrade_data.dart';
 import 'data/signature_data.dart';
 import 'data/signature_evolution_data.dart';
 import 'effective_card.dart';
+import 'missing_save_item.dart';
 
 /// Une entrée de la bande et de la liste de combat : la sorte d'un effet
 /// (`EffectKind`), sa valeur évoluée — absente pour une cible — et, pour un
@@ -55,6 +56,71 @@ class SignatureInstance {
   /// (héros niveau 5, 15, 25...), majeure sinon (D21).
   EvolutionTier get nextTier =>
       (level + 1).isOdd ? EvolutionTier.minor : EvolutionTier.major;
+
+  /// Relit les évolutions sauvegardées de [data] (spec P-42 T1 et P-44 lot 1,
+  /// §8) : [raw] est la valeur de sa clé dans `signatureEvolutions`. Seul un
+  /// id absent du pool entre au rapport ; une référence mal formée, une
+  /// majeure au-delà du niveau 1 ou une majeure exclue par une majeure gardée
+  /// avant elle sont corrigées sans rapport — elles ne naissent que d'une
+  /// sauvegarde écrite à la main, et le rapport dit au joueur qu'un élément a
+  /// disparu d'une mise à jour.
+  static (SignatureInstance, List<MissingSaveItem>) restore(
+    SignatureData data,
+    Object? raw,
+  ) {
+    final missing = <MissingSaveItem>[];
+    // 1. Absente, ou d'une autre forme qu'une liste : aucune évolution.
+    if (raw is! List) return (SignatureInstance(data), missing);
+
+    final pool = {
+      for (final evolution in data.evolutions) evolution.id: evolution,
+    };
+    final known = <String>[];
+    final reported = <String>{};
+    for (final entry in raw) {
+      // 2. Mal formée ou de niveau nul : ignorée, sans rapport.
+      if (entry is! String) continue;
+      final parsed = ForgeUpgradeData.parseRef(entry);
+      if (parsed == null) continue;
+      final (id, _) = parsed;
+      // 3. Absente du pool : retirée, et signalée une fois.
+      if (!pool.containsKey(id)) {
+        if (reported.add(id)) {
+          missing.add(MissingSaveItem(
+            id: id,
+            nameFr: id,
+            nameEn: id,
+            category: 'signatureEvolution',
+          ));
+        }
+        continue;
+      }
+      known.add(entry);
+    }
+
+    final keptMajors = <SignatureEvolutionData>[];
+    final evolutions = <String>[];
+    // 4. Les références d'un même id réunies, niveaux additionnés, dans
+    // l'ordre de leur première apparition.
+    for (final MapEntry(key: id, value: level)
+        in ForgeUpgradeData.levelsOf(known).entries) {
+      final evolution = pool[id]!;
+      if (evolution.tier == EvolutionTier.minor) {
+        evolutions.add('$id:$level');
+        continue;
+      }
+      // 5. Une majeure exclue par une majeure gardée avant elle, dans un
+      // sens ou dans l'autre, est retirée : la première arrivée est gardée,
+      // comme `ForgeRuneRules.consolidate`.
+      if (keptMajors.any(evolution.excludesOrIsExcludedBy)) continue;
+      keptMajors.add(evolution);
+      // 4, suite. Une majeure ne se prend qu'une fois : ramenée au niveau 1.
+      evolutions.add('$id:1');
+    }
+
+    // 6. La signature reconstruite, dans l'ordre lu.
+    return (SignatureInstance(data, evolutions: evolutions), missing);
+  }
 
   /// La signature sous la forme d'une carte, pour que le moteur de jeu et le
   /// rendu la lisent comme une carte. Neuve à chaque appel : commune, jamais

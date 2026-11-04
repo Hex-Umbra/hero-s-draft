@@ -80,9 +80,9 @@ class RunState {
   /// Les signatures de la run (spec P-43 E4, §9 ; A8), dans l'ordre de
   /// `HeroData.skills`. Hors du deck : le `masterDeck` n'en porte jamais.
   ///
-  /// **Jamais sérialisées**, comme [statRules] : une signature d'E4 est du
-  /// contenu, que `fromJsonWithReport` relit de la classe. La vague 5 y
-  /// ajoutera ses évolutions — et leur sauvegarde — sans déplacer le champ.
+  /// **Leur donnée n'est jamais sérialisée**, comme [statRules] :
+  /// `fromJsonWithReport` la relit de la classe. Seules leurs évolutions le
+  /// sont, sous `signatureEvolutions` (spec P-42 T1 et P-44 lot 1, §8).
   final List<SignatureInstance> signatures;
 
   /// La signature dont l'évolution attend le plus tôt : parmi celles dont
@@ -198,6 +198,13 @@ class RunState {
         'eliteCardChanceBonus': eliteCardChanceBonus,
         'extraBossRuneSharpens': extraBossRuneSharpens,
         'runeCapBonus': runeCapBonus,
+        // Une clé par signature qui porte au moins une évolution, sa liste
+        // telle quelle, dans l'ordre de la première prise (spec §8).
+        'signatureEvolutions': {
+          for (final signature in signatures)
+            if (signature.evolutions.isNotEmpty)
+              signature.data.id: signature.evolutions,
+        },
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -251,23 +258,40 @@ class RunState {
       statRules:
           HeroData.getById(json['heroClassId'] as String)?.statRules ??
               const [],
-      signatures: _signaturesOf(json['heroClassId'] as String),
+      signatures: _signaturesOf(
+        json['heroClassId'] as String,
+        json['signatureEvolutions'],
+        missing,
+      ),
     );
 
     return (run, missing);
   }
 
-  /// Les signatures de la classe [heroClassId], relues du registre chargé.
-  /// Registre absent ou classe inconnue : aucune, comme `statRules`. Un id de
-  /// `skills` absent du registre lève (`getSignatures`, fail-fast) : la
-  /// sauvegarde est alors illisible, et `SaveService.load` l'efface.
-  static List<SignatureInstance> _signaturesOf(String heroClassId) {
+  /// Les signatures de la classe [heroClassId], relues du registre chargé,
+  /// chacune avec ses évolutions relues de [saved] — la valeur de
+  /// `signatureEvolutions` (spec §8) ; ce que la relecture retire rejoint
+  /// [missing]. Une clé d'une signature que la classe ne porte pas n'est
+  /// jamais lue. Registre absent ou classe inconnue : aucune, comme
+  /// `statRules`. Un id de `skills` absent du registre lève
+  /// (`getSignatures`, fail-fast) : la sauvegarde est alors illisible, et
+  /// `SaveService.load` l'efface.
+  static List<SignatureInstance> _signaturesOf(
+    String heroClassId,
+    Object? saved,
+    List<MissingSaveItem> missing,
+  ) {
     final hero = HeroData.getById(heroClassId);
     if (hero == null) return const [];
-    return [
-      for (final data in hero.getSignatures(GameDataRegistry.instance!))
-        SignatureInstance(data),
-    ];
+    final byId =
+        saved is Map<String, dynamic> ? saved : const <String, dynamic>{};
+    final signatures = <SignatureInstance>[];
+    for (final data in hero.getSignatures(GameDataRegistry.instance!)) {
+      final (signature, lost) = SignatureInstance.restore(data, byId[data.id]);
+      signatures.add(signature);
+      missing.addAll(lost);
+    }
+    return signatures;
   }
 }
 
