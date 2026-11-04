@@ -360,7 +360,11 @@ class _SignatureTileState extends State<_SignatureTile>
   // inactive, et rien ne se joue, ne s'arme ni ne se désarme.
   void _showList() => setState(_list.show);
 
-  void _hideList() => setState(_list.hide);
+  // Gardé : un appui court, ou une tuile démontée avant le délai de l'appui
+  // long, appelle aussi onLongPressCancel, la liste fermée.
+  void _hideList() {
+    if (_list.isShowing) setState(_list.hide);
+  }
 
   /// Le contenu de la tuile, de haut en bas : l'en-tête (médaillon, nom, type
   /// et badge), la bande d'icônes sur toute la largeur — la liste des effets
@@ -659,7 +663,11 @@ class _SignatureTileState extends State<_SignatureTile>
           child: AnimatedScale(
             scale: _lifted ? 1.05 : 1,
             alignment: Alignment.centerLeft,
-            duration: const Duration(milliseconds: 100),
+            // Sous la liste, la tuile retombe d'un coup : en 100 ms, elle
+            // déborderait du calque.
+            duration: _list.isShowing
+                ? Duration.zero
+                : const Duration(milliseconds: 100),
             curve: Curves.easeOut,
             child: AnimatedBuilder(
               animation: _shake,

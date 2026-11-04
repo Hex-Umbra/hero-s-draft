@@ -31,26 +31,44 @@ void main() {
   ];
 
   test('les treize sortes ont leur phrase, en francais et en anglais', () {
-    final known = {
+    // La phrase exacte de chaque sorte, en français ; en anglais pour
+    // quelques-unes (null : non nulle seulement).
+    final expected = <String, (String, String?)>{
       'damage': ('Inflige 10 dégâts', 'Deal 10 damage'),
       'armor': ("Donne 4 d'Armure", 'Gain 4 Block'),
+      'heal': ('Soigne 3 PV', null),
+      'draw': ('Pioche 2 cartes', null),
+      'gain_mana': ('Gagne 1 Mana', null),
+      'status:might': ('Gagne 2 Puissance pendant 2 tours', null),
+      'status:might_regen': (
+        'Pendant 3 tours, gagne 1 Puissance au début du tour',
+        null
+      ),
+      'status:armor_regen': (
+        'Pendant 3 tours, gagne 2 Armure au début du tour',
+        null
+      ),
       'status:weakness': (
         'Applique 1 Faiblesse pendant 2 tours',
         'Apply 1 Weakness for 2 turns'
       ),
+      'status:vulnerable': (
+        'Applique 1 Vulnérable pendant 2 tours',
+        'Apply 1 Vulnerable for 2 turns'
+      ),
+      'status:burn': (
+        'Applique 3 Brûlure pendant 2 tours',
+        'Apply 3 Burn for 2 turns'
+      ),
       'crit': ('+5 % de critique', '+5% critical chance'),
       'target:allEnemies': ('Touche tous les ennemis', 'Hits all enemies'),
     };
+    expect(expected.keys, unorderedEquals([for (final l in thirteen) l.kind]));
     for (final l in thirteen) {
-      final phraseFr = EffectLineTexts.phrase(fr, l);
-      final phraseEn = EffectLineTexts.phrase(en, l);
-      expect(phraseFr, isNotNull, reason: '${l.kind} en français');
-      expect(phraseEn, isNotNull, reason: '${l.kind} en anglais');
-      final expected = known[l.kind];
-      if (expected != null) {
-        expect(phraseFr, expected.$1);
-        expect(phraseEn, expected.$2);
-      }
+      final (phraseFr, phraseEn) = expected[l.kind]!;
+      expect(EffectLineTexts.phrase(fr, l), phraseFr, reason: l.kind);
+      expect(EffectLineTexts.phrase(en, l), phraseEn ?? isNotNull,
+          reason: l.kind);
     }
   });
 
