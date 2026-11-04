@@ -9,6 +9,7 @@ import '../../../models/combat_state.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/effect_icon_table.dart';
 import '../../../models/data/effect_kind.dart';
+import '../../../models/data/signature_evolution_data.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/signature_instance.dart';
 import '../effect_style.dart';
@@ -378,38 +379,67 @@ class _SignatureTileState extends State<_SignatureTile>
           compact: compact,
           grayedOut: grayedOut,
         ),
-        if (taken.isNotEmpty || widget.turnsLeft > 0)
+        if (taken.isNotEmpty) ...[
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.only(
               left: _medallionSize + _medallionGap,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (taken.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 2,
-                    children: [
-                      for (final (evolution, level) in taken)
-                        EvolutionIcon(
-                          evolution: evolution,
-                          level: level,
-                          size: compact ? 16 : 18,
-                          color: grayedOut ? Colors.white38 : null,
-                        ),
-                    ],
-                  ),
+            // Un niveau écrit à côté d'une puce peut porter la rangée au-delà
+            // de la colonne de texte : elle se réduit alors d'un bloc.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 2,
+                children: [
+                  for (final (evolution, level) in taken)
+                    _evolutionChip(evolution, level, grayedOut),
                 ],
-                if (widget.turnsLeft > 0) ...[
-                  const SizedBox(height: 3),
-                  _turnsLeft(l10n),
-                ],
-              ],
+              ),
             ),
           ),
+        ],
+        if (widget.turnsLeft > 0) ...[
+          const SizedBox(height: 4),
+          Center(child: _turnsLeft(l10n)),
+        ],
+      ],
+    );
+  }
+
+  /// La taille du type et du badge, que reprend le niveau d'une puce.
+  double get _typeSize => widget.compact ? 9 : 10;
+
+  /// Une puce d'évolution : l'icône sans son chiffre superposé, illisible à
+  /// cette taille, puis, dès le niveau 2, le niveau écrit à sa droite, à la
+  /// taille du badge et à la couleur de la puce.
+  Widget _evolutionChip(
+    SignatureEvolutionData evolution,
+    int level,
+    bool grayedOut,
+  ) {
+    final color = grayedOut ? Colors.white38 : null;
+    final icon = EvolutionIcon(
+      evolution: evolution,
+      size: widget.compact ? 16 : 18,
+      color: color,
+    );
+    if (level < 2) return icon;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 1,
+      children: [
+        icon,
+        Text(
+          '$level',
+          style: TextStyle(
+            color: color ?? effectColors[evolution.color] ?? Colors.grey,
+            fontSize: _typeSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -421,7 +451,6 @@ class _SignatureTileState extends State<_SignatureTile>
     final grayedOut = _grayedOut(widget.state);
     final compact = widget.compact;
     final level = signature.level;
-    final typeSize = compact ? 9.0 : 10.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -447,7 +476,7 @@ class _SignatureTileState extends State<_SignatureTile>
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: getCardTypeColor(data.type, isGrayedOut: grayedOut),
-                  fontSize: typeSize,
+                  fontSize: _typeSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -459,7 +488,7 @@ class _SignatureTileState extends State<_SignatureTile>
                 maxLines: 1,
                 style: TextStyle(
                   color: grayedOut ? Colors.white38 : Colors.amberAccent,
-                  fontSize: typeSize,
+                  fontSize: _typeSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),

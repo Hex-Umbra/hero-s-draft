@@ -44,6 +44,6 @@ void main() {
     final floor = signatureBandPlacement(available: 400, natural: 176);
     expect(floor.scale, 0.75);
     expect(floor.top, 80);
-    expect(80 + 0.75 * 176 > 400 - 200, isTrue);
+    expect(floor.top + floor.scale * 176 > 400 - 200, isTrue);
   });
 }
