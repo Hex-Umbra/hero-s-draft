@@ -2,8 +2,8 @@
   "id": "holy_shield",
   "name_en": "Holy Shield",
   "name_fr": "Bouclier Sacré",
-  "description_en": "Gain 8 Block and heal 2 HP.",
-  "description_fr": "Donne 8 d'Armure et soigne 2 PV.",
+  "description_en": "Gain {armor} Block and heal {heal} HP.",
+  "description_fr": "Donne {armor} d'Armure et soigne {heal} PV.",
   "cost": 1,
   "cooldown": 2,
   "type": "skill",
@@ -17,6 +17,127 @@
     {
       "type": "heal",
       "value": 2
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "ward",
+      "tier": "minor",
+      "name_fr": "Garde",
+      "name_en": "Ward",
+      "description_fr": "+{val} Armure",
+      "description_en": "+{val} Block",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "armor",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "shield_rounded",
+      "color": "blueAccent"
+    },
+    {
+      "id": "mercy",
+      "tier": "minor",
+      "name_fr": "Miséricorde",
+      "name_en": "Mercy",
+      "description_fr": "+{val} PV soignés",
+      "description_en": "+{val} HP healed",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "heal",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "favorite_rounded",
+      "color": "pinkAccent"
+    },
+    {
+      "id": "resolve",
+      "tier": "minor",
+      "name_fr": "Résolution",
+      "name_en": "Resolve",
+      "description_fr": "Gagne {val} Puissance",
+      "description_en": "Gain {val} Might",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "might",
+          "durationPerLevel": 1
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "haste",
+      "tier": "major",
+      "name_fr": "Célérité",
+      "name_en": "Haste",
+      "description_fr": "Recharge réduite d'un tour",
+      "description_en": "Cooldown one turn shorter",
+      "cooldown": -1,
+      "icon": "fast_forward_rounded",
+      "color": "tealAccent"
+    },
+    {
+      "id": "consecration",
+      "tier": "major",
+      "name_fr": "Consécration",
+      "name_en": "Consecration",
+      "description_fr": "Gagne 2 Puissance pendant 2 tours",
+      "description_en": "Gain 2 Might for 2 turns",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 2,
+          "statusId": "might",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "inspiration",
+      "tier": "major",
+      "name_fr": "Inspiration",
+      "name_en": "Inspiration",
+      "description_fr": "Pioche 1 carte",
+      "description_en": "Draw 1 card",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "draw",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "style_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "lasting_aegis",
+      "tier": "major",
+      "name_fr": "Égide durable",
+      "name_en": "Lasting Aegis",
+      "description_fr": "Pendant 2 tours, gagne 3 Armure au début du tour",
+      "description_en": "For 2 turns, gain 3 Block at the start of your turn",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 3,
+          "statusId": "armor_regen",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "autorenew_rounded",
+      "color": "blueAccent"
     }
   ]
 }

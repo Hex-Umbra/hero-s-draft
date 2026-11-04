@@ -2,8 +2,8 @@
   "id": "reckless_strike",
   "name_en": "Reckless Strike",
   "name_fr": "Frappe Téméraire",
-  "description_en": "Deal 15 damage.",
-  "description_fr": "Inflige 15 dégâts.",
+  "description_en": "Deal {damage} damage.",
+  "description_fr": "Inflige {damage} dégâts.",
   "cost": 2,
   "cooldown": 2,
   "type": "attack",
@@ -13,6 +13,122 @@
     {
       "type": "damage",
       "value": 15
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "brutality",
+      "tier": "minor",
+      "name_fr": "Brutalité",
+      "name_en": "Brutality",
+      "description_fr": "+{val} dégâts",
+      "description_en": "+{val} damage",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "damage",
+          "valuePerLevel": 3
+        }
+      ],
+      "icon": "hardware_rounded",
+      "color": "redAccent"
+    },
+    {
+      "id": "instinct",
+      "tier": "minor",
+      "name_fr": "Instinct",
+      "name_en": "Instinct",
+      "description_fr": "+{val} % de critique",
+      "description_en": "+{val}% critical chance",
+      "deltas": [
+        {
+          "type": "critBonus",
+          "valuePerLevel": 5
+        }
+      ],
+      "icon": "flare_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "shatter",
+      "tier": "minor",
+      "name_fr": "Fracas",
+      "name_en": "Shatter",
+      "description_fr": "Applique {val} Vulnérable",
+      "description_en": "Apply {val} Vulnerable",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "vulnerable",
+          "durationPerLevel": 1
+        }
+      ],
+      "icon": "gps_fixed_rounded",
+      "color": "deepOrangeAccent"
+    },
+    {
+      "id": "haste",
+      "tier": "major",
+      "name_fr": "Célérité",
+      "name_en": "Haste",
+      "description_fr": "Recharge réduite d'un tour",
+      "description_en": "Cooldown one turn shorter",
+      "cooldown": -1,
+      "excludes": [
+        "devastation"
+      ],
+      "icon": "fast_forward_rounded",
+      "color": "tealAccent"
+    },
+    {
+      "id": "devastation",
+      "tier": "major",
+      "name_fr": "Dévastation",
+      "name_en": "Devastation",
+      "description_fr": "+10 dégâts, recharge allongée d'un tour",
+      "description_en": "+10 damage, cooldown one turn longer",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "damage",
+          "valuePerLevel": 10
+        }
+      ],
+      "cooldown": 1,
+      "excludes": [
+        "haste"
+      ],
+      "icon": "rocket_launch_rounded",
+      "color": "yellowAccent"
+    },
+    {
+      "id": "cleave",
+      "tier": "major",
+      "name_fr": "Fauchage",
+      "name_en": "Cleave",
+      "description_fr": "Touche tous les ennemis",
+      "description_en": "Hits all enemies",
+      "target": "allEnemies",
+      "icon": "all_out_rounded",
+      "color": "deepPurpleAccent"
+    },
+    {
+      "id": "composure",
+      "tier": "major",
+      "name_fr": "Sang-froid",
+      "name_en": "Composure",
+      "description_fr": "Coûte 1 Mana de moins",
+      "description_en": "Costs 1 less Mana",
+      "deltas": [
+        {
+          "type": "reduceCost",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "savings_rounded",
+      "color": "cyanAccent"
     }
   ]
 }

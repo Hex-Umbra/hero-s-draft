@@ -37,6 +37,21 @@ SignatureData fixtureSignature(String id, {String heroClass = 'paladin'}) =>
       'effects': [
         {'type': 'damage', 'value': 6},
       ],
+      'evolutions': [
+        {
+          'id': 'ardor',
+          'tier': 'minor',
+          'name_fr': 'Ardeur',
+          'name_en': 'Ardor',
+          'description_fr': '+{val} % de critique',
+          'description_en': '+{val}% critical chance',
+          'deltas': [
+            {'type': 'critBonus', 'valuePerLevel': 5},
+          ],
+          'icon': 'flare_rounded',
+          'color': 'amber',
+        },
+      ],
     });
 
 PassiveData fixturePassive(
