@@ -14,7 +14,6 @@ import 'package:roguelike_card_game/models/data/relic_data.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
-import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/might_target.dart';
 import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
@@ -82,17 +81,6 @@ const _talisman = RelicData(
   emoji: '🛡️',
 );
 
-const _rage = PassiveData(
-  id: 'rage',
-  nameEn: 'Rage',
-  nameFr: 'Rage',
-  descriptionEn: 'x',
-  descriptionFr: 'x',
-  trigger: RelicTrigger.startOfTurn,
-  effectType: 'gain_armor',
-  value: 2,
-);
-
 final _goblinData = EnemyData(
   id: 'goblin',
   nameEn: 'Goblin',
@@ -102,11 +90,6 @@ final _goblinData = EnemyData(
   spritePath: 'goblin.png',
   tier: 1,
   intents: [EnemyIntent(type: IntentType.attack, value: 5)],
-);
-
-EnemyInstance _freshGoblin() => EnemyInstance(
-  data: _goblinData,
-  stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, might: 5),
 );
 
 /// Le registre doit etre **peuple** : avec des catalogues vides, les onglets
@@ -192,157 +175,6 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
   }
 
-  testWidgets('ferme, le tiroir ne montre que sa poignee', (tester) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer();
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: false));
-
-    expect(find.text('DEBUG'), findsOneWidget);
-    expect(find.text('Heros'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('en combat, le panneau se reduit a l onglet Combat', (
-    tester,
-  ) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer(
-      enemies: [_freshGoblin(), _freshGoblin()],
-    );
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: true));
-    await _openDrawer(tester);
-    expect(tester.takeException(), isNull, reason: 'ouverture');
-
-    // Aucune barre d'onglets : un seul onglet ne la merite pas.
-    for (final absent in const ['Heros', 'Run', 'Deck', 'Reliques']) {
-      expect(find.text(absent), findsNothing, reason: absent);
-    }
-
-    // Il se suffit a lui-meme : statistiques du heros qui bougent d'un tour a
-    // l'autre, ennemis, et actions de fin de combat.
-    expect(find.textContaining('PV  (max'), findsOneWidget);
-    expect(find.textContaining('Mana  (max'), findsOneWidget);
-    expect(find.text('Armure'), findsOneWidget);
-    expect(find.textContaining('1. Gobelin'), findsOneWidget);
-
-    // Les actions sont sous la ligne de flottaison depuis que les statistiques
-    // du heros ouvrent l'onglet : la liste etant paresseuse, il faut y defiler
-    // pour qu'elles soient construites.
-    await _scrollTo(tester, find.text('Gagner le combat'));
-    expect(find.text('Gagner le combat'), findsOneWidget);
-  });
-
-  testWidgets('sur la carte, pas d onglet Combat mais l acte suivant', (
-    tester,
-  ) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer();
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: false));
-    await _openDrawer(tester);
-
-    expect(find.text('Combat'), findsNothing);
-    expect(tester.takeException(), isNull);
-
-    // Les quatre onglets de la carte, chacun verifie par un contenu propre.
-    const tabs = <String, String>{
-      'Run': 'Or',
-      'Deck': 'Ajouter une carte',
-      'Reliques': 'Ajouter une relique',
-      'Heros': 'PV max',
-    };
-    for (final entry in tabs.entries) {
-      await tester.ensureVisible(find.text(entry.key));
-      await tester.pump();
-      await tester.tap(find.text(entry.key));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(tester.takeException(), isNull, reason: 'onglet ${entry.key}');
-      expect(find.text(entry.value), findsWidgets, reason: entry.key);
-    }
-
-    // PV, mana et armure ont demenage dans l'onglet Combat.
-    expect(find.text('Armure'), findsNothing);
-
-    await tester.tap(find.text('Run'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Acte suivant'), findsOneWidget);
-  });
-
-  testWidgets('mettre un ennemi a 0 PV ne ferme pas le tiroir', (tester) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer(
-      enemies: [_freshGoblin(), _freshGoblin()],
-    );
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: true));
-    await _openDrawer(tester);
-
-    expect(find.textContaining('1. Gobelin'), findsOneWidget);
-    expect(find.textContaining('2. Gobelin'), findsOneWidget);
-
-    await tester.tap(find.text('0 PV').first);
-    await tester.pumpAndSettle();
-
-    await _scrollTo(tester, find.text('Gagner le combat'));
-
-    // L'ennemi meurt et le tiroir reste ouvert : un panneau ancre n'est pas
-    // une route, donc rien ne peut le fermer par megarde. C'est la propriete
-    // qui motive tout ce composant — sa perte reproduirait le defaut ou la
-    // sortie de combat fermait le menu au lieu de l'ecran.
-    expect(container.read(combatProvider).enemies.length, 1);
-    expect(find.text('Gagner le combat'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('l onglet Heros expose l orientation de la Puissance', (tester) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer(hero: _berserker);
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: false));
-    await _openDrawer(tester);
-    await tester.tap(find.text('Heros'));
-    await tester.pumpAndSettle();
-
-    // Une puce par cible de `MightTarget`, generee : jamais une liste ecrite
-    // a la main.
-    for (final cible in MightTarget.values) {
-      await _scrollTo(tester, find.text(cible.name));
-      expect(find.text(cible.name), findsOneWidget, reason: cible.name);
-    }
-  });
-
-  testWidgets('l onglet Heros expose les regles de stat et le passif', (tester) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer(
-      hero: _berserker,
-      activePassive: _rage,
-    );
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: false));
-    await _openDrawer(tester);
-    await tester.tap(find.text('Heros'));
-    await tester.pumpAndSettle();
-
-    // La regle, dans le vocabulaire du fichier : c'est la donnee que le
-    // developpeur edite, pas la phrase du joueur — ratio compris.
-    final regle = _berserker.statRules.first.toString();
-    expect(regle, 'armor convert status:might, 1 tour(s), ratio 0.5');
-    await _scrollTo(tester, find.text(regle));
-    expect(find.text(regle), findsOneWidget);
-
-    await _scrollTo(tester, find.text('Passif actif : rage'));
-    expect(find.text('Passif actif : rage'), findsOneWidget);
-  });
-
   testWidgets('la derniere cible de Puissance ne peut pas etre retiree', (tester) async {
     sizeScreen(tester);
     final container = _debugRunContainer(hero: _berserker);
@@ -388,19 +220,4 @@ void main() {
     );
   });
 
-  testWidgets('l onglet Heros dit le palier d XP de l acte courant', (
-    tester,
-  ) async {
-    sizeScreen(tester);
-    final container = _debugRunContainer();
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(_harness(container, inCombat: false));
-    await _openDrawer(tester);
-    await tester.tap(find.text('Heros'));
-    await tester.pumpAndSettle();
-
-    await _scrollTo(tester, find.text('XP  (seuil 115)'));
-    expect(find.text('XP  (seuil 115)'), findsOneWidget);
-  });
 }

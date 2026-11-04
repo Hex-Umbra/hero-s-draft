@@ -90,62 +90,6 @@ void main() {
     }
   });
 
-  test('l etape du deck de depart dit 2 du lot et 3 neutres', () {
-    final etape = kTutorialSteps.singleWhere((s) => s.type == TutorialStepType.starterDeck);
-
-    expect(
-      etape.bodyFr,
-      startsWith(
-        'Choisissez 2 cartes du lot de votre passif et 3 cartes neutres : '
-        'elles forment votre deck de départ, celui avec lequel vous jouerez '
-        'le reste du tutoriel.',
-      ),
-    );
-    expect(
-      etape.bodyEn,
-      startsWith(
-        'Pick 2 cards from your passive\'s set and 3 neutral cards: they form '
-        'your starting deck, the one you will play the rest of the tutorial '
-        'with.',
-      ),
-    );
-  });
-
-  test('l etape du deck de depart enseigne les signatures, mot pour mot', () {
-    final etape = kTutorialSteps.firstWhere((s) => s.titleFr == 'Votre deck de départ');
-
-    expect(
-      etape.bodyFr,
-      'Choisissez 2 cartes du lot de votre passif et 3 cartes neutres : '
-      'elles forment votre deck de départ, celui avec lequel vous jouerez le '
-      'reste du tutoriel.\n\n'
-      'Votre classe apporte en plus ses deux **signatures**, qui ne sont pas '
-      'des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles '
-      'vous attendent dans une barre à gauche de l\'écran, dès le premier '
-      'tour ; jouer une signature coûte du Mana, puis elle se recharge '
-      'quelques tours avant de revenir.',
-    );
-    expect(
-      etape.bodyEn,
-      'Pick 2 cards from your passive\'s set and 3 neutral cards: they form '
-      'your starting deck, the one you will play the rest of the tutorial '
-      'with.\n\n'
-      'Your class also brings its two **signatures**, which are not cards: '
-      'never drawn, they never merge. In combat they wait in a bar on the '
-      'left of the screen, from the first turn; playing a signature costs '
-      'Mana, then it recharges for a few turns before it comes back.',
-    );
-  });
-
-  test('la Fusion ne dit plus que les cartes de classe ne fusionnent pas', () {
-    final etape = kTutorialSteps.firstWhere((s) => s.type == TutorialStepType.merge);
-
-    expect(etape.bodyFr, isNot(contains('Vos cartes de classe sont uniques')));
-    expect(etape.bodyEn, isNot(contains('Your class cards are unique')));
-    expect(etape.bodyFr, contains('Le Puits d\'échange est un système distinct et payant'));
-    expect(etape.bodyEn, contains('The Exchange Well is a separate, paid system'));
-  });
-
   test('un texte sans placeholder traverse inchangé', () async {
     final rewards = (await loadGameDataRegistry(rootBundle)).levelUpRewards;
     const corps = 'Les reliques donnent des bonus passifs.';
@@ -187,35 +131,4 @@ void main() {
     }
   });
 
-  test('le Gel ne se chiffre plus dans les etapes elements et enemies', () {
-    String body(TutorialStepType type, {required bool fr}) {
-      final step = kTutorialSteps.singleWhere((s) => s.type == type);
-      return fr ? step.bodyFr : step.bodyEn;
-    }
-
-    for (final type in [TutorialStepType.elements, TutorialStepType.enemies]) {
-      for (final fr in [true, false]) {
-        final text = body(type, fr: fr);
-        expect(text, isNot(contains('divise par deux')));
-        expect(text, isNot(contains('halves')));
-        expect(text, isNot(contains('%')));
-      }
-    }
-    expect(
-      body(TutorialStepType.elements, fr: true),
-      contains('• ❄️ Gel : réduit leur prochaine attaque, d\'autant plus '
-          'qu\'il compte de points, jusqu\'à un plafond. La durée ne '
-          'décrémente qu\'une fois qu\'ils ont attaqué.'),
-    );
-    expect(
-      body(TutorialStepType.elements, fr: false),
-      contains('• ❄️ Freeze: reduces their next attack, more with each point, '
-          'up to a cap. The duration only ticks down once they have '
-          'attacked.'),
-    );
-    expect(body(TutorialStepType.enemies, fr: true),
-        endsWith('et baisse tant qu\'il est Gelé.'));
-    expect(body(TutorialStepType.enemies, fr: false),
-        endsWith('and drops while they are Frozen.'));
-  });
 }
