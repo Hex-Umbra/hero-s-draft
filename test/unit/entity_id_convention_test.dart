@@ -13,9 +13,14 @@ import 'package:flutter_test/flutter_test.dart';
 /// pour git sous Windows.
 const _pattern = r'^[a-z0-9_]+$';
 
-/// Les trois documents de configuration, a plat dans `assets/data/` : ce ne
+/// Les quatre documents de configuration, a plat dans `assets/data/` : ce ne
 /// sont pas des entites (spec P-43 E3, §3.2, §8).
-const _configDocuments = {'patch_notes.json', 'audio.json', 'xp_curve.json'};
+const _configDocuments = {
+  'patch_notes.json',
+  'audio.json',
+  'xp_curve.json',
+  'effect_icons.json',
+};
 
 Iterable<File> _entityFiles() sync* {
   for (final entity in Directory('assets/data').listSync(recursive: true)) {

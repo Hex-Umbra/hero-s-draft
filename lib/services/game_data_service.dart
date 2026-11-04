@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/data/effect_icon_table.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
@@ -156,6 +157,13 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     XpCurveData.fromJson,
   );
 
+  // Les icones d effet (spec §3.7, A39) : un document plat, qui fait lui
+  // aussi echouer le demarrage s il manque ou s il est fautif.
+  final effectIcons = await loader.loadDocument(
+    'assets/data/effect_icons.json',
+    EffectIconTable.fromJson,
+  );
+
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
   // remontees ensemble. Corriger une faute par cycle de rebuild, fichier par
   // fichier, serait invivable.
@@ -176,6 +184,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     forgeUpgrades: forgeUpgrades,
     levelUpRewards: levelUpRewards,
     xpCurve: xpCurve,
+    effectIcons: effectIcons!,
     audio: audio,
   );
 }

@@ -70,10 +70,11 @@ void main() {
     // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'signatures');
 
-    // Les trois documents de configuration restent a plat.
+    // Les quatre documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
     expect(json, contains('assets/data/patch_notes.json'));
     expect(json, contains('assets/data/xp_curve.json'));
+    expect(json, contains('assets/data/effect_icons.json'));
   });
 
   test('les images d entites sont declarees, pas seulement presentes', () async {
@@ -141,5 +142,12 @@ void main() {
       115, 200, 310, 480, 590, 775, 955, 1100, //
       1040, 1185, 1370, 1370, 1300, 1375, 1015,
     ]);
+  });
+
+  test('le registre reel charge les seize sortes d effect_icons.json',
+      () async {
+    final registry = await loadGameDataRegistry(rootBundle);
+
+    expect(registry.effectIcons.kinds, hasLength(16));
   });
 }

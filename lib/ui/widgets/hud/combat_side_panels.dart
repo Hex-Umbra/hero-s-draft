@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../models/data/effect_icon_table.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/status_effect.dart';
 import 'status_effects_panel.dart';
@@ -12,6 +13,7 @@ class CombatSidePanels extends StatelessWidget {
   final int discardPileCount;
   final List<StatusEffect> heroStatuses;
   final List<EnemyInstance> enemies;
+  final EffectIconTable effectIcons;
 
   const CombatSidePanels({
     super.key,
@@ -19,6 +21,7 @@ class CombatSidePanels extends StatelessWidget {
     required this.discardPileCount,
     required this.heroStatuses,
     required this.enemies,
+    this.effectIcons = const EffectIconTable.empty(),
   });
 
   @override
@@ -71,7 +74,10 @@ class CombatSidePanels extends StatelessWidget {
           Positioned(
             bottom: 80,
             left: 20,
-            child: StatusEffectsPanel(statuses: heroStatuses),
+            child: StatusEffectsPanel(
+              statuses: heroStatuses,
+              effectIcons: effectIcons,
+            ),
           ),
 
           // Panneau des Intentions Ennemies (Bas Droite, au-dessus de la Défausse)

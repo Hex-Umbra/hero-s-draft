@@ -484,6 +484,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
           const SizedBox(height: 10),
           Center(
             child: StatusEffectsPanel(
+              effectIcons: widget.engine.data.effectIcons,
               statuses: const [
                 StatusEffect(
                   id: 'poison',

@@ -628,6 +628,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       discardPileCount: deckState.discardPile.length,
                       heroStatuses: runState.heroStats.statuses,
                       enemies: combatState.enemies,
+                      effectIcons: gameData.effectIcons,
                     ),
 
                   // La barre passe au-dessus du panneau de statuts du héros.

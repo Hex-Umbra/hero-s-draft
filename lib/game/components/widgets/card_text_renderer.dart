@@ -8,10 +8,11 @@ import '../card_component.dart';
 import '../../systems/cost_rules.dart';
 import '../../systems/power_rules.dart';
 
-class _RendererEffectVisuals {
+/// L'icône et la couleur d'un effet sur la face Flame d'une carte.
+class RendererEffectVisuals {
   final IconData icon;
   final Color color;
-  const _RendererEffectVisuals({required this.icon, required this.color});
+  const RendererEffectVisuals({required this.icon, required this.color});
 }
 
 class BadgePainters {
@@ -109,7 +110,7 @@ class CardTextRenderer {
           scaleTerm: card.heroScaleTerm(effect),
         );
 
-        final visuals = _getEffectVisuals(effect);
+        final visuals = getEffectVisuals(effect);
         final iconColor = visuals.color.withAlpha(alpha);
 
         final isPlayerEffect = effect.type == 'armor' ||
@@ -274,33 +275,36 @@ class CardTextRenderer {
     return isDamage && effect.hits >= 2 ? '$value×${effect.hits}' : '$value';
   }
 
-  _RendererEffectVisuals _getEffectVisuals(CardEffect effect) {
+  /// L'icône et la couleur de la face d'un effet, sans état : la table
+  /// `effect_icons.json` est alignée dessus, et un test l'exige.
+  @visibleForTesting
+  static RendererEffectVisuals getEffectVisuals(CardEffect effect) {
     if (effect.type == 'damage') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.hardware_rounded,
         color: Colors.redAccent,
       );
     }
     if (effect.type == 'armor') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.shield_rounded,
         color: Colors.blueAccent,
       );
     }
     if (effect.type == 'heal') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.favorite_rounded,
         color: Colors.pinkAccent,
       );
     }
     if (effect.type == 'gain_mana') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.diamond_rounded,
         color: Colors.cyanAccent,
       );
     }
     if (effect.type == 'draw') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.style_rounded,
         color: Colors.amber,
       );
@@ -309,48 +313,48 @@ class CardTextRenderer {
       switch (effect.statusId) {
         case 'might':
         case 'might_regen':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.bolt_rounded,
             color: Colors.orangeAccent,
           );
         case 'armor_regen':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.autorenew_rounded,
             color: Colors.blueAccent,
           );
         case 'poison':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.science_rounded,
             color: Colors.greenAccent,
           );
         case 'weakness':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.trending_down_rounded,
             color: Colors.purpleAccent,
           );
         case 'vulnerable':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.gps_fixed_rounded,
             color: Colors.deepOrangeAccent,
           );
         case 'burn':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.local_fire_department_rounded,
             color: Colors.orangeAccent,
           );
         case 'freeze':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.ac_unit_rounded,
             color: Colors.lightBlueAccent,
           );
         case 'shock':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.flash_on_rounded,
             color: Colors.amberAccent,
           );
       }
     }
-    return const _RendererEffectVisuals(
+    return const RendererEffectVisuals(
       icon: Icons.help_outline,
       color: Colors.grey,
     );

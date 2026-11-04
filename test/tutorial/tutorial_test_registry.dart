@@ -45,6 +45,7 @@ Future<GameDataRegistry> buildTutorialTestRegistry({
     levelUpRewards: shipped.levelUpRewards,
     signatures: shipped.signatures,
     xpCurve: shipped.xpCurve,
+    effectIcons: shipped.effectIcons,
     audio: shipped.audio,
   );
 }
