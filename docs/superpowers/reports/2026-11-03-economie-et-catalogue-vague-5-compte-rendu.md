@@ -28,6 +28,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 | P-2 · P-4 | L'affichage des évolutions ; l'icône sur le rouleau | P | (c) badge et icônes, « rien n'est caché » ; (a) l'icône sur le rouleau (propriétaire, 03/11) | — |
 | P-3 | L'écho et les événements « carte jouée » | P | (a) aucun événement (propriétaire, 03/11) | — |
 | PN12 · PN13 | Les phrases d'évolution ; la couleur du badge | P | (d), une option du propriétaire : en combat, des icônes avec leur valeur à la place du texte, la description déroulée en liste par appui long ; l'ambre (propriétaire, 03/11, devant des [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx)) | — |
+| P-5 · P-6 | Les états où l'appui long ouvre la liste ; une seule table d'icônes en combat | P | (a) et (a), les recommandations : tous les états, inactive comprise ; la table alignée sur les faces des cartes (propriétaire, 04/11) | — |
 | D76 | Une vague pour les charges élémentaires | D | Vague 7, `0.5.9` ; la tranche 3 en vague 8 (propriétaire, 03/11 ; [étude](../../possible_upgrades/03-11-2026_charges_elementaires_Opus5.md)) | — |
 | A1-A5 | Forme C : `passive` seul ; seconde source qui l'injecte ; `isOfferable(p)` ; masquage mesuré sur le registre ; `classes` à une classe | T | spec §1.3 | 5 |
 | A6-A10 | `feeds` à préfixes ; validateur `costs.armor` par la `statRule` ; D17 au chargement ; forme de `costs` ; une règle `canAfford` | T | spec §1.3 | 1, 4, 5 |

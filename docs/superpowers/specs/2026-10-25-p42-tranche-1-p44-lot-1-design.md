@@ -69,6 +69,8 @@ l'amendement PN12-PN13, lues le 2026-11-03 sur `259588c1` : A39 à A42, P-5, P-6
 | **P-4** *(répondue le 03/11, née de P-2)* | Option (a) — **l'icône de l'évolution sur chaque rouleau de l'écran d'évolution** (§5.1). Motif du propriétaire : la philosophie de P-2, afficher toutes les informations au joueur ; sans elle, rien ne relie une icône de tuile à son évolution |
 | **PN12** *(répondue le 03/11, née à l'écriture du plan de la partie 3 ; [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx), diapositives 5 à 8)* | Une option (d), du propriétaire, à la place des trois proposées — **sur la tuile de combat, ce que fait la signature s'écrit en icônes au lieu du texte**, sans réutiliser le système actuel d'infobulles des cartes, « qui doit être revisité » (hors de cette vague). **Au repos** : une icône par effet de la signature évoluée — ses effets propres et ceux qu'ajoutent ses évolutions, critique et « tous les ennemis » compris —, plus grandes que les icônes d'évolution (28 px contre 18 dans la maquette), trois par ligne, centrées dans la tuile, puis retour à la ligne ; **chaque icône porte sa valeur** évoluée (10, 4, 1, +5 %) ; la durée d'un statut ne s'y écrit pas. **Appui long** : tant que le joueur reste appuyé sur la tuile, elle déroule sa description complète en liste, à la manière de l'option (b) — **une ligne par icône**, l'icône suivie de sa phrase (« Inflige 10 dégâts », « Donne 4 d'Armure », « Applique 1 Faiblesse pendant 2 tours ») ; **relâcher la replie**, comme l'infobulle d'un nœud de la carte du monde (`map_node_widget.dart:140-142`) ; la liste passe par-dessus les tuiles voisines sans déplacer la colonne de la barre. Un appui court garde son rôle — jouer, ou armer une signature à cible. Le badge de niveau et la rangée des icônes d'évolution (A36, A37) restent. **Hors combat** (sélection de classe, deck), la tuile garde son texte complet. Motif du propriétaire, devant les maquettes : « c'est exactement la vision que j'avais » ; les quatre précisions sont les recommandations de l'orchestrateur, acceptées telles quelles |
 | **PN13** *(répondue le 03/11, née à l'écriture du plan de la partie 3)* | Option (c) — **le badge « Niv. n » en `Colors.amberAccent`** quand la tuile est disponible ou armée, l'ambre d'accent du HUD (panneau des intentions ennemies, bouton de tour) ; en recharge et sans le mana, `Colors.white38`, comme le reste de la tuile (A36). Écartées : (a) le blanc du nom, (b) la couleur de la classe — le rouge du Berserker se fond dans le type « Attaque », le violet du Mage se lit mal sur le fond sombre |
+| **P-5** *(répondue le 04/11, née de PN12 (d) à l'écriture de l'amendement ; [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx), diapositive 10)* | Option (a) — **l'appui long ouvre la liste dans tous les états de la tuile, inactive comprise** : pendant le tour ennemi et pendant l'animation d'une carte jouée, où la tuile est inactive (`game_screen.dart:547-549`, `:641-642`). Lire n'est pas jouer : l'appui long ne joue, n'arme ni ne désarme rien (A42). Écartées : (b), tous les états sauf inactive, et (c), disponible et armée seulement |
+| **P-6** *(répondue le 04/11, née de la vérification de l'amendement ; [maquettes](../../presentations/2026-11-03_vague_5_pn12_pn13_maquettes.pptx), diapositives 9 et 10)* | Option (a) — **une seule table d'icônes pour les effets en combat, alignée sur les faces des cartes** : `effect_icons.json` reprend l'icône et la couleur que les faces (`getEffectVisuals`, Flutter et Flame) donnent à chaque sorte commune, un test garde l'égalité ; trois icônes neuves seulement — le critique `flare_rounded`, *Dévastation* et *Surcharge* `rocket_launch_rounded`, la cible « tous les ennemis » `all_out_rounded` (§3.7) ; la bande, la liste, les puces et les panneaux des statuts du héros et du tutoriel la lisent ; les faces, les émojis des statuts ennemis et la rune *Précis* passent sur le document plus tard (ROADMAP, §11). Écartées : (b), la table neuve pour le HUD seul, les faces à la ROADMAP, et (c), aucun alignement |
 | **L'écran d'évolution** | Le carrousel de la montée de niveau (`DraftScreen`, `DraftCardReel`), trois rouleaux, une fois par signature, déclenché par `pendingDrafts`. Chaque rouleau montre : le nom de l'évolution, sa description, son palier (« Mineure » / « Majeure ») et, pour une mineure déjà prise, son niveau « 1 → 2 » ; l'en-tête de l'écran nomme la signature concernée. Les détails de mise en page que ce contenu ne fixe pas (tailles, polices, couleurs) suivent le carrousel existant et sont de classe T |
 
 ### 1.3. Les arbitrages
@@ -400,7 +402,7 @@ aucune sorte et gardent la leur. Le test d'intégrité exige que chaque sorte pr
 une évolution de son pool figure au document. La sorte ne dit pas qui porte l'effet : la table servira plus tard aux
 infobulles des cartes et aux intentions ennemies — une attaque est `damage`, une défense `armor` —, sans qu'aucune ne
 la lise dans cette vague (§2). **Les autres icônes d'effet du combat** — faces des cartes, panneau des statuts du
-héros, émojis des ennemis — : P-6 (§1.4), appliquée à titre provisoire sous son option (a). La table reprend
+héros, émojis des ennemis — : P-6 (§1.2), répondue (a) par le propriétaire. La table reprend
 l'icône et la couleur que les faces des cartes donnent à chaque sorte qu'elles dessinent (`ui_card_helpers.dart:72-152`,
 `card_text_renderer.dart:277-357`), et un test garde cette égalité ; les faces gardent leur code. Le panneau des
 statuts du héros et celui du tutoriel (`tutorial_elements_widget.dart:486-500`, qui lit `engine.data`) lisent la
@@ -453,7 +455,7 @@ liste doit dire : les effets ajoutés ne lisent donc pas non plus la phrase de l
 revisitées hors de cette vague (§2) — elles trouveront alors, par sorte, les phrases comme les icônes (A39).
 
 **A42 — L'appui long : un calque ouvert au début de l'appui, replié à sa fin** *(T, filtres 6 et 5 ; les états :
-P-5, §1.4)*. Le geste suit `map_node_widget.dart:140-142` : le `GestureDetector` de la tuile
+P-5, §1.2)*. Le geste suit `map_node_widget.dart:140-142` : le `GestureDetector` de la tuile
 (`signature_bar.dart:324-326`) gagne `onLongPressStart`, qui ouvre la liste, `onLongPressEnd` et
 `onLongPressCancel`, qui la replient. Le SDK tranche le cas d'un pointeur annulé après l'ouverture : un
 `PointerCancelEvent` appelle alors `onLongPressCancel`, pas `onLongPressEnd` ; et `postAcceptSlopTolerance` valant
@@ -481,7 +483,7 @@ deux ; le survol ne change pas.
   et le bas du calque, dans le repère du calque. Le mécanisme — `OverlayPortal.overlayChildLayoutBuilder`, qui donne
   la taille du calque et la transformation de la tuile, ou un `CompositedTransformFollower` et un
   `CustomSingleChildLayout` — est laissé au plan, qui le teste (§9).
-- **Les états où elle s'ouvre** : P-5 (§1.4), appliquée à titre provisoire sous son option (a) — tous, inactive
+- **Les états où elle s'ouvre** : P-5 (§1.2), répondue (a) par le propriétaire — tous, inactive
   comprise.
 
 Les cartes, les pools d'évolutions et leurs textes sont des choix du rôle `game_designer` (fiche 8.5) ; deux
@@ -491,89 +493,7 @@ choix de conception y portent une raison qu'il faut lire : *Surtension de Mana* 
 
 ### 1.4. Les questions ouvertes
 
-P-1 à P-4, PN12 et PN13 sont répondues par le propriétaire (§1.2). Deux questions restent ouvertes, nées de PN12
-(d) à l'écriture de l'amendement et à sa vérification :
-
-**P-5 — Dans quels états l'appui long ouvre-t-il la liste ?** (a) Dans tous, inactive comprise — pendant le tour
-ennemi, et pendant l'animation d'une carte jouée : la tuile est inactive tant qu'une carte s'anime
-(`game_screen.dart:547-549`, `:641-642`). (b) Dans tous sauf inactive : la tuile inactive ne répond aujourd'hui à
-aucun geste (`signature_bar.dart:217-219`). (c) Disponible et armée seulement. Une tuile tenue ne sort des états admis
-par (b) ou (c) que par une seconde entrée — un second doigt (multitouch), ou le clavier sur « Fin de tour » (Tab,
-puis Espace : le bouton est un `ElevatedButton`, `turn_control_panel.dart:106-112`) ; elle peut y entrer d'elle-même,
-à la fin du tour ennemi ou d'une animation. Aucun raccourci propre au jeu ne joue une carte ni ne finit le tour, et
-l'appui long lui-même ne joue rien (A42). **Recommandation : (a), appliquée à titre provisoire (A42).** Lire n'est pas jouer, et
-la réponse PN12 ne borne pas l'appui long : sous (a), la liste s'ouvre sur ce que le joueur tient, quel que soit
-l'état, et aucune règle ne la referme d'elle-même. Sous (b) et (c), le joueur qui veut relire une signature pendant
-le tour ennemi, ou, sous (c), une signature en recharge — au moment où il prépare son retour —, ne le peut pas, sans
-signe qui le lui dise ; et un second doigt qui joue une carte pendant l'appui ferait sortir la tuile des états admis,
-un cas rare qu'il faudrait pourtant régler et tester.
-
-**Ce qui change sous chaque option.** Sous (a) : ce document tel qu'écrit. Sous (b) : la dernière puce d'A42 (« les
-états où elle s'ouvre ») devient « tous sauf inactive » ; dans le test « Tuile de combat » de §9, « ouverte en
-recharge, sans le mana et inactive » devient « ouverte en recharge et sans le mana, fermée sur une tuile inactive » ;
-s'y ajoutent une seconde règle — une liste ouverte se replie quand sa tuile devient inactive — et son test (un
-second pointeur joue une carte pendant l'appui : la liste se replie) ; l'exception de l'opacité sort d'A42 (« Son
-contenu ») et de §5.2, et le test « inactive, le calque à pleine opacité » sort de §9 : une liste n'est jamais peinte
-sur une tuile inactive. Sous (c) : la même chose, les états admis étant disponible et armée — la liste reste fermée
-en recharge et sans le mana, et se replie quand la tuile passe en recharge, sans le mana ou inactive ; de plus, le
-gris du calque en recharge et sans le mana sort d'A42 et de §5.2, et ses tests de §9 (« en recharge, le cadre et
-l'en-tête du calque gris, les phrases en `Colors.white38` ») tombent.
-
-**P-6 — Une seule table d'icônes pour les effets, en combat ?** Quatre jeux d'icônes dessinent déjà les mêmes
-effets à l'écran de combat. **Les faces des cartes** ont leur table sorte → icône, en double : Flutter,
-`getEffectVisuals` (`ui_card/ui_card_helpers.dart:72-152`), et Flame, `_getEffectVisuals`
-(`card_text_renderer.dart:277-357`) — `damage` `hardware_rounded` rouge, `armor` `shield_rounded` bleu, `heal`
-`favorite_rounded` rose, `gain_mana` `diamond_rounded` cyan, `draw` `style_rounded` ambre, `might` et `might_regen`
-`bolt_rounded` orange, `armor_regen` `autorenew_rounded` bleu, `poison` `science_rounded`, `weakness`
-`trending_down_rounded` violet, `vulnerable` `gps_fixed_rounded` orange foncé, `burn` `local_fire_department_rounded`
-orange, `freeze` `ac_unit_rounded`, `shock` `flash_on_rounded`. **Le panneau des statuts du héros** a les siennes, en
-dur (`status_effects_panel.dart:79-146`) : `might` et `might_regen` `flash_on`, `armor_regen` `shield`, `weakness` et
-`vulnerable` `arrow_downward` rouge, `burn` `whatshot`. **Les statuts des ennemis** sont des émojis peints par Flame
-(`status_indicator.dart:141-166`). **La table neuve** d'A35 et A39, telle que le tour PN · 1 l'avait laissée,
-inventait un quatrième jeu, et deux de ses icônes heurtaient celles des cartes : `gps_fixed_rounded` y était le
-critique quand les cartes en font Vulnérable, `bolt_rounded` *Dévastation* et *Surcharge* quand les cartes en font
-la Puissance.
-
-- **(a) Une seule table, alignée sur les faces des cartes — le vocabulaire que le joueur connaît déjà.**
-  `effect_icons.json` reprend, pour chaque sorte que les cartes dessinent, l'icône et la couleur de la face ; seules
-  les sortes que les cartes n'ont pas (`crit`, `target:allEnemies`) et les puces propres aux évolutions
-  (*Célérité*, *Dévastation* et *Surcharge*, le coût réduit) gardent une icône à elles, choisie pour ne heurter
-  aucune icône de carte. La bande, la liste, les puces d'évolution (A35), le panneau des statuts du héros et celui
-  de l'étape des éléments du tutoriel (`tutorial_elements_widget.dart:486-500`, qui lit le registre du tutoriel,
-  `engine.data`, chargé par `loadGameDataRegistry`) lisent cette table. Les faces des cartes gardent leur code dans
-  cette vague ; un test garde l'égalité entre leurs deux fonctions et le document pour chaque sorte commune. Les
-  émojis des ennemis restent, une ligne à la ROADMAP (§11). Hors combat, la rune *Précis* garde `gps_fixed_rounded`
-  pour le critique (`assets/data/forge_upgrades/precise.json`) ; son alignement rejoint la même ligne de la ROADMAP.
-- **(b) La table neuve du tour PN · 1** (`gavel_rounded`, `fitness_center_rounded`, `heart_broken_rounded`…) pour la
-  bande, la liste, les puces et le panneau du héros ; les faces des cartes restent différentes, leur alignement à la
-  ROADMAP.
-- **(c) Aucun alignement dans la vague** : la bande, la liste et les puces prennent la table neuve du tour PN · 1 ;
-  le panneau du héros et les faces gardent les leurs ; tout l'alignement à la ROADMAP.
-
-**Recommandation de l'orchestrateur : (a), appliquée à titre provisoire** (§2, A35, A39, A41, §3.7, §5.2, §9, §10,
-§11) :
-une icône par effet partout où le joueur la lit en combat, sauf chez les ennemis ; la liste qui apprend les icônes
-n'en enseigne qu'une, celle que les cartes lui ont déjà apprise.
-
-**Ce qu'un renversement toucherait.** Sous (a) : ce document tel qu'écrit. Sous (b) : les deux tables de §3.7
-reprennent les icônes du tour PN · 1 — dix sortes et vingt-sept évolutions changent d'icône ou de couleur
-(`hardware_rounded` → `gavel_rounded` ; `bolt_rounded` → `fitness_center_rounded` et `trending_up_rounded` ;
-`trending_down_rounded` → `arrow_downward_rounded` ; pour Vulnérable `gps_fixed_rounded` → `heart_broken_rounded` ;
-pour le critique `flare_rounded` → `gps_fixed_rounded` ; `rocket_launch_rounded` → `bolt_rounded` ; et les couleurs
-du soin, de la pioche, de `armor_regen`, de Vulnérable et de la Brûlure) ; l'en-tête de la table des évolutions
-redevient « quinze icônes, quatorze couleurs », sans « sous P-6 (a)… » ni les trois notes en italique ; la phrase des
-paires sous la table perd *Colère* et *Démence* ; le document perd `status:poison`, `status:freeze` et
-`status:shock` — treize sortes au lieu de seize, en A39, en §3.7 et dans la ligne « Comptes » de §9 ; « dix-huit
-noms » redevient « seize » (les quinze des évolutions et `diamond_rounded`) ; `effectColors` reste à quatorze, toutes
-des évolutions ; A41 perd sa phrase sur ces trois statuts ; le test
-d'égalité avec les faces sort de §9, §10 et §3.7 ; le panneau ne lit plus la table que pour six statuts — la liste
-de §5.2 perd `poison`, `freeze`, `shock` et « — celles des faces des cartes », et le test du panneau de §9 remplace
-`poison` par `vulnerable` et perd « et sur les faces des cartes » ; les lignes de §2 et §11 se réécrivent : les
-faces, différentes du document, à aligner ; le passage d'A39 « Les autres icônes d'effet du combat … ROADMAP (§11) »
-et la ligne P-6 du fichier de vérifications se réécrivent. Sous (c) : tout ce qui change sous (b) ; de plus, la
-ligne du panneau sort de §5.2, son test de §9, sa mention de §10 ; A39 perd « dans le panneau des statuts, sur son
-icône d'aujourd'hui » et dit que les panneaux du héros et du tutoriel gardent leurs icônes ; les lignes de §2 et
-§11 nomment, à aligner, les faces et le panneau.
+P-1 à P-6, PN12 et PN13 sont répondues par le propriétaire (§1.2) : aucune question ne reste ouverte.
 
 **Aucune question de classe D** : rien n'exige d'amender une décision acquise.
 
@@ -593,7 +513,7 @@ déplacée, *Trait de Glace* et *Marque du Mage* recalibrés ; le draft de dépa
 | D30 (banque de mana), D55 (*Prière*, `hp_regen`), le déclencheur de D34 (`onDamagingCardPlayed`) | Vagues 6 et 7 |
 | Épines, `retain`, production de cartes, malédictions, effets interactifs, `costs.discard`, `CardTarget.none` | P-44 lots 2 à 4 |
 | Les cartes-pont (Q8) | Plus tard |
-| Les infobulles des cartes du deck, Flutter et Flame, que le propriétaire veut revisiter (PN12) ; elles pourront lire les icônes et les phrases par sorte d'effet (A39, A41), comme les intentions ennemies. Sous P-6 (a), provisoire : le code des faces des cartes, qui garde sa table d'icônes égale au document (§9), et les émojis des statuts ennemis (Flame), à passer sur `effect_icons.json`, et l'icône de la rune *Précis* (`gps_fixed_rounded`, le Vulnérable des cartes) alignée sur le critique | Plus tard, une ligne à la ROADMAP (§11) |
+| Les infobulles des cartes du deck, Flutter et Flame, que le propriétaire veut revisiter (PN12) ; elles pourront lire les icônes et les phrases par sorte d'effet (A39, A41), comme les intentions ennemies. Sous P-6 (a) : le code des faces des cartes, qui garde sa table d'icônes égale au document (§9), et les émojis des statuts ennemis (Flame), à passer sur `effect_icons.json`, et l'icône de la rune *Précis* (`gps_fixed_rounded`, le Vulnérable des cartes) alignée sur le critique | Plus tard, une ligne à la ROADMAP (§11) |
 | `maxMana` | Reste 3 (D11) |
 | Tout rééquilibrage des neutres, sauf *Trait de Glace* (P-1, l'effet gardé) et la suppression de `focus` | — |
 | `tool/simulations/` : ni relancé, ni réaligné ; il ne lit pas `cards/*/*.json` et ne tourne plus depuis E4 — accepté (ADR-108 D5) | — |
@@ -805,7 +725,7 @@ Une évolution :
 `haste` porte dans chaque pool le même id et le même texte : il reste propre à chaque signature (D7), déclaré
 dans son fichier.
 
-**Les icônes** (A35) — une par sorte d'effet, la même d'un pool à l'autre, et, sous P-6 (a), provisoire (§1.4), celle
+**Les icônes** (A35) — une par sorte d'effet, la même d'un pool à l'autre, et, sous P-6 (a) (§1.2), celle
 que la face d'une carte donne à la même sorte (`ui_card_helpers.dart:72-152`) : quatorze icônes, onze couleurs, pour
 les 42 évolutions.
 
@@ -843,7 +763,7 @@ sorte — `damage`, `armor`, `heal`, `draw`, `gain_mana`, `status:<id>` (l'id en
 `target:allEnemies` — dont `apply_status` nu, un statut disant toujours son id ; une valeur qui n'est pas un objet à
 `icon` et `color`, deux textes non vides, sans autre clé. Que le nom figure dans `effectIcons` / `effectColors`, et
 que l'id d'un `status:` soit un statut que le jeu crée (`EffectResolver.createStatus`, `effect_resolver.dart:24`), le
-modèle ne le voit pas : le test d'intégrité le garde (§9). Seize sortes, sous P-6 (a), provisoire : les treize des
+modèle ne le voit pas : le test d'intégrité le garde (§9). Seize sortes, sous P-6 (a) : les treize des
 six signatures et de leurs pools, et trois que seuls les cartes et le panneau des statuts dessinent (`poison`,
 `freeze`, `shock`) ; chaque sorte que dessinent les faces des cartes y prend leur icône et leur couleur, que garde le
 test d'égalité (§9).
@@ -1108,7 +1028,7 @@ facultatif ; le draft de niveau ne le passe pas, ni le tutoriel, qui emploie aus
 | Infobulle Flutter (`ui_card_helpers.dart:338-412`) | La ligne de coût dit PV et Armure en plus du mana ; la ligne de dégâts dit les coups (`cardDescDamageHits`) et la Puissance par coup ; une ligne de croissance par `scaleWith` (§6.1) | 2 |
 | Infobulle Flame (`card_component.dart:296-298`, `:326-336`) | Mêmes lignes : la ligne de coût, aujourd'hui `'$costHeader${card.currentCost} Mana'` (`:298`), ajoute `cardCostHp`, `cardCostArmor` ; les lignes de dégâts (`:329-336`), qui ajoutent aujourd'hui `damageBonus` entier, passent à `floor(bonus × mightRatio)` par coup et à `cardDescDamageHits` ; la ligne de croissance | 2 |
 | Tuile de combat (`_SignatureTile`, `hud/signature_bar.dart:126-410`) | Lit `SignatureInstance` : coût, recharge, cible et effets évolués. **Plus de texte au repos** (PN12 (d)) : la description (`:268-276`) quitte la tuile, la **bande d'icônes** prend sa place, sous l'en-tête, centrée dans la tuile (A39, A40) ; la tuile suit son contenu. Par P-2 (c) : le badge de niveau au bout de la ligne du type (A36), la rangée des puces sous la bande et au-dessus du compte de recharge (A37). **Appui long** : la liste, une ligne par icône, dans un calque par-dessus les voisines, repliée au relâcher ; l'appui court garde son rôle (A41, A42 ; les états, P-5). États : **inactive**, toute la tuile à 0,45 comme aujourd'hui, bande, puces et badge compris ; **en recharge** et **sans le mana**, icônes et valeurs de la bande, puces, anneaux, chiffres de niveau des mineures et badge passent au gris pâle du texte (`Colors.white38`), comme le nom ; **disponible** et **armée**, à leurs couleurs, le badge en `Colors.amberAccent` (PN13, A36). Le calque de la liste reprend l'état de la tuile — ses phrases en `Colors.white70`, `Colors.white38` en recharge et sans le mana —, sauf l'opacité 0,45 et les couleurs des icônes de la liste (A42). Ni toucher ni survol propres aux icônes : la tuile seule répond, et aucune infobulle de carte ne revient (O4 de la vague 4). La barre : A38 | 3 |
-| Panneau des statuts du héros (`StatusEffectsPanel`, `hud/status_effects_panel.dart:79-146`) *(P-6, provisoire sous (a))* | Pour chaque statut que porte `effect_icons.json` (`might`, `might_regen`, `armor_regen`, `poison`, `weakness`, `vulnerable`, `burn`, `freeze`, `shock`), l'icône et la couleur de la table (A39) — celles des faces des cartes. La table vient de `GameScreen`, qui la lit dans le registre et la passe à `CombatSidePanels` (`game_screen.dart:626-631`), qui la passe au panneau (`combat_side_panels.dart:74`) ; le panneau de l'étape des éléments du tutoriel (`tutorial_elements_widget.dart:486-500`) la lit sur `engine.data`. `metallicize`, `lifesteal`, et tout statut absent de la table — une table vide — gardent leur icône d'aujourd'hui, jamais `help_outline`. Les libellés ne changent pas | 3 |
+| Panneau des statuts du héros (`StatusEffectsPanel`, `hud/status_effects_panel.dart:79-146`) *(P-6 (a))* | Pour chaque statut que porte `effect_icons.json` (`might`, `might_regen`, `armor_regen`, `poison`, `weakness`, `vulnerable`, `burn`, `freeze`, `shock`), l'icône et la couleur de la table (A39) — celles des faces des cartes. La table vient de `GameScreen`, qui la lit dans le registre et la passe à `CombatSidePanels` (`game_screen.dart:626-631`), qui la passe au panneau (`combat_side_panels.dart:74`) ; le panneau de l'étape des éléments du tutoriel (`tutorial_elements_widget.dart:486-500`) la lit sur `engine.data`. `metallicize`, `lifesteal`, et tout statut absent de la table — une table vide — gardent leur icône d'aujourd'hui, jamais `help_outline`. Les libellés ne changent pas | 3 |
 | Tuile hors combat (`SignatureTile`, `signature_tile.dart`) | Carte de classe et dictionnaire : la signature de base, le gabarit rempli des valeurs du fichier, **sans badge ni icône** — hors d'une run, elle n'a pas d'évolution (`signature_tile.dart:7-8` lit la donnée, jamais une instance) | 3 |
 | Dictionnaire | Inchangé : les cartes de lot y sont rangées avec les autres. Aucun regroupement par lot n'est ajouté (filtre 7) | — |
 
@@ -1281,11 +1201,11 @@ sans elle, signalée manquante (`deck_controller.dart:72-99`) ; ni test ni prote
 | Comptes | `entity_id_convention_test.dart:65-73`, `real_bundle_load_test.dart:36`, `:97` | 115 fichiers ; 15 neutres à la profondeur 4, 18 cartes de lot à la profondeur 5 ; `registry.cards` 33 ; forge 16 ; en partie 3, `effect_icons.json` rejoint `_configDocuments` (`entity_id_convention_test.dart:18`), les 115 ne bougent pas, et le registre réel charge ses seize sortes | 1 (forge) · 2 · 3 |
 | Éditeur | `entity_descriptor_test.dart`, tests de `content_editor/` dont `shipped_entities_round_trip_test.dart` | Dix catégories, dix sources ; carte de lot sous `cards/<passif>/`, propriétaire exigé, `passive` jamais écrit ; chaque fichier livré — runes, cartes de lot, signatures à évolutions — repasse la validation et se réécrit à l'identique | 1 · 2 · 3 |
 | Évolutions : donnée | `test/unit/signature_evolution_data_test.dart` *(nouveau)* | Chaque règle de §3.7, refus nommés ; trois mineures et quatre majeures par signature livrée (Q6) ; `cooldown` sur une mineure refusé (D54) ; `icon` ou `color` absents refusés | 3 |
-| Icônes d'évolution et d'effet | `test/unit/referential_integrity_test.dart`, à côté du test des icônes de rune (`:85-96`) | Chaque `icon` et chaque `color` d'évolution livrée et d'`effect_icons.json` est connue d'`effectIcons` et `effectColors` ; chaque entrée de ces deux tables sert au moins une évolution ou une sorte ; deux évolutions d'une même signature de même icône ne sont jamais deux mineures ni deux majeures (A37) ; chaque sorte que produit une signature livrée ou une évolution de son pool figure au document, chaque `status:<id>` du document est un statut que `createStatus` crée, chaque sorte que produit une signature ou une évolution a sa phrase (A41) ; **sous P-6 (a), provisoire**, pour chaque sorte que dessinent les faces des cartes, `getEffectVisuals` (`ui_card_helpers.dart:72`) et la fonction de la face Flame (`card_text_renderer.dart:277`, privée : le plan la rend publique et `@visibleForTesting`, et rend public son type de retour — `_RendererEffectVisuals` → `RendererEffectVisuals` —, la règle `library_private_types_in_public_api` de `flutter_lints` refusant un type privé dans une API publique ; sans état, elle devient `static`, comme `badgeValue` (`card_text_renderer.dart:260`), pour que le test l'appelle sans `CardComponent` ; les icônes et couleurs rendues ne changent pas) donnent l'icône et la couleur du document ; une évolution sans `cooldown` qui vise une seule sorte porte son `icon` et sa `color` — les 32, dont *Zèle* (`damage`) et *Sentence* (`status:weakness`) (A39) | 3 |
+| Icônes d'évolution et d'effet | `test/unit/referential_integrity_test.dart`, à côté du test des icônes de rune (`:85-96`) | Chaque `icon` et chaque `color` d'évolution livrée et d'`effect_icons.json` est connue d'`effectIcons` et `effectColors` ; chaque entrée de ces deux tables sert au moins une évolution ou une sorte ; deux évolutions d'une même signature de même icône ne sont jamais deux mineures ni deux majeures (A37) ; chaque sorte que produit une signature livrée ou une évolution de son pool figure au document, chaque `status:<id>` du document est un statut que `createStatus` crée, chaque sorte que produit une signature ou une évolution a sa phrase (A41) ; **sous P-6 (a)**, pour chaque sorte que dessinent les faces des cartes, `getEffectVisuals` (`ui_card_helpers.dart:72`) et la fonction de la face Flame (`card_text_renderer.dart:277`, privée : le plan la rend publique et `@visibleForTesting`, et rend public son type de retour — `_RendererEffectVisuals` → `RendererEffectVisuals` —, la règle `library_private_types_in_public_api` de `flutter_lints` refusant un type privé dans une API publique ; sans état, elle devient `static`, comme `badgeValue` (`card_text_renderer.dart:260`), pour que le test l'appelle sans `CardComponent` ; les icônes et couleurs rendues ne changent pas) donnent l'icône et la couleur du document ; une évolution sans `cooldown` qui vise une seule sorte porte son `icon` et sa `color` — les 32, dont *Zèle* (`damage`) et *Sentence* (`status:weakness`) (A39) | 3 |
 | Icônes d'effet : donnée | `test/unit/effect_icon_table_test.dart` *(nouveau)* | Chaque règle de chargement de §3.7, refus nommés : clé hors des sortes, `apply_status` nu, `icon` ou `color` absent ou vide, clé de plus ; une sorte absente retombe sur `Icons.help_outline` et du gris au rendu | 3 |
 | Phrases de la liste | `test/unit/effect_line_texts_test.dart` *(nouveau)* | Chacune des treize sortes qui ont une phrase (A41), en français et en anglais : « Inflige 10 dégâts », « Pioche 1 carte » et « Pioche 2 cartes », « Gagne 2 Puissance ce tour-ci » (durée 1) et « … pendant 2 tours », « Applique 1 Faiblesse pendant 2 tours », « +5 % de critique », « Touche tous les ennemis » ; aucune ne finit par un point ; `status:poison` rend `null` | 3 |
-| Tuile de combat | `test/widget/signature_bar_test.dart` | **Badge** : absent au niveau 0, « Niv. 3 » (`levelLabel`) au niveau 3, sur la ligne du type ; `Colors.amberAccent` disponible et armée, `Colors.white38` en recharge et sans le mana (PN13). **Puces** : une par évolution distincte, dans l'ordre, sous la bande ; anneau sur une majeure ; chiffre sur une mineure dès 2 ; sept puces sans débordement à 170 et à 220 px ; gris en recharge et sans le mana, chiffre de niveau compris. **Bande** (A40) : aucun texte de description sur la tuile ; *Châtiment* sans évolution, deux icônes ; `['zeal:2', 'sentence:1']`, trois — `damage` 10, `armor` 4, `status:weakness` 1, dans cet ordre, sur une ligne, sans « 2 tours » ; avec `ardor:1` et `radiance:1` de plus, cinq, trois puis deux, `crit` « +5 % », `target:allEnemies` sans valeur ; *Surtension de Mana* à huit icônes, trois lignes, sans débordement à 170 et à 220 px ; chaque ligne centrée dans la largeur intérieure de la tuile (le milieu de la ligne au milieu de la tuile, à 1 px près, pour une ligne pleine et pour la ligne de deux) ; l'icône de la bande à 24 et 28 px, plus grande que la puce à 16 et 18 ; `['zeal:1', 'ardor:1']` sur *Châtiment*, la ligne « 8 », « 4 », « +5 % » fait ≈ 172 px dans la police carrée des tests widget (1 em par glyphe), plus que les 154 de l'étroite : elle se réduit d'un bloc, sans débordement ni coupure, et la même tient sans réduction sur la large — en Roboto la ligne tient, la réduction se voit au test manuel sur des valeurs plus larges ; gris en recharge et sans le mana. **Liste** (A41, A42) : absente au repos ; ouverte par un appui long (`onLongPressStart`), une ligne par icône de la bande, dans son ordre, l'icône puis sa phrase (« Inflige 10 dégâts », « Applique 1 Faiblesse pendant 2 tours ») ; repliée au relâcher (`onLongPressEnd`) et par un `PointerCancelEvent` après l'ouverture (`onLongPressCancel`) ; un glissement hors de la tuile, le doigt posé, ne la replie pas ; ouverte, la hauteur de la colonne, son échelle et sa position ne changent pas, et la liste se peint au-dessus de la tuile voisine ; la tuile du bas d'une colonne posée bas, dont la liste sortirait du calque, l'ouvre vers le haut, son bas au bas de la tuile ; ouverte en recharge, sans le mana et inactive (P-5, provisoire) ; en recharge, le cadre et l'en-tête du calque gris, les phrases en `Colors.white38`, les icônes de la liste à leurs couleurs ; disponible, les phrases en `Colors.white70` ; inactive, le calque à pleine opacité ; icônes de la liste à 16 px sur les deux tuiles. **Appui court** : joue une signature sur soi, arme une signature à cible, désarme, refuse faute de mana comme avant ; un appui long ne joue, n'arme ni ne désarme. **Barre** : la colonne centrée à mi-hauteur quand elle tient, décalée quand elle sortirait de la bande, réduite quand elle dépasse sa hauteur, à l'échelle 0,75 au plus bas et alors sortie par le bas — un cas à `H ≈ 400` (A38) | 3 |
-| Panneau des statuts *(P-6, provisoire)* | `test/widget/status_effects_panel_test.dart` *(nouveau)* | Avec la table : `might`, `weakness`, `burn`, `poison` à l'icône et à la couleur d'`effect_icons.json`, les mêmes que sur la bande et sur les faces des cartes ; `metallicize` et `lifesteal` à leurs icônes d'aujourd'hui ; avec une table vide — celle des registres construits à la main —, chaque statut à son icône d'aujourd'hui, jamais `help_outline` ; le panneau du tutoriel lit la table de `engine.data` | 3 |
+| Tuile de combat | `test/widget/signature_bar_test.dart` | **Badge** : absent au niveau 0, « Niv. 3 » (`levelLabel`) au niveau 3, sur la ligne du type ; `Colors.amberAccent` disponible et armée, `Colors.white38` en recharge et sans le mana (PN13). **Puces** : une par évolution distincte, dans l'ordre, sous la bande ; anneau sur une majeure ; chiffre sur une mineure dès 2 ; sept puces sans débordement à 170 et à 220 px ; gris en recharge et sans le mana, chiffre de niveau compris. **Bande** (A40) : aucun texte de description sur la tuile ; *Châtiment* sans évolution, deux icônes ; `['zeal:2', 'sentence:1']`, trois — `damage` 10, `armor` 4, `status:weakness` 1, dans cet ordre, sur une ligne, sans « 2 tours » ; avec `ardor:1` et `radiance:1` de plus, cinq, trois puis deux, `crit` « +5 % », `target:allEnemies` sans valeur ; *Surtension de Mana* à huit icônes, trois lignes, sans débordement à 170 et à 220 px ; chaque ligne centrée dans la largeur intérieure de la tuile (le milieu de la ligne au milieu de la tuile, à 1 px près, pour une ligne pleine et pour la ligne de deux) ; l'icône de la bande à 24 et 28 px, plus grande que la puce à 16 et 18 ; `['zeal:1', 'ardor:1']` sur *Châtiment*, la ligne « 8 », « 4 », « +5 % » fait ≈ 172 px dans la police carrée des tests widget (1 em par glyphe), plus que les 154 de l'étroite : elle se réduit d'un bloc, sans débordement ni coupure, et la même tient sans réduction sur la large — en Roboto la ligne tient, la réduction se voit au test manuel sur des valeurs plus larges ; gris en recharge et sans le mana. **Liste** (A41, A42) : absente au repos ; ouverte par un appui long (`onLongPressStart`), une ligne par icône de la bande, dans son ordre, l'icône puis sa phrase (« Inflige 10 dégâts », « Applique 1 Faiblesse pendant 2 tours ») ; repliée au relâcher (`onLongPressEnd`) et par un `PointerCancelEvent` après l'ouverture (`onLongPressCancel`) ; un glissement hors de la tuile, le doigt posé, ne la replie pas ; ouverte, la hauteur de la colonne, son échelle et sa position ne changent pas, et la liste se peint au-dessus de la tuile voisine ; la tuile du bas d'une colonne posée bas, dont la liste sortirait du calque, l'ouvre vers le haut, son bas au bas de la tuile ; ouverte en recharge, sans le mana et inactive (P-5 (a)) ; en recharge, le cadre et l'en-tête du calque gris, les phrases en `Colors.white38`, les icônes de la liste à leurs couleurs ; disponible, les phrases en `Colors.white70` ; inactive, le calque à pleine opacité ; icônes de la liste à 16 px sur les deux tuiles. **Appui court** : joue une signature sur soi, arme une signature à cible, désarme, refuse faute de mana comme avant ; un appui long ne joue, n'arme ni ne désarme. **Barre** : la colonne centrée à mi-hauteur quand elle tient, décalée quand elle sortirait de la bande, réduite quand elle dépasse sa hauteur, à l'échelle 0,75 au plus bas et alors sortie par le bas — un cas à `H ≈ 400` (A38) | 3 |
+| Panneau des statuts *(P-6 (a))* | `test/widget/status_effects_panel_test.dart` *(nouveau)* | Avec la table : `might`, `weakness`, `burn`, `poison` à l'icône et à la couleur d'`effect_icons.json`, les mêmes que sur la bande et sur les faces des cartes ; `metallicize` et `lifesteal` à leurs icônes d'aujourd'hui ; avec une table vide — celle des registres construits à la main —, chaque statut à son icône d'aujourd'hui, jamais `help_outline` ; le panneau du tutoriel lit la table de `engine.data` | 3 |
 | Évolutions : moteur | `test/unit/signature_instance_test.dart` | `asCard` évolué : dégâts, Armure, coût, cible, recharge (plancher 1) ; sa description, le gabarit rempli puis les phrases verbales jointes par l'option (a) de PN12 — `['zeal:2', 'sentence:1']` : « Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. » —, la forme hors combat : les tests de description de la partie 3 la lisent ici, plus sur la tuile de combat ; la garde « hors combat, la tuile garde son texte complet » reste `test/widget/signature_tile_test.dart:54-62` (« Deal 6 damage and gain 4 Block. ») ; `effectLines` : sortes, valeurs évoluées, durées et ordre (A40), une chiffrée n'en ajoute aucune, deux soins de même sorte restent deux entrées ; `pendingFor` ; `nextTier` 5 → mineure, 10 → majeure | 3 |
 | Évolutions : tirage et choix | `test/unit/signature_evolution_rules_test.dart` *(nouveau)* | Trois mineures ; majeures non prises ; exclusion dans les deux sens (`haste` ↔ `devastation`) ; complément par des mineures sous trois majeures ; repli quand elles sont épuisées ; `chooseSignatureEvolution` refuse sans rien écrire, monte une mineure prise, sauve | 3 |
 | **Évolutions : sauvegarde — tâche à risque** | `test/unit/save_service_test.dart` | Aller-retour exact ; signature sans évolution : aucune clé ; sauvegarde sans la clé ; id inconnu retiré et signalé ; référence mal formée ignorée ; doublons additionnés ; majeure ramenée à 1 et paire exclue, la première gardée, sans entrée au rapport ; clé d'une signature absente ignorée | 3 |
@@ -1313,7 +1233,7 @@ pools, avec leurs icônes et les tables `effectIcons` / `effectColors` ; le docu
 et son chargement (A39) ; `SignatureInstance`, dont `effectLines`, le tirage, le choix, l'attente ; la sauvegarde ;
 l'écran, son icône de rouleau (P-4), le rideau ; la tuile de combat — sa bande d'icônes à la place de la
 description, sa liste à l'appui long et ses clés `effectLine…`, son badge ambre, sa rangée de puces — et la bande de
-la barre (A35 à A42) ; sous P-6 (a), provisoire, le panneau des statuts du héros et celui du tutoriel sur la même
+la barre (A35 à A42) ; sous P-6 (a), le panneau des statuts du héros et celui du tutoriel sur la même
 table, et le test d'égalité avec les faces des cartes ; le
 descripteur de signature ; les tests marqués 3.
 
@@ -1339,7 +1259,7 @@ donnée et celle qui touche la sauvegarde ne se mêlent pas.
 | **P-44 lot 1 se clôt** dans `docs/ROADMAP.md` | `memory-bank-sync` |
 | `CLAUDE.md:78` et `README.md:69` : l'arbre gagne `cards/<passive>/<id>.json` ; la phrase « Never write a field the directory imposes » gagne « and `passive` in any card file » | Partie 2 |
 | `CLAUDE.md:43` et `:75-77` : `effect_icon_table.dart` rejoint les modèles de données, `effect_icons.json` les documents plats | Partie 3 |
-| `docs/ROADMAP.md` : une ligne — les faces des cartes (Flutter et Flame) et les émojis des statuts ennemis lisent `effect_icons.json`, et l'icône de la rune *Précis* (`gps_fixed_rounded`, le Vulnérable des cartes) s'aligne sur le critique, avec la reprise des infobulles (§2 ; sous P-6 (a), provisoire) | `memory-bank-sync`, à la fin de la vague |
+| `docs/ROADMAP.md` : une ligne — les faces des cartes (Flutter et Flame) et les émojis des statuts ennemis lisent `effect_icons.json`, et l'icône de la rune *Précis* (`gps_fixed_rounded`, le Vulnérable des cartes) s'aligne sur le critique, avec la reprise des infobulles (§2 ; sous P-6 (a)) | `memory-bank-sync`, à la fin de la vague |
 | Note de version `0.5.7` | `patch-notes-writer`, à la fin de la vague |
 
 **Ce que le joueur voit en `0.5.7`** : le deckbuilding existe — trois passifs jouables avec leur lot de six
