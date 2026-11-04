@@ -5,6 +5,7 @@ import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/lot_rules.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/passive_feeds.dart';
+import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Les cartes et signatures livrées, vues comme (id, coût, effets).
@@ -121,6 +122,24 @@ void main() {
             cost + 1 + 1e-9)
           id,
     ];
+    expect(faulty, isEmpty);
+  });
+
+  test(
+      'A33 : chaque signature, toutes ses evolutions prises, tient le budget '
+      'de D38', () {
+    final faulty = <String>[];
+    for (final s in registry.signatures) {
+      final card = SignatureInstance(
+        s,
+        evolutions: [for (final e in s.evolutions) '${e.id}:1'],
+      ).asCard;
+      final effective = card.effective;
+      final budget = [...effective.addedEffects, ...effective.effects]
+          .where((e) => e.type == 'damage')
+          .fold<double>(0, (sum, e) => sum + e.hits * e.mightRatio);
+      if (budget > card.currentCost + 1 + 1e-9) faulty.add(s.id);
+    }
     expect(faulty, isEmpty);
   });
 

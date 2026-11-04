@@ -14,6 +14,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
@@ -399,6 +400,27 @@ void main() {
 
       expect(onEnemy('burn').single.value, 3);
       expect(onEnemy('shock').single.value, 1);
+    });
+
+    test(
+        'Projectile Magique a Braise et Mise a nu : la Brulure recoit la '
+        'Puissance, la Vulnerabilite non', () {
+      final missile = registry.signatures.singleWhere(
+        (s) => s.id == 'magic_missile',
+      );
+      final played = EffectResolver.resolveCard(
+        SignatureInstance(missile, evolutions: const ['ember:1', 'exposure:1'])
+            .asCard,
+        run,
+        deck,
+        combat,
+        enemyId,
+        container.read(effectRegistryProvider),
+      );
+      expect(played, isTrue);
+
+      expect(onEnemy('burn').single.value, 1 + 2);
+      expect(onEnemy('vulnerable').single.value, 2);
     });
 
     test('l echo recoit son propre bonus de statut', () {
