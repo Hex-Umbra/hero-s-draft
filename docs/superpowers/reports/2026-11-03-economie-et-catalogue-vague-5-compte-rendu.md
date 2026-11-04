@@ -2,11 +2,24 @@
 
 **Branche** : `feat/v0.5.7-p42-tranche-1-p44-lot-1` · **Spec** : [tranche 1 et P-44 lot 1](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md) ([vérifications](../specs/2026-10-25-p42-tranche-1-p44-lot-1-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1-verifications.md)) · [partie 2](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2-verifications.md)) · [partie 3](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-3.md) ([vérifications](../plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-3-verifications.md)) · **Tri D77** : [rapport](2026-11-04-vague-5-tri-des-tests-d-ecran.md) · **Forme** : [README](README.md).
 
-*Ouvert à la fin de la partie 1 (§3.5), complété à la fin des parties 2 et 3 ; §0, §3 et §6 s'écrivent en fin de vague.*
+*Ouvert à la fin de la partie 1 (§3.5), complété à la fin des parties 2 et 3, fermé le 04/11 (§3.8).*
 
 ## 0. Pour le propriétaire
 
-*À écrire en fin de vague.*
+**À tester d'abord**, par risque — [tests manuels](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 38 points ; depuis D77, l'écran n'a plus d'autre filet que toi :
+1. **M35, le parcours entier** : une run normale du Paladin jusqu'au niveau 5, le rideau, le draft de niveau, les deux écrans d'évolution (*Bouclier Sacré* d'abord, l'ordre de la fiche, S16), la tuile évoluée, l'appui long, puis quitter et reprendre — les évolutions et l'attente survivent (une run debug ne sauvegarde rien).
+2. **Le rideau et l'écran d'évolution** (M9 à M17) : nœuds fermés tant qu'un choix attend ; le retour système ne sort plus sans choisir (S19).
+3. **La tuile de combat et sa liste** (M18 à M31) : bande, badge ambre, puces et leur niveau écrit à côté (S20), la barre réduite sur écran bas, l'appui long dans tous les états (P-5).
+4. **L'entrée de debug « Évolutions de signature »** (M34) : elle prépare M18 à M27.
+5. **Les parties 1 et 2** (M1 à M8, M36 à M38) : coûts en PV et en Armure, runes, lots, draft 2 + 3, tutoriel.
+
+**Arbitrages que le joueur verra** — tes réponses : PN12 (d), les icônes et la liste à l'appui long ; PN13 (c), le badge ambre ; P-1 (a), 25 % par point ; P-2 (c) et P-4 (a), badge, icônes, icône sur le rouleau ; P-3 (a) ; P-5 (a) ; P-6 (a), les icônes des cartes ; P-7 (a), l'entrée de debug ; Q9, 2 du lot et 3 neutres ; O5, six passifs masqués ; D76, une vague de plus. **À juger au test** : MINEURE et MAJEURE au même gris (S19) ; le bleu de l'Armure en début de tour (S18) ; le médaillon bleu en recharge (S20) ; les phrases de la liste, reprises de la spec (« Donne 4 d'Armure » mais « gagne 2 Armure au début du tour »).
+
+**Faits sans toi** : l'autonomie `continu` une fois, à l'amendement PN12 (§5) ; les interprétations — Q9 lu comme deux quotas, C1.3 (un coût touche `feeds`), D35, PL2, l'accumulation de P-1, la prose du tutoriel réécrite (S14), la jointure (a) de PN12 hors combat ; au tri D77, les ordres d'affichage du dictionnaire et du draft supprimés comme visibles (S23 n'y touche pas) ; tous les S de §2.
+
+**Risques connus** : aucun test d'écran (D77) — la mise en page n'est vue que par toi, ni sur Android ni sur iOS ; M33 n'est pas atteignable (*Métallisation* n'est pas une relique, le Vol de vie ne vient que d'un passif masqué) ; Faiblesse, Brûlure, Poison et Électrocution ne se posent pas sur le héros en jeu (M32 : au tutoriel seulement) ; deux résidus de forme (S23).
+
+**Trois commandes** : `flutter test` (1612) · `flutter test test/unit/save_service_test.dart test/unit/signature_evolution_rules_test.dart` (la sauvegarde et les règles d'évolution) · `flutter run -d windows`.
 
 ## 1. La branche et ses chiffres
 
@@ -85,7 +98,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 
 ## 3. Les tests manuels
 
-*À écrire en fin de vague.* Points déjà renvoyés au test par les revues, à reprendre au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
+[Le fichier](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 38 points, à remplir : 0 ✅ · 0 ❌ · 38 non testés. Points renvoyés au test par les revues, repris au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
 
 ## 4. Trouvé périmé, et pour la file
 
@@ -100,8 +113,24 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 
 - **Autonomie `continu`, amendement PN12 (d) et PN13 (c) de la spec** : trois tours sans convergence (0/5/9/6, 0/2/6/5, 0/3/5/5), constats de classe T seulement ; l'orchestrateur a appliqué les corrections recommandées du troisième (la face Flame rendue publique avec son type, le renversement de P-6 réécrit, les conséquences de P-5 sur le calque, cinq mineurs, cinq rédactions) ; le dernier tour différentiel rend **prête** (0/0/4/6, corrigés au passage).
 
-1. **Les trois amendements de méthode du propriétaire** (prompt de lancement) : le tri des mineurs visibles à chaque tâche d'interface (S2), la tâche de vérification jouée par l'orchestrateur (S5), le contenu des écrans neufs tranché avant la vague — *bilan en fin de vague*.
+1. **Les trois amendements de méthode du propriétaire tiennent** : le tri des mineurs visibles a corrigé trois défauts que les revues laissaient en mineurs (S11, S19, S20) ; les tâches de vérification jouées par l'orchestrateur (S5, S13, S22) ont trouvé un grep en défaut chacune ; le contenu des écrans tranché avant la vague n'a pas empêché trois arrêts nés de PN12 (d) (P-5 et P-6, D77, P-7). Amendement : rien, les garder.
+2. **Deux exemples du plan contredisaient le réel** : l'ordre des signatures du Paladin (la donnée) et `getMaxScaleOnAxis` (la bibliothèque) ; les relectures les ont attrapés, pas le vérificateur du plan. Amendement : un vérificateur de plan recoupe chaque exemple tiré d'une donnée avec son fichier, et chaque promesse sur une bibliothèque avec sa source.
+3. **D77 a allégé la vague sans aveugler les relectures** : 392 tests d'écran retirés, six règles regardées par deux vérifications, puis 88 tests de calcul en partie 3 ; les mutations des tâches à risque ont tenu leur rôle (S17). Amendement : D77, déjà écrite.
+4. **Un rapport d'implémenteur affirmait une correction non faite** (S23, l'indentation) : la relecture ciblée l'a vu. Amendement : rien, la règle « ne pas se fier au rapport » suffit.
+5. **Des maquettes ont tranché PN12 en une réponse** du propriétaire, qui a inventé l'option (d). Amendement : une question P visible du joueur se pose avec ses maquettes (mémoire de l'orchestrateur).
 
 ## 6. Les statistiques de la session
 
-*À mesurer avant le commit de §3.8.*
+**Mesuré le 04/11/2026 à 05:27**, avant le commit de §3.8 — sessions : 1 (`e394dce2`) · arrêts : 5 · durée : du 25/10 à 03:05 au 04/11 à 05:27, dont 10 h 26 de temps actif de l'orchestrateur · tours de spec : 10 (4 + 2 à P-2 + 4 à PN12) · tours de plan : 13 (2 + 3 + 3, puis 2 à la reprise PN12, 1 sous D77, 2 à P-7)
+Prix lus le 04/11 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1179 $ (BCE, 03/11) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés ; `inference_geo` à `global`, le tarif de base)
+
+| | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|
+| Temps actif | 3 h 15 | 4 h 44 | 5 h 22 | 40 min | 10 h 26 | **24 h 26** |
+| Agents — Opus / Sonnet / Haiku | 12 / 0 / 0 | 14 / 3 / 0 | 12 / 49 / 2 | 2 / 1 / 0 | 1 / 0 / 0 | **41 / 53 / 2** |
+| Appels au modèle | 705 | 1 086 | 1 257 | 223 | 745 | **4 016** |
+| Jetons traités, dont hors cache | 161,4 M · 6,26 M | 257,3 M · 8,93 M | 131,3 M · 6,40 M | 53,3 M · 0,71 M | 342,1 M · 3,54 M | **945,5 M · 25,85 M** |
+| Sortie (minimum) | 883 k | 1 303 k | 1 098 k | 217 k | 767 k | **4 268 k** |
+| Coût API — $ / € | 79,81 / 71,40 | 118,96 / 106,41 | 51,42 / 45,99 | 18,31 / 16,38 | 111,24 / 99,51 | **379,74 / 339,69** |
+
+*Hors cache* : l'entrée hors cache et les écritures en cache. Le tri D77 compte dans l'implémentation ; la note de version, écrite par l'orchestrateur, dans sa colonne.
