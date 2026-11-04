@@ -12,6 +12,7 @@ import '../../models/data/level_up_reward_data.dart';
 import '../../models/data/passive_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/data/signature_data.dart';
+import '../../models/data/signature_evolution_data.dart';
 import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
@@ -301,7 +302,9 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     // Le sous-dossier de chaque classe : `classes/<classe>/skills/<id>.json`.
     directory: 'skills',
     ownerKind: EntityOwnerKind.heroClass,
-    requiredKeys: const {'cost', 'cooldown', 'type'},
+    // `evolutions` est obligatoire : la famille 3 en nomme l'absence avant
+    // `construct`, au lieu de laisser la famille 7 la decouvrir.
+    requiredKeys: const {'cost', 'cooldown', 'type', 'evolutions'},
     // `heroClass` est impose par le dossier de la classe ; `rarity`,
     // `isExhaust` et `category` appartiennent a une carte, et
     // `SignatureData.fromJson` les refuse (spec A11).
@@ -310,11 +313,26 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       // `status` n'est pas jouable : lu sur le modele, pas recopie.
       'type': _names(SignatureData.playableTypes.toList()),
       'target': _names(CardTarget.values),
+      // Les trois enumerations d'une evolution, lues sur son modele.
+      'evolutions[].tier': _names(EvolutionTier.values),
+      'evolutions[].target': SignatureEvolutionData.targetNames,
+      'evolutions[].deltas[].type': SignatureEvolutionData.deltaTypeNames,
     },
     bilingualBases: const ['name', 'description'],
     construct: SignatureData.fromJson,
     assetKeys: const {'sfx': AssetSlot.sound()},
-    vocabularyKeys: const {'animation', 'effects[].type', 'effects[].statusId'},
+    // `icon` et `color` d'une evolution suivent la forme de ceux d'une rune
+    // (voir `forgeUpgrade`) : des noms que l'interface traduit un a un, admis
+    // s'ils sont deja employes par un fichier livre ou par le gabarit, sans
+    // lire les tables de `lib/ui/`. Le test d'integrite exige que chaque
+    // evolution livree ait les siens, connus d'`effectIcons` et d'`effectColors`.
+    vocabularyKeys: const {
+      'animation',
+      'effects[].type',
+      'effects[].statusId',
+      'evolutions[].icon',
+      'evolutions[].color',
+    },
     template: '''
 {
   "cost": 1,

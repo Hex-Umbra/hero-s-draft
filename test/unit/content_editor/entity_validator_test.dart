@@ -137,6 +137,51 @@ void main() {
       );
     });
 
+    Map<String, dynamic> templateWithEvolution(
+      void Function(Map<String, dynamic> evolution) change,
+    ) {
+      final mechanics =
+          kEntityDescriptors[EntityCategory.signature]!.decodeTemplate();
+      change((mechanics['evolutions'] as List).first as Map<String, dynamic>);
+      return mechanics;
+    }
+
+    test('une evolution au tier inconnu est refusee par les enumerations', () {
+      final mechanics =
+          templateWithEvolution((evolution) => evolution['tier'] = 'legendary');
+      final faults = validatorWith().validate(
+        fixtureSignatureDraft(mechanics: jsonEncode(mechanics)),
+      );
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'evolutions[0].tier');
+    });
+
+    test('une icone d evolution qu aucun fichier n emploie est refusee', () {
+      final mechanics = templateWithEvolution(
+        (evolution) => evolution['icon'] = 'rocket_rounded',
+      );
+      final faults = validatorWith().validate(
+        fixtureSignatureDraft(mechanics: jsonEncode(mechanics)),
+      );
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'evolutions[0].icon');
+    });
+
+    test('une signature sans evolutions est refusee, la cle nommee', () {
+      final mechanics =
+          kEntityDescriptors[EntityCategory.signature]!.decodeTemplate()
+            ..remove('evolutions');
+      final faults = validatorWith().validate(
+        fixtureSignatureDraft(mechanics: jsonEncode(mechanics)),
+      );
+
+      expect(faults, hasLength(1));
+      expect(faults.single.field, 'evolutions');
+      expect(faults.single.message, 'champ obligatoire absent');
+    });
+
     test('une signature valide passe la construction, heroClass ajoute au '
         'document construit', () {
       final draft = fixtureSignatureDraft();

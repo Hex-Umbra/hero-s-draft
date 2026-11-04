@@ -5,6 +5,7 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/signature_evolution_data.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
@@ -130,10 +131,32 @@ void main() {
   test('la signature exige cost, cooldown et type, et refuse heroClass, '
       'rarity, isExhaust et category', () {
     final signature = kEntityDescriptors[EntityCategory.signature]!;
-    expect(signature.requiredKeys, {'cost', 'cooldown', 'type'});
+    expect(signature.requiredKeys, {'cost', 'cooldown', 'type', 'evolutions'});
     expect(
       signature.forbiddenKeys,
       {'heroClass', 'rarity', 'isExhaust', 'category'},
+    );
+  });
+
+  test('la signature connait ses evolutions : tier, target et deltas[].type '
+      'lus sur le modele', () {
+    final enums = kEntityDescriptors[EntityCategory.signature]!.enumKeys;
+    expect(
+      enums['evolutions[].tier'],
+      EvolutionTier.values.map((e) => e.name).toList(),
+    );
+    expect(enums['evolutions[].target'], SignatureEvolutionData.targetNames);
+    expect(
+      enums['evolutions[].deltas[].type'],
+      SignatureEvolutionData.deltaTypeNames,
+    );
+  });
+
+  test('evolutions[].icon et evolutions[].color sont des cles de vocabulaire, '
+      'comme celles d une rune', () {
+    expect(
+      kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys,
+      containsAll(['evolutions[].icon', 'evolutions[].color']),
     );
   });
 
@@ -435,8 +458,11 @@ void main() {
   test('les vocabulaires fermes cote moteur sont declares', () {
     expect(kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
         {'animation', 'effects[].type', 'effects[].statusId'});
-    expect(kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys,
-        kEntityDescriptors[EntityCategory.card]!.vocabularyKeys);
+    expect(kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys, {
+      ...kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
+      'evolutions[].icon',
+      'evolutions[].color',
+    });
     expect(kEntityDescriptors[EntityCategory.lotCard]!.vocabularyKeys,
         kEntityDescriptors[EntityCategory.card]!.vocabularyKeys);
     expect(kEntityDescriptors[EntityCategory.relic]!.vocabularyKeys,
