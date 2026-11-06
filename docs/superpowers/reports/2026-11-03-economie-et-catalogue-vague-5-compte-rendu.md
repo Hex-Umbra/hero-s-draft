@@ -6,7 +6,7 @@
 
 ## 0. Pour le propriétaire
 
-**À tester d'abord**, par risque — [tests manuels](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 38 points ; depuis D77, l'écran n'a plus d'autre filet que toi :
+**À tester d'abord**, par risque — [tests manuels](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 39 points ; depuis D77, l'écran n'a plus d'autre filet que toi :
 1. **M35, le parcours entier** : une run normale du Paladin jusqu'au niveau 5, le rideau, le draft de niveau, les deux écrans d'évolution (*Bouclier Sacré* d'abord, l'ordre de la fiche, S16), la tuile évoluée, l'appui long, puis quitter et reprendre — les évolutions et l'attente survivent (une run debug ne sauvegarde rien).
 2. **Le rideau et l'écran d'évolution** (M9 à M17) : nœuds fermés tant qu'un choix attend ; le retour système ne sort plus sans choisir (S19).
 3. **La tuile de combat et sa liste** (M18 à M31) : bande, badge ambre, puces et leur niveau écrit à côté (S20), la barre réduite sur écran bas, l'appui long dans tous les états (P-5).
@@ -98,7 +98,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 
 ## 3. Les tests manuels
 
-[Le fichier](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 38 points, à remplir : 0 ✅ · 0 ❌ · 38 non testés. Points renvoyés au test par les revues, repris au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
+[Le fichier](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 39 points, à remplir : 0 ✅ · 0 ❌ · 39 non testés. Points renvoyés au test par les revues, repris au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
 
 ## 4. Trouvé périmé, et pour la file
 

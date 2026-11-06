@@ -276,6 +276,9 @@
   "muteAll": "Couper le son",
 
   "signatureCostAndCooldown": "Coût : {cost} Mana · Recharge : {cooldown, plural, =1{1 tour} other{{cooldown} tours}}",
+  "signatureNextMinor": "Prochaine évolution mineure au niveau {level}",
+  "signatureNextMajor": "Prochaine évolution majeure au niveau {level}",
+  "signatureEvolutionPending": "Évolution à choisir",
   "signatureChooseTarget": "Choisissez une cible",
   "signatureTurnsLeft": "{count, plural, =1{1 tour} other{{count} tours}}",
   "effectValuePercent": "+{value} %",

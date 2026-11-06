@@ -4,7 +4,7 @@
 **Testé le** : non rempli
 **Résultat** : 0 ✅ · 0 ❌ · 38 non testés
 
-**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu). Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
+**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu) ; M39 s'y ajoute le 06/11 (les signatures dans « Mon Deck », demandées par le propriétaire). Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
 
 **Deux sortes de run.** « JOUER » lance une run normale, sauvegardée. « RUN DEBUG » (colonne DEBUG de l'accueil, build debug seulement) lance une run de test **qui ne sauvegarde jamais rien** : une reprise ne se teste que dans une run normale. Seule la run debug a le tiroir violet « DEBUG » au bord gauche. **En combat, un seul onglet, « Combat »** (« PV », « Mana », « Armure », « Soin complet », « Mana plein », les PV de chaque ennemi / « 0 PV », « Tous les ennemis a 0 PV », « Gagner le combat », « Perdre le combat », « Sauter la phase ennemie »). **Hors combat (carte du monde) : « Heros », « Run », « Deck », « Reliques ».** Un champ chiffré se valide en tapant la valeur puis Entrée. « Heros » porte « Puissance », « Niveau (stat brute) », « Gagner un niveau (ouvre le draft) » et, tout en bas, la section **« Évolutions de signature »** : pour chaque signature, son nom, la liste de ce qui est pris (« aucune », ou les identifiants et niveaux, ex. « zeal:2, sentence:1 »), un bouton par évolution que le prochain palier admet, **au nom français** (« Zèle »…), puis « Retirer les évolutions ». « Run » porte « Drafts en attente » ; « Deck » > « Ajouter une carte ». Les évolutions ne se posent donc que sur la carte du monde : entre deux poses qu'un combat doit montrer, finir le combat par « Gagner le combat », passer les récompenses, revenir à la carte.
 
@@ -69,43 +69,44 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 ## À tester d'abord
 <!-- du plus risqué au moins risqué -->
 1. **M35** — Le parcours de bout en bout : une run normale du Paladin jusqu'au niveau 5, le draft, les deux évolutions, la tuile évoluée, puis la reprise.
-2. **M10** — Le rideau au niveau 5 : le draft d'abord, puis *Bouclier Sacré*, puis *Châtiment*, puis les nœuds s'ouvrent.
-3. **M2** — Les médaillons de PV et d'Armure, et le rouge d'une ressource qui manque.
-4. **M24** — *Dévotion* jouable à 0 Mana ; *Rayonnement* joue sans demander de cible.
-5. **M29** — L'appui court joue, arme, désarme comme en `0.5.6` ; l'appui long ne fait rien de tout cela.
-6. **M34** — L'entrée de debug des évolutions (les autres points s'en servent).
-7. **M4** — Le draft de départ à deux quotas.
-8. **M9** — Le rideau sans draft : les nœuds restent éteints, aucun voyage possible.
-9. **M17** — L'évolution choisie se voit sur la tuile au combat suivant.
-10. **M25** — La liste de l'appui long : son contenu, et la colonne qui ne bouge pas.
-11. **M26** — Relâcher replie la liste, glisser ne la replie pas.
-12. **M31** — La barre sur une fenêtre basse : réduite, et la tuile réduite s'arme.
-13. **M27** — La liste qui s'ouvre vers le haut sur une fenêtre basse.
-14. **M28** — La liste dans les quatre états.
-15. **M12** — Les en-têtes de l'écran d'évolution.
-16. **M13** — Trois mineures au premier choix.
-17. **M14** — Trois majeures au deuxième.
-18. **M15** — Une mineure reprise : « +4 dégâts » et « Niveau 1 → 2 ».
-19. **M16** — L'icône du rouleau arrêté ; une majeure assez distincte d'une mineure.
-20. **M3** — Multi-coups (« 3×3 ») et croissance.
-21. **M1** — Les parenthèses des statuts proportionnels.
-22. **M20** — La bande d'icônes à la place de la description.
-23. **M19** — Les puces d'évolution.
-24. **M18** — Le badge « Niv. ».
-25. **M22** — Les évolutions chiffrées et la ligne qui se réduit d'un bloc.
-26. **M21** — Huit icônes sur Surtension de Mana.
-27. **M23** — Le gris des tuiles en recharge et sans le mana.
-28. **M30** — La barre à mi-hauteur à 1280 × 800.
-29. **M32** — Les icônes du panneau des statuts, le bleu de l'Armure en début de tour, les éclairs.
-30. **M33** — Métallisation et Vol de vie (non atteignables en `0.5.7`).
-31. **M5** — Le tutoriel, étape des éléments : le barème, et le texte du Gel sur petit écran.
-32. **M6** — Le tutoriel : le Mage sur Flux de Mana, le draft à deux sections.
-33. **M7** — Le tutoriel : Poison et Brûlure aux icônes des cartes.
-34. **M38** — Les deux phrases réécrites du tutoriel.
-35. **M8** — La tuile de signature hors combat : description remplie, sans badge.
-36. **M11** — Les rouleaux du draft de niveau : rien ne change.
-37. **M36** — Le chevron « Passifs » à un seul passif.
-38. **M37** — La barre de l'éditeur de contenu sur deux lignes.
+2. **M39** — Les signatures en tête de « Mon Deck » : fiche évoluée, prochaine évolution, défilement.
+3. **M10** — Le rideau au niveau 5 : le draft d'abord, puis *Bouclier Sacré*, puis *Châtiment*, puis les nœuds s'ouvrent.
+4. **M2** — Les médaillons de PV et d'Armure, et le rouge d'une ressource qui manque.
+5. **M24** — *Dévotion* jouable à 0 Mana ; *Rayonnement* joue sans demander de cible.
+6. **M29** — L'appui court joue, arme, désarme comme en `0.5.6` ; l'appui long ne fait rien de tout cela.
+7. **M34** — L'entrée de debug des évolutions (les autres points s'en servent).
+8. **M4** — Le draft de départ à deux quotas.
+9. **M9** — Le rideau sans draft : les nœuds restent éteints, aucun voyage possible.
+10. **M17** — L'évolution choisie se voit sur la tuile au combat suivant.
+11. **M25** — La liste de l'appui long : son contenu, et la colonne qui ne bouge pas.
+12. **M26** — Relâcher replie la liste, glisser ne la replie pas.
+13. **M31** — La barre sur une fenêtre basse : réduite, et la tuile réduite s'arme.
+14. **M27** — La liste qui s'ouvre vers le haut sur une fenêtre basse.
+15. **M28** — La liste dans les quatre états.
+16. **M12** — Les en-têtes de l'écran d'évolution.
+17. **M13** — Trois mineures au premier choix.
+18. **M14** — Trois majeures au deuxième.
+19. **M15** — Une mineure reprise : « +4 dégâts » et « Niveau 1 → 2 ».
+20. **M16** — L'icône du rouleau arrêté ; une majeure assez distincte d'une mineure.
+21. **M3** — Multi-coups (« 3×3 ») et croissance.
+22. **M1** — Les parenthèses des statuts proportionnels.
+23. **M20** — La bande d'icônes à la place de la description.
+24. **M19** — Les puces d'évolution.
+25. **M18** — Le badge « Niv. ».
+26. **M22** — Les évolutions chiffrées et la ligne qui se réduit d'un bloc.
+27. **M21** — Huit icônes sur Surtension de Mana.
+28. **M23** — Le gris des tuiles en recharge et sans le mana.
+29. **M30** — La barre à mi-hauteur à 1280 × 800.
+30. **M32** — Les icônes du panneau des statuts, le bleu de l'Armure en début de tour, les éclairs.
+31. **M33** — Métallisation et Vol de vie (non atteignables en `0.5.7`).
+32. **M5** — Le tutoriel, étape des éléments : le barème, et le texte du Gel sur petit écran.
+33. **M6** — Le tutoriel : le Mage sur Flux de Mana, le draft à deux sections.
+34. **M7** — Le tutoriel : Poison et Brûlure aux icônes des cartes.
+35. **M38** — Les deux phrases réécrites du tutoriel.
+36. **M8** — La tuile de signature hors combat : description remplie, sans badge.
+37. **M11** — Les rouleaux du draft de niveau : rien ne change.
+38. **M36** — Le chevron « Passifs » à un seul passif.
+39. **M37** — La barre de l'éditeur de contenu sur deux lignes.
 
 ## M1 — Infobulles : le barème des statuts proportionnels
 - **Atteindre la situation** : hors combat, accueil « DICTIONNAIRE », onglet « Cartes ». En combat : *Trait de Glace* en main (run Paladin ou debug, « Deck » > « Ajouter une carte » sur la carte du monde) ; *Décharge* et *Nova de givre* dans une run Mage (draft de départ ou « Ajouter une carte »).
@@ -375,6 +376,14 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 - **Faire** : lire les deux passages.
 - **Attendu** : « Choisissez votre classe » : « …et surtout par leur passif : c'est lui qui donne son style à la partie, et chaque passif a son propre lot de cartes. » (« …by their passive: it sets the style of your run, and each passive has its own set of cards. »). « Armure & Dégâts » : « La *façon d'en gagner* : vos cartes, et parfois votre passif — la Maîtrise, … » (« *How you earn it*: your cards, and sometimes your passive — Mastery, … »). Plus de « chaque classe en propose plusieurs », plus de « c'est votre passif ». **Juger** la formulation : elle se réécrit au besoin.
 - **Ne doit pas changer** : le reste des deux étapes.
+- **Résultat** : ✅ · ❌ · non testé —
+
+## M39 — Les signatures en tête de « Mon Deck » (neuf)
+*Neuf : demandé par le propriétaire le 06/11 ; [maquettes](../../presentations/2026-11-06_signatures_hors_combat_maquettes.pptx), options A et 2, sans chiffre d'XP.*
+- **Atteindre la situation** : « RUN DEBUG », Paladin ; niveau du héros par l'onglet « Heros », évolutions par sa section « Évolutions de signature » (M34) ; puis « MON DECK » depuis la carte, et depuis la barre du haut en combat. Pour l'attente, le niveau 5 sans choisir (M10).
+- **Faire** : ouvrir l'écran au niveau 3, sans évolution ; poser « Zèle », « Sentence », « Zèle » sur *Châtiment* au niveau 15 ; défiler ; recommencer sous 600 px de large, puis en anglais.
+- **Attendu** : en haut, « SIGNATURES » et une fiche par signature (*Bouclier Sacré*, puis *Châtiment*) : nom, type, coût et recharge, description. Sans évolution : pas de badge ni de liste, et « Prochaine évolution mineure au niveau 5 ». Avec les trois évolutions : badge « Niv. 3 », « Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. », les lignes « Zèle 2 +4 dégâts » et « Sentence… » avec leur icône, et « Prochaine évolution majeure au niveau 20 ». Quand un choix attend : « Évolution à choisir ». Côte à côte en large, empilées sous 600 px ; la bande défile avec les cartes. En anglais : « Next minor evolution at level 5 », « Next major evolution at level 20 », « Evolution to choose ». **Juger** : la bande prend-elle trop de place sur téléphone ?
+- **Ne doit pas changer** : les cartes, leur compteur, la fusion depuis la carte et son absence depuis le combat ; la tuile de combat ; aucun chiffre d'XP sur la fiche.
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## Ce qui doit rester inchangé

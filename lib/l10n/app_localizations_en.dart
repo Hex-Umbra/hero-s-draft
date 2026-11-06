@@ -1028,6 +1028,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String signatureNextMinor(int level) {
+    return 'Next minor evolution at level $level';
+  }
+
+  @override
+  String signatureNextMajor(int level) {
+    return 'Next major evolution at level $level';
+  }
+
+  @override
+  String get signatureEvolutionPending => 'Evolution to choose';
+
+  @override
   String get signatureChooseTarget => 'Choose a target';
 
   @override

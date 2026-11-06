@@ -1706,6 +1706,24 @@ abstract class AppLocalizations {
   /// **'Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}'**
   String signatureCostAndCooldown(int cost, int cooldown);
 
+  /// No description provided for @signatureNextMinor.
+  ///
+  /// In en, this message translates to:
+  /// **'Next minor evolution at level {level}'**
+  String signatureNextMinor(int level);
+
+  /// No description provided for @signatureNextMajor.
+  ///
+  /// In en, this message translates to:
+  /// **'Next major evolution at level {level}'**
+  String signatureNextMajor(int level);
+
+  /// No description provided for @signatureEvolutionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolution to choose'**
+  String get signatureEvolutionPending;
+
   /// Prompt under the signature bar while a signature waits for an enemy target.
   ///
   /// In en, this message translates to:

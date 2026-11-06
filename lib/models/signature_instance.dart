@@ -52,6 +52,9 @@ class SignatureInstance {
   /// [heroLevel] (A27).
   int pendingFor(int heroLevel) => max(0, heroLevel ~/ 5 - level);
 
+  /// Le niveau du héros auquel la prochaine évolution devient due.
+  int get nextEvolutionHeroLevel => (level + 1) * 5;
+
   /// Le rang de la prochaine évolution : mineure si son niveau est impair
   /// (héros niveau 5, 15, 25...), majeure sinon (D21).
   EvolutionTier get nextTier =>

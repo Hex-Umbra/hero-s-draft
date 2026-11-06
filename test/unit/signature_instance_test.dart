@@ -299,6 +299,18 @@ void main() {
     expect(_taken(['zeal:3']).pendingFor(10), 0);
   });
 
+  test('nextEvolutionHeroLevel : le niveau de heros de la prochaine evolution', () {
+    expect(
+      [
+        <String>[],
+        ['zeal:1'],
+        ['zeal:2'],
+        ['zeal:2', 'sentence:1'],
+      ].map((refs) => _taken(refs).nextEvolutionHeroLevel),
+      [5, 10, 15, 20],
+    );
+  });
+
   test('nextTier : niveau de heros 5 -> mineure, 10 -> majeure', () {
     expect(
       [

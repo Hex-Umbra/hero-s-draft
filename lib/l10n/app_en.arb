@@ -759,6 +759,19 @@
       "cooldown": { "type": "int" }
     }
   },
+  "signatureNextMinor": "Next minor evolution at level {level}",
+  "@signatureNextMinor": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "signatureNextMajor": "Next major evolution at level {level}",
+  "@signatureNextMajor": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "signatureEvolutionPending": "Evolution to choose",
   "signatureChooseTarget": "Choose a target",
   "@signatureChooseTarget": {
     "description": "Prompt under the signature bar while a signature waits for an enemy target."

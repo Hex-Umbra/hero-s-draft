@@ -1037,6 +1037,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String signatureNextMinor(int level) {
+    return 'Prochaine évolution mineure au niveau $level';
+  }
+
+  @override
+  String signatureNextMajor(int level) {
+    return 'Prochaine évolution majeure au niveau $level';
+  }
+
+  @override
+  String get signatureEvolutionPending => 'Évolution à choisir';
+
+  @override
   String get signatureChooseTarget => 'Choisissez une cible';
 
   @override
