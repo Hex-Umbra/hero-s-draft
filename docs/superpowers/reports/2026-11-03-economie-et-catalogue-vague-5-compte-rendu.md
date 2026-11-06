@@ -6,14 +6,14 @@
 
 ## 0. Pour le propriétaire
 
-**À tester d'abord**, par risque — [tests manuels](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 39 points ; depuis D77, l'écran n'a plus d'autre filet que toi :
+**À tester d'abord**, par risque — [tests manuels](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 40 points ; depuis D77, l'écran n'a plus d'autre filet que toi :
 1. **M35, le parcours entier** : une run normale du Paladin jusqu'au niveau 5, le rideau, le draft de niveau, les deux écrans d'évolution (*Bouclier Sacré* d'abord, l'ordre de la fiche, S16), la tuile évoluée, l'appui long, puis quitter et reprendre — les évolutions et l'attente survivent (une run debug ne sauvegarde rien).
 2. **Le rideau et l'écran d'évolution** (M9 à M17) : nœuds fermés tant qu'un choix attend ; le retour système ne sort plus sans choisir (S19).
 3. **La tuile de combat et sa liste** (M18 à M31) : bande, badge ambre, puces et leur niveau écrit à côté (S20), la barre réduite sur écran bas, l'appui long dans tous les états (P-5).
 4. **L'entrée de debug « Évolutions de signature »** (M34) : elle prépare M18 à M27.
 5. **Les parties 1 et 2** (M1 à M8, M36 à M38) : coûts en PV et en Armure, runes, lots, draft 2 + 3, tutoriel.
 
-**Arbitrages que le joueur verra** — tes réponses : PN12 (d), les icônes et la liste à l'appui long ; PN13 (c), le badge ambre ; P-1 (a), 25 % par point ; P-2 (c) et P-4 (a), badge, icônes, icône sur le rouleau ; P-3 (a) ; P-5 (a) ; P-6 (a), les icônes des cartes ; P-7 (a), l'entrée de debug ; Q9, 2 du lot et 3 neutres ; O5, six passifs masqués ; D76, une vague de plus. **À juger au test** : MINEURE et MAJEURE au même gris (S19) ; le bleu de l'Armure en début de tour (S18) ; le médaillon bleu en recharge (S20) ; les phrases de la liste, reprises de la spec (« Donne 4 d'Armure » mais « gagne 2 Armure au début du tour »).
+**Arbitrages que le joueur verra** — tes réponses : PN12 (d), les icônes et la liste à l'appui long ; PN13 (c), le badge ambre ; P-1 (a), 25 % par point ; P-2 (c) et P-4 (a), badge, icônes, icône sur le rouleau ; P-3 (a) ; P-5 (a) ; P-6 (a), les icônes des cartes ; P-7 (a), l'entrée de debug ; Q9, 2 du lot et 3 neutres ; O5, six passifs masqués ; D76, une vague de plus. **À juger au test** : une majeure assez distincte d'une mineure, à l'anneau seul depuis D78 (S19) ; le bleu de l'Armure en début de tour (S18) ; le médaillon bleu en recharge (S20) ; les phrases de la liste, reprises de la spec (« Donne 4 d'Armure » mais « gagne 2 Armure au début du tour »).
 
 **Faits sans toi** : l'autonomie `continu` une fois, à l'amendement PN12 (§5) ; les interprétations — Q9 lu comme deux quotas, C1.3 (un coût touche `feeds`), D35, PL2, l'accumulation de P-1, la prose du tutoriel réécrite (S14), la jointure (a) de PN12 hors combat ; au tri D77, les ordres d'affichage du dictionnaire et du draft supprimés comme visibles (S23 n'y touche pas) ; tous les S de §2.
 
@@ -38,7 +38,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 |:---|:---|:---:|:---|:---:|
 | Q6 · Q7 · Q8 | Pools d'évolutions ; majeures contradictoires ; cartes-pont | P | 3 mineures, 4 majeures, repli confirmé ; `excludes` en donnée ; pas de pont (propriétaire, prompt) | — |
 | Q9 · Q11 · O5 | Draft de départ ; double bonus de Puissance ; masquage | P | 2 du lot + 3 neutres, lu comme deux quotas ; un bonus par carte ; masqué si aucune carte ne porte le passif (propriétaire) | — |
-| Écran | L'écran d'évolution | P | Le carrousel, trois rouleaux, nom, description, palier, « 1 → 2 », signature en tête (propriétaire) | — |
+| Écran | L'écran d'évolution | P | Le carrousel, trois rouleaux, nom, description, palier, « 1 → 2 », signature en tête (propriétaire) ; **remplacé le 06/11 par le tableau de la signature, sans tirage (D78)** | — |
 | P-1 | Le barème des statuts proportionnels | P | (a) 25 % par point, plafonds 4 / 2 / 3 (propriétaire, 03/11) | — |
 | P-2 · P-4 | L'affichage des évolutions ; l'icône sur le rouleau | P | (c) badge et icônes, « rien n'est caché » ; (a) l'icône sur le rouleau (propriétaire, 03/11) | — |
 | P-3 | L'écho et les événements « carte jouée » | P | (a) aucun événement (propriétaire, 03/11) | — |
@@ -98,7 +98,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 
 ## 3. Les tests manuels
 
-[Le fichier](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 39 points, à remplir : 0 ✅ · 0 ❌ · 39 non testés. Points renvoyés au test par les revues, repris au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
+[Le fichier](2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md), 40 points, à remplir : 0 ✅ · 0 ❌ · 40 non testés. Points renvoyés au test par les revues, repris au fichier : le texte du Gel de la galerie sur petit écran ; le 3e médaillon Flame en (6, 58) face aux emplacements de runes, et la ligne Flame vide sans contexte ; le titre « Cartes de Régénération d'Armure » et la grille du draft à largeur de téléphone ; le chevron « Passifs » à un seul passif ; la barre de l'éditeur sur deux lignes ; les deux phrases du tutoriel réécrites (S14). Partie 3 : M7 à M34 de la spec §9.1 ; la lisibilité du bleu de l'Armure en début de tour et des deux éclairs (S18) ; une majeure assez distincte d'une mineure à l'écran d'évolution (S19).
 
 ## 4. Trouvé périmé, et pour la file
 
