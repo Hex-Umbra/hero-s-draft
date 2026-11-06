@@ -263,29 +263,32 @@ void main() {
     });
 
     test(
-        'nextPendingEvolution : Chatiment puis Bouclier Sacre au niveau 5 ; sur '
-        'un saut de 4 a 10, les deux mineures puis les deux majeures', () {
-      String? next() => run.currentState.nextPendingEvolution?.data.id;
+        'pendingEvolutions : les deux signatures ensemble, dans l ordre de la '
+        'fiche ; sur un saut de 4 a 10, les deux encore apres le premier choix',
+        () {
+      List<String> pending() => [
+            for (final s in run.currentState.pendingEvolutions) s.data.id,
+          ];
+
+      start('paladin', 4);
+      expect(pending(), isEmpty);
 
       // L'ordre livré de `HeroData.skills` du Paladin : Bouclier Sacre, puis
       // Châtiment.
       start('paladin', 5);
-      expect(next(), 'holy_shield');
+      expect(pending(), ['holy_shield', 'smite']);
       run.chooseSignatureEvolution('holy_shield', 'ward');
-      expect(next(), 'smite');
+      expect(pending(), ['smite']);
       run.chooseSignatureEvolution('smite', 'zeal');
-      expect(next(), isNull);
+      expect(pending(), isEmpty);
 
       start('paladin', 10);
-      expect(next(), 'holy_shield');
       run.chooseSignatureEvolution('holy_shield', 'ward');
-      expect(next(), 'smite');
       run.chooseSignatureEvolution('smite', 'zeal');
-      expect(next(), 'holy_shield');
+      expect(pending(), ['holy_shield', 'smite']);
       run.chooseSignatureEvolution('holy_shield', 'haste');
-      expect(next(), 'smite');
       run.chooseSignatureEvolution('smite', 'haste');
-      expect(next(), isNull);
+      expect(pending(), isEmpty);
     });
 
     test('hasPendingChoice : un draft ou une evolution en attente', () {

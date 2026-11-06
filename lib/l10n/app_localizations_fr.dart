@@ -1179,6 +1179,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get evolutionScreenTitleBoth => 'Vos signatures évoluent';
+
+  @override
+  String get evolutionCurtainTitle => 'ÉVOLUTION';
+
+  @override
+  String evolutionCurtainOne(String signature) {
+    return '$signature peut évoluer';
+  }
+
+  @override
+  String get evolutionCurtainBoth => 'Vos signatures peuvent évoluer';
+
+  @override
+  String get evolutionCurtainAction => 'TOUCHEZ POUR CHOISIR';
+
+  @override
   String evolutionBoardTierMinor(int level) {
     return 'Évolution mineure · niveau $level du héros';
   }
@@ -1230,6 +1247,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get evolutionBoardPick => 'Choisissez une évolution';
+
+  @override
+  String get evolutionBoardPickBoth => 'Choisissez une évolution par signature';
+
+  @override
+  String get evolutionBoardTakeBoth => 'Valider les deux';
 
   @override
   String evolutionBoardTake(String name) {

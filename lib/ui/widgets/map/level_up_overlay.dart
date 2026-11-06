@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:roguelike_card_game/l10n/app_localizations.dart';
+
+import '../../../models/signature_instance.dart';
 
 class LevelUpOverlay extends StatefulWidget {
   final VoidCallback onTap;
 
-  const LevelUpOverlay({super.key, required this.onTap});
+  /// Les signatures dont l'évolution est le prochain choix. Vide, le prochain
+  /// choix est un draft de niveau.
+  final List<SignatureInstance> evolving;
+
+  const LevelUpOverlay({
+    super.key,
+    required this.onTap,
+    this.evolving = const [],
+  });
 
   @override
   State<LevelUpOverlay> createState() => _LevelUpOverlayState();
@@ -48,6 +59,21 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final evolving = widget.evolving;
+    final isEvolution = evolving.isNotEmpty;
+    final title = isEvolution ? l10n.evolutionCurtainTitle : '🎉 LEVEL UP ! 🎉';
+    final subtitle = switch (evolving) {
+      [] => 'Votre héros a gagné en puissance !',
+      [final signature] => l10n.evolutionCurtainOne(
+          signature.data.getName(l10n.localeName),
+        ),
+      _ => l10n.evolutionCurtainBoth,
+    };
+    final action = isEvolution
+        ? l10n.evolutionCurtainAction
+        : 'TOUCHEZ POUR OBTENIR VOS RÉCOMPENSES';
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -86,9 +112,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              '🎉 LEVEL UP ! 🎉',
-                              style: TextStyle(
+                            Text(
+                              title,
+                              style: const TextStyle(
                                 color: Colors.amberAccent,
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,
@@ -102,9 +128,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                               ),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Votre héros a gagné en puissance !',
-                              style: TextStyle(
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -112,9 +138,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 24),
-                            const Text(
-                              'TOUCHEZ POUR OBTENIR VOS RÉCOMPENSES',
-                              style: TextStyle(
+                            Text(
+                              action,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

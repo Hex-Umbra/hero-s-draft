@@ -302,10 +302,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // Overlay de Level Up
           if (runState.hasPendingChoice)
             LevelUpOverlay(
+              // Le rideau dit ce qui attend : un draft d'abord, sinon les
+              // évolutions (D79).
+              evolving: runState.pendingDrafts > 0
+                  ? const []
+                  : runState.pendingEvolutions,
               onTap: () {
                 // Un draft de niveau d'abord, puis les évolutions en attente :
                 // le rideau revient tant qu'il en reste une.
-                final evolving = runState.nextPendingEvolution;
+                final evolving = runState.pendingEvolutions;
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => runState.pendingDrafts > 0
@@ -318,7 +323,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             },
                           )
                         : SignatureEvolutionScreen(
-                            signature: evolving!,
+                            signatures: evolving,
                             onComplete: () => Navigator.of(context).pop(),
                           ),
                   ),

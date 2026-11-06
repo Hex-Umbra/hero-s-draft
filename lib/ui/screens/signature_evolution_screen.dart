@@ -18,18 +18,18 @@ import '../widgets/screen_scaffold.dart';
 import '../widgets/signature_run_card.dart';
 import '../widgets/ui_card/ui_card_helpers.dart';
 
-/// Le choix d'une évolution de [signature], sur le tableau de son pool (D78) :
+/// Le choix des évolutions de [signatures], sur un seul écran (D78, D79) :
 /// aucun tirage, tout ce que le palier admet se choisit, et le reste du pool se
 /// lit. Toucher une ligne la sélectionne, la fiche montre le résultat, et seul
-/// le bouton prend l'évolution, puis [onComplete]. Le retour ramène au rideau
-/// sans rien perdre : rien n'est tiré à l'ouverture.
+/// le bouton prend les évolutions, toutes ensemble, puis [onComplete]. Le
+/// retour ramène au rideau sans rien perdre : rien n'est tiré à l'ouverture.
 class SignatureEvolutionScreen extends ConsumerStatefulWidget {
-  final SignatureInstance signature;
+  final List<SignatureInstance> signatures;
   final VoidCallback onComplete;
 
   const SignatureEvolutionScreen({
     super.key,
-    required this.signature,
+    required this.signatures,
     required this.onComplete,
   });
 
@@ -40,43 +40,58 @@ class SignatureEvolutionScreen extends ConsumerStatefulWidget {
 
 class _SignatureEvolutionScreenState
     extends ConsumerState<SignatureEvolutionScreen> {
-  SignatureEvolutionData? _selected;
+  /// L'évolution sélectionnée de chaque signature, par id de signature.
+  final Map<String, SignatureEvolutionData> _selected = {};
   bool _confirmed = false;
 
-  /// Le niveau déjà pris de [evolution], 0 si elle n'est pas prise.
-  int _takenLevel(SignatureEvolutionData evolution) =>
-      widget.signature.taken
+  /// Le niveau déjà pris de [evolution] sur [signature], 0 si elle n'est pas
+  /// prise.
+  int _takenLevel(
+    SignatureInstance signature,
+    SignatureEvolutionData evolution,
+  ) =>
+      signature.taken
           .where((t) => t.$1.id == evolution.id)
           .map((t) => t.$2)
           .firstOrNull ??
       0;
 
-  void _select(SignatureEvolutionData evolution) {
+  void _select(SignatureInstance signature, SignatureEvolutionData evolution) {
     ref.read(audioDirectorProvider).onMoment(GameMoment.draftCardPick);
-    setState(() => _selected = evolution);
+    setState(() => _selected[signature.data.id] = evolution);
   }
 
-  void _confirm(SignatureEvolutionData evolution) {
+  void _confirm() {
     if (_confirmed) return;
     _confirmed = true;
+    final run = ref.read(runProvider.notifier);
     // Refusé ou non, le rideau de la carte rouvre ce qui reste.
-    ref
-        .read(runProvider.notifier)
-        .chooseSignatureEvolution(widget.signature.data.id, evolution.id);
+    for (final MapEntry(key: signatureId, value: evolution)
+        in _selected.entries) {
+      run.chooseSignatureEvolution(signatureId, evolution.id);
+    }
     widget.onComplete();
+  }
+
+  /// [signature] telle qu'elle sera après le choix sélectionné, s'il y en a un.
+  SignatureInstance _preview(SignatureInstance signature) {
+    final selected = _selected[signature.data.id];
+    if (selected == null) return signature;
+    return SignatureEvolutionRules.take(signature, selected.id) ?? signature;
   }
 
   /// La ligne d'une évolution du palier : son texte au niveau qu'elle prendrait.
   Widget _choiceRow(
     AppLocalizations l10n,
+    SignatureInstance signature,
     SignatureEvolutionData evolution,
     Color classColor,
   ) {
-    final taken = _takenLevel(evolution);
+    final taken = _takenLevel(signature, evolution);
     final description = evolution.getDescription(
       taken + 1,
       l10n.localeName,
-      cost: widget.signature.data.cost,
+      cost: signature.data.cost,
     );
     return _EvolutionRow(
       evolution: evolution,
@@ -84,8 +99,8 @@ class _SignatureEvolutionScreenState
           ? l10n.evolutionBoardLevelUp(taken, taken + 1, description)
           : description,
       accent: classColor,
-      selected: evolution.id == _selected?.id,
-      onTap: () => _select(evolution),
+      selected: evolution.id == _selected[signature.data.id]?.id,
+      onTap: () => _select(signature, evolution),
     );
   }
 
@@ -93,35 +108,38 @@ class _SignatureEvolutionScreenState
   /// à son niveau actuel, ou au premier si elle n'est pas prise.
   Widget _lockedRow(
     AppLocalizations l10n,
+    SignatureInstance signature,
     SignatureEvolutionData evolution,
     Color classColor, {
     String? tag,
   }) {
-    final taken = _takenLevel(evolution);
+    final taken = _takenLevel(signature, evolution);
     return _EvolutionRow(
       evolution: evolution,
       description: evolution.getDescription(
         taken > 0 ? taken : 1,
         l10n.localeName,
-        cost: widget.signature.data.cost,
+        cost: signature.data.cost,
       ),
       accent: classColor,
       tag: tag,
     );
   }
 
-  /// Le pool, section par section : ce qu'on peut prendre d'abord.
+  /// Le pool de [signature], section par section : ce qu'on peut prendre
+  /// d'abord.
   List<Widget> _pool(
     AppLocalizations l10n,
-    SignatureEvolutionBoard board,
+    SignatureInstance signature,
     Color classColor,
   ) {
     final locale = l10n.localeName;
-    final upcomingMinors = widget.signature.nextTier == EvolutionTier.major;
+    final board = SignatureEvolutionRules.board(signature);
+    final upcomingMinors = signature.nextTier == EvolutionTier.major;
     return [
       _SectionTitle(l10n.evolutionBoardToChoose, color: classColor),
       for (final evolution in board.choices)
-        _choiceRow(l10n, evolution, classColor),
+        _choiceRow(l10n, signature, evolution, classColor),
       if (board.upcoming.isNotEmpty) ...[
         _SectionTitle(
           upcomingMinors
@@ -131,23 +149,27 @@ class _SignatureEvolutionScreenState
         for (final evolution in board.upcoming)
           _lockedRow(
             l10n,
+            signature,
             evolution,
             classColor,
-            tag: _takenLevel(evolution) > 0
-                ? l10n.evolutionBoardTakenLevel(_takenLevel(evolution))
+            tag: _takenLevel(signature, evolution) > 0
+                ? l10n.evolutionBoardTakenLevel(
+                    _takenLevel(signature, evolution),
+                  )
                 : null,
           ),
       ],
       if (board.takenMajors.isNotEmpty) ...[
         _SectionTitle(l10n.evolutionBoardTaken),
         for (final evolution in board.takenMajors)
-          _lockedRow(l10n, evolution, classColor),
+          _lockedRow(l10n, signature, evolution, classColor),
       ],
       if (board.excluded.isNotEmpty) ...[
         _SectionTitle(l10n.evolutionBoardExcluded),
         for (final (evolution, by) in board.excluded)
           _lockedRow(
             l10n,
+            signature,
             evolution,
             classColor,
             tag: l10n.evolutionBoardExcludedBy(by.getName(locale)),
@@ -156,83 +178,128 @@ class _SignatureEvolutionScreenState
     ];
   }
 
+  String _tierLine(AppLocalizations l10n, SignatureInstance signature) {
+    final level = signature.nextEvolutionHeroLevel;
+    return signature.nextTier == EvolutionTier.major
+        ? l10n.evolutionBoardTierMajor(level)
+        : l10n.evolutionBoardTierMinor(level);
+  }
+
   Widget _confirmButton(AppLocalizations l10n, Color classColor) {
-    final selected = _selected;
-    return GameButton(
-      text: selected == null
+    final signatures = widget.signatures;
+    final ready = signatures.every((s) => _selected.containsKey(s.data.id));
+    final String text;
+    if (signatures.length > 1) {
+      text = ready ? l10n.evolutionBoardTakeBoth : l10n.evolutionBoardPickBoth;
+    } else {
+      final selected = _selected[signatures.single.data.id];
+      text = selected == null
           ? l10n.evolutionBoardPick
-          : l10n.evolutionBoardTake(selected.getName(l10n.localeName)),
-      baseColor: classColor,
-      width: double.infinity,
-      onPressed: selected == null ? null : () => _confirm(selected),
+          : l10n.evolutionBoardTake(selected.getName(l10n.localeName));
+    }
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: GameButton(
+          text: text,
+          baseColor: classColor,
+          width: double.infinity,
+          onPressed: ready ? _confirm : null,
+        ),
+      ),
     );
   }
 
-  /// Large : la fiche et le bouton à gauche, le pool à droite.
+  /// Large : une colonne par signature, sa fiche puis son pool. Chaque colonne
+  /// défile seule. Sans [withSheet], sur une fenêtre basse où la fiche cacherait
+  /// le pool, le coût et la recharge d'après le choix la remplacent.
   Widget _wide(
     AppLocalizations l10n,
-    SignatureEvolutionBoard board,
-    SignatureInstance preview,
     int heroLevel,
-    Color classColor,
-  ) {
+    Color classColor, {
+    required bool withSheet,
+  }) {
+    final signatures = widget.signatures;
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 960),
+        constraints: BoxConstraints(maxWidth: 560.0 * signatures.length),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.lg,
+          spacing: AppSpacing.md,
           children: [
-            SizedBox(
-              width: 330,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SectionTitle(
-                    _selected == null
-                        ? l10n.evolutionBoardToday
-                        : l10n.evolutionBoardAfter,
-                    color: Colors.amberAccent,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: SignatureRunCard(
-                        signature: preview,
+            for (final signature in signatures)
+              Expanded(
+                child: ListView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _tierLine(l10n, signature),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            withSheet
+                                ? (_selected.containsKey(signature.data.id)
+                                        ? l10n.evolutionBoardAfter
+                                        : l10n.evolutionBoardToday)
+                                    .toUpperCase()
+                                : l10n.signatureCostAndCooldown(
+                                    _preview(signature).cost,
+                                    _preview(signature).cooldown,
+                                  ),
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (withSheet)
+                      SignatureRunCard(
+                        signature: _preview(signature),
                         heroLevel: heroLevel,
                         classColor: classColor,
                       ),
-                    ),
-                  ),
-                  AppSpacing.heightSm,
-                  _confirmButton(l10n, classColor),
-                ],
+                    ..._pool(l10n, signature, classColor),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView(
-                children: _pool(l10n, board, classColor),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  /// Téléphone : la fiche ne tient pas. Le pool défile, et le coût et la
-  /// recharge d'après le choix restent visibles au-dessus du bouton.
-  Widget _narrow(
+  /// Le pool d'une signature sur téléphone : la fiche ne tient pas, le coût et
+  /// la recharge d'après le choix restent visibles sous la liste.
+  Widget _narrowPage(
     AppLocalizations l10n,
-    SignatureEvolutionBoard board,
-    SignatureInstance preview,
+    SignatureInstance signature,
     Color classColor,
   ) {
+    final preview = _preview(signature);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: ListView(
-            children: _pool(l10n, board, classColor),
+            children: [
+              Text(
+                _tierLine(l10n, signature),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              ..._pool(l10n, signature, classColor),
+            ],
           ),
         ),
         AppSpacing.heightSm,
@@ -241,9 +308,62 @@ class _SignatureEvolutionScreenState
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.amberAccent, fontSize: 12),
         ),
-        AppSpacing.heightSm,
-        _confirmButton(l10n, classColor),
       ],
+    );
+  }
+
+  /// Téléphone : un onglet par signature, coché quand son choix est fait.
+  Widget _narrow(AppLocalizations l10n, Color classColor) {
+    final signatures = widget.signatures;
+    if (signatures.length == 1) {
+      return _narrowPage(l10n, signatures.single, classColor);
+    }
+    return DefaultTabController(
+      length: signatures.length,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TabBar(
+            indicatorColor: classColor,
+            dividerColor: Colors.transparent,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white54,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+            tabs: [
+              for (final signature in signatures)
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 4,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          signature.data.getName(l10n.localeName),
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (_selected.containsKey(signature.data.id))
+                        Icon(Icons.check_circle, color: classColor, size: 16),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          AppSpacing.heightSm,
+          Expanded(
+            child: TabBarView(
+              children: [
+                for (final signature in signatures)
+                  _narrowPage(l10n, signature, classColor),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -257,21 +377,16 @@ class _SignatureEvolutionScreenState
     final classColor = ClassIdentity.colorOf(
       gameData.heroes.firstWhere((h) => h.id == runState.heroClassId),
     );
-
-    final signature = widget.signature;
-    final board = SignatureEvolutionRules.board(signature);
-    final selected = _selected;
-    final preview = selected == null
-        ? signature
-        : SignatureEvolutionRules.take(signature, selected.id) ?? signature;
-    final tierLevel = signature.nextEvolutionHeroLevel;
+    final signatures = widget.signatures;
 
     return ScreenScaffold(
       backgroundType: ScreenBackgroundType.dark,
       appBar: PageHeader(
-        title: l10n.evolutionScreenTitle(
-          signature.data.getName(l10n.localeName),
-        ),
+        title: signatures.length > 1
+            ? l10n.evolutionScreenTitleBoth
+            : l10n.evolutionScreenTitle(
+                signatures.single.data.getName(l10n.localeName),
+              ),
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -283,27 +398,20 @@ class _SignatureEvolutionScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              signature.nextTier == EvolutionTier.major
-                  ? l10n.evolutionBoardTierMajor(tierLevel)
-                  : l10n.evolutionBoardTierMinor(tierLevel),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            AppSpacing.heightSm,
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) => constraints.maxWidth < 600
-                    ? _narrow(l10n, board, preview, classColor)
+                    ? _narrow(l10n, classColor)
                     : _wide(
                         l10n,
-                        board,
-                        preview,
                         runState.heroStats.level,
                         classColor,
+                        withSheet: constraints.maxHeight >= 420,
                       ),
               ),
             ),
+            AppSpacing.heightSm,
+            _confirmButton(l10n, classColor),
           ],
         ),
       ),

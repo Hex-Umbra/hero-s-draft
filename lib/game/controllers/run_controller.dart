@@ -85,23 +85,16 @@ class RunState {
   /// sont, sous `signatureEvolutions` (spec P-42 T1 et P-44 lot 1, §8).
   final List<SignatureInstance> signatures;
 
-  /// La signature dont l'évolution attend le plus tôt : parmi celles dont
-  /// `pendingFor(heroStats.level)` est positif, celle dont le prochain niveau
-  /// est le plus bas ; à égalité, la première de [signatures].
-  SignatureInstance? get nextPendingEvolution {
-    SignatureInstance? next;
-    for (final s in signatures) {
-      if (s.pendingFor(heroStats.level) > 0 &&
-          (next == null || s.level < next.level)) {
-        next = s;
-      }
-    }
-    return next;
-  }
+  /// Les signatures dont une évolution attend, dans l'ordre de [signatures] :
+  /// elles se choisissent ensemble, sur un seul écran (D79).
+  List<SignatureInstance> get pendingEvolutions => [
+        for (final s in signatures)
+          if (s.pendingFor(heroStats.level) > 0) s,
+      ];
 
   /// Vrai tant qu'un draft de carte ou une évolution de signature attend : la
   /// condition du rideau de la carte et des gardes de nœud.
-  bool get hasPendingChoice => pendingDrafts > 0 || nextPendingEvolution != null;
+  bool get hasPendingChoice => pendingDrafts > 0 || pendingEvolutions.isNotEmpty;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;

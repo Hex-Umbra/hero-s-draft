@@ -1826,6 +1826,36 @@ abstract class AppLocalizations {
   /// **'{signature} evolves'**
   String evolutionScreenTitle(String signature);
 
+  /// Title of the signature evolution screen, when two signatures evolve together.
+  ///
+  /// In en, this message translates to:
+  /// **'Your signatures evolve'**
+  String get evolutionScreenTitleBoth;
+
+  /// Title of the map curtain when the next pending choice is a signature evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'EVOLUTION'**
+  String get evolutionCurtainTitle;
+
+  /// Map curtain text when one signature waits for its evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'{signature} can evolve'**
+  String evolutionCurtainOne(String signature);
+
+  /// Map curtain text when two signatures wait for their evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Your signatures can evolve'**
+  String get evolutionCurtainBoth;
+
+  /// Call to action of the map curtain when a signature evolution waits.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO CHOOSE'**
+  String get evolutionCurtainAction;
+
   /// Subtitle of the signature evolution screen, on a minor tier.
   ///
   /// In en, this message translates to:
@@ -1903,6 +1933,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose an evolution'**
   String get evolutionBoardPick;
+
+  /// Disabled confirm button of the evolution screen, while a choice is missing on two signatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one evolution per signature'**
+  String get evolutionBoardPickBoth;
+
+  /// Confirm button of the evolution screen, when two signatures evolve together.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm both'**
+  String get evolutionBoardTakeBoth;
 
   /// Confirm button of the evolution screen.
   ///

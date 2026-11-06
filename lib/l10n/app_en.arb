@@ -891,6 +891,29 @@
       "signature": { "type": "String" }
     }
   },
+  "evolutionScreenTitleBoth": "Your signatures evolve",
+  "@evolutionScreenTitleBoth": {
+    "description": "Title of the signature evolution screen, when two signatures evolve together."
+  },
+  "evolutionCurtainTitle": "EVOLUTION",
+  "@evolutionCurtainTitle": {
+    "description": "Title of the map curtain when the next pending choice is a signature evolution."
+  },
+  "evolutionCurtainOne": "{signature} can evolve",
+  "@evolutionCurtainOne": {
+    "description": "Map curtain text when one signature waits for its evolution.",
+    "placeholders": {
+      "signature": { "type": "String" }
+    }
+  },
+  "evolutionCurtainBoth": "Your signatures can evolve",
+  "@evolutionCurtainBoth": {
+    "description": "Map curtain text when two signatures wait for their evolution."
+  },
+  "evolutionCurtainAction": "TAP TO CHOOSE",
+  "@evolutionCurtainAction": {
+    "description": "Call to action of the map curtain when a signature evolution waits."
+  },
   "evolutionBoardTierMinor": "Minor evolution · hero level {level}",
   "@evolutionBoardTierMinor": {
     "description": "Subtitle of the signature evolution screen, on a minor tier.",
@@ -965,6 +988,14 @@
   "evolutionBoardPick": "Choose an evolution",
   "@evolutionBoardPick": {
     "description": "Disabled confirm button of the evolution screen, before any selection."
+  },
+  "evolutionBoardPickBoth": "Choose one evolution per signature",
+  "@evolutionBoardPickBoth": {
+    "description": "Disabled confirm button of the evolution screen, while a choice is missing on two signatures."
+  },
+  "evolutionBoardTakeBoth": "Confirm both",
+  "@evolutionBoardTakeBoth": {
+    "description": "Confirm button of the evolution screen, when two signatures evolve together."
   },
   "evolutionBoardTake": "Take {name}",
   "@evolutionBoardTake": {
