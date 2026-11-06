@@ -29,22 +29,26 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
         : null;
 
     return AppBar(
-      title: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 2.0,
-          fontSize: 20,
-          shadows: isParchment
-              ? null
-              : [
-                  Shadow(
-                    color: Colors.black.withAlpha(150),
-                    offset: const Offset(1, 1),
-                    blurRadius: 4,
-                  ),
-                ],
+      // Un titre trop long pour un téléphone rétrécit plutôt que d'être coupé.
+      title: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2.0,
+            fontSize: 20,
+            shadows: isParchment
+                ? null
+                : [
+                    Shadow(
+                      color: Colors.black.withAlpha(150),
+                      offset: const Offset(1, 1),
+                      blurRadius: 4,
+                    ),
+                  ],
+          ),
         ),
       ),
       leading: leadingButton,

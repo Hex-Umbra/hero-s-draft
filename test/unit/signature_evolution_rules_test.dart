@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,9 +10,9 @@ import 'package:roguelike_card_game/models/data/signature_evolution_data.dart';
 import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-/// Le tirage, le choix et l'attente des évolutions de signature (spec P-42 T1 et P-44 lot 1,
-/// partie 3) : les règles pures sur le pool livré de *Frappe Téméraire*, puis
-/// l'entrée dans `RunController` sur les vraies classes.
+/// Le choix et l'attente des évolutions de signature (spec P-42 T1 et P-44
+/// lot 1, partie 3 ; D78) : les règles pures sur le pool livré de *Frappe
+/// Téméraire*, puis l'entrée dans `RunController` sur les vraies classes.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -31,55 +29,126 @@ void main() {
   List<String> ids(List<SignatureEvolutionData> offer) =>
       [for (final e in offer) e.id];
 
-  Iterable<List<SignatureEvolutionData>> offers(SignatureInstance s) sync* {
-    for (var seed = 0; seed < 20; seed++) {
-      yield SignatureEvolutionRules.offer(s, Random(seed));
-    }
-  }
+  const minors = ['brutality', 'instinct', 'shatter'];
 
-  group('le tirage', () {
-    test('au palier mineur : trois mineures, sans remise', () {
-      for (final offer in offers(strike([]))) {
-        expect(offer, hasLength(3));
-        expect(ids(offer).toSet(), hasLength(3));
-        expect(offer.every((e) => e.tier == EvolutionTier.minor), isTrue);
-      }
+  group('ce que le palier admet : tout, sans tirage (D78)', () {
+    test('au palier mineur : toutes les mineures', () {
+      expect(ids(SignatureEvolutionRules.admissible(strike([]))), minors);
     });
 
-    test('au palier majeur : les majeures non prises, trois au plus', () {
-      for (final offer in offers(strike(['brutality:1']))) {
-        expect(offer, hasLength(3));
-        expect(ids(offer).toSet(), hasLength(3));
-        expect(offer.every((e) => e.tier == EvolutionTier.major), isTrue);
-      }
+    test('au palier majeur : les quatre majeures, aucune mineure', () {
+      expect(
+        ids(SignatureEvolutionRules.admissible(strike(['brutality:1']))),
+        ['haste', 'devastation', 'cleave', 'composure'],
+      );
     });
 
-    test('une majeure exclue n est pas offerte, dans les deux sens', () {
-      for (final offer
-          in offers(strike(['brutality:1', 'haste:1', 'instinct:1']))) {
-        expect(ids(offer), isNot(contains('devastation')));
-      }
-      for (final offer
-          in offers(strike(['brutality:1', 'devastation:1', 'instinct:1']))) {
-        expect(ids(offer), isNot(contains('haste')));
-      }
+    test('une majeure prise ne revient pas', () {
+      expect(
+        ids(SignatureEvolutionRules.admissible(
+            strike(['brutality:1', 'cleave:1', 'instinct:1']))),
+        ['haste', 'devastation', 'composure'],
+      );
     });
 
-    test('sous trois majeures eligibles, des mineures completent jusqu a trois',
+    test('une majeure exclue n est pas admise, dans les deux sens', () {
+      expect(
+        ids(SignatureEvolutionRules.admissible(
+            strike(['brutality:1', 'haste:1', 'instinct:1']))),
+        isNot(contains('devastation')),
+      );
+      expect(
+        ids(SignatureEvolutionRules.admissible(
+            strike(['brutality:1', 'devastation:1', 'instinct:1']))),
+        isNot(contains('haste')),
+      );
+    });
+
+    test('sous trois majeures eligibles, toutes les mineures s ajoutent (Q6)',
         () {
-      for (final offer
-          in offers(strike(['brutality:1', 'instinct:1', 'haste:1']))) {
-        expect(offer, hasLength(3));
-        expect(ids(offer), containsAll(['cleave', 'composure']));
-        expect(offer.where((e) => e.tier == EvolutionTier.minor), hasLength(1));
-      }
+      expect(
+        ids(SignatureEvolutionRules.admissible(
+            strike(['brutality:1', 'instinct:1', 'haste:1']))),
+        ['cleave', 'composure', ...minors],
+      );
     });
 
-    test('majeures epuisees : trois mineures au palier majeur (Q6, repli)', () {
-      for (final offer
-          in offers(strike(['haste:1', 'cleave:1', 'composure:1']))) {
-        expect(offer, hasLength(3));
-        expect(offer.every((e) => e.tier == EvolutionTier.minor), isTrue);
+    test('majeures epuisees : les mineures seules au palier majeur (Q6, repli)',
+        () {
+      expect(
+        ids(SignatureEvolutionRules.admissible(
+            strike(['haste:1', 'cleave:1', 'composure:1']))),
+        minors,
+      );
+    });
+  });
+
+  group('le tableau range tout le pool (D78)', () {
+    test('au palier mineur, les majeures viennent au palier suivant', () {
+      final board = SignatureEvolutionRules.board(strike([]));
+      expect(ids(board.choices), minors);
+      expect(
+        ids(board.upcoming),
+        ['haste', 'devastation', 'cleave', 'composure'],
+      );
+      expect(board.upcomingHeroLevel, 10);
+      expect(board.takenMajors, isEmpty);
+      expect(board.excluded, isEmpty);
+    });
+
+    test('au palier majeur, les mineures viennent au palier suivant', () {
+      final board = SignatureEvolutionRules.board(strike(['brutality:1']));
+      expect(
+        ids(board.choices),
+        ['haste', 'devastation', 'cleave', 'composure'],
+      );
+      expect(ids(board.upcoming), minors);
+      expect(board.upcomingHeroLevel, 15);
+    });
+
+    test('une majeure prise se range a part, jamais parmi celles a venir', () {
+      final board = SignatureEvolutionRules.board(
+          strike(['brutality:1', 'cleave:1', 'instinct:1']));
+      expect(ids(board.takenMajors), ['cleave']);
+      expect(ids(board.choices), isNot(contains('cleave')));
+      expect(ids(board.upcoming), minors);
+      expect(board.upcomingHeroLevel, 25);
+    });
+
+    test('une majeure exclue dit qui l exclut, dans les deux sens', () {
+      final byHaste = SignatureEvolutionRules.board(
+          strike(['brutality:1', 'haste:1', 'instinct:1']));
+      expect([for (final (e, by) in byHaste.excluded) (e.id, by.id)],
+          [('devastation', 'haste')]);
+      expect(ids(byHaste.upcoming), isEmpty);
+
+      final byDevastation = SignatureEvolutionRules.board(
+          strike(['brutality:1', 'devastation:1']));
+      expect([for (final (e, by) in byDevastation.excluded) (e.id, by.id)],
+          [('haste', 'devastation')]);
+      expect(ids(byDevastation.upcoming), ['cleave', 'composure']);
+    });
+
+    test('chaque evolution du pool est rangee une fois, et une seule', () {
+      for (final evolutions in [
+        <String>[],
+        ['brutality:1'],
+        ['brutality:1', 'haste:1'],
+        ['brutality:1', 'haste:1', 'instinct:1'],
+        ['haste:1', 'cleave:1', 'composure:1'],
+        ['haste:1', 'cleave:1', 'composure:1', 'brutality:1'],
+      ]) {
+        final s = strike(evolutions);
+        final board = SignatureEvolutionRules.board(s);
+        final all = [
+          ...ids(board.choices),
+          ...ids(board.upcoming),
+          ...ids(board.takenMajors),
+          for (final (e, _) in board.excluded) e.id,
+        ];
+        expect(all, hasLength(s.data.evolutions.length), reason: '$evolutions');
+        expect(all.toSet(), {for (final e in s.data.evolutions) e.id},
+            reason: '$evolutions');
       }
     });
   });
@@ -176,6 +245,14 @@ void main() {
       start('paladin', 15, signatureId: 'smite', evolutions: ['zeal:1', 'haste:1']);
       expect(run.chooseSignatureEvolution('smite', 'aegis'), isTrue);
       expect(smiteTaken(), ['zeal:1', 'haste:1', 'aegis:1']);
+    });
+
+    test('chacune des quatre majeures se prend au premier palier majeur', () {
+      for (final major in ['haste', 'sentence', 'radiance', 'devotion']) {
+        start('paladin', 10, signatureId: 'smite', evolutions: ['zeal:1']);
+        expect(run.chooseSignatureEvolution('smite', major), isTrue, reason: major);
+        expect(smiteTaken(), ['zeal:1', '$major:1']);
+      }
     });
 
     test('chaque choix accepte sauve : le checkpoint monte d un', () {

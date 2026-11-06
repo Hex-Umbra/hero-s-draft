@@ -2,9 +2,9 @@
 
 **Branche** : `feat/v0.5.7-p42-tranche-1-p44-lot-1` · **Compte rendu** : [2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md](2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
 **Testé le** : non rempli
-**Résultat** : 0 ✅ · 0 ❌ · 38 non testés
+**Résultat** : 0 ✅ · 0 ❌ · 40 non testés
 
-**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu) ; M39 s'y ajoute le 06/11 (les signatures dans « Mon Deck », demandées par le propriétaire). Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
+**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu) ; M39 s'y ajoute le 06/11 (les signatures dans « Mon Deck », demandées par le propriétaire). **Le 06/11, D78 remplace le tirage et ses rouleaux par un tableau de la signature** : M12 à M17 sont réécrits, M40 s'ajoute. Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
 
 **Deux sortes de run.** « JOUER » lance une run normale, sauvegardée. « RUN DEBUG » (colonne DEBUG de l'accueil, build debug seulement) lance une run de test **qui ne sauvegarde jamais rien** : une reprise ne se teste que dans une run normale. Seule la run debug a le tiroir violet « DEBUG » au bord gauche. **En combat, un seul onglet, « Combat »** (« PV », « Mana », « Armure », « Soin complet », « Mana plein », les PV de chaque ennemi / « 0 PV », « Tous les ennemis a 0 PV », « Gagner le combat », « Perdre le combat », « Sauter la phase ennemie »). **Hors combat (carte du monde) : « Heros », « Run », « Deck », « Reliques ».** Un champ chiffré se valide en tapant la valeur puis Entrée. « Heros » porte « Puissance », « Niveau (stat brute) », « Gagner un niveau (ouvre le draft) » et, tout en bas, la section **« Évolutions de signature »** : pour chaque signature, son nom, la liste de ce qui est pris (« aucune », ou les identifiants et niveaux, ex. « zeal:2, sentence:1 »), un bouton par évolution que le prochain palier admet, **au nom français** (« Zèle »…), puis « Retirer les évolutions ». « Run » porte « Drafts en attente » ; « Deck » > « Ajouter une carte ». Les évolutions ne se posent donc que sur la carte du monde : entre deux poses qu'un combat doit montrer, finir le combat par « Gagner le combat », passer les récompenses, revenir à la carte.
 
@@ -70,43 +70,44 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 <!-- du plus risqué au moins risqué -->
 1. **M35** — Le parcours de bout en bout : une run normale du Paladin jusqu'au niveau 5, le draft, les deux évolutions, la tuile évoluée, puis la reprise.
 2. **M39** — Les signatures en tête de « Mon Deck » : fiche évoluée, prochaine évolution, défilement.
-3. **M10** — Le rideau au niveau 5 : le draft d'abord, puis *Bouclier Sacré*, puis *Châtiment*, puis les nœuds s'ouvrent.
-4. **M2** — Les médaillons de PV et d'Armure, et le rouge d'une ressource qui manque.
-5. **M24** — *Dévotion* jouable à 0 Mana ; *Rayonnement* joue sans demander de cible.
-6. **M29** — L'appui court joue, arme, désarme comme en `0.5.6` ; l'appui long ne fait rien de tout cela.
-7. **M34** — L'entrée de debug des évolutions (les autres points s'en servent).
-8. **M4** — Le draft de départ à deux quotas.
-9. **M9** — Le rideau sans draft : les nœuds restent éteints, aucun voyage possible.
-10. **M17** — L'évolution choisie se voit sur la tuile au combat suivant.
-11. **M25** — La liste de l'appui long : son contenu, et la colonne qui ne bouge pas.
-12. **M26** — Relâcher replie la liste, glisser ne la replie pas.
-13. **M31** — La barre sur une fenêtre basse : réduite, et la tuile réduite s'arme.
-14. **M27** — La liste qui s'ouvre vers le haut sur une fenêtre basse.
-15. **M28** — La liste dans les quatre états.
-16. **M12** — Les en-têtes de l'écran d'évolution.
-17. **M13** — Trois mineures au premier choix.
-18. **M14** — Trois majeures au deuxième.
-19. **M15** — Une mineure reprise : « +4 dégâts » et « Niveau 1 → 2 ».
-20. **M16** — L'icône du rouleau arrêté ; une majeure assez distincte d'une mineure.
-21. **M3** — Multi-coups (« 3×3 ») et croissance.
-22. **M1** — Les parenthèses des statuts proportionnels.
-23. **M20** — La bande d'icônes à la place de la description.
-24. **M19** — Les puces d'évolution.
-25. **M18** — Le badge « Niv. ».
-26. **M22** — Les évolutions chiffrées et la ligne qui se réduit d'un bloc.
-27. **M21** — Huit icônes sur Surtension de Mana.
-28. **M23** — Le gris des tuiles en recharge et sans le mana.
-29. **M30** — La barre à mi-hauteur à 1280 × 800.
-30. **M32** — Les icônes du panneau des statuts, le bleu de l'Armure en début de tour, les éclairs.
-31. **M33** — Métallisation et Vol de vie (non atteignables en `0.5.7`).
-32. **M5** — Le tutoriel, étape des éléments : le barème, et le texte du Gel sur petit écran.
-33. **M6** — Le tutoriel : le Mage sur Flux de Mana, le draft à deux sections.
-34. **M7** — Le tutoriel : Poison et Brûlure aux icônes des cartes.
-35. **M38** — Les deux phrases réécrites du tutoriel.
-36. **M8** — La tuile de signature hors combat : description remplie, sans badge.
-37. **M11** — Les rouleaux du draft de niveau : rien ne change.
-38. **M36** — Le chevron « Passifs » à un seul passif.
-39. **M37** — La barre de l'éditeur de contenu sur deux lignes.
+3. **M40** — Le tableau sur téléphone, le pire cas, et une majeure exclue.
+4. **M10** — Le rideau au niveau 5 : le draft d'abord, puis *Bouclier Sacré*, puis *Châtiment*, puis les nœuds s'ouvrent.
+5. **M2** — Les médaillons de PV et d'Armure, et le rouge d'une ressource qui manque.
+6. **M24** — *Dévotion* jouable à 0 Mana ; *Rayonnement* joue sans demander de cible.
+7. **M29** — L'appui court joue, arme, désarme comme en `0.5.6` ; l'appui long ne fait rien de tout cela.
+8. **M34** — L'entrée de debug des évolutions (les autres points s'en servent).
+9. **M4** — Le draft de départ à deux quotas.
+10. **M9** — Le rideau sans draft : les nœuds restent éteints, aucun voyage possible.
+11. **M17** — Sélectionner, lire la fiche, prendre au bouton ; le choix se voit sur la tuile au combat suivant.
+12. **M25** — La liste de l'appui long : son contenu, et la colonne qui ne bouge pas.
+13. **M26** — Relâcher replie la liste, glisser ne la replie pas.
+14. **M31** — La barre sur une fenêtre basse : réduite, et la tuile réduite s'arme.
+15. **M27** — La liste qui s'ouvre vers le haut sur une fenêtre basse.
+16. **M28** — La liste dans les quatre états.
+17. **M12** — Les en-têtes de l'écran d'évolution, et le retour qui ramène au rideau sans rien perdre.
+18. **M13** — Le palier mineur : toutes les mineures, et les majeures à venir.
+19. **M14** — Le palier majeur : les quatre majeures, et les mineures à venir.
+20. **M15** — Une mineure reprise : « Niveau 1 → 2 : +4 dégâts ».
+21. **M16** — Les icônes du tableau ; une majeure assez distincte d'une mineure.
+22. **M3** — Multi-coups (« 3×3 ») et croissance.
+23. **M1** — Les parenthèses des statuts proportionnels.
+24. **M20** — La bande d'icônes à la place de la description.
+25. **M19** — Les puces d'évolution.
+26. **M18** — Le badge « Niv. ».
+27. **M22** — Les évolutions chiffrées et la ligne qui se réduit d'un bloc.
+28. **M21** — Huit icônes sur Surtension de Mana.
+29. **M23** — Le gris des tuiles en recharge et sans le mana.
+30. **M30** — La barre à mi-hauteur à 1280 × 800.
+31. **M32** — Les icônes du panneau des statuts, le bleu de l'Armure en début de tour, les éclairs.
+32. **M33** — Métallisation et Vol de vie (non atteignables en `0.5.7`).
+33. **M5** — Le tutoriel, étape des éléments : le barème, et le texte du Gel sur petit écran.
+34. **M6** — Le tutoriel : le Mage sur Flux de Mana, le draft à deux sections.
+35. **M7** — Le tutoriel : Poison et Brûlure aux icônes des cartes.
+36. **M38** — Les deux phrases réécrites du tutoriel.
+37. **M8** — La tuile de signature hors combat : description remplie, sans badge.
+38. **M11** — Les rouleaux du draft de niveau : rien ne change.
+39. **M36** — Le chevron « Passifs » à un seul passif.
+40. **M37** — La barre de l'éditeur de contenu sur deux lignes.
 
 ## M1 — Infobulles : le barème des statuts proportionnels
 - **Atteindre la situation** : hors combat, accueil « DICTIONNAIRE », onglet « Cartes ». En combat : *Trait de Glace* en main (run Paladin ou debug, « Deck » > « Ajouter une carte » sur la carte du monde) ; *Décharge* et *Nova de givre* dans une run Mage (draft de départ ou « Ajouter une carte »).
@@ -174,7 +175,7 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 ## M10 — Le rideau au niveau 5 : le draft, puis les deux évolutions
 - **Atteindre la situation** : « RUN DEBUG », Paladin, carte du monde. Onglet « Heros » : « Niveau (stat brute) » à 4, puis « Gagner un niveau (ouvre le draft) » (notification « Niveau 5 — draft en attente sur la carte »).
 - **Faire** : fermer le tiroir ; toucher le rideau, finir le draft ; toucher le rideau, choisir ; toucher le rideau, choisir.
-- **Attendu** : d'abord le draft de niveau ; au retour, le rideau toujours là ouvre « Évolution de Bouclier Sacré » ; puis « Évolution de Châtiment » (l'ordre de la fiche du Paladin) ; après ce dernier choix, le rideau disparaît, les nœuds accessibles s'éclairent et se touchent.
+- **Attendu** : d'abord le draft de niveau ; au retour, le rideau toujours là ouvre « ÉVOLUTION DE BOUCLIER SACRÉ » ; puis « ÉVOLUTION DE CHÂTIMENT » (l'ordre de la fiche du Paladin) ; après ce dernier choix, le rideau disparaît, les nœuds accessibles s'éclairent et se touchent.
 - **Ne doit pas changer** : le draft de niveau lui-même ; la position sur la carte.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -185,45 +186,51 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 - **Ne doit pas changer** : le tirage, les sons, le choix.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## M12 — L'écran d'évolution : les en-têtes
+## M12 — L'écran d'évolution : les en-têtes et le retour
+*Réécrit le 06/11 (D78) : plus de rouleaux, plus de tirage à refaire.*
 - **Atteindre la situation** : comme M10, au niveau 5 (sans draft en attente : « Drafts en attente » à 0).
-- **Faire** : toucher le rideau, choisir l'évolution de *Bouclier Sacré*, rouvrir le rideau. En français puis en anglais.
-- **Attendu** : au premier écran, l'en-tête « Évolution de Bouclier Sacré » ; au second, « Évolution de Châtiment », puis « Choisissez une évolution » en dessous. En anglais : « Holy Shield evolves », « Smite evolves », « Choose an evolution ». Le retour système (Échap, bouton retour) ne quitte pas l'écran sans choisir.
-- **Ne doit pas changer** : la musique et le fond de la carte.
+- **Faire** : toucher le rideau ; lire l'en-tête ; toucher la flèche en haut à gauche ; au rideau, ouvrir « MON DECK » dans la barre du haut, revenir ; toucher le rideau de nouveau ; prendre une évolution de *Bouclier Sacré* ; toucher le rideau. En français puis en anglais.
+- **Attendu** : au premier écran, « ÉVOLUTION DE BOUCLIER SACRÉ » et, dessous, « Évolution mineure · niveau 5 du héros » ; au second, « ÉVOLUTION DE CHÂTIMENT ». En anglais : « HOLY SHIELD EVOLVES », « SMITE EVOLVES », « Minor evolution · hero level 5 ». La flèche et le retour système ramènent au rideau : rien n'est pris, les nœuds restent fermés, « MON DECK » s'ouvre et dit « Évolution à choisir ». L'écran rouvert est le même, sans sélection.
+- **Ne doit pas changer** : la musique ; le rideau, qui revient tant qu'un choix attend.
 - **Résultat** : ✅ · ❌ · non testé —
 
-## M13 — L'écran d'évolution : trois mineures
+## M13 — L'écran d'évolution : le palier mineur
+*Réécrit le 06/11 (D78).*
 - **Atteindre la situation** : niveau 5, aucune évolution prise (« Retirer les évolutions » sur les deux signatures au besoin).
-- **Faire** : ouvrir le premier écran (*Bouclier Sacré*), choisir, puis ouvrir le second (*Châtiment*).
-- **Attendu** : au second écran, trois rouleaux, chacun son nom, sa description et « MINEURE » : *Zèle* « +2 dégâts », *Égide* « +2 Armure », *Ardeur* « +5 % de critique » (dans un ordre quelconque). Au premier : *Garde* « +2 Armure », *Miséricorde* « +1 PV soignés », *Résolution* « Gagne 1 Puissance ».
+- **Faire** : ouvrir le premier écran (*Bouclier Sacré*), lire ; prendre une mineure ; ouvrir le second (*Châtiment*), lire ; rouvrir plusieurs fois pour comparer l'ordre.
+- **Attendu** : au second écran, sous « À CHOISIR », *Zèle* « +2 dégâts », *Égide* « +2 Armure », *Ardeur* « +5 % de critique », allumées, toujours dans cet ordre ; dessous, « MAJEURES — AU NIVEAU 10 » et les quatre majeures, éteintes : les toucher ne fait rien. Au premier : *Garde* « +2 Armure », *Miséricorde* « +1 PV soignés », *Résolution* « Gagne 1 Puissance ».
 - **Ne doit pas changer** : —
 - **Résultat** : ✅ · ❌ · non testé —
 
-## M14 — L'écran d'évolution : trois majeures
+## M14 — L'écran d'évolution : le palier majeur
+*Réécrit le 06/11 (D78) : les quatre majeures, sans tirage.*
 - **Atteindre la situation** : run debug Paladin, carte du monde, onglet « Heros », section « Évolutions de signature » : sous *Châtiment*, « Zèle » ; sous *Bouclier Sacré*, une mineure (« Garde »). Puis « Niveau (stat brute) » à 10.
-- **Faire** : au rideau, choisir l'évolution de *Bouclier Sacré* (déjà des majeures), puis ouvrir celle de *Châtiment*.
-- **Attendu** : trois rouleaux « MAJEURE », chacun une majeure de *Châtiment*, parmi *Célérité* « Recharge réduite d'un tour », *Sentence* « Applique 1 Faiblesse pendant 2 tours », *Rayonnement* « Touche tous les ennemis », *Dévotion* « Coûte 1 Mana de moins ».
+- **Faire** : au rideau, prendre une majeure de *Bouclier Sacré*, puis ouvrir *Châtiment*.
+- **Attendu** : « Évolution majeure · niveau 10 du héros » ; sous « À CHOISIR », **les quatre** : *Célérité* « Recharge réduite d'un tour », *Sentence* « Applique 1 Faiblesse pendant 2 tours », *Rayonnement* « Touche tous les ennemis », *Dévotion* « Coûte 1 Mana de moins ». Sous « MINEURES — AU NIVEAU 15 », éteintes : *Zèle* « +2 dégâts » avec, à droite, « Prise · Niv. 1 », puis *Égide* et *Ardeur*.
 - **Ne doit pas changer** : —
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## M15 — L'écran d'évolution : une mineure reprise
+*Réécrit le 06/11 (D78).*
 - **Atteindre la situation** : run debug Paladin, « Évolutions de signature » : sous *Châtiment*, « Zèle » puis « Célérité » ; sous *Bouclier Sacré*, « Garde » puis « Célérité ». Puis « Niveau (stat brute) » à 15.
-- **Faire** : au rideau, choisir l'évolution de *Bouclier Sacré*, puis ouvrir celle de *Châtiment*.
-- **Attendu** : trois mineures ; le rouleau de *Zèle* dit « +4 dégâts » (sa description au prochain niveau) et, en dernière ligne, « Niveau 1 → 2 » ; *Égide* et *Ardeur* n'ont pas cette ligne.
+- **Faire** : au rideau, prendre une mineure de *Bouclier Sacré*, puis ouvrir *Châtiment*.
+- **Attendu** : sous « À CHOISIR », *Zèle* dit « Niveau 1 → 2 : +4 dégâts » (le total à ce niveau, pas le gain) ; *Égide* et *Ardeur* disent seulement « +2 Armure » et « +5 % de critique ». Sous « MAJEURES — AU NIVEAU 20 » : *Sentence*, *Rayonnement*, *Dévotion*. Sous « DÉJÀ PRISES » : *Célérité*.
 - **Ne doit pas changer** : —
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## M16 — L'écran d'évolution : l'icône, et une majeure distincte d'une mineure
+*Réécrit le 06/11 (D78).*
 - **Atteindre la situation** : un écran de mineures (M13) et un écran de majeures (M14).
-- **Faire** : regarder les rouleaux tourner, puis s'arrêter ; comparer une majeure et une mineure.
-- **Attendu** : pendant la rotation, l'emoji ✨ du carrousel, sans icône d'évolution. Rouleau arrêté : au-dessus du nom, l'icône de l'évolution à sa couleur (*Zèle* : le marteau rouge ; *Égide* : l'écu bleu) ; une majeure a son icône dans un anneau de sa couleur, une mineure est nue. « MINEURE » et « MAJEURE » sont écrits au même gris : l'anneau et le mot sont les seules différences. **Juger** (point des revues) : une majeure se distingue-t-elle assez d'une mineure ?
-- **Ne doit pas changer** : la rotation, les sons, le choix au toucher.
+- **Faire** : ouvrir chaque écran ; comparer une majeure et une mineure, allumées puis éteintes.
+- **Attendu** : aucun rouleau, aucune rotation, aucun son de rouleau : l'écran est là d'emblée. Chaque ligne porte l'icône de l'évolution à sa couleur (*Zèle* : le marteau rouge ; *Égide* : l'écu bleu) ; une majeure a son icône dans un anneau de sa couleur, une mineure est nue ; une ligne éteinte a une icône plus petite et assombrie. **Juger** (point des revues) : une majeure se distingue-t-elle assez d'une mineure, maintenant que les mots « MINEURE » et « MAJEURE » ne sont plus sur la ligne ?
+- **Ne doit pas changer** : les rouleaux du draft de niveau, qui restent à ce draft (M11).
 - **Résultat** : ✅ · ❌ · non testé —
 
-## M17 — Le choix pris, puis le combat
-- **Atteindre la situation** : un écran d'évolution ouvert, rouleaux arrêtés.
-- **Faire** : toucher un rouleau ; entrer en combat.
-- **Attendu** : le rouleau grossit, l'écran se ferme et la carte revient ; en combat, la tuile de la signature porte la puce de l'évolution choisie et « Niv. 1 ».
+## M17 — Sélectionner, lire la fiche, prendre, puis le combat
+*Réécrit le 06/11 (D78) : toucher une ligne ne prend plus l'évolution, le bouton le fait.*
+- **Atteindre la situation** : l'écran de M14, *Châtiment*, fenêtre de plus de 600 px de large.
+- **Faire** : lire la fiche à gauche ; toucher le bouton grisé ; toucher *Sentence* ; toucher *Rayonnement*, puis *Sentence* de nouveau ; toucher « Prendre Sentence » ; entrer en combat.
+- **Attendu** : sans sélection, la fiche s'intitule « AUJOURD'HUI » et montre *Châtiment* tel qu'il est ; le bouton « Choisissez une évolution » est grisé et ne fait rien. *Sentence* touchée : sa ligne s'allume à la couleur de la classe, avec une coche ; la fiche devient « APRÈS CE CHOIX » : badge « Niv. 2 », « Inflige 8 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. », les lignes *Zèle* et *Sentence*, « Prochaine évolution mineure au niveau 15 » ; le bouton dit « Prendre Sentence ». Une seule ligne reste sélectionnée à la fois, et rien n'est pris avant le bouton. Le bouton ferme l'écran, et la carte revient ; en combat, la tuile porte les puces *Zèle* et *Sentence*, et « Niv. 2 ».
 - **Ne doit pas changer** : l'autre signature, si elle n'a rien reçu.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -350,7 +357,7 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 *Neuf : demandé par l'orchestrateur de la vague. Run normale, sans debug : la reprise ne se teste pas en run debug, qui ne sauvegarde rien. Le niveau 5 est jouable : environ 460 XP à l'acte 1, quatre à six combats.*
 - **Atteindre la situation** : accueil « JOUER », Paladin, passif *Régénération d'Armure*, draft 2 + 3, « ENTRER DANS L'UMBRA ».
 - **Faire** : (1) gagner des combats ; à chaque niveau (2, 3, 4), toucher le rideau et faire le draft. (2) Au niveau 5 (panneau en bas à droite : « Niv. 5 ») : toucher le rideau, faire le draft ; toucher le rideau, choisir une évolution de *Bouclier Sacré*. (3) Le rideau revenu, **fermer la fenêtre du jeu**. (4) Relancer, « Continuer » ; toucher le rideau, choisir *Zèle* pour *Châtiment*. (5) Entrer en combat ; regarder les deux tuiles ; rester appuyé sur *Châtiment*. (6) Finir le combat, revenir à la carte, fermer le jeu, relancer, « Continuer », entrer en combat.
-- **Attendu** : (2) le draft d'abord, puis « Évolution de Bouclier Sacré » (*Garde*, *Miséricorde*, *Résolution*, « MINEURE ») ; le rideau revient après le choix. (4) Après la reprise : le rideau est toujours là, l'évolution de *Bouclier Sacré* est gardée, et le rideau ouvre « Évolution de Châtiment » (*Zèle*, *Égide*, *Ardeur*) ; après le choix, il disparaît et les nœuds s'ouvrent. (5) Les deux tuiles portent « Niv. 1 » et leur puce ; *Châtiment* montre le marteau rouge « 8 » et l'écu bleu « 4 » ; la liste dit « Inflige 8 dégâts », « Donne 4 d'Armure ». (6) Après la seconde reprise : mêmes tuiles, même badge, mêmes puces ; aucun rideau.
+- **Attendu** : (2) le draft d'abord, puis « ÉVOLUTION DE BOUCLIER SACRÉ » (*Garde*, *Miséricorde*, *Résolution* sous « À CHOISIR ») ; le rideau revient après le choix. (4) Après la reprise : le rideau est toujours là, l'évolution de *Bouclier Sacré* est gardée, et le rideau ouvre « ÉVOLUTION DE CHÂTIMENT » (*Zèle*, *Égide*, *Ardeur*) ; après le choix, il disparaît et les nœuds s'ouvrent. (5) Les deux tuiles portent « Niv. 1 » et leur puce ; *Châtiment* montre le marteau rouge « 8 » et l'écu bleu « 4 » ; la liste dit « Inflige 8 dégâts », « Donne 4 d'Armure ». (6) Après la seconde reprise : mêmes tuiles, même badge, mêmes puces ; aucun rideau.
 - **Ne doit pas changer** : or, PV, reliques, deck, position sur la carte après chaque reprise ; le draft de niveau ne revient pas une seconde fois.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -384,6 +391,14 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 - **Faire** : ouvrir l'écran au niveau 3, sans évolution ; poser « Zèle », « Sentence », « Zèle » sur *Châtiment* au niveau 15 ; défiler ; recommencer sous 600 px de large, puis en anglais.
 - **Attendu** : en haut, « SIGNATURES » et une fiche par signature (*Bouclier Sacré*, puis *Châtiment*) : nom, type, coût et recharge, description. Sans évolution : pas de badge ni de liste, et « Prochaine évolution mineure au niveau 5 ». Avec les trois évolutions : badge « Niv. 3 », « Inflige 10 dégâts et donne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. », les lignes « Zèle 2 +4 dégâts » et « Sentence… » avec leur icône, et « Prochaine évolution majeure au niveau 20 ». Quand un choix attend : « Évolution à choisir ». Côte à côte en large, empilées sous 600 px ; la bande défile avec les cartes. En anglais : « Next minor evolution at level 5 », « Next major evolution at level 20 », « Evolution to choose ». **Juger** : la bande prend-elle trop de place sur téléphone ?
 - **Ne doit pas changer** : les cartes, leur compteur, la fusion depuis la carte et son absence depuis le combat ; la tuile de combat ; aucun chiffre d'XP sur la fiche.
+- **Résultat** : ✅ · ❌ · non testé —
+
+## M40 — Le tableau sur téléphone, le pire cas, et une majeure exclue (neuf)
+*Neuf : D78, le 06/11 ; [maquettes](../../presentations/2026-11-06_choix_des_evolutions_maquettes.pptx), règle 1 et écran A.*
+- **Atteindre la situation** : (a) fenêtre de moins de 600 px de large, run debug Paladin, carte du monde. Sous *Châtiment* : « Zèle », « Sentence », « Égide », « Rayonnement », « Zèle ». Sous *Bouclier Sacré* : « Garde », « Célérité », « Garde », « Consécration », « Garde ». Puis « Niveau (stat brute) » à 30. (b) Fenêtre de 900 × 600 ou plus, run debug du Berserker. Sous *Frappe Téméraire* : « Brutalité », « Célérité », « Instinct ». Sous *Posture de Rage* : « Colère », « Démence », « Carapace ». Puis « Niveau (stat brute) » à 20. (c) Une fenêtre étroite sur le Mage, au niveau 5.
+- **Faire** : (a) au rideau, prendre une évolution de *Bouclier Sacré* ; ouvrir *Châtiment* ; défiler ; toucher *Dévotion*. (b) Au rideau, ouvrir *Frappe Téméraire* ; défiler jusqu'en bas. (c) Au rideau, prendre une évolution de *Projectile Magique*, puis ouvrir *Surtension de Mana*.
+- **Attendu** : (a) une seule colonne qui défile, sans fiche, et, fixes en bas, « Coût : 1 Mana · Recharge : 2 tours » puis le bouton. Sous « À CHOISIR » : *Célérité*, *Dévotion*, puis les mineures, *Zèle* « Niveau 2 → 3 : +6 dégâts », *Égide* « Niveau 1 → 2 : +4 Armure », *Ardeur* « +5 % de critique » (moins de trois majeures restantes : Q6) ; sous « DÉJÀ PRISES » : *Sentence*, *Rayonnement*. *Dévotion* touchée : « Coût : 0 Mana · Recharge : 2 tours » et « Prendre Dévotion ». (b) Sous « À CHOISIR » : *Fauchage*, *Sang-froid*, puis les trois mineures ; sous « DÉJÀ PRISES » : *Célérité* ; sous « EXCLUES » : *Dévastation*, avec « Exclue par Célérité » à droite. La fiche reste à gauche et dit « Évolution à choisir » ; la colonne de droite défile seule. (c) Le titre, plus long, rétrécit et tient en entier, sans « … ». **Juger** : sur la fenêtre étroite, le coût et la recharge suffisent-ils, sans la fiche ?
+- **Ne doit pas changer** : le titre des autres écrans qui tient déjà sur sa ligne (« MON DECK », la boutique) : même taille qu'avant.
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## Ce qui doit rester inchangé

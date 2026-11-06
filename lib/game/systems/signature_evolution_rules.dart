@@ -1,15 +1,33 @@
-import 'dart:math' show Random;
-
 import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/signature_evolution_data.dart';
 import '../../models/signature_instance.dart';
 
-/// Les règles de tirage et de choix des évolutions de signature (spec P-42 T1 et P-44
-/// lot 1, §4.10 ; A26, Q6, Q7). Pures : ni Riverpod ni état, seulement une
-/// signature et un tirage.
+/// Le pool d'une signature rangé pour son écran d'évolution (D78) : chaque
+/// évolution y est une fois, et une seule.
+typedef SignatureEvolutionBoard = ({
+  /// Ce que le choix en cours peut prendre.
+  List<SignatureEvolutionData> choices,
+
+  /// L'autre rang, qui s'ouvre au palier suivant, au niveau du héros
+  /// [upcomingHeroLevel]. Une mineure déjà prise y reste : elle remontera.
+  List<SignatureEvolutionData> upcoming,
+  int upcomingHeroLevel,
+
+  /// Les majeures prises : elles ne se reprennent pas.
+  List<SignatureEvolutionData> takenMajors,
+
+  /// Les majeures exclues pour la run, chacune avec la majeure prise qui
+  /// l'exclut (Q7).
+  List<(SignatureEvolutionData, SignatureEvolutionData)> excluded,
+});
+
+/// Les règles de choix des évolutions de signature (spec P-42 T1 et P-44 lot 1,
+/// §4.10 ; A26, Q6, Q7, D78). Pures : ni Riverpod ni état, seulement une
+/// signature.
 abstract final class SignatureEvolutionRules {
-  /// Le nombre d'évolutions proposées à chaque choix.
-  static const int offerSize = 3;
+  /// Sous ce nombre de majeures éligibles, le palier majeur admet aussi les
+  /// mineures (Q6).
+  static const int _enoughMajors = 3;
 
   static List<SignatureEvolutionData> _ofTier(
           SignatureInstance s, EvolutionTier tier) =>
@@ -31,12 +49,12 @@ abstract final class SignatureEvolutionRules {
 
   /// Ce que le prochain choix de [s] peut prendre : au palier mineur, les
   /// mineures ; au palier majeur, les majeures éligibles, plus toutes les
-  /// mineures quand il en reste moins de [offerSize] (A26, Q6).
+  /// mineures quand il en reste moins de [_enoughMajors] (A26, Q6).
   static List<SignatureEvolutionData> admissible(SignatureInstance s) {
     final minors = _ofTier(s, EvolutionTier.minor);
     if (s.nextTier == EvolutionTier.minor) return minors;
     final majors = eligibleMajors(s);
-    return majors.length < offerSize ? [...majors, ...minors] : majors;
+    return majors.length < _enoughMajors ? [...majors, ...minors] : majors;
   }
 
   /// [s] une fois l'évolution [evolutionId] prise (voir [withChoice]), ou
@@ -50,21 +68,33 @@ abstract final class SignatureEvolutionRules {
     );
   }
 
-  /// Les évolutions proposées : sans poids, sans remise. Au palier mineur,
-  /// [offerSize] mineures ; au palier majeur, les majeures éligibles puis, pour
-  /// compléter, des mineures. Moins si le pool n'en a pas assez.
-  static List<SignatureEvolutionData> offer(SignatureInstance s, Random rng) {
-    List<SignatureEvolutionData> draw(List<SignatureEvolutionData> pool, int n) =>
-        ([...pool]..shuffle(rng)).take(n).toList();
-
-    if (s.nextTier == EvolutionTier.minor) {
-      return draw(_ofTier(s, EvolutionTier.minor), offerSize);
-    }
-    final majors = draw(eligibleMajors(s), offerSize);
-    return [
-      ...majors,
-      ...draw(_ofTier(s, EvolutionTier.minor), offerSize - majors.length),
+  /// Le pool de [s] rangé pour son écran d'évolution, dans l'ordre du pool.
+  static SignatureEvolutionBoard board(SignatureInstance s) {
+    final choices = admissible(s);
+    final takenMajors = [
+      for (final (evolution, _) in s.taken)
+        if (evolution.tier == EvolutionTier.major) evolution,
     ];
+    final excluded = [
+      for (final major in _ofTier(s, EvolutionTier.major))
+        if (takenMajors.where(major.excludesOrIsExcludedBy).firstOrNull
+            case final by?)
+          (major, by),
+    ];
+    final placed = {
+      for (final e in [...choices, ...takenMajors]) e.id,
+      for (final (e, _) in excluded) e.id,
+    };
+    return (
+      choices: choices,
+      upcoming: [
+        for (final e in s.data.evolutions)
+          if (!placed.contains(e.id)) e,
+      ],
+      upcomingHeroLevel: s.nextEvolutionHeroLevel + 5,
+      takenMajors: takenMajors,
+      excluded: excluded,
+    );
   }
 
   /// Les évolutions après le choix de [chosen] : une mineure déjà prise monte

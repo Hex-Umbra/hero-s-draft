@@ -1826,29 +1826,89 @@ abstract class AppLocalizations {
   /// **'{signature} evolves'**
   String evolutionScreenTitle(String signature);
 
-  /// Subtitle of the signature evolution screen.
+  /// Subtitle of the signature evolution screen, on a minor tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Minor evolution · hero level {level}'**
+  String evolutionBoardTierMinor(int level);
+
+  /// Subtitle of the signature evolution screen, on a major tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Major evolution · hero level {level}'**
+  String evolutionBoardTierMajor(int level);
+
+  /// Section of the evolution screen: what the current choice can take.
+  ///
+  /// In en, this message translates to:
+  /// **'To choose'**
+  String get evolutionBoardToChoose;
+
+  /// Section of the evolution screen: the minor evolutions of the next tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Minors — at level {level}'**
+  String evolutionBoardUpcomingMinors(int level);
+
+  /// Section of the evolution screen: the major evolutions of the next tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Majors — at level {level}'**
+  String evolutionBoardUpcomingMajors(int level);
+
+  /// Section of the evolution screen: the major evolutions already taken.
+  ///
+  /// In en, this message translates to:
+  /// **'Already taken'**
+  String get evolutionBoardTaken;
+
+  /// Section of the evolution screen: the major evolutions a taken major rules out.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded'**
+  String get evolutionBoardExcluded;
+
+  /// Tag of a major evolution ruled out by the taken major {name}.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded by {name}'**
+  String evolutionBoardExcludedBy(String name);
+
+  /// Tag of a minor evolution already taken, on a tier where it cannot be raised.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken · Lvl. {level}'**
+  String evolutionBoardTakenLevel(int level);
+
+  /// Text of a minor evolution already taken: its level before and after the choice, then what it gives at that level.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {from} → {to}: {description}'**
+  String evolutionBoardLevelUp(int from, int to, String description);
+
+  /// Heading of the signature sheet on the evolution screen, before any selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get evolutionBoardToday;
+
+  /// Heading of the signature sheet on the evolution screen, once an evolution is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'After this choice'**
+  String get evolutionBoardAfter;
+
+  /// Disabled confirm button of the evolution screen, before any selection.
   ///
   /// In en, this message translates to:
   /// **'Choose an evolution'**
-  String get evolutionScreenSubtitle;
+  String get evolutionBoardPick;
 
-  /// Badge of a minor signature evolution on its reel.
+  /// Confirm button of the evolution screen.
   ///
   /// In en, this message translates to:
-  /// **'MINOR'**
-  String get evolutionTierMinor;
-
-  /// Badge of a major signature evolution on its reel.
-  ///
-  /// In en, this message translates to:
-  /// **'MAJOR'**
-  String get evolutionTierMajor;
-
-  /// Last line of a minor evolution already taken: its level before and after the choice.
-  ///
-  /// In en, this message translates to:
-  /// **'Level {from} → {to}'**
-  String evolutionLevelUp(int from, int to);
+  /// **'Take {name}'**
+  String evolutionBoardTake(String name);
 
   /// Title of the class signatures block and of the dictionary tab.
   ///

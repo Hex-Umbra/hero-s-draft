@@ -891,24 +891,86 @@
       "signature": { "type": "String" }
     }
   },
-  "evolutionScreenSubtitle": "Choose an evolution",
-  "@evolutionScreenSubtitle": {
-    "description": "Subtitle of the signature evolution screen."
+  "evolutionBoardTierMinor": "Minor evolution · hero level {level}",
+  "@evolutionBoardTierMinor": {
+    "description": "Subtitle of the signature evolution screen, on a minor tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
   },
-  "evolutionTierMinor": "MINOR",
-  "@evolutionTierMinor": {
-    "description": "Badge of a minor signature evolution on its reel."
+  "evolutionBoardTierMajor": "Major evolution · hero level {level}",
+  "@evolutionBoardTierMajor": {
+    "description": "Subtitle of the signature evolution screen, on a major tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
   },
-  "evolutionTierMajor": "MAJOR",
-  "@evolutionTierMajor": {
-    "description": "Badge of a major signature evolution on its reel."
+  "evolutionBoardToChoose": "To choose",
+  "@evolutionBoardToChoose": {
+    "description": "Section of the evolution screen: what the current choice can take."
   },
-  "evolutionLevelUp": "Level {from} → {to}",
-  "@evolutionLevelUp": {
-    "description": "Last line of a minor evolution already taken: its level before and after the choice.",
+  "evolutionBoardUpcomingMinors": "Minors — at level {level}",
+  "@evolutionBoardUpcomingMinors": {
+    "description": "Section of the evolution screen: the minor evolutions of the next tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardUpcomingMajors": "Majors — at level {level}",
+  "@evolutionBoardUpcomingMajors": {
+    "description": "Section of the evolution screen: the major evolutions of the next tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardTaken": "Already taken",
+  "@evolutionBoardTaken": {
+    "description": "Section of the evolution screen: the major evolutions already taken."
+  },
+  "evolutionBoardExcluded": "Excluded",
+  "@evolutionBoardExcluded": {
+    "description": "Section of the evolution screen: the major evolutions a taken major rules out."
+  },
+  "evolutionBoardExcludedBy": "Excluded by {name}",
+  "@evolutionBoardExcludedBy": {
+    "description": "Tag of a major evolution ruled out by the taken major {name}.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "evolutionBoardTakenLevel": "Taken · Lvl. {level}",
+  "@evolutionBoardTakenLevel": {
+    "description": "Tag of a minor evolution already taken, on a tier where it cannot be raised.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardLevelUp": "Level {from} → {to}: {description}",
+  "@evolutionBoardLevelUp": {
+    "description": "Text of a minor evolution already taken: its level before and after the choice, then what it gives at that level.",
     "placeholders": {
       "from": { "type": "int" },
-      "to": { "type": "int" }
+      "to": { "type": "int" },
+      "description": { "type": "String" }
+    }
+  },
+  "evolutionBoardToday": "Today",
+  "@evolutionBoardToday": {
+    "description": "Heading of the signature sheet on the evolution screen, before any selection."
+  },
+  "evolutionBoardAfter": "After this choice",
+  "@evolutionBoardAfter": {
+    "description": "Heading of the signature sheet on the evolution screen, once an evolution is selected."
+  },
+  "evolutionBoardPick": "Choose an evolution",
+  "@evolutionBoardPick": {
+    "description": "Disabled confirm button of the evolution screen, before any selection."
+  },
+  "evolutionBoardTake": "Take {name}",
+  "@evolutionBoardTake": {
+    "description": "Confirm button of the evolution screen.",
+    "placeholders": {
+      "name": { "type": "String" }
     }
   },
   "signatures": "Signatures",

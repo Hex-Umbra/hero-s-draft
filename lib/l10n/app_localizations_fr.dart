@@ -1179,17 +1179,61 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get evolutionScreenSubtitle => 'Choisissez une évolution';
+  String evolutionBoardTierMinor(int level) {
+    return 'Évolution mineure · niveau $level du héros';
+  }
 
   @override
-  String get evolutionTierMinor => 'MINEURE';
+  String evolutionBoardTierMajor(int level) {
+    return 'Évolution majeure · niveau $level du héros';
+  }
 
   @override
-  String get evolutionTierMajor => 'MAJEURE';
+  String get evolutionBoardToChoose => 'À choisir';
 
   @override
-  String evolutionLevelUp(int from, int to) {
-    return 'Niveau $from → $to';
+  String evolutionBoardUpcomingMinors(int level) {
+    return 'Mineures — au niveau $level';
+  }
+
+  @override
+  String evolutionBoardUpcomingMajors(int level) {
+    return 'Majeures — au niveau $level';
+  }
+
+  @override
+  String get evolutionBoardTaken => 'Déjà prises';
+
+  @override
+  String get evolutionBoardExcluded => 'Exclues';
+
+  @override
+  String evolutionBoardExcludedBy(String name) {
+    return 'Exclue par $name';
+  }
+
+  @override
+  String evolutionBoardTakenLevel(int level) {
+    return 'Prise · Niv. $level';
+  }
+
+  @override
+  String evolutionBoardLevelUp(int from, int to, String description) {
+    return 'Niveau $from → $to : $description';
+  }
+
+  @override
+  String get evolutionBoardToday => 'Aujourd\'hui';
+
+  @override
+  String get evolutionBoardAfter => 'Après ce choix';
+
+  @override
+  String get evolutionBoardPick => 'Choisissez une évolution';
+
+  @override
+  String evolutionBoardTake(String name) {
+    return 'Prendre $name';
   }
 
   @override

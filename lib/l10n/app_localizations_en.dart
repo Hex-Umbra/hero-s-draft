@@ -1170,17 +1170,61 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get evolutionScreenSubtitle => 'Choose an evolution';
+  String evolutionBoardTierMinor(int level) {
+    return 'Minor evolution · hero level $level';
+  }
 
   @override
-  String get evolutionTierMinor => 'MINOR';
+  String evolutionBoardTierMajor(int level) {
+    return 'Major evolution · hero level $level';
+  }
 
   @override
-  String get evolutionTierMajor => 'MAJOR';
+  String get evolutionBoardToChoose => 'To choose';
 
   @override
-  String evolutionLevelUp(int from, int to) {
-    return 'Level $from → $to';
+  String evolutionBoardUpcomingMinors(int level) {
+    return 'Minors — at level $level';
+  }
+
+  @override
+  String evolutionBoardUpcomingMajors(int level) {
+    return 'Majors — at level $level';
+  }
+
+  @override
+  String get evolutionBoardTaken => 'Already taken';
+
+  @override
+  String get evolutionBoardExcluded => 'Excluded';
+
+  @override
+  String evolutionBoardExcludedBy(String name) {
+    return 'Excluded by $name';
+  }
+
+  @override
+  String evolutionBoardTakenLevel(int level) {
+    return 'Taken · Lvl. $level';
+  }
+
+  @override
+  String evolutionBoardLevelUp(int from, int to, String description) {
+    return 'Level $from → $to: $description';
+  }
+
+  @override
+  String get evolutionBoardToday => 'Today';
+
+  @override
+  String get evolutionBoardAfter => 'After this choice';
+
+  @override
+  String get evolutionBoardPick => 'Choose an evolution';
+
+  @override
+  String evolutionBoardTake(String name) {
+    return 'Take $name';
   }
 
   @override
