@@ -2,9 +2,9 @@
 
 **Branche** : `feat/v0.5.7-p42-tranche-1-p44-lot-1` · **Compte rendu** : [2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md](2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
 **Testé le** : non rempli
-**Résultat** : 0 ✅ · 0 ❌ · 40 non testés
+**Résultat** : 0 ✅ · 0 ❌ · 41 non testés
 
-**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu) ; M39 s'y ajoute le 06/11 (les signatures dans « Mon Deck », demandées par le propriétaire). **Le 06/11, D78 et D79 remplacent le tirage et ses rouleaux par un seul écran pour les deux signatures, et le rideau dit ce qui attend** : M9, M10, M12 à M17 et M35 sont réécrits, M40 s'ajoute. Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
+**Repères communs.** M1 à M34 reprennent la table des tests manuels de la spec (§9.1), dans son ordre et sous ses numéros ; M35 à M38 sont neufs (le parcours de bout en bout, et des points renvoyés au test par les revues, §2 et §3 du compte rendu) ; M39 s'y ajoute le 06/11 (les signatures dans « Mon Deck », demandées par le propriétaire). **Le 06/11, D78 et D79 remplacent le tirage et ses rouleaux par un seul écran pour les deux signatures, et le rideau dit ce qui attend** : M9, M10, M12 à M17 et M35 sont réécrits, M40 s'ajoute. **Le 07/11, D80 donne au rideau une forme par ce qui attend** : M9, M10 et M12 sont retouchés, M41 s'ajoute. Les points des revues qui recoupaient un M y ont été fondus (M1, M2, M4, M5, M16, M32).
 
 **Deux sortes de run.** « JOUER » lance une run normale, sauvegardée. « RUN DEBUG » (colonne DEBUG de l'accueil, build debug seulement) lance une run de test **qui ne sauvegarde jamais rien** : une reprise ne se teste que dans une run normale. Seule la run debug a le tiroir violet « DEBUG » au bord gauche. **En combat, un seul onglet, « Combat »** (« PV », « Mana », « Armure », « Soin complet », « Mana plein », les PV de chaque ennemi / « 0 PV », « Tous les ennemis a 0 PV », « Gagner le combat », « Perdre le combat », « Sauter la phase ennemie »). **Hors combat (carte du monde) : « Heros », « Run », « Deck », « Reliques ».** Un champ chiffré se valide en tapant la valeur puis Entrée. « Heros » porte « Puissance », « Niveau (stat brute) », « Gagner un niveau (ouvre le draft) » et, tout en bas, la section **« Évolutions de signature »** : pour chaque signature, son nom, la liste de ce qui est pris (« aucune », ou les identifiants et niveaux, ex. « zeal:2, sentence:1 »), un bouton par évolution que le prochain palier admet, **au nom français** (« Zèle »…), puis « Retirer les évolutions ». « Run » porte « Drafts en attente » ; « Deck » > « Ajouter une carte ». Les évolutions ne se posent donc que sur la carte du monde : entre deux poses qu'un combat doit montrer, finir le combat par « Gagner le combat », passer les récompenses, revenir à la carte.
 
@@ -77,7 +77,7 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 7. **M29** — L'appui court joue, arme, désarme comme en `0.5.6` ; l'appui long ne fait rien de tout cela.
 8. **M34** — L'entrée de debug des évolutions (les autres points s'en servent).
 9. **M4** — Le draft de départ à deux quotas.
-10. **M9** — Le rideau sans draft dit « ÉVOLUTION » : les nœuds restent éteints, aucun voyage possible.
+10. **M9** — Le rideau sans draft dit « ÉVOLUTION MINEURE » : les nœuds restent éteints, aucun voyage possible.
 11. **M17** — Sélectionner sur les deux signatures, lire les fiches, « Valider les deux » ; le choix se voit sur les tuiles au combat suivant.
 12. **M25** — La liste de l'appui long : son contenu, et la colonne qui ne bouge pas.
 13. **M26** — Relâcher replie la liste, glisser ne la replie pas.
@@ -108,6 +108,7 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 38. **M11** — Les rouleaux du draft de niveau : rien ne change.
 39. **M36** — Le chevron « Passifs » à un seul passif.
 40. **M37** — La barre de l'éditeur de contenu sur deux lignes.
+41. **M41** — Les trois rideaux de la carte : la pyramide, le bandeau, le médaillon, et la colonne sur téléphone.
 
 ## M1 — Infobulles : le barème des statuts proportionnels
 - **Atteindre la situation** : hors combat, accueil « DICTIONNAIRE », onglet « Cartes ». En combat : *Trait de Glace* en main (run Paladin ou debug, « Deck » > « Ajouter une carte » sur la carte du monde) ; *Décharge* et *Nova de givre* dans une run Mage (draft de départ ou « Ajouter une carte »).
@@ -169,15 +170,15 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 *Réécrit le 06/11 (D79) : le rideau dit ce qui attend.*
 - **Atteindre la situation** : « RUN DEBUG », Paladin, carte du monde. Onglet « Run » : « Drafts en attente » à 0. Onglet « Heros » : « Niveau (stat brute) » à 5.
 - **Faire** : fermer le tiroir ; regarder le rideau apparaître ; essayer de toucher un nœud à travers lui. En français puis en anglais.
-- **Attendu** : le rideau « ÉVOLUTION », « Vos signatures peuvent évoluer », « TOUCHEZ POUR CHOISIR » s'affiche (« EVOLUTION », « Your signatures can evolve », « TAP TO CHOOSE ») ; pendant son fondu, les nœuds restent éteints derrière le voile, sans s'éclaircir. Toucher n'importe où, nœud compris, ouvre « VOS SIGNATURES ÉVOLUENT » ; aucun voyage ne part. Si une seule signature attend (M40, e), il dit « Châtiment peut évoluer ».
-- **Ne doit pas changer** : le rideau d'un simple draft de niveau, « 🎉 LEVEL UP ! 🎉 », « Votre héros a gagné en puissance ! », « TOUCHEZ POUR OBTENIR VOS RÉCOMPENSES » ; la carte une fois le choix fait.
+- **Attendu** : le rideau mineur, un bandeau, « ÉVOLUTION MINEURE », « Vos signatures peuvent évoluer », « TOUCHEZ POUR CHOISIR » s'affiche (« MINOR EVOLUTION », « Your signatures can evolve », « TAP TO CHOOSE ») ; pendant son fondu, les nœuds restent éteints derrière le voile, sans s'éclaircir. Toucher n'importe où, nœud compris, ouvre « VOS SIGNATURES ÉVOLUENT » ; aucun voyage ne part. Si une seule signature attend (M40, e), il dit « Châtiment peut évoluer ».
+- **Ne doit pas changer** : la carte une fois le choix fait.
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## M10 — Le rideau au niveau 5 : le draft, puis les deux évolutions
 *Réécrit le 06/11 (D79).*
 - **Atteindre la situation** : « RUN DEBUG », Paladin, carte du monde. Onglet « Heros » : « Niveau (stat brute) » à 4, puis « Gagner un niveau (ouvre le draft) » (notification « Niveau 5 — draft en attente sur la carte »).
 - **Faire** : fermer le tiroir ; toucher le rideau, finir le draft ; toucher le rideau, choisir une évolution par signature, « Valider les deux ».
-- **Attendu** : d'abord le rideau « LEVEL UP ! » et le draft de niveau ; au retour, le rideau dit « ÉVOLUTION » et ouvre « VOS SIGNATURES ÉVOLUENT », avec *Bouclier Sacré* à gauche et *Châtiment* à droite (l'ordre de la fiche du Paladin) ; après la validation, le rideau disparaît, les nœuds accessibles s'éclairent et se touchent.
+- **Attendu** : d'abord le rideau « LEVEL UP ! » et le draft de niveau ; au retour, le rideau dit « ÉVOLUTION MINEURE » et ouvre « VOS SIGNATURES ÉVOLUENT », avec *Bouclier Sacré* à gauche et *Châtiment* à droite (l'ordre de la fiche du Paladin) ; après la validation, le rideau disparaît, les nœuds accessibles s'éclairent et se touchent.
 - **Ne doit pas changer** : le draft de niveau lui-même ; la position sur la carte.
 - **Résultat** : ✅ · ❌ · non testé —
 
@@ -401,6 +402,14 @@ Les évolutions des signatures testées. « Chiffrée » change un chiffre de la
 - **Faire** : (a) au rideau, ouvrir l'écran ; toucher l'onglet *Châtiment*, puis glisser vers l'autre ; défiler ; toucher *Dévotion* ; revenir sur *Bouclier Sacré*, y choisir une évolution. (b) Ouvrir l'écran. (c) Ouvrir l'écran ; défiler la colonne de *Frappe Téméraire* jusqu'en bas. (d) Ouvrir l'écran. (e) Lire le rideau, ouvrir l'écran. (f) Choisir et valider deux fois.
 - **Attendu** : (a) deux onglets, *Bouclier Sacré* et *Châtiment*, et une seule liste qui défile, sans fiche ; fixes en bas, « Coût : 1 Mana · Recharge : 2 tours » puis le bouton. Sous « À CHOISIR », pour *Châtiment* : *Célérité*, *Dévotion*, puis les mineures, *Zèle* « Niveau 2 → 3 : +6 dégâts », *Égide* « Niveau 1 → 2 : +4 Armure », *Ardeur* « +5 % de critique » (moins de trois majeures restantes : Q6) ; sous « DÉJÀ PRISES » : *Sentence*, *Rayonnement*. *Dévotion* touchée : l'onglet se coche et la ligne dit « Coût : 0 Mana · Recharge : 2 tours ». Le bouton s'active au second choix : « Valider les deux ». (b) Deux colonnes, sans fiche : le coût et la recharge sont sur la ligne de tête, et les évolutions se voient sans défiler. (c) Sous « À CHOISIR », pour *Frappe Téméraire* : *Fauchage*, *Sang-froid*, puis les trois mineures ; sous « DÉJÀ PRISES » : *Célérité* ; sous « EXCLUES » : *Dévastation*, avec « Exclue par Célérité » à droite. Chaque colonne défile seule. (d) Les onglets « Projectile Magique » et « Surtension de Mana » s'écrivent en entier, le titre tient sur sa ligne, sans « … ». (e) Le rideau dit « Châtiment peut évoluer » ; l'écran n'a qu'une colonne, le titre « ÉVOLUTION DE CHÂTIMENT », et le bouton dit « Prendre Sentence » une fois *Sentence* touchée. (f) D'abord les deux mineures, puis, le rideau revenu, les deux majeures. **Juger** : sur la fenêtre étroite, le coût et la recharge suffisent-ils, sans la fiche ?
 - **Ne doit pas changer** : le titre des autres écrans qui tient déjà sur sa ligne (« MON DECK », la boutique) : même taille qu'avant.
+- **Résultat** : ✅ · ❌ · non testé —
+
+## M41 — Les trois rideaux de la carte (neuf)
+*Neuf : D80, le 07/11 ; [maquettes](../../presentations/2026-11-07_rideaux_des_evolutions_maquettes.pptx).*
+- **Atteindre la situation** : run debug Paladin, carte du monde, fenêtre de 1280 × 800. (a) « Gagner un niveau (ouvre le draft) ». (b) Après (a), sans évolution, « Niveau (stat brute) » à 5. (c) Sous chaque signature, poser une mineure, puis « Niveau (stat brute) » à 10. (d) Run debug Paladin neuve, « Drafts en attente » à 2. (e) (a), (b) et (c) en Mage et en Berserker. (f) (a) dans une fenêtre de moins de 600 px de large. (g) (a), (b) et (c) dans une fenêtre de 800 × 360.
+- **Faire** : (a) regarder l'entrée du rideau, attendre, toucher, finir le draft. (b) et (c) regarder l'entrée, toucher, revenir par la flèche. (d) finir le premier draft. (e), (f) et (g) lire chaque rideau. En français puis en anglais.
+- **Attendu** : (a) une pyramide transparente à la couleur de la classe, la carte visible à travers, et des flèches qui montent partout, d'autres positions à chaque ouverture ; « LEVEL UP ! », « Votre héros a gagné en puissance ! », « TOUCHEZ POUR OBTENIR VOS RÉCOMPENSES » (« LEVEL UP! », « Your hero has grown stronger! », « TAP TO CLAIM YOUR REWARDS ») ; les flèches s'effacent derrière le texte et s'arrêtent sous la barre du haut. (b) Le bandeau « ÉVOLUTION MINEURE » s'ouvre du centre vers les bords, sans rebond, puis ne bouge plus. (c) L'écran s'éteint : le médaillon rebondit, une onde part, le texte arrive, puis les rayons tournent et l'invite pulse ; « ÉVOLUTION MAJEURE » (« MAJOR EVOLUTION »). (d) Au retour du premier draft, l'entrée de la pyramide rejoue. (e) Le faisceau, le bandeau et le halo prennent la couleur de la classe ; les titres gardent leur couleur. (f) Une colonne de lumière, des chevrons et des étincelles à la place de la pyramide. (g) Tout tient dans la hauteur, le texte entier. **Juger** : la pyramide lasse-t-elle à force de revenir à chaque niveau ? La vitesse des flèches ? Au retour du draft, l'entrée du bandeau se voit-elle assez, alors que la carte revient à l'écran au même moment ?
+- **Ne doit pas changer** : toucher n'importe où ouvre le draft ou l'écran, dès l'entrée du rideau ; « MON DECK » reste accessible au-dessus du rideau ; le rideau ne revient plus une fois tout choisi.
 - **Résultat** : ✅ · ❌ · non testé —
 
 ## Ce qui doit rester inchangé
