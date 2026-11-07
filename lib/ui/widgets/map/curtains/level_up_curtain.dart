@@ -137,6 +137,7 @@ class _LevelUpCurtainState extends State<LevelUpCurtain>
                   child: CurtainBand(
                     classColor: widget.classColor,
                     open: open,
+                    longFade: true,
                     child: _content(t, low: box.maxHeight < 420),
                   ),
                 ),
