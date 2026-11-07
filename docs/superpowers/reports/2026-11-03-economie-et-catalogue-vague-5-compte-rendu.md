@@ -38,7 +38,7 @@ Une ligne chacun, ou un thème par ligne pour les arbitrages T de la spec (le pl
 |:---|:---|:---:|:---|:---:|
 | Q6 · Q7 · Q8 | Pools d'évolutions ; majeures contradictoires ; cartes-pont | P | 3 mineures, 4 majeures, repli confirmé ; `excludes` en donnée ; pas de pont (propriétaire, prompt) | — |
 | Q9 · Q11 · O5 | Draft de départ ; double bonus de Puissance ; masquage | P | 2 du lot + 3 neutres, lu comme deux quotas ; un bonus par carte ; masqué si aucune carte ne porte le passif (propriétaire) | — |
-| Écran | L'écran d'évolution | P | Le carrousel, trois rouleaux, nom, description, palier, « 1 → 2 », signature en tête (propriétaire) ; **remplacé le 06/11 par un seul écran pour les deux signatures, sans tirage (D78, D79)** ; le 07/11, trois rideaux selon ce qui attend (D80) | — |
+| Écran | L'écran d'évolution | P | Le carrousel, trois rouleaux, nom, description, palier, « 1 → 2 », signature en tête (propriétaire) ; **remplacé le 06/11 par un seul écran pour les deux signatures, sans tirage (D78, D79)** ; le 07/11, trois rideaux selon ce qui attend (D80, D81) | — |
 | P-1 | Le barème des statuts proportionnels | P | (a) 25 % par point, plafonds 4 / 2 / 3 (propriétaire, 03/11) | — |
 | P-2 · P-4 | L'affichage des évolutions ; l'icône sur le rouleau | P | (c) badge et icônes, « rien n'est caché » ; (a) l'icône sur le rouleau (propriétaire, 03/11) | — |
 | P-3 | L'écho et les événements « carte jouée » | P | (a) aucun événement (propriétaire, 03/11) | — |
