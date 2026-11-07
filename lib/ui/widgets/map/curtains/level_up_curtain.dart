@@ -1,14 +1,13 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'curtain_band.dart';
 import 'curtain_step.dart';
 
-/// Le rideau d'un niveau gagné (D80), à la couleur de la classe : une pyramide
-/// transparente et des flèches au hasard sur grand écran, une colonne de lumière
-/// et des chevrons sur téléphone. Il revient à chaque niveau, son entrée reste
-/// courte.
+/// Le rideau d'un niveau gagné (D81) : un bandeau à la couleur de la classe,
+/// sur des flèches placées au hasard qui montent et passent derrière lui. Il
+/// revient à chaque niveau, son entrée reste courte.
 class LevelUpCurtain extends StatefulWidget {
   final Color classColor;
   final String title;
@@ -29,20 +28,12 @@ class LevelUpCurtain extends StatefulWidget {
 
 class _LevelUpCurtainState extends State<LevelUpCurtain>
     with TickerProviderStateMixin {
-  /// La largeur sous laquelle le rideau passe en colonne, la même que l'écran
-  /// d'évolution pour ses onglets.
-  static const _phoneWidth = 600.0;
-
-  /// Le nombre de pulsations des chevrons par tour de [_drift].
-  static const _chevronPulsesPerTurn = 6;
-
   late final AnimationController _entrance;
 
-  /// Le tour des flèches et des étincelles, qui montent sans fin.
+  /// Le tour des flèches, qui montent sans fin.
   late final AnimationController _drift;
 
-  /// Tiré à chaque ouverture : c'est lui qui place les flèches et les
-  /// étincelles.
+  /// Tiré à chaque ouverture : c'est lui qui place les flèches.
   final int _seed = math.Random().nextInt(1 << 31);
 
   @override
@@ -65,48 +56,11 @@ class _LevelUpCurtainState extends State<LevelUpCurtain>
     super.dispose();
   }
 
-  Widget _chevrons(double size) => SizedBox(
-        height: size * 1.3,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            for (var i = 0; i < 3; i++)
-              Transform.translate(
-                offset: Offset(0, (1 - i) * size * 0.36),
-                child: Opacity(
-                  opacity: 0.35 +
-                      0.65 *
-                          (0.5 +
-                              0.5 *
-                                  math.sin(
-                                    (_drift.value * _chevronPulsesPerTurn -
-                                            i * 0.28) *
-                                        2 *
-                                        math.pi,
-                                  )),
-                  child: Icon(
-                    Icons.keyboard_arrow_up,
-                    size: size,
-                    color: Colors.amberAccent,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-
-  Widget _content(double t, {required bool low, required bool withChevrons}) {
+  Widget _content(double t, {required bool low}) {
     final rest = curtainStep(t, 0.55, 1);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (withChevrons) ...[
-          Opacity(
-            opacity: curtainStep(t, 0.2, 0.6),
-            child: _chevrons(low ? 30 : 52),
-          ),
-          SizedBox(height: low ? 4 : 12),
-        ],
         Transform.scale(
           scale: curtainStep(t, 0.25, 1, Curves.easeOutBack),
           child: FittedBox(
@@ -125,7 +79,7 @@ class _LevelUpCurtainState extends State<LevelUpCurtain>
             ),
           ),
         ),
-        SizedBox(height: low ? 4 : 10),
+        SizedBox(height: low ? 4 : 8),
         Opacity(
           opacity: rest,
           child: Text(
@@ -138,7 +92,7 @@ class _LevelUpCurtainState extends State<LevelUpCurtain>
             ),
           ),
         ),
-        SizedBox(height: low ? 8 : 18),
+        SizedBox(height: low ? 6 : 12),
         Opacity(
           opacity: rest,
           child: FittedBox(
@@ -161,138 +115,66 @@ class _LevelUpCurtainState extends State<LevelUpCurtain>
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, box) {
-        final phone = box.maxWidth < _phoneWidth;
-        return AnimatedBuilder(
-          animation: Listenable.merge([_entrance, _drift]),
-          builder: (context, _) {
-            final t = _entrance.value;
-            final rise = curtainStep(t, 0, 0.55, Curves.easeOutCubic);
-            return Container(
-              color: Colors.black.withValues(alpha: 0.68 * rise),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (phone)
-                    Transform(
-                      alignment: Alignment.bottomCenter,
-                      transform: Matrix4.diagonal3Values(1, rise, 1),
-                      child: CustomPaint(
-                        painter: _ColumnPainter(
-                          classColor: widget.classColor,
-                          drift: _drift.value,
-                          seed: _seed,
-                        ),
-                      ),
-                    )
-                  else
-                    CustomPaint(
-                      painter: _PyramidPainter(
-                        classColor: widget.classColor,
-                        drift: _drift.value,
-                        rise: rise,
-                        seed: _seed,
-                      ),
-                    ),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: _content(
-                        t,
-                        low: box.maxHeight < 420,
-                        withChevrons: phone,
-                      ),
-                    ),
+      builder: (context, box) => AnimatedBuilder(
+        animation: Listenable.merge([_entrance, _drift]),
+        builder: (context, _) {
+          final t = _entrance.value;
+          final open = curtainStep(t, 0, 0.55, Curves.easeOutCubic);
+          return Container(
+            color: Colors.black.withValues(alpha: 0.68 * open),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CustomPaint(
+                  painter: _ArrowsPainter(
+                    classColor: widget.classColor,
+                    drift: _drift.value,
+                    fade: open,
+                    seed: _seed,
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+                ),
+                Center(
+                  child: CurtainBand(
+                    classColor: widget.classColor,
+                    open: open,
+                    child: _content(t, low: box.maxHeight < 420),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-/// La pyramide transparente, à deux faces, et les flèches qui montent partout
-/// dans le rideau.
-class _PyramidPainter extends CustomPainter {
+/// Les flèches qui montent partout dans le rideau.
+class _ArrowsPainter extends CustomPainter {
   /// La surface du rideau, en pixels, pour une flèche.
   static const _areaPerArrow = 30000.0;
-
-  /// La moitié de la zone du texte, où les flèches s'effacent.
-  static const _textHalfWidth = 210.0;
-  static const _textHalfHeight = 92.0;
 
   static const _gold = Color(0xFFFFD54F);
 
   final Color classColor;
   final double drift;
-  final double rise;
+  final double fade;
   final int seed;
 
-  const _PyramidPainter({
+  const _ArrowsPainter({
     required this.classColor,
     required this.drift,
-    required this.rise,
+    required this.fade,
     required this.seed,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final hsl = HSLColor.fromColor(classColor);
-    final light = hsl.withLightness(0.76).toColor();
-    _paintPyramid(canvas, size, hsl, light);
-    _paintArrows(canvas, size, light);
-  }
-
-  void _paintPyramid(Canvas canvas, Size size, HSLColor hsl, Color light) {
     final w = size.width;
     final h = size.height;
-    final baseWidth = math.min(w, math.max(h * 1.35, w * 0.7));
-    final top = Offset(w / 2, h - h * 0.94 * rise);
-    final left = Offset((w - baseWidth) / 2, h);
-    final right = Offset((w + baseWidth) / 2, h);
-    final middle = Offset(w / 2, h);
-
-    Paint faceFill(Color color, double bottom, double upper) => Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(0, h),
-        top,
-        [color.withValues(alpha: bottom), color.withValues(alpha: upper)],
-      );
-    Path face(Offset corner) => Path()
-      ..moveTo(top.dx, top.dy)
-      ..lineTo(corner.dx, corner.dy)
-      ..lineTo(middle.dx, middle.dy)
-      ..close();
-    canvas.drawPath(
-      face(left),
-      faceFill(hsl.withLightness(hsl.lightness * 0.8).toColor(), 0.55, 0.22),
-    );
-    canvas.drawPath(
-      face(right),
-      faceFill(hsl.withLightness(hsl.lightness * 0.45).toColor(), 0.62, 0.26),
-    );
-
-    Paint edge(double bottom, double upper, double width) => Paint()
-      ..strokeWidth = width
-      ..shader = ui.Gradient.linear(
-        Offset(0, h),
-        top,
-        [light.withValues(alpha: bottom), light.withValues(alpha: upper)],
-      );
-    canvas.drawLine(top, left, edge(0.85, 0.5, 1.5));
-    canvas.drawLine(top, right, edge(0.85, 0.5, 1.5));
-    canvas.drawLine(top, middle, edge(0.28, 0.12, 1));
-  }
-
-  void _paintArrows(Canvas canvas, Size size, Color light) {
-    final w = size.width;
-    final h = size.height;
+    final light = HSLColor.fromColor(classColor).withLightness(0.76).toColor();
     final random = math.Random(seed);
     final count = (w * h / _areaPerArrow).clamp(12, 34).round();
-    final textHalfWidth = math.min(w * 0.46, _textHalfWidth);
     for (var i = 0; i < count; i++) {
       // Une par tranche de largeur : le hasard, sans tas d'un seul côté.
       final x = (i + random.nextDouble()) / count * w;
@@ -303,16 +185,10 @@ class _PyramidPainter extends CustomPainter {
 
       final progress = (phase + drift * speed) % 1.0;
       final y = h + 40 - (h + 80) * progress;
-      final inText = math.max(
-        (x - w / 2).abs() / textHalfWidth,
-        (y - h / 2).abs() / _textHalfHeight,
-      );
-      final clear = ((inText - 0.8) / 0.3).clamp(0.0, 1.0);
-      final alpha = math.sin(progress * math.pi) * 0.85 * clear * rise;
-      if (alpha <= 0.01) continue;
-
       final paint = Paint()
-        ..color = Color.lerp(light, _gold, warmth)!.withValues(alpha: alpha)
+        ..color = Color.lerp(light, _gold, warmth)!.withValues(
+          alpha: math.sin(progress * math.pi) * 0.85 * fade,
+        )
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
@@ -331,92 +207,5 @@ class _PyramidPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PyramidPainter oldDelegate) => true;
-}
-
-/// La colonne de lumière, en fondu sur les côtés et vers le haut, et les
-/// étincelles qui y montent.
-class _ColumnPainter extends CustomPainter {
-  static const _sparkCount = 26;
-  static const _gold = Color(0xFFFFD54F);
-
-  final Color classColor;
-  final double drift;
-  final int seed;
-
-  const _ColumnPainter({
-    required this.classColor,
-    required this.drift,
-    required this.seed,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final hsl = HSLColor.fromColor(classColor);
-    final deep = hsl.withLightness(hsl.lightness * 0.36).toColor();
-    final core = hsl.withLightness(hsl.lightness * 0.62).toColor();
-    final light = hsl.withLightness(0.76).toColor();
-    final body = Offset.zero & size;
-
-    canvas.saveLayer(body, Paint());
-    canvas.drawRect(
-      body,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          Offset.zero,
-          Offset(size.width, 0),
-          [
-            deep.withValues(alpha: 0),
-            deep,
-            core,
-            deep,
-            deep.withValues(alpha: 0),
-          ],
-          const [0, 0.05, 0.5, 0.95, 1],
-        ),
-    );
-    canvas.drawRect(
-      body,
-      Paint()
-        ..blendMode = BlendMode.dstIn
-        ..shader = ui.Gradient.linear(
-          Offset(0, size.height),
-          Offset.zero,
-          [Colors.white, Colors.white, Colors.white.withValues(alpha: 0)],
-          const [0.0, 0.66, 0.98],
-        ),
-    );
-    canvas.restore();
-
-    canvas.drawRect(
-      body,
-      Paint()
-        ..shader = ui.Gradient.radial(
-          Offset(size.width / 2, size.height),
-          size.width * 0.48,
-          [light.withValues(alpha: 0.4), light.withValues(alpha: 0)],
-        ),
-    );
-
-    final random = math.Random(seed);
-    final sparkColor = Color.lerp(light, _gold, 0.5)!;
-    for (var i = 0; i < _sparkCount; i++) {
-      final x = random.nextDouble() * size.width;
-      final phase = random.nextDouble();
-      final speed = 1 + random.nextInt(2);
-      final radius = 1.2 + random.nextDouble() * 1.8;
-      final progress = (phase + drift * speed) % 1.0;
-      canvas.drawCircle(
-        Offset(x, size.height * (1 - progress)),
-        radius,
-        Paint()
-          ..color = sparkColor.withValues(
-            alpha: math.sin(progress * math.pi) * 0.75,
-          ),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ColumnPainter oldDelegate) => true;
+  bool shouldRepaint(_ArrowsPainter oldDelegate) => true;
 }
