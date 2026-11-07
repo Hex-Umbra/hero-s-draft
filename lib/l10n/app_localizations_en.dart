@@ -1173,7 +1173,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get evolutionScreenTitleBoth => 'Your signatures evolve';
 
   @override
-  String get evolutionCurtainTitle => 'EVOLUTION';
+  String get levelUpCurtainTitle => 'LEVEL UP!';
+
+  @override
+  String get levelUpCurtainSubtitle => 'Your hero has grown stronger!';
+
+  @override
+  String get levelUpCurtainAction => 'TAP TO CLAIM YOUR REWARDS';
+
+  @override
+  String get evolutionCurtainTitleMinor => 'MINOR EVOLUTION';
+
+  @override
+  String get evolutionCurtainTitleMajor => 'MAJOR EVOLUTION';
 
   @override
   String evolutionCurtainOne(String signature) {

@@ -895,9 +895,25 @@
   "@evolutionScreenTitleBoth": {
     "description": "Title of the signature evolution screen, when two signatures evolve together."
   },
-  "evolutionCurtainTitle": "EVOLUTION",
-  "@evolutionCurtainTitle": {
-    "description": "Title of the map curtain when the next pending choice is a signature evolution."
+  "levelUpCurtainTitle": "LEVEL UP!",
+  "@levelUpCurtainTitle": {
+    "description": "Title of the map curtain when the next pending choice is a level draft."
+  },
+  "levelUpCurtainSubtitle": "Your hero has grown stronger!",
+  "@levelUpCurtainSubtitle": {
+    "description": "Text of the map curtain when the next pending choice is a level draft."
+  },
+  "levelUpCurtainAction": "TAP TO CLAIM YOUR REWARDS",
+  "@levelUpCurtainAction": {
+    "description": "Call to action of the map curtain when a level draft waits."
+  },
+  "evolutionCurtainTitleMinor": "MINOR EVOLUTION",
+  "@evolutionCurtainTitleMinor": {
+    "description": "Title of the map curtain when the next pending choice is a minor signature evolution."
+  },
+  "evolutionCurtainTitleMajor": "MAJOR EVOLUTION",
+  "@evolutionCurtainTitleMajor": {
+    "description": "Title of the map curtain when the next pending choice is a major signature evolution."
   },
   "evolutionCurtainOne": "{signature} can evolve",
   "@evolutionCurtainOne": {

@@ -1832,11 +1832,35 @@ abstract class AppLocalizations {
   /// **'Your signatures evolve'**
   String get evolutionScreenTitleBoth;
 
-  /// Title of the map curtain when the next pending choice is a signature evolution.
+  /// Title of the map curtain when the next pending choice is a level draft.
   ///
   /// In en, this message translates to:
-  /// **'EVOLUTION'**
-  String get evolutionCurtainTitle;
+  /// **'LEVEL UP!'**
+  String get levelUpCurtainTitle;
+
+  /// Text of the map curtain when the next pending choice is a level draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Your hero has grown stronger!'**
+  String get levelUpCurtainSubtitle;
+
+  /// Call to action of the map curtain when a level draft waits.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO CLAIM YOUR REWARDS'**
+  String get levelUpCurtainAction;
+
+  /// Title of the map curtain when the next pending choice is a minor signature evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MINOR EVOLUTION'**
+  String get evolutionCurtainTitleMinor;
+
+  /// Title of the map curtain when the next pending choice is a major signature evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MAJOR EVOLUTION'**
+  String get evolutionCurtainTitleMajor;
 
   /// Map curtain text when one signature waits for its evolution.
   ///

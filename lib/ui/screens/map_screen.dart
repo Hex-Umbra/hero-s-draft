@@ -18,6 +18,8 @@ import '../../game/controllers/deck_controller.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/game_moment.dart';
 import '../../services/audio/music_scene.dart';
+import '../../services/game_data_service.dart';
+import '../widgets/class_identity.dart';
 import '../widgets/map/map_connection_painter.dart';
 import '../widgets/map/map_legend.dart';
 import '../widgets/map/map_node_widget.dart';
@@ -302,6 +304,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
           // Overlay de Level Up
           if (runState.hasPendingChoice)
             LevelUpOverlay(
+              // Un draft de plus en attente rejoue l'entrée du rideau.
+              key: ValueKey(runState.pendingDrafts),
+              classColor: ClassIdentity.colorOf(
+                ref
+                    .watch(gameDataLoaderProvider)
+                    .requireValue
+                    .heroes
+                    .firstWhere((h) => h.id == runState.heroClassId),
+              ),
               // Le rideau dit ce qui attend : un draft d'abord, sinon les
               // évolutions (D79).
               evolving: runState.pendingDrafts > 0

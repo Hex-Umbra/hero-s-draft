@@ -1182,7 +1182,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get evolutionScreenTitleBoth => 'Vos signatures évoluent';
 
   @override
-  String get evolutionCurtainTitle => 'ÉVOLUTION';
+  String get levelUpCurtainTitle => 'LEVEL UP !';
+
+  @override
+  String get levelUpCurtainSubtitle => 'Votre héros a gagné en puissance !';
+
+  @override
+  String get levelUpCurtainAction => 'TOUCHEZ POUR OBTENIR VOS RÉCOMPENSES';
+
+  @override
+  String get evolutionCurtainTitleMinor => 'ÉVOLUTION MINEURE';
+
+  @override
+  String get evolutionCurtainTitleMajor => 'ÉVOLUTION MAJEURE';
 
   @override
   String evolutionCurtainOne(String signature) {
