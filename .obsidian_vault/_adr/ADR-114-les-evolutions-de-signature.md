@@ -6,7 +6,9 @@ description: Signature evolutions — every five hero levels each signature gain
 
 ### Statut
 
-✅ Accepté — 2026-11-04 (P-42, **tranche 1**, partie 3 ; brainstorm v3, décisions D7, D19, D21, D54 ;
+✅ Accepté — 2026-11-04 ; **D3 (le tirage) et D4 (l'écran à trois rouleaux) amendés le 2026-11-07 par
+[ADR-115](ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)** : plus de tirage, les
+deux signatures sur un écran, trois rideaux. (P-42, **tranche 1**, partie 3 ; brainstorm v3, décisions D7, D19, D21, D54 ;
 réponses du propriétaire Q6, Q7, P-2, P-4, PN12, PN13, P-5, P-6, P-7, du 2026-11-03 au 2026-11-04).
 **Livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1` — vague 5 du
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md),

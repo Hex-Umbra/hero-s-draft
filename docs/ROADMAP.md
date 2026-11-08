@@ -710,7 +710,8 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 - Mettre `docs/animations/card_animations_system.md` en conformité avec le code (documentation fausse sur 4 points).
 - **Un `flatBonus` qui vise un effet absent de sa signature est accepté en silence par le chargeur** : l'évolution ne change rien, sans faute nommée. Le refuser au chargement, en nommant l'évolution. *(Relevé le 2026-11-04, compte rendu de la vague 5, §4.)*
 - **`DraftScreen` se quitte par le retour système sans choisir** : le draft de montée de niveau ne pose pas de `PopScope`, à la différence de l'écran d'évolution (S19), de l'événement et du repos. *(Même source.)*
-- **Le rideau de montée de niveau de la carte est en français en dur et ne dit pas ce qui attend** — un draft de niveau ou une évolution de signature (`map_screen.dart`) ; à passer par les ARB et à nommer ce qu'il ouvre. *(Même source.)*
+- ✅ ~~**Le rideau de montée de niveau de la carte est en français en dur et ne dit pas ce qui attend**~~ — **réglé le 2026-11-07 sur la branche de la vague 5** : un rideau par ce qui attend, ses textes aux ARB (D80 à D82, [ADR-115](../.obsidian_vault/_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)). *(Même source.)*
+- **À 360 px de large, le compteur d'or de la barre de la carte chevauche « RELIQUES » et « CHANCES »** dans le rendu de test, dont la police diffère du jeu : à confirmer sur un vrai téléphone avant de corriger. *(Relevé le 2026-11-07, série de corrections de la vague 5.)*
 
 ---
 

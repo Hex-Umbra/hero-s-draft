@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-04 | commit: 22da17b5 -->
+<!-- last-sync: 2026-11-09 | commit: 8a5d92b9 -->
 
 # 🧠 Contexte Actuel
 
@@ -14,7 +14,10 @@ passif » et **le lot 1 de P-44** « Profondeur », en trois parties : le moteur
 ([ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)) ;
 la forme C, les trois lots, le masquage des passifs sans lot et le draft de départ à deux quotas
 ([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) ; les évolutions de signature
-([ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)). **Rien n'en est fusionné ni publié** :
+([ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)). **Une série de corrections du
+propriétaire l'a suivie sur la même branche** (2026-11-04 → 2026-11-07, D78 à D82, [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)) :
+le choix libre des évolutions, les deux signatures sur un écran, trois rideaux sur la carte, les
+signatures dans Mon Deck. **Rien n'en est fusionné ni publié** :
 `main` reste à `d99cd815`, et ce que le vault dit de la vague 5 n'y deviendra vrai qu'à la fusion.
 **P-44 lot 1 est clos dans `docs/ROADMAP.md`** ; P-42 reste ouvert, deux tranches à venir. Le
 [compte rendu de la vague](../../docs/superpowers/reports/2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
@@ -54,15 +57,15 @@ Réserves à ne pas perdre de vue :
 
 - **Ce que la vague 5 laisse ouvert**, consigné au compte rendu §4 et dans ses ADR : un `flatBonus`
   qui vise un effet absent de sa signature est accepté en silence ; `DraftScreen` se quitte par le
-  retour système sans choisir ; le rideau de montée de niveau est en français en dur et ne dit pas
-  ce qui attend ; l'éditeur accepte une carte à `costs.armor` sous un passif sans classe unique ;
+  retour système sans choisir ; l'éditeur accepte une carte à `costs.armor` sous un passif sans classe unique ;
   `ProportionalStatus`, sous `lib/game/`, est importé par `enemy_instance.dart` ; `takeDamage` n'a
   pas de test direct ; la croissance `targetStatus` nomme le statut en français dans la version
   anglaise ; `asCard` est recalculé à chaque lecture, `effectLines` couplé par l'ordre sans
   `assert`. **Les faces des cartes, les émojis des statuts ennemis et l'icône de *Précis*** ne
   lisent pas encore `effect_icons.json`, et **les infobulles des cartes** attendent leur reprise
-  (PN12) — lignes de `docs/ROADMAP.md`. Le libellé « Passifs » et son chevron restent avec un seul
-  passif par classe jusqu'à la tranche 2 (S10). *Marque du Mage* ne voit toujours pas *Projectile
+  (PN12) — lignes de `docs/ROADMAP.md`. À 360 px de large, le compteur d'or de la barre de la carte
+  chevauche « RELIQUES » et « CHANCES » dans le rendu de test — à confirmer sur un vrai téléphone
+  (ADR-115). *Marque du Mage* ne voit toujours pas *Projectile
   Magique* : D34 passe en **vague 8** depuis D76 ; le passif est masqué jusque-là.
 - **Ce que la vague 4 laisse ouvert**, consigné dans ADR-109 : `playSignature` ne vérifie pas que
   l'ennemi visé est présent (S4) ; l'ennemi visé par la dernière carte garde sa bordure ambre
@@ -86,7 +89,7 @@ Réserves à ne pas perdre de vue :
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
   `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 5, les trois porteurs de
-  version portent déjà la sienne (`22da17b5`), **ni taguée ni publiée** ; sur `main`, celle de la
+  version portent déjà la sienne (`22da17b5`, note corrigée en `8a5d92b9`), **ni taguée ni publiée** ; sur `main`, celle de la
   vague 4, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
@@ -118,13 +121,16 @@ Réserves à ne pas perdre de vue :
    carte ; la tuile de combat passe en icônes, avec un badge et des puces, et déroule sa liste à
    l'appui long dans un calque (PN12 (d), P-5) ; une table d'icônes d'effet unique,
    `effect_icons.json` (P-6) ; une entrée de debug (P-7) ; la sauvegarde sous
-   `signatureEvolutions`. **Quatre arrêts**, chacun levé par le propriétaire : P-1 à P-3 (25/10),
+   `signatureEvolutions`. **Puis une série de corrections du propriétaire** (D78 à D82) : plus de
+   tirage, tout ce que le palier admet se choisit ; les deux signatures sur un seul écran ; un rideau
+   par ce qui attend — bandeau et flèches, bandeau, médaillon ; les signatures évoluées en tête de
+   Mon Deck ; plus de badge « Passifs » sans deuxième passif. **Quatre arrêts**, chacun levé par le propriétaire : P-1 à P-3 (25/10),
    PN12 et PN13 (03/11), P-5 et P-6 (03/11), D77 (04/11). **Deux décisions de méthode** : D76,
    une vague de plus (ADR-110) ; D77, plus de tests d'écran (ADR-113). Simulation non relancée
-   (ADR-108 D5). Note de version écrite (`22da17b5`). **1612 tests** (−89 sur la base de **1701**,
-   celle de la porte d'entrée ; le tri de D77 en a retiré 392), `dart analyze` propre (**vérifié
-   le 2026-11-04**) — [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)
-   à [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md).
+   (ADR-108 D5). Note de version écrite (`22da17b5`), corrigée sur place (`8a5d92b9`). **1620 tests** (−81 sur la
+   base de **1701**, celle de la porte d'entrée ; le tri de D77 en a retiré 392), `dart analyze`
+   propre (**vérifié le 2026-11-09**) — [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)
+   à [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md).
 2. **Vague 4 — P-43 lot E4 : les signatures en compétences de classe** (2026-10-15 → 2026-10-16,
    branche `feat/v0.5.6-p43-e4-signatures`, 25 commits `d0ac431` → `f42a25a` sur `main` à
    `848645b`, puis six retouches de la barre demandées par le propriétaire — **fusionnée dans
@@ -196,8 +202,8 @@ Réserves à ne pas perdre de vue :
 §3.8), il joue **le [fichier de tests manuels](../../docs/superpowers/reports/2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md)**
 de la vague, voisin du
 [compte rendu](../../docs/superpowers/reports/2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
-— les points renvoyés au test par les revues et M7 à M34 de la spec, préparés par l'entrée de
-debug des évolutions —, lit la table des arbitrages (§2), ouvre la PR de
+— 41 points : ceux que les revues renvoient au test, M7 à M34 de la spec, préparés par l'entrée
+de debug des évolutions, et ceux de la série de corrections, jusqu'à M41 pour les rideaux —, lit la table des arbitrages (§2), ouvre la PR de
 `feat/v0.5.7-p42-tranche-1-p44-lot-1`, la fusionne dans `main`, puis pose le tag de la version sur
 le commit de fusion (ADR-103 D1). Une correction demandée se fait sur la branche, avant la fusion.
 

@@ -2,7 +2,8 @@
 
 Les signatures de classe ([`_rules/02-2`](02-2-systeme-de-heros.md) §Signatures) évoluent avec le
 niveau du héros — P-42 tranche 1, partie 3, livrée sur la branche de la vague 5, en attente du test,
-de la PR, de la fusion et du tag du propriétaire — [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md).
+de la PR, de la fusion et du tag du propriétaire — [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md), dont le
+tirage et l'écran sont amendés par [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md) (D78 à D82).
 Architecture : [`_patterns/03-8`](../_patterns/03-8-signatureevolutionrules-regles-pures-des-evolutions.md)
 (les règles), [`_patterns/05-12`](../_patterns/05-12-barre-de-signatures-bande-et-calque.md) (la tuile).
 
@@ -10,18 +11,18 @@ Architecture : [`_patterns/03-8`](../_patterns/03-8-signatureevolutionrules-regl
 
 > [!IMPORTANT]
 > **Tous les 5 niveaux du héros, chaque signature gagne un niveau** (D19, D21) : une évolution
-> choisie parmi trois tirées de **son propre pool**. **Mineure aux niveaux impairs** de la signature
+> de **son propre pool**, choisie parmi **tout ce que le palier admet** — rien n'est tiré (D78). **Mineure aux niveaux impairs** de la signature
 > (héros 5, 15, 25…), **majeure aux pairs** (10, 20, 30…), sans plafond. Une mineure se reprend et
 > monte d'un niveau ; une majeure ne se prend qu'une fois.
 
 - **L'attente se dérive, jamais stockée** : `max(0, niveau du héros ~/ 5 − niveau de la
   signature)`. Un saut de 4 à 10 laisse deux mineures puis deux majeures à choisir.
-- **Deux signatures en attente** : celle dont le prochain niveau est le plus bas d'abord, à égalité
-  dans l'ordre de `skills` de `class.json` — au niveau 5, le Paladin choisit pour *Bouclier Sacré*,
-  puis pour *Châtiment*.
-- **Le tirage** : trois évolutions, sans poids ni remise, au palier dû. **Au palier majeur, des
-  mineures complètent** quand il reste moins de trois majeures éligibles (Q6). Une majeure prise,
-  ou exclue par une majeure prise (`excludes`, lu dans les deux sens, Q7), sort du tirage.
+- **Deux signatures en attente se choisissent ensemble**, sur un seul écran (D79), dans l'ordre de
+  `skills` de `class.json` ; sur un saut de plusieurs paliers, l'écran se rouvre pour le suivant.
+- **Ce que le palier admet** : au palier mineur, les trois mineures ; au palier majeur, les
+  majeures éligibles, **plus toutes les mineures** quand il reste moins de trois majeures éligibles
+  (Q6). Une majeure prise, ou exclue par une majeure prise (`excludes`, lu dans les deux sens, Q7),
+  ne se propose plus.
 
 #### 2.8.2. Les six pools — 3 mineures, 4 majeures chacun
 
@@ -56,10 +57,11 @@ test du propriétaire corrige. *Célérité* (`haste`) raccourcit la recharge d'
 
 | Lieu | Ce qu'il montre |
 |:---|:---|
-| **Le rideau de la carte** | Reste tant qu'un draft de niveau **ou** une évolution attend ; le toucher ouvre d'abord le draft, puis l'évolution suivante ; deux écrans à la suite au niveau 5. Les nœuds restent verrouillés |
-| **L'écran d'évolution** | « Évolution de {signature} », trois rouleaux : nom, description au prochain niveau, palier (MINEURE / MAJEURE), « Niveau 1 → 2 » pour une mineure reprise, et l'icône de l'évolution — dans son anneau pour une majeure (P-4). Le retour système ne relance pas le tirage |
+| **Le rideau de la carte** | Reste tant qu'un draft de niveau **ou** une évolution attend ; le toucher ouvre d'abord le draft, puis l'écran des évolutions. Les nœuds restent verrouillés, la barre du haut accessible. **Une forme par ce qui attend**, à la couleur de la classe (D80 à D82) : un draft, un bandeau transparent sur ses bords, sur des flèches qui montent (« LEVEL UP ! ») ; une mineure, un bandeau plein avec son icône (« ÉVOLUTION MINEURE ») ; une majeure, un médaillon doré et des rayons (« ÉVOLUTION MAJEURE »), qui l'emporte si les rangs diffèrent |
+| **L'écran d'évolution** | Les signatures en attente **ensemble** (D79) : une colonne chacune, sa fiche — le résultat du choix — puis son pool entier, rangé en ce qui se prend maintenant, l'autre rang et le niveau du héros qui l'ouvre, les majeures prises, les majeures exclues et par laquelle ; « Niveau 1 → 2 » pour une mineure reprise. Un seul bouton, actif quand chacune a son choix. Sur téléphone, un onglet par signature ; sur une fenêtre basse, deux colonnes sans fiche. Le retour ramène au rideau sans rien perdre |
 | **La tuile de combat** | **Plus de texte au repos** (PN12 (d)) : une icône par effet évolué avec sa valeur, trois par ligne ; un badge « Niv. n » au bout de la ligne du type, en ambre d'accent quand la tuile répond (PN13) ; une puce par évolution prise, sous la bande. **L'appui long déroule la liste**, une phrase par icône, par-dessus les tuiles voisines, dans **tous** les états, inactive comprise (P-5) — il ne joue, n'arme ni ne désarme rien ; relâcher la replie |
-| **Hors combat** | Carte de classe et dictionnaire : la signature de base, gabarit rempli de la donnée, sans badge ni icône |
+| **Mon Deck** | En tête, une fiche par signature de la run : type, coût, recharge et description évolués, évolutions prises et leur niveau, la prochaine par son rang et le niveau du héros, sans chiffre d'XP |
+| **Hors run** | Carte de classe et dictionnaire : la signature de base, gabarit rempli de la donnée, sans badge ni icône |
 | **Le menu de debug** | Onglet Héros, section « Évolutions de signature » : pose une évolution admissible par les mêmes règles, sans attente ni sauvegarde (P-7) |
 
 Les icônes de la bande, de la liste et des puces viennent de la table d'icônes d'effet
