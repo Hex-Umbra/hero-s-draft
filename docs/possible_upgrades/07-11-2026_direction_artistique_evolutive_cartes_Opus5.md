@@ -1,8 +1,8 @@
 # Direction artistique évolutive — les cartes à jouer d'abord
 
-**Date** : 07/11/2026 · **Mise à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14)
+**Date** : 07/11/2026 · **Mises à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14) · 09/11/2026 (méthode pixel art retenue, outils conservés dans le dépôt, §15)
 **Contexte** : idée du propriétaire : le merging fait déjà progresser les valeurs d'une carte, il doit aussi faire progresser son dessin. Une *Frappe* commune est griffonnée, une *Frappe* légendaire est une illustration achevée. Les cartes à jouer ouvrent la marche parce que c'est le terrain le plus simple ; le concept pourra ensuite s'étendre au reste du jeu.
-**Statut** : Exploration — **rien n'est implémenté, aucun asset n'est produit**. Seules les décisions de §2 sont acquises ; tout le reste est une proposition.
+**Statut** : Exploration — **rien n'est implémenté, aucun asset n'est intégré au jeu**. Seules les décisions de §2 sont acquises ; tout le reste est une proposition.
 **Maquettes** : [`docs/presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx`](../presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx) — 19 diapositives, citées ci-dessous sous la forme *(diapo 2)*. Elles sont générées par code : les diapos 1 à 13 à partir d'un seul motif d'épée, les diapos 14 à 19 à partir de six autres cartes (§14). Elles servent à juger l'écart entre les styles, pas la qualité que chaque style peut atteindre.
 **Croise** : [Identité visuelle pixel art](18-09-2026_identite_visuelle_pixel_art_Opus5.md) (voir §12, Q5) · [Rareté et fusion](../../.obsidian_vault/_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md)
 
@@ -23,7 +23,7 @@ La troisième ligne est la différence qui compte, et c'est aussi le principal r
 
 ## 2. Ce qui est acquis
 
-Décisions du propriétaire (échange du 07/11/2026, et du 08/11/2026 pour la sixième) :
+Décisions du propriétaire (échange du 07/11/2026, du 08/11/2026 pour la sixième, du 09/11/2026 pour la septième) :
 
 1. **Le style suit la rareté de la carte**, pas le nombre de fusions. Une carte pré-forgée de la boutique arrive directement avec le style de sa rareté.
 2. **Le changement est purement visuel** : aucun effet sur l'équilibrage ni sur les règles.
@@ -31,6 +31,7 @@ Décisions du propriétaire (échange du 07/11/2026, et du 08/11/2026 pour la si
 4. **Le critère de réussite** : on connaît le niveau d'une carte **sans regarder ni son niveau ni sa rareté**.
 5. **On commence par les cartes à jouer.**
 6. **L'échelle A est retenue** : griffonnage → pixel 16×16 → pixel 64×64 → dessin animé → peinture numérique (§8). Le test du tri sur de vrais dessins reste à faire, mais il n'est plus là pour choisir l'échelle : il sert à la valider.
+7. **La méthode du pixel art du projet**, cartes et décors : la structure par le code, le détail par ComfyUI en local, le retour sur la grille et la palette Apollo avec un découpage en calques, puis la retouche à la main dans Aseprite (§15). Ni générateur en ligne, ni logiciel tiers payant.
 
 ## 3. Le point de départ, mesuré
 
@@ -316,11 +317,11 @@ Ce classement est mon jugement sur des échantillons générés. Il se refait su
 | **Q1** | Quelle échelle ? | **Tranchée le 08/11/2026 : A** (§2, décision 6) |
 | **Q2** | Fenêtre ou plein cadre ? | Fenêtre |
 | **Q3** | Le support évolue-t-il avec le dessin, police du titre comprise ? | Oui pour le fond et le cadre ; la police du titre reste à juger en jeu |
-| **Q4** | **Qui dessine, et avec quel budget ?** Le document du 18/09 prévoit des illustrations à la main sous Aseprite, ce qui couvre bien les paliers 2 et 3. Les paliers 1, 4 et 5 demandent d'autres outils et d'autres compétences. Indication du propriétaire (08/11/2026) : le dessin final sera plus probablement fait à la main | À trancher avant le lot de masse : c'est la décision qui pèse le plus sur la faisabilité. En attendant, les images générées de §14 peuvent servir de remplaçants provisoires et de gabarits |
+| **Q4** | **Qui dessine, et avec quel budget ?** Le document du 18/09 prévoit des illustrations à la main sous Aseprite, ce qui couvre bien les paliers 2 et 3. Les paliers 1, 4 et 5 demandent d'autres outils et d'autres compétences. Indication du propriétaire (08/11/2026) : le dessin final sera plus probablement fait à la main | À trancher avant le lot de masse : c'est la décision qui pèse le plus sur la faisabilité. Le 09/11/2026, une méthode est retenue pour le pixel art (§2, décision 7, §15) ; elle couvre les paliers 2 et 3. Les paliers 1, 4 et 5 restent ouverts |
 | **Q5** | **Comment concilier avec l'identité pixel du 18/09 ?** Celle-ci prévoit un fond de carte de 64 × 88 par type, que ce document remplacerait. Le reste du jeu pourrait rester en pixel art, les cartes le traversant : en dessous au palier 1, au même niveau aux paliers 2 et 3, au-delà aux paliers 4 et 5 | Garder le pixel art pour le monde, et ne pas étendre l'échelle aux ennemis tant que les cartes n'ont pas fait leurs preuves |
 | **Q6** | Y a-t-il une révélation à la fusion, et sous quelle forme ? | Oui, à concevoir après la carte pilote |
 | **Q7** | Le palier 5 a-t-il droit à un traitement à part (animation, reflet) ? | Le reflet d'abord, car il ne coûte presque rien |
-| **Q8** | Garde-t-on le générateur d'images de §14 ? Il vit hors du dépôt, dans un dossier temporaire, et il est écrit en Python alors que `tool/` ne contient que du Dart | À décider avant d'aller au-delà des sept cartes : sans lui, les images générées ne se refont pas |
+| **Q8** | Garde-t-on le générateur d'images de §14 ? Il vivait hors du dépôt, dans un dossier temporaire, et il est écrit en Python alors que `tool/` ne contient que du Dart | **Tranchée le 09/11/2026 : oui.** Il est rangé dans [`art_src/tools/`](../../art_src/tools/README.md), en Python, à côté des sources d'art et hors de `tool/` (§15) |
 
 ## 13. Les prochaines étapes possibles
 
@@ -367,4 +368,30 @@ Sept cartes sur 33 existent donc maintenant aux cinq paliers, *Frappe* comprise.
 
 - **Le palier 5 est le plus faible :** c'est un filtre posé sur des formes. Les objets clairs (cuirasse, cartes) y pâlissent.
 - **Ce ne sont pas des cibles de qualité :** ces images ne remplacent pas un dessinateur. Elles peuvent servir de remplaçants provisoires derrière la règle de repli de §9, et de gabarits pour le dessin à la main (cadrage, palette et taille par palier).
-- **Le générateur est temporaire :** il n'est pas dans le dépôt (Q8).
+- **Le générateur est conservé :** il est rangé dans [`art_src/tools/`](../../art_src/tools/README.md) depuis le 09/11/2026 (Q8, §15).
+
+## 15. La méthode pixel art retenue (09/11/2026)
+
+Le propriétaire veut des **sources qu'il peut retoucher à la main** : un `.aseprite` à calques nommés, en palette indexée, plutôt qu'une image plate venue d'un générateur. La méthode suivante s'applique désormais à tout le pixel art du projet, cartes et décors (§2, décision 7).
+
+| Étape | Qui | Ce qui en sort |
+|:---|:---|:---|
+| 1. La structure | Le code | La géométrie (pour un décor, une vraie perspective calculée pixel par pixel), la palette [Apollo](18-09-2026_identite_visuelle_pixel_art_Opus5.md) et des calques nommés. Le `.aseprite` est déjà utilisable tel quel |
+| 2. Le détail | ComfyUI, en local | Une image riche guidée par l'image de l'étape 1, et par ses cartes de profondeur et de contours (ControlNet) |
+| 3. Le retour sur la grille | Le code | L'image alignée, ramenée sur la grille avec la seule palette Apollo, puis découpée en calques selon la géométrie de l'étape 1 |
+| 4. La retouche | Le propriétaire | Dans Aseprite |
+
+Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/tools/README.md`](../../art_src/tools/README.md).
+
+### 15.1 Ce que les premiers essais ont appris
+
+- **Les paliers pixel des sept cartes** de §14 existent en `.aseprite`, dans [`docs/presentations/2026-11-09_sources_aseprite_serie_pilote/`](../presentations/2026-11-09_sources_aseprite_serie_pilote/). Une fois rouverts dans Aseprite, ils sont identiques aux images de la présentation, au pixel près.
+- **Un fond de combat a fait le trajet complet**, dans [`art_src/backgrounds/`](../../art_src/backgrounds/) : une salle de donjon de 320 × 180, affichée ×6 en 1080p sans déformation. Ses détails sont sur les côtés et en haut, parce que les ennemis, le héros et la main couvrent le centre. Le générateur de cet essai était Gemini, avant le choix de ComfyUI. Il a tenu la composition : il a suffi d'un décalage de 3 pixels pour la recaler.
+- **Un calque est un objet complet.** Le premier découpage posait la lumière sur des calques à part, qui recopiaient les murs éclairés. Masquer les murs n'enlevait donc que les joints. La règle est maintenant la suivante : chaque objet porte sa propre lumière, et masquer un calque fait disparaître l'objet en entier sur une surface complète. Les outils vérifient cette règle à chaque export.
+- **Une limite du pixel art indexé :** une lumière ne peut pas être un calque qui s'additionne. Masquer une torche retire la flamme, mais pas la lumière peinte sur le mur.
+
+### 15.2 Ce qui reste à faire
+
+- **Installer ComfyUI** et ses modèles. Les outils lui fournissent déjà l'image guide et les deux cartes de guidage.
+- **Brancher le nouveau fond dans le jeu.** Le combat charge toujours `bg_dungeon.png`, et il étire le fond à la taille de l'écran. Il faudra une échelle entière, comme le prévoit [l'identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §3.1, et un recadrage plutôt qu'un étirement en portrait.
+- **Pour chaque nouveau décor,** comme les 15 fonds de biome de P-12, il faudra son propre script de géométrie. Celui de la salle sert de modèle.
