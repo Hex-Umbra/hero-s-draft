@@ -443,7 +443,7 @@
   },
   "cardCloned": "Card cloned!",
   "noCardsInStock": "Out of stock!",
-  "levelLabel": "Lvl {level}",
+  "levelLabel": "Lvl. {level}",
   "@levelLabel": {
     "placeholders": {
       "level": { "type": "int" }
@@ -546,15 +546,40 @@
   "restCampRemoveTitle": "REMOVE A CARD",
   "restCampRemoveSubtitle": "Choose a card to permanently remove from your deck.",
   "draftDeckTitle": "DECK CONSTITUTION",
-  "draftDeckSubtitle": "Select exactly 5 global cards to build your starting deck and launch the run.",
+  "draftDeckSubtitle": "Pick 2 cards from your passive and 3 neutral cards to build your starting deck.",
   "draftDeckSelectedCount": "Selected cards: {count} / 5",
   "@draftDeckSelectedCount": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
+  "draftDeckLotSection": "{passive} cards",
+  "@draftDeckLotSection": {
+    "placeholders": {
+      "passive": { "type": "String" }
+    }
+  },
+  "draftDeckNeutralSection": "Neutral cards",
+  "draftDeckQuota": "{picked}/{quota}",
+  "@draftDeckQuota": {
+    "placeholders": {
+      "picked": { "type": "int" },
+      "quota": { "type": "int" }
+    }
+  },
   "draftDeckProceed": "ENTER THE UMBRA",
-  "draftDeckSnackbarMax": "You can only select up to 5 cards.",
+  "draftDeckSnackbarMaxLot": "You already picked your {quota} passive cards.",
+  "@draftDeckSnackbarMaxLot": {
+    "placeholders": {
+      "quota": { "type": "int" }
+    }
+  },
+  "draftDeckSnackbarMaxNeutral": "You already picked your {quota} neutral cards.",
+  "@draftDeckSnackbarMaxNeutral": {
+    "placeholders": {
+      "quota": { "type": "int" }
+    }
+  },
   "mergeLabel": "MERGE ({count})",
   "@mergeLabel": {
     "placeholders": {
@@ -734,6 +759,19 @@
       "cooldown": { "type": "int" }
     }
   },
+  "signatureNextMinor": "Next minor evolution at level {level}",
+  "@signatureNextMinor": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "signatureNextMajor": "Next major evolution at level {level}",
+  "@signatureNextMajor": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "signatureEvolutionPending": "Evolution to choose",
   "signatureChooseTarget": "Choose a target",
   "@signatureChooseTarget": {
     "description": "Prompt under the signature bar while a signature waits for an enemy target."
@@ -745,8 +783,359 @@
       "count": { "type": "int" }
     }
   },
+  "effectValuePercent": "+{value}%",
+  "@effectValuePercent": {
+    "description": "A percentage value on a signature's icon band, such as its critical-chance bonus.",
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "effectLineDamage": "Deal {amount} damage",
+  "@effectLineDamage": {
+    "description": "A line of a signature's long-press effect list: a damage effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineArmor": "Gain {amount} Block",
+  "@effectLineArmor": {
+    "description": "A line of a signature's long-press effect list: an armor effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineHeal": "Heal {amount} HP",
+  "@effectLineHeal": {
+    "description": "A line of a signature's long-press effect list: a heal effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineDraw": "Draw {amount, plural, =1{1 card} other{{amount} cards}}",
+  "@effectLineDraw": {
+    "description": "A line of a signature's long-press effect list: a draw effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineGainMana": "Gain {amount} Mana",
+  "@effectLineGainMana": {
+    "description": "A line of a signature's long-press effect list: a mana gain effect.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineMight": "Gain {amount} Might {duration, plural, =1{this turn} other{for {duration} turns}}",
+  "@effectLineMight": {
+    "description": "A line of a signature's long-press effect list: the Might status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineMightRegen": "{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Might at the start of your turn",
+  "@effectLineMightRegen": {
+    "description": "A line of a signature's long-press effect list: the Might regeneration status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineArmorRegen": "{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Block at the start of your turn",
+  "@effectLineArmorRegen": {
+    "description": "A line of a signature's long-press effect list: the armor regeneration status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineWeakness": "Apply {amount} Weakness for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineWeakness": {
+    "description": "A line of a signature's long-press effect list: the Weakness status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineVulnerable": "Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineVulnerable": {
+    "description": "A line of a signature's long-press effect list: the Vulnerable status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineBurn": "Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}",
+  "@effectLineBurn": {
+    "description": "A line of a signature's long-press effect list: the Burn status.",
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "effectLineCrit": "+{amount}% critical chance",
+  "@effectLineCrit": {
+    "description": "A line of a signature's long-press effect list: a critical-chance bonus.",
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "effectLineAllEnemies": "Hits all enemies",
+  "@effectLineAllEnemies": {
+    "description": "A line of a signature's long-press effect list: the signature now targets all enemies."
+  },
+  "evolutionScreenTitle": "{signature} evolves",
+  "@evolutionScreenTitle": {
+    "description": "Title of the signature evolution screen.",
+    "placeholders": {
+      "signature": { "type": "String" }
+    }
+  },
+  "evolutionScreenTitleBoth": "Your signatures evolve",
+  "@evolutionScreenTitleBoth": {
+    "description": "Title of the signature evolution screen, when two signatures evolve together."
+  },
+  "levelUpCurtainTitle": "LEVEL UP!",
+  "@levelUpCurtainTitle": {
+    "description": "Title of the map curtain when the next pending choice is a level draft."
+  },
+  "levelUpCurtainSubtitle": "Your hero has grown stronger!",
+  "@levelUpCurtainSubtitle": {
+    "description": "Text of the map curtain when the next pending choice is a level draft."
+  },
+  "levelUpCurtainAction": "TAP TO CLAIM YOUR REWARDS",
+  "@levelUpCurtainAction": {
+    "description": "Call to action of the map curtain when a level draft waits."
+  },
+  "evolutionCurtainTitleMinor": "MINOR EVOLUTION",
+  "@evolutionCurtainTitleMinor": {
+    "description": "Title of the map curtain when the next pending choice is a minor signature evolution."
+  },
+  "evolutionCurtainTitleMajor": "MAJOR EVOLUTION",
+  "@evolutionCurtainTitleMajor": {
+    "description": "Title of the map curtain when the next pending choice is a major signature evolution."
+  },
+  "evolutionCurtainOne": "{signature} can evolve",
+  "@evolutionCurtainOne": {
+    "description": "Map curtain text when one signature waits for its evolution.",
+    "placeholders": {
+      "signature": { "type": "String" }
+    }
+  },
+  "evolutionCurtainBoth": "Your signatures can evolve",
+  "@evolutionCurtainBoth": {
+    "description": "Map curtain text when two signatures wait for their evolution."
+  },
+  "evolutionCurtainAction": "TAP TO CHOOSE",
+  "@evolutionCurtainAction": {
+    "description": "Call to action of the map curtain when a signature evolution waits."
+  },
+  "evolutionBoardTierMinor": "Minor evolution · hero level {level}",
+  "@evolutionBoardTierMinor": {
+    "description": "Subtitle of the signature evolution screen, on a minor tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardTierMajor": "Major evolution · hero level {level}",
+  "@evolutionBoardTierMajor": {
+    "description": "Subtitle of the signature evolution screen, on a major tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardToChoose": "To choose",
+  "@evolutionBoardToChoose": {
+    "description": "Section of the evolution screen: what the current choice can take."
+  },
+  "evolutionBoardUpcomingMinors": "Minors — at level {level}",
+  "@evolutionBoardUpcomingMinors": {
+    "description": "Section of the evolution screen: the minor evolutions of the next tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardUpcomingMajors": "Majors — at level {level}",
+  "@evolutionBoardUpcomingMajors": {
+    "description": "Section of the evolution screen: the major evolutions of the next tier.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardTaken": "Already taken",
+  "@evolutionBoardTaken": {
+    "description": "Section of the evolution screen: the major evolutions already taken."
+  },
+  "evolutionBoardExcluded": "Excluded",
+  "@evolutionBoardExcluded": {
+    "description": "Section of the evolution screen: the major evolutions a taken major rules out."
+  },
+  "evolutionBoardExcludedBy": "Excluded by {name}",
+  "@evolutionBoardExcludedBy": {
+    "description": "Tag of a major evolution ruled out by the taken major {name}.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "evolutionBoardTakenLevel": "Taken · Lvl. {level}",
+  "@evolutionBoardTakenLevel": {
+    "description": "Tag of a minor evolution already taken, on a tier where it cannot be raised.",
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "evolutionBoardLevelUp": "Level {from} → {to}: {description}",
+  "@evolutionBoardLevelUp": {
+    "description": "Text of a minor evolution already taken: its level before and after the choice, then what it gives at that level.",
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "description": { "type": "String" }
+    }
+  },
+  "evolutionBoardToday": "Today",
+  "@evolutionBoardToday": {
+    "description": "Heading of the signature sheet on the evolution screen, before any selection."
+  },
+  "evolutionBoardAfter": "After this choice",
+  "@evolutionBoardAfter": {
+    "description": "Heading of the signature sheet on the evolution screen, once an evolution is selected."
+  },
+  "evolutionBoardPick": "Choose an evolution",
+  "@evolutionBoardPick": {
+    "description": "Disabled confirm button of the evolution screen, before any selection."
+  },
+  "evolutionBoardPickBoth": "Choose one evolution per signature",
+  "@evolutionBoardPickBoth": {
+    "description": "Disabled confirm button of the evolution screen, while a choice is missing on two signatures."
+  },
+  "evolutionBoardTakeBoth": "Confirm both",
+  "@evolutionBoardTakeBoth": {
+    "description": "Confirm button of the evolution screen, when two signatures evolve together."
+  },
+  "evolutionBoardTake": "Take {name}",
+  "@evolutionBoardTake": {
+    "description": "Confirm button of the evolution screen.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "signatures": "Signatures",
   "@signatures": {
     "description": "Title of the class signatures block and of the dictionary tab."
+  },
+  "statusWeaknessHint": "−{percent}% damage dealt per point, down to −{max}%",
+  "@statusWeaknessHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "statusVulnerableHint": "+{percent}% damage taken per point, up to +{max}%",
+  "@statusVulnerableHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "statusFreezeHint": "−{percent}% to the next attack per point, down to −{max}%",
+  "@statusFreezeHint": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "cardCostHp": "Costs {amount} HP",
+  "@cardCostHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardCostArmor": "Costs {amount} Block",
+  "@cardCostArmor": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "cardDescDamageHits": "Deal {amount} damage {hits} times.",
+  "@cardDescDamageHits": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "hits": { "type": "int" }
+    }
+  },
+  "cardScaleArmor": "+{ratio} per point of Block",
+  "@cardScaleArmor": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleArmorPer": "+1 per {per} Block",
+  "@cardScaleArmorPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleMissingHp": "+{ratio} per missing HP",
+  "@cardScaleMissingHp": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleMissingHpPer": "+1 per {per} missing HP",
+  "@cardScaleMissingHpPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleCardsPlayed": "+{ratio} per card played this turn",
+  "@cardScaleCardsPlayed": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleCardsPlayedPer": "+1 per {per} cards played this turn",
+  "@cardScaleCardsPlayedPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleEnemiesAlive": "+{ratio} per enemy",
+  "@cardScaleEnemiesAlive": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleEnemiesAlivePer": "+1 per {per} enemies",
+  "@cardScaleEnemiesAlivePer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
+  },
+  "cardScaleTargetStatus": "+{ratio} per point of {status} on the target",
+  "@cardScaleTargetStatus": {
+    "placeholders": {
+      "ratio": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "cardScaleTargetStatusPer": "+1 per {per} points of {status} on the target",
+  "@cardScaleTargetStatusPer": {
+    "placeholders": {
+      "per": { "type": "int" },
+      "status": { "type": "String" }
+    }
+  },
+  "cardScaleTargetMissingHp": "+{ratio} per missing HP on the target",
+  "@cardScaleTargetMissingHp": {
+    "placeholders": {
+      "ratio": { "type": "String" }
+    }
+  },
+  "cardScaleTargetMissingHpPer": "+1 per {per} missing HP on the target",
+  "@cardScaleTargetMissingHpPer": {
+    "placeholders": {
+      "per": { "type": "int" }
+    }
   }
 }

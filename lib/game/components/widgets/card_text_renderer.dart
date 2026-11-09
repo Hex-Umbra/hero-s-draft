@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../card_component.dart';
+import '../../systems/cost_rules.dart';
 import '../../systems/power_rules.dart';
 
-class _RendererEffectVisuals {
+/// L'icône et la couleur d'un effet sur la face Flame d'une carte.
+class RendererEffectVisuals {
   final IconData icon;
   final Color color;
-  const _RendererEffectVisuals({required this.icon, required this.color});
+  const RendererEffectVisuals({required this.icon, required this.color});
 }
 
 class BadgePainters {
@@ -102,14 +104,13 @@ class CardTextRenderer {
       final effects = card.card.effective.effects;
       for (int i = 0; i < effects.length; i++) {
         final effect = effects[i];
-        final scaledValue = effect.value;
+        final valueToDisplay = badgeValue(
+          effect,
+          damageBonus: damageBonus,
+          scaleTerm: card.heroScaleTerm(effect),
+        );
 
-        int valueToDisplay = scaledValue;
-        if (effect.type == 'damage') {
-          valueToDisplay = scaledValue + damageBonus;
-        }
-
-        final visuals = _getEffectVisuals(effect);
+        final visuals = getEffectVisuals(effect);
         final iconColor = visuals.color.withAlpha(alpha);
 
         final isPlayerEffect = effect.type == 'armor' ||
@@ -255,33 +256,55 @@ class CardTextRenderer {
     )..layout();
   }
 
-  _RendererEffectVisuals _getEffectVisuals(CardEffect effect) {
+  /// La valeur jouée d'un effet en combat : sa valeur plus [scaleTerm]. Lue
+  /// par le badge et par les lignes de l'infobulle Flame.
+  static int playedValue(CardEffect effect, int scaleTerm) =>
+      effect.value + scaleTerm;
+
+  /// Le chiffre du badge d'un effet : sa valeur plus le terme de croissance,
+  /// plus la part de Puissance par coup pour un `damage`, suivi de `×coups` dès
+  /// deux coups.
+  static String badgeValue(
+    CardEffect effect, {
+    int damageBonus = 0,
+    int scaleTerm = 0,
+  }) {
+    final isDamage = effect.type == 'damage';
+    final value = playedValue(effect, scaleTerm) +
+        (isDamage ? effect.mightPerHit(damageBonus) : 0);
+    return isDamage && effect.hits >= 2 ? '$value×${effect.hits}' : '$value';
+  }
+
+  /// L'icône et la couleur de la face d'un effet, sans état : la table
+  /// `effect_icons.json` est alignée dessus, et un test l'exige.
+  @visibleForTesting
+  static RendererEffectVisuals getEffectVisuals(CardEffect effect) {
     if (effect.type == 'damage') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.hardware_rounded,
         color: Colors.redAccent,
       );
     }
     if (effect.type == 'armor') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.shield_rounded,
         color: Colors.blueAccent,
       );
     }
     if (effect.type == 'heal') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.favorite_rounded,
         color: Colors.pinkAccent,
       );
     }
     if (effect.type == 'gain_mana') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.diamond_rounded,
         color: Colors.cyanAccent,
       );
     }
     if (effect.type == 'draw') {
-      return const _RendererEffectVisuals(
+      return const RendererEffectVisuals(
         icon: Icons.style_rounded,
         color: Colors.amber,
       );
@@ -290,48 +313,48 @@ class CardTextRenderer {
       switch (effect.statusId) {
         case 'might':
         case 'might_regen':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.bolt_rounded,
             color: Colors.orangeAccent,
           );
         case 'armor_regen':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.autorenew_rounded,
             color: Colors.blueAccent,
           );
         case 'poison':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.science_rounded,
             color: Colors.greenAccent,
           );
         case 'weakness':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.trending_down_rounded,
             color: Colors.purpleAccent,
           );
         case 'vulnerable':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.gps_fixed_rounded,
             color: Colors.deepOrangeAccent,
           );
         case 'burn':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.local_fire_department_rounded,
             color: Colors.orangeAccent,
           );
         case 'freeze':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.ac_unit_rounded,
             color: Colors.lightBlueAccent,
           );
         case 'shock':
-          return const _RendererEffectVisuals(
+          return const RendererEffectVisuals(
             icon: Icons.flash_on_rounded,
             color: Colors.amberAccent,
           );
       }
     }
-    return const _RendererEffectVisuals(
+    return const RendererEffectVisuals(
       icon: Icons.help_outline,
       color: Colors.grey,
     );
@@ -510,24 +533,97 @@ class CardTextRenderer {
       }
     }
 
-    // Circular Mana Medallion (Top-Left Overlapping) - radius 12, center (6, 6)
-    final cost = card.card.currentCost;
-    final medallionPaint = Paint()
-      ..color = const Color(0xFF0D1B2A).withValues(alpha: opacity)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(const Offset(6, 6), 12.0, medallionPaint);
+    // Les médaillons de coût (coin haut-gauche, rayon 12) : le mana en (6, 6),
+    // puis un par coût non nul, PV puis Armure, sans trou. Celui d'une
+    // ressource qui manque au héros passe au rouge.
+    final data = card.card.data;
+    final missing = card.game.currentRunState?.heroStats.missingFor(
+          mana: card.card.currentCost,
+          hp: data.hpCost,
+          armor: data.armorCost,
+        ) ??
+        const <CostResource>{};
+    _paintCostMedallion(canvas, const Offset(6, 6), CostResource.mana,
+        card.card.currentCost, missing);
+    var medallionY = 32.0;
+    for (final (resource, amount) in [
+      (CostResource.hp, data.hpCost),
+      (CostResource.armor, data.armorCost),
+    ]) {
+      if (amount <= 0) continue;
+      _paintCostMedallion(
+          canvas, Offset(6, medallionY), resource, amount, missing);
+      medallionY += 26;
+    }
 
-    final medallionBorderPaint = Paint()
-      ..color = Colors.cyanAccent.withValues(alpha: 0.8 * opacity)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawCircle(const Offset(6, 6), 12.0, medallionBorderPaint);
+    // Type Label (tout en bas)
+    typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
+  }
+
+  /// Un médaillon de coût centré en [center] : cyan pour le mana, rouge vif
+  /// pour les PV, gris-bleu pour l'Armure, rouge sombre si [missing] nomme sa
+  /// ressource.
+  void _paintCostMedallion(
+    Canvas canvas,
+    Offset center,
+    CostResource resource,
+    int amount,
+    Set<CostResource> missing,
+  ) {
+    final isMissing = missing.contains(resource);
+    final color = isMissing
+        ? Colors.red
+        : switch (resource) {
+            CostResource.mana => Colors.cyanAccent,
+            CostResource.hp => Colors.redAccent,
+            CostResource.armor => Colors.blueGrey.shade200,
+          };
+    final background =
+        isMissing ? const Color(0xFF2A0D0D) : const Color(0xFF0D1B2A);
+    canvas.drawCircle(
+      center,
+      12.0,
+      Paint()
+        ..color = background.withValues(alpha: opacity)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      center,
+      12.0,
+      Paint()
+        ..color = color.withValues(alpha: 0.8 * opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+
+    final icon = switch (resource) {
+      CostResource.mana => null,
+      CostResource.hp => Icons.water_drop_rounded,
+      CostResource.armor => Icons.shield_rounded,
+    };
+    if (icon != null) {
+      final iconPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon.codePoint),
+          style: TextStyle(
+            color: color.withValues(alpha: 0.25 * opacity),
+            fontSize: 17.0,
+            fontFamily: 'MaterialIcons',
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      iconPainter.paint(
+        canvas,
+        center - Offset(iconPainter.width / 2, iconPainter.height / 2),
+      );
+    }
 
     final costPainter = TextPainter(
       text: TextSpan(
-        text: '$cost',
+        text: '$amount',
         style: TextStyle(
-          color: Colors.cyanAccent.withValues(alpha: opacity),
+          color: color.withValues(alpha: opacity),
           fontSize: 11.0,
           fontWeight: FontWeight.bold,
         ),
@@ -536,11 +632,8 @@ class CardTextRenderer {
     )..layout();
     costPainter.paint(
       canvas,
-      Offset(6.0 - costPainter.width / 2, 6.0 - costPainter.height / 2),
+      center - Offset(costPainter.width / 2, costPainter.height / 2),
     );
-
-    // Type Label (tout en bas)
-    typePainter.paint(canvas, Offset(size.x / 2 - typePainter.width / 2, 175));
   }
 
   /// Le haut du bloc central — la description ou les effets — de hauteur

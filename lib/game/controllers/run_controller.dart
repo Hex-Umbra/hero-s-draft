@@ -16,8 +16,10 @@ import '../../services/map_generator_service.dart';
 import '../game_constants.dart';
 import '../services/level_up_reward_service.dart';
 import '../systems/passives/passive_strategy.dart';
+import '../systems/signature_evolution_rules.dart';
 import '../systems/trait_system.dart';
 import '../systems/stat_gains.dart';
+import 'checkpoint_controller.dart';
 import 'debug_run_controller.dart';
 import 'inventory_controller.dart';
 import 'run/player_stats_manager.dart';
@@ -78,10 +80,21 @@ class RunState {
   /// Les signatures de la run (spec P-43 E4, §9 ; A8), dans l'ordre de
   /// `HeroData.skills`. Hors du deck : le `masterDeck` n'en porte jamais.
   ///
-  /// **Jamais sérialisées**, comme [statRules] : une signature d'E4 est du
-  /// contenu, que `fromJsonWithReport` relit de la classe. La vague 5 y
-  /// ajoutera ses évolutions — et leur sauvegarde — sans déplacer le champ.
+  /// **Leur donnée n'est jamais sérialisée**, comme [statRules] :
+  /// `fromJsonWithReport` la relit de la classe. Seules leurs évolutions le
+  /// sont, sous `signatureEvolutions` (spec P-42 T1 et P-44 lot 1, §8).
   final List<SignatureInstance> signatures;
+
+  /// Les signatures dont une évolution attend, dans l'ordre de [signatures] :
+  /// elles se choisissent ensemble, sur un seul écran (D79).
+  List<SignatureInstance> get pendingEvolutions => [
+        for (final s in signatures)
+          if (s.pendingFor(heroStats.level) > 0) s,
+      ];
+
+  /// Vrai tant qu'un draft de carte ou une évolution de signature attend : la
+  /// condition du rideau de la carte et des gardes de nœud.
+  bool get hasPendingChoice => pendingDrafts > 0 || pendingEvolutions.isNotEmpty;
 
   bool get isBossLevel => currentLevel > 0 && currentLevel % 10 == 0;
   bool get isDead => heroStats.currentPv <= 0;
@@ -178,6 +191,13 @@ class RunState {
         'eliteCardChanceBonus': eliteCardChanceBonus,
         'extraBossRuneSharpens': extraBossRuneSharpens,
         'runeCapBonus': runeCapBonus,
+        // Une clé par signature qui porte au moins une évolution, sa liste
+        // telle quelle, dans l'ordre de la première prise (spec §8).
+        'signatureEvolutions': {
+          for (final signature in signatures)
+            if (signature.evolutions.isNotEmpty)
+              signature.data.id: signature.evolutions,
+        },
       };
 
   static (RunState, List<MissingSaveItem>) fromJsonWithReport(
@@ -231,23 +251,40 @@ class RunState {
       statRules:
           HeroData.getById(json['heroClassId'] as String)?.statRules ??
               const [],
-      signatures: _signaturesOf(json['heroClassId'] as String),
+      signatures: _signaturesOf(
+        json['heroClassId'] as String,
+        json['signatureEvolutions'],
+        missing,
+      ),
     );
 
     return (run, missing);
   }
 
-  /// Les signatures de la classe [heroClassId], relues du registre chargé.
-  /// Registre absent ou classe inconnue : aucune, comme `statRules`. Un id de
-  /// `skills` absent du registre lève (`getSignatures`, fail-fast) : la
-  /// sauvegarde est alors illisible, et `SaveService.load` l'efface.
-  static List<SignatureInstance> _signaturesOf(String heroClassId) {
+  /// Les signatures de la classe [heroClassId], relues du registre chargé,
+  /// chacune avec ses évolutions relues de [saved] — la valeur de
+  /// `signatureEvolutions` (spec §8) ; ce que la relecture retire rejoint
+  /// [missing]. Une clé d'une signature que la classe ne porte pas n'est
+  /// jamais lue. Registre absent ou classe inconnue : aucune, comme
+  /// `statRules`. Un id de `skills` absent du registre lève
+  /// (`getSignatures`, fail-fast) : la sauvegarde est alors illisible, et
+  /// `SaveService.load` l'efface.
+  static List<SignatureInstance> _signaturesOf(
+    String heroClassId,
+    Object? saved,
+    List<MissingSaveItem> missing,
+  ) {
     final hero = HeroData.getById(heroClassId);
     if (hero == null) return const [];
-    return [
-      for (final data in hero.getSignatures(GameDataRegistry.instance!))
-        SignatureInstance(data),
-    ];
+    final byId =
+        saved is Map<String, dynamic> ? saved : const <String, dynamic>{};
+    final signatures = <SignatureInstance>[];
+    for (final data in hero.getSignatures(GameDataRegistry.instance!)) {
+      final (signature, lost) = SignatureInstance.restore(data, byId[data.id]);
+      signatures.add(signature);
+      missing.addAll(lost);
+    }
+    return signatures;
   }
 }
 
@@ -489,6 +526,25 @@ class RunController extends Notifier<RunState> {
     });
   }
 
+  /// Prend l'évolution [evolutionId] de la signature [signatureId] (spec
+  /// P-42 T1 et P-44 lot 1, §4.10 ; A26). Refuse, sans rien écrire, une
+  /// signature hors de la run, aucune évolution en attente, une évolution hors
+  /// du pool ou non admissible ; sinon la sauvegarde suit le choix.
+  bool chooseSignatureEvolution(String signatureId, String evolutionId) {
+    final signature =
+        state.signatures.where((s) => s.data.id == signatureId).firstOrNull;
+    if (signature == null || signature.pendingFor(state.heroStats.level) == 0) {
+      return false;
+    }
+    final taken = SignatureEvolutionRules.take(signature, evolutionId);
+    if (taken == null) return false;
+    state = state.copyWith(signatures: [
+      for (final s in state.signatures) s == signature ? taken : s,
+    ]);
+    ref.read(checkpointProvider.notifier).bump();
+    return true;
+  }
+
   void startCombat() {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
     // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
@@ -554,10 +610,12 @@ class RunController extends Notifier<RunState> {
     startTurn();
   }
 
-  /// Consomme les ressources nécessaires. Retourne false si insuffisant.
-  bool consumeResource({int mana = 0, int hpPercent = 0}) {
-    return _playerStatsManager.consumeResource(mana: mana, hpPercent: hpPercent);
-  }
+  /// Débite le coût d'une carte ; voir `PlayerStatsManager.consumeResource`.
+  bool consumeResource({int mana = 0, int hp = 0, int armor = 0}) =>
+      _playerStatsManager.consumeResource(mana: mana, hp: hp, armor: armor);
+
+  /// Le remboursement de *Transfusion* ; voir `PlayerStatsManager.refundHp`.
+  void refundHp(int amount) => _playerStatsManager.refundHp(amount);
 
   /// Arme le Vol de vie pour une valeur et une durée données
   void applyLifestealBuff({required int value, required int duration}) {

@@ -1,0 +1,21 @@
+{
+  "id": "blood_pact",
+  "name_en": "Blood Pact",
+  "name_fr": "Pacte de sang",
+  "description_en": "Costs 3 HP. Draw 2 cards.",
+  "description_fr": "Coûte 3 PV. Pioche 2 cartes.",
+  "costs": {
+    "mana": 1,
+    "hp": 3
+  },
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "draw",
+      "value": 2
+    }
+  ]
+}

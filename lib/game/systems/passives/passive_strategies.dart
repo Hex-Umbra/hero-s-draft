@@ -58,9 +58,9 @@ class ChannelingPassive extends PassiveStrategy {
 /// (spec §6.3). Le passif ne dépend d'aucune carte : R4 est satisfaite dès
 /// aujourd'hui.
 ///
-/// L'intensité n'est pas lue par le pipeline, qui applique `vulnerable` en
-/// tout ou rien (+50 %) : c'est la **durée** qui grandit avec la Maîtrise, et
-/// `value` reste l'intensité pour le jour où le pipeline la lira.
+/// Le pipeline lit l'intensité : `value` points de `vulnerable`, au barème de
+/// `ProportionalStatus.vulnerable`. La Maîtrise, elle, allonge toujours la
+/// **durée**.
 class MageMarkPassive extends PassiveStrategy {
   const MageMarkPassive();
 

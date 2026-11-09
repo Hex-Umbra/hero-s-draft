@@ -1,5 +1,6 @@
 import 'dart:math' show max;
 
+import 'passive_feeds.dart';
 import 'relic_data.dart';
 import 'package:flutter/foundation.dart';
 import 'game_data_registry.dart';
@@ -114,9 +115,16 @@ class PassiveData {
   /// là, le premier est le passif que la classe obtient.
   final int displayOrder;
 
-  /// Les classes qui peuvent prendre ce passif ; `null` : toutes
-  /// (spec P-49, §3.2). Seul le point d'accès unique la lit (spec P-49, §4).
+  /// La classe qui prend ce passif : une seule, exigée par la donnée (A5, qui
+  /// amende ADR-096 D1 — `null` n'y veut plus dire « toutes »). Nullable pour
+  /// les passifs construits en code. Seul le point d'accès unique la lit
+  /// (spec P-49, §4).
   final List<String>? classes;
+
+  /// Ce que le passif nourrit, dans le vocabulaire de `PassiveFeeds` (A6) :
+  /// une carte de son lot doit en toucher une entrée (D45). Exigée, non vide,
+  /// par la donnée ; vide pour un passif construit en code.
+  final List<String> feeds;
 
   /// Ce qu'un point de Maîtrise apporte à ce passif ; `null` : rien.
   final PassiveMastery? mastery;
@@ -135,6 +143,7 @@ class PassiveData {
     this.draw = 0,
     this.displayOrder = 0,
     this.classes,
+    this.feeds = const [],
     this.mastery,
   });
 
@@ -204,6 +213,7 @@ class PassiveData {
         draw: draw,
         displayOrder: displayOrder,
         classes: classes,
+        feeds: feeds,
         mastery: mastery,
       );
 
@@ -219,17 +229,32 @@ class PassiveData {
         json['description'] as String? ??
         '';
 
-    final classesJson = json['classes'] as List<dynamic>?;
-    if (classesJson != null && classesJson.isEmpty) {
-      throw const FormatException(
-        'classes ne peut pas être vide : omettre la clé ouvre le passif à '
-        'toutes les classes',
+    final id = json['id'] as String;
+    final classesJson = json['classes'];
+    if (classesJson is! List || classesJson.length != 1) {
+      throw FormatException(
+        'PassiveData "$id": "classes" doit être une liste d\'une seule '
+        'classe — reçu : $classesJson',
       );
+    }
+    final feedsJson = json['feeds'];
+    if (feedsJson is! List ||
+        feedsJson.isEmpty ||
+        feedsJson.any((e) => e is! String)) {
+      throw FormatException(
+        'PassiveData "$id": "feeds" doit être une liste non vide de textes — '
+        'reçu : $feedsJson',
+      );
+    }
+    final feeds = feedsJson.cast<String>();
+    for (final entry in feeds) {
+      final fault = PassiveFeeds.faultOf(entry);
+      if (fault != null) throw FormatException('PassiveData "$id": $fault');
     }
     final masteryJson = json['mastery'] as Map<String, dynamic>?;
 
     final passive = PassiveData(
-      id: json['id'] as String,
+      id: id,
       nameEn: nEn,
       nameFr: nFr,
       descriptionEn: dEn,
@@ -241,7 +266,8 @@ class PassiveData {
       threshold: json['threshold'] as int? ?? 0,
       draw: json['draw'] as int? ?? 0,
       displayOrder: json['displayOrder'] as int? ?? 0,
-      classes: classesJson?.map((e) => e as String).toList(),
+      classes: classesJson.cast<String>(),
+      feeds: feeds,
       mastery:
           masteryJson == null ? null : PassiveMastery.fromJson(masteryJson),
     );

@@ -67,6 +67,7 @@ signature du paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n
 ```
 assets/data/
 ├── cards/<id>.json              # carte neutre
+├── cards/<passif>/<id>.json     # carte de lot : le dossier est le passif
 ├── relics/<id>.json             # idem pour events/, forge_upgrades/, passives/
 ├── classes/<id>/                # un dossier auto-suffisant par classe
 │   ├── class.json
@@ -91,8 +92,8 @@ assets/data/
    compte par la Boutique, les récompenses et le système de combat !
 
 *Note : n'écrivez pas les champs que le répertoire impose — `heroClass` dans le fichier
-d'une signature fait échouer le chargement, de même que `heroClass` et `category` dans le fichier
-d'une carte. Seul l'`id` peut être redéclaré, à condition d'être
+d'une signature fait échouer le chargement, de même que `heroClass`, `category` et `passive` dans tout
+fichier de carte. Seul l'`id` peut être redéclaré, à condition d'être
 identique, parce qu'il rend le fichier lisible hors de son contexte.*
 
 *Note : toute entrée à texte visible porte ses deux variantes `_fr` et `_en`.*

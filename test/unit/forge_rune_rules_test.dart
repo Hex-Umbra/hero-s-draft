@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/forge_rune_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 
@@ -15,6 +16,7 @@ ForgeUpgradeData _rune(
   bool binary = false,
   int minFusionRank = 1,
   int weight = 10,
+  List<CardDelta> deltas = const [],
 }) =>
     ForgeUpgradeData(
       id: id,
@@ -28,6 +30,7 @@ ForgeUpgradeData _rune(
       maxLevel: maxLevel,
       binary: binary,
       weight: weight,
+      deltas: deltas,
     );
 
 CardInstance _cardWith(List<String> runes) => CardInstance(
@@ -303,6 +306,74 @@ void main() {
           _cardWith(['eco:1', 'capped:1']),
         ]),
         [('eco', 1), ('capped', 2)],
+      );
+    });
+
+    // Une rune dont chaque delta est sature n'a plus rien a donner (A22).
+    final saturable = [
+      _rune('piercing', maxLevel: 4, deltas: const [
+        ArmorPierceDelta(valuePercentPerLevel: 25),
+      ]),
+      _rune('lifesteal', maxLevel: 3, deltas: const [
+        LifestealPercentDelta(valuePercentPerLevel: 20),
+      ]),
+    ];
+
+    List<(String, int)> saturableCandidates(
+      List<CardInstance> deck, {
+      Map<String, int> capBonus = const {},
+    }) =>
+        [
+          for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+              deck, saturable,
+              capBonus: capBonus))
+            (rune.id, cap),
+        ];
+
+    test('une rune dont chaque delta est sature n est pas proposee : '
+        'Perforant a 4, Vampirique a 5', () {
+      expect(saturableCandidates([_cardWith(['piercing:4'])]), isEmpty);
+      expect(
+        saturableCandidates([_cardWith(['lifesteal:5'])],
+            capBonus: {'lifesteal': 2}),
+        isEmpty,
+      );
+    });
+
+    test('Ricochant a son plafond 3 est propose', () {
+      final splash = _rune('splash', maxLevel: 3, deltas: const [
+        SplashPercentDelta(valuePercentPerLevel: 25),
+      ]);
+      expect(
+        [
+          for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+              [_cardWith(['splash:3'])], [splash]))
+            (rune.id, cap),
+        ],
+        [('splash', 3)],
+      );
+    });
+
+    test('Resonant : propose a 4 et a 6, ecarte a 7', () {
+      final echo = _rune('echo', maxLevel: 4, deltas: const [
+        EchoChanceDelta(valuePercentPerLevel: 15),
+      ]);
+      List<(String, int)> caps(String level, Map<String, int> capBonus) => [
+            for (final (:rune, :cap) in ForgeRuneRules.raisableCaps(
+                [_cardWith(['echo:$level'])], [echo],
+                capBonus: capBonus))
+              (rune.id, cap),
+          ];
+      expect(caps('4', const {}), [('echo', 4)]);
+      expect(caps('6', const {'echo': 2}), [('echo', 6)]);
+      expect(caps('7', const {'echo': 3}), isEmpty);
+    });
+
+    test('Vampirique 4 reste proposee', () {
+      expect(
+        saturableCandidates([_cardWith(['lifesteal:4'])],
+            capBonus: {'lifesteal': 1}),
+        [('lifesteal', 4)],
       );
     });
 

@@ -74,6 +74,41 @@ void main() {
       expect(exhaust, isA<AddExhaustDelta>());
     });
 
+    test('flatBonus se lit et se reecrit, statusId facultatif', () {
+      final plain = {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 2};
+      final status = {
+        'type': 'flatBonus',
+        'effect': 'apply_status',
+        'statusId': 'might',
+        'valuePerLevel': 1,
+      };
+      final delta = CardDelta.fromJson(plain);
+      expect(delta, isA<FlatBonusDelta>());
+      expect((delta as FlatBonusDelta).statusId, isNull);
+      expect(delta.toJson(), plain);
+      final withStatus = CardDelta.fromJson(status) as FlatBonusDelta;
+      expect(withStatus.statusId, 'might');
+      expect(withStatus.toJson(), status);
+    });
+
+    test('flatBonus sans effect, a valuePerLevel 0, ou a statusId hors '
+        'apply_status est refuse', () {
+      expect(() => CardDelta.fromJson({'type': 'flatBonus', 'valuePerLevel': 2}),
+          throwsFormatException);
+      expect(
+          () => CardDelta.fromJson(
+              {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 0}),
+          throwsFormatException);
+      expect(
+          () => CardDelta.fromJson({
+                'type': 'flatBonus',
+                'effect': 'damage',
+                'valuePerLevel': 2,
+                'statusId': 'might',
+              }),
+          throwsFormatException);
+    });
+
     test('refuse un reduceCost ou un critBonus sans valuePerLevel strictement '
         'positif', () {
       for (final type in ['reduceCost', 'critBonus']) {
@@ -92,6 +127,127 @@ void main() {
             reason: '$type $bad',
           );
         }
+      }
+    });
+
+    test('armorPierce et lifestealPercent se lisent et s ecrivent ; un '
+        'pourcentage nul est refuse', () {
+      final json = [
+        {'type': 'armorPierce', 'valuePercentPerLevel': 25},
+        {'type': 'lifestealPercent', 'valuePercentPerLevel': 20},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      final [pierce, steal] = rune.deltas;
+      expect(
+        pierce,
+        isA<ArmorPierceDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 25),
+      );
+      expect(
+        steal,
+        isA<LifestealPercentDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 20),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+
+      for (final type in ['armorPierce', 'lifestealPercent']) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({
+            'deltas': [
+              {'type': type, 'valuePercentPerLevel': 0},
+            ],
+          })),
+          _refused('valuePercentPerLevel'),
+          reason: type,
+        );
+      }
+    });
+
+    test('splashPercent se lit et s ecrit ; {val} Ricochant 3 vaut 75', () {
+      final json = [
+        {'type': 'splashPercent', 'valuePercentPerLevel': 25},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<SplashPercentDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 25),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        () => ForgeUpgradeData.fromJson(_json({
+          'deltas': [
+            {'type': 'splashPercent', 'valuePercentPerLevel': 0},
+          ],
+        })),
+        _refused('valuePercentPerLevel'),
+      );
+      expect(
+        shippedRune('splash').getDescription(
+            3, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        'Touche aussi les autres ennemis pour 75 % des dégâts',
+      );
+    });
+
+    test('echoChance se lit et s ecrit ; {val} Resonant 2 vaut 30', () {
+      final json = [
+        {'type': 'echoChance', 'valuePercentPerLevel': 15},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<EchoChanceDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 15),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        () => ForgeUpgradeData.fromJson(_json({
+          'deltas': [
+            {'type': 'echoChance', 'valuePercentPerLevel': 0},
+          ],
+        })),
+        _refused('valuePercentPerLevel'),
+      );
+      expect(
+        shippedRune('echo').getDescription(
+            2, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        '30 % de chances de se rejouer',
+      );
+    });
+
+    test('requiresCost n admet que hp ; refundHpCost se lit et s ecrit ; {val} '
+        'Transfusion vaut 50', () {
+      final json = [
+        {'type': 'refundHpCost', 'valuePercentPerLevel': 50},
+      ];
+      final rune = ForgeUpgradeData.fromJson(_json({'deltas': json}));
+
+      expect(
+        rune.deltas.single,
+        isA<RefundHpCostDelta>()
+            .having((d) => d.valuePercentPerLevel, 'valuePercentPerLevel', 50),
+      );
+      expect([for (final d in rune.deltas) d.toJson()], json);
+      expect(
+        shippedRune('transfusion').getDescription(
+            1, 'fr', shippedCard('strike_basic'), CardRarity.common),
+        'Rend 50 % du coût en PV',
+      );
+
+      expect(ForgeUpgradeData.fromJson(_json()).requiresCost, isNull);
+      final costed = ForgeUpgradeData.fromJson(_json({'requiresCost': 'hp'}));
+      expect(costed.requiresCost, 'hp');
+      expect(costed.toJson()['requiresCost'], 'hp');
+      expect(ForgeUpgradeData.fromJson(_json()).toJson().containsKey(
+          'requiresCost'), isFalse);
+      for (final value in ['armor', 'mana']) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({'requiresCost': value})),
+          _refused('requiresCost'),
+        );
       }
     });
 
@@ -411,6 +567,16 @@ void main() {
           'Pioche +6');
     });
 
+    test('le {val} d une rune flatBonus vaut valuePerLevel x L', () {
+      final rune = ForgeUpgradeData.fromJson(_json({
+        'description_fr': '+{val}',
+        'deltas': [
+          {'type': 'flatBonus', 'effect': 'damage', 'valuePerLevel': 3},
+        ],
+      }));
+      expect(rune.getDescription(2, 'fr', strike, CardRarity.common), '+6');
+    });
+
     test('lit le premier delta chiffre', () {
       // Le pourcentage donnerait 15 % x 2 x 30 = 9 ; le premier delta
       // chiffre est le mana rendu, 1 par niveau.
@@ -450,13 +616,23 @@ void main() {
       expect(rune.getDescription(3, 'fr', strike, CardRarity.common), '+15%');
     });
 
+    test('{val} : Perforant 1 vaut 25, Perforant 5 borne a 100, Vampirique 2 '
+        'vaut 40', () {
+      final card = shippedCard('strike_basic');
+      String text(String id, int level) =>
+          shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
+      expect(text('piercing', 1), "Ignore 25 % de l'Armure de la cible");
+      expect(text('piercing', 5), "Ignore 100 % de l'Armure de la cible");
+      expect(text('lifesteal', 2), 'Soigne 40 % des dégâts infligés');
+    });
+
     test('les cinq runes a effet ajoute disent leur valeur, que l ecran '
         'montrait deja', () {
       final card = shippedCard('strike_basic');
       String text(String id, int level) =>
           shippedRune(id).getDescription(level, 'fr', card, CardRarity.common);
       expect(text('burning', 3), 'Applique 3 Brûlure');
-      expect(text('freezing', 1), 'Applique 1 Gel');
+      expect(text('freezing', 1), 'Applique 2 Gel');
       expect(text('shocking', 2), 'Applique 2 Électrocution');
       expect(text('quick', 1), 'Pioche +1 carte(s)');
       expect(text('eco', 1), "Gagne +1 Mana à l'utilisation");
@@ -497,6 +673,24 @@ void main() {
       expect(rune.excludesEffects, isEmpty);
       expect(rune.requiresMinCost, 0);
       expect(rune.excludesRunes, isEmpty);
+    });
+
+    test('eligibleTargets : absente toute cible ; vide ou nom inconnu '
+        'refuses ; aller-retour', () {
+      final absent = ForgeUpgradeData.fromJson(_json());
+      expect(absent.eligibleTargets, isNull);
+      expect(absent.toJson().containsKey('eligibleTargets'), isFalse);
+      for (final bad in [<String>[], ['enemy']]) {
+        expect(
+          () => ForgeUpgradeData.fromJson(_json({'eligibleTargets': bad})),
+          _refused('eligibleTargets'),
+          reason: '$bad',
+        );
+      }
+      final rune = ForgeUpgradeData.fromJson(
+          _json({'eligibleTargets': ['singleEnemy']}));
+      expect(rune.eligibleTargets, ['singleEnemy']);
+      expect(rune.toJson()['eligibleTargets'], ['singleEnemy']);
     });
 
     test('refuse eligibleEffects vide, eligible a rien', () {

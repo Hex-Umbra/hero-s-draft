@@ -5,6 +5,7 @@
   "description_en": "Every 3 Skills played in a combat, gain 1 Mana for the current turn. Mastery lowers this threshold, never below 2.",
   "description_fr": "Toutes les 3 Compétences jouées dans un combat, gagne 1 Mana pour le tour en cours. La Maîtrise abaisse ce seuil, jamais sous 2.",
   "classes": ["mage"],
+  "feeds": ["skill"],
   "trigger": "onSkillPlayed",
   "effectType": "mana_flux",
   "value": 1,

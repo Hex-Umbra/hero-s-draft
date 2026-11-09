@@ -5,10 +5,12 @@
 **Méthodes principales** :
 
 #### `canPlayCard(CardInstance, RunState, String? selectedEnemyId) → bool`
-- Vérifie : mana suffisant (≥ `currentCost`), carte non-status, carte ciblée → `selectedEnemyId` requis.
+- Vérifie : `canAfford(card, heroStats)` — depuis la vague 5, la règle unique des coûts combinés,
+  `CostRules.canPay` (mana courant, PV strictement supérieurs au coût en PV, Armure) —, carte
+  non-status, carte ciblée → `selectedEnemyId` requis ([`_rules/03-14`](../_rules/03-14-couts-combines-croissance-et-multi-coups.md)).
 
 #### `resolveCard(CardInstance, RunController, DeckNotifier, CombatController, String?, EffectRegistry) → bool`
-1. Déduit le coût en mana de la carte (`currentCost`).
+1. Paie la carte par `consumeResource({mana, hp, armor})`, une seule écriture d'état (vague 5).
 2. Lit la carte **telle qu'elle se joue** : `card.effective`, l'`EffectiveCard` que calcule l'applicateur
    unique — rareté (G1, G2) et runes comprises ([`_patterns/10-00`](10-00-architecture-du-systeme-de-forge-et-de-fusion.md) §10.4).
 3. Itère sur `addedEffects` (les effets que les runes ajoutent : pioche de `quick`, mana d'`eco`,
@@ -31,11 +33,20 @@
 Le calcul des dégâts physiques, magiques et des intentions d'attaques ennemies est entièrement délégué à la méthode statique unifiée `DamagePipeline.calculate(int initialDamage, EntityStats attackerStats, EntityStats defenderStats)` dans `lib/game/services/damage_pipeline.dart`. 
 
 Le calcul s'exécute selon les étapes logiques strictes suivantes :
-1. **Faiblesse (Attaquant)** : Dégâts réduits de 25% (multiplication par `0.75` puis arrondi) si le statut `weakness` est présent sur l'attaquant.
+1. **Faiblesse (Attaquant)** : Dégâts réduits de 25 % par point, 2 points au plus (`ProportionalStatus.weakness`, vague 5), puis arrondis.
 2. **Coup Critique** : Jet probabiliste basé sur `effectiveCritChance` de l'attaquant, plus le `critChanceBonus` de la carte — 0 par défaut, rempli par la rune *Précis* via `DamageEffectStrategy` ; les ennemis et le tutoriel passent 0 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)). En cas de succès, dégâts multipliés par `critMultiplier` de l'attaquant et assignation à `true` de `lastActionWasCrit` sur l'attaquant pour guider le rendu des tremblements, flashs et particules de la couche Flame.
 3. **Choc (Défenseur)** : Ajout de la valeur brute cumulée du statut `shock` sur le défenseur.
-4. **Vulnérabilité (Défenseur)** : Dégâts augmentés de 50% (multiplication par `1.5` puis arrondi) si le statut `vulnerable` est présent sur le défenseur.
+4. **Vulnérabilité (Défenseur)** : Dégâts augmentés de 25 % par point, 4 points au plus (`ProportionalStatus.vulnerable`, vague 5), puis arrondis.
 
 Il retourne un tuple `(int finalDamage, bool isCrit)`.
 
 **Statuts que fabrique `EffectResolver.createStatus`** — re-lu le 2026-10-02 : `poison`, `might`, `weakness`, `vulnerable`, `might_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution). Seule la branche `might` retient le paramètre facultatif `sourceId` (ADR-104). `strength` et `strength_regen`, que cette ligne citait, sont devenus `might` et `might_regen` avec [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) ; `crit_chance` n'est pas fabriqué ici.
+
+**Depuis le lot 1 de P-44** (vague 5, en attente du propriétaire —
+[ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)) :
+chaque effet reçoit son terme de croissance, `EffectResolver.scaleTerm` (`floor(ratio × source)`,
+lu au moment de l'effet), et le premier `apply_status` de la résolution le bonus de statut ;
+`DamageEffectStrategy` boucle sur `hits` et sur les cibles vivantes, Puissance par coup
+`floor(bonus × mightRatio)`, éclaboussure à chaque coup, vol de vie une fois ; après les effets,
+`resolveCard` tire l'écho sur un `Random` facultatif, injectable pour les tests, puis rembourse
+*Transfusion*. Ordre complet : [`_rules/03-14`](../_rules/03-14-couts-combines-croissance-et-multi-coups.md) §3.14.5.

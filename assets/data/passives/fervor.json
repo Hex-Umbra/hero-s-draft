@@ -5,6 +5,7 @@
   "description_en": "When your Block absorbs damage, gain 1 Might for 2 turns.",
   "description_fr": "Quand votre Armure encaisse des dégâts, gagne 1 Puissance pendant 2 tours.",
   "classes": ["paladin"],
+  "feeds": ["armor", "attack"],
   "trigger": "onDamageTaken",
   "effectType": "fervor",
   "value": 1,

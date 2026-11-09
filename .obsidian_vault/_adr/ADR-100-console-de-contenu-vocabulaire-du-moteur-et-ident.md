@@ -22,6 +22,8 @@ produite par [ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md) (`sta
 `kDebugMode`. C'est la raison pour laquelle la note `0.5.2` n'a **pas** été rouverte pour cette
 livraison — ni entrée joueur, ni entrée Technique.
 
+**Complété le 2026-11-04 par [ADR-112](ADR-112-forme-c-un-lot-de-cartes-par-passif.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : la carte de lot est la dixième catégorie de l'éditeur.
+
 ### Contexte
 
 Trois lots de P-41 avaient déplacé de la mécanique de jeu vers la donnée — la conversion d'armure

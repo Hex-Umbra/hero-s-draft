@@ -23,6 +23,10 @@ class ForgeUpgradeData {
   final int minFusionRank;
   final List<String>? eligibleCardTypes;
 
+  /// Les cibles (`CardTarget`) que la carte doit viser ; `null` : toute cible.
+  /// Jamais vide : `[]` serait « éligible à rien » (spec §4.6, A21).
+  final List<String>? eligibleTargets;
+
   /// Les types d'effet dont la carte doit porter au moins un, parmi ses effets
   /// propres ; `null` : toute carte (D61). Jamais vide : `[]` serait « éligible
   /// à rien ».
@@ -35,6 +39,12 @@ class ForgeUpgradeData {
   /// Le coût courant minimal de la carte (D44, D61) : `eco` ne vient pas sur
   /// une carte gratuite.
   final int requiresMinCost;
+
+  /// Le coût que la carte doit porter en plus du mana : `'hp'` exige un coût
+  /// en PV d'au moins 1 (A20) ; `null` : aucune exigence. `'armor'` n'aurait
+  /// pas de lecteur.
+  final String? requiresCost;
+  static const requiresCostValues = ['hp'];
 
   /// Les runes avec lesquelles celle-ci ne cohabite pas sur une carte (D51) ;
   /// le prédicat lit la règle dans les deux sens (D61).
@@ -69,10 +79,12 @@ class ForgeUpgradeData {
     required this.color,
     this.minFusionRank = 1,
     this.eligibleCardTypes,
+    this.eligibleTargets,
     this.eligibleEffects,
     this.excludesEffects = const [],
     this.requiresExhaust = false,
     this.requiresMinCost = 0,
+    this.requiresCost,
     this.excludesRunes = const [],
     this.maxLevel,
     this.binary = false,
@@ -96,6 +108,7 @@ class ForgeUpgradeData {
       eligibleCardTypes: json['eligibleCardTypes'] != null
           ? List<String>.from(json['eligibleCardTypes'] as List)
           : null,
+      eligibleTargets: _readTargets(id, json),
       eligibleEffects:
           _readNames(id, json, 'eligibleEffects', allowEmpty: false),
       excludesEffects:
@@ -103,6 +116,7 @@ class ForgeUpgradeData {
               const [],
       requiresExhaust: json['requiresExhaust'] as bool? ?? false,
       requiresMinCost: _readMinCost(id, json['requiresMinCost']),
+      requiresCost: _readRequiresCost(id, json['requiresCost']),
       excludesRunes: _readExcludedRunes(id, json),
       maxLevel: maxLevel,
       binary: _readBinary(id, json['binary'], maxLevel),
@@ -134,11 +148,38 @@ class ForgeUpgradeData {
     return List<String>.unmodifiable(raw);
   }
 
+  /// `eligibleTargets` : absente, toute cible ; sinon une liste non vide de
+  /// noms de `CardTarget` (spec §4.6, A21).
+  static List<String>? _readTargets(String id, Map<String, dynamic> json) {
+    final targets = _readNames(id, json, 'eligibleTargets', allowEmpty: false);
+    final unknown = targets?.where(
+      (name) => CardTarget.values.every((target) => target.name != name),
+    );
+    if (unknown != null && unknown.isNotEmpty) {
+      throw FormatException(
+        '$id : eligibleTargets nomme "${unknown.first}" — attendu : '
+        '${CardTarget.values.map((target) => target.name).join(', ')}',
+      );
+    }
+    return targets;
+  }
+
   static int _readMinCost(String id, Object? raw) {
     if (raw == null) return 0;
     if (raw is! int || raw < 0) {
       throw FormatException(
         '$id : requiresMinCost vaut un entier d\'au moins 0 — reçu : $raw',
+      );
+    }
+    return raw;
+  }
+
+  static String? _readRequiresCost(String id, Object? raw) {
+    if (raw == null) return null;
+    if (raw is! String || !requiresCostValues.contains(raw)) {
+      throw FormatException(
+        '$id : requiresCost vaut ${requiresCostValues.join(', ')} — reçu : '
+        '$raw',
       );
     }
     return raw;
@@ -232,10 +273,12 @@ class ForgeUpgradeData {
       'color': color,
       'minFusionRank': minFusionRank,
       if (eligibleCardTypes != null) 'eligibleCardTypes': eligibleCardTypes,
+      if (eligibleTargets != null) 'eligibleTargets': eligibleTargets,
       if (eligibleEffects != null) 'eligibleEffects': eligibleEffects,
       if (excludesEffects.isNotEmpty) 'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
+      if (requiresCost != null) 'requiresCost': requiresCost,
       if (excludesRunes.isNotEmpty) 'excludesRunes': excludesRunes,
       'maxLevel': maxLevel,
       'binary': binary,
@@ -278,10 +321,16 @@ class ForgeUpgradeData {
         PercentBonusDelta() =>
           _percentAdded(card, rarity, level, carried, delta),
         AddEffectDelta() => delta.valuePerLevel * level,
+        FlatBonusDelta() => delta.valuePerLevel * level,
         RemoveExhaustDelta() => null,
         ReduceCostDelta() => _costCut(card, rarity, level, carried, delta),
         CritBonusDelta() => delta.valuePerLevel * level,
         AddExhaustDelta() => null,
+        ArmorPierceDelta() => min(100, delta.valuePercentPerLevel * level),
+        LifestealPercentDelta() => delta.valuePercentPerLevel * level,
+        SplashPercentDelta() => delta.valuePercentPerLevel * level,
+        EchoChanceDelta() => delta.valuePercentPerLevel * level,
+        RefundHpCostDelta() => delta.valuePercentPerLevel * level,
       };
       if (value != null) return value;
     }

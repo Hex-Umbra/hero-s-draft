@@ -335,5 +335,17 @@ void main() {
         throwsA(predicate((e) => e.toString().contains('xp_curve.json'))),
       );
     });
+
+    test('le demarrage du jeu refuse un registre sans effect_icons.json',
+        () async {
+      // Seule la courbe d XP est servie, valide : l erreur qui remonte ne
+      // peut venir que du document des icones d effet.
+      await expectLater(
+        loadGameDataRegistry(FakeBundle(const {
+          'assets/data/xp_curve.json': '{"xpPerLevelByAct":[100]}',
+        })),
+        throwsA(predicate((e) => e.toString().contains('effect_icons.json'))),
+      );
+    });
   });
 }

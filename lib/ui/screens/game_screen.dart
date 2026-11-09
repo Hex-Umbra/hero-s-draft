@@ -628,6 +628,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       discardPileCount: deckState.discardPile.length,
                       heroStatuses: runState.heroStats.statuses,
                       enemies: combatState.enemies,
+                      effectIcons: gameData.effectIcons,
                     ),
 
                   // La barre passe au-dessus du panneau de statuts du héros.
@@ -637,7 +638,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     SignatureBar(
                       signatures: runState.signatures,
                       combatState: combatState,
-                      currentMana: runState.heroStats.currentMana,
+                      heroStats: runState.heroStats,
+                      effectIcons: gameData.effectIcons,
                       interactive:
                           isPlayerActionable && !combatState.isCombatEnded,
                       classColor: ClassIdentity.colorOf(

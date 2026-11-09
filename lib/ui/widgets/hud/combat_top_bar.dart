@@ -5,6 +5,10 @@ import '../../screens/deck_screen.dart';
 /// Boutons Deck/Pause/Coupure du son et indicateur Acte/Niveau en haut de
 /// l'écran de combat.
 class CombatTopBar extends StatelessWidget {
+  /// Le haut de la bande où se pose la barre des signatures, sous les boutons
+  /// de la barre du haut (A38).
+  static const double bandTop = 80;
+
   final int act;
   final int currentLevel;
   final VoidCallback onPauseTap;

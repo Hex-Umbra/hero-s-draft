@@ -5,6 +5,7 @@
   "description_en": "Each enemy killed grants 2 Might for the turn and draws 1 card.",
   "description_fr": "Chaque ennemi abattu donne 2 Puissance pour le tour et fait piocher 1 carte.",
   "classes": ["berserker"],
+  "feeds": ["scale:targetMissingHp", "scale:enemiesAlive"],
   "trigger": "onEnemyKilled",
   "effectType": "frenzy",
   "value": 2,

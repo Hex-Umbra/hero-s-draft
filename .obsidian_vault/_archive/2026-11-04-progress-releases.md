@@ -1,0 +1,9 @@
+# Archive — historique des releases sorti de `progress.md` le 2026-11-04
+
+Rotation FIFO du tableau `## 4. Historique des releases (10 dernières)` de
+`_memory_bank/progress.md` : l'entrée `0.5.7` y est entrée, la plus ancienne en est
+sortie. Ligne conservée **verbatim**, jamais réécrite.
+
+| Version | Date | Titre | Description des changements clés |
+|:---|:---|:---|:---|
+| **0.4.7** | 2026-08-06 | Assainissement du Système de Pioche (P-02) | Le remélange défausse → pioche devient **automatique et à sec** : il n'intervient plus qu'une fois la pioche réellement vide, y compris au milieu d'une pioche. L'ancien seuil `if (drawPile.length < 5)` porté par `game_screen.dart` déclenchait un remélange presque chaque tour et détruisait la capacité à compter son deck ; `shuffleDiscardIntoDraw()` est supprimée. La pioche s'arrête **net** à `GameConstants.maxHandSize` (10) sans consommer de carte ni remélanger. `RunState.cardsPerTurn` (défaut 5) remplace le `5` codé en dur, et `TurnPhaseManager` gagne `startPlayerCombat()`/`startPlayerTurn()` : le tour 1 et le tour N+1 empruntent enfin le même code, et `game_screen.dart` n'anime plus que (perte de `_turnCount` et du deck de secours, 555 → 524 lignes). Aléatoire injectable via `deckRandomProvider`, compteur `DeckState.reshuffleCount` observable et notification joueur. Première relique touchant au deck : `scholars_satchel` (Besace de l'Érudit, legendary, +1 carte/tour), avec `case` symétrique dans `removeRelicEffect`. 6 éléments de code mort supprimés (`temporaryCost`, `IntentType.debuffDeck`, `intentCurse`, `onEnemyDebuffDeck`, `onTurnEnded`, deck de secours). 8 commits TDD, **230/230 tests au vert** (+18 neufs, 2 réécrits), `dart analyze` propre, **playtest de validation passé le 2026-08-06**. Voir [ADR-078](../_adr/ADR-078-assainissement-du-systeme-de-pioche-remelange-a-sec.md). |

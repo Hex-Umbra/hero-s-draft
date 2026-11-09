@@ -1,0 +1,20 @@
+{
+  "id": "bastion",
+  "name_en": "Bastion",
+  "name_fr": "Bastion",
+  "description_en": "For 4 turns, gain 3 Block at the start of your turn.",
+  "description_fr": "Pendant 4 tours, gagne 3 Armure au début du tour.",
+  "cost": 3,
+  "type": "power",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "armor_regen",
+      "value": 3,
+      "duration": 4
+    }
+  ]
+}

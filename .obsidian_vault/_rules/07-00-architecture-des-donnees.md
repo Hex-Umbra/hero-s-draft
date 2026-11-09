@@ -4,7 +4,8 @@
 > **Une entité, un fichier, et le répertoire porte l'appartenance.** Le nom du fichier **est**
 > l'`id`. Une signature rangée sous `classes/paladin/skills/` *est* une signature du paladin —
 > le chargeur l'injecte depuis le chemin, et un JSON qui déclarerait `heroClass` échoue au
-> chargement ; une carte neutre qui déclarerait `heroClass` ou `category` aussi. Voir
+> chargement ; une carte qui déclarerait `heroClass`, `category` ou `passive` aussi — le dossier
+> `cards/<passif>/` injecte le passif d'une carte de lot ([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md), vague 5). Voir
 > [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md), complété par
 > [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) (branche de la vague 4).
 
@@ -13,9 +14,10 @@
 ```
 assets/data/
 ├── audio.json, patch_notes.json,   # à plat : documents de configuration, pas des catalogues
-│   xp_curve.json
+│   xp_curve.json, effect_icons.json
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/
+├── cards/<passif>/<id>.json        # cartes de lot : le dossier est le passif (vague 5)
 ├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
@@ -32,6 +34,19 @@ rapport aux autres ; dans `patch_notes.json`, l'ordre du tableau **est** la sém
 d'entiers d'au moins 1, refusée sinon. Comme `audio.json`, elle n'a ni id ni dossier et reste hors
 de l'éditeur de contenu ; **à sa différence, son absence ou sa faute fait échouer le démarrage**,
 avec les fautes des entités.
+
+**`effect_icons.json`** (vague 5, en attente du propriétaire —
+[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md), réponse P-6 (a)) est **la table d'icônes
+d'effet** : pour chaque **sorte** d'effet, l'icône et la couleur, par leur nom, que la bande et la
+liste de la tuile de signature, les puces d'évolution et les panneaux des statuts du héros et du
+tutoriel lui donnent. Une sorte est `damage`, `armor`, `heal`, `draw`, `gain_mana`,
+`status:<id>` (jamais `apply_status` nu), `crit` ou `target:allEnemies` ; **seize sont livrées**,
+chacune à l'icône et à la couleur que les faces des cartes donnent à la même sorte — un test garde
+l'égalité. `EffectIconTable.fromJson` refuse une clé qui n'est pas une sorte, une valeur qui n'est
+pas un objet à `icon` et `color` non vides ; un nom inconnu de la table de traduction retombe sur
+l'icône d'aide. Chargée par `loadDocument`, sa faute fait échouer le démarrage comme celle de la
+courbe d'XP. Les faces des cartes, les émojis des statuts ennemis et l'icône de la rune *Précis* ne
+la lisent pas encore (`docs/ROADMAP.md`).
 
 Un dossier de classe ou d'ennemi est **auto-suffisant**, image comprise : l'ajouter, c'est
 créer un dossier, pas toucher quatre fichiers dispersés.
@@ -53,7 +68,8 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 ```
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des neuf sources du jeu** ; le provider de production et le registre des tests du
+déclaration des dix sources du jeu** — la dixième, `cards/*/*.json`, celle des cartes de lot
+(vague 5) ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
 en une fois, en nommant fichier et champ. Depuis la vague 3, elle charge aussi la
 courbe d'XP, un document plat, par `GameDataLoader.loadDocument`, avant la levée ; le registre la

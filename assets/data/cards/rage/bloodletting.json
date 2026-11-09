@@ -1,0 +1,21 @@
+{
+  "id": "bloodletting",
+  "name_en": "Bloodletting",
+  "name_fr": "Sang versé",
+  "description_en": "Costs 4 HP. Deal 8 damage.",
+  "description_fr": "Coûte 4 PV. Inflige 8 dégâts.",
+  "costs": {
+    "mana": 0,
+    "hp": 4
+  },
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 8
+    }
+  ]
+}

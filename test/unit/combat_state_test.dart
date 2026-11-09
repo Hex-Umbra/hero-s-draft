@@ -39,4 +39,25 @@ void main() {
     expect(json.keys.any((k) => k.contains('signature')), isFalse);
     expect(jsonEncode(json).contains('smite'), isFalse);
   });
+
+  group('les cartes jouees ce tour (P-44 lot 1, A12)', () {
+    test('cardsPlayedThisTurn vaut 0 sur un etat neuf, et 0 au tour suivant',
+        () {
+      expect(CombatState().cardsPlayedThisTurn, 0);
+
+      final played = CombatState().recordCardPlayed();
+      expect(played.cardsPlayedThisTurn, 1);
+      expect(played.copyWith(turnCount: 2).cardsPlayedThisTurn, 0);
+    });
+
+    test('recordCardPlayed compte dans le tour courant', () {
+      final state = CombatState(turnCount: 3)
+          .recordCardPlayed()
+          .recordCardPlayed();
+
+      expect(state.cardsPlayedThisTurn, 2);
+      final json = state.toJson();
+      expect(json.keys.any((k) => k.contains('layed')), isFalse);
+    });
+  });
 }

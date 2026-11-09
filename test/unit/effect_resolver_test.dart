@@ -1,10 +1,26 @@
+import 'dart:math';
+
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
+import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
+import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
+import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/combat_state.dart';
+import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/signature_instance.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
+
+import 'scripted_random.dart';
 
 void main() {
   group('EntityStats & StatusEffect', () {
@@ -234,6 +250,37 @@ void main() {
         expect(eliteEnemy.effectiveIntent?.value, 29);
       },
     );
+
+    test('le Gel reduit l intention de 25 % par point, 3 points au plus', () {
+      EnemyInstance frozen(int points) => EnemyInstance(
+            stats: EntityStats(
+              maxPv: 20,
+              currentPv: 20,
+              armure: 0,
+              might: 10,
+            ).addStatus(StatusEffect(
+              id: 'freeze',
+              name: 'Gel',
+              type: StatusType.debuff,
+              value: points,
+              duration: 1,
+            )),
+            data: const EnemyData(
+              id: 'test',
+              nameEn: 'Test Enemy',
+              nameFr: 'Test Ennemi',
+              maxHp: 20,
+              baseDamage: 10,
+              spritePath: '',
+            ),
+            currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+          );
+
+      expect(
+        [1, 2, 3, 5].map((p) => frozen(p).effectiveIntent?.value),
+        [8, 5, 3, 3],
+      );
+    });
   });
 
   // La portée de la règle s'écrit dans la fabrique, une fois (spec P-43 E0,
@@ -259,6 +306,160 @@ void main() {
       )!;
 
       expect(status.sourceId, isNull);
+    });
+  });
+
+  // Un seul bonus de Puissance de statut par resolution : le premier
+  // `apply_status`, tous statuts confondus (Q11, A15).
+  group('Q11 : un seul bonus de statut par resolution', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    late GameDataRegistry registry;
+    late ProviderContainer container;
+    late RunController run;
+    late CombatController combat;
+    late DeckNotifier deck;
+    late String enemyId;
+
+    setUpAll(() async {
+      registry = await loadGameDataRegistry(rootBundle);
+    });
+
+    setUp(() {
+      container = ProviderContainer();
+      run = container.read(runProvider.notifier);
+      combat = container.read(combatProvider.notifier);
+      deck = container.read(deckProvider.notifier);
+      run.startNewRun(registry.heroes.singleWhere((h) => h.id == 'mage'));
+      final enemy = EnemyInstance(
+        data: registry.enemies.first,
+        stats: EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+      );
+      enemyId = enemy.id;
+      combat.state = CombatState(
+        enemies: [enemy],
+        selectedEnemyId: enemyId,
+        turnPhase: TurnPhase.player,
+      );
+      // Puissance temporaire 2, la seule du Mage.
+      run.updateState(run.currentState.copyWith(
+        heroStats: run.currentState.heroStats.copyWith(
+          might: 0,
+          currentMana: 9,
+          statuses: const [
+            StatusEffect(
+              id: 'might',
+              name: 'Puissance',
+              type: StatusType.buff,
+              value: 2,
+              duration: 2,
+            ),
+          ],
+        ),
+      ));
+    });
+
+    tearDown(() => container.dispose());
+
+    void play(CardData data,
+        {List<String> runes = const [], Random? random}) {
+      final played = EffectResolver.resolveCard(
+        CardInstance(data: data, forgeUpgrades: runes),
+        run,
+        deck,
+        combat,
+        enemyId,
+        container.read(effectRegistryProvider),
+        random: random,
+      );
+      expect(played, isTrue);
+    }
+
+    CardData shipped(String id) =>
+        registry.cards.singleWhere((c) => c.id == id);
+
+    List<StatusEffect> onEnemy(String id) => combat
+        .currentState.enemies.single.stats.statuses
+        .where((s) => s.id == id)
+        .toList();
+
+    test(
+        'Boule de Feu et Brulant : la Brulure de la rune recoit la Puissance, '
+        'celle de la carte non', () {
+      play(shipped('fireball'), runes: const ['burning:1']);
+
+      final burn = onEnemy('burn').single;
+      expect(burn.value, 5);
+      expect(burn.duration, 2);
+    });
+
+    test(
+        'Coup de Tonnerre et Brulant : la Brulure de la rune la recoit, '
+        'l Electrocution non', () {
+      play(shipped('thunder_clap'), runes: const ['burning:1']);
+
+      expect(onEnemy('burn').single.value, 3);
+      expect(onEnemy('shock').single.value, 1);
+    });
+
+    test(
+        'Projectile Magique a Braise et Mise a nu : la Brulure recoit la '
+        'Puissance, la Vulnerabilite non', () {
+      final missile = registry.signatures.singleWhere(
+        (s) => s.id == 'magic_missile',
+      );
+      final played = EffectResolver.resolveCard(
+        SignatureInstance(missile, evolutions: const ['ember:1', 'exposure:1'])
+            .asCard,
+        run,
+        deck,
+        combat,
+        enemyId,
+        container.read(effectRegistryProvider),
+      );
+      expect(played, isTrue);
+
+      expect(onEnemy('burn').single.value, 1 + 2);
+      expect(onEnemy('vulnerable').single.value, 2);
+    });
+
+    test('l echo recoit son propre bonus de statut', () {
+      play(shipped('poison_stab'),
+          runes: const ['echo:7'], random: ScriptedRandom([0]));
+
+      // Deux resolutions de 1 Poison, chacune avec la Puissance 2 : 2 x (1 + 2).
+      expect(onEnemy('poison').single.value, 6);
+    });
+
+    test('sans rune, le premier statut de la carte recoit le bonus', () {
+      play(shipped('poison_stab'));
+
+      expect(onEnemy('poison').single.value, 1 + 2);
+    });
+
+    test('une carte sur soi : aucun de ses statuts ne recoit de Puissance',
+        () {
+      play(const CardData(
+        id: 'test',
+        cost: 1,
+        type: CardType.skill,
+        rarity: CardRarity.common,
+        target: CardTarget.self,
+        effects: [
+          CardEffect(
+              type: 'apply_status', statusId: 'might', value: 1, duration: 2),
+          CardEffect(
+              type: 'apply_status',
+              statusId: 'armor_regen',
+              value: 2,
+              duration: 2),
+        ],
+      ));
+
+      final statuses = run.currentState.heroStats.statuses;
+      final fromCard = statuses.where((s) => s.sourceId == 'card:test');
+      expect(fromCard.singleWhere((s) => s.id == 'might').value, 1);
+      expect(statuses.singleWhere((s) => s.id == 'armor_regen').value, 2);
     });
   });
 }

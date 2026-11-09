@@ -23,6 +23,13 @@ class CombatState {
   /// (D41). **Jamais sérialisée** : ni `toJson` ni `fromJson` ne la lisent.
   final Map<String, int> signaturesReadyOn;
 
+  /// Le dernier tour où une carte (ou une signature) a été jouée, et combien
+  /// l'ont été ce tour-là (spec P-44 lot 1, A12). Le compte du tour se lit par
+  /// [cardsPlayedThisTurn] : aucune remise à zéro au changement de tour.
+  /// **Jamais sérialisés**, comme [signaturesReadyOn].
+  final int lastPlayedTurn;
+  final int playedOnLastPlayedTurn;
+
   CombatState({
     List<EnemyInstance> enemies = const [],
     List<EnemyInstance> pendingEnemies = const [],
@@ -33,6 +40,8 @@ class CombatState {
     this.isCombatEnded = false,
     this.isVictory = false,
     Map<String, int> signaturesReadyOn = const {},
+    this.lastPlayedTurn = 0,
+    this.playedOnLastPlayedTurn = 0,
   })  : enemies = List.unmodifiable(enemies),
         pendingEnemies = List.unmodifiable(pendingEnemies),
         defeatedEnemies = List.unmodifiable(defeatedEnemies),
@@ -48,6 +57,8 @@ class CombatState {
     bool? isCombatEnded,
     bool? isVictory,
     Map<String, int>? signaturesReadyOn,
+    int? lastPlayedTurn,
+    int? playedOnLastPlayedTurn,
     bool clearSelectedEnemy = false,
   }) {
     return CombatState(
@@ -62,8 +73,22 @@ class CombatState {
       isCombatEnded: isCombatEnded ?? this.isCombatEnded,
       isVictory: isVictory ?? this.isVictory,
       signaturesReadyOn: signaturesReadyOn ?? this.signaturesReadyOn,
+      lastPlayedTurn: lastPlayedTurn ?? this.lastPlayedTurn,
+      playedOnLastPlayedTurn:
+          playedOnLastPlayedTurn ?? this.playedOnLastPlayedTurn,
     );
   }
+
+  /// Les cartes et signatures jouées pendant le tour courant : 0 dès qu'un
+  /// nouveau tour s'ouvre.
+  int get cardsPlayedThisTurn =>
+      lastPlayedTurn == turnCount ? playedOnLastPlayedTurn : 0;
+
+  /// Cet état, un jeu de plus compté dans le tour courant.
+  CombatState recordCardPlayed() => copyWith(
+        lastPlayedTurn: turnCount,
+        playedOnLastPlayedTurn: cardsPlayedThisTurn + 1,
+      );
 
   /// Dans combien de tours joueur la signature [id] revient : 0 si elle est
   /// prête. Ne bouge pas pendant le tour ennemi.

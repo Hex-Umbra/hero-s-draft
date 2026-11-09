@@ -296,6 +296,10 @@ class CombatController extends Notifier<CombatState> {
   void _afterCardPlayed(CardInstance card, {required String? enemyId}) {
     final runController = ref.read(runProvider.notifier);
 
+    // Une signature compte, résolue comme une carte (A12) ; le compte se
+    // remet à zéro de lui-même au tour suivant.
+    state = state.recordCardPlayed();
+
     TraitSystem.dispatch(
       runController,
       PassiveEvent(RelicTrigger.onCardPlayed, card: card, enemyId: enemyId),

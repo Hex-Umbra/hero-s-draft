@@ -1,5 +1,9 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
+import 'package:roguelike_card_game/models/data/game_data_registry.dart';
+import 'package:roguelike_card_game/models/data/hero_skills_link.dart';
 import 'package:roguelike_card_game/game/controllers/debug_run_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
@@ -47,6 +51,8 @@ ProviderContainer _startedRun() {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('DebugActions — run et heros', () {
     test('updateHeroStats ecrit les PV du heros', () {
       final container = _startedRun();
@@ -269,5 +275,130 @@ void main() {
 
       expect(container.read(combatProvider).turnPhase, TurnPhase.player);
     });
+  });
+
+  group('DebugActions — evolutions de signature (P-7 (a))', () {
+    late GameDataRegistry registry;
+    setUpAll(() async {
+      registry = await loadGameDataRegistry(rootBundle);
+    });
+
+    /// Une run de la classe livrée [classId], debug ou non.
+    ProviderContainer start(String classId, {bool debug = true}) {
+      final container = ProviderContainer();
+      final debugRun = container.read(debugRunProvider.notifier);
+      debug ? debugRun.requestDebugRun() : debugRun.requestNormalRun();
+      final hero = registry.heroes.singleWhere((h) => h.id == classId);
+      container
+          .read(runProvider.notifier)
+          .startNewRun(hero, null, hero.getSignatures(registry));
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    List<String> taken(ProviderContainer container, String signatureId) =>
+        container
+            .read(runProvider)
+            .signatures
+            .singleWhere((s) => s.data.id == signatureId)
+            .evolutions;
+
+    bool take(ProviderContainer c, String signatureId, String evolutionId) =>
+        DebugActions.takeSignatureEvolution(c.read, signatureId, evolutionId);
+
+    test(
+      'takeSignatureEvolution suit le palier : une majeure refusee d abord, '
+      'admise apres une mineure',
+      () {
+        final c = start('paladin');
+
+        expect(take(c, 'smite', 'haste'), isFalse);
+        expect(taken(c, 'smite'), isEmpty);
+        expect(take(c, 'smite', 'zeal'), isTrue);
+        expect(taken(c, 'smite'), ['zeal:1']);
+        expect(take(c, 'smite', 'haste'), isTrue);
+        expect(taken(c, 'smite'), ['zeal:1', 'haste:1']);
+      },
+    );
+
+    test(
+      'une mineure reprise monte a sa place ; une majeure prise ou exclue est '
+      'refusee',
+      () {
+        final c = start('berserker');
+
+        expect(take(c, 'reckless_strike', 'brutality'), isTrue);
+        expect(take(c, 'reckless_strike', 'haste'), isTrue);
+        expect(take(c, 'reckless_strike', 'brutality'), isTrue);
+        expect(taken(c, 'reckless_strike'), ['brutality:2', 'haste:1']);
+
+        expect(take(c, 'reckless_strike', 'devastation'), isFalse);
+        expect(take(c, 'reckless_strike', 'haste'), isFalse);
+        expect(taken(c, 'reckless_strike'), ['brutality:2', 'haste:1']);
+        expect(take(c, 'reckless_strike', 'cleave'), isTrue);
+        expect(
+          taken(c, 'reckless_strike'),
+          ['brutality:2', 'haste:1', 'cleave:1'],
+        );
+      },
+    );
+
+    test(
+      'l attente n est pas exigee : acceptee au niveau 1, le niveau du heros '
+      'ne bouge pas, rien n est sauve',
+      () {
+        final c = start('paladin');
+        final smite = c
+            .read(runProvider)
+            .signatures
+            .singleWhere((s) => s.data.id == 'smite');
+        expect(smite.pendingFor(c.read(runProvider).heroStats.level), 0);
+
+        expect(take(c, 'smite', 'zeal'), isTrue);
+
+        expect(c.read(runProvider).heroStats.level, 1);
+        expect(c.read(checkpointProvider), 0);
+      },
+    );
+
+    test(
+      'hors du pool, hors de la run ou hors d une run debug, rien n est ecrit',
+      () {
+        final c = start('paladin');
+        final before = [for (final s in c.read(runProvider).signatures) s.evolutions];
+
+        expect(take(c, 'smite', 'ghost'), isFalse);
+        expect(take(c, 'reckless_strike', 'zeal'), isFalse);
+        final normal = start('paladin', debug: false);
+        final normalBefore = [
+          for (final s in normal.read(runProvider).signatures) s.evolutions,
+        ];
+        expect(take(normal, 'smite', 'zeal'), isFalse);
+
+        expect([for (final s in c.read(runProvider).signatures) s.evolutions],
+            before);
+        expect([
+          for (final s in normal.read(runProvider).signatures) s.evolutions,
+        ], normalBefore);
+      },
+    );
+
+    test(
+      'clearSignatureEvolutions rend la signature sans evolution, et elle '
+      'seule',
+      () {
+        final c = start('paladin');
+        take(c, 'smite', 'zeal');
+        take(c, 'smite', 'haste');
+        take(c, 'holy_shield', 'ward');
+        expect(taken(c, 'smite'), ['zeal:1', 'haste:1']);
+        expect(taken(c, 'holy_shield'), ['ward:1']);
+
+        DebugActions.clearSignatureEvolutions(c.read, 'smite');
+
+        expect(taken(c, 'smite'), isEmpty);
+        expect(taken(c, 'holy_shield'), ['ward:1']);
+      },
+    );
   });
 }

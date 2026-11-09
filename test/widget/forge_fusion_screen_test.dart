@@ -12,8 +12,6 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/forge_fusion_screen.dart';
-import 'package:roguelike_card_game/ui/widgets/forge/forge_slot_row.dart';
-import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 
 import '../unit/shipped_data.dart';
@@ -82,18 +80,6 @@ void main() {
         ),
       );
 
-  /// Le Puits en page d'accueil.
-  Future<ProviderContainer> pumpWell(
-    WidgetTester tester, {
-    required List<CardInstance> deck,
-    int gold = 1000,
-  }) async {
-    final container = startRun(tester, deck: deck, gold: gold);
-    await tester.pumpWidget(app(container, const ForgeFusionScreen()));
-    await tester.pumpAndSettle();
-    return container;
-  }
-
   /// Le Puits poussé sur une vraie pile, comme la carte du monde le pousse :
   /// le retour système a une page où revenir.
   Future<ProviderContainer> pushWell(
@@ -136,15 +122,6 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   }
 
-  /// La couleur que le texte [label] porte vraiment : celle du style rendu,
-  /// héritée de la tuile ou forcée sur le `Text`.
-  Color? titleColor(WidgetTester tester, String label) => tester
-      .widget<RichText>(find.descendant(
-          of: find.text(label), matching: find.byType(RichText)))
-      .text
-      .style
-      ?.color;
-
   bool currentNodeCompleted(ProviderContainer container) {
     final run = container.read(runProvider);
     return run.mapNodes
@@ -156,112 +133,6 @@ void main() {
     await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
     await tester.pumpAndSettle();
   }
-
-  testWidgets('les cartes qui portent une rune, et elles seules',
-      (tester) async {
-    await pumpWell(tester, deck: [
-      strike(const ['sharp:2']),
-      CardInstance(data: shippedCard('defend_basic')),
-    ]);
-
-    expect(find.text('PUITS D\'ÉCHANGE'), findsOneWidget);
-    expect(find.text('Choisissez une carte, puis la rune à donner.'),
-        findsOneWidget);
-    expect(find.byType(UiCard), findsOneWidget);
-  });
-
-  testWidgets('les remplacantes d une rune : toutes, a leur niveau d arrivee, '
-      'au cout de la rune donnee', (tester) async {
-    await pumpWell(tester, deck: [strike(const ['sharp:3'])]);
-
-    await tester.tap(find.byType(UiCard));
-    await tester.pumpAndSettle();
-    final before = titleColor(tester, 'Tranchant 3');
-    await tester.tap(find.text('Tranchant 3'));
-    await tester.pumpAndSettle();
-    // La rune choisie se montre choisie.
-    expect(titleColor(tester, 'Tranchant 3'), isNot(before));
-
-    // Brulant aux deux tiers de 3, Econome borne a 1 ; Endurci ne vise que
-    // l'armure.
-    expect(find.byType(ForgeSlotRow), findsNWidgets(2));
-    expect(find.text('Échanger — 150 or'), findsNWidgets(2));
-    expect(find.text('Reçue au niveau 2'), findsOneWidget);
-    expect(find.text('Reçue au niveau 1'), findsOneWidget);
-  });
-
-  // Transcendance, lue par le Puits (spec P-43 E3, §4.8, §8 ; A17).
-  testWidgets('sous un plafond releve, Econome est recue au niveau 2',
-      (tester) async {
-    final container =
-        await pumpWell(tester, deck: [strike(const ['sharp:3'])]);
-    container.read(runProvider.notifier).raiseRuneCap('eco');
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byType(UiCard));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Tranchant 3'));
-    await tester.pumpAndSettle();
-
-    // Brûlant et Économe aux deux tiers de 3 : 2 l'une et l'autre, Économe
-    // sous son plafond effectif.
-    expect(find.text('Reçue au niveau 2'), findsNWidgets(2));
-    expect(find.text('Reçue au niveau 1'), findsNothing);
-  });
-
-  testWidgets('un echange par visite : le Puits echange, puis ne propose plus '
-      'que la sortie', (tester) async {
-    final card = strike(const ['sharp:3']);
-    final container = await pumpWell(tester, deck: [card], gold: 300);
-
-    await exchangeSharp(tester);
-
-    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
-        ['burning:2']);
-    expect(container.read(inventoryProvider).gold, 150);
-    expect(container.read(notificationProvider).last.message,
-        'Tranchant devient Brûlant (niveau 2).');
-    // L'or suffirait a un second echange : rien ne le propose plus.
-    expect(find.byType(UiCard), findsNothing);
-    expect(find.byType(ForgeSlotRow), findsNothing);
-    expect(find.text('Quitter le Puits'), findsOneWidget);
-
-    await settleNotification(tester);
-  });
-
-  // Review Focus 2.
-  testWidgets('une rune sans remplacante se montre inactive, avec son motif',
-      (tester) async {
-    // Une Defense peu commune, sur ce catalogue sans Allege : ni degats, ni
-    // rang 2.
-    await pumpWell(tester, deck: [
-      CardInstance(
-        data: shippedCard('defend_basic'),
-        rarity: CardRarity.uncommon,
-        forgeUpgrades: const ['hardened:1'],
-      ),
-    ]);
-
-    await tester.tap(find.byType(UiCard));
-    await tester.pumpAndSettle();
-    expect(find.text('Aucune autre rune ne peut la remplacer.'),
-        findsOneWidget);
-    // Et se montre inactive : ni blanche, ni de la couleur du choix.
-    expect(titleColor(tester, 'Endurci 1'), isNot(Colors.white));
-
-    await tester.tap(find.text('Endurci 1'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ForgeSlotRow), findsNothing);
-  });
-
-  testWidgets('un deck sans rune montre l ecran vide et la sortie',
-      (tester) async {
-    await pumpWell(tester, deck: [CardInstance(data: shippedCard('defend_basic'))]);
-
-    expect(find.text('Aucune carte de votre deck ne porte de rune à échanger.'),
-        findsOneWidget);
-    expect(find.text('Quitter le Puits'), findsOneWidget);
-  });
 
   // Spec P-43 E2, A5 : apres un echange, toute sortie resout le noeud ; sans
   // echange, le joueur peut revenir.

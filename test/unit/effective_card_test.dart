@@ -325,6 +325,70 @@ void main() {
     });
   });
 
+  group('flatBonus (A24)', () {
+    test('flatBonus ajoute N x L a chaque effet propre du type, apres la '
+        'rarete', () {
+      final card = EffectiveCard.apply(
+        _card([_damage(6), const CardEffect(type: 'armor', value: 5)]),
+        CardRarity.epic,
+        const [(FlatBonusDelta(effect: 'damage', valuePerLevel: 2), 3)],
+      );
+      expect(card.effects[0].value, CardRarity.epic.scaleValue(6) + 6);
+      expect(card.effects[1].value, CardRarity.epic.scaleValue(5));
+      expect(card.addedEffects, isEmpty);
+    });
+
+    test('flatBonus a statusId ne vise que l apply_status de ce statut', () {
+      final card = EffectiveCard.apply(
+        _card([
+          const CardEffect(
+              type: 'apply_status', value: 2, statusId: 'might', duration: 2),
+          const CardEffect(
+              type: 'apply_status', value: 1, statusId: 'burn', duration: 2),
+          const CardEffect(type: 'draw', value: 1),
+        ]),
+        CardRarity.common,
+        const [
+          (
+            FlatBonusDelta(
+                effect: 'apply_status', statusId: 'might', valuePerLevel: 1),
+            2
+          ),
+        ],
+      );
+      expect(_values(card), [4, 1, 1]);
+    });
+
+    test('extraDeltas s appliquent apres les runes et ne s ecrivent pas', () {
+      GameDataRegistry(
+        enemies: const [],
+        heroes: const [],
+        cards: const [],
+        events: const [],
+        passives: const [],
+        relics: const [],
+        forgeUpgrades: [
+          _rune('sharp', const [_sharp]),
+        ],
+      );
+      final data = _card([_damage(6)]);
+      final instance = CardInstance(
+        data: data,
+        forgeUpgrades: const ['sharp:1'],
+        extraDeltas: const [
+          (FlatBonusDelta(effect: 'damage', valuePerLevel: 2), 1),
+        ],
+      );
+      final sharpOnly =
+          EffectiveCard.apply(data, CardRarity.common, [(_sharp, 1)]);
+      expect(instance.effective.effects[0].value,
+          sharpOnly.effects[0].value + 2);
+      expect(instance.toJson().containsKey('extraDeltas'), isFalse);
+      expect(instance.copyWith(rarity: CardRarity.rare).extraDeltas,
+          instance.extraDeltas);
+    });
+  });
+
   test('effects a la longueur et l ordre des effets de la donnee', () {
     final data = _card([
       _damage(6),
@@ -339,7 +403,7 @@ void main() {
 
   test('apply ne lit aucune rune : des paires d une autre provenance suffisent',
       () {
-    // La couture des evolutions de signature (vague 5) : un delta construit
+    // La couture des evolutions de signature (P-42 T1 et P-44 lot 1) : un delta construit
     // hors de tout fichier de rune, sans catalogue.
     final fromElsewhere = <(CardDelta, int)>[
       (const PercentBonusDelta(effect: 'damage', valuePercentPerLevel: 50), 2),

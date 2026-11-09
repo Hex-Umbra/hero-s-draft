@@ -59,6 +59,41 @@ void main() {
       expect(missing, isEmpty);
     });
 
+    test('une carte de lot a costs survit a l aller-retour de DeckState', () {
+      const breach = CardData(
+        id: 'breach',
+        passive: 'regen_armor',
+        cost: 0,
+        armorCost: 4,
+        type: CardType.attack,
+        rarity: CardRarity.common,
+        target: CardTarget.singleEnemy,
+        effects: [],
+      );
+      GameDataRegistry(
+        enemies: [],
+        heroes: [],
+        cards: [breach],
+        events: [],
+        passives: [],
+        relics: [],
+        forgeUpgrades: [],
+      );
+      final state = DeckState(
+        masterDeck: [CardInstance(data: breach, rarity: CardRarity.rare)],
+      );
+
+      final (restored, missing) = DeckState.fromJsonWithReport(state.toJson());
+
+      final card = restored.masterDeck.single;
+      expect(missing, isEmpty);
+      expect(
+        (card.data.passive, card.data.cost, card.data.armorCost),
+        ('regen_armor', 0, 4),
+      );
+      expect(card.rarity, CardRarity.rare);
+    });
+
     test('drops a card whose CardData id no longer resolves and reports it', () {
       final removedCard = CardInstance(
         uniqueId: 'card-2',

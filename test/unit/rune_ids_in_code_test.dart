@@ -7,10 +7,18 @@ import 'package:flutter_test/flutter_test.dart';
 /// l'applicateur (spec P-43 E1, A1, A4, §8). Sur le modèle de
 /// `stat_gain_single_passage_test.dart`.
 void main() {
-  final runeIds = [
+  final shipped = [
     for (final file in Directory('assets/data/forge_upgrades').listSync())
       if (file is File && file.path.endsWith('.json'))
         file.uri.pathSegments.last.replaceAll('.json', ''),
+  ];
+
+  // `lifesteal` est aussi l'id du statut de Vol de vie (P-41), que lib/ nomme
+  // en littéral : le motif ne peut pas l'y chercher comme id de rune.
+  const sharedWithAStatus = {'lifesteal'};
+  final runeIds = [
+    for (final id in shipped)
+      if (!sharedWithAStatus.contains(id)) id,
   ];
 
   /// Les endroits de `lib/` où [pattern] apparaît, `chemin:ligne : extrait`.
@@ -30,7 +38,7 @@ void main() {
   }
 
   test('aucun id de rune livree n est ecrit en litteral dans lib', () {
-    expect(runeIds, hasLength(11), reason: 'les onze runes livrees');
+    expect(shipped, hasLength(16), reason: 'les seize runes livrees');
     final offenders =
         offendersOf(RegExp('''['"](${runeIds.join('|')})['"]'''));
     expect(offenders, isEmpty, reason: offenders.join('\n'));

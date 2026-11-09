@@ -12,6 +12,8 @@ la Puissance une source — aucune décision ci-dessous n'est amendée.
 **Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) sur D3 : la tranche de *Bénédiction* se lit
 dans la donnée, `threshold: 5`, au lieu d'une constante de sa stratégie.
 
+**Complété le 2026-11-04 par [ADR-111](ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : la Puissance s'ajoute par coup, `floor(bonus × mightRatio)`, et un seul bonus de statut par résolution — aucune décision ci-dessous n'est amendée.
+
 ### Contexte
 Le lot A ([ADR-095](ADR-095-passage-unique-des-gains-scission-des-puissances-et.md)) avait
 scindé `attaque` en trois stats numériques — `attackPower`, `skillPower`, `alterationPower` —

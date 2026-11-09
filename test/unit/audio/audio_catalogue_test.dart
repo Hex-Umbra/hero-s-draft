@@ -36,7 +36,9 @@ void main() {
       // sont les cartes, les signatures de classe, les ennemis et les
       // reliques ; `AudioSource` n est implemente que par ces quatre modeles.
       final contentFiles = [
-        ...Directory('assets/data/cards').listSync().whereType<File>(),
+        ...Directory('assets/data/cards')
+            .listSync(recursive: true)
+            .whereType<File>(),
         ...Directory('assets/data/relics').listSync().whereType<File>(),
         ...Directory('assets/data/classes')
             .listSync(recursive: true)
@@ -48,8 +50,9 @@ void main() {
             .where((f) => f.path.endsWith('enemy.json')),
       ].where((f) => f.path.endsWith('.json'));
 
-      expect(contentFiles.length, 55,
-          reason: '17 cartes + 28 reliques + 6 signatures + 4 ennemis');
+      expect(contentFiles.length, 71,
+          reason: '15 cartes neutres + 18 cartes de lot + 28 reliques + 6 '
+              'signatures + 4 ennemis');
 
       final declared = audio.sounds.keys.toSet();
       final offenders = <String>[];

@@ -11,6 +11,8 @@ Complète [ADR-085](ADR-085-regle-de-partage-catalogue-configuration.md), qui d�
 `heroClass` aux signatures ; `category` et `CardData.heroClass` n'existent plus, et une carte qui
 les déclare échoue au chargement.
 
+**Complété le 2026-11-04 par [ADR-112](ADR-112-forme-c-un-lot-de-cartes-par-passif.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `cards/<passif>/` injecte `passive` aux cartes de lot, `cards/*.json` l'injecte à `null` ; un fichier qui le déclare échoue au chargement — aucune décision ci-dessous n'est amendée.
+
 ### Contexte
 
 Une fois les catalogues éclatés, chaque entité devient un fichier. Restait la question de

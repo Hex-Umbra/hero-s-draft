@@ -49,12 +49,12 @@ class ClassRecipe {
   /// L'identifiant du passif de depart que la recette ecrit.
   ///
   /// **Derive de l'identifiant de la classe**, comme le chemin de son icone :
-  /// il ne se saisit pas. Une classe sans aucun passif disponible afficherait
-  /// un choix vide a la selection et ferait rougir
-  /// `referential_integrity_test` (spec P-41, §9.2) ; la garantir revient a
-  /// ecrire ce passif dans la meme transaction. L'auteur le renomme ensuite
-  /// comme n'importe quelle entite, et sa prose `[A REMPLIR]` le lui
-  /// rappellera.
+  /// il ne se saisit pas. La recette ecrit ce passif, mais aucune carte : un
+  /// passif sans lot n'est propose a aucune classe (O5), et la classe creee
+  /// n'a donc de passif jouable qu'une fois une carte de lot de ce passif
+  /// ecrite (categorie `lotCard`) — jusque-la, sa selection n'offre aucun
+  /// passif. L'auteur le renomme ensuite comme n'importe quelle entite, et sa
+  /// prose `[A REMPLIR]` le lui rappellera.
   String get starterPassiveId => id;
 
   /// Les brouillons, **dans l'ordre d'ecriture**.
@@ -99,7 +99,7 @@ class ClassRecipe {
             id: signature.id,
             bilingual: signature.bilingual,
             mechanics: '{}',
-            heroClass: id,
+            owner: id,
           ),
         ),
     ];
@@ -108,8 +108,8 @@ class ClassRecipe {
   /// Le corps du passif de depart : le gabarit de la categorie, plus la seule
   /// cle que la recette impose — `classes`.
   ///
-  /// Sans elle, le passif serait ouvert a **toutes** les classes (spec P-49,
-  /// §3.2) et viendrait polluer le pool des trois livrees. C'est la meme
+  /// Le gabarit porte deja `classes` (A5, sans elle le chargement echoue) ;
+  /// la recette remplace son `["paladin"]` par la classe creee. C'est la meme
   /// doctrine que `iconPath` : ce que le geste impose, la recette l'ecrit.
   String get _starterPassiveMechanics {
     final decoded = jsonDecode(

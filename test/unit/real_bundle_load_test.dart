@@ -22,7 +22,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 94 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 115 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -33,10 +33,11 @@ void main() {
         .where((a) => a.startsWith(prefix) && a.split('/').length == depth)
         .length;
 
-    expect(countUnder('assets/data/cards/', 4), 17, reason: 'cartes neutres');
+    expect(countUnder('assets/data/cards/', 4), 15, reason: 'cartes neutres');
+    expect(countUnder('assets/data/cards/', 5), 18, reason: 'cartes de lot');
     expect(countUnder('assets/data/relics/', 4), 28, reason: 'reliques');
     expect(countUnder('assets/data/events/', 4), 7, reason: 'evenements');
-    expect(countUnder('assets/data/forge_upgrades/', 4), 11, reason: 'forge');
+    expect(countUnder('assets/data/forge_upgrades/', 4), 16, reason: 'forge');
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
     expect(countUnder('assets/data/level_up_rewards/', 4), 9,
         reason: 'recompenses de niveau');
@@ -69,10 +70,11 @@ void main() {
     // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'signatures');
 
-    // Les trois documents de configuration restent a plat.
+    // Les quatre documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
     expect(json, contains('assets/data/patch_notes.json'));
     expect(json, contains('assets/data/xp_curve.json'));
+    expect(json, contains('assets/data/effect_icons.json'));
   });
 
   test('les images d entites sont declarees, pas seulement presentes', () async {
@@ -94,13 +96,13 @@ void main() {
     // Canari delibere, comme countUnder('assets/data/classes/', 6) plus
     // haut dans ce fichier : ce total augmentera avec les cartes de P-42.
     // Le mettre a jour est la bonne reaction, pas retirer l assertion.
-    expect(registry.cards, hasLength(17)); // les signatures n en sont plus
+    expect(registry.cards, hasLength(33)); // 15 neutres + 18 de lot ; les signatures n en sont plus
     expect(registry.relics, hasLength(28));
     expect(registry.events, hasLength(7));
-    expect(registry.forgeUpgrades, hasLength(11));
+    expect(registry.forgeUpgrades, hasLength(16));
     expect(
       registry.forgeUpgrades.where((u) => u.maxLevel == 1).map((u) => u.id),
-      ['cheap', 'eco', 'enduring', 'freezing', 'quick'],
+      ['cheap', 'eco', 'enduring', 'quick', 'transfusion'],
     );
     expect(registry.passives, hasLength(9));
     expect(registry.heroes, hasLength(3));
@@ -140,5 +142,12 @@ void main() {
       115, 200, 310, 480, 590, 775, 955, 1100, //
       1040, 1185, 1370, 1370, 1300, 1375, 1015,
     ]);
+  });
+
+  test('le registre reel charge les seize sortes d effect_icons.json',
+      () async {
+    final registry = await loadGameDataRegistry(rootBundle);
+
+    expect(registry.effectIcons.kinds, hasLength(16));
   });
 }

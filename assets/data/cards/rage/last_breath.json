@@ -1,0 +1,22 @@
+{
+  "id": "last_breath",
+  "name_en": "Last Breath",
+  "name_fr": "Dernier souffle",
+  "description_en": "Deal 4 damage, +1 per 5 missing HP.",
+  "description_fr": "Inflige 4 dégâts, +1 par tranche de 5 PV manquants.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4,
+      "scaleWith": {
+        "source": "missingHp",
+        "ratio": 0.2
+      }
+    }
+  ]
+}

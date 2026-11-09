@@ -9,7 +9,7 @@ void main() {
   EntityDraft draft({
     Map<String, String> bilingual = const {},
     String mechanics = '{}',
-    String? heroClass,
+    String? owner,
     bool isModification = false,
   }) =>
       EntityDraft(
@@ -17,7 +17,7 @@ void main() {
         id: 'talisman',
         bilingual: bilingual,
         mechanics: mechanics,
-        heroClass: heroClass,
+        owner: owner,
         isModification: isModification,
       );
 
@@ -72,9 +72,24 @@ void main() {
 
   test('les champs optionnels ne sont jamais perdus', () {
     final filled = fillPlaceholders(
-      draft(heroClass: 'paladin', isModification: true),
+      draft(owner: 'paladin', isModification: true),
     );
-    expect(filled.heroClass, 'paladin');
+    expect(filled.owner, 'paladin');
     expect(filled.isModification, isTrue);
+  });
+
+  test('le gabarit ne pose pas cost quand costs est saisi', () {
+    final filled = fillPlaceholders(
+      EntityDraft(
+        descriptor: kEntityDescriptors[EntityCategory.lotCard]!,
+        id: 'kindle',
+        owner: 'mana_flux',
+        bilingual: const {},
+        mechanics: '{"costs": {"mana": 0, "hp": 4}, "type": "attack"}',
+      ),
+    );
+    final decoded = jsonDecode(filled.mechanics) as Map<String, dynamic>;
+    expect(decoded.containsKey('cost'), isFalse);
+    expect(decoded['costs'], {'mana': 0, 'hp': 4});
   });
 }

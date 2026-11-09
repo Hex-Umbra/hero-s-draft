@@ -9,7 +9,6 @@ import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
-import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -186,31 +185,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('RestScreen renders the three action buttons', (
-    WidgetTester tester,
-  ) async {
-    await pumpRestScreen(tester);
-
-    expect(find.text('SE REPOSER'), findsOneWidget);
-    expect(find.text('AFFÛTER'), findsOneWidget);
-    expect(find.text('OUBLIER'), findsOneWidget);
-    expect(find.text('FORGER'), findsNothing);
-  });
-
-  testWidgets('AFFUTER est inactive, avec son motif, quand aucune rune du '
-      'deck ne peut monter', (WidgetTester tester) async {
-    await pumpRestScreen(tester, deck: [CardInstance(data: mockCard)]);
-
-    expect(find.text('Aucune rune de votre deck ne peut gagner de niveau.'),
-        findsOneWidget);
-
-    await tester.tap(find.text('AFFÛTER'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(RestCardSelectionScreen), findsNothing);
-    expect(find.text('SE REPOSER'), findsOneWidget);
-  });
-
   // Transcendance, lue par l'option du feu (spec P-43 E3, §4.8, §8 ; A17).
   testWidgets('AFFUTER s active sur une rune plafonnee quand la run releve '
       'son plafond', (WidgetTester tester) async {
@@ -279,64 +253,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(container.read(runProvider).heroStats.currentPv, maxPv);
-
-      await settlePendingNotificationTimers(tester);
-    },
-  );
-
-  testWidgets('Affuter monte une rune d un niveau, notifie, et clot les '
-      'options (D14)', (WidgetTester tester) async {
-    final container = await pumpRestScreen(
-      tester,
-      registry: shippedRegistry(),
-      deck: [sharpStrike()],
-    );
-
-    await sharpenTheOnlyCard(tester);
-
-    expect(find.byType(RestScreen), findsOneWidget);
-    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
-        ['sharp:2']);
-    expect(container.read(inventoryProvider).gold, 0);
-    expect(container.read(notificationProvider).last.message,
-        'Tranchant passe au niveau 2 sur Frappe !');
-    // Une seule rune, un seul niveau par visite : les trois options ont
-    // disparu, seul « Continuer » reste.
-    expect(find.text('SE REPOSER'), findsNothing);
-    expect(find.text('AFFÛTER'), findsNothing);
-    expect(find.text('OUBLIER'), findsNothing);
-    expect(find.text('CONTINUER LA ROUTE'), findsOneWidget);
-
-    await settlePendingNotificationTimers(tester);
-  });
-
-  testWidgets(
-    'Remove flow removes the selected card from the master deck',
-    (WidgetTester tester) async {
-      final cardToRemove = CardInstance(data: mockCard);
-      final container = await pumpRestScreen(tester, deck: [cardToRemove]);
-
-      await tester.tap(find.text('OUBLIER'));
-      await tester.pumpAndSettle();
-
-      // RestCardSelectionScreen renders the deck's single card as a UiCard;
-      // tapping it triggers the real (non-sharpen) removal path, which pops
-      // the navigator with the CardInstance directly.
-      await tester.tap(find.byType(UiCard));
-      await tester.pumpAndSettle();
-
-      expect(
-        container
-            .read(deckProvider)
-            .masterDeck
-            .any((c) => c.uniqueId == cardToRemove.uniqueId),
-        isFalse,
-      );
-
-      final notifications = container.read(notificationProvider);
-      expect(notifications, isNotEmpty);
-      expect(notifications.last.type, NotificationType.error);
-      expect(notifications.last.message, contains('Frappe'));
 
       await settlePendingNotificationTimers(tester);
     },

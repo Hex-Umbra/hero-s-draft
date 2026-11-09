@@ -635,7 +635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String levelLabel(int level) {
-    return 'Lvl $level';
+    return 'Lvl. $level';
   }
 
   @override
@@ -802,7 +802,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get draftDeckSubtitle =>
-      'Select exactly 5 global cards to build your starting deck and launch the run.';
+      'Pick 2 cards from your passive and 3 neutral cards to build your starting deck.';
 
   @override
   String draftDeckSelectedCount(int count) {
@@ -810,10 +810,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String draftDeckLotSection(String passive) {
+    return '$passive cards';
+  }
+
+  @override
+  String get draftDeckNeutralSection => 'Neutral cards';
+
+  @override
+  String draftDeckQuota(int picked, int quota) {
+    return '$picked/$quota';
+  }
+
+  @override
   String get draftDeckProceed => 'ENTER THE UMBRA';
 
   @override
-  String get draftDeckSnackbarMax => 'You can only select up to 5 cards.';
+  String draftDeckSnackbarMaxLot(int quota) {
+    return 'You already picked your $quota passive cards.';
+  }
+
+  @override
+  String draftDeckSnackbarMaxNeutral(int quota) {
+    return 'You already picked your $quota neutral cards.';
+  }
 
   @override
   String mergeLabel(int count) {
@@ -1008,6 +1028,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String signatureNextMinor(int level) {
+    return 'Next minor evolution at level $level';
+  }
+
+  @override
+  String signatureNextMajor(int level) {
+    return 'Next major evolution at level $level';
+  }
+
+  @override
+  String get signatureEvolutionPending => 'Evolution to choose';
+
+  @override
   String get signatureChooseTarget => 'Choose a target';
 
   @override
@@ -1022,5 +1055,303 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String effectValuePercent(int value) {
+    return '+$value%';
+  }
+
+  @override
+  String effectLineDamage(int amount) {
+    return 'Deal $amount damage';
+  }
+
+  @override
+  String effectLineArmor(int amount) {
+    return 'Gain $amount Block';
+  }
+
+  @override
+  String effectLineHeal(int amount) {
+    return 'Heal $amount HP';
+  }
+
+  @override
+  String effectLineDraw(int amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      amount,
+      locale: localeName,
+      other: '$amount cards',
+      one: '1 card',
+    );
+    return 'Draw $_temp0';
+  }
+
+  @override
+  String effectLineGainMana(int amount) {
+    return 'Gain $amount Mana';
+  }
+
+  @override
+  String effectLineMight(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'for $duration turns',
+      one: 'this turn',
+    );
+    return 'Gain $amount Might $_temp0';
+  }
+
+  @override
+  String effectLineMightRegen(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'For $duration turns',
+      one: 'For 1 turn',
+    );
+    return '$_temp0, gain $amount Might at the start of your turn';
+  }
+
+  @override
+  String effectLineArmorRegen(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: 'For $duration turns',
+      one: 'For 1 turn',
+    );
+    return '$_temp0, gain $amount Block at the start of your turn';
+  }
+
+  @override
+  String effectLineWeakness(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Weakness for $_temp0';
+  }
+
+  @override
+  String effectLineVulnerable(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Vulnerable for $_temp0';
+  }
+
+  @override
+  String effectLineBurn(int amount, int duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      duration,
+      locale: localeName,
+      other: '$duration turns',
+      one: '1 turn',
+    );
+    return 'Apply $amount Burn for $_temp0';
+  }
+
+  @override
+  String effectLineCrit(int amount) {
+    return '+$amount% critical chance';
+  }
+
+  @override
+  String get effectLineAllEnemies => 'Hits all enemies';
+
+  @override
+  String evolutionScreenTitle(String signature) {
+    return '$signature evolves';
+  }
+
+  @override
+  String get evolutionScreenTitleBoth => 'Your signatures evolve';
+
+  @override
+  String get levelUpCurtainTitle => 'LEVEL UP!';
+
+  @override
+  String get levelUpCurtainSubtitle => 'Your hero has grown stronger!';
+
+  @override
+  String get levelUpCurtainAction => 'TAP TO CLAIM YOUR REWARDS';
+
+  @override
+  String get evolutionCurtainTitleMinor => 'MINOR EVOLUTION';
+
+  @override
+  String get evolutionCurtainTitleMajor => 'MAJOR EVOLUTION';
+
+  @override
+  String evolutionCurtainOne(String signature) {
+    return '$signature can evolve';
+  }
+
+  @override
+  String get evolutionCurtainBoth => 'Your signatures can evolve';
+
+  @override
+  String get evolutionCurtainAction => 'TAP TO CHOOSE';
+
+  @override
+  String evolutionBoardTierMinor(int level) {
+    return 'Minor evolution · hero level $level';
+  }
+
+  @override
+  String evolutionBoardTierMajor(int level) {
+    return 'Major evolution · hero level $level';
+  }
+
+  @override
+  String get evolutionBoardToChoose => 'To choose';
+
+  @override
+  String evolutionBoardUpcomingMinors(int level) {
+    return 'Minors — at level $level';
+  }
+
+  @override
+  String evolutionBoardUpcomingMajors(int level) {
+    return 'Majors — at level $level';
+  }
+
+  @override
+  String get evolutionBoardTaken => 'Already taken';
+
+  @override
+  String get evolutionBoardExcluded => 'Excluded';
+
+  @override
+  String evolutionBoardExcludedBy(String name) {
+    return 'Excluded by $name';
+  }
+
+  @override
+  String evolutionBoardTakenLevel(int level) {
+    return 'Taken · Lvl. $level';
+  }
+
+  @override
+  String evolutionBoardLevelUp(int from, int to, String description) {
+    return 'Level $from → $to: $description';
+  }
+
+  @override
+  String get evolutionBoardToday => 'Today';
+
+  @override
+  String get evolutionBoardAfter => 'After this choice';
+
+  @override
+  String get evolutionBoardPick => 'Choose an evolution';
+
+  @override
+  String get evolutionBoardPickBoth => 'Choose one evolution per signature';
+
+  @override
+  String get evolutionBoardTakeBoth => 'Confirm both';
+
+  @override
+  String evolutionBoardTake(String name) {
+    return 'Take $name';
+  }
+
+  @override
   String get signatures => 'Signatures';
+
+  @override
+  String statusWeaknessHint(int percent, int max) {
+    return '−$percent% damage dealt per point, down to −$max%';
+  }
+
+  @override
+  String statusVulnerableHint(int percent, int max) {
+    return '+$percent% damage taken per point, up to +$max%';
+  }
+
+  @override
+  String statusFreezeHint(int percent, int max) {
+    return '−$percent% to the next attack per point, down to −$max%';
+  }
+
+  @override
+  String cardCostHp(int amount) {
+    return 'Costs $amount HP';
+  }
+
+  @override
+  String cardCostArmor(int amount) {
+    return 'Costs $amount Block';
+  }
+
+  @override
+  String cardDescDamageHits(int amount, int hits) {
+    return 'Deal $amount damage $hits times.';
+  }
+
+  @override
+  String cardScaleArmor(String ratio) {
+    return '+$ratio per point of Block';
+  }
+
+  @override
+  String cardScaleArmorPer(int per) {
+    return '+1 per $per Block';
+  }
+
+  @override
+  String cardScaleMissingHp(String ratio) {
+    return '+$ratio per missing HP';
+  }
+
+  @override
+  String cardScaleMissingHpPer(int per) {
+    return '+1 per $per missing HP';
+  }
+
+  @override
+  String cardScaleCardsPlayed(String ratio) {
+    return '+$ratio per card played this turn';
+  }
+
+  @override
+  String cardScaleCardsPlayedPer(int per) {
+    return '+1 per $per cards played this turn';
+  }
+
+  @override
+  String cardScaleEnemiesAlive(String ratio) {
+    return '+$ratio per enemy';
+  }
+
+  @override
+  String cardScaleEnemiesAlivePer(int per) {
+    return '+1 per $per enemies';
+  }
+
+  @override
+  String cardScaleTargetStatus(String ratio, String status) {
+    return '+$ratio per point of $status on the target';
+  }
+
+  @override
+  String cardScaleTargetStatusPer(int per, String status) {
+    return '+1 per $per points of $status on the target';
+  }
+
+  @override
+  String cardScaleTargetMissingHp(String ratio) {
+    return '+$ratio per missing HP on the target';
+  }
+
+  @override
+  String cardScaleTargetMissingHpPer(int per) {
+    return '+1 per $per missing HP on the target';
+  }
 }

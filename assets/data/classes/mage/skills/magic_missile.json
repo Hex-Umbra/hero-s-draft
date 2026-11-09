@@ -2,8 +2,8 @@
   "id": "magic_missile",
   "name_en": "Magic Missile",
   "name_fr": "Projectile Magique",
-  "description_en": "Deal 5 damage and draw 1 card.",
-  "description_fr": "Inflige 5 dégâts et pioche 1 carte.",
+  "description_en": "Deal {damage} damage and draw {draw} card(s).",
+  "description_fr": "Inflige {damage} dégâts et pioche {draw} carte(s).",
   "cost": 1,
   "cooldown": 2,
   "type": "skill",
@@ -17,6 +17,125 @@
     {
       "type": "draw",
       "value": 1
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "acuity",
+      "tier": "minor",
+      "name_fr": "Acuité",
+      "name_en": "Acuity",
+      "description_fr": "+{val} dégâts",
+      "description_en": "+{val} damage",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "damage",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "hardware_rounded",
+      "color": "redAccent"
+    },
+    {
+      "id": "precision",
+      "tier": "minor",
+      "name_fr": "Précision",
+      "name_en": "Precision",
+      "description_fr": "+{val} % de critique",
+      "description_en": "+{val}% critical chance",
+      "deltas": [
+        {
+          "type": "critBonus",
+          "valuePerLevel": 5
+        }
+      ],
+      "icon": "flare_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "ember",
+      "tier": "minor",
+      "name_fr": "Braise",
+      "name_en": "Ember",
+      "description_fr": "Applique {val} Brûlure",
+      "description_en": "Apply {val} Burn",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "burn",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "local_fire_department_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "haste",
+      "tier": "major",
+      "name_fr": "Célérité",
+      "name_en": "Haste",
+      "description_fr": "Recharge réduite d'un tour",
+      "description_en": "Cooldown one turn shorter",
+      "cooldown": -1,
+      "excludes": [
+        "overload"
+      ],
+      "icon": "fast_forward_rounded",
+      "color": "tealAccent"
+    },
+    {
+      "id": "overload",
+      "tier": "major",
+      "name_fr": "Surcharge",
+      "name_en": "Overload",
+      "description_fr": "+8 dégâts, recharge allongée d'un tour",
+      "description_en": "+8 damage, cooldown one turn longer",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "damage",
+          "valuePerLevel": 8
+        }
+      ],
+      "cooldown": 1,
+      "excludes": [
+        "haste"
+      ],
+      "icon": "rocket_launch_rounded",
+      "color": "yellowAccent"
+    },
+    {
+      "id": "nova",
+      "tier": "major",
+      "name_fr": "Nova",
+      "name_en": "Nova",
+      "description_fr": "Touche tous les ennemis",
+      "description_en": "Hits all enemies",
+      "target": "allEnemies",
+      "icon": "all_out_rounded",
+      "color": "deepPurpleAccent"
+    },
+    {
+      "id": "exposure",
+      "tier": "major",
+      "name_fr": "Mise à nu",
+      "name_en": "Exposure",
+      "description_fr": "Applique 2 Vulnérable pendant 2 tours",
+      "description_en": "Apply 2 Vulnerable for 2 turns",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 2,
+          "statusId": "vulnerable",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "gps_fixed_rounded",
+      "color": "deepOrangeAccent"
     }
   ]
 }

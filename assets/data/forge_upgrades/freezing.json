@@ -10,12 +10,12 @@
   "eligibleCardTypes": [
     "attack"
   ],
-  "maxLevel": 1,
+  "maxLevel": null,
   "deltas": [
     {
       "type": "addEffect",
       "effect": "apply_status",
-      "valuePerLevel": 1,
+      "valuePerLevel": 2,
       "statusId": "freeze",
       "durationPerLevel": 1
     }

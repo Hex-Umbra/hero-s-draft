@@ -11,6 +11,7 @@ import '../models/entity_stats.dart';
 import '../models/enemy_instance.dart';
 import '../game/services/damage_pipeline.dart';
 import '../game/services/forge_rune_rules.dart';
+import '../game/systems/cost_rules.dart';
 import '../game/systems/stat_gains.dart';
 import '../game/systems/power_rules.dart';
 import 'tutorial_data.dart';
@@ -264,15 +265,25 @@ class TutorialEngine extends ChangeNotifier {
     ];
   }
 
+  /// Une carte « à mécanisme » : un coût en PV ou en Armure, des coups
+  /// multiples ou une croissance. La leçon n'enseigne que le geste simple, et
+  /// `playCard` ne paie que le Mana.
+  bool _hasMechanism(CardData data) =>
+      data.hpCost > 0 ||
+      data.armorCost > 0 ||
+      data.effects.any((e) => e.hits >= 2 || e.scaleWith != null);
+
   bool _isEnemyTargetingAttack(CardData data) =>
       data.type == CardType.attack &&
       data.target == CardTarget.singleEnemy &&
-      !data.effects.any((e) => e.type == 'armor');
+      !data.effects.any((e) => e.type == 'armor') &&
+      !_hasMechanism(data);
 
   bool _isArmorGivingSkill(CardData data) =>
       data.type == CardType.skill &&
       data.target == CardTarget.self &&
-      data.effects.any((e) => e.type == 'armor');
+      data.effects.any((e) => e.type == 'armor') &&
+      !_hasMechanism(data);
 
   /// Place l'ennemi d'entraînement, intention comprise.
   void seedEnemy() {
@@ -365,7 +376,7 @@ class TutorialEngine extends ChangeNotifier {
   /// Joue une carte de la main. Les dégâts passent par le pipeline réel :
   /// avec `critChance: 0`, il est déterministe.
   bool playCard(CardInstance card) {
-    if (mockState.heroStats.currentMana < card.currentCost) return false;
+    if (!mockState.heroStats.canPay(mana: card.currentCost)) return false;
 
     _manaWarningPending = false;
 

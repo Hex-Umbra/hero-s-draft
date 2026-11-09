@@ -84,6 +84,14 @@ Trois lectures et un réglage, posés par
 - **En lecture seule** — la classe, ses règles de stat, son passif actif. Ils viennent du
   `class.json` et du choix de passif ; les écraser produirait une run qu'aucune sauvegarde ne
   saurait relire, `RunState.statRules` étant relu de la classe et non sérialisé.
+- **Les évolutions de signature** (vague 5, en attente du propriétaire, réponse P-7 (a) —
+  [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)) : par signature de la run, ses
+  références prises, **un bouton par évolution admissible** et « Retirer les évolutions ».
+  `DebugActions.takeSignatureEvolution` pose par la règle du jeu, `SignatureEvolutionRules.take`
+  ([`_patterns/03-8`](03-8-signatureevolutionrules-regles-pures-des-evolutions.md)) ; seule
+  l'attente n'est pas lue, pour préparer un test manuel sans monter le héros.
+  `clearSignatureEvolutions` rend l'état de départ. Ni sauvegarde ni checkpoint : une run debug ne
+  persiste rien.
 
 > [!NOTE]
 > **Les règles de stat s'affichent dans le vocabulaire du fichier**, pas dans la phrase du joueur :
@@ -119,6 +127,10 @@ pause.
 |:---|:---|
 | `test/unit/debug_run_test.dart` | Verrou de `save`/`clear`, intention qui traîne, mode rabaissé au chargement |
 | `test/unit/debug_actions_test.dart` | Chaque action, et le refus hors run debug |
-| `test/widget/debug_drawer_test.dart` | Poignée seule fermée, onglet Combat seul en combat, tiroir ouvert après « 0 PV » |
+| `test/widget/debug_drawer_test.dart` | Une seule règle depuis le tri de D77 : la dernière cible de Puissance ne se retire pas |
 
-La correction de sortie de combat n'a **pas** de test automatisé (`GameScreen` exige Flame).
+Depuis la vague 5, `debug_actions_test.dart` couvre aussi `takeSignatureEvolution` et
+`clearSignatureEvolutions`. Le tiroir lui-même — poignée, onglets, ouverture — et la correction de
+sortie de combat se vérifient au test manuel
+([ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md)) ; `GameScreen` exige
+Flame.

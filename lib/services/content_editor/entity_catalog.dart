@@ -12,16 +12,32 @@ List<String> entityFiles(
 ) {
   final files = <String>[];
 
-  // Une signature vit sous chaque classe, et nulle part a plat :
-  // `classes/<classe>/skills/<id>.json`.
-  if (descriptor.supportsHeroClass) {
-    for (final heroClass in fs.listDirectory('$rootPath/assets/data/classes')) {
-      final owned = 'assets/data/classes/$heroClass/${descriptor.directory}';
-      for (final name in fs.listDirectory('$rootPath/$owned')) {
-        if (name.endsWith('.json')) files.add('$owned/$name');
+  switch (descriptor.ownerKind) {
+    case EntityOwnerKind.heroClass:
+      // Une signature vit sous chaque classe, et nulle part a plat :
+      // `classes/<classe>/skills/<id>.json`.
+      for (final heroClass
+          in fs.listDirectory('$rootPath/assets/data/classes')) {
+        final owned = 'assets/data/classes/$heroClass/${descriptor.directory}';
+        for (final name in fs.listDirectory('$rootPath/$owned')) {
+          if (name.endsWith('.json')) files.add('$owned/$name');
+        }
       }
-    }
-    return files;
+      return files;
+    case EntityOwnerKind.passive:
+      // Une carte de lot vit sous le dossier de son passif :
+      // `cards/<passif>/<id>.json`. Les `.json` de `cards/` sont les neutres,
+      // et ne sont pas d'elle.
+      final base = 'assets/data/${descriptor.directory}';
+      for (final entry in fs.listDirectory('$rootPath/$base')) {
+        if (entry.endsWith('.json')) continue;
+        for (final name in fs.listDirectory('$rootPath/$base/$entry')) {
+          if (name.endsWith('.json')) files.add('$base/$entry/$name');
+        }
+      }
+      return files;
+    case null:
+      break;
   }
 
   final base = 'assets/data/${descriptor.directory}';
@@ -44,7 +60,8 @@ List<String> entityFiles(
 /// Les identifiants d'une categorie, groupes par proprietaire.
 ///
 /// La cle `null` porte les entites sans proprietaire — toutes les categories
-/// sauf la signature. Les autres cles sont des identifiants de classe. C'est
+/// sauf la signature et la carte de lot. Les autres cles sont des identifiants
+/// de classe, ou de passif pour une carte de lot. C'est
 /// cette table qui dessine le niveau 2 de l'arbre, et le groupement y **est**
 /// le repertoire : dans ce projet, le repertoire porte la propriete.
 Map<String?, List<String>> entityIdsByOwner(
@@ -63,8 +80,9 @@ Map<String?, List<String>> entityIdsByOwner(
       // `assets/data/classes/<id>/class.json`
       owner = null;
       id = segments[segments.length - 2];
-    } else if (segments.length > 4 && segments[2] == 'classes') {
-      // `assets/data/classes/<classe>/skills/<id>.json`
+    } else if (descriptor.ownerKind != null) {
+      // `assets/data/classes/<classe>/skills/<id>.json`, ou
+      // `assets/data/cards/<passif>/<id>.json`
       owner = segments[3];
       id = segments.last.replaceAll('.json', '');
     } else {

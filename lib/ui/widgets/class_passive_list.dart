@@ -12,6 +12,11 @@ import '../../models/data/passive_data.dart';
 ///
 /// Il ne décide pas de son propre dépliage : c'est la carte qui le lui dit,
 /// parce qu'une seule carte à la fois peut être ouverte.
+///
+/// Avec un seul passif disponible, il n'y a rien à déplier : le bloc montre
+/// ce passif sans le badge « Passifs », qui promettrait d'en voir d'autres.
+/// C'est le cas tant que les lots de cartes des autres passifs ne sont pas
+/// arrivés (O5) ; le badge revient seul avec le deuxième.
 class ClassPassiveList extends StatelessWidget {
   final List<PassiveData> passives;
 
@@ -82,66 +87,72 @@ class ClassPassiveList extends StatelessWidget {
         // L'étiquette ferme le bloc, elle ne l'ouvre pas : le passif retenu
         // est ce que le joueur vient lire, l'étiquette est l'invitation à
         // en voir davantage.
-        SizedBox(height: _gap),
-        // Un badge, et non du texte nu : posée à même le fond, l'étiquette
-        // flottait sans appartenir à rien. La pastille reprend la forme des
-        // badges de stats du haut de la carte et la teinte de la classe —
-        // c'était le seul élément de la carte à rester cyan quelle que soit
-        // la classe, ce qui suffisait à le détacher du reste.
-        Center(
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 10 : 12,
-              vertical: isMobile ? 4 : 5,
-            ),
-            decoration: BoxDecoration(
-              color: classColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: classColor.withValues(alpha: 0.45),
-                width: 1,
+        if (canExpand) ...[
+          SizedBox(height: _gap),
+          // Un badge, et non du texte nu : posée à même le fond, l'étiquette
+          // flottait sans appartenir à rien. La pastille reprend la forme des
+          // badges de stats du haut de la carte et la teinte de la classe —
+          // c'était le seul élément de la carte à rester cyan quelle que soit
+          // la classe, ce qui suffisait à le détacher du reste.
+          Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 10 : 12,
+                vertical: isMobile ? 4 : 5,
+              ),
+              decoration: BoxDecoration(
+                color: classColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: classColor.withValues(alpha: 0.45),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      // Elle ne nomme pas le passif : la tuile au-dessus le
+                      // fait déjà, repliée comme dépliée.
+                      l10n.passivesLabel,
+                      style: TextStyle(
+                        fontSize: _labelFontSize,
+                        fontWeight: FontWeight.w600,
+                        color: classColor,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  SizedBox(width: isMobile ? 3 : 4),
+                  // Une seule icône qui pivote, plutôt que deux glyphes
+                  // échangés : le chevron accompagne le dépliage au lieu de
+                  // sauter d'un état à l'autre.
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      Icons.expand_more,
+                      // Le chevron suit la taille du texte : c'est la même
+                      // affordance, les désaccorder la casserait en deux.
+                      size: _labelFontSize + 3,
+                      color: classColor,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    // Elle ne nomme pas le passif : la tuile au-dessus le
-                    // fait déjà, repliée comme dépliée.
-                    l10n.passivesLabel,
-                    style: TextStyle(
-                      fontSize: _labelFontSize,
-                      fontWeight: FontWeight.w600,
-                      color: classColor,
-                      letterSpacing: 0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(width: isMobile ? 3 : 4),
-                // Une seule icône qui pivote, plutôt que deux glyphes
-                // échangés : le chevron accompagne le dépliage au lieu de
-                // sauter d'un état à l'autre.
-                AnimatedRotation(
-                  turns: isExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  child: Icon(
-                    Icons.expand_more,
-                    // Le chevron suit la taille du texte : c'est la même
-                    // affordance, les désaccorder la casserait en deux.
-                    size: _labelFontSize + 3,
-                    color: classColor,
-                  ),
-                ),
-              ],
-            ),
           ),
-        ),
+        ],
       ],
     );
   }
+
+  /// Y a-t-il quelque chose à déplier ? Il faut au moins un autre passif
+  /// que celui que le bloc montre déjà.
+  bool get canExpand => passives.length > 1;
 
   /// L'écart entre chaque élément du bloc : sous le bouton, entre deux
   /// tuiles, et avant le badge. Une seule valeur, pour que les trois

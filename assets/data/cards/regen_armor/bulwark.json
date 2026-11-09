@@ -1,0 +1,18 @@
+{
+  "id": "bulwark",
+  "name_en": "Bulwark",
+  "name_fr": "Muraille",
+  "description_en": "Gain 12 Block.",
+  "description_fr": "Gagne 12 d'Armure.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 12
+    }
+  ]
+}

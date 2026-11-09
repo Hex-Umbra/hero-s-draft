@@ -88,6 +88,12 @@ alphabétique, pastille de couleur et compteur — et un filtre les réduit (sou
 
 | Emplacement | Couvre |
 |:---|:---|
-| `test/widget/content_editor_screen_test.dart` | Parcours complet, Valider = Écrire, imports, faute de conversion, faute qui ramène à son champ ou vise le panneau des signatures, lisibilité |
-| `test/widget/content_editor/` (11 fichiers + `contrast.dart`, **vérifié le 2026-09-15**) | Chaque widget ; `choice_surface_test.dart` pose un test d'encre par usager |
-| `test/widget/content_editor/contrast.dart` | `expectReadableChoice` : fond opaque et 4,5:1, par la luminance du framework, jamais par `readableOn` |
+| `test/widget/content_editor_screen_test.dart` | Ce que l'éditeur écrit ou refuse d'écrire sur disque : brouillon fautif refusé sans rien écrire, créations, Valider = Écrire, mode Modifier, imports, faute de conversion |
+| `test/widget/content_editor/` (`document_form_test.dart`, `color_field_test.dart`, **vérifié le 2026-11-04**) | Ce que le formulaire fait au document ; les conversions couleur ↔ JSON |
+
+> [!NOTE]
+> **Depuis le tri de D77** (vague 5, [ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md)),
+> l'éditeur ne garde que les tests de ce qu'il **écrit** : un outil de développement sans
+> contrôleur, dont l'écran *est* la logique. Navigation, lisibilité, contraste, couleurs et
+> alignement — et l'aide de contraste qui les servait, devenue sans lecteur — sont supprimés ; ils se vérifient
+> à la main. La lisibilité des choix (4,5:1) reste une règle de revue.

@@ -5,7 +5,8 @@ import '../../models/card_instance.dart';
 import '../../models/data/model_extensions.dart';
 import 'ui_card/ui_card_helpers.dart';
 import 'ui_card/polychromatic_border.dart';
-import 'ui_card/card_mana_medallion.dart';
+import '../../game/systems/cost_rules.dart';
+import 'ui_card/card_cost_medallion.dart';
 import 'ui_card/card_rune_sockets.dart';
 import 'ui_card/card_compact_description.dart';
 
@@ -307,7 +308,34 @@ class UiCard extends StatelessWidget {
                 Positioned(
                   top: -9,
                   left: -9,
-                  child: CardManaMedallion(cost: cost!),
+                  child: CardCostMedallion(
+                    resource: CostResource.mana,
+                    amount: cost!,
+                  ),
+                ),
+
+              // Les coûts en PV puis en Armure, sous le médaillon de mana.
+              if (data != null && (data!.hpCost > 0 || data!.armorCost > 0))
+                Positioned(
+                  top: 24,
+                  left: -9,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (data!.hpCost > 0)
+                        CardCostMedallion(
+                          resource: CostResource.hp,
+                          amount: data!.hpCost,
+                        ),
+                      if (data!.hpCost > 0 && data!.armorCost > 0)
+                        const SizedBox(height: 2),
+                      if (data!.armorCost > 0)
+                        CardCostMedallion(
+                          resource: CostResource.armor,
+                          amount: data!.armorCost,
+                        ),
+                    ],
+                  ),
                 ),
             ],
           ),

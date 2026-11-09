@@ -2,8 +2,8 @@
   "id": "rage_form",
   "name_en": "Rage Stance",
   "name_fr": "Posture de Rage",
-  "description_en": "Apply 2 Might this turn. Draw 1 card.",
-  "description_fr": "Applique 2 Puissance ce tour-ci. Pioche 1 carte.",
+  "description_en": "Apply {might} Might this turn. Draw {draw} card(s).",
+  "description_fr": "Applique {might} Puissance ce tour-ci. Pioche {draw} carte(s).",
   "cost": 1,
   "cooldown": 2,
   "type": "skill",
@@ -19,6 +19,123 @@
     {
       "type": "draw",
       "value": 1
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "anger",
+      "tier": "minor",
+      "name_fr": "Colère",
+      "name_en": "Anger",
+      "description_fr": "+{val} Puissance",
+      "description_en": "+{val} Might",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "might"
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "hide",
+      "tier": "minor",
+      "name_fr": "Carapace",
+      "name_en": "Thick Hide",
+      "description_fr": "Donne {val} d'Armure",
+      "description_en": "Gain {val} Block",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "armor",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "shield_rounded",
+      "color": "blueAccent"
+    },
+    {
+      "id": "second_wind",
+      "tier": "minor",
+      "name_fr": "Second souffle",
+      "name_en": "Second Wind",
+      "description_fr": "Soigne {val} PV",
+      "description_en": "Heal {val} HP",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "heal",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "favorite_rounded",
+      "color": "pinkAccent"
+    },
+    {
+      "id": "haste",
+      "tier": "major",
+      "name_fr": "Célérité",
+      "name_en": "Haste",
+      "description_fr": "Recharge réduite d'un tour",
+      "description_en": "Cooldown one turn shorter",
+      "cooldown": -1,
+      "icon": "fast_forward_rounded",
+      "color": "tealAccent"
+    },
+    {
+      "id": "berserk",
+      "tier": "major",
+      "name_fr": "Démence",
+      "name_en": "Berserk",
+      "description_fr": "Pendant 3 tours, gagne 1 Puissance au début du tour",
+      "description_en": "For 3 turns, gain 1 Might at the start of your turn",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "might_regen",
+          "durationPerLevel": 3
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "rally",
+      "tier": "major",
+      "name_fr": "Ralliement",
+      "name_en": "Rally",
+      "description_fr": "Pioche 1 carte de plus",
+      "description_en": "Draw 1 more card",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "draw",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "style_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "fury",
+      "tier": "major",
+      "name_fr": "Furie",
+      "name_en": "Fury",
+      "description_fr": "Coûte 1 Mana de moins",
+      "description_en": "Costs 1 less Mana",
+      "deltas": [
+        {
+          "type": "reduceCost",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "savings_rounded",
+      "color": "cyanAccent"
     }
   ]
 }

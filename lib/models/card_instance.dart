@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'data/card_data.dart';
+import 'data/card_delta.dart';
 import 'effective_card.dart';
 
 class CardInstance {
@@ -8,11 +9,16 @@ class CardInstance {
   final CardRarity rarity;
   final List<String> forgeUpgrades;
 
+  /// Les deltas que la carte porte hors de ses runes, après elles : seule
+  /// `SignatureInstance.asCard` les remplit (A24). Jamais sérialisés.
+  final List<(CardDelta, int)> extraDeltas;
+
   CardInstance({
     String? uniqueId,
     required this.data,
     CardRarity? rarity,
     List<String>? forgeUpgrades,
+    this.extraDeltas = const [],
   })  : uniqueId = uniqueId ?? const Uuid().v4(),
         rarity = rarity ?? data.rarity,
         forgeUpgrades = forgeUpgrades != null
@@ -26,7 +32,8 @@ class CardInstance {
   /// La carte telle qu'elle se joue — sa rareté et ses runes appliquées, sur
   /// le catalogue du registre (spec P-43 E1, §4.2).
   EffectiveCard get effective =>
-      EffectiveCard.withRunes(data, rarity, forgeUpgrades);
+      EffectiveCard.withRunes(data, rarity, forgeUpgrades,
+          extraDeltas: extraDeltas);
 
   /// La carte est-elle épuisée une fois jouée ? Un pouvoir l'est toujours ;
   /// une carte qu'une rune épuise aussi (`addExhaust`, D33), même si une
@@ -50,6 +57,7 @@ class CardInstance {
       data: data ?? this.data,
       rarity: rarity ?? this.rarity,
       forgeUpgrades: forgeUpgrades ?? this.forgeUpgrades,
+      extraDeltas: extraDeltas,
     );
   }
 

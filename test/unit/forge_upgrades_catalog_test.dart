@@ -16,10 +16,12 @@ const _allTypes = ['attack', 'skill', 'power'];
 Map<String, Object?> _declared(ForgeUpgradeData rune) => {
       'minFusionRank': rune.minFusionRank,
       'eligibleCardTypes': rune.eligibleCardTypes,
+      'eligibleTargets': rune.eligibleTargets,
       'eligibleEffects': rune.eligibleEffects,
       'excludesEffects': rune.excludesEffects,
       'requiresExhaust': rune.requiresExhaust,
       'requiresMinCost': rune.requiresMinCost,
+      'requiresCost': rune.requiresCost,
       'excludesRunes': rune.excludesRunes,
       'maxLevel': rune.maxLevel,
       'deltas': [for (final delta in rune.deltas) delta.toJson()],
@@ -29,10 +31,12 @@ Map<String, Object?> _declared(ForgeUpgradeData rune) => {
 Map<String, Object?> _rune({
   int minFusionRank = 1,
   List<String>? eligibleCardTypes,
+  List<String>? eligibleTargets,
   List<String>? eligibleEffects,
   List<String> excludesEffects = const [],
   bool requiresExhaust = false,
   int requiresMinCost = 0,
+  String? requiresCost,
   List<String> excludesRunes = const [],
   required int? maxLevel,
   required List<Map<String, Object?>> deltas,
@@ -41,20 +45,22 @@ Map<String, Object?> _rune({
     {
       'minFusionRank': minFusionRank,
       'eligibleCardTypes': eligibleCardTypes,
+      'eligibleTargets': eligibleTargets,
       'eligibleEffects': eligibleEffects,
       'excludesEffects': excludesEffects,
       'requiresExhaust': requiresExhaust,
       'requiresMinCost': requiresMinCost,
+      'requiresCost': requiresCost,
       'excludesRunes': excludesRunes,
       'maxLevel': maxLevel,
       'deltas': deltas,
       'weight': weight,
     };
 
-Map<String, Object?> _status(String statusId) => {
+Map<String, Object?> _status(String statusId, {int valuePerLevel = 1}) => {
       'type': 'addEffect',
       'effect': 'apply_status',
-      'valuePerLevel': 1,
+      'valuePerLevel': valuePerLevel,
       'statusId': statusId,
       'durationPerLevel': 1,
     };
@@ -108,8 +114,8 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'freezing': _rune(
     eligibleCardTypes: const ['attack'],
-    maxLevel: 1,
-    deltas: [_status('freeze')],
+    maxLevel: null,
+    deltas: [_status('freeze', valuePerLevel: 2)],
     weight: 80,
   ),
   'shocking': _rune(
@@ -155,6 +161,48 @@ final _expected = <String, Map<String, Object?>>{
     ],
     weight: 50,
   ),
+  'piercing': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: 4,
+    deltas: const [
+      {'type': 'armorPierce', 'valuePercentPerLevel': 25},
+    ],
+    weight: 50,
+  ),
+  'lifesteal': _rune(
+    eligibleEffects: const ['damage'],
+    maxLevel: 3,
+    deltas: const [
+      {'type': 'lifestealPercent', 'valuePercentPerLevel': 20},
+    ],
+    weight: 50,
+  ),
+  'splash': _rune(
+    eligibleTargets: const ['singleEnemy'],
+    eligibleEffects: const ['damage'],
+    maxLevel: 3,
+    deltas: const [
+      {'type': 'splashPercent', 'valuePercentPerLevel': 25},
+    ],
+    weight: 50,
+  ),
+  'echo': _rune(
+    excludesEffects: const ['draw', 'gain_mana'],
+    excludesRunes: const ['eco', 'quick'],
+    maxLevel: 4,
+    deltas: const [
+      {'type': 'echoChance', 'valuePercentPerLevel': 15},
+    ],
+    weight: 50,
+  ),
+  'transfusion': _rune(
+    requiresCost: 'hp',
+    maxLevel: 1,
+    deltas: const [
+      {'type': 'refundHpCost', 'valuePercentPerLevel': 50},
+    ],
+    weight: 50,
+  ),
 };
 
 /// Ce que la première fusion d'une attaque de dégâts lui offre (rang 1), puis
@@ -167,33 +215,147 @@ const _attackRank1 = {
   'cheap',
   'precise',
   'spectral',
+  'piercing',
+  'lifesteal',
 };
 const _attackRank2 = {..._attackRank1, 'quick', 'eco'};
 
-/// La matrice de l'offre aux 17 cartes neutres livrées, sans rune, au rang
+/// Une attaque à cible unique reçoit de plus Ricochant.
+const _singleTargetRank1 = {..._attackRank1, 'splash'};
+const _singleTargetRank2 = {..._attackRank2, 'splash'};
+
+/// Une Compétence de dégâts n'a ni Brûlant, ni Glaçant, ni Électrisant,
+/// réservés aux Attaques.
+const _skillDamageRank1 = {
+  'sharp',
+  'precise',
+  'spectral',
+  'piercing',
+  'lifesteal',
+  'cheap',
+};
+const _skillDamageRank2 = {..._skillDamageRank1, 'quick', 'eco'};
+
+/// Une attaque à cible unique à 0 mana : celles de `_singleTargetRank1` sans
+/// `cheap` (rien à rendre), plus Écho ; `quick` n'y vient qu'au rang 2 et
+/// `eco` jamais.
+const _breachRank1 = {
+  'sharp',
+  'burning',
+  'freezing',
+  'shocking',
+  'precise',
+  'spectral',
+  'piercing',
+  'lifesteal',
+  'splash',
+  'echo',
+};
+
+/// La matrice de l'offre aux 33 cartes livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
-  'strike_basic': (_attackRank1, _attackRank2),
-  'heavy_strike': (_attackRank1, _attackRank2),
-  'fireball': (_attackRank1, _attackRank2),
-  'ice_bolt': (_attackRank1, _attackRank2),
-  'poison_stab': (_attackRank1, _attackRank2),
-  'quick_attack': (_attackRank1, _attackRank2),
-  'sweep': (_attackRank1, _attackRank2),
-  'thunder_clap': (_attackRank1, _attackRank2),
-  'warcry': ({..._attackRank1, 'hardened'}, {..._attackRank2, 'hardened'}),
+  'strike_basic': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'heavy_strike': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'fireball': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'ice_bolt': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'poison_stab': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  // Elle pioche : Resonant la refuse.
+  'quick_attack': (_singleTargetRank1, _singleTargetRank2),
+  'sweep': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  'thunder_clap': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'warcry': (
+    {..._attackRank1, 'hardened', 'echo'},
+    {..._attackRank2, 'hardened', 'echo'},
+  ),
   'awakening': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'defend_basic': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'iron_wall': ({'hardened', 'cheap'}, {'hardened', 'cheap', 'quick', 'eco'}),
-  'heal_potion': ({'enduring', 'cheap'}, {'enduring', 'cheap', 'quick', 'eco'}),
-  'demon_form': ({'cheap'}, {'cheap', 'quick', 'eco'}),
-  'metallicize': ({'cheap'}, {'cheap', 'quick', 'eco'}),
+  'defend_basic': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'iron_wall': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'heal_potion': (
+    {'enduring', 'cheap', 'echo'},
+    {'enduring', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'demon_form': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'metallicize': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
   'concentration': (<String>{}, {'quick'}),
-  'focus': (<String>{}, {'quick'}),
+  'bulwark': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'fortify': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  'bastion': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'blood_fury': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'trance': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'kindle': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'frost_nova': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'rampart_slam': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'last_breath': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'shield_burst': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  // 0 mana : ni Economique, ni Allegee.
+  'breach': (_breachRank1, {..._breachRank1, 'quick'}),
+  // 0 mana, 4 PV : Transfusion s'y ajoute.
+  'bloodletting': (
+    {..._breachRank1, 'transfusion'},
+    {..._breachRank1, 'quick', 'transfusion'},
+  ),
+  // Elle pioche : Resonant la refuse.
+  'blood_pact': (
+    {'cheap', 'transfusion'},
+    {'cheap', 'transfusion', 'quick', 'eco'},
+  ),
+  'arcane_shard': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'spark_barrage': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'discharge': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'arcane_wave': (
+    {..._skillDamageRank1, 'echo'},
+    {..._skillDamageRank2, 'echo'},
+  ),
 };
 
-/// Les onze runes livrées, et l'offre qu'elles font aux 17 cartes livrées
+/// Les seize runes livrées, et l'offre qu'elles font aux 33 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -235,10 +397,12 @@ void main() {
       'color',
       'minFusionRank',
       'eligibleCardTypes',
+      'eligibleTargets',
       'eligibleEffects',
       'excludesEffects',
       'requiresExhaust',
       'requiresMinCost',
+      'requiresCost',
       'excludesRunes',
       'maxLevel',
       'binary',
@@ -258,18 +422,18 @@ void main() {
   });
 
   // A16 : les runes dont le plafond ne monte jamais (spec P-43 E3, §3.7).
-  test('enduring et cheap sont binaires, les neuf autres non', () {
-    expect(registry.forgeUpgrades, hasLength(11));
+  test('enduring, cheap et transfusion sont binaires, les treize autres non', () {
+    expect(registry.forgeUpgrades, hasLength(16));
     expect(
       {
         for (final rune in registry.forgeUpgrades)
           if (rune.binary) rune.id,
       },
-      {'enduring', 'cheap'},
+      {'enduring', 'cheap', 'transfusion'},
     );
   });
 
-  test('la matrice couvre les 17 cartes livrees', () {
+  test('la matrice couvre les 33 cartes livrees', () {
     expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
   });
 

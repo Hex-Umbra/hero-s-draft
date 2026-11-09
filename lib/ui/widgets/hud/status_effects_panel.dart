@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../models/data/effect_icon_table.dart';
 import '../../../models/status_effect.dart';
+import '../effect_style.dart';
 
 class StatusEffectsPanel extends StatelessWidget {
   final List<StatusEffect> statuses;
 
-  const StatusEffectsPanel({super.key, required this.statuses});
+  /// L'icône et la couleur de chaque statut que la table porte (spec §3.7,
+  /// A39) ; un statut absent de la table garde l'icône de ce panneau.
+  final EffectIconTable effectIcons;
+
+  const StatusEffectsPanel({
+    super.key,
+    required this.statuses,
+    this.effectIcons = const EffectIconTable.empty(),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +153,15 @@ class StatusEffectsPanel extends StatelessWidget {
                       : Colors.redAccent;
                   label = '${status.name} : ${status.value}';
                   break;
+              }
+
+              final tabled = effectVisualsOrNull(
+                effectIcons,
+                'status:${status.id}',
+              );
+              if (tabled != null) {
+                icon = tabled.icon;
+                color = tabled.color;
               }
 
               return Padding(

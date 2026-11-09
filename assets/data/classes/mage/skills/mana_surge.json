@@ -2,8 +2,8 @@
   "id": "mana_surge",
   "name_en": "Mana Surge",
   "name_fr": "Surtension de Mana",
-  "description_en": "Gain 1 Mana and draw 1 card.",
-  "description_fr": "Gagne 1 Mana et pioche 1 carte.",
+  "description_en": "Gain {gain_mana} Mana and draw {draw} card(s).",
+  "description_fr": "Gagne {gain_mana} Mana et pioche {draw} carte(s).",
   "cost": 0,
   "cooldown": 2,
   "type": "skill",
@@ -17,6 +17,133 @@
     {
       "type": "draw",
       "value": 1
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "mana_shield",
+      "tier": "minor",
+      "name_fr": "Bouclier de mana",
+      "name_en": "Mana Shield",
+      "description_fr": "Donne {val} d'Armure",
+      "description_en": "Gain {val} Block",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "armor",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "shield_rounded",
+      "color": "blueAccent"
+    },
+    {
+      "id": "attunement",
+      "tier": "minor",
+      "name_fr": "Harmonie",
+      "name_en": "Attunement",
+      "description_fr": "Gagne {val} Puissance",
+      "description_en": "Gain {val} Might",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "might",
+          "durationPerLevel": 1
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "clarity",
+      "tier": "minor",
+      "name_fr": "Clarté",
+      "name_en": "Clarity",
+      "description_fr": "Soigne {val} PV",
+      "description_en": "Heal {val} HP",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "heal",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "favorite_rounded",
+      "color": "pinkAccent"
+    },
+    {
+      "id": "foresight",
+      "tier": "major",
+      "name_fr": "Prescience",
+      "name_en": "Foresight",
+      "description_fr": "Pioche 1 carte de plus",
+      "description_en": "Draw 1 more card",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "draw",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "style_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "glyph",
+      "tier": "major",
+      "name_fr": "Glyphe de garde",
+      "name_en": "Ward Glyph",
+      "description_fr": "Pendant 2 tours, gagne 3 Armure au début du tour",
+      "description_en": "For 2 turns, gain 3 Block at the start of your turn",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 3,
+          "statusId": "armor_regen",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "autorenew_rounded",
+      "color": "blueAccent"
+    },
+    {
+      "id": "empower",
+      "tier": "major",
+      "name_fr": "Exaltation",
+      "name_en": "Exaltation",
+      "description_fr": "Gagne 2 Puissance pendant 2 tours",
+      "description_en": "Gain 2 Might for 2 turns",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 2,
+          "statusId": "might",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "bolt_rounded",
+      "color": "orangeAccent"
+    },
+    {
+      "id": "serenity",
+      "tier": "major",
+      "name_fr": "Sérénité",
+      "name_en": "Serenity",
+      "description_fr": "Soigne 4 PV",
+      "description_en": "Heal 4 HP",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "heal",
+          "valuePerLevel": 4
+        }
+      ],
+      "icon": "favorite_rounded",
+      "color": "pinkAccent"
     }
   ]
 }

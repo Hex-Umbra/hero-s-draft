@@ -1,7 +1,10 @@
+import 'dart:math' show min;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/data/relic_data.dart';
 import '../../../models/data/level_up_reward_data.dart';
+import '../../systems/cost_rules.dart';
 import '../../systems/stat_gains.dart';
 import '../../services/level_up_reward_service.dart';
 import '../inventory_controller.dart';
@@ -497,29 +500,39 @@ class PlayerStatsManager {
     ref.read(inventoryProvider.notifier).addRelic(gained);
   }
 
-  /// Consomme les ressources nécessaires. Retourne false si insuffisant.
-  bool consumeResource({int mana = 0, int hpPercent = 0}) {
-    int hpCost = 0;
-    if (hpPercent > 0) {
-      hpCost = (controller.currentState.heroStats.currentPv * (hpPercent / 100.0)).round();
-      if (hpCost < 1) hpCost = 1;
-      if (controller.currentState.heroStats.currentPv <= hpCost) return false;
-    }
-
-    if (mana > 0 && controller.currentState.heroStats.currentMana < mana) {
+  /// Débite le coût d'une carte — [mana], [hp], [armor] — en **une seule**
+  /// écriture d'état (spec §4.1) : ni `takeDamage`, ni absorption, ni
+  /// critique, ni vol de vie, ni `onDamageTaken`, ni soin négatif. Rend
+  /// `false` sans rien écrire si `CostRules.canPay` refuse.
+  bool consumeResource({int mana = 0, int hp = 0, int armor = 0}) {
+    final stats = controller.currentState.heroStats;
+    if (!stats.canPay(mana: mana, hp: hp, armor: armor)) {
       ref.read(audioDirectorProvider).onMoment(GameMoment.insufficientMana);
       return false;
     }
-
     controller.updateState(
       controller.currentState.copyWith(
-        heroStats: controller.currentState.heroStats.copyWith(
-          currentMana: controller.currentState.heroStats.currentMana - mana,
-          currentPv: controller.currentState.heroStats.currentPv - hpCost,
+        heroStats: stats.copyWith(
+          currentMana: stats.currentMana - mana,
+          currentPv: stats.currentPv - hp,
+          armure: stats.armure - armor,
         ),
       ),
     );
     return true;
+  }
+
+  /// Rend [amount] PV hors du pipeline et hors de [heal] — ni critique, ni
+  /// soin —, borné aux PV max : le remboursement de *Transfusion* (A20).
+  void refundHp(int amount) {
+    final stats = controller.currentState.heroStats;
+    controller.updateState(
+      controller.currentState.copyWith(
+        heroStats: stats.copyWith(
+          currentPv: min(stats.maxPv, stats.currentPv + amount),
+        ),
+      ),
+    );
   }
 
   /// Arme le Vol de vie : [value] PV drainés par carte de dégâts résolue,

@@ -1,0 +1,20 @@
+{
+  "id": "frost_nova",
+  "name_en": "Frost Nova",
+  "name_fr": "Nova de givre",
+  "description_en": "Apply 2 Freeze to all enemies.",
+  "description_fr": "Applique 2 Gel à tous les ennemis.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "ice",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "freeze",
+      "value": 2,
+      "duration": 1
+    }
+  ]
+}

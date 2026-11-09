@@ -1,0 +1,22 @@
+{
+  "id": "lifesteal",
+  "name_en": "Vampiric",
+  "name_fr": "Vampirique",
+  "description_en": "Heals {val}% of the damage dealt",
+  "description_fr": "Soigne {val} % des dégâts infligés",
+  "icon": "water_drop_rounded",
+  "color": "deepOrangeAccent",
+  "minFusionRank": 1,
+  "eligibleEffects": [
+    "damage"
+  ],
+  "maxLevel": 3,
+  "deltas": [
+    {
+      "type": "lifestealPercent",
+      "valuePercentPerLevel": 20
+    }
+  ],
+  "weight": 50,
+  "emoji": "🩸"
+}

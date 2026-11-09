@@ -1,8 +1,8 @@
 # Vague 4 — `0.5.6` — tests manuels
 
 **Branche** : `feat/v0.5.6-p43-e4-signatures` · **Compte rendu** : [2026-10-16-economie-et-catalogue-vague-4-compte-rendu.md](2026-10-16-economie-et-catalogue-vague-4-compte-rendu.md)
-**Testé le** : <JJ/MM/AAAA>, sur `<sha>`, sur <plateforme>
-**Résultat** : <K> ✅ · <L> ❌ · <M> non testés
+**Testé le** : non rempli — la vague a été fusionnée (`d99cd81`) et taguée `v0.5.6` le 24/10 sans que les résultats soient reportés ici ; noté tel quel par l'orchestrateur de la vague 5, le 25/10
+**Résultat** : non remplis — 0 ✅ · 0 ❌ · 21 non reportés
 
 **Repères communs.** Les trois classes ont 3 Mana max. Les signatures, d'après `assets/data/classes/*/skills/*.json` (recharge 2 tours pour toutes) :
 

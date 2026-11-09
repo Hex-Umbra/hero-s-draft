@@ -2,8 +2,8 @@
   "id": "smite",
   "name_en": "Smite",
   "name_fr": "Châtiment",
-  "description_en": "Deal 6 damage and gain 4 Block.",
-  "description_fr": "Inflige 6 dégâts et donne 4 d'Armure.",
+  "description_en": "Deal {damage} damage and gain {armor} Block.",
+  "description_fr": "Inflige {damage} dégâts et donne {armor} d'Armure.",
   "cost": 1,
   "cooldown": 2,
   "type": "attack",
@@ -17,6 +17,115 @@
     {
       "type": "armor",
       "value": 4
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "zeal",
+      "tier": "minor",
+      "name_fr": "Zèle",
+      "name_en": "Zeal",
+      "description_fr": "+{val} dégâts",
+      "description_en": "+{val} damage",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "damage",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "hardware_rounded",
+      "color": "redAccent"
+    },
+    {
+      "id": "aegis",
+      "tier": "minor",
+      "name_fr": "Égide",
+      "name_en": "Aegis",
+      "description_fr": "+{val} Armure",
+      "description_en": "+{val} Block",
+      "deltas": [
+        {
+          "type": "flatBonus",
+          "effect": "armor",
+          "valuePerLevel": 2
+        }
+      ],
+      "icon": "shield_rounded",
+      "color": "blueAccent"
+    },
+    {
+      "id": "ardor",
+      "tier": "minor",
+      "name_fr": "Ardeur",
+      "name_en": "Ardor",
+      "description_fr": "+{val} % de critique",
+      "description_en": "+{val}% critical chance",
+      "deltas": [
+        {
+          "type": "critBonus",
+          "valuePerLevel": 5
+        }
+      ],
+      "icon": "flare_rounded",
+      "color": "amber"
+    },
+    {
+      "id": "haste",
+      "tier": "major",
+      "name_fr": "Célérité",
+      "name_en": "Haste",
+      "description_fr": "Recharge réduite d'un tour",
+      "description_en": "Cooldown one turn shorter",
+      "cooldown": -1,
+      "icon": "fast_forward_rounded",
+      "color": "tealAccent"
+    },
+    {
+      "id": "sentence",
+      "tier": "major",
+      "name_fr": "Sentence",
+      "name_en": "Sentence",
+      "description_fr": "Applique 1 Faiblesse pendant 2 tours",
+      "description_en": "Apply 1 Weakness for 2 turns",
+      "deltas": [
+        {
+          "type": "addEffect",
+          "effect": "apply_status",
+          "valuePerLevel": 1,
+          "statusId": "weakness",
+          "durationPerLevel": 2
+        }
+      ],
+      "icon": "trending_down_rounded",
+      "color": "purpleAccent"
+    },
+    {
+      "id": "radiance",
+      "tier": "major",
+      "name_fr": "Rayonnement",
+      "name_en": "Radiance",
+      "description_fr": "Touche tous les ennemis",
+      "description_en": "Hits all enemies",
+      "target": "allEnemies",
+      "icon": "all_out_rounded",
+      "color": "deepPurpleAccent"
+    },
+    {
+      "id": "devotion",
+      "tier": "major",
+      "name_fr": "Dévotion",
+      "name_en": "Devotion",
+      "description_fr": "Coûte 1 Mana de moins",
+      "description_en": "Costs 1 less Mana",
+      "deltas": [
+        {
+          "type": "reduceCost",
+          "valuePerLevel": 1
+        }
+      ],
+      "icon": "savings_rounded",
+      "color": "cyanAccent"
     }
   ]
 }

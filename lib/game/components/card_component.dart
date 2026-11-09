@@ -8,6 +8,9 @@ import '../../models/data/card_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import '../services/card_rule_texts.dart';
+import '../services/effect_resolver.dart';
+import '../services/proportional_status.dart';
 import '../systems/power_rules.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
@@ -52,8 +55,10 @@ class CardComponent extends PositionComponent
 
   bool get canAfford {
     if (!isLoaded || !isMounted) return true;
-    final currentMana = game.currentRunState?.heroStats.currentMana ?? 0;
-    return currentMana >= card.currentCost;
+    final heroStats = game.currentRunState?.heroStats;
+    // Sans run, la règle d'avant : seule une carte gratuite passe.
+    if (heroStats == null) return card.currentCost <= 0;
+    return EffectResolver.canAfford(card, heroStats);
   }
 
   Color getTypeColor() {
@@ -132,6 +137,13 @@ class CardComponent extends PositionComponent
       case CardType.status:
         return getTranslation((l) => l.cardTypeStatus, fallback: 'Statut');
     }
+  }
+
+  /// La parenthèse d'un statut proportionnel. Sans contexte, la traduction
+  /// est vide et aucune ligne n'est écrite : le texte n'a pas de copie ici.
+  String _statusHintLine(String Function(AppLocalizations) hint) {
+    final text = getTranslation(hint);
+    return text.isEmpty ? '' : '  ($text)\n';
   }
 
   Color getRarityColor() {
@@ -241,6 +253,21 @@ class CardComponent extends PositionComponent
     }
   }
 
+  /// Le terme de croissance de [effect] sur les sources du héros, tel que le
+  /// moteur le lirait maintenant ; 0 sans run ni combat. Une source de cible,
+  /// sans cible avant le jeu, vaut 0. Lu par le badge et l'infobulle.
+  int heroScaleTerm(CardEffect effect) {
+    final heroStats = game.currentRunState?.heroStats;
+    final combat = game.currentCombatState;
+    if (heroStats == null || combat == null) return 0;
+    return EffectResolver.scaleTerm(
+      effect,
+      hero: heroStats,
+      combat: combat,
+      targetId: null,
+    );
+  }
+
   String buildDetailedDescription() {
     String desc = '';
 
@@ -296,6 +323,11 @@ class CardComponent extends PositionComponent
     // 4. Cost
     final costHeader = activeLocale == 'fr' ? '⚡ Coût : ' : '⚡ Cost: ';
     details += '$costHeader${card.currentCost} Mana\n';
+    // Les coûts en PV et en Armure, sous la ligne de mana ; sans contexte, la
+    // traduction est vide et la ligne ne s'écrit pas.
+    details += getTranslation((l) => CardRuleTexts.extraCosts(l, card.data)
+        .map((line) => '  $line\n')
+        .join());
 
     desc += '$details\n';
 
@@ -323,16 +355,23 @@ class CardComponent extends PositionComponent
     // Les valeurs que la carte joue — rareté et runes comprises — viennent de
     // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
     for (final effect in card.effective.effects) {
-      final scaledValue = effect.value;
+      // La valeur jouée plus le terme de croissance des sources du héros, le
+      // même que le badge ; 0 hors combat.
+      final scaledValue =
+          CardTextRenderer.playedValue(effect, heroScaleTerm(effect));
       if (effect.type == 'damage') {
-        final totalDmg = scaledValue + damageBonus;
-        if (card.data.target == CardTarget.allEnemies) {
-          desc +=
-              '• ${getTranslation((l) => l.cardDescDamageAll(totalDmg), fallback: 'Inflige $totalDmg dégâts à tous les ennemis.')}\n';
-        } else {
-          desc +=
-              '• ${getTranslation((l) => l.cardDescDamage(totalDmg), fallback: 'Inflige $totalDmg dégâts.')}\n';
-        }
+        // Puis la part de Puissance de chaque coup.
+        final totalDmg = scaledValue + effect.mightPerHit(damageBonus);
+        final line = getTranslation(
+          (l) => CardRuleTexts.damage(
+            l,
+            amount: totalDmg,
+            hits: effect.hits,
+            allEnemies: card.data.target == CardTarget.allEnemies,
+          ),
+          fallback: 'Inflige $totalDmg dégâts.',
+        );
+        desc += '• $line\n';
       }
       if (effect.type == 'heal') {
         desc +=
@@ -371,16 +410,16 @@ class CardComponent extends PositionComponent
           case 'weakness':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusWeaknessDuration(scaledValue, duration), fallback: 'Applique $scaledValue Faiblesse pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Réduit les dégâts infligés par l\'ennemi de 25%)\n'
-                : '  (Reduces damage dealt by the enemy by 25%)\n';
+            desc += _statusHintLine((l) => l.statusWeaknessHint(
+                ProportionalStatus.weakness.percentPerPoint,
+                ProportionalStatus.weakness.maxPercent));
             break;
           case 'vulnerable':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusVulnerableDuration(scaledValue, duration), fallback: 'Applique $scaledValue Vulnérable pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (L\'ennemi subit 50% de dégâts supplémentaires)\n'
-                : '  (Enemy takes 50% more damage from attacks)\n';
+            desc += _statusHintLine((l) => l.statusVulnerableHint(
+                ProportionalStatus.vulnerable.percentPerPoint,
+                ProportionalStatus.vulnerable.maxPercent));
             break;
           case 'might_regen':
             desc +=
@@ -396,9 +435,9 @@ class CardComponent extends PositionComponent
           case 'freeze':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Réduit les dégâts de la prochaine attaque de l\'ennemi de 50%)\n'
-                : '  (Reduces next enemy attack damage by 50%)\n';
+            desc += _statusHintLine((l) => l.statusFreezeHint(
+                ProportionalStatus.freeze.percentPerPoint,
+                ProportionalStatus.freeze.maxPercent));
             break;
           case 'shock':
             desc +=
@@ -408,6 +447,13 @@ class CardComponent extends PositionComponent
                 : '  (Takes extra damage equal to Shock on every hit)\n';
             break;
         }
+      }
+      // La croissance de l'effet, en parenthèse ; vide sans contexte, la ligne
+      // ne s'écrit pas.
+      final scale = effect.scaleWith;
+      if (scale != null) {
+        final text = getTranslation((l) => CardRuleTexts.scale(l, scale));
+        if (text.isNotEmpty) desc += '  ($text)\n';
       }
     }
 

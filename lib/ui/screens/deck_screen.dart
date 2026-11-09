@@ -13,7 +13,10 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
+import '../../services/game_data_service.dart';
+import '../widgets/class_identity.dart';
 import '../widgets/forge_upgrade_dialog.dart';
+import '../widgets/signature_run_card.dart';
 import '../widgets/ui_card.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
@@ -29,6 +32,7 @@ class DeckScreen extends ConsumerWidget {
 
     final deckState = ref.watch(deckProvider);
     final masterDeck = deckState.masterDeck;
+    final runState = ref.watch(runProvider);
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
 
@@ -50,113 +54,171 @@ class DeckScreen extends ConsumerWidget {
       appBar: appBar,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.deckTotalCards(masterDeck.length),
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  childAspectRatio: 70 / 110,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+        // Une seule surface qui défile, la bande puis les cartes : fixe, la
+        // bande ne laisserait plus de place aux cartes sur un téléphone.
+        child: CustomScrollView(
+          slivers: [
+            if (runState.signatures.isNotEmpty)
+              SliverToBoxAdapter(child: _signatureBand(context, ref, l10n)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Text(
+                  l10n.deckTotalCards(masterDeck.length),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
-                itemCount: groups.keys.length,
-                // `_` et non `context` : la fusion se lance avec le `context`
-                // de l'écran, que la grille ne démonte pas (spec P-43 E2,
-                // §4.5).
-                itemBuilder: (_, index) {
-                  final key = groups.keys.elementAt(index);
-                  final cardList = groups[key]!;
-                  final card = cardList.first;
-                  final count = cardList.length;
-                  final canMerge = count >= 3;
+              ),
+            ),
+            SliverGrid.builder(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                childAspectRatio: 70 / 110,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: groups.keys.length,
+              // `_` et non `context` : la fusion se lance avec le `context`
+              // de l'écran, que la grille ne démonte pas (spec P-43 E2,
+              // §4.5).
+              itemBuilder: (_, index) {
+                final key = groups.keys.elementAt(index);
+                final cardList = groups[key]!;
+                final card = cardList.first;
+                final count = cardList.length;
+                final canMerge = count >= 3;
 
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            UiCard.fromInstance(
-                              card: card,
-                              locale: locale,
-                              l10n: l10n,
-                            ),
-                            Positioned(
-                              top: 5,
-                              right: 5,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: Colors.amber,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  'x$count',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                  ),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          UiCard.fromInstance(
+                            card: card,
+                            locale: locale,
+                            l10n: l10n,
+                          ),
+                          Positioned(
+                            top: 5,
+                            right: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.amber,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                'x$count',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      if (card.rarity.next == null)
-                        const SizedBox.shrink()
-                      else if (canMerge && allowMerge)
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (card.rarity.next == null)
+                      const SizedBox.shrink()
+                    else if (canMerge && allowMerge)
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          onPressed: () {
-                            _confirmMerge(context, ref, cardList);
-                          },
-                          child: Text(
-                            l10n.mergeLabel(3),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      else if (canMerge && !allowMerge)
-                        Text(
-                          l10n.mergePossible,
+                        ),
+                        onPressed: () {
+                          _confirmMerge(context, ref, cardList);
+                        },
+                        child: Text(
+                          l10n.mergeLabel(3),
                           style: const TextStyle(
-                            color: Colors.orangeAccent,
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
-                        )
-                      else
-                        Text(
-                          l10n.mergeMoreRequired(3 - count),
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 10,
-                          ),
                         ),
-                    ],
-                  );
-                },
-              ),
+                      )
+                    else if (canMerge && !allowMerge)
+                      Text(
+                        l10n.mergePossible,
+                        style: const TextStyle(
+                          color: Colors.orangeAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    else
+                      Text(
+                        l10n.mergeMoreRequired(3 - count),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Les signatures de la run : côte à côte, empilées sous 600 px comme les
+  /// cartes de la sélection de classe. Chacune garde la hauteur de son
+  /// contenu, pour qu'une fiche longue n'étire pas sa voisine.
+  Widget _signatureBand(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
+    final runState = ref.watch(runProvider);
+    final gameData = ref.watch(gameDataLoaderProvider).requireValue;
+    final classColor = ClassIdentity.colorOf(
+      gameData.heroes.firstWhere((h) => h.id == runState.heroClassId),
+    );
+    final cards = [
+      for (final signature in runState.signatures)
+        SignatureRunCard(
+          signature: signature,
+          heroLevel: runState.heroStats.level,
+          classColor: classColor,
+        ),
+    ];
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: [
+          Text(
+            l10n.signatures.toUpperCase(),
+            style: TextStyle(
+              color: classColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+          if (isMobile)
+            ...cards
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 12,
+              children: [
+                for (final card in cards) Expanded(child: card),
+              ],
+            ),
+        ],
       ),
     );
   }

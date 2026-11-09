@@ -5,6 +5,8 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 
+import 'shipped_data.dart';
+
 ForgeUpgradeData _rune(
   String id, {
   List<String>? eligibleCardTypes,
@@ -12,6 +14,7 @@ ForgeUpgradeData _rune(
   List<String> excludesEffects = const [],
   bool requiresExhaust = false,
   int requiresMinCost = 0,
+  String? requiresCost,
   List<String> excludesRunes = const [],
   int? maxLevel,
   int minFusionRank = 1,
@@ -30,6 +33,7 @@ ForgeUpgradeData _rune(
       excludesEffects: excludesEffects,
       requiresExhaust: requiresExhaust,
       requiresMinCost: requiresMinCost,
+      requiresCost: requiresCost,
       excludesRunes: excludesRunes,
       maxLevel: maxLevel,
       minFusionRank: minFusionRank,
@@ -43,6 +47,8 @@ CardInstance _card({
   CardType type = CardType.attack,
   CardRarity rarity = CardRarity.uncommon,
   int cost = 1,
+  int hpCost = 0,
+  int armorCost = 0,
   bool isExhaust = false,
   List<CardEffect> effects = const [CardEffect(type: 'damage', value: 6)],
   List<String> runes = const [],
@@ -51,6 +57,8 @@ CardInstance _card({
       data: CardData(
         id: 'test_card',
         cost: cost,
+        hpCost: hpCost,
+        armorCost: armorCost,
         type: type,
         rarity: CardRarity.common,
         target: CardTarget.singleEnemy,
@@ -70,6 +78,33 @@ bool _eligible(
 
 /// Le prédicat d'éligibilité, condition par condition (spec P-43 E1, §4.6).
 void main() {
+  test('eligibleTargets : Ricochant refuse une carte allEnemies, accepte une '
+      'singleEnemy', () {
+    final splash = shippedRune('splash');
+    CardInstance shipped(String id) =>
+        CardInstance(data: shippedCard(id), rarity: CardRarity.uncommon);
+    expect(_eligible(splash, shipped('strike_basic')), isTrue);
+    expect(_eligible(splash, shipped('sweep')), isFalse);
+  });
+
+  test('Resonant : refuse une carte qui pioche ou rend du mana, ou qui porte '
+      'Econome ou Veloce', () {
+    final echo = shippedRune('echo');
+    final eco = shippedRune('eco');
+    final quick = shippedRune('quick');
+    CardInstance shipped(String id, [List<String> runes = const []]) =>
+        CardInstance(
+            data: shippedCard(id),
+            rarity: CardRarity.rare,
+            forgeUpgrades: runes);
+    expect(_eligible(echo, shipped('quick_attack')), isFalse);
+    expect(_eligible(echo, shipped('defend_basic', const ['eco:1']), [eco]),
+        isFalse);
+    expect(_eligible(echo, shipped('defend_basic', const ['quick:1']), [quick]),
+        isFalse);
+    expect(_eligible(echo, shipped('defend_basic')), isTrue);
+  });
+
   test('le type de carte', () {
     final rune = _rune('burning', eligibleCardTypes: const ['attack']);
     expect(_eligible(rune, _card()), isTrue);
@@ -110,6 +145,19 @@ void main() {
     final rune = _rune('enduring', requiresExhaust: true);
     expect(_eligible(rune, _card()), isFalse);
     expect(_eligible(rune, _card(isExhaust: true)), isTrue);
+  });
+
+  test('requiresCost hp : Transfusion refuse une carte sans cout en PV', () {
+    final rune = _rune('transfusion', requiresCost: 'hp');
+    expect(_eligible(rune, _card(hpCost: 3)), isTrue);
+    expect(_eligible(rune, _card()), isFalse);
+  });
+
+  test('requiresMinCost lit le mana : une carte a 0 mana et 4 Armure ne recoit '
+      'ni Allege ni Econome', () {
+    final card = _card(cost: 0, armorCost: 4, rarity: CardRarity.rare);
+    expect(_eligible(shippedRune('cheap'), card), isFalse);
+    expect(_eligible(shippedRune('eco'), card), isFalse);
   });
 
   test('le cout courant atteint le minimum', () {

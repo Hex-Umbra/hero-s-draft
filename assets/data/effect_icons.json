@@ -1,0 +1,18 @@
+{
+  "damage": { "icon": "hardware_rounded", "color": "redAccent" },
+  "armor": { "icon": "shield_rounded", "color": "blueAccent" },
+  "heal": { "icon": "favorite_rounded", "color": "pinkAccent" },
+  "draw": { "icon": "style_rounded", "color": "amber" },
+  "gain_mana": { "icon": "diamond_rounded", "color": "cyanAccent" },
+  "status:might": { "icon": "bolt_rounded", "color": "orangeAccent" },
+  "status:might_regen": { "icon": "bolt_rounded", "color": "orangeAccent" },
+  "status:armor_regen": { "icon": "autorenew_rounded", "color": "blueAccent" },
+  "status:poison": { "icon": "science_rounded", "color": "greenAccent" },
+  "status:weakness": { "icon": "trending_down_rounded", "color": "purpleAccent" },
+  "status:vulnerable": { "icon": "gps_fixed_rounded", "color": "deepOrangeAccent" },
+  "status:burn": { "icon": "local_fire_department_rounded", "color": "orangeAccent" },
+  "status:freeze": { "icon": "ac_unit_rounded", "color": "lightBlueAccent" },
+  "status:shock": { "icon": "flash_on_rounded", "color": "amberAccent" },
+  "crit": { "icon": "flare_rounded", "color": "amber" },
+  "target:allEnemies": { "icon": "all_out_rounded", "color": "deepPurpleAccent" }
+}

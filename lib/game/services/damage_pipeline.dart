@@ -1,6 +1,7 @@
 import 'dart:math';
 import '../../models/entity_stats.dart';
 import '../../models/status_effect.dart';
+import 'proportional_status.dart';
 
 class DamagePipeline {
   /// [critChanceBonus] : les points de pourcentage de critique que la carte
@@ -15,10 +16,11 @@ class DamagePipeline {
   }) {
     int totalDamage = initialDamage;
 
-    // 1. Weakness (faiblesse) de l'attaquant : réduit les dégâts de 25% (arrondi)
-    final hasWeakness = attackerStats.statuses.any((s) => s.id == 'weakness');
-    if (hasWeakness) {
-      totalDamage = (totalDamage * 0.75).round();
+    // 1. Weakness (faiblesse) de l'attaquant : réduit les dégâts selon ses
+    // points, au barème de [ProportionalStatus.weakness] (arrondi)
+    final weaknessPercent = ProportionalStatus.weakness.percentOn(attackerStats);
+    if (weaknessPercent > 0) {
+      totalDamage = (totalDamage * (100 - weaknessPercent) / 100).round();
     }
 
     // 2. Coup critique de l'attaquant : multiplie les dégâts par critMultiplier
@@ -47,10 +49,12 @@ class DamagePipeline {
       totalDamage += shockStatus.value;
     }
 
-    // 4. Vulnerable (vulnérabilité) du défenseur : augmente les dégâts de 50% (arrondi)
-    final hasVulnerable = defenderStats.statuses.any((s) => s.id == 'vulnerable');
-    if (hasVulnerable) {
-      totalDamage = (totalDamage * 1.5).round();
+    // 4. Vulnerable (vulnérabilité) du défenseur : augmente les dégâts selon
+    // ses points, au barème de [ProportionalStatus.vulnerable] (arrondi)
+    final vulnerablePercent =
+        ProportionalStatus.vulnerable.percentOn(defenderStats);
+    if (vulnerablePercent > 0) {
+      totalDamage = (totalDamage * (100 + vulnerablePercent) / 100).round();
     }
 
     // Garde-fou pour éviter des dégâts négatifs

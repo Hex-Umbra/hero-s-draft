@@ -37,9 +37,28 @@ SignatureData fixtureSignature(String id, {String heroClass = 'paladin'}) =>
       'effects': [
         {'type': 'damage', 'value': 6},
       ],
+      'evolutions': [
+        {
+          'id': 'ardor',
+          'tier': 'minor',
+          'name_fr': 'Ardeur',
+          'name_en': 'Ardor',
+          'description_fr': '+{val} % de critique',
+          'description_en': '+{val}% critical chance',
+          'deltas': [
+            {'type': 'critBonus', 'valuePerLevel': 5},
+          ],
+          'icon': 'flare_rounded',
+          'color': 'amber',
+        },
+      ],
     });
 
-PassiveData fixturePassive(String id) => PassiveData.fromJson({
+PassiveData fixturePassive(
+  String id, {
+  String heroClass = 'paladin',
+  List<String> feeds = const ['armor'],
+}) => PassiveData.fromJson({
       'id': id,
       'name_en': 'x',
       'name_fr': 'x',
@@ -48,6 +67,8 @@ PassiveData fixturePassive(String id) => PassiveData.fromJson({
       'trigger': 'startOfTurn',
       'effectType': 'gain_armor',
       'value': 1,
+      'classes': [heroClass],
+      'feeds': feeds,
     });
 
 HeroData fixtureHero(String id) => HeroData.fromJson({
@@ -58,6 +79,26 @@ HeroData fixtureHero(String id) => HeroData.fromJson({
       'maxHp': 80,
       'maxMana': 3,
       'mightTargets': ['attack'],
+    });
+
+/// Une classe qui convertit son Armure (A7), comme le berserker livre.
+HeroData fixtureConvertingHero(String id) => HeroData.fromJson({
+      'id': id,
+      'name_en': 'x',
+      'name_fr': 'x',
+      'classCard': 'assets/data/classes/$id/$id.png',
+      'maxHp': 80,
+      'maxMana': 3,
+      'mightTargets': ['attack'],
+      'statRules': [
+        {
+          'stat': 'armor',
+          'mode': 'convert',
+          'to': 'status:might',
+          'duration': 1,
+          'ratio': 0.5,
+        },
+      ],
     });
 
 ForgeUpgradeData fixtureRune(String id) => ForgeUpgradeData.fromJson({
@@ -120,14 +161,14 @@ EntityDraft fixtureRelicDraft({
 /// pour eprouver le refus d'une signature sans proprietaire.
 EntityDraft fixtureSignatureDraft({
   String id = 'eclair',
-  String? heroClass = 'mage',
+  String? owner = 'mage',
   String? mechanics,
 }) {
   final descriptor = kEntityDescriptors[EntityCategory.signature]!;
   return EntityDraft(
     descriptor: descriptor,
     id: id,
-    heroClass: heroClass,
+    owner: owner,
     bilingual: const {
       'name_fr': 'Eclair',
       'name_en': 'Lightning',

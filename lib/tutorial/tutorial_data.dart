@@ -15,16 +15,16 @@ const List<TutorialStep> kTutorialSteps = [
     titleFr: 'Choisissez votre classe',
     bodyEn:
         'Every run starts here. The three classes differ by their health pool, '
-        'by what their Might strengthens, and — above all — by the passive you '
-        'pick for them: each class offers several, and the passive decides how '
-        'you earn Armor.\n\n'
+        'by what their Might strengthens, and — above all — by their passive: '
+        'it sets the style of your run, and each passive has its own set of '
+        'cards.\n\n'
         'Choose a class, then tap a passive to keep it. The rest of this '
         'tutorial will use both.',
     bodyFr:
         'Toute partie commence ici. Les trois classes se distinguent par leurs '
-        'points de vie, par ce que renforce leur Puissance, et surtout par le '
-        'passif que vous leur choisissez : chaque classe en propose plusieurs, '
-        'et c\'est lui qui décide de la façon dont vous gagnez de l\'Armure.\n\n'
+        'points de vie, par ce que renforce leur Puissance, et surtout par leur '
+        'passif : c\'est lui qui donne son style à la partie, et chaque passif '
+        'a son propre lot de cartes.\n\n'
         'Choisissez une classe, puis touchez un passif pour le retenir. La '
         'suite de ce tutoriel s\'appuiera sur les deux.',
     type: TutorialStepType.classChoice,
@@ -33,15 +33,17 @@ const List<TutorialStep> kTutorialSteps = [
     titleEn: 'Your Starting Deck',
     titleFr: 'Votre deck de départ',
     bodyEn:
-        'Pick 5 cards from the common pool: they form your starting deck, the '
-        'one you will play the rest of the tutorial with.\n\n'
+        'Pick 2 cards from your passive\'s set and 3 neutral cards: they form '
+        'your starting deck, the one you will play the rest of the tutorial '
+        'with.\n\n'
         'Your class also brings its two **signatures**, which are not cards: '
         'never drawn, they never merge. In combat they wait in a bar on the '
         'left of the screen, from the first turn; playing a signature costs '
         'Mana, then it recharges for a few turns before it comes back.',
     bodyFr:
-        'Choisissez 5 cartes dans le pool commun : elles forment votre deck de '
-        'départ, celui avec lequel vous jouerez le reste du tutoriel.\n\n'
+        'Choisissez 2 cartes du lot de votre passif et 3 cartes neutres : '
+        'elles forment votre deck de départ, celui avec lequel vous jouerez le '
+        'reste du tutoriel.\n\n'
         'Votre classe apporte en plus ses deux **signatures**, qui ne sont pas '
         'des cartes : jamais piochées, elles ne fusionnent pas. En combat, elles '
         'vous attendent dans une barre à gauche de l\'écran, dès le premier '
@@ -193,8 +195,8 @@ const List<TutorialStep> kTutorialSteps = [
         '**Armor always resets to 0 at the start of your turn** — every class, '
         'no exception — and again at the end of a combat. It is a one-turn '
         'expense, never a stock you build up.\n\n'
-        'Your class decides two things. *How you earn it*: that is your '
-        'passive — Mastery, a permanent stat, strengthens what your passive '
+        'Your class decides two things. *How you earn it*: your cards, '
+        'and sometimes your passive — Mastery, a permanent stat, strengthens what your passive '
         'produces, and each passive states what one point adds. And *what '
         'becomes of it*: most classes keep it for the turn, some turn it into '
         'something else at once.\n\n'
@@ -206,8 +208,8 @@ const List<TutorialStep> kTutorialSteps = [
         'classes confondues, sans exception — et de nouveau à la fin d\'un '
         'combat. C\'est une dépense pour un tour, jamais un stock qu\'on '
         'accumule.\n\n'
-        'Votre classe décide de deux choses. La *façon d\'en gagner* : c\'est '
-        'votre passif — la Maîtrise, statistique permanente, renforce ce que '
+        'Votre classe décide de deux choses. La *façon d\'en gagner* : vos '
+        'cartes, et parfois votre passif — la Maîtrise, statistique permanente, renforce ce que '
         'produit votre passif, et chaque passif indique ce qu\'un point lui '
         'apporte. Et *ce qu\'elle devient* : la plupart des classes la gardent '
         'pour le tour, certaines la transforment aussitôt en autre chose.\n\n'
@@ -224,8 +226,8 @@ const List<TutorialStep> kTutorialSteps = [
         'The value never drops — only the duration ticks down.\n'
         '• 🔥 Burn: damage at the start of their turn, then the value drops by 1. '
         'It vanishes when it reaches 0.\n'
-        '• ❄️ Freeze: halves their next attack. The duration only ticks down '
-        'once they have attacked.\n'
+        '• ❄️ Freeze: reduces their next attack, more with each point, up to a '
+        'cap. The duration only ticks down once they have attacked.\n'
         '• ⚡ Shock: adds its value to **every** hit they take while it lasts.',
     bodyFr:
         'Certaines cartes appliquent des altérations aux ennemis :\n'
@@ -233,8 +235,9 @@ const List<TutorialStep> kTutorialSteps = [
         'La valeur ne baisse jamais — seule la durée décrémente.\n'
         '• 🔥 Brûlure : inflige des dégâts au début de leur tour, puis la valeur '
         'perd 1. Elle disparaît en atteignant 0.\n'
-        '• ❄️ Gel : divise par deux leur prochaine attaque. La durée ne '
-        'décrémente qu\'une fois qu\'ils ont attaqué.\n'
+        '• ❄️ Gel : réduit leur prochaine attaque, d\'autant plus qu\'il compte '
+        'de points, jusqu\'à un plafond. La durée ne décrémente qu\'une fois '
+        'qu\'ils ont attaqué.\n'
         '• ⚡ Électrocution : ajoute sa valeur à **chaque** coup qu\'ils '
         'subissent tant qu\'elle dure.',
     type: TutorialStepType.elements,
@@ -252,7 +255,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Until an enemy has an intent, that same panel shows an hourglass and '
         '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Might, and halves while they are Frozen.',
+        'accumulated Might, and drops while they are Frozen.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
@@ -264,8 +267,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Tant qu\'un ennemi n\'a pas encore d\'intention, ce même panneau '
         'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
-        'l\'ennemi et sa Puissance accumulée, et se divise par deux tant qu\'il '
-        'est Gelé.',
+        'l\'ennemi et sa Puissance accumulée, et baisse tant qu\'il est Gelé.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(

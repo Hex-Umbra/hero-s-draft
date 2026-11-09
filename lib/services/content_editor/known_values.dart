@@ -51,12 +51,27 @@ Map<String, List<String>> knownValues(
     });
   }
 
-  // Une signature parle le vocabulaire de la carte (spec §8) : ses valeurs
-  // connues sont l'union des fichiers de cartes et de ceux des signatures.
+  // Une signature parle le vocabulaire de la carte (spec §8), et la carte de
+  // lot et la carte neutre un seul et meme (A31) : les valeurs connues sont
+  // l'union des fichiers de toutes les cartes.
   final sources = [
-    descriptor,
-    if (descriptor.category == EntityCategory.signature)
-      kEntityDescriptors[EntityCategory.card]!,
+    for (final category in switch (descriptor.category) {
+      EntityCategory.signature => const [
+          EntityCategory.signature,
+          EntityCategory.card,
+          EntityCategory.lotCard,
+        ],
+      EntityCategory.card => const [
+          EntityCategory.card,
+          EntityCategory.lotCard,
+        ],
+      EntityCategory.lotCard => const [
+          EntityCategory.lotCard,
+          EntityCategory.card,
+        ],
+      _ => [descriptor.category],
+    })
+      kEntityDescriptors[category]!,
   ];
 
   for (final source in sources) {

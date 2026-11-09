@@ -324,5 +324,20 @@ void main() {
         1,
       );
     });
+
+    test('une signature jouee compte dans cardsPlayedThisTurn, comme une carte',
+        () {
+      start('paladin');
+      final strike = deck.state.hand.first;
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentMana: 9)));
+      combat.selectEnemy(enemy().id);
+
+      combat.applyPlayerCardPlay(strike);
+      expect(combat.currentState.cardsPlayedThisTurn, 1);
+
+      expect(combat.playSignature(signature('holy_shield')), isTrue);
+      expect(combat.currentState.cardsPlayedThisTurn, 2);
+    });
   });
 }

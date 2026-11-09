@@ -70,9 +70,11 @@ graph TD
     P40["P-40 Nettoyage héros & cartes ✅ clos"] -.annule un tiers de.-> P26[P-26 Lot d'hygiène]
     P41[P-41 Identité de classe] -.son lot A précède.-> P49[P-49 Passifs partagés]
     P49 -.précède le lot B de.-> P41
-    P41 --> P43["P-43 Économie unifiée ✅ clos, E4 sur branche"]
-    P43 --> P42[P-42 Catalogue par lots de passif]
-    P43 --> P44["P-44 Profondeur — lot 1, livré avec la tranche 1 de P-42"]
+    P41 --> P43["P-43 Économie unifiée ✅ clos"]
+    P43 --> P42["P-42 Catalogue par lots de passif — tranche 1 sur branche"]
+    P43 --> P44["P-44 Profondeur — lot 1 ✅, livré avec la tranche 1 de P-42"]
+    P44 -.statuts proportionnels du lot 1, relus.-> P53["P-53 Charges élémentaires — vague 7, 0.5.9"]
+    P53 -.précède la tranche 3.-> P42
     P05 -.lots 2 à 4 de P-44.-> P44
     P49 -.pose le point d'accès aux passifs.-> P13
     P41 -.pose la chaîne de migration.-> P13
@@ -258,9 +260,10 @@ Marqué **priorité haute** dans le rapport du 22/07 et jamais traité. Difficul
 | **P-15** | **Ennemis tiers 2-5** (20 concepts restants) | **3-5 j** *(+ sprites)* | ★★★☆☆ | 🔥🔥 |
 | **P-41** | **Identité de classe** — Puissance orientée par la classe, `statRules`, 9 passifs sélectionnables, récompenses data-driven · **4 lots (A → D)** — ✅ **livré en entier, fusionné dans `main` le 2026-09-20 (PR #45 pour le dernier)** *(voir §4)* · [spec](superpowers/specs/2026-08-07-s2-identite-de-classe-design.md), révisée les 2026-09-16 et 2026-09-17 | *à chiffrer par lot* | ★★★★☆ | 🔥🔥🔥 |
 | **P-49** | **Passifs partagés** — répertoire commun, éligibilité déclarée par le passif, point d'accès unique, Maîtrise dont chaque passif déclare l'effet ; **prépare P-13** · ✅ **Fusionné dans `main` le 2026-09-17 (PR #39)** · [spec](superpowers/specs/2026-09-16-p49-passifs-partages-design.md) · [plan](superpowers/plans/2026-09-16-p49-passifs-partages.md) · [ADR-096](../.obsidian_vault/_adr/ADR-096-passifs-partages-eligibilite-et-maitrise-hybride.md) | *non chiffré* | ★★★☆☆ | 🔥🔥 |
-| ~~**P-43**~~ | ~~**Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4**~~ ✅ **Clos le 2026-10-16 avec son dernier lot, E4 : livré sur la branche de la vague 4, en attente du test, de la PR, de la fusion et du tag du propriétaire** — les lots E0 à E3 sont dans `main` · [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md) pour E4 · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | — | — | — |
+| ~~**P-43**~~ | ~~**Économie unifiée** — la fusion devient le moteur de progression du deck : moteur de runes en donnée, fusion = forge, affûtage et Puits, trouvaille de carte, signatures en compétences de classe · **cinq lots, E0 → E4**~~ ✅ **Clos le 2026-10-16 avec son dernier lot, E4, fusionné dans `main` le 2026-10-24 par la PR #50** (tag `v0.5.6`) — les cinq lots E0 à E4 sont dans `main` · [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md) pour E4 · [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) · **vagues, versions et avancement : [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)** | — | — | — |
 | **P-42** | **Catalogue par lots de passif** — un lot de cartes par passif, rangé sous `cards/<passif>/`, et les évolutions de signature · **trois tranches**, après P-43 *(redécoupé le 2026-10-01, voir §4)* · même brainstorm, même fichier d'orchestration | *une spec par tranche* | ★★★★☆ | 🔥🔥🔥 |
-| **P-44** | **Profondeur de cartes** — **quatre lots** : 1 (`scaleWith`, multi-coups, statuts proportionnels, coûts combinés, runes de pipeline) **livré avec la tranche 1 de P-42** ; 2 (malédictions, étourdissement, épines), 3 (mots-clés, production de cartes) et 4 (effets interactifs, cible `none`) **après le programme, derrière P-05** *(redécoupé le 2026-10-01, voir §4)* | *lot 1 : avec P-42 ; lots 2-4 : à chiffrer* | ★★★★☆ | 🔥🔥 |
+| **P-44** | **Profondeur de cartes** — **quatre lots** : ~~1 (`scaleWith`, multi-coups, statuts proportionnels, coûts combinés, runes de pipeline)~~ ✅ **clos le 2026-11-04, livré avec la tranche 1 de P-42 sur la branche de la vague 5, en attente du test, de la PR, de la fusion et du tag du propriétaire** — [ADR-111](../.obsidian_vault/_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md) ; 2 (malédictions, étourdissement, épines), 3 (mots-clés, production de cartes) et 4 (effets interactifs, cible `none`) **après le programme, derrière P-05** *(redécoupé le 2026-10-01, voir §4)* | *lot 1 : livré ; lots 2-4 : à chiffrer* | ★★★★☆ | 🔥🔥 |
+| **P-53** | **Charges élémentaires** — Gel, Feu et Foudre deviennent des charges à seuil, un cadre commun en donnée, utilisable par le héros comme par de futurs ennemis élémentaires ; Faiblesse et Poison inchangés · **exploré le 2026-11-03 ; dans le programme depuis D76 : vague 7, `0.5.9`**, avant la tranche 3 de P-42 *(voir §4)* · [étude](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md) | *à chiffrer en spec* | ★★★☆☆ | 🔥🔥🔥 |
 | ~~**P-48**~~ | ~~**Réorganisation des données** — un fichier par entité, dossiers auto-suffisants, chargeur générique~~ ✅ **Livré le 2026-09-05** — 8 catalogues monolithiques éclatés en 71 fichiers d'entité, lus par un chargeur générique piloté par des motifs de chemin · [spec](superpowers/specs/2026-09-04-reorganisation-donnees-un-fichier-par-entite-design.md) | — | — | — |
 
 ### P-10 — Finale de Séquence
@@ -376,7 +379,7 @@ deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 > « progression » de carte est l'inflation numérique de l'une des 17 communes*. **P-40, P-41 et
 > P-49 sont livrés.** Les trois chantiers restants ont été reconçus par le
 > [brainstorm v3](possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md) — ses
-> décisions acquises, D1 à D75, sa [revue](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
+> décisions acquises, D1 à D76, sa [revue](possible_upgrades/29-09-2026_revue_brainstorm_v3_heros_et_cartes_Fable5.md)
 > en six passes et sa [simulation](possible_upgrades/30-09-2026_simulation_D26_economie_Fable5.md).
 > **L'ordre est désormais P-43 → P-42 → P-44, et il ne se ré-ordonne pas** : l'économie décide
 > combien de runes une carte porte et à quel rythme les doublons arrivent, donc combien de cartes
@@ -395,12 +398,13 @@ deuxième fois le 2026-09-21** par la publication de `v0.5.2`.
 | S1 — Nettoyage | ~~**P-40**~~ *(Tier D)* ✅ clos le 2026-09-15 | — |
 | *Chantier frère* — Passifs partagés | **P-49** | **P-41**, son lot A (passage unique des gains) |
 | S2 — Identité de classe | **P-41** | **P-49**, pour son lot B |
-| S3 — Économie unifiée *(cinq lots, E0 → E4)* | ~~**P-43**~~ ✅ clos le 2026-10-16 — E4 livré sur la branche de la vague 4, en attente du propriétaire | **P-41** (livré) |
-| S4 — Catalogue par lots de passif *(trois tranches)* | **P-42** | **P-43**, son lot E4 (livré sur branche) |
-| S5 — Profondeur de cartes *(quatre lots)* | **P-44** | Lot 1 : livré avec la tranche 1 de **P-42** · lots 2 à 4 : **P-05**, après le programme |
+| S3 — Économie unifiée *(cinq lots, E0 → E4)* | ~~**P-43**~~ ✅ clos le 2026-10-16 — E4 fusionné dans `main` le 2026-10-24 (PR #50) | **P-41** (livré) |
+| S4 — Catalogue par lots de passif *(trois tranches)* | **P-42** | **P-43**, son lot E4 (fusionné) |
+| S5 — Profondeur de cartes *(quatre lots)* | **P-44** | ~~Lot 1~~ ✅ clos le 2026-11-04, avec la tranche 1 de **P-42** (branche de la vague 5) · lots 2 à 4 : **P-05**, après le programme |
+| S6 — Charges élémentaires *(depuis D76, 2026-11-03)* | **P-53** | **P-44** lot 1 ; avant la tranche 3 de **P-42** |
 
 **Périmètre des vagues, et ce qui reste dehors** *(2026-10-01)*. Les vagues couvrent ce que le
-brainstorm v3 a conçu : P-43 en entier, P-42 en entier, P-44 lot 1. **Restent pour après** : les
+brainstorm v3 a conçu : P-43 en entier, P-42 en entier, P-44 lot 1 — et, depuis D76 (2026-11-03), P-53, en vague 7. **Restent pour après** : les
 lots 2 à 4 de P-44 — qui devront trois cartes à des lots déjà livrés, les épines de Rempart, la
 carte `retain` de Voile et la production de cartes de Carnage — et **P-16**, qui calibrera sur les
 neuf lots (§5).
@@ -474,8 +478,12 @@ l'autre. Une conséquence à garder en tête au moment d'écrire ces cartes : **
 cesse d'être `unique`, elle devient achetable en boutique et tirable au bonus de boss** — par sa
 propre classe seulement, mais quand même. C'est le prédicat qui le décide, plus la rareté.
 *(Depuis le 2026-10-01 la question change de forme : les signatures cessent d'être des cartes —
-brainstorm v3, D49, lot E4 de P-43. **Réglé par E4**, livré sur la branche de la vague 4 : les signatures ne sont plus dans `registry.cards`, aucun pool ne les voit —
+brainstorm v3, D49, lot E4 de P-43. **Réglé par E4**, fusionné dans `main` le 2026-10-24 : les signatures ne sont plus dans `registry.cards`, aucun pool ne les voit —
 [ADR-109](../.obsidian_vault/_adr/ADR-109-signatures-hors-du-deck.md).)*
+
+### P-53 — Charges élémentaires
+
+Né pendant l'arrêt de la vague 5, sur la question P-1 de sa spec : **Gel et Faiblesse font la même chose** — tous deux réduisent ce que l'ennemi inflige —, et Brûlure et Poison sont deux dégâts sur la durée. L'idée : un statut élémentaire s'accumule en points et, à un seuil, provoque une rupture propre à son élément — le Gel ôte une action, le Feu explose sur le porteur et ses voisins, la Foudre amplifie chaque coup reçu —, dans un **cadre commun en donnée, symétrique** : le héros le pose aujourd'hui, de futurs ennemis élémentaires le poseront sur lui. **Hors de la vague 5, par choix du propriétaire** (T3) : `0.5.7` garde les statuts proportionnels de P-44 lot 1, que P-53 relira. **Programmé le 2026-11-03 par D76** (brainstorm v3) : une vague à lui, la **vague 7, `0.5.9`**, juste avant la tranche 3 de P-42, qui passe en vague 8, `0.6.0` — le lot *Marque* s'écrit ainsi sur les charges. Ses règles sont à décider avant la vague ; le déroulé est dans le [fichier d'orchestration](possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md), fiche 8.7. Les règles, les orientations du propriétaire, la faisabilité et les questions ouvertes : [l'étude](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md).
 
 ---
 
@@ -630,6 +638,8 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 | **P-37** | **Icônes de type de dégâts** dans les descriptions de cartes | **0,5 j** | ★☆☆☆☆ | 🔥 |
 | **P-38** | **Dashboard de perf** (FPS, drops) dans les logs de debug | **1 j** | ★★☆☆☆ | 🔥 |
 | **P-39** | **Skins de héros** débloquables | **3 j+** *(art)* | ★★☆☆☆ | 🔥 |
+| **P-54** | **Infobulles des cartes revisitées** — la reprise que le propriétaire a demandée en tranchant PN12 (vague 5) : les infobulles des cartes du deck, Flutter et Flame, laissées telles quelles par la vague ; elles pourront lire les icônes et les phrases par sorte d'effet que la tuile de signature emploie (`effect_icons.json`, `effect_line_texts.dart`), comme les intentions ennemies · [ADR-114](../.obsidian_vault/_adr/ADR-114-les-evolutions-de-signature.md) | *à chiffrer en spec* | ★★☆☆☆ | 🔥🔥 |
+| **P-55** | **Une seule table d'icônes partout** — sous P-6 (a) (vague 5), passer sur `assets/data/effect_icons.json` ce qui garde encore sa propre table : **les faces des cartes** (`getEffectVisuals`, Flutter et Flame, aujourd'hui égales au document par un test), **les émojis des statuts ennemis** (Flame, `status_indicator.dart`) et **l'icône de la rune *Précis*** (`gps_fixed_rounded`, le Vulnérable des cartes), à aligner sur le critique `flare_rounded` · [ADR-114](../.obsidian_vault/_adr/ADR-114-les-evolutions-de-signature.md) | **0,5-1 j** | ★★☆☆☆ | 🔥 |
 | **P-47** | **Seconde passe audio** — sonoriser l'économie et la fin de partie, réveiller le niveau 1 de la chaîne de repli, revoir le mixage | **1-2 j** *(+ ~10 bruitages)* | ★☆☆☆☆ | 🔥🔥 |
 
 ### P-30 — Menu de debug
@@ -698,6 +708,10 @@ Sur les 14 blocs `catch` de `lib/`, **un seul est totalement muet** : `lib/ui/sc
 - Vérifier que la règle anti-répétition de nœuds fonctionne réellement, et que les quotas par acte sont respectés.
 - Repositionner la popup d'aperçu des améliorations d'une carte (forge et tous les autres écrans concernés).
 - Mettre `docs/animations/card_animations_system.md` en conformité avec le code (documentation fausse sur 4 points).
+- **Un `flatBonus` qui vise un effet absent de sa signature est accepté en silence par le chargeur** : l'évolution ne change rien, sans faute nommée. Le refuser au chargement, en nommant l'évolution. *(Relevé le 2026-11-04, compte rendu de la vague 5, §4.)*
+- **`DraftScreen` se quitte par le retour système sans choisir** : le draft de montée de niveau ne pose pas de `PopScope`, à la différence de l'écran d'évolution (S19), de l'événement et du repos. *(Même source.)*
+- ✅ ~~**Le rideau de montée de niveau de la carte est en français en dur et ne dit pas ce qui attend**~~ — **réglé le 2026-11-07 sur la branche de la vague 5** : un rideau par ce qui attend, ses textes aux ARB (D80 à D82, [ADR-115](../.obsidian_vault/_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)). *(Même source.)*
+- **À 360 px de large, le compteur d'or de la barre de la carte chevauche « RELIQUES » et « CHANCES »** dans le rendu de test, dont la police diffère du jeu : à confirmer sur un vrai téléphone avant de corriger. *(Relevé le 2026-11-07, série de corrections de la vague 5.)*
 
 ---
 
@@ -743,6 +757,7 @@ Constats faits en consolidant ce document — **à traiter avant de se fier aux 
 | 5 | Taux de complétion divergents | Rapport 22/07 : « ~86 % de 146 items » · `progress.md` §3 : « ~60 % de 95 items » | Recompter sur la base de ce document |
 | 6 | Aucun `.github/workflows/` | Confirmé | → **P-04** — ✅ clos le 2026-08-20 (trois workflows) |
 | 7 | `systemPatterns.md` : `## 2.` porte un `### 2.1.bis` et **deux** sous-sections `### 2.5` (`ShopController` et Immutabilité Stricte des Modèles d'État) | Constaté le 2026-08-20 | Slugs distincts → aucune collision de nom de fichier, mais la numérotation reste à trancher. Re-vérifié le 2026-09-15 : les en-têtes `### 2.5` ont quitté l'index le 2026-09-14, la double numérotation demeure dans les noms de fiche (`02-5-immutabilite-…`, `02-5-shopcontroller`) et le libellé `2.1.bis` |
+| 8 | `CLAUDE.md`, « Data-Driven Content Workflow », étape 2 : elle dit qu'un dossier de classe ou d'ennemi neuf exige sa ligne de `pubspec.yaml`, **pas qu'un dossier de lot `cards/<passif>/` l'exige lui aussi** | Constaté le 2026-11-04 (compte rendu de la vague 5, §4) — trois dossiers de lot déclarés par `sync_assets` à la vague 5, [ADR-112](../.obsidian_vault/_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md) | Ajouter la demi-phrase à l'étape 2 ; `CLAUDE.md` n'est pas de la main de `memory-bank-sync` |
 
 ---
 

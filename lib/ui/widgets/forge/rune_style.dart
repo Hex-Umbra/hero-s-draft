@@ -15,6 +15,11 @@ const Map<String, IconData> runeIcons = {
   'savings_rounded': Icons.savings_rounded,
   'gps_fixed_rounded': Icons.gps_fixed_rounded,
   'blur_on_rounded': Icons.blur_on_rounded,
+  'scatter_plot_rounded': Icons.scatter_plot_rounded,
+  'navigation_rounded': Icons.navigation_rounded,
+  'water_drop_rounded': Icons.water_drop_rounded,
+  'replay_rounded': Icons.replay_rounded,
+  'bloodtype_rounded': Icons.bloodtype_rounded,
 };
 
 /// Les couleurs que nomme le champ `color` d'une rune (spec P-43 E2, A19). Un
@@ -32,4 +37,9 @@ const Map<String, Color> runeColors = {
   'tealAccent': Colors.tealAccent,
   'pinkAccent': Colors.pinkAccent,
   'purpleAccent': Colors.purpleAccent,
+  'indigoAccent': Colors.indigoAccent,
+  'deepOrangeAccent': Colors.deepOrangeAccent,
+  'limeAccent': Colors.limeAccent,
+  'deepPurpleAccent': Colors.deepPurpleAccent,
+  'red': Colors.red,
 };

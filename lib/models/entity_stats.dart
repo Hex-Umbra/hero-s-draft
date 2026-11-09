@@ -1,3 +1,5 @@
+import 'dart:math' show max, min;
+
 import 'package:meta/meta.dart';
 import 'might_target.dart';
 import 'status_effect.dart';
@@ -191,17 +193,31 @@ class EntityStats {
     return critChance + bonus;
   }
 
-  EntityStats takeDamage(int amount, {bool isCrit = false}) {
+  /// Inflige [amount] dégâts. [armorPiercePercent] % de l'Armure — au moins
+  /// [armorPierceFloor], jamais plus que l'Armure présente — est ignoré : cette
+  /// part ne protège pas et n'est pas consommée (spec §4.6, A16).
+  EntityStats takeDamage(
+    int amount, {
+    bool isCrit = false,
+    int armorPiercePercent = 0,
+    int armorPierceFloor = 0,
+  }) {
     if (amount <= 0) return copyWith(lastActionWasCrit: isCrit);
 
-    // 2. Absorption via Armure
-    int damageAfterArmor = amount - armure;
+    final percent = min(100, armorPiercePercent);
+    final ignored = percent > 0
+        ? min(armure, max((percent * armure + 50) ~/ 100, armorPierceFloor))
+        : 0;
+    final protecting = armure - ignored;
+
+    // 2. Absorption via Armure : seule la part qui protège encaisse
+    int damageAfterArmor = amount - protecting;
     int newArmor = armure;
     int newPv = currentPv;
 
     if (damageAfterArmor > 0) {
-      // L'armure est brisée, le reste va aux PV
-      newArmor = 0;
+      // L'armure qui protège est brisée, le reste va aux PV
+      newArmor = ignored;
       newPv -= damageAfterArmor;
     } else {
       // L'armure encaisse tout

@@ -16,6 +16,13 @@ class EffectiveCard {
     required this.cost,
     required this.critChanceBonus,
     required this.addsExhaust,
+    required this.armorPiercePercent,
+    required this.armorPierceLevel,
+    required this.lifestealPercent,
+    required this.lifestealLevel,
+    required this.splashPercent,
+    required this.echoChance,
+    required this.hpRefundPercent,
   });
 
   /// Les effets que les deltas ajoutent, résolus avant ceux de la carte.
@@ -41,9 +48,32 @@ class EffectiveCard {
   /// P-43 E2, A10).
   final bool addsExhaust;
 
-  /// La couture commune aux runes et, en vague 5, aux évolutions de
-  /// signature : une fonction pure, qui ne lit ni registre ni rune — elle
-  /// reçoit des paires *(delta, niveau)*.
+  /// Le pourcentage de l'Armure de la cible que les coups de la carte ignorent,
+  /// et le niveau total des deltas qui le donnent : plancher de l'Armure
+  /// ignorée (spec §4.6, A16).
+  final int armorPiercePercent;
+  final int armorPierceLevel;
+
+  /// Le pourcentage des dégâts infligés que la carte rend en PV, et le niveau
+  /// total des deltas qui le donnent : plancher du soin (spec §4.6, A18).
+  final int lifestealPercent;
+  final int lifestealLevel;
+
+  /// Le pourcentage du coup dont chaque autre ennemi vivant est éclaboussé
+  /// (spec §4.6, A17).
+  final int splashPercent;
+
+  /// Le pourcentage de chances que la carte se résolve une seconde fois (spec
+  /// §4.7, A19).
+  final int echoChance;
+
+  /// Le pourcentage du coût en PV que la carte rend après sa résolution (spec
+  /// §4.1, A20).
+  final int hpRefundPercent;
+
+  /// La couture commune aux runes et aux évolutions de signature : une
+  /// fonction pure, qui ne lit ni registre ni rune — elle reçoit des paires
+  /// *(delta, niveau)*.
   static EffectiveCard apply(
     CardData data,
     CardRarity rarity,
@@ -58,6 +88,13 @@ class EffectiveCard {
     var costReduction = 0;
     var critChanceBonus = 0;
     var addsExhaust = false;
+    var armorPiercePercent = 0;
+    var armorPierceLevel = 0;
+    var lifestealPercent = 0;
+    var lifestealLevel = 0;
+    var splashPercent = 0;
+    var echoChance = 0;
+    var hpRefundPercent = 0;
 
     for (final (delta, level) in deltas) {
       switch (delta) {
@@ -66,10 +103,20 @@ class EffectiveCard {
           // pourcentages sur un même effet ne se composent pas.
           for (var i = 0; i < effects.length; i++) {
             if (effects[i].type != delta.effect) continue;
-            effects[i] = _withValue(
-              effects[i],
-              effects[i].value + delta.bonusFor(atRarity[i].value, level),
-            );
+            final hits = effects[i].hits;
+            final base = atRarity[i].value;
+            // A14 : à plusieurs coups, le bonus se calcule sur le total des
+            // coups, plancher compris, puis se répartit vers le haut.
+            final perHit = hits == 1
+                ? delta.bonusFor(base, level)
+                : (delta.bonusFor(base * hits, level) + hits - 1) ~/ hits;
+            effects[i] = effects[i].copyWithValue(effects[i].value + perHit);
+          }
+        case FlatBonusDelta():
+          for (var i = 0; i < effects.length; i++) {
+            if (!delta.targets(effects[i])) continue;
+            effects[i] = effects[i]
+                .copyWithValue(effects[i].value + delta.valuePerLevel * level);
           }
         case AddEffectDelta():
           added.add(delta.effectAt(level));
@@ -81,6 +128,18 @@ class EffectiveCard {
           critChanceBonus += delta.valuePerLevel * level;
         case AddExhaustDelta():
           addsExhaust = true;
+        case ArmorPierceDelta():
+          armorPiercePercent += delta.valuePercentPerLevel * level;
+          armorPierceLevel += level;
+        case LifestealPercentDelta():
+          lifestealPercent += delta.valuePercentPerLevel * level;
+          lifestealLevel += level;
+        case SplashPercentDelta():
+          splashPercent += delta.valuePercentPerLevel * level;
+        case EchoChanceDelta():
+          echoChance += delta.valuePercentPerLevel * level;
+        case RefundHpCostDelta():
+          hpRefundPercent += delta.valuePercentPerLevel * level;
       }
     }
 
@@ -91,6 +150,13 @@ class EffectiveCard {
       cost: max(0, data.cost - costReduction),
       critChanceBonus: critChanceBonus,
       addsExhaust: addsExhaust,
+      armorPiercePercent: armorPiercePercent,
+      armorPierceLevel: armorPierceLevel,
+      lifestealPercent: lifestealPercent,
+      lifestealLevel: lifestealLevel,
+      splashPercent: splashPercent,
+      echoChance: echoChance,
+      hpRefundPercent: hpRefundPercent,
     );
   }
 
@@ -113,17 +179,18 @@ class EffectiveCard {
   }
 
   /// [data] à [rarity], portant [runes], sur le catalogue du registre — comme
-  /// `ForgeUpgradeData.getById`.
+  /// `ForgeUpgradeData.getById`. Les [extraDeltas] — les évolutions de
+  /// signature — s'appliquent après les runes.
   static EffectiveCard withRunes(
     CardData data,
     CardRarity rarity,
-    List<String> runes,
-  ) =>
-      apply(
-        data,
-        rarity,
-        runeDeltas(runes, GameDataRegistry.instance?.forgeUpgrades ?? const []),
-      );
+    List<String> runes, {
+    Iterable<(CardDelta, int)> extraDeltas = const [],
+  }) =>
+      apply(data, rarity, [
+        ...runeDeltas(runes, GameDataRegistry.instance?.forgeUpgrades ?? const []),
+        ...extraDeltas,
+      ]);
 
   /// G2 : la pioche et le mana rendu ne grandissent pas avec la rareté — la
   /// seule écriture de la règle (brainstorm §4.5, spec P-43 E1, A6, §4.3).
@@ -134,12 +201,5 @@ class EffectiveCard {
   static CardEffect _atRarity(CardEffect effect, CardRarity rarity) =>
       _frozenByRarity.contains(effect.type)
           ? effect
-          : _withValue(effect, rarity.scaleValue(effect.value));
-
-  static CardEffect _withValue(CardEffect effect, int value) => CardEffect(
-        type: effect.type,
-        value: value,
-        statusId: effect.statusId,
-        duration: effect.duration,
-      );
+          : effect.copyWithValue(rarity.scaleValue(effect.value));
 }

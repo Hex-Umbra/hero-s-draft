@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,7 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/services/proportional_status.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -14,6 +17,8 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+
+import 'scripted_random.dart';
 
 /// Les runes livrées, jouées sur les vraies cartes par
 /// `EffectResolver.resolveCard` (spec P-43 E1, §4.4, §4.8).
@@ -73,7 +78,7 @@ void main() {
   List<StatusEffect> enemyStatuses(String id) =>
       enemy().statuses.where((s) => s.id == id).toList();
 
-  void play(CardInstance card) {
+  void play(CardInstance card, {Random? random}) {
     // Assez de mana pour jouer plusieurs cartes dans un meme cas.
     run.updateState(run.currentState
         .copyWith(heroStats: hero().copyWith(currentMana: 9)));
@@ -84,6 +89,7 @@ void main() {
       combat,
       enemyId,
       container.read(effectRegistryProvider),
+      random: random,
     );
     expect(played, isTrue);
   }
@@ -187,10 +193,347 @@ void main() {
       expect(enemyStatuses('freeze'), hasLength(1));
     });
 
+    test('Trait de Glace pose 2 Gel : -50 %, l effet d avant', () {
+      play(card('ice_bolt'));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
+      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+    });
+
+    test('Congelant 1 pose 2 Gel : -50 %', () {
+      play(card('strike_basic', runes: const ['freezing:1']));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
+      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+    });
+
     test('Boule de Feu et Brulant 1 : une brulure de 3 pour 2 tours', () {
       // La rune pose avant la carte, dont la brulure rejoint la sienne.
       play(card('fireball', runes: const ['burning:1']));
       expect(enemyStatuses('burn').map((s) => (s.value, s.duration)), [(3, 2)]);
+    });
+  });
+
+  // Perforant : une part de l'Armure ne protège pas et n'est pas consommée
+  // (spec §4.6, A16).
+  group('Perforant', () {
+    void armEnemy(int armor) {
+      combat.updateEnemyStats(enemyId, enemy().copyWith(armure: armor));
+    }
+
+    (int, int) afterPlaying(CardInstance played) {
+      play(played);
+      return (enemy().currentPv, enemy().armure);
+    }
+
+    test('Perforant 1 contre 10 Armure : 3 ignores', () {
+      armEnemy(10);
+      expect(afterPlaying(card('heavy_strike', runes: const ['piercing:1'])),
+          (95, 3));
+      armEnemy(10);
+      combat.updateEnemyStats(enemyId, enemy().copyWith(currentPv: 100));
+      expect(afterPlaying(card('heavy_strike')), (98, 0));
+    });
+
+    test('Perforant : au moins L, jamais plus que l Armure presente', () {
+      armEnemy(1);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:1'])),
+          (94, 1));
+      combat.updateEnemyStats(enemyId, enemy().copyWith(currentPv: 100));
+      armEnemy(0);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:1'])),
+          (94, 0));
+    });
+
+    test('Perforant 4 : toute l Armure ignoree, et gardee', () {
+      armEnemy(10);
+      expect(afterPlaying(card('strike_basic', runes: const ['piercing:4'])),
+          (94, 10));
+    });
+  });
+
+  // Vampirique : le soin de la rune, une fois par carte, sans critique (A18).
+  group('Vampirique', () {
+    CardInstance custom(int damage, List<String> runes) => CardInstance(
+          data: CardData(
+            id: 'test_hit',
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'damage', value: damage)],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    setUp(() {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+    });
+
+    test('Vampirique 1 : 20 % des degats infliges, demie vers le haut', () {
+      play(card('heavy_strike', runes: const ['lifesteal:1']));
+      expect(hero().currentPv, 52);
+    });
+
+    test('Vampirique : au moins L, jamais plus que les degats infliges', () {
+      play(custom(1, const ['lifesteal:1']));
+      expect(hero().currentPv, 51);
+
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+      play(custom(2, const ['lifesteal:3']));
+      expect(hero().currentPv, 52);
+    });
+
+    test('Vampirique et le Vol de vie de Soif de Sang soignent tous deux, une '
+        'fois par carte', () {
+      run.applyLifestealBuff(value: 2, duration: 3);
+      play(card('strike_basic', runes: const ['lifesteal:1']));
+      expect(hero().currentPv, 50 + 2 + 1);
+    });
+  });
+
+  // Ricochant : chaque autre ennemi vivant prend une part du coup, par coup,
+  // sur le pipeline de sa propre cible (spec §3.6, §4.6, A17).
+  group('Ricochant', () {
+    late List<String> ids;
+
+    EntityStats stats(int pv) =>
+        EntityStats(maxPv: 100, currentPv: pv, armure: 0, might: 0);
+
+    void faceEnemies([List<int> pvs = const [100, 100, 100]]) {
+      final enemies = [
+        for (final pv in pvs)
+          EnemyInstance(data: registry.enemies.first, stats: stats(pv)),
+      ];
+      ids = [for (final e in enemies) e.id];
+      combat.state = CombatState(
+        enemies: enemies,
+        selectedEnemyId: ids.first,
+        turnPhase: TurnPhase.player,
+      );
+    }
+
+    EntityStats statsOf(int index) => combat.currentState.enemies
+        .singleWhere((e) => e.id == ids[index])
+        .stats;
+
+    List<int> pvs() => [for (var i = 0; i < ids.length; i++) statsOf(i).currentPv];
+
+    void edit(int index, EntityStats Function(EntityStats) change) =>
+        combat.updateEnemyStats(ids[index], change(statsOf(index)));
+
+    void playOnFirst(CardInstance played) {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentMana: 9)));
+      expect(
+        EffectResolver.resolveCard(
+          played,
+          run,
+          deck,
+          combat,
+          ids.first,
+          container.read(effectRegistryProvider),
+        ),
+        isTrue,
+      );
+    }
+
+    CardInstance custom(int damage, List<String> runes) => CardInstance(
+          data: CardData(
+            id: 'test_hit',
+            cost: 1,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'damage', value: damage)],
+          ),
+          forgeUpgrades: runes,
+        );
+
+    setUp(faceEnemies);
+
+    test('Ricochant 1 : chaque autre ennemi vivant prend 25 % du coup, demie '
+        'vers le haut, au moins 1', () {
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 98]);
+
+      faceEnemies();
+      playOnFirst(custom(1, const ['splash:1']));
+      expect(pvs(), [99, 99, 99]);
+
+      faceEnemies(const [100, 100, 0]);
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 0]);
+    });
+
+    test('l eclaboussure passe le pipeline de sa cible : son Electrocution et '
+        'sa Vulnerabilite', () {
+      edit(
+        1,
+        (s) => s.copyWith(statuses: const [
+          StatusEffect(
+              id: 'shock',
+              name: 'shock',
+              type: StatusType.debuff,
+              value: 2,
+              duration: 2),
+          StatusEffect(
+              id: 'vulnerable',
+              name: 'vulnerable',
+              type: StatusType.debuff,
+              value: 2,
+              duration: 2),
+        ]),
+      );
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      // (2 + 2) x 1,5 = 6 ; le troisieme ennemi n'a rien de tout cela.
+      expect(pvs(), [94, 94, 98]);
+    });
+
+    test('l eclaboussure est absorbee par l Armure de sa cible, Perforant '
+        'compris', () {
+      edit(1, (s) => s.copyWith(armure: 5));
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect((statsOf(1).currentPv, statsOf(1).armure), (100, 3));
+
+      faceEnemies();
+      edit(1, (s) => s.copyWith(armure: 5));
+      playOnFirst(
+          card('strike_basic', runes: const ['splash:1', 'piercing:4']));
+      expect((statsOf(1).currentPv, statsOf(1).armure), (98, 5));
+    });
+
+    test('les eclaboussures comptent dans le vol de vie, statut et rune', () {
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentPv: 50)));
+      run.applyLifestealBuff(value: 99, duration: 3);
+      playOnFirst(
+          card('strike_basic', runes: const ['splash:1', 'lifesteal:1']));
+      // 6 + 2 + 2 = 10 degats : le statut soigne 10, la rune 20 % = 2.
+      expect(pvs(), [94, 98, 98]);
+      expect(hero().currentPv, 50 + 10 + 2);
+    });
+
+    test('un critique se tire pour chaque cible', () {
+      // Le heros n'a aucun critique : seul le bonus de Precis (20 niveaux de
+      // 5 points, soit 100 %) peut en donner, et il doit atteindre chaque
+      // cible touchee.
+      expect(hero().effectiveCritChance, 0);
+      playOnFirst(
+          card('strike_basic', runes: const ['precise:20', 'splash:1']));
+      // La base de l'eclaboussure, 2, est prise avant le pipeline : 2 x 1,5.
+      expect(pvs(), [100 - 9, 100 - 3, 100 - 3]);
+
+      // Sans la rune, aucune des trois cibles ne critique.
+      faceEnemies();
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      expect(pvs(), [94, 98, 98]);
+    });
+  });
+
+  // L'echo : une seconde resolution des effets, pas un second jeu (spec §4.7,
+  // A15, P-3 (a)).
+  group('Resonant', () {
+    test('jet reussi : les effets se resolvent une seconde fois, sans rien '
+        'payer', () {
+      play(card('strike_basic', runes: const ['echo:1']),
+          random: ScriptedRandom([0]));
+
+      expect(enemy().currentPv, 100 - 12);
+      expect(hero().currentMana, 9 - 1);
+    });
+
+    test('jet manque : une seule resolution', () {
+      play(card('strike_basic', runes: const ['echo:1']),
+          random: ScriptedRandom([99]));
+
+      expect(enemy().currentPv, 100 - 6);
+    });
+
+    test('un seul jet : jamais de troisieme resolution', () {
+      // 7 niveaux de 15 % : 105 %, le jet reussit toujours.
+      play(card('strike_basic', runes: const ['echo:7']),
+          random: ScriptedRandom([0, 0]));
+
+      expect(enemy().currentPv, 100 - 12);
+    });
+
+    test('la cible meurt a la premiere resolution : les degats se perdent, '
+        'les effets sur soi se rejouent', () {
+      final enemies = [
+        for (final pv in [6, 100])
+          EnemyInstance(
+            data: registry.enemies.first,
+            stats: EntityStats(maxPv: 100, currentPv: pv, armure: 0, might: 0),
+          ),
+      ];
+      combat.state = CombatState(
+        enemies: enemies,
+        selectedEnemyId: enemies.first.id,
+        turnPhase: TurnPhase.player,
+      );
+      run.updateState(run.currentState
+          .copyWith(heroStats: hero().copyWith(currentMana: 9)));
+      final attack = CardInstance(
+        data: const CardData(
+          id: 'test_hit',
+          cost: 1,
+          type: CardType.attack,
+          rarity: CardRarity.common,
+          target: CardTarget.singleEnemy,
+          effects: [
+            CardEffect(type: 'damage', value: 6),
+            CardEffect(type: 'armor', value: 3),
+          ],
+        ),
+        forgeUpgrades: const ['echo:7'],
+      );
+
+      expect(
+        EffectResolver.resolveCard(attack, run, deck, combat,
+            enemies.first.id, container.read(effectRegistryProvider),
+            random: ScriptedRandom([0])),
+        isTrue,
+      );
+
+      final left = combat.currentState.enemies;
+      expect(left[0].stats.currentPv, 0);
+      expect(left[1].stats.currentPv, 100);
+      expect(hero().armure, 6);
+    });
+
+    test('l echo ne declenche aucun evenement carte jouee', () {
+      final flux = registry.passives.singleWhere((p) => p.id == 'mana_flux');
+      run.startNewRun(registry.heroes.singleWhere((h) => h.id == 'mage'), flux);
+      final skills = [
+        for (var i = 0; i < 2; i++)
+          CardInstance(
+            data: CardData(
+              id: 'test_skill_$i',
+              cost: 0,
+              type: CardType.skill,
+              rarity: CardRarity.common,
+              target: CardTarget.self,
+              effects: const [CardEffect(type: 'armor', value: 1)],
+            ),
+            forgeUpgrades: const ['echo:7'],
+          ),
+      ];
+      deck.state = deck.state.copyWith(hand: skills, discardPile: const []);
+      combat.state = CombatState(
+        enemies: combat.currentState.enemies,
+        turnPhase: TurnPhase.player,
+      );
+      final mana = hero().currentMana;
+
+      for (final skill in skills) {
+        combat.applyPlayerCardPlay(skill);
+      }
+
+      // Quatre Competences comptees (seuil 3) auraient monte le mana de 1.
+      expect(hero().currentMana, mana);
+      expect(combat.currentState.cardsPlayedThisTurn, 2);
+      expect(deck.state.discardPile, hasLength(2));
     });
   });
 

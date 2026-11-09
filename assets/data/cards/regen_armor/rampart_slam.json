@@ -1,0 +1,22 @@
+{
+  "id": "rampart_slam",
+  "name_en": "Rampart Slam",
+  "name_fr": "Rempart brisé",
+  "description_en": "Deal 2 damage, +1 per point of Block.",
+  "description_fr": "Inflige 2 dégâts, +1 par point d'Armure.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 2,
+      "scaleWith": {
+        "source": "armor",
+        "ratio": 1
+      }
+    }
+  ]
+}

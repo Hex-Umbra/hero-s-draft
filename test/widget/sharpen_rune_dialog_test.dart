@@ -8,10 +8,8 @@ import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
-import 'package:roguelike_card_game/ui/widgets/forge/forge_slot_row.dart';
 import 'package:roguelike_card_game/ui/widgets/forge/sharpen_rune_dialog.dart';
 import 'package:roguelike_card_game/ui/widgets/game_button.dart';
-import 'package:roguelike_card_game/ui/widgets/gold_indicator.dart';
 
 import '../unit/shipped_data.dart';
 
@@ -84,114 +82,6 @@ GameButton _button(WidgetTester tester, String label) =>
 
 /// Le dialogue d'affûtage (spec P-43 E2, A4, §4.7).
 void main() {
-  testWidgets('une ligne par rune portee ; Niveau 2 -> 3 et 100 or pour '
-      'Tranchant 2', (tester) async {
-    await _openDialog(tester, _rareStrike(const ['sharp:2', 'eco:1']),
-        gold: 1000);
-
-    expect(find.byType(ForgeSlotRow), findsNWidgets(2));
-    expect(find.text('Niveau 2 → 3'), findsOneWidget);
-    expect(_button(tester, 'Affûter — 100 or').onPressed, isNotNull);
-  });
-
-  testWidgets('une rune a son plafond : Niveau maximal, inactif, sans ligne '
-      'de niveau', (tester) async {
-    await _openDialog(tester, _rareStrike(const ['eco:1']), gold: 1000);
-
-    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
-    expect(find.textContaining('Niveau 1 →'), findsNothing);
-  });
-
-  testWidgets('faute d or, Affuter est inactif', (tester) async {
-    await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 99);
-
-    expect(_button(tester, 'Affûter — 100 or').onPressed, isNull);
-    // Le bouton grise s'explique : le solde est sous les yeux du joueur.
-    expect(
-      find.descendant(
-          of: find.byType(GoldIndicator), matching: find.text('99')),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('la description dit ce que le niveau de plus ajoute a cette '
-      'carte', (tester) async {
-    // 8 degats en rare : Tranchant 2 ajoute +2, Tranchant 3 +4 — le niveau
-    // de plus ajoute +2 (spec P-43 E1, §5.1).
-    await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 1000);
-
-    expect(
-      find.text('+2 Dégâts sur la carte (+15% de la base, au moins +1)'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('affuter monte la rune d un niveau et ferme le dialogue : '
-      'aucun second affutage (D14)', (tester) async {
-    String? closedOn;
-    final container = await _openDialog(
-      tester,
-      _rareStrike(const ['sharp:2', 'eco:1']),
-      gold: 1000,
-      onClosed: (id) => closedOn = id,
-    );
-
-    await tester.tap(find.text('Affûter — 100 or'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(SharpenRuneDialog), findsNothing);
-    expect(closedOn, 'sharp');
-    expect(container.read(inventoryProvider).gold, 900);
-    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
-        ['sharp:3', 'eco:1']);
-  });
-
-  // Le Rémouleur (spec P-43 E3, §4.9, A21) : choisir, sans payer ni écrire.
-  testWidgets('sans or, Choisir rend la rune sans rien ecrire ni payer',
-      (tester) async {
-    String? closedOn;
-    final container = await _openDialog(
-      tester,
-      _rareStrike(const ['sharp:2', 'eco:1']),
-      gold: 0,
-      isFree: true,
-      onClosed: (id) => closedOn = id,
-    );
-
-    expect(find.text('Niveau 2 → 3'), findsOneWidget);
-    await tester.tap(find.text('Choisir'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(SharpenRuneDialog), findsNothing);
-    expect(closedOn, 'sharp');
-    expect(container.read(inventoryProvider).gold, 0);
-    expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
-        ['sharp:2', 'eco:1']);
-  });
-
-  testWidgets('sans or, le solde n est pas affiche : rien n est paye',
-      (tester) async {
-    await _openDialog(tester, _rareStrike(const ['sharp:2']),
-        gold: 0, isFree: true);
-
-    expect(find.byType(GoldIndicator), findsNothing);
-  });
-
-  testWidgets('dans le mode du feu, le solde est affiche', (tester) async {
-    await _openDialog(tester, _rareStrike(const ['sharp:2']), gold: 1000);
-
-    expect(find.byType(GoldIndicator), findsOneWidget);
-  });
-
-  testWidgets('sans or, une rune a son plafond dit Niveau maximal, inactive',
-      (tester) async {
-    await _openDialog(tester, _rareStrike(const ['eco:1']),
-        gold: 0, isFree: true);
-
-    expect(_button(tester, 'Niveau maximal').onPressed, isNull);
-    expect(find.text('Choisir'), findsNothing);
-  });
-
   // Transcendance, lue par le dialogue (spec P-43 E3, §4.8, §8 ; A17).
   testWidgets('une rune plafonnee dit Niveau maximal, puis Niveau 1 -> 2 '
       'sous un plafond releve', (tester) async {

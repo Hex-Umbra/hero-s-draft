@@ -9,6 +9,8 @@ qui en dépend.
 par `withMastery` ; le texte de la Maîtrise dit l'écart effectif (`describeMastery`) — aucune
 décision ci-dessous n'est amendée.
 
+**Complété le 2026-11-04 par [ADR-112](ADR-112-forme-c-un-lot-de-cartes-par-passif.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `availablePassivesFor` rend les passifs éligibles **et pourvus d'un lot** ; `classes` vaut exactement une classe — l'éligibilité déclarée par le passif (D1) tient.
+
 ### Contexte
 
 ADR-086 D4 excluait les passifs de l'injection d'appartenance par répertoire (`PassiveData` n'a pas

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/checkpoint_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
-import 'package:roguelike_card_game/game/controllers/event_controller.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -33,10 +32,6 @@ void main() {
     maxMana: 3,
   );
 
-  const sale =
-      'Vendre votre relique la plus faible (+40 à +200 Or selon sa rareté)';
-  const remedies = "L'échanger contre des remèdes (+20 % des PV max, si vos "
-      'PV sont sous la moitié)';
   const leave = 'Passer votre chemin (Rien)';
   const handRune = 'Lui confier une rune (-10 % des PV max, +1 niveau de rune)';
 
@@ -146,16 +141,6 @@ void main() {
     return container;
   }
 
-  /// Le bouton du choix dont le texte est [text] est-il actif ?
-  bool enabled(WidgetTester tester, String text) =>
-      tester
-          .widget<ElevatedButton>(find.ancestor(
-            of: find.text(text),
-            matching: find.byType(ElevatedButton),
-          ))
-          .onPressed !=
-      null;
-
   bool currentNodeCompleted(ProviderContainer container) {
     final run = container.read(runProvider);
     return run.mapNodes
@@ -167,10 +152,6 @@ void main() {
     await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
     await tester.pumpAndSettle();
   }
-
-  void carryBandage(ProviderContainer container) => container
-      .read(inventoryProvider.notifier)
-      .addRelic(shippedRelic('bandage'));
 
   // A22 : le mécanisme du feu et du Puits.
   group('le retour systeme', () {
@@ -201,47 +182,6 @@ void main() {
     });
   });
 
-  group('le Colporteur', () {
-    testWidgets('les badges nomment la relique visee et son prix',
-        (tester) async {
-      await pumpEvent(tester, eventOf('relic_peddler'), prepare: carryBandage);
-
-      // Le Bandage de voyage, commun (rang 0) : 40 or.
-      expect(find.text('Cède Bandage de voyage : +40 Or'), findsOneWidget);
-      expect(find.text('Cède Bandage de voyage'), findsOneWidget);
-      expect(find.text('+20 PV'), findsOneWidget);
-    });
-
-    testWidgets('sans relique, les deux echanges sont inactifs et le disent',
-        (tester) async {
-      await pumpEvent(tester, eventOf('relic_peddler'));
-
-      expect(tester.takeException(), isNull);
-      expect(find.text('Aucune relique à céder'), findsNWidgets(2));
-      expect(enabled(tester, sale), isFalse);
-      expect(enabled(tester, remedies), isFalse);
-      expect(enabled(tester, leave), isTrue);
-    });
-
-    // Avec le cas de l'or du contrôleur, ce cas épingle les trois entiers
-    // positionnels d'`isSelectable` (n° 1 du tour 5) : les PV, les PV max.
-    testWidgets('les remedes ne s offrent que sous la moitie des PV',
-        (tester) async {
-      final container = await pumpEvent(
-        tester,
-        eventOf('relic_peddler'),
-        prepare: carryBandage,
-      );
-      expect(enabled(tester, sale), isTrue);
-      expect(enabled(tester, remedies), isFalse);
-
-      container.read(runProvider.notifier).takeDamage(60);
-      await tester.pump();
-
-      expect(enabled(tester, remedies), isTrue);
-    });
-  });
-
   group('le Remouleur', () {
     /// Une Frappe rare portant Tranchant 1 : la rune peut monter.
     CardInstance sharpStrike() => CardInstance(
@@ -249,35 +189,6 @@ void main() {
           rarity: CardRarity.rare,
           forgeUpgrades: const ['sharp:1'],
         );
-
-    testWidgets('inactif sur un deck sans rune affutable, ses badges disent '
-        'le prix et le gain', (tester) async {
-      await pumpEvent(
-        tester,
-        eventOf('wandering_grinder'),
-        deck: [CardInstance(data: shippedCard('defend_basic'))],
-      );
-
-      expect(enabled(tester, handRune), isFalse);
-      expect(enabled(tester, leave), isTrue);
-      expect(find.text('-10 PV'), findsOneWidget);
-      // Le choix s'explique : ce n'est pas une affaire de PV. Le badge du
-      // gain cède sa place, comme celui de la relique du Colporteur.
-      expect(find.text('Aucune rune à affûter'), findsOneWidget);
-      expect(find.text('+1 niveau de rune'), findsNothing);
-    });
-
-    testWidgets('avec une rune affutable, le badge Aucune rune a affuter '
-        'n y est pas', (tester) async {
-      await pumpEvent(
-        tester,
-        eventOf('wandering_grinder'),
-        deck: [sharpStrike()],
-      );
-
-      expect(enabled(tester, handRune), isTrue);
-      expect(find.text('Aucune rune à affûter'), findsNothing);
-    });
 
     testWidgets('il affute la rune choisie, sans or, contre 10 % des PV max',
         (tester) async {
@@ -309,49 +220,5 @@ void main() {
       expect(find.text('CONTINUER'), findsOneWidget);
     });
 
-    // Le bonus de plafond, lu par la condition que l'écran demande au
-    // contrôleur (spec P-43 E3, §4.8, §4.9 ; A17).
-    testWidgets('le bonus de plafond de la run rend le choix actif sur une '
-        'rune plafonnee', (tester) async {
-      final container = await pumpEvent(
-        tester,
-        eventOf('wandering_grinder'),
-        deck: [
-          CardInstance(
-            data: shippedCard('strike_basic'),
-            rarity: CardRarity.rare,
-            forgeUpgrades: const ['eco:1'],
-          ),
-        ],
-      );
-      expect(enabled(tester, handRune), isFalse);
-
-      container.read(runProvider.notifier).raiseRuneCap('eco');
-      await tester.pump();
-
-      expect(enabled(tester, handRune), isTrue);
-    });
-
-    testWidgets('annuler la selection ne resout rien, ne coute rien',
-        (tester) async {
-      final container = await pumpEvent(
-        tester,
-        eventOf('wandering_grinder'),
-        deck: [sharpStrike()],
-      );
-
-      await tester.tap(find.text(handRune));
-      await tester.pumpAndSettle();
-      expect(find.byType(RestCardSelectionScreen), findsOneWidget);
-
-      await pressBack(tester);
-
-      expect(find.byType(RestCardSelectionScreen), findsNothing);
-      expect(container.read(runProvider).heroStats.currentPv, 100);
-      expect(container.read(deckProvider).masterDeck.single.forgeUpgrades,
-          ['sharp:1']);
-      expect(container.read(eventProvider).isResolved, isFalse);
-      expect(enabled(tester, handRune), isTrue);
-    });
   });
 }

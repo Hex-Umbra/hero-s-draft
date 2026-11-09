@@ -1,0 +1,22 @@
+{
+  "id": "fortify",
+  "name_en": "Fortify",
+  "name_fr": "Fortification",
+  "description_en": "Gain 6 Block, +1 per 5 Block you have.",
+  "description_fr": "Gagne 6 d'Armure, +1 par tranche de 5 d'Armure.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 6,
+      "scaleWith": {
+        "source": "armor",
+        "ratio": 0.2
+      }
+    }
+  ]
+}

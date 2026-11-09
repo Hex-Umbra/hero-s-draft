@@ -1,0 +1,22 @@
+{
+  "id": "piercing",
+  "name_en": "Piercing",
+  "name_fr": "Perforant",
+  "description_en": "Ignores {val}% of the target's Block",
+  "description_fr": "Ignore {val} % de l'Armure de la cible",
+  "icon": "navigation_rounded",
+  "color": "indigoAccent",
+  "minFusionRank": 1,
+  "eligibleEffects": [
+    "damage"
+  ],
+  "maxLevel": 4,
+  "deltas": [
+    {
+      "type": "armorPierce",
+      "valuePercentPerLevel": 25
+    }
+  ],
+  "weight": 50,
+  "emoji": "🗡️"
+}

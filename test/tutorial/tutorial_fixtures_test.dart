@@ -44,11 +44,12 @@ void main() {
     test('le premier passif de chaque classe est son choix par defaut', () {
       // Le premier par rang d'affichage : celui avec lequel la carte de
       // classe s'affiche repliee, et celui que `chooseHero` retient tant que
-      // le joueur n'en designe pas un autre.
+      // le joueur n'en designe pas un autre. Le Mage demarre sur Flux de
+      // Mana : le seul de ses passifs pourvu d'un lot (O5).
       const attendus = {
         'paladin': 'regen_armor',
         'berserker': 'rage',
-        'mage': 'channeling',
+        'mage': 'mana_flux',
       };
       for (final hero in fixtures.heroes) {
         expect(fixtures.passivesFor(hero).first.id, attendus[hero.id]);
@@ -121,12 +122,16 @@ void main() {
     });
 
     test('le pool de départ est celui du prédicat d offre', () {
-      expect(fixtures.starterPool, isNotEmpty);
-      expect(fixtures.starterPool.length, greaterThanOrEqualTo(5));
-      expect(fixtures.starterPool.every((c) => c.isOfferable), isTrue);
-      final expected = data.cards.where((c) => c.isOfferable).toList()
+      final draft = fixtures.starterDraft('regen_armor');
+      final pool = draft.pool;
+      expect(pool, isNotEmpty);
+      expect(pool.length, greaterThanOrEqualTo(5));
+      expect(pool.every((c) => c.isOfferable('regen_armor')), isTrue);
+      final offered = data.cards.where((c) => c.isOfferable('regen_armor')).toList()
         ..sort(CardData.compareByDisplayOrder);
-      expect(fixtures.starterPool, expected);
+      expect(draft.lot, offered.where((c) => c.passive != null).toList());
+      expect(draft.neutrals, offered.where((c) => c.passive == null).toList());
+      expect(draft.neutrals, hasLength(15));
     });
   });
 

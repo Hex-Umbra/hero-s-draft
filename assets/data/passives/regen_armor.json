@@ -5,6 +5,7 @@
   "description_en": "Gain 2 Block automatically at the end of each turn.",
   "description_fr": "Gagne 2 points d'Armure automatiquement à la fin de chaque tour.",
   "classes": ["paladin"],
+  "feeds": ["armor", "status:armor_regen", "scale:armor", "cost:armor"],
   "trigger": "endOfTurn",
   "effectType": "gain_armor",
   "value": 2,

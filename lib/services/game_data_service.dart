@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/data/effect_icon_table.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
@@ -50,10 +51,31 @@ Future<AudioData> loadAudioData(String path) async {
   }
 }
 
+/// Les deux sources des cartes (spec P-42 T1 / P-44 lot 1, A2) : la neutre
+/// `cards/<id>.json` et celle d un lot `cards/<passif>/<id>.json`. Le nombre de
+/// segments les separe ; la deduplication des ids, elle, est commune.
+///
+/// La source neutre injecte `passive: null` : sans cela, `_applyInjection`
+/// (`game_data_loader.dart`) ne verrait aucun conflit et une neutre pourrait
+/// declarer un passif. Injecte, meme a `null`, le champ est refuse dans le
+/// fichier, comme il l est dans celui d une carte de lot.
+final List<EntitySource<CardData>> cardSources = [
+  EntitySource(
+    'assets/data/cards/*.json',
+    CardData.fromJson,
+    inject: (c) => {'id': c[0], 'passive': null},
+  ),
+  EntitySource(
+    'assets/data/cards/*/*.json',
+    CardData.fromJson,
+    inject: (c) => {'id': c[1], 'passive': c[0]},
+  ),
+];
+
 /// Construit le registre complet : les entites et la courbe d XP depuis
 /// [bundle], l audio depuis `rootBundle`.
 ///
-/// **Unique declaration des neuf sources du jeu.** Le provider de production
+/// **Unique declaration des dix sources du jeu.** Le provider de production
 /// et le registre des tests du tutoriel passent tous deux par ici : une
 /// seconde declaration serait une seconde verite, et c est exactement ce que
 /// ce chantier supprime.
@@ -74,13 +96,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
   // `const {'id'}` — `id` reste redeclarable a titre permanent (le porter
   // rend le fichier lisible hors contexte) ; `heroClass` et `category` sont
   // refuses par `CardData.fromJson`.
-  final cards = await loader.loadAll<CardData>([
-    EntitySource(
-      'assets/data/cards/*.json',
-      CardData.fromJson,
-      inject: (c) => {'id': c[0]},
-    ),
-  ]);
+  final cards = await loader.loadAll<CardData>(cardSources);
 
   // Les signatures de classe (spec P-43 E4, §3.2) : hors du deck, elles ne
   // sont pas des cartes. Le dossier de la classe injecte `heroClass`.
@@ -141,6 +157,13 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     XpCurveData.fromJson,
   );
 
+  // Les icones d effet (spec §3.7, A39) : un document plat, qui fait lui
+  // aussi echouer le demarrage s il manque ou s il est fautif.
+  final effectIcons = await loader.loadDocument(
+    'assets/data/effect_icons.json',
+    EffectIconTable.fromJson,
+  );
+
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
   // remontees ensemble. Corriger une faute par cycle de rebuild, fichier par
   // fichier, serait invivable.
@@ -161,6 +184,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     forgeUpgrades: forgeUpgrades,
     levelUpRewards: levelUpRewards,
     xpCurve: xpCurve,
+    effectIcons: effectIcons!,
     audio: audio,
   );
 }

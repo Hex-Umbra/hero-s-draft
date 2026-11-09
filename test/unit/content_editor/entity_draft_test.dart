@@ -117,7 +117,7 @@ void main() {
       EntityDraft(
         descriptor: signature,
         id: 'smite',
-        heroClass: 'paladin',
+        owner: 'paladin',
         bilingual: const {},
         mechanics: signature.template,
       ).path,

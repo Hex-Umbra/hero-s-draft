@@ -8,13 +8,13 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 |:---|:---:|:---:|:---|:---|
 | `poison` | Debuff | Oui | Inflige dégâts directs = valeur au début du tour | Durée -1 chaque tour |
 | `might` | Buff | Oui, **par source** (§4.3) | La **Puissance** : ajoute sa valeur à `effectiveMight`, que la classe oriente par `mightTargets` — Attaques, Compétences, altérations ([ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)). `effectiveMight` somme **toutes** les entrées `might`, une par source | Durée -1 chaque tour, chaque entrée pour elle-même |
-| `weakness` | Debuff | Oui | Réduit les dégâts physiques infligés de **25%** (`×0.75`) | Durée -1 chaque tour |
+| `weakness` | Debuff | Oui | **−25 % de dégâts infligés par point, 2 points au plus** (−50 %) — §4.4 | Durée -1 chaque tour |
 | `might_regen` | Buff | Oui | Ajoute sa valeur au statut `might` au début du tour, sous la source `status:might_regen` | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
 | `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
-| `freeze` | Debuff | Oui | Réduit les dégâts de la prochaine attaque de l'ennemi de **50%** (calculé dans l'intention affichée). Ne se dissipe plus en début de tour mais après la résolution de son action d'attaque. | Durée décrémentée après l'action d'attaque |
+| `freeze` | Debuff | Oui | **−25 % à la prochaine attaque par point, 3 points au plus** (−75 %), calculé dans l'intention affichée — §4.4. Ne se dissipe pas en début de tour mais après la résolution de son action d'attaque. | Durée décrémentée après l'action d'attaque |
 | `shock` | Debuff | Oui | Ajoute sa valeur active cumulée à tout dégât d'attaque direct subi par la cible. | Durée -1 chaque tour |
-| `vulnerable` | Debuff | Oui | Augmente universellement tous les dégâts reçus de **50%** (arrondi). Affecte autant le Héros que les Ennemis. | Durée -1 chaque tour |
+| `vulnerable` | Debuff | Oui | **+25 % de dégâts reçus par point, 4 points au plus** (+100 %), arrondi — §4.4. Affecte autant le Héros que les Ennemis. | Durée -1 chaque tour |
 
 ### 4.2. Statuts Partiellement Implémentés
 Aucun. Tous les statuts décrits ci-dessus sont 100% implémentés et opérationnels dans le calcul des dégâts.
@@ -62,3 +62,30 @@ if (isStackable) {
 > (`lib/game/components/entities/status_indicator.dart:43-62`). Vrai aujourd'hui : la Puissance
 > d'un ennemi n'a qu'une source, son intention Buff — celle d'Éveil meurt dans l'appel qui la
 > crée. Une carte qui donnerait de la Puissance à un ennemi casserait cet invariant (ADR-104).
+
+### 4.4. Les statuts proportionnels
+
+> [!IMPORTANT]
+> **Vulnérable, Faiblesse et Gel comptent leurs points** — P-44 lot 1, vague 5, en attente du
+> propriétaire ; barème de la réponse P-1 (a) du propriétaire, 2026-11-03 —
+> [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md).
+> Jusqu'à la vague 4, ils étaient tout ou rien (+50 %, −25 %, −50 %).
+
+| Statut | Par point | Plafond |
+|:---|:---|:---|
+| `vulnerable` | +25 % de dégâts subis | 4 points (+100 %) |
+| `weakness` | −25 % de dégâts infligés | 2 points (−50 %) |
+| `freeze` | −25 % à l'attaque | 3 points (−75 %) |
+
+- **Le point se lit sur la somme des entrées de même id**, bornée au plafond ; l'arrondi est au
+  plus proche. Les durées ne changent pas : le Gel s'use d'une attaque par attaque.
+- **Un seul endroit porte le barème** — `ProportionalStatus` (`lib/game/services/proportional_status.dart`),
+  le pourcentage par point et le plafond de chacun — et le pipeline de dégâts, l'intention effective
+  de l'ennemi, les infobulles des cartes et la galerie du tutoriel le lisent : aucun texte n'écrit
+  plus un pourcentage en dur.
+- **La Puissance « altération » ajoute des points** à ces trois statuts, comme à leur durée avant.
+  Un seul `apply_status` par résolution reçoit ce bonus ([`_rules/03-14`](03-14-couts-combines-croissance-et-multi-coups.md) §3.14.4).
+- **Recalibrés pour garder leur premier effet** : *Trait de Glace* pose 2 Gel, la rune *Congelant*
+  2 points par niveau et sans plafond, *Marque du Mage* 2 Vulnérable.
+- **C'est le barème des vagues 5 et 6** : les charges élémentaires relisent le Gel, le Feu et la
+  Foudre en vague 7 ([ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)).

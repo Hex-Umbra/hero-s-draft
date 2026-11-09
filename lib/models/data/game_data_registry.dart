@@ -1,3 +1,4 @@
+import 'effect_icon_table.dart';
 import 'enemy_data.dart';
 import 'hero_data.dart';
 import 'card_data.dart';
@@ -36,6 +37,11 @@ class GameDataRegistry {
   /// `xpCurveProvider` par une `StateError` explicite.
   final XpCurveData? xpCurve;
 
+  /// Les icônes d'effet par sorte (spec §3.7, A39). Défaut vide, comme
+  /// [levelUpRewards] : `loadGameDataRegistry` la renseigne toujours, et un
+  /// registre construit à la main retombe sur l'icône d'aide.
+  final EffectIconTable effectIcons;
+
   final AudioData audio;
 
   static GameDataRegistry? _instance;
@@ -52,6 +58,7 @@ class GameDataRegistry {
     this.levelUpRewards = const [],
     this.signatures = const [],
     this.xpCurve,
+    this.effectIcons = const EffectIconTable.empty(),
     this.audio = const AudioData.disabled(),
   }) {
     _instance = this;

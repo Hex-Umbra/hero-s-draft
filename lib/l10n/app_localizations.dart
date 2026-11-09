@@ -1103,7 +1103,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelLabel.
   ///
   /// In en, this message translates to:
-  /// **'Lvl {level}'**
+  /// **'Lvl. {level}'**
   String levelLabel(int level);
 
   /// No description provided for @shopReroll.
@@ -1391,7 +1391,7 @@ abstract class AppLocalizations {
   /// No description provided for @draftDeckSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Select exactly 5 global cards to build your starting deck and launch the run.'**
+  /// **'Pick 2 cards from your passive and 3 neutral cards to build your starting deck.'**
   String get draftDeckSubtitle;
 
   /// No description provided for @draftDeckSelectedCount.
@@ -1400,17 +1400,41 @@ abstract class AppLocalizations {
   /// **'Selected cards: {count} / 5'**
   String draftDeckSelectedCount(int count);
 
+  /// No description provided for @draftDeckLotSection.
+  ///
+  /// In en, this message translates to:
+  /// **'{passive} cards'**
+  String draftDeckLotSection(String passive);
+
+  /// No description provided for @draftDeckNeutralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral cards'**
+  String get draftDeckNeutralSection;
+
+  /// No description provided for @draftDeckQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'{picked}/{quota}'**
+  String draftDeckQuota(int picked, int quota);
+
   /// No description provided for @draftDeckProceed.
   ///
   /// In en, this message translates to:
   /// **'ENTER THE UMBRA'**
   String get draftDeckProceed;
 
-  /// No description provided for @draftDeckSnackbarMax.
+  /// No description provided for @draftDeckSnackbarMaxLot.
   ///
   /// In en, this message translates to:
-  /// **'You can only select up to 5 cards.'**
-  String get draftDeckSnackbarMax;
+  /// **'You already picked your {quota} passive cards.'**
+  String draftDeckSnackbarMaxLot(int quota);
+
+  /// No description provided for @draftDeckSnackbarMaxNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'You already picked your {quota} neutral cards.'**
+  String draftDeckSnackbarMaxNeutral(int quota);
 
   /// No description provided for @mergeLabel.
   ///
@@ -1682,6 +1706,24 @@ abstract class AppLocalizations {
   /// **'Cost: {cost} Mana · Cooldown: {cooldown, plural, =1{1 turn} other{{cooldown} turns}}'**
   String signatureCostAndCooldown(int cost, int cooldown);
 
+  /// No description provided for @signatureNextMinor.
+  ///
+  /// In en, this message translates to:
+  /// **'Next minor evolution at level {level}'**
+  String signatureNextMinor(int level);
+
+  /// No description provided for @signatureNextMajor.
+  ///
+  /// In en, this message translates to:
+  /// **'Next major evolution at level {level}'**
+  String signatureNextMajor(int level);
+
+  /// No description provided for @signatureEvolutionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolution to choose'**
+  String get signatureEvolutionPending;
+
   /// Prompt under the signature bar while a signature waits for an enemy target.
   ///
   /// In en, this message translates to:
@@ -1694,11 +1736,359 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
   String signatureTurnsLeft(int count);
 
+  /// A percentage value on a signature's icon band, such as its critical-chance bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{value}%'**
+  String effectValuePercent(int value);
+
+  /// A line of a signature's long-press effect list: a damage effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Deal {amount} damage'**
+  String effectLineDamage(int amount);
+
+  /// A line of a signature's long-press effect list: an armor effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Block'**
+  String effectLineArmor(int amount);
+
+  /// A line of a signature's long-press effect list: a heal effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Heal {amount} HP'**
+  String effectLineHeal(int amount);
+
+  /// A line of a signature's long-press effect list: a draw effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw {amount, plural, =1{1 card} other{{amount} cards}}'**
+  String effectLineDraw(int amount);
+
+  /// A line of a signature's long-press effect list: a mana gain effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Mana'**
+  String effectLineGainMana(int amount);
+
+  /// A line of a signature's long-press effect list: the Might status.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain {amount} Might {duration, plural, =1{this turn} other{for {duration} turns}}'**
+  String effectLineMight(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Might regeneration status.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Might at the start of your turn'**
+  String effectLineMightRegen(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the armor regeneration status.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration, plural, =1{For 1 turn} other{For {duration} turns}}, gain {amount} Block at the start of your turn'**
+  String effectLineArmorRegen(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Weakness status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Weakness for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineWeakness(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Vulnerable status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineVulnerable(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: the Burn status.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}'**
+  String effectLineBurn(int amount, int duration);
+
+  /// A line of a signature's long-press effect list: a critical-chance bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}% critical chance'**
+  String effectLineCrit(int amount);
+
+  /// A line of a signature's long-press effect list: the signature now targets all enemies.
+  ///
+  /// In en, this message translates to:
+  /// **'Hits all enemies'**
+  String get effectLineAllEnemies;
+
+  /// Title of the signature evolution screen.
+  ///
+  /// In en, this message translates to:
+  /// **'{signature} evolves'**
+  String evolutionScreenTitle(String signature);
+
+  /// Title of the signature evolution screen, when two signatures evolve together.
+  ///
+  /// In en, this message translates to:
+  /// **'Your signatures evolve'**
+  String get evolutionScreenTitleBoth;
+
+  /// Title of the map curtain when the next pending choice is a level draft.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL UP!'**
+  String get levelUpCurtainTitle;
+
+  /// Text of the map curtain when the next pending choice is a level draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Your hero has grown stronger!'**
+  String get levelUpCurtainSubtitle;
+
+  /// Call to action of the map curtain when a level draft waits.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO CLAIM YOUR REWARDS'**
+  String get levelUpCurtainAction;
+
+  /// Title of the map curtain when the next pending choice is a minor signature evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MINOR EVOLUTION'**
+  String get evolutionCurtainTitleMinor;
+
+  /// Title of the map curtain when the next pending choice is a major signature evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MAJOR EVOLUTION'**
+  String get evolutionCurtainTitleMajor;
+
+  /// Map curtain text when one signature waits for its evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'{signature} can evolve'**
+  String evolutionCurtainOne(String signature);
+
+  /// Map curtain text when two signatures wait for their evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Your signatures can evolve'**
+  String get evolutionCurtainBoth;
+
+  /// Call to action of the map curtain when a signature evolution waits.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO CHOOSE'**
+  String get evolutionCurtainAction;
+
+  /// Subtitle of the signature evolution screen, on a minor tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Minor evolution · hero level {level}'**
+  String evolutionBoardTierMinor(int level);
+
+  /// Subtitle of the signature evolution screen, on a major tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Major evolution · hero level {level}'**
+  String evolutionBoardTierMajor(int level);
+
+  /// Section of the evolution screen: what the current choice can take.
+  ///
+  /// In en, this message translates to:
+  /// **'To choose'**
+  String get evolutionBoardToChoose;
+
+  /// Section of the evolution screen: the minor evolutions of the next tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Minors — at level {level}'**
+  String evolutionBoardUpcomingMinors(int level);
+
+  /// Section of the evolution screen: the major evolutions of the next tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Majors — at level {level}'**
+  String evolutionBoardUpcomingMajors(int level);
+
+  /// Section of the evolution screen: the major evolutions already taken.
+  ///
+  /// In en, this message translates to:
+  /// **'Already taken'**
+  String get evolutionBoardTaken;
+
+  /// Section of the evolution screen: the major evolutions a taken major rules out.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded'**
+  String get evolutionBoardExcluded;
+
+  /// Tag of a major evolution ruled out by the taken major {name}.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded by {name}'**
+  String evolutionBoardExcludedBy(String name);
+
+  /// Tag of a minor evolution already taken, on a tier where it cannot be raised.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken · Lvl. {level}'**
+  String evolutionBoardTakenLevel(int level);
+
+  /// Text of a minor evolution already taken: its level before and after the choice, then what it gives at that level.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {from} → {to}: {description}'**
+  String evolutionBoardLevelUp(int from, int to, String description);
+
+  /// Heading of the signature sheet on the evolution screen, before any selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get evolutionBoardToday;
+
+  /// Heading of the signature sheet on the evolution screen, once an evolution is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'After this choice'**
+  String get evolutionBoardAfter;
+
+  /// Disabled confirm button of the evolution screen, before any selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an evolution'**
+  String get evolutionBoardPick;
+
+  /// Disabled confirm button of the evolution screen, while a choice is missing on two signatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one evolution per signature'**
+  String get evolutionBoardPickBoth;
+
+  /// Confirm button of the evolution screen, when two signatures evolve together.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm both'**
+  String get evolutionBoardTakeBoth;
+
+  /// Confirm button of the evolution screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Take {name}'**
+  String evolutionBoardTake(String name);
+
   /// Title of the class signatures block and of the dictionary tab.
   ///
   /// In en, this message translates to:
   /// **'Signatures'**
   String get signatures;
+
+  /// No description provided for @statusWeaknessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% damage dealt per point, down to −{max}%'**
+  String statusWeaknessHint(int percent, int max);
+
+  /// No description provided for @statusVulnerableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% damage taken per point, up to +{max}%'**
+  String statusVulnerableHint(int percent, int max);
+
+  /// No description provided for @statusFreezeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% to the next attack per point, down to −{max}%'**
+  String statusFreezeHint(int percent, int max);
+
+  /// No description provided for @cardCostHp.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs {amount} HP'**
+  String cardCostHp(int amount);
+
+  /// No description provided for @cardCostArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs {amount} Block'**
+  String cardCostArmor(int amount);
+
+  /// No description provided for @cardDescDamageHits.
+  ///
+  /// In en, this message translates to:
+  /// **'Deal {amount} damage {hits} times.'**
+  String cardDescDamageHits(int amount, int hits);
+
+  /// No description provided for @cardScaleArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per point of Block'**
+  String cardScaleArmor(String ratio);
+
+  /// No description provided for @cardScaleArmorPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} Block'**
+  String cardScaleArmorPer(int per);
+
+  /// No description provided for @cardScaleMissingHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per missing HP'**
+  String cardScaleMissingHp(String ratio);
+
+  /// No description provided for @cardScaleMissingHpPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} missing HP'**
+  String cardScaleMissingHpPer(int per);
+
+  /// No description provided for @cardScaleCardsPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per card played this turn'**
+  String cardScaleCardsPlayed(String ratio);
+
+  /// No description provided for @cardScaleCardsPlayedPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} cards played this turn'**
+  String cardScaleCardsPlayedPer(int per);
+
+  /// No description provided for @cardScaleEnemiesAlive.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per enemy'**
+  String cardScaleEnemiesAlive(String ratio);
+
+  /// No description provided for @cardScaleEnemiesAlivePer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} enemies'**
+  String cardScaleEnemiesAlivePer(int per);
+
+  /// No description provided for @cardScaleTargetStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per point of {status} on the target'**
+  String cardScaleTargetStatus(String ratio, String status);
+
+  /// No description provided for @cardScaleTargetStatusPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} points of {status} on the target'**
+  String cardScaleTargetStatusPer(int per, String status);
+
+  /// No description provided for @cardScaleTargetMissingHp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ratio} per missing HP on the target'**
+  String cardScaleTargetMissingHp(String ratio);
+
+  /// No description provided for @cardScaleTargetMissingHpPer.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 per {per} missing HP on the target'**
+  String cardScaleTargetMissingHpPer(int per);
 }
 
 class _AppLocalizationsDelegate

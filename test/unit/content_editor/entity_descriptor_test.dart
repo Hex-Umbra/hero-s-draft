@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/card_delta.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
+import 'package:roguelike_card_game/models/data/signature_evolution_data.dart';
 import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/services/content_editor/entity_descriptor.dart';
@@ -15,7 +17,7 @@ void main() {
     // fichier, a cent lignes l'un de l'autre ; elle ne dit donc rien de
     // `loadGameDataRegistry`, dont c'est le test suivant qui s'occupe.
     expect(kEntityDescriptors.keys.toSet(), EntityCategory.values.toSet());
-    expect(EntityCategory.values, hasLength(9));
+    expect(EntityCategory.values, hasLength(10));
   });
 
   test('aucune source de chargement n a ete ajoutee sans descripteur', () {
@@ -26,13 +28,15 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Neuf sources pour neuf categories,
-    // sans ecart : la carte est neutre seulement, et la signature de classe a
-    // sa propre source et son propre descripteur (spec P-43 E4, §8). Les
-    // recompenses de niveau ont recu le leur au lot D (spec §9.2).
+    // puis relever le compte ci-dessous. Dix sources pour dix categories :
+    // la carte en a deux (`cardSources`, spec P-42 T1 / P-44 lot 1, A2), la
+    // neutre et celle d'un lot, et chacune a son descripteur, `card` et
+    // `lotCard`. La signature de classe a sa propre source et son
+    // propre descripteur (spec P-43 E4, §8). Les recompenses de niveau ont
+    // recu le leur au lot D (spec §9.2).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
-    expect(declared, hasLength(9));
+    expect(declared, hasLength(10));
   });
 
   test('chaque descripteur est indexe sous sa propre categorie', () {
@@ -66,8 +70,16 @@ void main() {
     test('une signature va dans skills de sa classe', () {
       expect(
         kEntityDescriptors[EntityCategory.signature]!
-            .pathOf('smite', heroClass: 'paladin'),
+            .pathOf('smite', owner: 'paladin'),
         'assets/data/classes/paladin/skills/smite.json',
+      );
+    });
+
+    test('une carte de lot va dans cards/<passif>/', () {
+      expect(
+        kEntityDescriptors[EntityCategory.lotCard]!
+            .pathOf('kindle', owner: 'mana_flux'),
+        'assets/data/cards/mana_flux/kindle.json',
       );
     });
 
@@ -112,17 +124,39 @@ void main() {
   test('la carte interdit les champs que le repertoire impose', () {
     expect(
       kEntityDescriptors[EntityCategory.card]!.forbiddenKeys,
-      {'heroClass', 'category'},
+      {'heroClass', 'category', 'passive'},
     );
   });
 
   test('la signature exige cost, cooldown et type, et refuse heroClass, '
       'rarity, isExhaust et category', () {
     final signature = kEntityDescriptors[EntityCategory.signature]!;
-    expect(signature.requiredKeys, {'cost', 'cooldown', 'type'});
+    expect(signature.requiredKeys, {'cost', 'cooldown', 'type', 'evolutions'});
     expect(
       signature.forbiddenKeys,
       {'heroClass', 'rarity', 'isExhaust', 'category'},
+    );
+  });
+
+  test('la signature connait ses evolutions : tier, target et deltas[].type '
+      'lus sur le modele', () {
+    final enums = kEntityDescriptors[EntityCategory.signature]!.enumKeys;
+    expect(
+      enums['evolutions[].tier'],
+      EvolutionTier.values.map((e) => e.name).toList(),
+    );
+    expect(enums['evolutions[].target'], SignatureEvolutionData.targetNames);
+    expect(
+      enums['evolutions[].deltas[].type'],
+      SignatureEvolutionData.deltaTypeNames,
+    );
+  });
+
+  test('evolutions[].icon et evolutions[].color sont des cles de vocabulaire, '
+      'comme celles d une rune', () {
+    expect(
+      kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys,
+      containsAll(['evolutions[].icon', 'evolutions[].color']),
     );
   });
 
@@ -147,12 +181,33 @@ void main() {
     }
   });
 
-  test('seule la signature accepte une classe', () {
-    final withClass = kEntityDescriptors.values
-        .where((d) => d.supportsHeroClass)
-        .map((d) => d.category)
-        .toList();
-    expect(withClass, [EntityCategory.signature]);
+  test('la signature a pour proprietaire une classe, la carte de lot un '
+      'passif, aucune autre', () {
+    final owned = {
+      for (final d in kEntityDescriptors.values)
+        if (d.ownerKind != null) d.category: d.ownerKind,
+    };
+    expect(owned, {
+      EntityCategory.signature: EntityOwnerKind.heroClass,
+      EntityCategory.lotCard: EntityOwnerKind.passive,
+    });
+  });
+
+  test('carte et carte de lot lisent scaleWith.source sur ScaleSource, et '
+      'refusent passive', () {
+    for (final category in [EntityCategory.card, EntityCategory.lotCard]) {
+      final descriptor = kEntityDescriptors[category]!;
+      expect(
+        descriptor.enumKeys['effects[].scaleWith.source'],
+        ScaleSource.values.map((e) => e.name).toList(),
+        reason: descriptor.label,
+      );
+      expect(descriptor.forbiddenKeys, contains('passive'),
+          reason: descriptor.label);
+      expect(descriptor.requiredKeys, {'type'}, reason: descriptor.label);
+      expect(descriptor.alternativeKeys, {'cost': 'costs'},
+          reason: descriptor.label);
+    }
   });
 
   test('seules la classe et l ennemi portent des emplacements image', () {
@@ -233,7 +288,7 @@ void main() {
   //   `EntityWriter` a partir de l'identifiant ;
   // - `iconPath`, derive de l'identifiant par `ClassRecipe` ;
   // - `skills`, alimente signature par signature par `_registerSignature` ;
-  // - `heroClass` et `category`, imposes par le repertoire ;
+  // - `heroClass`, `category` et `passive`, imposes par le repertoire ;
   // - `classes` d'un passif, qui est une `referenceListKeys` : absente, elle
   //   ouvre le passif a toutes les classes (spec P-49, §3.2). L'assertion
   //   qui suit la table le verifie ;
@@ -255,6 +310,16 @@ void main() {
         'isExhaust',
         'effects',
       },
+      // Le gabarit de la carte de lot est celui de la carte neutre.
+      EntityCategory.lotCard: {
+        'cost',
+        'type',
+        'rarity',
+        'target',
+        'animation',
+        'isExhaust',
+        'effects',
+      },
       EntityCategory.signature: {
         'cost',
         'cooldown',
@@ -262,6 +327,7 @@ void main() {
         'target',
         'animation',
         'effects',
+        'evolutions',
       },
       EntityCategory.relic: {
         'trigger',
@@ -271,6 +337,8 @@ void main() {
         'emoji',
       },
       EntityCategory.passive: {
+        'classes',
+        'feeds',
         'trigger',
         'effectType',
         'value',
@@ -288,6 +356,7 @@ void main() {
         'color',
         'minFusionRank',
         'eligibleCardTypes',
+        'eligibleTargets',
         'eligibleEffects',
         'excludesEffects',
         'requiresExhaust',
@@ -330,7 +399,7 @@ void main() {
     expect(
       expected.keys.toSet(),
       EntityCategory.values.toSet(),
-      reason: 'la table doit couvrir les neuf categories',
+      reason: 'la table doit couvrir les dix categories',
     );
 
     expected.forEach((category, keys) {
@@ -342,9 +411,10 @@ void main() {
     });
   });
 
-  test('classes est atteignable par le catalogue, pas par le gabarit', () {
+  test('classes et feeds sont exiges, et au gabarit (A5, A6)', () {
     final descriptor = kEntityDescriptors[EntityCategory.passive]!;
-    expect(descriptor.decodeTemplate().containsKey('classes'), isFalse);
+    expect(descriptor.requiredKeys, containsAll(['classes', 'feeds']));
+    expect(descriptor.decodeTemplate().keys, containsAll(['classes', 'feeds']));
     expect(descriptor.referenceListKeys, {'classes': EntityCategory.heroClass});
   });
 
@@ -388,7 +458,12 @@ void main() {
   test('les vocabulaires fermes cote moteur sont declares', () {
     expect(kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
         {'animation', 'effects[].type', 'effects[].statusId'});
-    expect(kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys,
+    expect(kEntityDescriptors[EntityCategory.signature]!.vocabularyKeys, {
+      ...kEntityDescriptors[EntityCategory.card]!.vocabularyKeys,
+      'evolutions[].icon',
+      'evolutions[].color',
+    });
+    expect(kEntityDescriptors[EntityCategory.lotCard]!.vocabularyKeys,
         kEntityDescriptors[EntityCategory.card]!.vocabularyKeys);
     expect(kEntityDescriptors[EntityCategory.relic]!.vocabularyKeys,
         {'effectType'});
@@ -438,5 +513,18 @@ void main() {
     expect(forge.referenceListKeys,
         {'excludesRunes': EntityCategory.forgeUpgrade});
     expect(forge.decodeTemplate().containsKey('excludesRunes'), isFalse);
+  });
+
+  test('requiresCost : hp seulement, absente du gabarit', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    expect(forge.enumKeys['requiresCost'], ForgeUpgradeData.requiresCostValues);
+    expect(forge.decodeTemplate().containsKey('requiresCost'), isFalse);
+  });
+
+  test('eligibleTargets est une liste de CardTarget, au gabarit', () {
+    final forge = kEntityDescriptors[EntityCategory.forgeUpgrade]!;
+    final targets = [for (final t in CardTarget.values) t.name];
+    expect(forge.enumListKeys['eligibleTargets'], targets);
+    expect(forge.decodeTemplate()['eligibleTargets'], targets);
   });
 }
