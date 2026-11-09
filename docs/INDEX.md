@@ -148,6 +148,8 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
+| 🔍 | [Direction artistique évolutive — les cartes à jouer d'abord](possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md) *(le style de dessin d'une carte suit sa rareté ; catalogue de 74 styles, styles recommandés, échelles comparées, échelle A retenue le 08/11, série pilote de six cartes ; aucun `P-xx` à ce jour ; croise l'identité visuelle pixel art du 18/09)* | 07/11/2026 |
+| 📊 | [La direction artistique évolutive, en maquettes](presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx) *(PowerPoint, 19 diapositives : l'échelle recommandée sur la vraie carte, le test du tri, quatre échelles comparées, le catalogue en images, fenêtre ou plein cadre, le pire cas, le support seul, la main à l'échelle d'un écran 1080p ; puis la série pilote de six cartes, sur la vraie carte, en test du tri et en main)* | 07/11/2026 |
 | 🔍 | [Audit animations & juice](possible_upgrades/25-07-2026_animations_juice_analysis_Opus5.md) *(→ P-06, P-07, P-29)* | 25/07/2026 |
 | 🔍⚠️ | [Audit responsive — téléphone & tablette](possible_upgrades/05-08-2026_audit_responsive_mobile_tablette_Opus5.md) — **aucun chantier `P-xx` ne le porte à ce jour** : son verdict (portrait téléphone injouable) n'a pas de destination dans `ROADMAP.md`, à trancher | 05/08/2026 |
 | ⚠️ | [Système d'animation des cartes](animations/card_animations_system.md) — **faux sur 4 points**, mise en conformité listée en `ROADMAP.md` §7 | — |
