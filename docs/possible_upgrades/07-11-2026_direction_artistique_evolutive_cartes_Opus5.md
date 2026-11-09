@@ -393,9 +393,11 @@ Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/too
   - La chaîne s'enchaîne sans copier-coller, pilotée depuis le dépôt. ComfyUI a mis environ 45 secondes par image.
   - Grâce à ControlNet, l'image générée tombe à un pixel près sur la géométrie, et le découpage en calques devient générique : chaque pixel va au calque de l'objet visible à cet endroit.
   - Il reste deux faiblesses. Les éléments fins se perdent (les dents de l'engrenage, les enveloppes des dirigeables). Et le LoRA pixel art peint des « pixels » environ deux fois plus gros que la grille de 320 × 180, ce qui donne un aspect par blocs de 2 × 2.
+- **Un troisième fond, pour l'aire de repos**, a suivi le même trajet : un campement à la lisière d'une forêt, à l'heure bleue, dans [`art_src/backgrounds/camp/`](../../art_src/backgrounds/camp/). Sa composition part de l'écran de repos réel : le centre reste calme sous la colonne des options, et le feu brûle juste dessous. Il confirme ce que montrait la place : un détail ambigu de la géométrie est réinterprété par le générateur, et l'ombilic lumineux du bouclier est devenu une lanterne.
 
 ### 15.2 Ce qui reste à faire
 
 - **Régler l'étape 2 :** accorder la grille à la taille réelle des pixels du LoRA, et trouver des réglages qui gardent les éléments fins.
 - **Brancher le nouveau fond dans le jeu.** Le combat charge toujours `bg_dungeon.png`, et il étire le fond à la taille de l'écran. Il faudra une échelle entière, comme le prévoit [l'identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §3.1, et un recadrage plutôt qu'un étirement en portrait.
 - **Pour chaque nouveau décor,** comme les 15 fonds de biome de P-12, il faudra son propre script de géométrie. Celui de la salle sert de modèle.
+- **Animer légèrement les fonds** (idée retenue par le propriétaire le 09/11/2026, non planifiée) : quelques images seulement, pour le feu, les lanternes, la brume ou les étoiles. Les images viennent du code ou de la main, pas du générateur, qui ne garde pas la cohérence d'une image à l'autre. Dans le jeu, le fond reste fixe et de petites planches de sprites animées se posent par-dessus ; un GIF de toute l'image reste l'option de repli.
