@@ -382,7 +382,8 @@ def main(out_aseprite):
     depth, edges = control_maps()
     depth.save(f"{stem}_depth.png")
     edges.save(f"{stem}_edges.png")
-    manifest = [dict(out=out_aseprite, ref=work("hall", "hall_ref.png"), w=GW, h=GH, palette=[list(c) for c in APOLLO], layers=layers)]
+    manifest = [dict(out=out_aseprite, ref=work("hall", "hall_ref.png"), w=GW, h=GH, palette=[list(c) for c in APOLLO], layers=layers,
+                     surfaces=list(SURFACES), import_skip=["Ombre des bords"])]
     flat.save(manifest[0]["ref"])
     print(f"{len(layers)} calques, {n} couleurs Apollo utilisees sur 46")
     build(write_manifest("hall", manifest))
