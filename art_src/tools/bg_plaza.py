@@ -10,14 +10,10 @@ le detail vit en haut (horloge, dirigeables, fumees), sur les cotes (maisons, re
 et dans la bande entre les ennemis et la place (ville, viaduc, train).
 """
 import math
-import os
 import sys
-from PIL import Image, ImageFilter
 
-from aseprite_io import build, check_independent, work, write_manifest
-from bg_hall import APOLLO, C, bayer, h01, vnoise
-
-GW, GH = 320, 180
+from bg_hall import C, bayer, h01, vnoise
+from scene import GH, GW, Scene, export, shade
 VPX, VPY, FOC = 160, 46, 160.0
 CAMH = 3.0  # hauteur de la camera au-dessus des paves : on voit la place d'un peu haut
 EDGE = 20.0  # bord de la place, au-dessus du ravin
@@ -49,10 +45,7 @@ R = {k: [C(h) for h in v] for k, v in R.items()}
 
 
 def tone(ramp, v, x, y, dither=True):
-    rr = R[ramp]
-    t = max(0.0, min(0.999, v)) * (len(rr) - 1)
-    i = int(t) + (1 if t - int(t) > (bayer(x, y) if dither else 0.5) else 0)
-    return rr[min(len(rr) - 1, i)]
+    return shade(R[ramp], v, x, y, dither)
 
 
 def proj(X, Y, Z):
@@ -67,29 +60,8 @@ def lamp_light(X, Y, Z):
     return sum(1.5 * math.exp(-((X - lx) ** 2 + (Y - LANTERN_Y) ** 2 + (Z - lz) ** 2) / 3.2) for lx, lz in LAMPS)
 
 
-class Scene:
-    """Les calques, chacun avec sa profondeur et ses identifiants d'objet, pixel par pixel."""
-
-    ORDER = ["Ciel", "Nuages", "Horizon", "Ville", "Fumées", "Dirigeables", "Viaduc", "Train", "Tour de l'horloge",
-             "Balustrade", "Pavés", "Engrenage", "Maisons", "Réverbères"]
-
-    def __init__(self):
-        self.img = {n: Image.new("RGBA", (GW, GH), (0, 0, 0, 0)) for n in self.ORDER}
-        self.px = {n: im.load() for n, im in self.img.items()}
-        self.z = {n: {} for n in self.ORDER}
-        self.oid = {n: {} for n in self.ORDER}
-
-    def put(self, layer, x, y, col, z, oid):
-        if 0 <= x < GW and 0 <= y < GH:
-            self.px[layer][x, y] = col + (255,)
-            self.z[layer][x, y] = z
-            self.oid[layer][x, y] = oid
-
-    def top(self, x, y):
-        for n in reversed(self.ORDER):
-            if (x, y) in self.z[n]:
-                return n, self.z[n][x, y], self.oid[n][x, y]
-        raise AssertionError((x, y))
+ORDER = ["Ciel", "Nuages", "Horizon", "Ville", "Fumées", "Dirigeables", "Viaduc", "Train", "Tour de l'horloge",
+         "Balustrade", "Pavés", "Engrenage", "Maisons", "Réverbères"]
 
 
 # --- Le lointain ---------------------------------------------------------------------------
@@ -448,8 +420,20 @@ def lamps(S):
                     S.put("Réverbères", x, y, tone("iron", 0.4, x, y) if frame else tone("glow", 0.75, x, y), lz, f"lanterne{lx}{lz}" + ("c" if frame else ""))
 
 
-def render(out_dir):
-    S = Scene()
+def shape(n, oid):
+    """L'objet a l'echelle ou ses contours comptent : les joints, les pierres d'une meme
+    surface et les fenetres de la ville lointaine sont laisses au generateur."""
+    if n == "Pavés":
+        return "pave"
+    if n in ("Ville", "Horizon"):
+        return oid.split("f")[0].replace("mur", "")
+    if n == "Maisons" and (oid == "joint" or oid.endswith("b")):
+        return "mur"
+    return oid
+
+
+def render():
+    S = Scene(ORDER)
     sky(S)
     clouds(S)
     skyline(S, "Horizon", 120.0, 31, "haze", 4, 16, 0.0, 0.0)
@@ -465,64 +449,8 @@ def render(out_dir):
     gear(S)
     houses(S)
     lamps(S)
-    flat = Image.new("RGBA", (GW, GH), (0, 0, 0, 0))
-    entries = []
-    for i, n in enumerate(S.ORDER):
-        if S.img[n].getbbox() is None:
-            continue
-        p = os.path.join(out_dir, f"{i:02d}.png")
-        os.makedirs(out_dir, exist_ok=True)
-        S.img[n].save(p)
-        entries.append(dict(name=n, png=p))
-        flat = Image.alpha_composite(flat, S.img[n])
-    used = {c[:3] for c in flat.get_flattened_data()}
-    assert used <= set(APOLLO), used - set(APOLLO)
-    return S, flat.convert("RGB"), entries, len(used)
-
-
-def control_maps(S, scale=4):
-    """Profondeur (blanc devant) et contours (les limites entre objets), a la taille du guide."""
-    depth = Image.new("L", (GW, GH))
-    edges = Image.new("L", (GW, GH))
-    top = {(x, y): S.top(x, y) for y in range(GH) for x in range(GW)}
-    lo, hi = math.log(3.0), math.log(1000.0)
-    def shape(n, oid):
-        """L'objet a l'echelle ou ses contours comptent : les joints, les pierres d'une meme
-        surface et les fenetres de la ville lointaine sont laisses au generateur."""
-        if n == "Pavés":
-            return "pave"
-        if n in ("Ville", "Horizon"):
-            return oid.split("f")[0].replace("mur", "")
-        if n == "Maisons" and (oid == "joint" or oid.endswith("b")):
-            return "mur"
-        return oid
-
-    for (x, y), (n, z, oid) in top.items():
-        depth.putpixel((x, y), round(255 * max(0.0, min(1.0, (hi - math.log(z)) / (hi - lo)))))
-        here = (n, shape(n, oid))
-        if n in ("Ciel", "Nuages", "Fumées"):
-            continue
-        if any((top[q][0], shape(top[q][0], top[q][2])) != here for q in ((x + 1, y), (x, y + 1)) if q in top):
-            edges.putpixel((x, y), 255)
-    size = (GW * scale, GH * scale)
-    return depth.resize(size, Image.BICUBIC).filter(ImageFilter.GaussianBlur(scale / 2)), edges.resize(size, Image.NEAREST)
-
-
-def main(out_aseprite):
-    S, flat, layers, n = render(work("plaza", "layers"))
-    check_independent([(e["name"], Image.open(e["png"]).convert("RGBA")) for e in layers], ("Ciel",))
-    flat.save(work("plaza", "flat.png"))
-    stem = os.path.splitext(out_aseprite)[0]
-    flat.resize((GW * 4, GH * 4), Image.NEAREST).save(f"{stem}_guide_x4.png")
-    depth, edges = control_maps(S)
-    depth.save(f"{stem}_depth.png")
-    edges.save(f"{stem}_edges.png")
-    manifest = [dict(out=out_aseprite, ref=work("plaza", "plaza_ref.png"), w=GW, h=GH, palette=[list(c) for c in APOLLO], layers=layers,
-                     surfaces=["Ciel"])]
-    flat.save(manifest[0]["ref"])
-    print(f"{len(layers)} calques, {n} couleurs Apollo utilisees sur 46")
-    build(write_manifest("plaza", manifest))
+    return S
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    export(render(), "plaza", sys.argv[1], surfaces=("Ciel",), shape=shape, skip=("Ciel", "Nuages", "Fumées"))

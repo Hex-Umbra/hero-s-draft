@@ -6,8 +6,10 @@ Bibliotheque standard seulement : ComfyUI doit tourner (http://127.0.0.1:8188).
 
     python comfy_gen.py ../backgrounds/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]
 
-Le premier argument est le prefixe des fichiers de l'etape 1 : <prefixe>_guide_x4.png,
-<prefixe>_depth.png et <prefixe>_edges.png. L'image generee est ecrite dans .work/comfy/.
+Le premier argument est le prefixe des fichiers de l'etape 1 : <prefixe>_guide_x4.png (ou
+le nom donne par --guide), <prefixe>_depth.png et <prefixe>_edges.png. --size fixe la taille de
+generation : 1360x768 pour un fond, 832x1248 pour un sprite de 64 x 96. L'image generee est
+ecrite dans .work/comfy/.
 """
 import argparse
 import json
@@ -23,7 +25,6 @@ HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 CHECKPOINT = "sd_xl_base_1.0.safetensors"
 CONTROLNET = "controlnet-union-sdxl-1.0-promax.safetensors"
 LORA = "pixel-art-xl.safetensors"
-WIDTH, HEIGHT = 1360, 768  # le 16:9 le plus proche que SDXL accepte (multiples de 8)
 NEGATIVE = ("blurry, smooth gradients, 3d render, photo, realistic, text, letters, watermark, signature, logo, "
             "people, person, character, creature, deformed, lowres, jpeg artifacts, frame, border")
 
@@ -46,10 +47,10 @@ def upload(path):
     return _post("/upload/image", body, {"Content-Type": f"multipart/form-data; boundary={boundary}"})["name"]
 
 
-def workflow(guide, depth, edges, prompt, seed, denoise, depth_strength, edge_strength, lora_strength):
+def workflow(guide, depth, edges, prompt, seed, denoise, depth_strength, edge_strength, lora_strength, size):
     """Le graphe ComfyUI, au format API : chaque noeud par son numero."""
     def scaled(node):
-        return {"class_type": "ImageScale", "inputs": {"image": [node, 0], "upscale_method": "bicubic", "width": WIDTH, "height": HEIGHT, "crop": "disabled"}}
+        return {"class_type": "ImageScale", "inputs": {"image": [node, 0], "upscale_method": "bicubic", "width": size[0], "height": size[1], "crop": "disabled"}}
 
     return {
         "1": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": CHECKPOINT}},
@@ -101,10 +102,13 @@ def main():
     ap.add_argument("--depth", type=float, default=0.7, help="force de la carte de profondeur")
     ap.add_argument("--edges", type=float, default=0.45, help="force de la carte des contours")
     ap.add_argument("--lora", type=float, default=0.9, help="force du LoRA pixel art")
+    ap.add_argument("--size", default="1360x768", help="taille de generation, LARGEURxHAUTEUR (multiples de 8)")
+    ap.add_argument("--guide", default="guide_x4", help="suffixe de l'image guide")
     a = ap.parse_args()
-    names = [upload(f"{a.prefix}_{k}.png") for k in ("guide_x4", "depth", "edges")]
+    size = tuple(int(v) for v in a.size.split("x"))
+    names = [upload(f"{a.prefix}_{k}.png") for k in (a.guide, "depth", "edges")]
     out = work("comfy", f"{os.path.basename(a.prefix)}_s{a.seed}_d{a.denoise}.png")
-    took = run(workflow(*names, a.prompt, a.seed, a.denoise, a.depth, a.edges, a.lora), out)
+    took = run(workflow(*names, a.prompt, a.seed, a.denoise, a.depth, a.edges, a.lora, size), out)
     print(f"{out}  ({took:.0f} s)")
 
 

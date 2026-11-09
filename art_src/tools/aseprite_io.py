@@ -47,6 +47,13 @@ def check_independent(layers, surfaces):
         assert flat.getchannel("A").getextrema()[0] == 255, f"masquer « {hidden} » laisse un trou"
 
 
+def _visible(im):
+    """L'image telle qu'on la voit : la couleur des pixels transparents ne compte pas."""
+    im = im.convert("RGBA")
+    clear = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    return Image.composite(im, clear, im.getchannel("A").point(lambda a: 255 if a else 0))
+
+
 def build(manifest_path):
     """Assemble les fichiers du manifeste, les rouvre, et compare chacun a son image de reference."""
     exe = aseprite_exe()
@@ -55,8 +62,8 @@ def build(manifest_path):
     with open(manifest_path, encoding="utf-8") as f:
         entries = json.load(f)
     for e in entries:
-        ref = Image.open(e["ref"]).convert("RGB")
-        back = Image.open(e["ref"].replace("_ref.png", "_back.png")).convert("RGB")
+        ref = _visible(Image.open(e["ref"]))
+        back = _visible(Image.open(e["ref"].replace("_ref.png", "_back.png")))
         assert ref.size == back.size and ImageChops.difference(ref, back).getbbox() is None, f"{e['out']} differe de son rendu"
     print(f"{len(entries)} fichier(s) .aseprite identiques a leur rendu apres aller-retour dans Aseprite")
 
