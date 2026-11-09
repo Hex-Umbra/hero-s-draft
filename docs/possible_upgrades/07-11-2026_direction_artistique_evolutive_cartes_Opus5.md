@@ -386,12 +386,16 @@ Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/too
 ### 15.1 Ce que les premiers essais ont appris
 
 - **Les paliers pixel des sept cartes** de §14 existent en `.aseprite`, dans [`docs/presentations/2026-11-09_sources_aseprite_serie_pilote/`](../presentations/2026-11-09_sources_aseprite_serie_pilote/). Une fois rouverts dans Aseprite, ils sont identiques aux images de la présentation, au pixel près.
-- **Un fond de combat a fait le trajet complet**, dans [`art_src/backgrounds/`](../../art_src/backgrounds/) : une salle de donjon de 320 × 180, affichée ×6 en 1080p sans déformation. Ses détails sont sur les côtés et en haut, parce que les ennemis, le héros et la main couvrent le centre. Le générateur de cet essai était Gemini, avant le choix de ComfyUI. Il a tenu la composition : il a suffi d'un décalage de 3 pixels pour la recaler.
+- **Un fond de combat a fait le trajet complet**, dans [`art_src/backgrounds/dungeon/`](../../art_src/backgrounds/dungeon/) : une salle de donjon de 320 × 180, affichée ×6 en 1080p sans déformation. Ses détails sont sur les côtés et en haut, parce que les ennemis, le héros et la main couvrent le centre. Le générateur de cet essai était Gemini, avant le choix de ComfyUI. Il a tenu la composition : il a suffi d'un décalage de 3 pixels pour la recaler.
 - **Un calque est un objet complet.** Le premier découpage posait la lumière sur des calques à part, qui recopiaient les murs éclairés. Masquer les murs n'enlevait donc que les joints. La règle est maintenant la suivante : chaque objet porte sa propre lumière, et masquer un calque fait disparaître l'objet en entier sur une surface complète. Les outils vérifient cette règle à chaque export.
 - **Une limite du pixel art indexé :** une lumière ne peut pas être un calque qui s'additionne. Masquer une torche retire la flamme, mais pas la lumière peinte sur le mur.
+- **Un second fond a fait le trajet complet avec ComfyUI** : la place de l'horloge, une ville steampunk au crépuscule, dans [`art_src/backgrounds/steampunk/`](../../art_src/backgrounds/steampunk/).
+  - La chaîne s'enchaîne sans copier-coller, pilotée depuis le dépôt. ComfyUI a mis environ 45 secondes par image.
+  - Grâce à ControlNet, l'image générée tombe à un pixel près sur la géométrie, et le découpage en calques devient générique : chaque pixel va au calque de l'objet visible à cet endroit.
+  - Il reste deux faiblesses. Les éléments fins se perdent (les dents de l'engrenage, les enveloppes des dirigeables). Et le LoRA pixel art peint des « pixels » environ deux fois plus gros que la grille de 320 × 180, ce qui donne un aspect par blocs de 2 × 2.
 
 ### 15.2 Ce qui reste à faire
 
-- **Installer ComfyUI** et ses modèles. Les outils lui fournissent déjà l'image guide et les deux cartes de guidage.
+- **Régler l'étape 2 :** accorder la grille à la taille réelle des pixels du LoRA, et trouver des réglages qui gardent les éléments fins.
 - **Brancher le nouveau fond dans le jeu.** Le combat charge toujours `bg_dungeon.png`, et il étire le fond à la taille de l'écran. Il faudra une échelle entière, comme le prévoit [l'identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §3.1, et un recadrage plutôt qu'un étirement en portrait.
 - **Pour chaque nouveau décor,** comme les 15 fonds de biome de P-12, il faudra son propre script de géométrie. Celui de la salle sert de modèle.
