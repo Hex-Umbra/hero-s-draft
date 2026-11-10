@@ -1,6 +1,6 @@
 # Direction artistique évolutive — les cartes à jouer d'abord
 
-**Date** : 07/11/2026 · **Mises à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14) · 09/11/2026 (méthode pixel art retenue, outils conservés dans le dépôt, §15) · 10/11/2026 (la DA évolutive s'étend aux créatures, par le tier, §16)
+**Date** : 07/11/2026 · **Mises à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14) · 09/11/2026 (méthode pixel art retenue, outils conservés dans le dépôt, §15) · 10/11/2026 (la DA évolutive s'étend aux créatures, par le tier, §16 ; le même jour, le tier renonce à fixer leur taille : seuls la qualité et le détail le marquent)
 **Contexte** : idée du propriétaire : le merging fait déjà progresser les valeurs d'une carte, il doit aussi faire progresser son dessin. Une *Frappe* commune est griffonnée, une *Frappe* légendaire est une illustration achevée. Les cartes à jouer ouvrent la marche parce que c'est le terrain le plus simple ; le concept pourra ensuite s'étendre au reste du jeu.
 **Statut** : Exploration — **rien n'est implémenté, aucun asset n'est intégré au jeu**. Seules les décisions de §2 sont acquises ; tout le reste est une proposition.
 **Maquettes** : [`docs/presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx`](../presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx) — 19 diapositives, citées ci-dessous sous la forme *(diapo 2)*. Elles sont générées par code : les diapos 1 à 13 à partir d'un seul motif d'épée, les diapos 14 à 19 à partir de six autres cartes (§14). Elles servent à juger l'écart entre les styles, pas la qualité que chaque style peut atteindre.
@@ -32,7 +32,7 @@ Décisions du propriétaire (échange du 07/11/2026, du 08/11/2026 pour la sixi�
 5. **On commence par les cartes à jouer.**
 6. **L'échelle A est retenue** : griffonnage → pixel 16×16 → pixel 64×64 → dessin animé → peinture numérique (§8). Le test du tri sur de vrais dessins reste à faire, mais il n'est plus là pour choisir l'échelle : il sert à la valider.
 7. **La méthode du pixel art du projet**, cartes et décors : la structure par le code, le détail par ComfyUI en local, le retour sur la grille et la palette Apollo avec un découpage en calques, puis la retouche à la main dans Aseprite (§15). Ni générateur en ligne, ni logiciel tiers payant.
-8. **La DA évolutive s'étend aux créatures, par leur tier.** Comme pour les cartes, le dessin raconte le niveau : plus le tier d'une créature est bas, moins elle a de détail ; plus il est haut, plus elle est riche (§16).
+8. **La DA évolutive s'étend aux créatures, par leur tier.** Comme pour les cartes, le dessin raconte le niveau : plus le tier d'une créature est bas, moins elle a de détail ; plus il est haut, plus elle est riche (§16). **Le tier ne fixe pas la taille de la créature**, seulement sa qualité et surtout son détail. Toutes les créatures portent un liseré de lumière d'un pixel, posé une fois leur design validé.
 
 ## 3. Le point de départ, mesuré
 
@@ -407,31 +407,23 @@ Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/too
 
 **Le principe** (§2, décision 8) : comme une carte, une créature raconte son niveau par son dessin. Un ennemi de tier 1 est simple, un ennemi de tier 3 est une illustration riche. La menace se lisait déjà par le cadre, qui grossit avec le tier ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4). Elle se lit maintenant deux fois : par le cadre, puis par la finesse de la créature.
 
-**Ce qui change par rapport aux cartes :** les cartes changent de style d'un palier à l'autre, du griffonnage à la peinture. Les créatures restent en pixel art, l'identité du monde, et c'est **leur présence et leur richesse** qui évoluent.
+**Ce qui change par rapport aux cartes :** les cartes changent de style d'un palier à l'autre, du griffonnage à la peinture. Les créatures restent en pixel art, l'identité du monde, et c'est **leur richesse**, la qualité et surtout le détail, qui évolue.
 
-### 16.1 Une seule résolution, une présence qui grandit
+### 16.1 Une seule résolution, un détail qui grandit
 
-**Toutes les créatures sont produites en 128 × 192**, deux fois la fenêtre du cadre (64 × 96). Le tier ne change pas la résolution. Il change **la place que la créature occupe** dans l'image, puis, au-delà du tier 3, le travail porté sur elle.
+**Toutes les créatures sont produites en 128 × 192**, deux fois la fenêtre du cadre (64 × 96). **Le tier ne change ni la résolution ni la taille de la créature dans l'image** : il change le travail porté sur elle.
 
-| Tier | Présence | Ce qui fait la différence (proposition) |
-|:---:|:---:|:---|
-| 1 | 45 % | Une silhouette simple et franche, peu de tons par matière, pas d'accessoire fin |
-| 2 | 56 % | Les volumes modelés, l'équipement lisible, quelques détails |
-| 3 | 70 % | La matière (tissu, os, métal), une pose qui menace, les petits accessoires |
-| 4 | 70 % | Une pose plus dramatique, une tenue plus riche (armure, ornements, trophées), une prestance qui s'impose |
-| 5 | 70 % | La pose la plus spectaculaire, une tenue d'exception, une aura propre (lueur, runes, éléments qui flottent) |
+| Tier | Ce qui fait la différence (proposition) |
+|:---:|:---|
+| 1 | Une silhouette simple et franche, peu de tons par matière, pas d'accessoire fin |
+| 2 | Les volumes modelés, l'équipement lisible, quelques détails |
+| 3 | La matière (tissu, os, métal), une pose qui menace, les petits accessoires |
+| 4 | Une pose plus dramatique, une tenue plus riche (armure, ornements, trophées), une prestance qui s'impose |
+| 5 | La pose la plus spectaculaire, une tenue d'exception, une aura propre (lueur, runes, éléments qui flottent) |
 
-**Comment se lit la présence :**
-- **On mesure la boîte de la silhouette entière, arme et ombre comprises :** c'est ce que l'œil appelle la présence.
-- **La créature tient dans une boîte réduite du même facteur en hauteur et en largeur,** posée sur la ligne de sol. Une créature haute est donc limitée par la hauteur, une bête longue par la largeur.
+Le tier 3 est le palier du milieu : la matière et la pose, pas encore l'aura. La menace se lit aussi par le cadre, qui grossit avec le tier ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4).
 
-**Pourquoi ces chiffres :**
-- **Des tiers 1 à 3, la taille croît d'un rapport constant de ×1,25** (×1,56 en pixels). Chaque pas se voit autant que le précédent. Des pas égaux en pourcentage sauteraient fort en bas (+67 % du tier 1 au tier 2) et presque plus en haut.
-- **Le tier 3 sert d'ancre à 70 %.** Au-delà, la créature ne grandit plus : elle remplirait la fenêtre et cacherait son décor. **Les tiers 4 et 5 se distinguent par le travail sur la créature**, la pose, la tenue et la prestance, et par leur cadre, qui grossit avec le tier ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4).
-
-**Le détail suit tout seul jusqu'au tier 3.** À taille de pixel égale, une créature de tier 3 a environ deux fois et demie plus de pixels pour être dessinée qu'une créature de tier 1.
-
-**La créature est générée directement à la taille de son tier.** C'est le guide de pose qu'on réduit, pas l'image finie : réduire un pixel art après coup le brouille.
+**Pas de limite de taille par tier** (décision du propriétaire du 10/11/2026). Une première version fixait la place de la créature dans l'image : 45 % de la hauteur au tier 1, 56 % au tier 2, 70 % à partir du tier 3. La Faucheuse a été régénérée à cette règle : à 58 %, elle a été jugée bien moins cohérente que l'originale, qui occupe 95 % de la hauteur. La taille se choisit donc créature par créature, pour sa lisibilité ; seules la qualité et le détail marquent le tier. L'essai est raconté dans [l'exemple de la Faucheuse](../../art_src/docs/exemples/creature_faucheuse.md).
 
 ### 16.2 L'échelle
 
@@ -439,8 +431,8 @@ Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/too
 
 ### 16.3 Ce qui existe, et ce qui est à refaire
 
-- **La Faucheuse** (`art_src/creatures/squelette_faucheuse/`) a la pose, la tenue et le niveau de détail d'un tier 3. Mais sa présence est de 95 %, faux levée comprise : il faudra la régénérer à 70 %.
-- **Le Squelette de tier 2** (`art_src/creatures/squelette_96*`) a été fait par l'ancienne méthode : une illustration pleine fenêtre avec sa crypte, en 96 × 144. Il est à refaire en sprite de 128 × 192, à 56 % de présence.
+- **La Faucheuse** (`art_src/creatures/squelette_faucheuse/`) a la pose, la tenue et le niveau de détail d'un tier 3. Sa robe se perdait dans les sous-bois sombres : depuis le 10/11/2026, un calque de liseré de lumière l'en détache ([workflow des créatures](../../art_src/docs/workflow_creature.md), étape 6).
+- **Le Squelette de tier 2** (`art_src/creatures/squelette_96*`) a été fait par l'ancienne méthode : une illustration pleine fenêtre avec sa crypte, en 96 × 144. Il est à refaire en sprite de 128 × 192.
 - **Aucune créature de tier 1, 4 ou 5** n'existe encore.
 
 **Les pistes liées** (évoquées le 10/11/2026, non décidées) :
