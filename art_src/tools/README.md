@@ -2,14 +2,21 @@
 
 Les scripts qui produisent les sources `.aseprite` du projet. Ils sont rangés hors de `assets/` et ne sont jamais livrés avec le jeu. Pourquoi cette méthode a été choisie : voir le document de direction artistique, [§15](../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md).
 
-## La méthode, en quatre étapes
+## La méthode
 
-1. **La structure, par le code.** La géométrie (pour les fonds, une vraie perspective calculée pixel par pixel), la palette [Apollo](https://lospec.com/palette-list/apollo) et des calques nommés.
-2. **Le détail, par ComfyUI**, en local. L'image guide, la carte de profondeur et la carte des contours tiennent la composition (ControlNet).
-3. **Le retour sur la grille.** L'image générée est alignée, ramenée sur la grille (chaque case prend la couleur du groupe dominant de son bloc, puis la couleur Apollo la plus proche à l'œil, tramée avec sa voisine quand la palette n'a pas le ton), puis découpée en calques selon la géométrie de l'étape 1.
-4. **La retouche à la main**, dans Aseprite.
+Deux documents décrivent le travail pas à pas :
+- [**Produire un fond**](../docs/workflow_fond.md) : le fond d'écran de 320 × 180, avec la structure par le code et le détail par ComfyUI ; et le fond de fenêtre de 128 × 192, généré librement, en trois variations par biome.
+- [**Produire une créature ou un personnage**](../docs/workflow_creature.md) : la créature générée seule, avec la pose imposée en OpenPose, puis détourée et séparée en calques, et livrée comme un sprite que le jeu greffe sur un fond de fenêtre.
 
-**Règle des calques :** un calque est un objet complet. Le masquer le fait disparaître en entier et laisse voir une surface complète dessous. Seules les surfaces (murs, sol, voûte, fond) n'ont rien derrière elles. `aseprite_io.check_independent` vérifie cette règle à chaque export, et `aseprite_io.build` vérifie que chaque `.aseprite`, rouvert dans Aseprite, redonne exactement son rendu.
+Les deux finissent de la même façon : un `.aseprite` en palette Apollo, à retoucher à la main. Des cas réels, racontés en détail avec leurs prompts et leurs graines, sont dans [`../docs/exemples/`](../docs/exemples/).
+
+## Règles communes
+
+- **La palette [Apollo](https://lospec.com/palette-list/apollo), exacte.** ComfyUI ne la connaît pas : le prompt la décrit en mots (« muted cold palette of deep navy blue, slate blue and teal greys, with sparse warm accents of rust, ember orange and old ivory »), puis la mise sur la grille la rend exacte. Chaque case prend la couleur du groupe dominant de son bloc, puis la couleur Apollo la plus proche à l'œil, tramée avec sa voisine quand la palette n'a pas le ton.
+- **Générer à 8 fois la taille voulue.** Le LoRA pixel art peint des cases de 8 pixels. À 1024 × 1536, elles tombent pile sur une grille de 128 × 192, et l'import lit le cœur de chaque case au lieu de mélanger ses bords.
+- **Trois graines par tour, une chose changée à la fois.** Une image qu'on aime se relance avec sa graine quand on retouche le prompt : la composition reste souvent proche.
+- **Garder la source.** L'image générée se range en PNG à côté de son `.aseprite`, jamais en JPEG. Une image corrigée garde l'originale à côté (`_brute`).
+- **Un calque est un objet complet.** Le masquer le fait disparaître en entier et laisse voir une surface complète dessous. Seules les surfaces (murs, sol, voûte, fond) n'ont rien derrière elles. `aseprite_io.check_independent` vérifie cette règle à chaque export, et `aseprite_io.build` vérifie que chaque `.aseprite`, rouvert dans Aseprite, redonne exactement son rendu.
 
 ## Prérequis
 
@@ -38,6 +45,13 @@ Toutes se lancent depuis ce dossier.
 | `python bg_import.py squelette_96 <image générée> ../creatures/squelette_96_detail.aseprite` | L'étape 3 d'une illustration pleine fenêtre : la même que pour un fond. Une génération à 768 × 1152 se ramène sur les trois largeurs. |
 | `python sprite_import.py <scène> <image générée> <sortie.aseprite> [<copie PNG>]` | L'étape 3 d'un sprite détouré, sur fond transparent : la mise sur la grille, le retrait du fond uni, le découpage par partie du corps. |
 | `python bg_import.py <scène> <image générée> <sortie.aseprite> [<copie PNG de la source>]` | L'étape 3, pour n'importe quelle scène (`hall`, `plaza`…) : l'image générée est alignée, ramenée sur la grille Apollo, puis découpée. Chaque pixel va au calque de l'objet visible à cet endroit, et les autres calques gardent le rendu de la scène. Le script de la scène doit avoir tourné avant. |
+| `python comfy_gen.py <nom> "<prompt>" --libre --exclure "<exclusions>" --size 1024x1536 --seed N --lora 0.8` | Une génération libre, sans guide : pour explorer un design, pour un fond de fenêtre ou pour une créature seule. L'image arrive dans `.work/comfy/<nom>_libre_s<graine>.png`. |
+| `python comfy_gen.py <préfixe> "<prompt>" --sujet --guide guide --pose 0.85 --edges 0.4 --depth 0 --denoise 1.0 --size 1024x1536` | Une créature guidée par sa pose : `<préfixe>_pose.png` (OpenPose), `<préfixe>_edges.png` (l'arme) et `<préfixe>_guide.png`. `--sujet` laisse le prompt négatif accepter une figure. Un guide de force nulle n'est pas utilisé. |
+| `python comfy_gen.py <préfixe> "<prompt>" --retouche --denoise 0.55` | Ne repeint que la zone blanche de `<préfixe>_bande.png` dans `<préfixe>_assemblage.png`, et rend le reste à l'identique. |
+| `python window_import.py <image générée> <sortie.aseprite> [--taille 128x192] [--source <copie PNG>]` | Un fond de fenêtre : l'image générée à 8 fois la taille, ramenée sur la grille Apollo, en un calque. |
+| `python creature_faucheuse_pose.py <préfixe>` | Les guides de pose de la Faucheuse : la carte OpenPose, la faux en contours et l'image de départ unie. Le modèle des guides des futures créatures. |
+| `python creature_compose.py <figure.png> <fond.png> <préfixe> [--dx N] [--dy N] [--ombre-peinte]` | Détoure une créature générée sur fond uni et la pose sur un fond de la même taille. Écrit `<préfixe>_assemblage.png`, la silhouette (une case par case de 8 pixels) et la bande de retouche. |
+| `python creature_layers.py <préfixe> <assemblage.png> <fond.png> <aperçu.aseprite> [--sol 183] [--sprite <sprite.aseprite>]` | Met l'assemblage sur la grille Apollo et le sépare en calques : Décor, Ombre et raccord, puis la créature en Ombre, Robe, Os et Arme. `--sprite` écrit aussi la créature seule, sur fond transparent. |
 | `python aseprite_layers.py ../../docs/presentations/2026-11-09_sources_aseprite_serie_pilote` | Les paliers pixel 16 et pixel 64 des sept cartes de la série pilote. |
 | `python pilot_cards.py` | Une planche de contrôle des cartes de la série pilote aux cinq paliers, sur la vraie carte. |
 
@@ -57,12 +71,17 @@ Toutes se lancent depuis ce dossier.
 | `frame_tier.py` | Les cadres de tier des ennemis : fond de fenêtre, plaque, liseré, rivets, coins, insigne du tier. |
 | `creature_squelette.py` | Le Squelette et sa crypte, partie par partie, en coordonnées relatives à la fenêtre ; le modèle des futures créatures. |
 | `sprite_import.py` | L'étape 3 des sprites détourés : fond uni retiré, transparence rendue autour de la silhouette. |
-| `comfy_gen.py` | L'étape 2 : le pilote de ComfyUI, en bibliothèque standard seulement. |
-| `bg_import.py` | L'étape 3, commune à toutes les scènes : alignement, mise sur la grille, découpage. |
+| `comfy_gen.py` | Le pilote de ComfyUI, en bibliothèque standard seulement : génération guidée (profondeur, contours, pose), libre, ou retouche d'une zone. |
+| `bg_import.py` | L'étape 3 des fonds d'écran : alignement, mise sur la grille, découpage. Elle contient aussi la mise sur la grille commune à toute la chaîne, la lecture de la grille du LoRA et le nettoyage des pixels isolés. |
+| `window_import.py` | Les fonds de fenêtre : mise sur la grille, un calque. |
+| `creature_faucheuse_pose.py` | Les guides de pose de la Faucheuse, en OpenPose. |
+| `creature_compose.py` | Le détourage d'une créature générée seule, et sa pose sur un fond. |
+| `creature_layers.py` | La séparation d'une créature en calques complets, et son sprite sur fond transparent. Sa fonction `classify` connaît une créature en robe, avec des os et une arme à manche. |
 | `aseprite_io.py`, `aseprite_build.lua`, `aseprite_verify.lua` | Le pont vers Aseprite : assemblage en mode indexé, aller-retour vérifié, contrôle des calques. |
 
 **À savoir :**
-- **Les fonds sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`…), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée.
+- **Les fonds sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`…), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée. Les fonds de fenêtre sont dans `../backgrounds/windows/<biome>/`, trois par biome.
+- **Les créatures ont chacune leur dossier** dans `../creatures/<id>/`, avec le sprite, un aperçu sur un fond, la figure générée brute, la figure corrigée et les guides de pose.
 - **Chaque fond a son propre script de géométrie**, construit sur `scene.py`, avec `bg_plaza.py` et `bg_camp.py` pour modèles : un calque complet par objet, posé à sa profondeur. Le script de la scène ne décrit que ce qui lui est propre ; l'export, les contrôles et les cartes de guidage sont communs.
 - **Le manifeste de la scène guide l'étape 3.** Il dit quels calques sont des surfaces (autorisés à laisser un vide quand on les masque), lesquels l'import doit ignorer, comme l'ombre tramée des bords de la salle, et quelles couleurs il ne doit pas utiliser. Pour le Squelette, ce sont les deux verts pâles d'Apollo : sans cette exclusion, l'ivoire des os vire au vert maladif.
 - **Le fichier `dungeon_hall_detail.aseprite` a été découpé par une version plus ancienne de `bg_import.py`**, qui triait aussi les pixels par couleur. Relancer l'import le découperait selon la règle actuelle.
