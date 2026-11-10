@@ -13,6 +13,7 @@ et la decoupe en calques d'apres le rendu de la scene (etape 1).
 
 <scene> est le nom du manifeste ecrit par le script de la scene (hall, plaza...).
 """
+import cmath
 import json
 import math
 import os
@@ -57,6 +58,68 @@ def align(src, ref):
     return best
 
 
+def _period(src, axis, expected):
+    """La periode et le decalage de la grille de pixels peinte le long d'un axe, et sa nettete.
+
+    Les changements de couleur d'un pixel au suivant se repetent a chaque bord de case : on
+    cherche la periode, pres de celle qu'on attend, ou cette repetition est la plus forte."""
+    d = ImageChops.difference(src, ImageChops.offset(src, *((1, 0) if axis == 0 else (0, 1)))).convert("L")
+    w, h = d.size
+    px = d.load()
+    if axis == 0:
+        prof = [sum(px[i, j] for j in range(h)) for i in range(1, w)]
+    else:
+        prof = [sum(px[i, j] for i in range(w)) for j in range(1, h)]
+    mean = sum(prof) / len(prof)
+    prof = [v - mean for v in prof]
+
+    def spectrum(p):  # l'amplitude et la phase de la repetition de periode p
+        s = sum(v * cmath.exp(2j * math.pi * (k + 1) / p) for k, v in enumerate(prof))
+        return abs(s), (cmath.phase(s) % (2 * math.pi)) / (2 * math.pi) * p
+
+    peak, p = max((spectrum(expected * (1 + i / 400))[0], expected * (1 + i / 400)) for i in range(-12, 13))
+    off = spectrum(p)[1]
+    floor = sorted(spectrum(expected * k / 10)[0] for k in (6, 7, 13, 14, 15))[2]  # le bruit, hors de la periode
+    return p, (off + p / 2) % p - p / 2, peak / max(floor, 1)
+
+
+def lora_grid(src, gw, gh):
+    """La grille peinte par le LoRA pixel art, si elle tombe sur la grille de la scene.
+
+    Le LoRA peint des cases d'environ 8 pixels : une image de 768 de large porte une grille de
+    96. Quand la grille peinte a la taille de celle de la scene, on la prend telle quelle :
+    c'est plus juste que l'alignement sur les contours, qui peut tomber entre deux cases."""
+    t = []
+    for axis, n in ((0, gw), (1, gh)):
+        p, off, sharp = _period(src, axis, src.size[axis] / n)
+        if sharp < 3 or abs(p * n - src.size[axis]) > 0.01 * src.size[axis]:
+            return None
+        t += [p, off]
+    return tuple(t)
+
+
+def tidy(img, palette=APOLLO):
+    """Retire le bruit : un pixel seul de sa couleur, entoure d'une couleur proche, prend celle-ci.
+
+    Un pixel tres different de son entourage (un oeil rouge, un reflet) est un detail : il reste."""
+    lab = {c: _lab(c) for c in palette}
+    src = img.copy()
+    sp, op = src.load(), img.load()
+    w, h = img.size
+    changed = 0
+    for y in range(1, h - 1):
+        for x in range(1, w - 1):
+            c = sp[x, y]
+            around = [sp[x + dx, y + dy] for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy]
+            if c in around:
+                continue
+            top = max(set(around), key=around.count)
+            if around.count(top) >= 5 and math.dist(lab[c], lab[top]) < 20:
+                op[x, y] = top
+                changed += 1
+    return changed
+
+
 def _lab(c):
     """La couleur dans l'espace Lab, ou les distances suivent ce que voit l'oeil."""
     def lin(v):
@@ -87,7 +150,7 @@ def _representative(src, x0, x1, y0, y1):
     return tuple(sum(c[i] for c in best) / len(best) for i in range(3))
 
 
-def to_grid(src, t, gw, gh, palette=APOLLO):
+def to_grid(src, t, gw, gh, palette=APOLLO, inset=0.0):
     """Ramene l'image generee sur la grille et sur la palette, en restant au plus pres de ce qu'on voit.
 
     Chaque case prend la couleur representative de son bloc, puis la couleur de la palette la
@@ -95,7 +158,8 @@ def to_grid(src, t, gw, gh, palette=APOLLO):
     sans cela, un ivoire dans l'ombre part vers un gris bleute. Pour un gris, c'est l'inverse :
     la pierre garde sa luminosite au lieu de chercher une teinte qu'elle n'a pas. Quand la couleur
     tombe entre deux couleurs voisines de la palette, une trame de Bayer les melange, pour rendre
-    les tons que la palette n'a pas."""
+    les tons que la palette n'a pas. inset retire cette part de chaque bord du bloc : sur la grille
+    du LoRA, on ne lit que le coeur de chaque case."""
     pal_lab = [_lab(c) for c in palette]
     sp = src.convert("RGB").load()
     a, c, e, f = t
@@ -103,7 +167,8 @@ def to_grid(src, t, gw, gh, palette=APOLLO):
     op = out.load()
     for y in range(gh):
         for x in range(gw):
-            rep = _representative(_Pixels(sp, src.size), a * x + c, a * (x + 1) + c, e * y + f, e * (y + 1) + f)
+            rep = _representative(_Pixels(sp, src.size), a * (x + inset) + c, a * (x + 1 - inset) + c,
+                                  e * (y + inset) + f, e * (y + 1 - inset) + f)
             if rep is None:  # bord hors de l'image source : on prolonge le pixel le plus proche
                 rep = sp[min(src.width - 1, max(0, int(a * x + c))), min(src.height - 1, max(0, int(e * y + f)))]
             L = _lab(rep)
@@ -158,13 +223,19 @@ def main(scene, src_path, out_aseprite, keep_png=None):
         src.save(keep_png)  # la source, conservee sans perte (en PNG) a cote du .aseprite
     ref = Image.open(work(scene, "flat.png")).convert("RGB")
     gw, gh = ref.size
-    score, t = align(src, ref)
-    naive = (src.width / gw, 0.0, src.height / gh, 0.0)
-    naive_score = ImageStat.Stat(ImageChops.difference(edges(warp(src.filter(ImageFilter.GaussianBlur(1.5)), *naive, ref.size)), edges(ref))).mean[0]
-    print(f"alignement : ecart des contours {naive_score:.2f} -> {score:.2f} ; echelle x {t[0]:.3f} y {t[2]:.3f}, decalage {t[1]:+.1f} {t[3]:+.1f} px source")
+    t, inset = lora_grid(src, gw, gh), 0.25
+    if t:
+        print(f"grille du LoRA : cases de {t[0]:.2f} x {t[2]:.2f} px, decalage {t[1]:+.2f} {t[3]:+.2f} ; lecture du coeur de chaque case")
+    else:
+        score, t = align(src, ref)
+        inset = 0.0
+        naive = (src.width / gw, 0.0, src.height / gh, 0.0)
+        naive_score = ImageStat.Stat(ImageChops.difference(edges(warp(src.filter(ImageFilter.GaussianBlur(1.5)), *naive, ref.size)), edges(ref))).mean[0]
+        print(f"alignement : ecart des contours {naive_score:.2f} -> {score:.2f} ; echelle x {t[0]:.3f} y {t[2]:.3f}, decalage {t[1]:+.1f} {t[3]:+.1f} px source")
     entry = json.load(open(path, encoding="utf-8"))[0]
     excluded = {tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) for h in entry.get("import_exclude", ())}
-    img = to_grid(src, t, gw, gh, [c for c in APOLLO if c not in excluded])
+    img = to_grid(src, t, gw, gh, [c for c in APOLLO if c not in excluded], inset)
+    print(f"nettoyage : {tidy(img)} pixels isoles fondus dans leur entourage")
     img.resize((gw * 4, gh * 4), Image.NEAREST).save(work(f"{scene}_detail", "apercu_x4.png"))
     layers, entry = cut(img, scene)
     check_independent(layers, entry.get("surfaces", ()))
