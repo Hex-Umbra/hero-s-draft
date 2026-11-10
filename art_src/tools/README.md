@@ -6,7 +6,7 @@ Les scripts qui produisent les sources `.aseprite` du projet. Ils sont rangés h
 
 Deux documents décrivent le travail pas à pas :
 - [**Produire un fond**](../docs/workflow_fond.md) : le fond d'écran de 320 × 180, avec la structure par le code et le détail par ComfyUI ; et le fond de fenêtre de 128 × 192, généré librement, en trois variations par biome.
-- [**Produire une créature ou un personnage**](../docs/workflow_creature.md) : la créature générée seule, avec la pose imposée en OpenPose, puis détourée et séparée en calques, et livrée comme un sprite que le jeu greffe sur un fond de fenêtre.
+- [**Produire une créature ou un personnage**](../docs/workflow_creature.md) : la créature générée seule, avec la pose imposée en OpenPose, puis détourée et séparée en calques, et livrée comme un sprite que le jeu greffe sur un fond de fenêtre. Une fois son design validé, elle reçoit un liseré de lumière dans son propre calque.
 
 Les deux finissent de la même façon : un `.aseprite` en palette Apollo, à retoucher à la main. Des cas réels, racontés en détail avec leurs prompts et leurs graines, sont dans [`../docs/exemples/`](../docs/exemples/).
 
@@ -16,6 +16,7 @@ Les deux finissent de la même façon : un `.aseprite` en palette Apollo, à ret
 - **Générer à 8 fois la taille voulue.** Le LoRA pixel art peint des cases de 8 pixels. À 1024 × 1536, elles tombent pile sur une grille de 128 × 192, et l'import lit le cœur de chaque case au lieu de mélanger ses bords.
 - **Trois graines par tour, une chose changée à la fois.** Une image qu'on aime se relance avec sa graine quand on retouche le prompt : la composition reste souvent proche.
 - **Garder la source.** L'image générée se range en PNG à côté de son `.aseprite`, jamais en JPEG. Une image corrigée garde l'originale à côté (`_brute`).
+- **Ne rien supprimer.** Une version remplacée, ou un essai abandonné, va dans [`../archives/`](../archives/README.md)`<id>/<date>_<ce que c'est>/`, avec ses noms de fichiers d'origine. Les archives sont en lecture seule, et aucun outil n'y lit : c'est l'historique de ce qui a été fait.
 - **Un calque est un objet complet.** Le masquer le fait disparaître en entier et laisse voir une surface complète dessous. Seules les surfaces (murs, sol, voûte, fond) n'ont rien derrière elles. `aseprite_io.check_independent` vérifie cette règle à chaque export, et `aseprite_io.build` vérifie que chaque `.aseprite`, rouvert dans Aseprite, redonne exactement son rendu.
 
 ## Prérequis
@@ -52,6 +53,7 @@ Toutes se lancent depuis ce dossier.
 | `python creature_faucheuse_pose.py <préfixe>` | Les guides de pose de la Faucheuse : la carte OpenPose, la faux en contours et l'image de départ unie. Le modèle des guides des futures créatures. |
 | `python creature_compose.py <figure.png> <fond.png> <préfixe> [--dx N] [--dy N] [--ombre-peinte]` | Détoure une créature générée sur fond uni et la pose sur un fond de la même taille. Écrit `<préfixe>_assemblage.png`, la silhouette (une case par case de 8 pixels) et la bande de retouche. |
 | `python creature_layers.py <préfixe> <assemblage.png> <fond.png> <aperçu.aseprite> [--sol 183] [--sprite <sprite.aseprite>]` | Met l'assemblage sur la grille Apollo et le sépare en calques : Décor, Ombre et raccord, puis la créature en Ombre, Robe, Os et Arme. `--sprite` écrit aussi la créature seule, sur fond transparent. |
+| `python creature_lisere.py <créature.aseprite> [--calque Robe] [--couleur 819796] [--sol 183]` | Ajoute, ou recalcule, le calque « Liseré » tout en haut : un pixel de lumière sur le bord extérieur de la tenue, sauf en bas, près du sol. Le fichier est relu dans Aseprite, ses autres calques sont recopiés à l'identique (le script le vérifie), puis il est réécrit sur place. Pour toute créature, une fois son design validé : sur le sprite, puis sur l'aperçu. |
 | `python aseprite_layers.py ../../docs/presentations/2026-11-09_sources_aseprite_serie_pilote` | Les paliers pixel 16 et pixel 64 des sept cartes de la série pilote. |
 | `python pilot_cards.py` | Une planche de contrôle des cartes de la série pilote aux cinq paliers, sur la vraie carte. |
 
@@ -77,12 +79,12 @@ Toutes se lancent depuis ce dossier.
 | `creature_faucheuse_pose.py` | Les guides de pose de la Faucheuse, en OpenPose. |
 | `creature_compose.py` | Le détourage d'une créature générée seule, et sa pose sur un fond. |
 | `creature_layers.py` | La séparation d'une créature en calques complets, et son sprite sur fond transparent. Sa fonction `classify` connaît une créature en robe, avec des os et une arme à manche. |
-| `aseprite_io.py`, `aseprite_build.lua`, `aseprite_verify.lua` | Le pont vers Aseprite : assemblage en mode indexé, aller-retour vérifié, contrôle des calques. |
+| `creature_lisere.py` | Le calque de liseré de lumière d'une créature, posé sur un `.aseprite` déjà fait. |
+| `aseprite_io.py`, `aseprite_build.lua`, `aseprite_verify.lua`, `aseprite_export.lua` | Le pont vers Aseprite : assemblage en mode indexé, aller-retour vérifié, contrôle des calques, relecture d'un fichier existant calque par calque. |
 
 **À savoir :**
 - **Les fonds sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`…), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée. Les fonds de fenêtre sont dans `../backgrounds/windows/<biome>/`, trois par biome.
-- **Les créatures ont chacune leur dossier** dans `../creatures/<id>/`, avec le sprite, un aperçu sur un fond, la figure générée brute, la figure corrigée et les guides de pose.
-- **Chaque fond a son propre script de géométrie**, construit sur `scene.py`, avec `bg_plaza.py` et `bg_camp.py` pour modèles : un calque complet par objet, posé à sa profondeur. Le script de la scène ne décrit que ce qui lui est propre ; l'export, les contrôles et les cartes de guidage sont communs.
+- **Les créatures ont chacune leur dossier** dans `../creatures/<id>/`, avec le sprite, un aperçu sur un fond, la figure générée brute, la figure corrigée et les guides de pose.- **Chaque fond a son propre script de géométrie**, construit sur `scene.py`, avec `bg_plaza.py` et `bg_camp.py` pour modèles : un calque complet par objet, posé à sa profondeur. Le script de la scène ne décrit que ce qui lui est propre ; l'export, les contrôles et les cartes de guidage sont communs.
 - **Le manifeste de la scène guide l'étape 3.** Il dit quels calques sont des surfaces (autorisés à laisser un vide quand on les masque), lesquels l'import doit ignorer, comme l'ombre tramée des bords de la salle, et quelles couleurs il ne doit pas utiliser. Pour le Squelette, ce sont les deux verts pâles d'Apollo : sans cette exclusion, l'ivoire des os vire au vert maladif.
 - **Le fichier `dungeon_hall_detail.aseprite` a été découpé par une version plus ancienne de `bg_import.py`**, qui triait aussi les pixels par couleur. Relancer l'import le découperait selon la règle actuelle.
 - **Les fichiers `_detail` de la salle, de la place et du campement ont été mis sur la grille avant la conversion perceptive** (en Lab, avec trame) utilisée pour le Squelette. Les réimporter changerait leurs couleurs.

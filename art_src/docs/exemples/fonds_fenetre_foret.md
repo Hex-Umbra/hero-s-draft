@@ -36,4 +36,4 @@ Le choix a été fait en greffant la même créature sur cinq candidats.
 
 - **Le grand arbre central revient tant qu'on ne le chasse pas.** C'est « a clear path in the foreground » qui l'a chassé, plus que l'exclusion de « giant central tree ».
 - **Retirer la brume est ce qui a le plus amélioré le détail.**
-- **Les fonds clairs au loin servent mieux une créature sombre.** Sur le troisième fond, plus sombre, la robe de la Faucheuse se perd dans les troncs : voir [l'exemple de la Faucheuse](creature_faucheuse.md), « Ce qui reste ouvert ».
+- **Les fonds clairs au loin servent mieux une créature sombre.** Sur le troisième fond, plus sombre, la robe de la Faucheuse se perdait dans les troncs. Depuis le 10/11, un calque de liseré de lumière l'en détache : voir [l'exemple de la Faucheuse](creature_faucheuse.md), « La robe se détache par un liseré ».

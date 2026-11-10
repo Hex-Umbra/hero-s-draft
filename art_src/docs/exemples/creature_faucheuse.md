@@ -67,18 +67,45 @@ Tout se fait en génération libre, en 1024 × 1536, avec le LoRA à 0.8.
 
 La figure générée intacte est gardée sous le nom `squelette_faucheuse_figure_brute.png`. Le sprite est tiré de `squelette_faucheuse_figure.png`, l'image corrigée.
 
-## Ce qui reste ouvert
+## La suite, le 10/11/2026
 
-**Elle est trop présente pour son tier.** La DA évolutive par tier, fixée après sa production, donne 70 % de présence au tier 3 ([direction artistique](../../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16). Avec la faux levée, la Faucheuse occupe 95 % de la hauteur. Il faudra la régénérer avec le même prompt, à partir du guide de pose réduit à la boîte de 70 %.
+### Une régénération à la taille du tier 3, abandonnée
 
-**La robe se perd dans les sous-bois sombres.** Sur la grille Apollo, son bleu nuit tombe sur les mêmes gris-sarcelle que la forêt. Le crâne et la faux ressortent, pas la silhouette. Les deux pistes du workflow, recolorer la robe ou ajouter un liseré de lumière, ne sont pas encore départagées.
+La DA évolutive fixait alors une limite de taille par tier : 70 % de la hauteur au tier 3. La Faucheuse en occupait 95 %, faux levée comprise. On l'a régénérée avec le même prompt, les mêmes exclusions et le même guide de pose.
+
+| Tour | Méthode | Résultat |
+|:---|:---|:---|
+| 1 | Le guide réduit à 0,73 dans le cadre de 1024 × 1536, mêmes réglages qu'au tour 6. Graines 53724, 784142 et 189881 | Le corps suit le guide, mais **le générateur remplit l'espace libéré** : un second squelette au-dessus, un crâne géant, une faux qui couvre tout. Les trois dépassent 95 % |
+| 2 | Le guide d'origine, sur une toile de 768 × 1152, posée sans redimensionnement dans le cadre (décalage multiple de 8) | La taille tombe entre 48 et 60 %. **Graine 389679 :** fond uni, le design de la Faucheuse, mais une seconde lame, fantôme, au-dessus de la vraie. Les deux autres ont un fond rayé ou en halo |
+| 3 | Des variations de 389679 en img2img : l'image en guide, denoise 0.6, trois graines | La composition reste. **Graine 339193 retenue**, la plus proche et avec le moins de défauts. La lame fantôme reste sur les trois |
+
+La lame fantôme, isolée sur un fond propre, a été recouverte par la bande de fond prise 48 pixels plus bas. Le sprite tiré de là fait 58 % de la hauteur.
+
+**Pourquoi c'est abandonné :** posée à côté de l'originale, cette Faucheuse a été jugée bien moins cohérente. Le propriétaire a renoncé aux limites de taille par tier : seuls la qualité et le détail marquent le tier ([direction artistique](../../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16.1). L'originale reste en place. L'essai est rangé dans `art_src/archives/squelette_faucheuse/2026-11-10_essai_tier3/`.
+
+**Ce que l'essai a appris :**
+- **Le générateur déborde de son guide.** La Faucheuse d'origine occupe 95 % de la hauteur pour un guide qui n'en couvre que 62 %. Sa faux ne suit pas le tracé en contours : il l'a dressée au-dessus de la tête.
+- **Un guide réduit laisse un vide, que le générateur remplit** avec ce qu'il veut.
+- **Une toile plus petite réduit la créature sans brouiller le pixel art.** Le LoRA garde des cases de 8 pixels à 768 × 1152, et l'image se pose telle quelle dans le cadre.
+
+### La robe se détache par un liseré
+
+**Pourquoi elle se perdait :** sur la grille Apollo, la robe est peinte dans la rampe gris-sarcelle (indices 37 à 41), celle des forêts. Ses deux tons principaux couvrent à eux seuls 44 % des trois fonds.
+
+Les deux pistes du workflow ont été montrées sur les trois fonds :
+- **Recolorer la robe** dans une rampe absente des forêts : le bleu marine (indices 0 à 3) ou le violet (30 à 33). La robe ressort, mais le personnage change.
+- **Un liseré de lumière** d'un pixel, gris clair (indice 42), sur le haut et les côtés de la robe.
+
+**Le liseré est retenu**, dans son propre calque, pour son côté stylisé : 425 pixels, le même sur le sprite et sur l'aperçu. Le propriétaire l'a ensuite étendu à toutes les créatures, posé en dernier, une fois le design validé ([workflow](../workflow_creature.md), étape 7). Les versions sans liseré sont dans `art_src/archives/squelette_faucheuse/2026-11-10_sans_lisere/`.
+
+`python creature_lisere.py ../creatures/squelette_faucheuse/squelette_faucheuse.aseprite`, puis la même commande sur `squelette_faucheuse_foret.aseprite`.
 
 ## Les fichiers
 
 | Fichier | Contenu |
 |:---|:---|
-| `squelette_faucheuse.aseprite` | Le sprite, 128 × 192 : Ombre, Robe, Os, Arme |
-| `squelette_faucheuse_foret.aseprite` | L'aperçu sur le fond forêt 1, avec Décor dessous |
+| `squelette_faucheuse.aseprite` | Le sprite, 128 × 192 : Ombre, Robe, Os, Arme, Liseré |
+| `squelette_faucheuse_foret.aseprite` | L'aperçu sur le fond forêt 1, avec Décor dessous et Liseré dessus |
 | `squelette_faucheuse_figure_brute.png` | La génération du tour 6, intacte |
 | `squelette_faucheuse_figure.png` | La même, sans le troisième bras ni sa manche |
 | `squelette_faucheuse_pose.png`, `squelette_faucheuse_pose_faux.png` | Le guide OpenPose et la faux en contours |

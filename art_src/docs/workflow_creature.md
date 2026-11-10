@@ -6,14 +6,17 @@
 
 **La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds](workflow_fond.md), § 2). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
 
-**On commence par relever le tier de la créature.** La créature suit la DA évolutive par tier, décrite dans le [document de direction artistique](../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16. Le tier fixe deux choses :
-- **Sa présence :** la part de l'image qu'occupe la boîte de sa silhouette, arme et ombre comprises. Elle grandit du tier 1 au tier 3, puis reste la même.
-- **La richesse à viser :** jusqu'au tier 3, la taille fait le détail. Au-delà, c'est le travail sur la pose, la tenue et la prestance. Le prompt suit : une silhouette simple et peu d'accessoires pour un tier bas ; une tenue riche, une pose spectaculaire et une aura pour un tier haut.
+**On commence par relever le tier de la créature.** La créature suit la DA évolutive par tier, décrite dans le [document de direction artistique](../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16. **Le tier fixe la richesse, jamais la taille :** la qualité et surtout le détail. Le prompt suit le tier :
+- une silhouette simple et peu d'accessoires pour un tier bas ;
+- la matière, une pose qui menace et de petits accessoires au tier 3, le palier du milieu ;
+- une tenue riche, une pose spectaculaire et une aura pour un tier haut.
+
+La taille de la créature dans l'image se choisit pour sa lisibilité, créature par créature.
 
 **Le cadrage est commun à toutes les créatures :**
 - **La résolution :** toujours 128 × 192, générée à 1024 × 1536 (8 fois plus grande, pour la grille du LoRA). Le tier ne change pas la résolution.
-- **La boîte de présence :** la créature tient dans une boîte réduite du même facteur en hauteur et en largeur, centrée, posée sur la ligne de sol.
 - **La ligne de sol :** les pieds, ou le bas de la tenue, tombent sur la ligne y = 183. Ainsi, n'importe quelle créature tient sur n'importe quel fond.
+- **Le liseré :** toutes les créatures portent un liseré de lumière d'un pixel, dans son propre calque. Il se pose en dernier, une fois le design validé, jamais dès le départ (étape 7).
 
 ## Les étapes
 
@@ -45,7 +48,7 @@ Une silhouette pleine en guide ne marche pas : le générateur copie les aplats,
    - une image de départ unie.
 2. **Choisir un geste qui menace.** Une créature debout et droite reste figée. Il faut un appui large, un buste penché vers le spectateur et l'arme armée.
 3. **Garder la tête dégagée :** aucun bras ni objet ne passe devant le visage.
-4. **Placer les pieds sur la ligne de sol** et tenir toute la silhouette, arme comprise, dans la boîte de présence de son tier. On réduit le guide, pas l'image finie : le générateur peint alors la créature directement à sa taille, sur la grille du LoRA.
+4. **Placer les pieds sur la ligne de sol** et garder toute la silhouette, arme comprise, dans l'image.
 5. **Générer** en mode guidé, avec trois graines :
 
    | Réglage | Valeur |
@@ -97,20 +100,31 @@ Les calques suivent la règle commune : chaque calque est un objet complet, comp
 
 **À contrôler :** chaque calque seul, sur un fond de couleur vive. Il ne doit y avoir aucun morceau d'un objet rangé dans le calque d'un autre, et aucun objet coupé en deux.
 
-### 6. Contrôler en situation
+### 6. Contrôler en situation, puis faire valider le design
 
 Greffer le sprite sur les trois fonds de son biome, puis le poser dans le cadre de son tier, sur l'écran de combat, à côté des créatures des autres tiers. Trois questions :
 - La silhouette se détache-t-elle de chaque fond ?
 - Les pieds tombent-ils sur le sol ?
-- Le tier se lit-il ?
+- Le tier se lit-il, par le détail ?
 
-**Si la silhouette se perd dans un fond,** deux corrections possibles, encore à départager :
-- recolorer le calque de la tenue dans une teinte que les fonds du biome n'ont pas ;
-- ajouter un liseré de lumière d'un pixel sur le bord de la silhouette.
+Ce contrôle se fait **sans liseré** : il juge le design seul. Tant que le propriétaire ne l'a pas validé, on revient aux étapes précédentes.
 
-### 7. Retoucher dans Aseprite
+### 7. Ajouter le liseré, une fois le design validé
+
+Toutes les créatures reçoivent un liseré de lumière d'un pixel sur le bord extérieur de leur tenue. **Il vient à la fin des générations initiales, quand le design est validé**, jamais dès le départ.
+
+`python creature_lisere.py <sprite.aseprite>`, puis la même commande sur l'aperçu :
+- **Il vit dans son propre calque, « Liseré »,** tout en haut, et se masque d'un clic. C'est un effet stylisé, voulu : la seule lumière de la chaîne qui ne soit pas cuite dans son objet.
+- **Il est gris clair** (`#819796`, un gris d'Apollo) et borde le haut et les côtés de la tenue. Le bas, qui touche le sol, n'en reçoit pas.
+- **Le calque de la tenue est `Robe` par défaut.** Pour une créature d'une autre forme, `--calque` nomme le sien.
+
+Le liseré détache aussi la tenue des fonds sombres du biome. L'autre piste, recolorer la tenue dans une teinte que les fonds n'ont pas, a été écartée le 10/11/2026 : elle change le personnage (voir [l'exemple de la Faucheuse](exemples/creature_faucheuse.md)).
+
+### 8. Retoucher dans Aseprite
 
 On reprend à la main les fragments mal rangés, les bords et les détails que la grille a perdus.
+
+**Si la retouche change le bord de la tenue,** on relance `creature_lisere.py`. Il relit le fichier dans Aseprite, garde les retouches et recalcule le liseré.
 
 ## Le dossier d'une créature
 
@@ -118,10 +132,12 @@ Dans `art_src/creatures/<id>/` :
 
 | Fichier | Rôle |
 |:---|:---|
-| `<id>.aseprite` | Le sprite, sur fond transparent : le livrable |
+| `<id>.aseprite` | Le sprite, sur fond transparent : le livrable. Ses calques : Ombre, Robe, Os, Arme, puis Liseré une fois le design validé |
 | `<id>_<biome>.aseprite` | Un aperçu de la créature posée sur un fond de son biome |
 | `<id>_figure_brute.png` | L'image générée, intacte |
 | `<id>_figure.png` | L'image corrigée, d'où le sprite est tiré |
 | `<id>_pose.png`, `<id>_pose_<objet>.png` | Les guides de génération |
 
 Le script de pose va dans `art_src/tools/creature_<id>_pose.py`. Les fichiers de travail restent dans `art_src/tools/.work/`, que git ignore.
+
+**On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
