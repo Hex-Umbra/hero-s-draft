@@ -13,6 +13,9 @@ ecrite dans .work/comfy/.
 
 Deux autres modes : --libre compose sans guide, pour explorer des idees ; --retouche repeint
 seulement la bande d'un assemblage de creature_compose.py, et rend le reste a l'identique.
+
+L'image porte le nom du prefixe, sa graine et son debruitage. Plusieurs prompts sur une meme
+graine s'ecraseraient : --nom donne a chacun son propre nom d'image.
 """
 import argparse
 import json
@@ -158,21 +161,23 @@ def main():
     ap.add_argument("--sujet", action="store_true", help="guide vers un personnage : le negatif ne refuse plus les figures")
     ap.add_argument("--retouche", action="store_true", help="repeint la bande de <prefixe>_bande.png dans <prefixe>_assemblage.png")
     ap.add_argument("--exclure", default="", help="ce qui s'ajoute au prompt negatif")
+    ap.add_argument("--nom", help="le nom de l'image de sortie, a la place de celui du prefixe")
     a = ap.parse_args()
+    name = a.nom or os.path.basename(a.prefix)
     size = tuple(int(v) for v in a.size.split("x"))
     negative = NEGATIVE + (ONE_FIGURE if a.libre or a.sujet or a.retouche else NO_FIGURES) + (", " + a.exclure if a.exclure else "")
     if a.retouche:
         names = [upload(f"{a.prefix}_{k}.png") for k in ("assemblage", "bande")]
-        out = work("comfy", f"{os.path.basename(a.prefix)}_retouche_s{a.seed}_d{a.denoise}.png")
+        out = work("comfy", f"{name}_retouche_s{a.seed}_d{a.denoise}.png")
         took = run(touch_up_workflow(*names, a.prompt, negative, a.seed, a.denoise, a.lora), out)
     elif a.libre:
-        out = work("comfy", f"{os.path.basename(a.prefix)}_libre_s{a.seed}.png")
+        out = work("comfy", f"{name}_libre_s{a.seed}.png")
         took = run(free_workflow(a.prompt, negative, a.seed, a.lora, size), out)
     else:
         strengths = {"pose": a.pose, "depth": a.depth, "edges": a.edges}
         controls = [(upload(f"{a.prefix}_{suffix}.png"), kind, strengths[k], end)
                     for k, (suffix, kind, end) in CONTROLS.items() if strengths[k] > 0]
-        out = work("comfy", f"{os.path.basename(a.prefix)}_s{a.seed}_d{a.denoise}.png")
+        out = work("comfy", f"{name}_s{a.seed}_d{a.denoise}.png")
         took = run(workflow(upload(f"{a.prefix}_{a.guide}.png"), controls, a.prompt, negative, a.seed, a.denoise, a.lora, size), out)
     print(f"{out}  ({took:.0f} s)")
 

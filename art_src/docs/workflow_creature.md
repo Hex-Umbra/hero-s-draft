@@ -121,6 +121,7 @@ L'agent annonce le nombre avant chaque tour, montre toutes les images, et le pro
 | Contours de l'équipement | 0.55 |
 | Profondeur | 0 |
 | Denoise | 1.0 |
+| LoRA | 0.8 (`comfy_gen.py` prend 0.9 par défaut, la valeur des fonds d'écran) |
 | Taille | 1024 × 1536 |
 
 À 0.4, les contours gardent la place d'un objet mais pas sa forme : l'écu du Squelette n'était pas rond. **Ces réglages sont provisoires.** Une session dédiée doit les affiner, pour que la base de chaque génération reste la même et que seuls la créature et ses détails changent.
@@ -159,7 +160,7 @@ L'agent annonce le nombre avant chaque tour, montre toutes les images, et le pro
 **Une graine ne se garde qu'une fois un design validé,** pour en voir d'autres possibilités par petites modifications. Ce choix n'est pas encore la validation finale de l'étape 7. Jusque-là, chaque tour repart de graines neuves : le guide porte la composition, et le prompt s'affine avec le brief. Une graine gardée trop tôt fige sa composition avec ses défauts : relancée avec un prompt modifié, elle la garde au point d'ignorer « facing the viewer ». Avec une autre taille de toile, elle ne garde rien.
 
 **Deux façons de faire varier un design validé :**
-- **Plusieurs prompts sur sa graine,** chacun changeant une chose : six bâtons et écus de styles différents, pour le Squelette. `comfy_gen.py` nomme ses images par préfixe, graine et denoise : on renomme chaque image avant de lancer la suivante, sinon elle est écrasée.
+- **Plusieurs prompts sur sa graine,** chacun changeant une chose : six bâtons et écus de styles différents, pour le Squelette. `comfy_gen.py` nomme ses images par préfixe, graine et denoise : `--nom` donne à chaque prompt son propre nom d'image, sinon elles s'écrasent.
 - **L'img2img :** l'image retenue devient l'image de départ. On la copie en `<préfixe>_base.png`, à côté des guides de pose et de contours, puis on génère avec `--guide base`, un denoise de 0.6 à 0.7 et des graines neuves. La composition reste, les détails changent.
 
 **Sans guide, pour un brief ouvert ou une créature non humanoïde.** On commence par explorer en génération libre (`--libre`, à 1024 × 1536, avec le LoRA à 0.8), avec le même gabarit et le même nombre d'images par tour. On part général, le type de créature et le ton, puis on précise à chaque tour ce qu'on a aimé. Pour une créature humanoïde, on trace le guide dès que le design est trouvé (étape 2), puis on continue sous le guide.
