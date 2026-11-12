@@ -1,6 +1,6 @@
 # Exemple — la Faucheuse (créature de tier 3)
 
-Le parcours complet de la première créature produite par [le workflow des créatures](../workflow_creature.md), les 09 et 10/11/2026 : les tours de génération, les prompts exacts, les graines, les corrections et ce que chaque échec a appris. Les fichiers sont dans `art_src/creatures/squelette_faucheuse/`.
+Le parcours complet de la première créature produite par [le workflow des créatures](../workflow_creature.md), les 09 et 10/11/2026 : les tours de génération, les prompts exacts, les graines, les corrections et ce que chaque échec a appris. Les fichiers sont dans `art_src/creatures/squelette/tier_3/` : la Faucheuse est le Squelette de tier 3.
 
 ## Le point de départ
 
@@ -81,7 +81,7 @@ La DA évolutive fixait alors une limite de taille par tier : 70 % de la hauteur
 
 La lame fantôme, isolée sur un fond propre, a été recouverte par la bande de fond prise 48 pixels plus bas. Le sprite tiré de là fait 58 % de la hauteur.
 
-**Pourquoi c'est abandonné :** posée à côté de l'originale, cette Faucheuse a été jugée bien moins cohérente. Le propriétaire a renoncé aux limites de taille par tier : seuls la qualité et le détail marquent le tier ([direction artistique](../../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16.1). L'originale reste en place. L'essai est rangé dans `art_src/archives/squelette_faucheuse/2026-11-10_essai_tier3/`.
+**Pourquoi c'est abandonné :** posée à côté de l'originale, cette Faucheuse a été jugée bien moins cohérente. Le propriétaire a renoncé aux limites de taille par tier : seuls la qualité et le détail marquent le tier ([direction artistique](../../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16.1). L'originale reste en place. L'essai est rangé dans `art_src/archives/squelette/tier_3/2026-11-10_essai_tier3/`.
 
 **Ce que l'essai a appris :**
 - **Le générateur déborde de son guide.** La Faucheuse d'origine occupe 95 % de la hauteur pour un guide qui n'en couvre que 62 %. Sa faux ne suit pas le tracé en contours : il l'a dressée au-dessus de la tête.
@@ -96,9 +96,9 @@ Les deux pistes du workflow ont été montrées sur les trois fonds :
 - **Recolorer la robe** dans une rampe absente des forêts : le bleu marine (indices 0 à 3) ou le violet (30 à 33). La robe ressort, mais le personnage change.
 - **Un liseré de lumière** d'un pixel, gris clair (indice 42), sur le haut et les côtés de la robe.
 
-**Le liseré est retenu**, dans son propre calque, pour son côté stylisé : 425 pixels, le même sur le sprite et sur l'aperçu. Le propriétaire l'a ensuite étendu à toutes les créatures, posé en dernier, une fois le design validé ([workflow](../workflow_creature.md), étape 7). Les versions sans liseré sont dans `art_src/archives/squelette_faucheuse/2026-11-10_sans_lisere/`.
+**Le liseré est retenu**, dans son propre calque, pour son côté stylisé : 425 pixels, le même sur le sprite et sur l'aperçu. Le propriétaire l'a ensuite étendu à toutes les créatures, posé en dernier, une fois le design validé ([workflow](../workflow_creature.md), étape 8). Les versions sans liseré sont dans `art_src/archives/squelette/tier_3/2026-11-10_sans_lisere/`.
 
-`python creature_lisere.py ../creatures/squelette_faucheuse/squelette_faucheuse.aseprite`, puis la même commande sur `squelette_faucheuse_foret.aseprite`.
+`python creature_lisere.py ../creatures/squelette/tier_3/squelette_faucheuse.aseprite`, puis la même commande sur `squelette_faucheuse_foret.aseprite`.
 
 ## Les fichiers
 

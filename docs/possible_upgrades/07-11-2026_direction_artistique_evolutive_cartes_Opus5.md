@@ -431,8 +431,8 @@ Le tier 3 est le palier du milieu : la matière et la pose, pas encore l'aura. L
 
 ### 16.3 Ce qui existe, et ce qui est à refaire
 
-- **La Faucheuse** (`art_src/creatures/squelette_faucheuse/`) a la pose, la tenue et le niveau de détail d'un tier 3. Sa robe se perdait dans les sous-bois sombres : depuis le 10/11/2026, un calque de liseré de lumière l'en détache ([workflow des créatures](../../art_src/docs/workflow_creature.md), étape 6).
-- **Le Squelette de tier 2** (`art_src/creatures/squelette_96*`) a été fait par l'ancienne méthode : une illustration pleine fenêtre avec sa crypte, en 96 × 144. Il est à refaire en sprite de 128 × 192.
+- **La Faucheuse** (`art_src/creatures/squelette/tier_3/`) a la pose, la tenue et le niveau de détail d'un tier 3. Sa robe se perdait dans les sous-bois sombres : depuis le 10/11/2026, un calque de liseré de lumière l'en détache ([workflow des créatures](../../art_src/docs/workflow_creature.md), étape 8).
+- **Le Squelette de tier 2** a été fait par l'ancienne méthode : une illustration pleine fenêtre avec sa crypte, en 96 × 144, archivée dans `art_src/archives/squelette/tier_2/`. Il est en cours de refonte en sprite de 128 × 192, qui ira dans `art_src/creatures/squelette/tier_2/`.
 - **Aucune créature de tier 1, 4 ou 5** n'existe encore.
 
 **Les pistes liées** (évoquées le 10/11/2026, non décidées) :
