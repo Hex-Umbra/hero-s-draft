@@ -6,12 +6,14 @@ grille, a la taille des cases du LoRA. Les calques, du bas vers le haut :
 - le decor, complet : il vient du decor genere seul, rien ne manque derriere la creature ;
 - l'ombre et le raccord : ce que l'assemblage a change autour de la creature ;
 - l'ombre au sol peinte avec la creature, sous la ligne de sol (--sol) ;
-- la robe, les os, l'arme : la creature, separee par la couleur et par la forme.
+- la robe, les os, le bouclier s'il y en a un (--bouclier), l'arme : la creature, separee par la
+  couleur et par la forme. --manche donne la demi-largeur du manche, pour un baton plus epais.
 
 Chaque calque de la creature est complete sous ceux qui le couvrent, en prolongeant ses
 propres couleurs : masquer l'arme laisse voir la robe, masquer les os l'interieur de la robe.
 
     python creature_layers.py <prefixe> <assemblage.png> <decor.png> <sortie.aseprite> [--sol N] [--sprite <sprite.aseprite>]
+                              [--manche 1.3] [--bouclier]
 
 <prefixe> est celui de creature_compose.py, dont on relit <prefixe>_silhouette.png. --sprite
 ecrit aussi la creature seule, sur fond transparent : c'est elle que le jeu greffe sur un decor.
@@ -96,8 +98,51 @@ def shaft_line(cells, lab, tries=4000, width=1.0):
     return (x1, y1, nx, ny), on
 
 
-def classify(img, silhouette, src, ground=None):
-    """Les cases de la creature, rangees en ombre au sol, robe, os et arme."""
+def grow(cells, k):
+    """Les cases a `k` cases au plus d'un ensemble, en voisinage a 8."""
+    out = set(cells)
+    for _ in range(k):
+        out |= {(c[0] + dx, c[1] + dy) for c in out for dx, dy in N8}
+    return out
+
+
+def shield_cells(cells, lab, src, gw, gh):
+    """L'ecu : le plus grand amas brun (cuir ou bois), son contour sombre et ce qu'il enferme.
+
+    Le brun se lit dans l'image source, sur la moyenne de chaque case : un cuir marbre y reste
+    d'un seul ton, quand la grille Apollo le disperse entre des bruns clairs et fonces. Une
+    ouverture de deux cases detache ensuite l'ecu des fines formes brunes qui le touchent, comme
+    une ceinture. Ce qu'il enferme, les clous et les reflets, ce sont les cases qui ont l'ecu de
+    part et d'autre, sur leur ligne comme sur leur colonne."""
+    means = src.resize((gw, gh), Image.BOX).load()
+    tone = {c: _lab(means[c]) for c in cells}
+    brown = {c for c in cells if 28 <= tone[c][0] < 58 and tone[c][1] >= 9 and tone[c][2] >= 15}
+    core = {c for c in brown if all((c[0] + dx, c[1] + dy) in brown for dx in range(-2, 3) for dy in range(-2, 3))}
+    opened = grow(core, 2) & brown
+    blob = components(opened)[0]
+    # le bord de l'ecu, plus sombre, et son contour : l'ecu gagne de proche en proche, sur six cases
+    # au plus, les cases brunes ou rouille et les contours sombres de ton chaud ; pas la tenue, froide
+    rim = {c for c in cells if (tone[c][1] >= 9 and tone[c][2] >= 6) or (tone[c][0] < 20 and tone[c][1] >= 3 and tone[c][2] >= 0)}
+    for _ in range(6):
+        edge = {c for c in rim - blob if any((c[0] + dx, c[1] + dy) in blob for dx, dy in N8)}
+        if not edge:
+            break
+        blob |= edge
+    rows, cols = {}, {}
+    for x, y in blob:
+        rows.setdefault(y, []).append(x)
+        cols.setdefault(x, []).append(y)
+    inside = {c for c in cells if c[1] in rows and c[0] in cols
+              and min(rows[c[1]]) < c[0] < max(rows[c[1]]) and min(cols[c[0]]) < c[1] < max(cols[c[0]])}
+    return blob | inside
+
+
+def classify(img, silhouette, src, ground=None, shaft_width=None, shield=False):
+    """Les cases de la creature, rangees en ombre au sol, robe, os, arme et, si `shield`, bouclier.
+
+    `shaft_width` est la demi-largeur du manche, en cases, de part et d'autre de sa droite (1.3 par
+    defaut). Donnee, elle sert a un manche plus epais, dont les reflets et les bords sont lus aussi
+    dans la source : la grille les arrondit au clair des os, la source les garde bruns."""
     ip, sp = img.load(), silhouette.load()
     gw, gh = img.size
     sil = {(x, y) for y in range(gh) for x in range(gw) if sp[x, y]}
@@ -110,8 +155,13 @@ def classify(img, silhouette, src, ground=None):
     # il passe dans l'ombre et que la grille le rend gris plutot que brun
     while any(near((x, bottom + 1), 0.75) and (x, bottom + 1) in sil for x in range(gw)):
         bottom += 1
-    shaft = {c for c in sil if near(c, 1.3) and top - 1 <= c[1] <= bottom + 1 and lab[c][1] > 6 and lab[c][0] < 50}
+    width = shaft_width or 1.3
+    shaft = {c for c in sil if near(c, width) and top - 1 <= c[1] <= bottom + 1 and lab[c][1] > 6 and lab[c][0] < 50}
     shaft |= {c for c in sil if near(c, 0.75) and top <= c[1] <= bottom and lab[c][0] < 55}
+    if shaft_width:
+        means = src.resize((gw, gh), Image.BOX).load()
+        shaft |= {c for c in sil if near(c, width) and top - 1 <= c[1] <= bottom + 1
+                  and _lab(means[c])[0] < 50 and _lab(means[c])[1] >= 3}
     # la lame : les taches d'acier, reperees dans la source, qui touchent le haut du manche,
     # et leur liseré sombre sur le bord de la silhouette
     head = min(shaft, key=lambda c: c[1])
@@ -125,9 +175,18 @@ def classify(img, silhouette, src, ground=None):
     weapon = shaft | blade
     shadow = {c for c in sil - weapon if ground is not None and c[1] > ground}
     rest = sil - weapon - shadow
+    guard = shield_cells(rest, lab, src, gw, gh) if shield else set()
+    rest -= guard
     comps = components(rest)
     body = comps[0]
-    weapon |= set().union(*comps[1:]) if len(comps) > 1 else set()  # un bout de liseré detache du corps
+    # un bout du corps que l'ecu separe du reste, ou qu'un manche epais coupe du bras : la main qui le
+    # serre, reconnue a ses os ; un eclat brun du baton, lui, reste a l'arme
+    touches = lambda comp, cells: any((c[0] + dx, c[1] + dy) in cells for c in comp for dx, dy in N8)
+    for comp in comps[1:]:
+        if touches(comp, guard) or (shaft_width and touches(comp, shaft) and any(lab[c][0] >= 55 for c in comp)):
+            body |= comp
+        else:
+            weapon |= comp  # un bout de liseré detache du corps
     bones = {c for c in body if lab[c][0] >= 55}
     bones |= {c for c in body if 38 <= lab[c][0] < 55 and sum((c[0] + dx, c[1] + dy) in bones for dx, dy in N8) >= 3}
     robe = body - bones
@@ -136,9 +195,10 @@ def classify(img, silhouette, src, ground=None):
         side = lambda dx, dy: any((c[0] + dx * k, c[1] + dy * k) in body for k in (1, 2, 3))
         return (side(1, 0) and side(-1, 0)) or (side(0, 1) and side(0, -1))
 
-    # le corps, ferme : l'arme qui le traverse est devant la robe, pas devant le decor
-    closed = body | {c for c in weapon if enclosed(c)}
-    return dict(shadow=shadow, robe=robe, bones=bones, weapon=weapon, body=closed)
+    # le corps, ferme : l'arme qui le traverse est devant la robe, pas devant le decor ; l'ecu cache
+    # le corps pres de son bord, sur l'epaisseur d'un bras
+    closed = body | {c for c in weapon if enclosed(c)} | (guard & grow(body, 6))
+    return dict(shadow=shadow, robe=robe, bones=bones, weapon=weapon, shield=guard, body=closed)
 
 
 def fill(img, own, area):
@@ -191,6 +251,8 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--sol", type=int, default=None, help="la ligne de sol : en dessous, l'ombre peinte avec la creature")
     ap.add_argument("--sprite", default=None, help="ecrit aussi la creature seule, sur fond transparent")
+    ap.add_argument("--manche", type=float, default=None, help="la demi-largeur d'un manche epais, en cases, lu aussi dans la source (1.3 sinon)")
+    ap.add_argument("--bouclier", action="store_true", help="separe un bouclier dans son propre calque")
     a = ap.parse_args()
     silhouette = Image.open(f"{a.prefix}_silhouette.png").convert("L")
     gw, gh = silhouette.size
@@ -199,7 +261,7 @@ def main():
     t = lora_grid(decor_src, gw, gh)
     assert t, "la grille peinte par le LoRA ne tombe pas sur la grille demandee"
     img, decor = snap(src, t, gw, gh), snap(decor_src, t, gw, gh)
-    parts = classify(img, silhouette, src, a.sol)
+    parts = classify(img, silhouette, src, a.sol, a.manche, a.bouclier)
     ip, dp, sp = img.load(), decor.load(), silhouette.load()
     size = (gw, gh)
     joint = {(x, y): ip[x, y] for y in range(gh) for x in range(gw) if not sp[x, y] and ip[x, y] != dp[x, y]}
@@ -207,7 +269,8 @@ def main():
     bones = fill(img, parts["bones"], parts["bones"] | {c for c in parts["weapon"] & parts["body"]
                                                           if sum((c[0] + dx, c[1] + dy) in parts["bones"] for dx, dy in N8) >= 4})
     creature = [("Ombre", layer(size, {c: ip[c] for c in parts["shadow"]})), ("Robe", layer(size, robe)),
-                ("Os", layer(size, bones)), ("Arme", layer(size, {c: ip[c] for c in parts["weapon"]}))]
+                ("Os", layer(size, bones)), ("Bouclier", layer(size, {c: ip[c] for c in parts["shield"]})),
+                ("Arme", layer(size, {c: ip[c] for c in parts["weapon"]}))]
     layers = [("Décor", decor.convert("RGBA")), ("Ombre et raccord", layer(size, joint))] + creature
     flat = Image.new("RGBA", size)
     for _, im in layers:
@@ -215,13 +278,13 @@ def main():
     assert flat.convert("RGB").tobytes() == img.tobytes(), "les calques ne redonnent pas l'image"
     name = a.prefix.replace("\\", "/").split("/")[-1]
     img.resize((gw * 4, gh * 4), Image.NEAREST).save(work(name + "_calques", "apercu_x4.png"))
-    print(", ".join(f"{n} {len(parts[k])} cases" for n, k in (("ombre", "shadow"), ("robe", "robe"), ("os", "bones"), ("arme", "weapon"))))
+    print(", ".join(f"{n} {len(parts[k])} cases" for n, k in (("ombre", "shadow"), ("robe", "robe"), ("os", "bones"), ("bouclier", "shield"), ("arme", "weapon"))))
     write(name + "_calques", layers, img, a.out, ("Décor",))
     if a.sprite:
         alone = Image.new("RGBA", size, (0, 0, 0, 0))
         for _, im in creature:
             alone = Image.alpha_composite(alone, im)
-        write(name + "_sprite", creature, alone, a.sprite, ("Ombre", "Robe", "Os", "Arme"))
+        write(name + "_sprite", creature, alone, a.sprite, ("Ombre", "Robe", "Os", "Bouclier", "Arme"))
 
 
 if __name__ == "__main__":
