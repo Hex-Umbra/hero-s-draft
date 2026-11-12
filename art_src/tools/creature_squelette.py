@@ -9,7 +9,7 @@ en travers, ecu de bois a l'embleme pale, une crypte derriere.
 
 Tout est decrit en coordonnees relatives a la fenetre, pour rendre a n'importe quelle taille :
 
-    python creature_squelette.py 128 ../creatures/squelette_128.aseprite
+    python creature_squelette.py 128 .work/squelette_128.aseprite
 """
 import math
 import sys
