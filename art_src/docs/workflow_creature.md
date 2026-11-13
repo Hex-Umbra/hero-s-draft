@@ -18,6 +18,7 @@ La taille de la créature dans l'image se choisit pour sa lisibilité, créature
 **Le cadrage est commun à toutes les créatures :**
 - **La résolution :** toujours 128 × 192, générée à 1024 × 1536 (8 fois plus grande, pour la grille du LoRA). Le tier ne change pas la résolution.
 - **La ligne de sol :** les pieds, ou le bas de la tenue, tombent sur la ligne y = 183. Ainsi, n'importe quelle créature tient sur n'importe quel fond.
+- **L'ombre :** toute créature a son ombre au sol, dans son propre calque, Ombre, tout en bas (décision du propriétaire du 13/11/2026). C'est celle que le générateur a peinte, ou, s'il n'en a pas peint, une bande sombre posée par le code (étape 6). Le calque se masque d'un clic : le jeu peut charger le sprite avec ou sans son ombre, selon le fond.
 - **Le liseré :** toutes les créatures portent un liseré de lumière d'un pixel, dans son propre calque. Il se pose en dernier, une fois le design validé, jamais dès le départ (étape 8).
 
 ## Les étapes
@@ -39,7 +40,7 @@ Avant tout guide et toute génération, l'agent et le propriétaire fixent la cr
 | Quelle famille, et quel nom ? | Le dossier `<famille>/tier_<n>/` et le nom des fichiers |
 | Quel tier ? | Le niveau de détail du prompt (voir le principe, plus haut) |
 | Doit-elle rappeler une autre forme de sa famille ? | La cohérence de la lignée, comme les os ivoire du Squelette à la Faucheuse |
-| Dans quel biome apparaît-elle ? | Les fonds du détourage et du contrôle (étapes 5 et 7) |
+| Dans quel biome apparaît-elle ? | Les fonds de l'aperçu et du contrôle (étapes 6 et 7) |
 
 **Par défaut, la créature est nouvelle.** On ne repart d'une créature existante que sur instruction du propriétaire. On lui demande alors ce qu'on en garde : le design, l'équipement, les couleurs.
 
@@ -88,7 +89,18 @@ Le prompt, les exclusions, le script de guide et ses réglages.
 ## Le journal des tours
 | Tour | Variantes | Ce qui change | Graine retenue | Pourquoi |
 |:---|:---|:---|:---|:---|
+
+## Après la génération
+- Les corrections d'anatomie (étape 4) : ce qui a été retiré, et comment.
+- La réduction, s'il y en a eu une : le facteur et l'ancre.
+- Le détourage (étape 5) : `--pieds` ou `--dy`, et `--ombre-peinte`.
+- Les calques (étape 6) : la recette et ses options.
+- Le liseré (étape 8) : le calque de la tenue.
 ```
+
+**La dernière section sert à refaire le sprite sans rien deviner.** Sans elle, les réglages choisis après la génération ne sont écrits nulle part : le Squelette a été réduit à 70 % autour d'une ancre que seul un fichier de travail retenait.
+
+**Le journal se remplit depuis les images.** Chaque image générée embarque son prompt, ses exclusions, sa graine et ses forces : `python comfy_meta.py lire <image.png>` les affiche.
 
 ### 2. Tracer le guide
 
@@ -115,16 +127,27 @@ On génère en mode guidé, avec le prompt tiré du brief. **Le nombre d'images 
 
 L'agent annonce le nombre avant chaque tour, montre toutes les images, et le propriétaire choisit. On change une chose à la fois, et chaque tour s'inscrit au journal du brief.
 
-| Réglage | Valeur |
-|:---|:---|
-| Pose | 0.85 |
-| Contours de l'équipement | 0.55 |
-| Profondeur | 0 |
-| Denoise | 1.0 |
-| LoRA | 0.8 (`comfy_gen.py` prend 0.9 par défaut, la valeur des fonds d'écran) |
-| Taille | 1024 × 1536 |
+**Un tour se lance en une commande :**
 
-À 0.4, les contours gardent la place d'un objet mais pas sa forme : l'écu du Squelette n'était pas rond. **Ces réglages sont provisoires.** Une session dédiée doit les affiner, pour que la base de chaque génération reste la même et que seuls la créature et ses détails changent.
+`python comfy_gen.py <préfixe des guides> "<prompt>" --creature --graines 6 --exclure "<exclusions>"`
+
+- **`--creature` pose tous les réglages du tableau.** Sans lui, `comfy_gen.py` prend ceux des fonds d'écran. Une option donnée à la main garde le dessus : `--edges 0.4`, par exemple.
+- **`--graines N` tire N graines neuves.** `--seed` en accepte plusieurs, séparées par des virgules, pour rejouer des graines choisies.
+- **Les images du tour sont réunies sur une planche,** chacune sous sa graine : c'est elle qu'on montre au propriétaire.
+
+| Réglage | Valeur | Option |
+|:---|:---|:---|
+| Pose | 0.85, jusqu'à 80 % du débruitage | `--pose` |
+| Contours de l'équipement | 0.55, jusqu'à 60 % du débruitage | `--edges` |
+| Profondeur | 0 : pas utilisée | `--depth` |
+| Denoise | 1.0 | `--denoise` |
+| LoRA | 0.8 | `--lora` |
+| Taille | 1024 × 1536 | `--size` |
+| Échantillonnage | 30 pas, CFG 6.5, `dpmpp_2m` karras | fixé dans `comfy_gen.py` |
+
+La fin d'effet de chaque guide est fixée dans `comfy_gen.py`, elle aussi. À 0.4, les contours gardent la place d'un objet mais pas sa forme : l'écu du Squelette n'était pas rond. **Ces réglages sont provisoires.** Une session dédiée doit les affiner, pour que la base de chaque génération reste la même et que seuls la créature et ses détails changent.
+
+**Un premier essai, le 12/11/2026 : la taille de la toile.** Six graines du Squelette, à 1024 × 1536 puis à 832 × 1248, avec le même prompt et le même guide. Aucune des douze images n'a de membre en trop. Le bâton et l'écu au bras sortent sur trois images à la grande taille, et sur deux à la petite ; le fond est uni sur trois, puis sur quatre. La petite taille prend 48 secondes au lieu de 72. Sur cet échantillon, rien ne justifie de changer de taille.
 
 **Le gabarit du prompt**, à compléter dans cet ordre :
 
@@ -137,6 +160,7 @@ L'agent annonce le nombre avant chaque tour, montre toutes les images, et le pro
 - « grim, menacing » éloigne le résultat du monstre de fête foraine.
 - Les exclusions « halloween, cute » retirent le ton enfantin.
 - Les exclusions de texture gardent le fond uni, dont dépend le détourage.
+- **`comfy_gen.py` ajoute les siennes tout seul,** devant celles-ci : le flou, le rendu 3D, la photo, le texte, les cadres, et « duplicate, multiple figures, cropped, cut off » pour une créature. On ne les répète pas dans `--exclure`.
 
 **Le vocabulaire du tier**, une liste provisoire, complétée à chaque créature :
 
@@ -151,19 +175,26 @@ L'agent annonce le nombre avant chaque tour, montre toutes les images, et le pro
 
 **La pondération `(mots:1.3)`** donne plus de poids à un passage du prompt, dans la syntaxe de ComfyUI ; de 1.2 à 1.4 suffisent. Elle fait venir un élément que le générateur oublie, comme l'équipement du Squelette. **Le piège :** elle renforce aussi chaque adjectif du passage, et « large » a rendu les écus géants. La taille d'un objet se règle par le guide, jamais par un adjectif.
 
-**Le geste et l'orientation du brief s'écrivent aussi en mots,** par exemple « front view, facing the viewer » ou « wide stance, leaning forward toward the viewer ». **On n'exclut jamais une orientation ni une pose :** une créature peut prendre n'importe quelle pose, et c'est le guide qui la tient.
+**Le geste et l'orientation du brief s'écrivent aussi en mots,** par exemple « front view, facing the viewer » ou « wide stance, leaning forward toward the viewer ». **On n'exclut jamais une orientation ni une pose :** une créature peut prendre n'importe quelle pose, et c'est le guide qui la tient. Les prompts du Squelette et de la Faucheuse datent d'avant cette règle : ils excluent encore « profile, side view » ou « front view, standing still ». On ne les recopie pas tels quels.
 
 **La façon de tenir une arme ou de se tenir ne s'obtient pas par le texte.** Le prompt place les objets, pas le geste : c'est le rôle du guide. On ajoute aux exclusions les objets que le générateur substitue volontiers à l'arme voulue (un bâton à la place d'une arme à long manche, par exemple), et « multiple weapons, extra blades » s'il en ajoute.
 
-**Si le fond n'est pas uni, le code l'aplatit,** avec `fond_uni.py`. Le générateur peine à tenir un fond uni, et insister dans le prompt déforme le reste : l'écu du Squelette s'est allongé. L'outil traite un fond d'un ou deux tons, comme un fond ocre posé sur un sol bleu. Il n'a pas été essayé sur un fond rayé ou en halo.
+**Si le fond n'est pas uni, le code l'aplatit,** avec `fond_uni.py`. Le générateur peine à tenir un fond uni, et insister dans le prompt déforme le reste : l'écu du Squelette s'est allongé. L'outil traite un fond d'un ou deux tons, comme un fond ocre posé sur un sol bleu.
+
+**Si le fond est taché, le modèle de détourage prend le relais.** `python comfy_masque.py <figure.png> <masque.png>` demande à ComfyUI le masque de la créature (BiRefNet), et `creature_detour.py --masque` le prend à la place du détourage par le code. Essayé le 13/11/2026 sur quatre fonds que le générateur n'avait pas tenus :
+- **des taches en nuage :** le code laisse des éclats de fond autour de la créature, même après `fond_uni.py` ; le modèle la détoure proprement ;
+- **un sol d'un autre ton :** `fond_uni.py` et le modèle réussissent tous les deux ;
+- **un halo,** un grand disque clair derrière la créature : ni l'un ni l'autre ne le retire. On change de graine.
+
+Le modèle retire le plus souvent l'ombre peinte au sol, que le code garde.
 
 **Une graine ne se garde qu'une fois un design validé,** pour en voir d'autres possibilités par petites modifications. Ce choix n'est pas encore la validation finale de l'étape 7. Jusque-là, chaque tour repart de graines neuves : le guide porte la composition, et le prompt s'affine avec le brief. Une graine gardée trop tôt fige sa composition avec ses défauts : relancée avec un prompt modifié, elle la garde au point d'ignorer « facing the viewer ». Avec une autre taille de toile, elle ne garde rien.
 
 **Deux façons de faire varier un design validé :**
 - **Plusieurs prompts sur sa graine,** chacun changeant une chose : six bâtons et écus de styles différents, pour le Squelette. `comfy_gen.py` nomme ses images par préfixe, graine et denoise : `--nom` donne à chaque prompt son propre nom d'image, sinon elles s'écrasent.
-- **L'img2img :** l'image retenue devient l'image de départ. On la copie en `<préfixe>_base.png`, à côté des guides de pose et de contours, puis on génère avec `--guide base`, un denoise de 0.6 à 0.7 et des graines neuves. La composition reste, les détails changent.
+- **L'img2img :** l'image retenue devient l'image de départ. On la copie en `<préfixe>_base.png`, à côté des guides de pose et de contours, puis on génère avec `--creature --guide base`, un denoise de 0.6 à 0.7 et des graines neuves. La composition reste, les détails changent.
 
-**Sans guide, pour un brief ouvert ou une créature non humanoïde.** On commence par explorer en génération libre (`--libre`, à 1024 × 1536, avec le LoRA à 0.8), avec le même gabarit et le même nombre d'images par tour. On part général, le type de créature et le ton, puis on précise à chaque tour ce qu'on a aimé. Pour une créature humanoïde, on trace le guide dès que le design est trouvé (étape 2), puis on continue sous le guide.
+**Sans guide, pour un brief ouvert ou une créature non humanoïde.** On commence par explorer en génération libre (`--libre --creature` : 1024 × 1536, avec le LoRA à 0.8), avec le même gabarit et le même nombre d'images par tour. On part général, le type de créature et le ton, puis on précise à chaque tour ce qu'on a aimé. Pour une créature humanoïde, on trace le guide dès que le design est trouvé (étape 2), puis on continue sous le guide.
 
 ### 4. Vérifier l'anatomie, et corriger
 
@@ -173,36 +204,52 @@ On corrige sur l'image source, en gardant toujours l'originale à côté (`<nom>
 - **Pour une petite forme posée sur un fond propre,** recopier la bande propre juste à côté. Si cette bande est penchée, compenser son décalage.
 - **Pour retirer un pan entier :**
   1. Retailler la forme **par le code** : tracer le nouveau bord, et remettre du fond au-delà.
-  2. Laisser ComfyUI ne retoucher **qu'une bande étroite le long de ce bord**, en mode retouche, avec un denoise d'environ 0.55. Faire trois graines et choisir.
-- **À ne pas faire : donner à ComfyUI toute la zone à repeindre.** Il reconstruit la forme d'origine, en suivant ce qu'il voit autour.
+  2. Laisser ComfyUI ne retoucher **qu'une bande étroite le long de ce bord**, en mode retouche (`comfy_gen.py --retouche`), avec un denoise d'environ 0.55. On lui donne l'image sous le nom `<préfixe>_assemblage.png`, et le masque, blanc sur la bande, sous `<préfixe>_bande.png`. Faire trois graines et choisir.
+- **À ne pas faire : donner à ComfyUI toute la zone à repeindre, sans guide de repeinte.** Il reconstruit la forme d'origine, en suivant ce qu'il voit autour.
+- **Une piste plus courte, à confirmer : la repeinte guidée.** `comfy_gen.py <préfixe> "<prompt>" --creature --retouche --repaint 1.0 --zone X0,Y0,X1,Y1` repeint un rectangle entier, à débruitage complet. Le ControlNet reçoit l'image, noire dans la zone, et accorde la zone à ce qui l'entoure. Le prompt décrit ce qui doit s'y trouver, et les exclusions ce qu'on retire. Essayé le 13/11/2026 sur le troisième bras de la Faucheuse, bras et manche d'un seul coup, sur la figure brute : deux graines sur trois les retirent en gardant le manche de la faux, la troisième casse le manche. Sans le guide, sur les mêmes graines, la manche revenait à chaque fois. Le propriétaire n'a pas encore jugé ces images.
 
 Après chaque correction, on revérifie l'anatomie sur l'image entière.
 
-### 5. Détourer et poser sur un fond
+### 5. Détourer et poser dans le cadre
 
-Avec `creature_compose.py`, sur un fond de fenêtre du biome visé. On lui donne la source du fond, en 1024 × 1536 (`<biome>_window_<n>_comfy_source.png`), pas son `.aseprite`. Tant qu'un biome n'a pas ses fonds, on prend ceux de la forêt.
+`python creature_detour.py <figure.png> <préfixe>`. La créature est détourée seule : aucun fond n'entre dans son sprite.
 - **Le détourage se fait case par case**, sur les cases de 8 pixels du LoRA. Chaque case est comparée au fond local, mesuré autour d'elle.
 - **Les petits trous fermés sont bouchés.** Un grand espace fermé par la créature reste du fond, comme l'intérieur d'une anse ou l'espace entre un bras et le corps.
-- **`--dy` aligne la créature sur la ligne de sol**, en multiple de 8 pixels. Une première passe sans `--dy` écrit la silhouette (`<préfixe>_silhouette.png`, une case par pixel du sprite). On y lit r, la dernière rangée des pieds, et `--dy` vaut (183 − r) × 8. Une ombre peinte descend sous les pieds : r se lit sur les pieds, pas sur l'ombre.
-- **`--ombre-peinte`** sert quand le générateur a peint l'ombre au sol avec la créature. Sinon, le code en pose une. **Sans ombre peinte, le sprite livré n'a pas d'ombre :** celle du code ne va que dans l'aperçu.
+- **Les pieds vont sur la ligne de sol**, par cases entières. Sans ombre peinte, l'outil prend le bas de la silhouette pour les pieds et la place tout seul.
+- **`--ombre-peinte`** sert quand le générateur a peint l'ombre au sol avec la créature : le bas de la silhouette est alors l'ombre, pas les pieds. L'outil affiche la largeur des dernières rangées. On y lit la rangée des pieds, là où la silhouette s'élargit en ombre, et on relance avec `--pieds R`. La Faucheuse : `--ombre-peinte --pieds 185`.
+- **`--masque <masque.png>`** remplace le détourage par le code par le masque de `comfy_masque.py`, pour un fond taché (étape 3).
+- **Une figure générée sur une toile plus petite que le cadre** est posée telle quelle, sans redimensionnement, centrée et les pieds au sol.
+
+Trois fichiers sortent : la figure cadrée (`<préfixe>_cadree.png`), sa silhouette (`<préfixe>_silhouette.png`, une case par pixel du sprite) et la créature sur un fond vif (`<préfixe>_detouree.png`).
 
 **Une question ouverte, le raccord au sol.** Le bas d'une créature doit paraître posé sur le sol de n'importe quel biome, et chaque fond doit pouvoir accueillir n'importe quelle créature. Ce raccord touche les deux à la fois, comme la position où poser la créature sur chaque fond. Il sera travaillé avec le workflow des fonds et des biomes.
 
-**À contrôler :** la silhouette détourée, sur un fond de couleur vive. Il ne doit rester aucune tache du fond uni, et aucune partie fine ne doit manquer (doigts, arme, lambeaux).
+**À contrôler :** `<préfixe>_detouree.png`. Il ne doit rester aucune tache du fond uni, et aucune partie fine ne doit manquer (doigts, arme, lambeaux).
 
 ### 6. Ramener sur la grille et séparer en calques
 
-Avec `creature_layers.py ... --sol 183 --sprite <nom>.aseprite`. On obtient deux fichiers :
+`python creature_<forme>_layers.py <préfixe> <nom>.aseprite --apercu <fond.aseprite> <nom>_<biome>.aseprite`. On obtient :
 - **le sprite seul**, sur fond transparent : c'est le livrable ;
-- **un aperçu**, la créature posée sur le fond.
+- **un aperçu**, la créature posée sur un fond de fenêtre de son biome, pour la retoucher en situation. Tant qu'un biome n'a pas ses fonds, on prend ceux de la forêt ;
+- **la planche des calques** (`<préfixe>_calques.png`), chaque calque seul sur un fond vif.
 
-Les calques suivent la règle commune : chaque calque est un objet complet, complété sous ceux qui le couvrent.
+**La grille se lit sur la créature elle-même.** L'outil affiche sa netteté, et s'arrête sous 3. Les calques suivent la règle commune : chaque calque est un objet complet, complété sous ceux qui le couvrent.
 
-**La séparation en calques dépend de la forme de la créature.** La fonction `classify` de `creature_layers.py` ne connaît pour l'instant qu'une forme : une créature en robe ou en vêtements, avec des os, une arme à manche et, au besoin, un bouclier. Elle range les cases en Ombre, Robe, Os, Bouclier (avec `--bouclier`) et Arme. `--manche` règle l'épaisseur du manche, pour un bâton plus large qu'une faux. Pour une créature d'une autre forme (une bête, un golem, un personnage en armure), il faut lui écrire ses propres règles avant cette étape. Deux principes, appris en route :
+**Le premier calque est toujours l'ombre.** Le propriétaire l'a décidé le 13/11/2026, sur [maquettes](../../docs/presentations/2026-11-13_ombre_au_sol_creatures_maquettes.pptx) :
+- **peinte par le générateur,** sous la ligne de sol, elle est gardée telle quelle. Celle de la Faucheuse porte le bas de sa robe : la retirer couperait la robe sur une ligne droite ;
+- **sinon, le code en pose une :** une bande pleine, de la couleur la plus sombre d'Apollo, en ellipse aplatie sous ce qui repose au sol. La recette dit ce qui repose au sol : la tenue et les os, pas l'arme, qui peut descendre plus bas que les pieds.
+
+L'outil refuse une recette qui ne livre pas ce calque.
+
+**Chaque forme de créature a sa recette de calques,** comme chaque créature a son script de pose. La recette, `creature_<forme>_layers.py`, dit quelles cases vont à quel calque, et rien d'autre. Le reste est commun, dans `creature_layers.py` : la mise sur la grille, les outils de tri, les contrôles et l'écriture des fichiers.
+- **Une recette existe : `creature_squelette_layers.py`.** Elle sert au Squelette et à la Faucheuse : une tenue, des os, une arme à manche et, avec `--bouclier`, un bouclier. Elle range les cases en Ombre, Robe, Os, Bouclier et Arme. `--manche` règle l'épaisseur du manche, pour un bâton plus large qu'une faux (2 pour le Squelette).
+- **Une créature d'une autre forme** (une bête, un golem, un personnage en armure) demande sa recette, écrite avant cette étape sur le modèle de la première. Sur une créature sans arme à manche, la recette des squelettes s'arrête et le dit.
+
+Deux principes, appris en route :
 - **Une couleur ne suffit pas.** Sur la grille Apollo, des matières différentes tombent sur les mêmes gris. On combine la couleur avec la forme : une droite pour un manche, une tache reliée à l'arme pour une lame.
 - **En cas de doute, regarder l'image source.** Elle garde des nuances que la grille a fondues ensemble.
 
-**À contrôler :** chaque calque seul, sur un fond de couleur vive. Il ne doit y avoir aucun morceau d'un objet rangé dans le calque d'un autre, et aucun objet coupé en deux.
+**À contrôler :** la planche des calques. Il ne doit y avoir aucun morceau d'un objet rangé dans le calque d'un autre, et aucun objet coupé en deux.
 
 ### 7. Contrôler en situation, puis faire valider le design
 
@@ -245,8 +292,8 @@ Une créature validée peut paraître trop grande devant son fond. **On ne la r�
 
 1. **Réduire la figure et ses guides** autour du milieu des pieds, qui ne bouge pas :
    `python creature_reduire.py reduire <figure.png> <préfixe des guides> <préfixe de sortie> <facteur> --ancre X,Y`
-2. **La faire repeindre** par `comfy_gen.py`, sur sa graine et avec son prompt, en `--guide base` et à un denoise de 0.35. La repeinte rend au pixel art sa grille.
-3. **Vérifier que la grille est retombée** sur 8 pixels : `python creature_reduire.py grille <image repeinte>`. Pour le Squelette, à 70 % et 0.35, elle l'était ; à 80 % et 0.35, non.
+2. **La faire repeindre** par `comfy_gen.py`, sur sa graine et avec son prompt, en `--creature --guide base` et à un denoise de 0.35. La repeinte rend au pixel art sa grille.
+3. **Vérifier que la grille est retombée** sur 8 pixels : `python creature_reduire.py grille <image repeinte>`. L'outil affiche la netteté de la grille, en largeur et en hauteur. **Elle revient affaiblie :** pour le Squelette, à 70 % et 0.35, elle vaut 7,4 et 3,8, pour un minimum de 3, quand la Faucheuse, générée directement, atteint 30. À 80 % et 0.35, elle n'était pas retombée. Entre deux facteurs qui plaisent autant, on garde le plus net.
 
 On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devient la figure brute, et la version pleine taille va aux archives. La suite reprend à l'étape 4.
 
@@ -258,11 +305,11 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 |:---|:---|
 | `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt en cours et le journal des tours |
 | `<nom>.aseprite` | Le sprite, sur fond transparent : le livrable. Ses calques : Ombre, Robe, Os, Bouclier s'il en a un, Arme, puis Liseré une fois le design validé |
-| `<nom>_<biome>.aseprite` | Un aperçu de la créature posée sur un fond de son biome |
-| `<nom>_figure_brute.png` | La dernière génération, intacte : celle d'où la figure est tirée. Quand la figure vient d'une réduction ou d'une variation, c'est l'image repeinte ; les générations d'avant vont aux archives |
+| `<nom>_<biome>.aseprite` | Un aperçu de la créature posée sur un fond de son biome : le calque Décor, puis ceux du sprite |
+| `<nom>_figure_brute.png` | La dernière génération, intacte : celle d'où la figure est tirée. Quand la figure vient d'une réduction ou d'une variation, c'est l'image repeinte ; les générations d'avant vont aux archives. Elle embarque ses réglages (`comfy_meta.py lire`) |
 | `<nom>_figure.png` | L'image corrigée, d'où le sprite est tiré |
-| `<nom>_pose.png`, `<nom>_pose_<objet>.png` | Les guides de génération |
+| `<nom>_pose.png`, `<nom>_edges.png` | Les guides de génération, la pose et l'équipement en contours, sous les noms que les outils leur donnent : `<dossier>/<nom>` sert tel quel de préfixe à `creature_reduire.py`. L'image de départ unie (`_guide.png`) n'est pas gardée : le script de pose la réécrit |
 
-Le script de pose, un par créature, va dans `art_src/tools/creature_<nom>_pose.py`, à côté de `pose.py` qu'il importe. Les fichiers de travail restent dans `art_src/tools/.work/`, que git ignore.
+Le script de pose, un par créature, va dans `art_src/tools/creature_<nom>_pose.py`, à côté de `pose.py` qu'il importe. La recette de calques, une par forme, va dans `art_src/tools/creature_<forme>_layers.py`, à côté de `creature_layers.py`. Les fichiers de travail restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).

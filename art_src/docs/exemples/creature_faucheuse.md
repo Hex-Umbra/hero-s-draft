@@ -53,6 +53,14 @@ Tout se fait en génération libre, en 1024 × 1536, avec le LoRA à 0.8.
 
 `python creature_layers.py .work/faucheuse6 .work/faucheuse6_assemblage.png <fond forêt 1> squelette_faucheuse_foret.aseprite --sol 183 --sprite squelette_faucheuse.aseprite`
 
+**Ces deux commandes sont celles de l'époque.** La créature était alors posée sur un fond avant d'être mise sur la grille, et sa grille était lue sur ce fond. Depuis le 12/11/2026, elle est détourée seule et sa grille se lit sur elle-même :
+
+`python creature_detour.py <figure> .work/faucheuse --ombre-peinte --pieds 185`
+
+`python creature_squelette_layers.py .work/faucheuse squelette_faucheuse.aseprite --apercu <fond forêt 1, en .aseprite> squelette_faucheuse_foret.aseprite`
+
+Refaite ainsi, la Faucheuse garde sa silhouette et ses calques, mais 7 % de ses cases changent de nuance : la grille n'est plus lue au même pixel près. Le sprite commité reste celui de l'époque.
+
 ## Les corrections d'anatomie
 
 **Un troisième bras.** Sous le bras qui tient la faux, un avant-bras sortait du milieu de la robe pour serrer le manche une seconde fois. Le propriétaire l'a repéré sur le sprite fini.
@@ -108,5 +116,5 @@ Les deux pistes du workflow ont été montrées sur les trois fonds :
 | `squelette_faucheuse_foret.aseprite` | L'aperçu sur le fond forêt 1, avec Décor dessous et Liseré dessus |
 | `squelette_faucheuse_figure_brute.png` | La génération du tour 6, intacte |
 | `squelette_faucheuse_figure.png` | La même, sans le troisième bras ni sa manche |
-| `squelette_faucheuse_pose.png`, `squelette_faucheuse_pose_faux.png` | Le guide OpenPose et la faux en contours |
+| `squelette_faucheuse_pose.png`, `squelette_faucheuse_edges.png` | Le guide OpenPose et la faux en contours |
 | `art_src/tools/creature_faucheuse_pose.py` | Le script qui trace ces guides |
