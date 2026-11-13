@@ -9,7 +9,7 @@ guides sont dans pose.py.
     python creature_squelette_pose.py <prefixe>
 
 Ecrit <prefixe>_pose.png, <prefixe>_edges.png et <prefixe>_guide.png. Le Squelette a ete genere
-avec comfy_gen.py --sujet --guide guide --pose 0.85 --edges 0.55 --depth 0.
+avec comfy_gen.py --creature (pose 0.85, contours 0.55, pas de profondeur).
 """
 import sys
 

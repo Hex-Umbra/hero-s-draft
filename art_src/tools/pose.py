@@ -23,7 +23,7 @@ LIMBS = [(1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10)
          (1, 0), (0, 14), (14, 16), (0, 15), (15, 17)]
 COLOURS = [(255, 0, 0), (255, 85, 0), (255, 170, 0), (255, 255, 0), (170, 255, 0), (85, 255, 0), (0, 255, 0),
            (0, 255, 85), (0, 255, 170), (0, 255, 255), (0, 170, 255), (0, 85, 255), (0, 0, 255), (85, 0, 255),
-           (170, 0, 255), (255, 0, 255), (255, 0, 85), (255, 0, 85)]
+           (170, 0, 255), (255, 0, 255), (255, 0, 170), (255, 0, 85)]
 STICK, JOINT = 10, 9  # demi-largeur d'un membre et rayon d'une articulation, en pixels
 EDGE = 5  # l'epaisseur d'un contour d'equipement, en pixels
 START = "#d7b594"  # l'image de depart, un aplat ocre : avec un debruitage complet, elle ne fixe que la taille
@@ -58,7 +58,7 @@ def pose_map(points):
 
 def write_guides(prefix, points, edges):
     """Ecrit <prefixe>_pose.png (OpenPose), <prefixe>_edges.png (l'equipement) et <prefixe>_guide.png
-    (l'image de depart), a donner a comfy_gen.py --sujet --guide guide."""
+    (l'image de depart), a donner a comfy_gen.py --creature."""
     pose_map(points).save(prefix + "_pose.png")
     edges.save(prefix + "_edges.png")
     Image.new("RGB", (W, H), START).save(prefix + "_guide.png")

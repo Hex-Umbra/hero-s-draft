@@ -1,7 +1,7 @@
 """Le liseré de lumiere d'une creature : un calque a part, pose sur un .aseprite deja fait.
 
 Quand la tenue d'une creature se perd dans les fonds de son biome, un pixel de lumiere sur son bord
-exterieur la detache (workflow des creatures, etape 6). L'effet est voulu, stylise : il vit dans son
+exterieur la detache (workflow des creatures, etape 8). L'effet est voulu, stylise : il vit dans son
 propre calque, « Liseré », tout en haut, pour qu'on puisse le masquer d'un clic. C'est la seule
 lumiere de la chaine qui ne soit pas cuite dans son objet.
 
