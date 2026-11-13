@@ -2,6 +2,8 @@
 
 **État au 12/11/2026.** La méthode est encore en itération. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images. Un cas complet, de la première idée au sprite, est raconté dans [les exemples](exemples/).
 
+**Ce workflow se lance par la commande `/workflow-creature`.** Le [skill](../../.claude/skills/workflow-creature/SKILL.md) le conduit étape par étape : il dit où s'arrêter, ce qu'on montre au propriétaire, et qui décide. Ce document, lui, dit comment faire.
+
 ## Le principe
 
 **La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds](workflow_fond.md), § 2). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
@@ -57,8 +59,8 @@ Avant tout guide et toute génération, l'agent et le propriétaire fixent la cr
 
 | Question | Ce que la réponse décide |
 |:---|:---|
-| Quelle arme, dans quelle main, tenue comment : plantée, levée, en travers ? | Son tracé en contours dans le guide, et `--manche` à l'étape 6 |
-| Un bouclier ? De quelle forme, de quelle taille, à quel bras ? | Son tracé en contours, et `--bouclier` à l'étape 6 |
+| Quelle arme, dans quelle main, tenue comment : plantée, levée, en travers ? | Son tracé en contours dans le guide, et son mot dans la recette de calques (étape 6) |
+| Un bouclier ? De quelle forme, de quelle taille, à quel bras ? | Son tracé en contours, et son mot dans la recette de calques (étape 6) |
 | D'autres accessoires, comme un casque, ou explicitement aucun ? | Le prompt et les exclusions : le générateur ajoute volontiers une armure |
 | Dans quel état, et de quelle facture : brut, rouillé, ouvragé ? | Les variantes de prompt à essayer sur une graine retenue |
 
@@ -94,7 +96,7 @@ Le prompt, les exclusions, le script de guide et ses réglages.
 - Les corrections d'anatomie (étape 4) : ce qui a été retiré, et comment.
 - La réduction, s'il y en a eu une : le facteur et l'ancre.
 - Le détourage (étape 5) : `--pieds` ou `--dy`, et `--ombre-peinte`.
-- Les calques (étape 6) : la recette et ses options.
+- Les calques (étape 6) : la recette, `<nom>_calques.json`, avec les mots retenus et ceux qui n'ont rien donné.
 - Le liseré (étape 8) : le calque de la tenue.
 ```
 
@@ -228,7 +230,7 @@ Trois fichiers sortent : la figure cadrée (`<préfixe>_cadree.png`), sa silhoue
 
 ### 6. Ramener sur la grille et séparer en calques
 
-`python creature_<forme>_layers.py <préfixe> <nom>.aseprite --apercu <fond.aseprite> <nom>_<biome>.aseprite`. On obtient :
+`python creature_mots_layers.py <préfixe> <nom>.aseprite --recette <nom>_calques.json --apercu <fond.aseprite> <nom>_<biome>.aseprite`. On obtient :
 - **le sprite seul**, sur fond transparent : c'est le livrable ;
 - **un aperçu**, la créature posée sur un fond de fenêtre de son biome, pour la retoucher en situation. Tant qu'un biome n'a pas ses fonds, on prend ceux de la forêt ;
 - **la planche des calques** (`<préfixe>_calques.png`), chaque calque seul sur un fond vif.
@@ -237,15 +239,42 @@ Trois fichiers sortent : la figure cadrée (`<préfixe>_cadree.png`), sa silhoue
 
 **Le premier calque est toujours l'ombre.** Le propriétaire l'a décidé le 13/11/2026, sur [maquettes](../../docs/presentations/2026-11-13_ombre_au_sol_creatures_maquettes.pptx) :
 - **peinte par le générateur,** sous la ligne de sol, elle est gardée telle quelle. Celle de la Faucheuse porte le bas de sa robe : la retirer couperait la robe sur une ligne droite ;
-- **sinon, le code en pose une :** une bande pleine, de la couleur la plus sombre d'Apollo, en ellipse aplatie sous ce qui repose au sol. La recette dit ce qui repose au sol : la tenue et les os, pas l'arme, qui peut descendre plus bas que les pieds.
+- **sinon, le code en pose une :** une bande pleine, de la couleur la plus sombre d'Apollo, en ellipse aplatie sous ce qui repose au sol. L'arme ne compte pas : elle peut descendre plus bas que les pieds.
 
 L'outil refuse une recette qui ne livre pas ce calque.
 
-**Chaque forme de créature a sa recette de calques,** comme chaque créature a son script de pose. La recette, `creature_<forme>_layers.py`, dit quelles cases vont à quel calque, et rien d'autre. Le reste est commun, dans `creature_layers.py` : la mise sur la grille, les outils de tri, les contrôles et l'écriture des fichiers.
-- **Une recette existe : `creature_squelette_layers.py`.** Elle sert au Squelette et à la Faucheuse : une tenue, des os, une arme à manche et, avec `--bouclier`, un bouclier. Elle range les cases en Ombre, Robe, Os, Bouclier et Arme. `--manche` règle l'épaisseur du manche, pour un bâton plus large qu'une faux (2 pour le Squelette).
-- **Une créature d'une autre forme** (une bête, un golem, un personnage en armure) demande sa recette, écrite avant cette étape sur le modèle de la première. Sur une créature sans arme à manche, la recette des squelettes s'arrête et le dit.
+**Les calques se découpent par des mots.** Le modèle SAM3 isole dans l'image ce qu'un mot anglais désigne : « scythe », « robe », « shield ». La créature ne déclare donc que ses calques et leurs mots, dans `<nom>_calques.json`, rangé avec elle. Il n'y a aucun seuil de couleur à régler, et la même recette sert à toute forme de créature. Celle du Squelette :
 
-Deux principes, appris en route :
+```json
+{
+  "calques": ["Ombre", "Robe", "Bouclier", "Arme", "Os"],
+  "mots": {"Arme": ["staff"], "Bouclier": ["shield"], "Robe": ["clothes"], "Os": ["skeleton"]},
+  "sous_le_sol": ["Arme"]
+}
+```
+
+- **`calques` :** du bas vers le haut. Le premier est toujours l'ombre. Ce qui passe devant va au-dessus : les os après l'arme, parce que la main serre le manche.
+- **`mots` :** pour chaque calque, les mots qui le désignent. **L'ordre compte :** chaque calque réclame ses cases à son tour, et une case déjà prise ne change plus de main. On va du plus sûr au plus large. « skeleton » désigne aussi la tenue : il passe après « clothes », et ne garde que les os.
+- **`sous_le_sol` :** les calques qui ont le droit de descendre sous la ligne de sol, comme une arme plantée. Tout le reste, sous la ligne de sol, est l'ombre peinte.
+
+**Les mots se cherchent sur une planche, avant d'écrire la recette :**
+
+`python comfy_masque.py <préfixe>_cadree.png <planche.png> --mots scythe robe skeleton hand`
+
+La planche montre ce que chaque mot isole, en quatre secondes par mot. Un mot ne rend pas toujours ce qu'on attend :
+- **« bones » ne rend que le crâne.** Les os s'obtiennent par « skeleton », réclamé après la tenue.
+- **« shadow » n'est pas fiable :** sur la Faucheuse, il désigne la lame de la faux. L'ombre se prend donc sous la ligne de sol, jamais par un mot.
+- **Un pluriel n'est pas un singulier :** sur la Faucheuse, « hand » rend une main et « hands » l'autre. On donne les deux.
+- **Un détail peut n'avoir aucun mot :** les chiffons des genoux du Squelette restent avec les os. C'est une retouche de l'étape 9.
+
+**Ce que fait l'outil des mots qu'on lui donne :**
+- **Une case qu'aucun mot ne réclame suit ses voisines.** L'outil affiche combien de cases les mots ont réclamées : 93 % pour le Squelette, 98 % pour la Faucheuse.
+- **Chaque calque est complété sous ceux qui le couvrent,** là où il les encadre : masquer la main laisse voir le manche, masquer les os la tenue.
+- **Un mot qui ne désigne rien arrête l'outil,** qui le nomme.
+
+**Pourquoi les mots,** depuis le 13/11/2026. La recette d'avant triait les cases par leur couleur et leur forme, avec des seuils réglés pour chaque créature. Sur les deux créatures existantes, les mots rendent des objets entiers là où elle rendait des pointillés : les os du Squelette passent de 482 cases éparses à 933 d'un seul tenant. Le propriétaire a jugé ce découpage bien meilleur.
+
+**Sans ComfyUI, une recette par le code reste possible.** `creature_squelette_layers.py` trie le Squelette et la Faucheuse par la couleur et la forme, avec `--manche` et `--bouclier`. Elle ne sert qu'à une créature en tenue, avec des os et une arme à manche. Écrire une telle recette pour une autre forme demande du code. Deux principes s'y appliquent :
 - **Une couleur ne suffit pas.** Sur la grille Apollo, des matières différentes tombent sur les mêmes gris. On combine la couleur avec la forme : une droite pour un manche, une tache reliée à l'arme pour une lame.
 - **En cas de doute, regarder l'image source.** Elle garde des nuances que la grille a fondues ensemble.
 
@@ -304,12 +333,13 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 | Fichier | Rôle |
 |:---|:---|
 | `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt en cours et le journal des tours |
-| `<nom>.aseprite` | Le sprite, sur fond transparent : le livrable. Ses calques : Ombre, Robe, Os, Bouclier s'il en a un, Arme, puis Liseré une fois le design validé |
+| `<nom>.aseprite` | Le sprite, sur fond transparent : le livrable. Ses calques : Ombre, puis ceux de sa recette, puis Liseré une fois le design validé |
+| `<nom>_calques.json` | La recette de calques : l'ordre des calques, et les mots qui désignent chacun (étape 6) |
 | `<nom>_<biome>.aseprite` | Un aperçu de la créature posée sur un fond de son biome : le calque Décor, puis ceux du sprite |
 | `<nom>_figure_brute.png` | La dernière génération, intacte : celle d'où la figure est tirée. Quand la figure vient d'une réduction ou d'une variation, c'est l'image repeinte ; les générations d'avant vont aux archives. Elle embarque ses réglages (`comfy_meta.py lire`) |
 | `<nom>_figure.png` | L'image corrigée, d'où le sprite est tiré |
 | `<nom>_pose.png`, `<nom>_edges.png` | Les guides de génération, la pose et l'équipement en contours, sous les noms que les outils leur donnent : `<dossier>/<nom>` sert tel quel de préfixe à `creature_reduire.py`. L'image de départ unie (`_guide.png`) n'est pas gardée : le script de pose la réécrit |
 
-Le script de pose, un par créature, va dans `art_src/tools/creature_<nom>_pose.py`, à côté de `pose.py` qu'il importe. La recette de calques, une par forme, va dans `art_src/tools/creature_<forme>_layers.py`, à côté de `creature_layers.py`. Les fichiers de travail restent dans `art_src/tools/.work/`, que git ignore.
+Le script de pose, un par créature, va dans `art_src/tools/creature_<nom>_pose.py`, à côté de `pose.py` qu'il importe. La recette de calques est un fichier de la créature, pas un script : `creature_mots_layers.py` la lit. Les fichiers de travail restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
