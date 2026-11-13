@@ -12,20 +12,22 @@ on la fait repeindre legerement par ComfyUI, ce qui rend au pixel art sa grille 
 
 2. La repeinte, sur la meme graine et avec le meme prompt :
 
-    python comfy_gen.py <sortie> "<prompt>" --sujet --guide base --denoise 0.35 --pose 0.85 --edges 0.55 --depth 0 ...
+    python comfy_gen.py <sortie> "<prompt>" --creature --guide base --denoise 0.35 --seed <graine> --exclure "<exclusions>"
 
 3. Le controle de la grille, qui doit etre retombee sur 8 pixels :
 
     python creature_reduire.py grille <image repeinte.png>
 
-   Pour le Squelette, a 70 % et 0.35, elle est retombee ; a 80 % et 0.35, non.
+   Il affiche la nettete de la grille, en largeur et en hauteur, a cote du minimum que demande la
+   mise sur la grille. Pour le Squelette, a 70 % et 0.35, elle est retombee de justesse (7,4 et 3,8,
+   pour un minimum de 3 ; la Faucheuse, generee directement, atteint 30) ; a 80 % et 0.35, non.
 """
 import argparse
 
 from PIL import Image
 
-from bg_import import lora_grid
-from creature_compose import detour
+from bg_import import MIN_SHARPNESS, grid_sharpness, lora_grid
+from creature_detour import detour
 from fond_uni import CELL, TOP_ROWS, median
 
 GW, GH = 128, 192  # la grille du sprite
@@ -57,7 +59,9 @@ def check_grid(path):
     mask = detour(im)
     rows = [y for y in range(mask.height) for x in range(mask.width) if mask.getpixel((x, y))]
     height = (max(rows) - min(rows) + 1) / GH if rows else 0
-    print(f"grille de 8 pixels : {'retombee' if ok else 'NON retombee'} ; silhouette, ombre comprise : {height:.0%} de la hauteur")
+    sharp = grid_sharpness(im, GW, GH)
+    print(f"grille de 8 pixels : {'retombee' if ok else 'NON retombee'}, nettete {sharp[0]:.1f} en largeur et {sharp[1]:.1f} en hauteur "
+          f"(minimum {MIN_SHARPNESS}) ; silhouette, ombre comprise : {height:.0%} de la hauteur")
 
 
 def main():

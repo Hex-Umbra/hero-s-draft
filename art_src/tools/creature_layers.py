@@ -1,62 +1,127 @@
-"""Etape 3 d'une creature assemblee : la grille Apollo, puis les calques.
+"""Le decoupage d'une creature en calques : ce que toutes les formes de creature partagent.
 
-L'assemblage de creature_compose.py (retouche ou non) et le decor seul sont ramenes sur la
-grille, a la taille des cases du LoRA. Les calques, du bas vers le haut :
+Chaque forme de creature a sa recette, creature_<forme>_layers.py, ecrite d'apres la creature : elle
+dit quelles cases vont a quel calque, et ne contient que cela. Ce module fait le reste : la mise sur
+la grille Apollo, les outils de tri que les recettes combinent, les controles et l'ecriture des
+.aseprite. C'est le meme partage qu'entre pose.py et les scripts de pose.
 
-- le decor, complet : il vient du decor genere seul, rien ne manque derriere la creature ;
-- l'ombre et le raccord : ce que l'assemblage a change autour de la creature ;
-- l'ombre au sol peinte avec la creature, sous la ligne de sol (--sol) ;
-- la robe, les os, le bouclier s'il y en a un (--bouclier), l'arme : la creature, separee par la
-  couleur et par la forme. --manche donne la demi-largeur du manche, pour un baton plus epais.
+Une recette se lance comme un script :
 
-Chaque calque de la creature est complete sous ceux qui le couvrent, en prolongeant ses
-propres couleurs : masquer l'arme laisse voir la robe, masquer les os l'interieur de la robe.
+    python creature_<forme>_layers.py <prefixe> <sprite.aseprite> [--sol 183]
+                                      [--apercu <fond.aseprite> <apercu.aseprite>] [ses options]
 
-    python creature_layers.py <prefixe> <assemblage.png> <decor.png> <sortie.aseprite> [--sol N] [--sprite <sprite.aseprite>]
-                              [--manche 1.3] [--bouclier]
+<prefixe> est celui de creature_detour.py, dont on relit <prefixe>_cadree.png et
+<prefixe>_silhouette.png. La grille se lit sur la creature elle-meme : son sprite ne depend
+d'aucun fond. Sont ecrits :
 
-<prefixe> est celui de creature_compose.py, dont on relit <prefixe>_silhouette.png. --sprite
-ecrit aussi la creature seule, sur fond transparent : c'est elle que le jeu greffe sur un decor.
+- le sprite, la creature seule sur fond transparent : le livrable ;
+- <prefixe>_calques.png, chaque calque seul sur un fond vif, pour le controle a l'oeil ;
+- avec --apercu, la creature posee sur un fond de fenetre, au-dessus d'un calque « Décor ».
+
+Ecrire une recette : une fonction separate(figure, options), qui renvoie les calques du bas vers le
+haut, [(nom, {case: couleur})]. Ensemble, ils doivent redonner la creature, case pour case. Chaque
+calque est un objet complet : fill le complete sous ceux qui le couvrent.
+
+Toute creature a son ombre, dans le calque SHADOW, tout en bas (regle du 13/11/2026) : celle que
+le generateur a peinte sous la ligne de sol, ou, s'il n'en a pas peint, celle que pose cast_shadow
+sous ce qui repose au sol. Le calque se masque d'un clic : le jeu peut charger le sprite avec ou
+sans son ombre, selon le fond.
 """
 import argparse
 import math
-import random
+import os
 
 from PIL import Image
 
 from aseprite_io import build, check_independent, work, write_manifest
 from bg_hall import APOLLO
-from bg_import import _lab, lora_grid, tidy, to_grid
+from bg_import import MIN_SHARPNESS, _lab, grid_sharpness, lora_grid, tidy, to_grid
+from creature_controle import sheet
+from creature_detour import CELL
+from creature_lisere import read_layers
 
 N8 = [(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy]
 N4 = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+SHADOW = "Ombre"  # le calque de l'ombre au sol : peinte avec la creature, ou posee par le code
+DECOR = "Décor"  # le calque que l'apercu ajoute sous la creature
+SHADOW_COLOUR = min(APOLLO, key=sum)  # l'ombre posee par le code : la couleur la plus sombre d'Apollo
 
 
-def snap(im, t, gw, gh):
-    """L'image sur la grille Apollo. Le decor et l'assemblage sont lus sur la meme grille :
-    un decalage d'une fraction de pixel changerait quelques cases partout."""
-    out = to_grid(im, t, gw, gh, APOLLO, 0.25)
-    tidy(out)
-    return out
+class Figure:
+    """Ce qu'une recette lit : la creature sur la grille Apollo, son image source et sa silhouette.
 
+    cells : les cases de la creature ; colour et lab : leur couleur sur la grille ; ground : la ligne
+    de sol. La grille fond ensemble des matieres que la source distingue encore : tone et core
+    lisent la source."""
 
-def steel_cells(src, gw, gh):
-    """Les cases de la lame, reperees dans l'image source : un gris neutre ou lavande, ni sarcelle
-    comme la doublure de la capuche, ni ivoire comme les os. Sur la grille Apollo, ces gris se
-    confondent ; dans la source, non."""
-    sp = src.load()
-    k = src.width // gw
-    found = set()
-    for cy in range(gh):
-        for cx in range(gw):
-            hits = 0
-            for j in range(k // 4, k - k // 4):
-                for i in range(k // 4, k - k // 4):
-                    L, a, b = _lab(sp[cx * k + i, cy * k + j])
-                    hits += L >= 28 and a >= -4 and -16 <= b <= 2 and math.hypot(a, b) < 14
-            if hits * 2 >= (k - 2 * (k // 4)) ** 2:
+    def __init__(self, img, src, silhouette, ground):
+        self.img, self.src, self.ground = img, src, ground
+        self.gw, self.gh = img.size
+        ip, sp = img.load(), silhouette.load()
+        self.cells = {(x, y) for y in range(self.gh) for x in range(self.gw) if sp[x, y]}
+        self.colour = {c: ip[c] for c in self.cells}
+        self.lab = {c: _lab(v) for c, v in self.colour.items()}
+        self._tone = None
+
+    @property
+    def tone(self):
+        """La couleur de chaque case dans la source, en Lab, sur la moyenne de la case : un cuir
+        marbre y reste d'un seul ton, quand la grille le disperse entre plusieurs bruns."""
+        if self._tone is None:
+            means = self.src.resize((self.gw, self.gh), Image.BOX).load()
+            self._tone = {c: _lab(means[c]) for c in self.cells}
+        return self._tone
+
+    def core(self, test):
+        """Les cases dont la moitie du coeur, dans la source, passe test(L, a, b) : la lecture
+        pixel par pixel, pour une matiere que la moyenne d'une case brouillerait."""
+        sp = self.src.load()
+        k = self.src.width // self.gw
+        span = range(k // 4, k - k // 4)
+        found = set()
+        for cx, cy in self.cells:
+            hits = sum(bool(test(*_lab(sp[cx * k + i, cy * k + j]))) for j in span for i in span)
+            if hits * 2 >= len(span) ** 2:
                 found.add((cx, cy))
-    return found
+        return found
+
+    def below_ground(self):
+        """Les cases sous la ligne de sol : l'ombre peinte avec la creature."""
+        return {c for c in self.cells if c[1] > self.ground}
+
+    def cast_shadow(self, standing):
+        """L'ombre posee par le code, pour une creature dont le generateur n'a pas peint la sienne :
+        une bande pleine, d'une seule couleur, en ellipse aplatie sous `standing`, les cases qui
+        reposent au sol. On n'y compte pas l'arme, qui peut descendre plus bas que les pieds."""
+        feet_row = max(y for _, y in standing)
+        feet = [x for x, y in standing if feet_row - 2 <= y <= feet_row]
+        cx, cy = (min(feet) + max(feet)) / 2 + 0.5, feet_row + 0.5
+        rx, ry = 0.674 * ((max(feet) - min(feet)) / 2 + 6), 0.674 * 3.2  # un peu plus large que l'appui, haute de quatre cases
+        return {(gx, gy): SHADOW_COLOUR
+                for gy in range(max(0, int(cy - ry) - 1), min(self.gh, int(cy + ry) + 2))
+                for gx in range(max(0, int(cx - rx) - 1), min(self.gw, int(cx + rx) + 2))
+                if math.hypot((gx + 0.5 - cx) / rx, (gy + 0.5 - cy) / ry) < 1}
+
+    def pick(self, cells):
+        """Les cases d'un calque, avec leur couleur sur la grille."""
+        return {c: self.colour[c] for c in cells}
+
+    def fill(self, own, area):
+        """Le calque d'un objet complete sur `area` : chaque case manquante prend la couleur de ses
+        voisines de l'objet, de proche en proche."""
+        colour = self.pick(own)
+        todo = set(area) - set(own)
+        while todo:
+            grown = {}
+            for c in todo:
+                near = [colour[n] for n in ((c[0] + dx, c[1] + dy) for dx, dy in N8) if n in colour]
+                if near:
+                    grown[c] = max(set(near), key=near.count)
+            if not grown:
+                break
+            colour.update(grown)
+            todo -= set(grown)
+        return colour
 
 
 def components(cells):
@@ -79,25 +144,6 @@ def components(cells):
     return sorted(comps, key=len, reverse=True)
 
 
-def shaft_line(cells, lab, tries=4000, width=1.0):
-    """La droite du manche : celle qui passe par le plus de cases brunes (RANSAC)."""
-    brown = [c for c in cells if lab[c][1] > 12 and lab[c][2] > -4 and lab[c][0] < 45]
-    rng = random.Random(1)
-    best = (0, None)
-    for _ in range(tries):
-        (x1, y1), (x2, y2) = rng.sample(brown, 2)
-        length = math.hypot(x2 - x1, y2 - y1)
-        if length < 30:
-            continue
-        nx, ny = (y2 - y1) / length, -(x2 - x1) / length
-        score = sum(abs((x - x1) * nx + (y - y1) * ny) <= width for x, y in brown)
-        if score > best[0]:
-            best = (score, (x1, y1, nx, ny))
-    x1, y1, nx, ny = best[1]
-    on = [c for c in brown if abs((c[0] - x1) * nx + (c[1] - y1) * ny) <= width]
-    return (x1, y1, nx, ny), on
-
-
 def grow(cells, k):
     """Les cases a `k` cases au plus d'un ensemble, en voisinage a 8."""
     out = set(cells)
@@ -106,118 +152,16 @@ def grow(cells, k):
     return out
 
 
-def shield_cells(cells, lab, src, gw, gh):
-    """L'ecu : le plus grand amas brun (cuir ou bois), son contour sombre et ce qu'il enferme.
-
-    Le brun se lit dans l'image source, sur la moyenne de chaque case : un cuir marbre y reste
-    d'un seul ton, quand la grille Apollo le disperse entre des bruns clairs et fonces. Une
-    ouverture de deux cases detache ensuite l'ecu des fines formes brunes qui le touchent, comme
-    une ceinture. Ce qu'il enferme, les clous et les reflets, ce sont les cases qui ont l'ecu de
-    part et d'autre, sur leur ligne comme sur leur colonne."""
-    means = src.resize((gw, gh), Image.BOX).load()
-    tone = {c: _lab(means[c]) for c in cells}
-    brown = {c for c in cells if 28 <= tone[c][0] < 58 and tone[c][1] >= 9 and tone[c][2] >= 15}
-    core = {c for c in brown if all((c[0] + dx, c[1] + dy) in brown for dx in range(-2, 3) for dy in range(-2, 3))}
-    opened = grow(core, 2) & brown
-    blob = components(opened)[0]
-    # le bord de l'ecu, plus sombre, et son contour : l'ecu gagne de proche en proche, sur six cases
-    # au plus, les cases brunes ou rouille et les contours sombres de ton chaud ; pas la tenue, froide
-    rim = {c for c in cells if (tone[c][1] >= 9 and tone[c][2] >= 6) or (tone[c][0] < 20 and tone[c][1] >= 3 and tone[c][2] >= 0)}
-    for _ in range(6):
-        edge = {c for c in rim - blob if any((c[0] + dx, c[1] + dy) in blob for dx, dy in N8)}
-        if not edge:
-            break
-        blob |= edge
-    rows, cols = {}, {}
-    for x, y in blob:
-        rows.setdefault(y, []).append(x)
-        cols.setdefault(x, []).append(y)
-    inside = {c for c in cells if c[1] in rows and c[0] in cols
-              and min(rows[c[1]]) < c[0] < max(rows[c[1]]) and min(cols[c[0]]) < c[1] < max(cols[c[0]])}
-    return blob | inside
+def touches(a, b):
+    """Vrai si une case de `a` a une voisine (a 8) dans `b`."""
+    return any((c[0] + dx, c[1] + dy) in b for c in a for dx, dy in N8)
 
 
-def classify(img, silhouette, src, ground=None, shaft_width=None, shield=False):
-    """Les cases de la creature, rangees en ombre au sol, robe, os, arme et, si `shield`, bouclier.
-
-    `shaft_width` est la demi-largeur du manche, en cases, de part et d'autre de sa droite (1.3 par
-    defaut). Donnee, elle sert a un manche plus epais, dont les reflets et les bords sont lus aussi
-    dans la source : la grille les arrondit au clair des os, la source les garde bruns."""
-    ip, sp = img.load(), silhouette.load()
-    gw, gh = img.size
-    sil = {(x, y) for y in range(gh) for x in range(gw) if sp[x, y]}
-    lab = {c: _lab(ip[c]) for c in sil}
-    (x1, y1, nx, ny), on = shaft_line(sil, lab)
-    ys = [c[1] for c in on]
-    top, bottom = min(ys), max(ys)
-    near = lambda c, w: abs((c[0] - x1) * nx + (c[1] - y1) * ny) <= w
-    # le manche se prolonge vers le bas tant que sa droite reste dans la silhouette, meme quand
-    # il passe dans l'ombre et que la grille le rend gris plutot que brun
-    while any(near((x, bottom + 1), 0.75) and (x, bottom + 1) in sil for x in range(gw)):
-        bottom += 1
-    width = shaft_width or 1.3
-    shaft = {c for c in sil if near(c, width) and top - 1 <= c[1] <= bottom + 1 and lab[c][1] > 6 and lab[c][0] < 50}
-    shaft |= {c for c in sil if near(c, 0.75) and top <= c[1] <= bottom and lab[c][0] < 55}
-    if shaft_width:
-        means = src.resize((gw, gh), Image.BOX).load()
-        shaft |= {c for c in sil if near(c, width) and top - 1 <= c[1] <= bottom + 1
-                  and _lab(means[c])[0] < 50 and _lab(means[c])[1] >= 3}
-    # la lame : les taches d'acier, reperees dans la source, qui touchent le haut du manche,
-    # et leur liseré sombre sur le bord de la silhouette
-    head = min(shaft, key=lambda c: c[1])
-    blade = set()
-    for comp in components(steel_cells(src, gw, gh) & sil):
-        if any(math.hypot(c[0] - head[0], c[1] - head[1]) <= 3 for c in comp):
-            blade |= comp
-    blade |= {c for c in sil if lab[c][0] < 30 and lab[c][1] > -5
-              and any((c[0] + dx, c[1] + dy) in blade for dx, dy in N8)
-              and any((c[0] + dx, c[1] + dy) not in sil for dx, dy in N8)}
-    weapon = shaft | blade
-    shadow = {c for c in sil - weapon if ground is not None and c[1] > ground}
-    rest = sil - weapon - shadow
-    guard = shield_cells(rest, lab, src, gw, gh) if shield else set()
-    rest -= guard
-    comps = components(rest)
-    body = comps[0]
-    # un bout du corps que l'ecu separe du reste, ou qu'un manche epais coupe du bras : la main qui le
-    # serre, reconnue a ses os ; un eclat brun du baton, lui, reste a l'arme
-    touches = lambda comp, cells: any((c[0] + dx, c[1] + dy) in cells for c in comp for dx, dy in N8)
-    for comp in comps[1:]:
-        if touches(comp, guard) or (shaft_width and touches(comp, shaft) and any(lab[c][0] >= 55 for c in comp)):
-            body |= comp
-        else:
-            weapon |= comp  # un bout de liseré detache du corps
-    bones = {c for c in body if lab[c][0] >= 55}
-    bones |= {c for c in body if 38 <= lab[c][0] < 55 and sum((c[0] + dx, c[1] + dy) in bones for dx, dy in N8) >= 3}
-    robe = body - bones
-
-    def enclosed(c):  # le corps de part et d'autre, a trois cases au plus, en largeur ou en hauteur
-        side = lambda dx, dy: any((c[0] + dx * k, c[1] + dy * k) in body for k in (1, 2, 3))
-        return (side(1, 0) and side(-1, 0)) or (side(0, 1) and side(0, -1))
-
-    # le corps, ferme : l'arme qui le traverse est devant la robe, pas devant le decor ; l'ecu cache
-    # le corps pres de son bord, sur l'epaisseur d'un bras
-    closed = body | {c for c in weapon if enclosed(c)} | (guard & grow(body, 6))
-    return dict(shadow=shadow, robe=robe, bones=bones, weapon=weapon, shield=guard, body=closed)
-
-
-def fill(img, own, area):
-    """Le calque d'un objet complete sur `area` : chaque case manquante prend la couleur
-    de ses voisines de l'objet, de proche en proche."""
-    ip = img.load()
-    colour = {c: ip[c] for c in own}
-    todo = set(area) - set(own)
-    while todo:
-        grown = {}
-        for c in todo:
-            near = [colour[n] for n in ((c[0] + dx, c[1] + dy) for dx, dy in N8) if n in colour]
-            if near:
-                grown[c] = max(set(near), key=near.count)
-        if not grown:
-            break
-        colour.update(grown)
-        todo -= set(grown)
-    return colour
+def snap(im, t, gw, gh):
+    """L'image sur la grille Apollo, en ne lisant que le coeur de chaque case du LoRA."""
+    out = to_grid(im, t, gw, gh, APOLLO, 0.25)
+    tidy(out)
+    return out
 
 
 def layer(size, colour):
@@ -228,64 +172,71 @@ def layer(size, colour):
     return im
 
 
-def write(name, layers, ref_img, out_aseprite, surfaces):
-    """Ecrit les calques non vides et assemble le .aseprite, verifie apres aller-retour."""
-    layers = [(n, im) for n, im in layers if im.getbbox()]
+def write(name, layers, out_aseprite, surfaces):
+    """Assemble le .aseprite, verifie apres aller-retour dans Aseprite."""
     check_independent(layers, surfaces)
+    flat = Image.new("RGBA", layers[0][1].size, (0, 0, 0, 0))
     entries = []
     for i, (n, im) in enumerate(layers):
         p = work(name, "layers", f"{i:02d}.png")
         im.save(p)
         entries.append(dict(name=n, png=p))
+        flat = Image.alpha_composite(flat, im)
     ref = work(name, "detail_ref.png")
-    ref_img.save(ref)
-    build(write_manifest(name, [dict(out=out_aseprite, ref=ref, w=ref_img.width, h=ref_img.height,
+    flat.save(ref)
+    build(write_manifest(name, [dict(out=out_aseprite, ref=ref, w=flat.width, h=flat.height,
                                      palette=[list(c) for c in APOLLO], layers=entries)]))
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("prefix")
-    ap.add_argument("composite")
-    ap.add_argument("decor")
-    ap.add_argument("out")
-    ap.add_argument("--sol", type=int, default=None, help="la ligne de sol : en dessous, l'ombre peinte avec la creature")
-    ap.add_argument("--sprite", default=None, help="ecrit aussi la creature seule, sur fond transparent")
-    ap.add_argument("--manche", type=float, default=None, help="la demi-largeur d'un manche epais, en cases, lu aussi dans la source (1.3 sinon)")
-    ap.add_argument("--bouclier", action="store_true", help="separe un bouclier dans son propre calque")
+def check_whole(figure, parts):
+    """Les calques, l'un sur l'autre, doivent redonner la creature : toutes ses cases, et elles
+    seules. Seule l'ombre, tout en bas, peut deborder de la silhouette : celle que pose le code."""
+    assert parts and parts[0][0] == SHADOW, f"toute creature a son ombre : le premier calque doit etre « {SHADOW} »"
+    seen = {}
+    for _, cells in parts:
+        seen.update(cells)
+    assert set(seen) - set(parts[0][1]) <= figure.cells, "un calque deborde de la silhouette"
+    assert figure.cells <= set(seen), "les calques ne couvrent pas toute la silhouette"
+    assert all(seen[c] == figure.colour[c] for c in figure.cells), "les calques ne redonnent pas l'image"
+
+
+def run(separate, add_options=None, description=None):
+    """Le deroule commun a toutes les recettes : lire, mettre sur la grille, trier, controler, ecrire."""
+    ap = argparse.ArgumentParser(description=description)
+    ap.add_argument("prefix", help="le prefixe de creature_detour.py")
+    ap.add_argument("sprite", help="le sprite a ecrire, en .aseprite")
+    ap.add_argument("--sol", type=int, default=183, help="la ligne de sol : en dessous, l'ombre peinte avec la creature")
+    ap.add_argument("--apercu", nargs=2, metavar=("FOND", "SORTIE"),
+                    help="ecrit aussi la creature posee sur un fond de fenetre : le fond et l'apercu, en .aseprite")
+    if add_options:
+        add_options(ap)
     a = ap.parse_args()
     silhouette = Image.open(f"{a.prefix}_silhouette.png").convert("L")
-    gw, gh = silhouette.size
-    src = Image.open(a.composite).convert("RGB")
-    decor_src = Image.open(a.decor).convert("RGB")
-    t = lora_grid(decor_src, gw, gh)
-    assert t, "la grille peinte par le LoRA ne tombe pas sur la grille demandee"
-    img, decor = snap(src, t, gw, gh), snap(decor_src, t, gw, gh)
-    parts = classify(img, silhouette, src, a.sol, a.manche, a.bouclier)
-    ip, dp, sp = img.load(), decor.load(), silhouette.load()
-    size = (gw, gh)
-    joint = {(x, y): ip[x, y] for y in range(gh) for x in range(gw) if not sp[x, y] and ip[x, y] != dp[x, y]}
-    robe = fill(img, parts["robe"], parts["body"])
-    bones = fill(img, parts["bones"], parts["bones"] | {c for c in parts["weapon"] & parts["body"]
-                                                          if sum((c[0] + dx, c[1] + dy) in parts["bones"] for dx, dy in N8) >= 4})
-    creature = [("Ombre", layer(size, {c: ip[c] for c in parts["shadow"]})), ("Robe", layer(size, robe)),
-                ("Os", layer(size, bones)), ("Bouclier", layer(size, {c: ip[c] for c in parts["shield"]})),
-                ("Arme", layer(size, {c: ip[c] for c in parts["weapon"]}))]
-    layers = [("Décor", decor.convert("RGBA")), ("Ombre et raccord", layer(size, joint))] + creature
-    flat = Image.new("RGBA", size)
-    for _, im in layers:
-        flat = Image.alpha_composite(flat, im)
-    assert flat.convert("RGB").tobytes() == img.tobytes(), "les calques ne redonnent pas l'image"
-    name = a.prefix.replace("\\", "/").split("/")[-1]
-    img.resize((gw * 4, gh * 4), Image.NEAREST).save(work(name + "_calques", "apercu_x4.png"))
-    print(", ".join(f"{n} {len(parts[k])} cases" for n, k in (("ombre", "shadow"), ("robe", "robe"), ("os", "bones"), ("bouclier", "shield"), ("arme", "weapon"))))
-    write(name + "_calques", layers, img, a.out, ("Décor",))
-    if a.sprite:
-        alone = Image.new("RGBA", size, (0, 0, 0, 0))
-        for _, im in creature:
-            alone = Image.alpha_composite(alone, im)
-        write(name + "_sprite", creature, alone, a.sprite, ("Ombre", "Robe", "Os", "Bouclier", "Arme"))
-
-
-if __name__ == "__main__":
-    main()
+    size = gw, gh = silhouette.size
+    src = Image.open(f"{a.prefix}_cadree.png").convert("RGB")
+    assert src.size == (gw * CELL, gh * CELL), "la figure cadree et sa silhouette ne vont pas ensemble"
+    sharp = grid_sharpness(src, gw, gh)
+    t = lora_grid(src, gw, gh)
+    if not t:
+        raise SystemExit(f"la creature n'a pas de grille de {CELL} pixels lisible : nettete {sharp[0]:.1f} en largeur, "
+                         f"{sharp[1]:.1f} en hauteur, pour un minimum de {MIN_SHARPNESS}")
+    print(f"grille de la creature : cases de {t[0]:.2f} x {t[2]:.2f} px, decalage {t[1]:+.2f} {t[3]:+.2f}, "
+          f"nettete {sharp[0]:.1f} et {sharp[1]:.1f} (minimum {MIN_SHARPNESS})")
+    figure = Figure(snap(src, t, gw, gh), src, silhouette, a.sol)
+    parts = [(n, cells) for n, cells in separate(figure, a) if cells]
+    check_whole(figure, parts)
+    print(", ".join(f"{n} {len(cells)} cases" for n, cells in parts))
+    creature = [(n, layer(size, cells)) for n, cells in parts]
+    name = os.path.basename(a.prefix)
+    vivid = Image.new("RGBA", size, (255, 0, 255, 255))
+    whole = vivid
+    for _, im in creature:
+        whole = Image.alpha_composite(whole, im)
+    sheet([("Tous les calques", whole)] + [(n, Image.alpha_composite(vivid, im)) for n, im in creature]).save(f"{a.prefix}_calques.png")
+    write(name + "_sprite", creature, a.sprite, tuple(n for n, _ in creature))
+    if a.apercu:
+        decor = Image.new("RGBA", size, (0, 0, 0, 0))
+        for _, im in read_layers(a.apercu[0], name + "_fond"):
+            decor = Image.alpha_composite(decor, im)
+        assert decor.size == size and decor.getchannel("A").getextrema()[0] == 255, "le fond doit couvrir tout le cadre du sprite"
+        write(name + "_apercu", [(DECOR, decor)] + creature, a.apercu[1], (DECOR,))

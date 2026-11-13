@@ -83,6 +83,9 @@ def _period(src, axis, expected):
     return p, (off + p / 2) % p - p / 2, peak / max(floor, 1)
 
 
+MIN_SHARPNESS = 3  # sous ce rapport entre la repetition de la grille et le bruit, la grille n'est pas lisible
+
+
 def lora_grid(src, gw, gh):
     """La grille peinte par le LoRA pixel art, si elle tombe sur la grille de la scene.
 
@@ -92,10 +95,16 @@ def lora_grid(src, gw, gh):
     t = []
     for axis, n in ((0, gw), (1, gh)):
         p, off, sharp = _period(src, axis, src.size[axis] / n)
-        if sharp < 3 or abs(p * n - src.size[axis]) > 0.01 * src.size[axis]:
+        if sharp < MIN_SHARPNESS or abs(p * n - src.size[axis]) > 0.01 * src.size[axis]:
             return None
         t += [p, off]
     return tuple(t)
+
+
+def grid_sharpness(src, gw, gh):
+    """La nettete de la grille peinte, en largeur puis en hauteur : lora_grid la refuse sous
+    MIN_SHARPNESS. Un fond genere depasse 30 ; une creature reduite puis repeinte peut tomber a 4."""
+    return tuple(_period(src, axis, src.size[axis] / n)[2] for axis, n in ((0, gw), (1, gh)))
 
 
 def tidy(img, palette=APOLLO):
