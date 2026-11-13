@@ -1,0 +1,5 @@
+{
+  "calques": ["Ombre", "Robe", "Arme", "Os"],
+  "mots": {"Arme": ["scythe"], "Os": ["skeleton", "hand", "hands"], "Robe": ["robe"]},
+  "sous_le_sol": ["Arme"]
+}

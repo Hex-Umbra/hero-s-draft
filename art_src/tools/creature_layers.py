@@ -1,14 +1,18 @@
 """Le decoupage d'une creature en calques : ce que toutes les formes de creature partagent.
 
-Chaque forme de creature a sa recette, creature_<forme>_layers.py, ecrite d'apres la creature : elle
-dit quelles cases vont a quel calque, et ne contient que cela. Ce module fait le reste : la mise sur
-la grille Apollo, les outils de tri que les recettes combinent, les controles et l'ecriture des
-.aseprite. C'est le meme partage qu'entre pose.py et les scripts de pose.
+Une recette dit quelles cases vont a quel calque, et ne contient que cela. Ce module fait le reste :
+la mise sur la grille Apollo, les outils de tri que les recettes combinent, les controles et
+l'ecriture des .aseprite. Deux recettes existent :
+
+- creature_mots_layers.py, celle par defaut, pour toute forme de creature : SAM3 isole ce que
+  designent les mots que la creature declare ;
+- creature_squelette_layers.py, le repli sans ComfyUI : le tri par la couleur et la forme, ecrit
+  pour les squelettes.
 
 Une recette se lance comme un script :
 
-    python creature_<forme>_layers.py <prefixe> <sprite.aseprite> [--sol 183]
-                                      [--apercu <fond.aseprite> <apercu.aseprite>] [ses options]
+    python creature_<recette>_layers.py <prefixe> <sprite.aseprite> [--sol 183]
+                                        [--apercu <fond.aseprite> <apercu.aseprite>] [ses options]
 
 <prefixe> est celui de creature_detour.py, dont on relit <prefixe>_cadree.png et
 <prefixe>_silhouette.png. La grille se lit sur la creature elle-meme : son sprite ne depend

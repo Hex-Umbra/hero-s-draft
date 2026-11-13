@@ -1,4 +1,7 @@
-"""La recette de calques des squelettes : une tenue, des os, une arme a manche et, au besoin, un ecu.
+"""La recette de calques des squelettes, par la couleur et la forme : une tenue, des os, une arme a manche et, au besoin, un ecu.
+
+C'est le repli sans ComfyUI. La recette par defaut est creature_mots_layers.py, qui decoupe par des
+mots et rend des objets plus entiers : celle-ci ne garde aux os que leurs cases claires.
 
 Elle sert au Squelette (tier 2 : baton et ecu rond) et a la Faucheuse (tier 3 : faux). Les calques,
 du bas vers le haut : Ombre (peinte avec la creature, sous la ligne de sol, ou posee par le code
