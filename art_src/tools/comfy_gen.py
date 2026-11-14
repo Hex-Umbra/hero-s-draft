@@ -18,7 +18,8 @@ a l'identique. --zone X0,Y0,X1,Y1 donne cette zone en rectangle, a la place du f
 noire dans la zone, et repeint la zone entiere en accord avec ce qui l'entoure, a debruitage complet.
 
 --creature pose d'un coup les reglages d'une creature guidee par sa pose (voir CREATURE, plus bas) ;
-une option donnee a la main garde le dessus. Un tour de plusieurs images se lance en une commande :
+une option donnee a la main garde le dessus. --edges-fin regle la fin d'effet des contours dans le
+debruitage : plus tot, le guide tient la place des formes et laisse leur dessin au generateur. Un tour de plusieurs images se lance en une commande :
 --graines N tire N graines neuves, --seed en accepte plusieurs, separees par des virgules. Les
 images du tour sont alors reunies sur une planche, chacune sous sa graine.
 
@@ -76,7 +77,8 @@ def upload(path):
     return _post("/upload/image", body, {"Content-Type": f"multipart/form-data; boundary={boundary}"})["name"]
 
 
-# les guides que lit ControlNet Union : (suffixe du fichier, type Union, fin d'effet dans le debruitage)
+# les guides que lit ControlNet Union : (suffixe du fichier, type Union, fin d'effet dans le debruitage) ;
+# la fin d'effet des contours est celle par defaut, que --edges-fin remplace
 CONTROLS = {
     "pose": ("pose", "openpose", 0.8),
     "depth": ("depth", "depth", 0.85),
@@ -212,6 +214,8 @@ def main():
     ap.add_argument("--denoise", type=float, help=f"le debruitage ({DEFAULTS['denoise']} par defaut)")
     ap.add_argument("--depth", type=float, help=f"force de la carte de profondeur ({DEFAULTS['depth']} par defaut)")
     ap.add_argument("--edges", type=float, help=f"force de la carte des contours ({DEFAULTS['edges']} par defaut)")
+    ap.add_argument("--edges-fin", type=float, default=CONTROLS["edges"][2],
+                    help=f"fin d'effet des contours, en part du debruitage ({CONTROLS['edges'][2]} par defaut)")
     ap.add_argument("--pose", type=float, help=f"force de la carte de pose OpenPose, <prefixe>_pose.png ({DEFAULTS['pose']} par defaut)")
     ap.add_argument("--lora", type=float, help=f"force du LoRA pixel art ({DEFAULTS['lora']} par defaut)")
     ap.add_argument("--size", help=f"taille de generation, LARGEURxHAUTEUR, en multiples de 8 ({DEFAULTS['size']} par defaut)")
@@ -256,7 +260,7 @@ def main():
         stem = lambda seed: f"{name}_libre_s{seed}"
     else:
         strengths = {"pose": a.pose, "depth": a.depth, "edges": a.edges}
-        controls = [(upload(f"{a.prefix}_{suffix}.png"), kind, strengths[k], end)
+        controls = [(upload(f"{a.prefix}_{suffix}.png"), kind, strengths[k], a.edges_fin if k == "edges" else end)
                     for k, (suffix, kind, end) in CONTROLS.items() if strengths[k] > 0]
         guide = upload(f"{a.prefix}_{a.guide}.png")
         graph = lambda seed: workflow(guide, controls, a.prompt, negative, seed, a.denoise, a.lora, size)

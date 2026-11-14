@@ -55,6 +55,11 @@ Avant tout guide et toute génération, l'agent et le propriétaire fixent la cr
 | Quel geste ? Que fait chaque main ? | La place des poignets et de l'équipement dans le guide |
 | Quelle taille dans le cadre, en part de la hauteur ? | La taille du guide. Elle oriente celle de la créature sans la tenir : le générateur déborde souvent de son guide |
 
+**Pour une créature non humanoïde,** le bloc 2 n'a pas encore de règle générale. Voici ce que le Rat géant a fixé (décisions du propriétaire du 13/11/2026), à reprendre comme précédent :
+- **L'orientation.** Un quadrupède vu de profil remplit mal un cadre en hauteur. Le Rat est vu en plongée et avance presque de face vers le joueur. Le corps se raccourcit derrière la tête, et la silhouette tient dans le cadre. Le propriétaire avait dit « trois quarts » : on lui fait confirmer ce qu'il veut sur sa référence, parce que « three-quarter view » tourne nettement le corps.
+- **La taille.** Elle se donne en part de la largeur et de la hauteur, pas de la hauteur seule : pour le Rat, environ 85 % de la largeur et 60 % de la hauteur, queue comprise.
+- **Une image de référence** montrée par le propriétaire se décrit en mots dans le brief : la pose, le geste, ce qu'on garde et ce qu'on ne garde pas. Elle n'est pas versée au dépôt quand c'est l'œuvre de quelqu'un d'autre.
+
 **Bloc 3 — Équipement**
 
 | Question | Ce que la réponse décide |
@@ -118,8 +123,11 @@ Une silhouette pleine en guide ne marche pas : le générateur copie les aplats,
 4. **Placer les pieds sur la ligne de sol** et garder toute la silhouette, équipement compris, dans l'image, à la taille fixée par le brief.
 5. **Montrer le guide au propriétaire avant toute génération,** pose et équipement superposés, et le corriger jusqu'à son accord.
 
-**Pour une créature non humanoïde,** il n'existe pas encore de guide : on passe à l'exploration sans guide de l'étape 3.
-
+**Pour une créature non humanoïde,** il n'y a pas de bonhomme OpenPose, mais **un guide en contours seuls tient la pose** (le Rat géant, 13/11/2026). Trois tours sans guide, soit 18 images, n'avaient donné ni la plongée ni le rat à quatre pattes : sur une toile en hauteur, le générateur dressait la bête pour la remplir. Le premier tour sous un guide en contours a tenu la pose sur six images sur six.
+- **Le script trace la silhouette de la référence en formes simples** (ellipses et polygones, de l'arrière vers l'avant, chaque forme effaçant les contours qu'elle cache), puis écrit `_edges.png` et l'image de départ unie, sans `_pose.png` : voir `creature_rat_geant_pose.py`.
+- **Le tour se lance avec `--creature --pose 0`** : un guide de force nulle n'est pas chargé, et les contours gardent leur force de 0.55.
+- **Une forme tracée par ses deux bords peut se lire en double :** la queue du Rat, une bande fine, est sortie en deux queues sur deux images sur six. Le propriétaire a gardé l'idée ; ailleurs, une forme fine se trace d'un seul trait.
+- **Les petits détails du guide ne pèsent pas :** la gueule ouverte et les incisives tracées sur le museau ne sont sorties sur aucune image.
 ### 3. Chercher le design sous le guide
 
 On génère en mode guidé, avec le prompt tiré du brief. **Le nombre d'images par tour baisse à mesure que le design se fixe :**
@@ -140,14 +148,14 @@ L'agent annonce le nombre avant chaque tour, montre toutes les images, et le pro
 | Réglage | Valeur | Option |
 |:---|:---|:---|
 | Pose | 0.85, jusqu'à 80 % du débruitage | `--pose` |
-| Contours de l'équipement | 0.55, jusqu'à 60 % du débruitage | `--edges` |
+| Contours de l'équipement | 0.55, jusqu'à 60 % du débruitage | `--edges` pour la force, `--edges-fin` pour la fin d'effet |
 | Profondeur | 0 : pas utilisée | `--depth` |
 | Denoise | 1.0 | `--denoise` |
 | LoRA | 0.8 | `--lora` |
 | Taille | 1024 × 1536 | `--size` |
 | Échantillonnage | 30 pas, CFG 6.5, `dpmpp_2m` karras | fixé dans `comfy_gen.py` |
 
-La fin d'effet de chaque guide est fixée dans `comfy_gen.py`, elle aussi. À 0.4, les contours gardent la place d'un objet mais pas sa forme : l'écu du Squelette n'était pas rond. **Ces réglages sont provisoires.** Une session dédiée doit les affiner, pour que la base de chaque génération reste la même et que seuls la créature et ses détails changent.
+La fin d'effet de la pose est fixée dans `comfy_gen.py`, elle aussi ; celle des contours se règle par `--edges-fin`. À une force de 0.4, les contours gardent la place d'un objet mais pas sa forme : l'écu du Squelette n'était pas rond. **Ces réglages sont provisoires.** Une session dédiée doit les affiner, pour que la base de chaque génération reste la même et que seuls la créature et ses détails changent.
 
 **Un premier essai, le 12/11/2026 : la taille de la toile.** Six graines du Squelette, à 1024 × 1536 puis à 832 × 1248, avec le même prompt et le même guide. Aucune des douze images n'a de membre en trop. Le bâton et l'écu au bras sortent sur trois images à la grande taille, et sur deux à la petite ; le fond est uni sur trois, puis sur quatre. La petite taille prend 48 secondes au lieu de 72. Sur cet échantillon, rien ne justifie de changer de taille.
 
@@ -168,7 +176,7 @@ La fin d'effet de chaque guide est fixée dans `comfy_gen.py`, elle aussi. À 0.
 
 | Tier | Ajouté au prompt | Ajouté aux exclusions | Trouvé sur |
 |:---|:---|:---|:---|
-| 1 | à trouver | | |
+| 1 | (simple readable silhouette:1.3), (low detail:1.3), chunky simple shapes, flat colors, simple shading. Pas de « cartoonish » : sur une bête, il tire vers le dessin animé mignon | highly detailed, intricate, detailed anatomy, chibi | Le Rat géant, en cours (validé comme point de départ le 13/11/2026) |
 | 2 | (cartoonish stylized design:1.3), (low detail:1.2), chunky simple shapes, flat colors, simple shading | chibi, highly detailed, intricate, detailed anatomy, realistic proportions | Le Squelette, en cours |
 | 3 | highly detailed, et la matière en mots : worn cloth texture, deep folds, frayed torn edges, highly detailed bones | cartoon, flat shading, simple shapes | La Faucheuse |
 | 4 et 5 | à trouver | | |
@@ -177,7 +185,7 @@ La fin d'effet de chaque guide est fixée dans `comfy_gen.py`, elle aussi. À 0.
 
 **La pondération `(mots:1.3)`** donne plus de poids à un passage du prompt, dans la syntaxe de ComfyUI ; de 1.2 à 1.4 suffisent. Elle fait venir un élément que le générateur oublie, comme l'équipement du Squelette. **Le piège :** elle renforce aussi chaque adjectif du passage, et « large » a rendu les écus géants. La taille d'un objet se règle par le guide, jamais par un adjectif.
 
-**Le geste et l'orientation du brief s'écrivent aussi en mots,** par exemple « front view, facing the viewer » ou « wide stance, leaning forward toward the viewer ». **On n'exclut jamais une orientation ni une pose :** une créature peut prendre n'importe quelle pose, et c'est le guide qui la tient. Les prompts du Squelette et de la Faucheuse datent d'avant cette règle : ils excluent encore « profile, side view » ou « front view, standing still ». On ne les recopie pas tels quels.
+**Le geste et l'orientation du brief s'écrivent aussi en mots,** par exemple « front view, facing the viewer » ou « wide stance, leaning forward toward the viewer ». **On n'exclut jamais une orientation ni une pose :** une créature peut prendre n'importe quelle pose, et c'est le guide qui la tient. **L'exception, sans guide** (décision du propriétaire du 13/11/2026) : pour une créature non humanoïde, rien ne tient la pose. On peut alors exclure les poses que le générateur met à la place de celle du brief. Le Rat géant sortait dressé sur ses pattes arrière, comme un ours-garou, sur cinq images sur six : « standing, upright, bipedal ». On commence par pondérer la pose voulue dans le prompt, et l'exclusion ne vient qu'ensuite. Les prompts du Squelette et de la Faucheuse datent d'avant cette règle : ils excluent encore « profile, side view » ou « front view, standing still ». On ne les recopie pas tels quels.
 
 **La façon de tenir une arme ou de se tenir ne s'obtient pas par le texte.** Le prompt place les objets, pas le geste : c'est le rôle du guide. On ajoute aux exclusions les objets que le générateur substitue volontiers à l'arme voulue (un bâton à la place d'une arme à long manche, par exemple), et « multiple weapons, extra blades » s'il en ajoute.
 
@@ -196,7 +204,7 @@ Le modèle retire le plus souvent l'ombre peinte au sol, que le code garde.
 - **Plusieurs prompts sur sa graine,** chacun changeant une chose : six bâtons et écus de styles différents, pour le Squelette. `comfy_gen.py` nomme ses images par préfixe, graine et denoise : `--nom` donne à chaque prompt son propre nom d'image, sinon elles s'écrasent.
 - **L'img2img :** l'image retenue devient l'image de départ. On la copie en `<préfixe>_base.png`, à côté des guides de pose et de contours, puis on génère avec `--creature --guide base`, un denoise de 0.6 à 0.7 et des graines neuves. La composition reste, les détails changent.
 
-**Sans guide, pour un brief ouvert ou une créature non humanoïde.** On commence par explorer en génération libre (`--libre --creature` : 1024 × 1536, avec le LoRA à 0.8), avec le même gabarit et le même nombre d'images par tour. On part général, le type de créature et le ton, puis on précise à chaque tour ce qu'on a aimé. Pour une créature humanoïde, on trace le guide dès que le design est trouvé (étape 2), puis on continue sous le guide.
+**Sans guide, pour un brief ouvert ou une créature non humanoïde.** On commence par explorer en génération libre (`--libre --creature` : 1024 × 1536, avec le LoRA à 0.8), avec le même gabarit et le même nombre d'images par tour. On part général, le type de créature et le ton, puis on précise à chaque tour ce qu'on a aimé. Pour une créature humanoïde, on trace le guide dès que le design est trouvé (étape 2), puis on continue sous le guide. Pour une créature non humanoïde, on trace son guide en contours dès que la pose voulue ne sort pas, ou dès qu'une référence la fixe (étape 2) : la génération libre trouve l'espèce et les couleurs, rarement la posture.
 
 ### 4. Vérifier l'anatomie, et corriger
 
@@ -219,7 +227,7 @@ Après chaque correction, on revérifie l'anatomie sur l'image entière.
 - **Les petits trous fermés sont bouchés.** Un grand espace fermé par la créature reste du fond, comme l'intérieur d'une anse ou l'espace entre un bras et le corps.
 - **Les pieds vont sur la ligne de sol**, par cases entières. Sans ombre peinte, l'outil prend le bas de la silhouette pour les pieds et la place tout seul.
 - **`--ombre-peinte`** sert quand le générateur a peint l'ombre au sol avec la créature : le bas de la silhouette est alors l'ombre, pas les pieds. L'outil affiche la largeur des dernières rangées. On y lit la rangée des pieds, là où la silhouette s'élargit en ombre, et on relance avec `--pieds R`. La Faucheuse : `--ombre-peinte --pieds 185`.
-- **`--masque <masque.png>`** remplace le détourage par le code par le masque de `comfy_masque.py`, pour un fond taché (étape 3).
+- **`--masque <masque.png>`** remplace le détourage par le code par le masque de `comfy_masque.py`, pour un fond taché (étape 3). Ce masque retire l'ombre peinte, mais en laisse des restes collés à la créature : **`--miettes`** les retire, en reconnaissant le ton du fond, assombri (27 cases sur le Rat géant).
 - **Une figure générée sur une toile plus petite que le cadre** est posée telle quelle, sans redimensionnement, centrée et les pieds au sol.
 
 Trois fichiers sortent : la figure cadrée (`<préfixe>_cadree.png`), sa silhouette (`<préfixe>_silhouette.png`, une case par pixel du sprite) et la créature sur un fond vif (`<préfixe>_detouree.png`).
@@ -255,7 +263,10 @@ L'outil refuse une recette qui ne livre pas ce calque.
 
 - **`calques` :** du bas vers le haut. Le premier est toujours l'ombre. Ce qui passe devant va au-dessus : les os après l'arme, parce que la main serre le manche.
 - **`mots` :** pour chaque calque, les mots qui le désignent. **L'ordre compte :** chaque calque réclame ses cases à son tour, et une case déjà prise ne change plus de main. On va du plus sûr au plus large. « skeleton » désigne aussi la tenue : il passe après « clothes », et ne garde que les os.
-- **`sous_le_sol` :** les calques qui ont le droit de descendre sous la ligne de sol, comme une arme plantée. Tout le reste, sous la ligne de sol, est l'ombre peinte.
+- **`sous_le_sol` :** les calques qui ont le droit de descendre sous la ligne de sol, comme une arme plantée. Tout le reste, sous la ligne de sol, est l'ombre peinte. Ces calques ne comptent pas non plus pour placer l'ombre du code.
+- **`passe_sous`,** facultatif : `{"Corps": ["Tête"]}`, pour un objet qui passe en entier sous un autre. Un calque n'est complété, par défaut, que sous ce qu'il encadre de près, à moins de 8 cases : assez pour une main sur un manche, pas pour le corps d'une bête sous sa tête.
+- **`ombre_sous`,** facultatif : `["Corps"]`, pour une créature vue de dessus, dont tout le corps touche le sol. Sans ombre peinte, le code pose alors l'ombre sous l'empreinte entière de ces calques, décalée de trois cases vers le bas, et non en bande sous les pieds.
+- **`miettes`,** facultatif : `{"Corps": "Tête"}`. Les morceaux détachés du premier calque vont au second : les moustaches du Rat géant, que « rat » désigne et pas « head ».
 
 **Les mots se cherchent sur une planche, avant d'écrire la recette :**
 
@@ -328,7 +339,7 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 
 ## Le dossier d'une créature
 
-**Les créatures sont rangées par famille, puis par tier :** `art_src/creatures/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
+**Les créatures sont rangées par famille, puis par tier :** `art_src/creatures/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. **La famille est la créature elle-même, jamais un groupe de créatures** comme « vermine » ou « bêtes » : le Rat géant est dans `rat/tier_1/` (décision du propriétaire du 13/11/2026). Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
 
 | Fichier | Rôle |
 |:---|:---|

@@ -16,9 +16,18 @@ la creature declare ses calques et les mots anglais de chacun, dans <nom>_calque
 - sous_le_sol : les calques qui ont le droit de descendre sous la ligne de sol, comme une arme plantee.
   Tout le reste, sous la ligne de sol, est l'ombre peinte. Ces calques ne comptent pas non plus pour
   placer l'ombre du code, quand la creature n'a pas d'ombre peinte.
+- passe_sous, facultatif : {calque: [calques plus hauts]}, pour un objet qui passe en entier sous un
+  autre, comme le corps d'une bete sous sa tete. Il est alors complete sous toutes les cases de
+  ceux-la qu'il encadre, sans limite de distance.
+- ombre_sous, facultatif : les calques qui reposent au sol de tout leur long, pour une creature vue
+  de dessus. Sans ombre peinte, le code pose alors l'ombre sous leur empreinte entiere, decalee
+  vers le bas, et non en bande sous les pieds.
+- miettes, facultatif : {calque: calque heritier}. Les morceaux detaches du calque, tout ce qui ne
+  tient pas a sa plus grande piece, vont a l'heritier : les moustaches d'une bete, que le mot du
+  corps designe et pas celui de la tete.
 
 Une case qu'aucun mot ne reclame suit la majorite de ses voisines. Chaque calque est ensuite complete
-sous les cases des calques plus hauts qu'il encadre : masquer la main laisse voir le manche qu'elle serre.
+sous les cases des calques plus hauts qu'il encadre de pres : masquer la main laisse voir le manche qu'elle serre.
 
     python creature_mots_layers.py <prefixe> <sprite.aseprite> --recette <nom>_calques.json [--sol 183]
                                    [--apercu <fond.aseprite> <apercu.aseprite>]
@@ -30,7 +39,7 @@ Le deroule commun est dans creature_layers.py.
 import json
 
 from comfy_masque import word_cells
-from creature_layers import N8, SHADOW, run
+from creature_layers import N8, SHADOW, components, run
 
 REACH = 8  # un calque passe sous une case d'un calque plus haut s'il l'encadre a moins de 8 cases, en ligne ou en colonne
 
@@ -39,15 +48,22 @@ def read_recipe(path):
     with open(path, encoding="utf-8") as f:
         recipe = json.load(f)
     order, words, below = recipe["calques"], recipe["mots"], recipe.get("sous_le_sol", [])
+    under, crumbs, lying = recipe.get("passe_sous", {}), recipe.get("miettes", {}), recipe.get("ombre_sous", [])
     assert order[0] == SHADOW, f"le premier calque doit etre « {SHADOW} »"
     assert SHADOW not in words, f"« {SHADOW} » ne se designe pas par un mot : c'est ce qui passe sous la ligne de sol"
-    for name in list(words) + below:
+    for name in list(words) + below + lying:
         assert name in order, f"« {name} » n'est pas dans la liste des calques"
-    return order, words, below
+    for name, covers in under.items():
+        for cover in covers:
+            assert name in order and cover in order[order.index(name) + 1:], f"« {cover} » n'est pas un calque au-dessus de « {name} »"
+    for name, heir in crumbs.items():
+        assert name in order and heir in order and heir != SHADOW, f"les miettes de « {name} » vont a un calque de la liste, pas a « {heir} »"
+    return order, words, below, under, crumbs, lying
 
 
-def owners(figure, words, below, cells_of):
-    """A quel calque va chaque case : {case: calque}, et le nombre de cases qu'un mot ou la ligne de sol a reclamees."""
+def owners(figure, words, below, crumbs, cells_of):
+    """A quel calque va chaque case : {case: calque}, et le nombre de cases qu'un mot ou la ligne de sol a reclamees.
+    Les morceaux detaches d'un calque de `crumbs` vont ensuite a son heritier."""
     owner = {}
     for name, names in words.items():
         claimed = set().union(*(cells_of[w] for w in names)) & figure.cells
@@ -70,11 +86,16 @@ def owners(figure, words, below, cells_of):
         owner.update(grown)
         todo -= set(grown)
     assert not todo, f"{len(todo)} cases ne touchent aucun calque : les mots ne designent rien dans la creature"
+    for name, heir in crumbs.items():
+        for piece in components({c for c in owner if owner[c] == name})[1:]:
+            owner.update(dict.fromkeys(piece, heir))
     return owner, direct
 
 
-def complete(figure, owner, order):
-    """Les calques, du bas vers le haut : chacun complete sous les cases des calques plus hauts qu'il encadre."""
+def complete(figure, owner, order, under):
+    """Les calques, du bas vers le haut : chacun complete sous les cases des calques plus hauts qu'il encadre,
+    de pres, ou a toute distance sous ceux que `under` lui donne a couvrir en entier."""
+    far = max(figure.gw, figure.gh)
     parts = []
     for i, name in enumerate(order):
         own = {c for c in figure.cells if owner[c] == name}
@@ -84,7 +105,8 @@ def complete(figure, owner, order):
         above = {c for c in figure.cells if owner[c] in order[i + 1:]}
 
         def framed(c):
-            side = lambda dx, dy: any((c[0] + dx * k, c[1] + dy * k) in own for k in range(1, REACH + 1))
+            reach = far if owner[c] in under.get(name, ()) else REACH
+            side = lambda dx, dy: any((c[0] + dx * k, c[1] + dy * k) in own for k in range(1, reach + 1))
             return (side(1, 0) and side(-1, 0)) or (side(0, 1) and side(0, -1))
 
         parts.append((name, figure.fill(own, own | {c for c in above if framed(c)})))
@@ -92,15 +114,17 @@ def complete(figure, owner, order):
 
 
 def separate(figure, a):
-    order, words, below = read_recipe(a.recette)
+    order, words, below, under, crumbs, lying = read_recipe(a.recette)
     cells_of = word_cells(f"{a.prefix}_cadree.png", [w for names in words.values() for w in names])
     for w, cells in cells_of.items():
         if not cells & figure.cells:
             raise SystemExit(f"le mot « {w} » ne designe rien dans la creature : le changer, ou le retirer de la recette")
-    owner, direct = owners(figure, words, below, cells_of)
+    owner, direct = owners(figure, words, below, crumbs, cells_of)
     print(f"{direct} cases sur {len(figure.cells)} reclamees par un mot ou par la ligne de sol ; les autres suivent leurs voisines")
-    parts = complete(figure, owner, order)
-    if not parts[0][1]:  # pas d'ombre peinte : le code en pose une sous ce qui repose au sol
+    parts = complete(figure, owner, order, under)
+    if not parts[0][1] and lying:  # pas d'ombre peinte, vue de dessus : le code en pose une sous toute l'empreinte
+        parts[0] = (SHADOW, figure.footprint_shadow({c for name, cells in parts if name in lying for c in cells}))
+    elif not parts[0][1]:  # pas d'ombre peinte : le code en pose une sous ce qui repose au sol
         standing = {c for c in figure.cells if owner[c] not in below}
         parts[0] = (SHADOW, figure.cast_shadow(standing))
     return parts

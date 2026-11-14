@@ -9,6 +9,7 @@ on la fait repeindre legerement par ComfyUI, ce qui rend au pixel art sa grille 
     python creature_reduire.py reduire <figure.png> <prefixe des guides> <prefixe de sortie> <facteur> --ancre X,Y
 
    Ecrit <sortie>_base.png (la figure reduite, sur son fond uni), <sortie>_pose.png et <sortie>_edges.png.
+   Une creature guidee par ses seuls contours n'a pas de carte de pose : elle n'est alors pas ecrite.
 
 2. La repeinte, sur la meme graine et avec le meme prompt :
 
@@ -23,6 +24,7 @@ on la fait repeindre legerement par ComfyUI, ce qui rend au pixel art sa grille 
    pour un minimum de 3 ; la Faucheuse, generee directement, atteint 30) ; a 80 % et 0.35, non.
 """
 import argparse
+import os
 
 from PIL import Image
 
@@ -48,7 +50,8 @@ def reduce(figure, guides, out, scale, anchor):
     cells = im.resize((gw, im.height // CELL), Image.BOX).load()
     ground = median([cells[x, y] for x in range(gw) for y in range(TOP_ROWS)])  # le fond uni, mesure en haut
     shrink(im, scale, anchor, ground).save(out + "_base.png")
-    shrink(Image.open(guides + "_pose.png").convert("RGB"), scale, anchor, (0, 0, 0)).save(out + "_pose.png")
+    if os.path.exists(guides + "_pose.png"):
+        shrink(Image.open(guides + "_pose.png").convert("RGB"), scale, anchor, (0, 0, 0)).save(out + "_pose.png")
     shrink(Image.open(guides + "_edges.png").convert("L"), scale, anchor, 0).save(out + "_edges.png")
     print(f"reduite a {scale:.0%} autour de {anchor}, sur le fond {ground}")
 

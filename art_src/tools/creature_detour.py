@@ -7,7 +7,7 @@
    en bas. Les pieds vont sur la ligne de sol.
 
     python creature_detour.py <figure.png> <prefixe> [--sol 183] [--pieds R | --dy N] [--dx N] [--ombre-peinte] [--cadre 128x192]
-                              [--masque <masque.png>]
+                              [--masque <masque.png> [--miettes]]
 
 Sans --pieds ni --dy, les pieds sont pris au bas de la silhouette. Quand le generateur a peint une
 ombre au sol (--ombre-peinte), le bas de la silhouette est cette ombre : l'outil ne devine pas les
@@ -15,6 +15,8 @@ pieds. Il affiche les dernieres rangees, ou se lit la rangee des pieds, a redonn
 
 Quand le fond n'est pas uni (des taches, un sol d'un autre ton), le detourage par le code se perd :
 --masque prend a sa place le masque de comfy_masque.py, blanc sur la creature, ramene aux cases.
+Ce masque retire l'ombre peinte mais en laisse des miettes au bord de la creature : --miettes les
+retire, en reconnaissant le ton du fond, assombri.
 
 Ecrit <prefixe>_cadree.png (la figure placee, sur son fond uni), <prefixe>_silhouette.png (une case
 blanche par case de la creature) et <prefixe>_detouree.png (la creature seule sur un fond vif, pour
@@ -123,6 +125,35 @@ def cells_of(mask, figure):
     return mask.resize((figure.width // CELL, figure.height // CELL), Image.BOX).point(lambda v: 255 if v >= 128 else 0)
 
 
+def drop_crumbs(figure, mask, low=0.35, high=0.95, tolerance=12):
+    """Retire du masque les miettes d'ombre peinte : les cases du ton du fond, en plus sombre, qui
+    tiennent au bord du masque. Le modele de detourage retire l'ombre peinte, mais en laisse des
+    restes colles a la creature. Renvoie le nombre de cases retirees."""
+    bg = background_colour(figure)
+    means = figure.resize(mask.size, Image.BOX).load()
+    mp = mask.load()
+
+    def shadow(c):
+        k = sum(v * b for v, b in zip(means[c], bg)) / sum(b * b for b in bg)  # le fond, assombri de ce facteur
+        return low <= k <= high and math.dist(means[c], [k * b for b in bg]) <= tolerance
+
+    def around(c):
+        return [(c[0] + dx, c[1] + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                if 0 <= c[0] + dx < mask.width and 0 <= c[1] + dy < mask.height]
+
+    toned = {(x, y) for y in range(mask.height) for x in range(mask.width) if mp[x, y] and shadow((x, y))}
+    stack = [c for c in toned if any(not mp[n] for n in around(c))]
+    crumbs = set(stack)
+    while stack:
+        for n in around(stack.pop()):
+            if n in toned and n not in crumbs:
+                crumbs.add(n)
+                stack.append(n)
+    for c in crumbs:
+        mp[c] = 0
+    return len(crumbs)
+
+
 def place(figure, mask, frame, dx=0, dy=0):
     """La figure et sa silhouette posees dans le cadre : centrees, en bas, puis decalees de
     (dx, dy) pixels, arrondis a une case. Renvoie la figure cadree et sa silhouette, en cases."""
@@ -153,12 +184,17 @@ def main():
     ap.add_argument("--dy", type=int, help="un decalage vertical impose, en pixels (multiple de 8), a la place de --pieds")
     ap.add_argument("--ombre-peinte", action="store_true", help="le bas de la silhouette est une ombre peinte, pas les pieds")
     ap.add_argument("--masque", help="le masque de comfy_masque.py, a la place du detourage par le code")
+    ap.add_argument("--miettes", action="store_true", help="avec --masque : retire les restes d'ombre peinte que le masque a gardes au bord de la creature")
     a = ap.parse_args()
+    if a.miettes and not a.masque:
+        ap.error("--miettes ne sert qu'avec --masque")
     frame = tuple(int(v) for v in a.cadre.split("x"))
     figure = Image.open(a.figure).convert("RGB")
     assert figure.width % CELL == 0 and figure.height % CELL == 0, "la figure doit mesurer un multiple de 8 pixels"
     assert figure.width <= frame[0] * CELL and figure.height <= frame[1] * CELL, "la figure depasse le cadre"
     mask = cells_of(Image.open(a.masque).convert("L"), figure) if a.masque else detour(figure)
+    if a.miettes:
+        print(f"miettes d'ombre retirees : {drop_crumbs(figure, mask)} cases")
     natural = rows(place(figure, mask, frame)[1])  # les rangees dans le cadre, avant tout decalage vertical
     bottom = max(natural)
     if a.dy is not None:

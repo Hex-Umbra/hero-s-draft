@@ -106,6 +106,12 @@ class Figure:
                 for gx in range(max(0, int(cx - rx) - 1), min(self.gw, int(cx + rx) + 2))
                 if math.hypot((gx + 0.5 - cx) / rx, (gy + 0.5 - cy) / ry) < 1}
 
+    def footprint_shadow(self, lying, drop=3):
+        """L'ombre posee par le code, pour une creature vue de dessus : l'empreinte de `lying`, les
+        cases de ce qui repose au sol de tout son long, decalee de quelques cases vers le bas. Une
+        bande sous les pieds n'a pas de sens ici : tout le corps touche le sol."""
+        return {(x, y + drop): SHADOW_COLOUR for x, y in lying if y + drop < self.gh}
+
     def pick(self, cells):
         """Les cases d'un calque, avec leur couleur sur la grille."""
         return {c: self.colour[c] for c in cells}
