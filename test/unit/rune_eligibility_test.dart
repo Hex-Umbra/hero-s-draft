@@ -141,6 +141,17 @@ void main() {
     );
   });
 
+  test('excludesEffects lit les statuts poses', () {
+    final rune =
+        _rune('enduring', excludesEffects: const ['status:mana_regen']);
+    CardInstance applying(String statusId) => _card(effects: [
+          CardEffect(
+              type: 'apply_status', value: 1, statusId: statusId, duration: 2),
+        ]);
+    expect(_eligible(rune, applying('mana_regen')), isFalse);
+    expect(_eligible(rune, applying('might_regen')), isTrue);
+  });
+
   test('l epuisement', () {
     final rune = _rune('enduring', requiresExhaust: true);
     expect(_eligible(rune, _card()), isFalse);

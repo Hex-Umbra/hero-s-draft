@@ -425,6 +425,10 @@ class CardComponent extends PositionComponent
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusMightRegen(scaledValue, duration), fallback: 'Gagne $scaledValue Éveil de Puissance pendant $duration tours.')}\n';
             break;
+          case 'mana_regen':
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusManaRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Mana au début du tour.')}\n';
+            break;
           case 'burn':
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';

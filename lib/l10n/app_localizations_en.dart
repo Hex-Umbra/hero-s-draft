@@ -536,6 +536,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusManaRegen(int amount, int duration) {
+    return 'For $duration turns, gains $amount Mana at turn start.';
+  }
+
+  @override
   String cardDescStatusBurn(int amount) {
     return 'Applies $amount Burn.';
   }
@@ -895,6 +900,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String statusMightRegen(int value) {
     return 'Might Awakening: +$value';
+  }
+
+  @override
+  String statusManaRegen(int value) {
+    return 'Mana Spring: +$value';
   }
 
   @override

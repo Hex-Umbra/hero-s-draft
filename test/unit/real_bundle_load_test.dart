@@ -144,10 +144,10 @@ void main() {
     ]);
   });
 
-  test('le registre reel charge les seize sortes d effect_icons.json',
+  test('le registre reel charge les dix-sept sortes d effect_icons.json',
       () async {
     final registry = await loadGameDataRegistry(rootBundle);
 
-    expect(registry.effectIcons.kinds, hasLength(16));
+    expect(registry.effectIcons.kinds, hasLength(17));
   });
 }

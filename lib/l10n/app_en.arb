@@ -372,6 +372,13 @@
       "duration": { "type": "int" }
     }
   },
+  "cardDescStatusManaRegen": "For {duration} turns, gains {amount} Mana at turn start.",
+  "@cardDescStatusManaRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusBurn": "Applies {amount} Burn.",
   "@cardDescStatusBurn": {
     "placeholders": {
@@ -631,6 +638,12 @@
   },
   "statusMightRegen": "Might Awakening: +{value}",
   "@statusMightRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusManaRegen": "Mana Spring: +{value}",
+  "@statusManaRegen": {
     "placeholders": {
       "value": { "type": "int" }
     }

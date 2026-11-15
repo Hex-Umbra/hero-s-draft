@@ -126,7 +126,7 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'enduring': _rune(
     eligibleCardTypes: _allTypes,
-    excludesEffects: const ['gain_mana', 'draw'],
+    excludesEffects: const ['gain_mana', 'draw', 'status:mana_regen'],
     requiresExhaust: true,
     excludesRunes: const ['eco', 'quick'],
     maxLevel: 1,
@@ -187,7 +187,7 @@ final _expected = <String, Map<String, Object?>>{
     weight: 50,
   ),
   'echo': _rune(
-    excludesEffects: const ['draw', 'gain_mana'],
+    excludesEffects: const ['draw', 'gain_mana', 'status:mana_regen'],
     excludesRunes: const ['eco', 'quick'],
     maxLevel: 4,
     deltas: const [

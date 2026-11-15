@@ -102,7 +102,11 @@ void main() {
           ...rune.excludesEffects,
           for (final delta in rune.deltas) ?_effectOf(delta),
         })
-          if (strategies.get(type) == null)
+          // `status:<id>` n'est pas un type d'effet : il se valide comme les
+          // `feeds`, par la fabrique de statuts.
+          if (type.startsWith('status:')
+              ? EffectResolver.createStatus(type.substring(7), 1, 1) == null
+              : strategies.get(type) == null)
             '${rune.id} → type d effet "$type" sans stratégie',
     ];
 
@@ -299,6 +303,7 @@ void main() {
       for (final id in [
         'might',
         'might_regen',
+        'mana_regen',
         'armor_regen',
         'poison',
         'weakness',

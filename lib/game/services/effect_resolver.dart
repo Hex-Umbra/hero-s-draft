@@ -69,6 +69,14 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
+      case 'mana_regen':
+        return StatusEffect(
+          id: 'mana_regen',
+          name: 'Source de Mana',
+          type: StatusType.buff,
+          value: value,
+          duration: duration,
+        );
       case 'armor_regen':
         return StatusEffect(
           id: 'armor_regen',

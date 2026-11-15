@@ -944,6 +944,12 @@ abstract class AppLocalizations {
   /// **'Gains {amount} Might Awakening for {duration} turns.'**
   String cardDescStatusMightRegen(int amount, int duration);
 
+  /// No description provided for @cardDescStatusManaRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration} turns, gains {amount} Mana at turn start.'**
+  String cardDescStatusManaRegen(int amount, int duration);
+
   /// No description provided for @cardDescStatusBurn.
   ///
   /// In en, this message translates to:
@@ -1525,6 +1531,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Might Awakening: +{value}'**
   String statusMightRegen(int value);
+
+  /// No description provided for @statusManaRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mana Spring: +{value}'**
+  String statusManaRegen(int value);
 
   /// No description provided for @statusArmorRegen.
   ///

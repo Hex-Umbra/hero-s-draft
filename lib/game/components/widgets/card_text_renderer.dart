@@ -317,6 +317,11 @@ class CardTextRenderer {
             icon: Icons.bolt_rounded,
             color: Colors.orangeAccent,
           );
+        case 'mana_regen':
+          return const RendererEffectVisuals(
+            icon: Icons.diamond_rounded,
+            color: Colors.cyanAccent,
+          );
         case 'armor_regen':
           return const RendererEffectVisuals(
             icon: Icons.autorenew_rounded,

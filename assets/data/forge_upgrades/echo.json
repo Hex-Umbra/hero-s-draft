@@ -9,7 +9,8 @@
   "minFusionRank": 1,
   "excludesEffects": [
     "draw",
-    "gain_mana"
+    "gain_mana",
+    "status:mana_regen"
   ],
   "excludesRunes": [
     "eco",
