@@ -203,9 +203,11 @@ la fusion.
 
 **Puis la vague 7 du fichier d'orchestration** (sa version y est fixée, §1) : **les charges élémentaires** (P-53, D76,
 [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)) — le Gel, le Feu et la
-Foudre qui s'accumulent jusqu'à un seuil qui les fait rompre. **Elle ne s'ouvre pas encore** : sa fiche, §8.7 de l'orchestration, est **à compléter
-avant elle, dans une session de documentation**, pour que les règles des charges deviennent des
-décisions du brainstorm. Elle se lancera ensuite dans une session neuve, **sous D77** — aucun test
+Foudre qui s'accumulent jusqu'à un seuil qui les fait rompre. **Ses règles sont décidées le
+2026-11-15 par le propriétaire** (brainstorm v3, **D83 à D86** : le cadre commun, le Gel, le Feu, la
+Foudre ; [étude](../../docs/possible_upgrades/03-11-2026_charges_elementaires_Opus5.md), §11 et §12),
+et sa fiche, §8.7 de l'orchestration, est complète. Rien n'est implémenté ; l'ADR « charges
+élémentaires » s'écrira avec la vague. Elle se lancera dans une session neuve, **sous D77** — aucun test
 d'écran —, et **sa porte d'entrée attendra le tag de la vague 6** : tag ancêtre de `main`, CI/CD
 verte, constatée par `gh` — c'est elle qui notera la vague 6 close. La tranche 3 de P-42
 (*Bénédiction*, *Frénésie*, *Marque du Mage*, D34) suit en vague 8.
