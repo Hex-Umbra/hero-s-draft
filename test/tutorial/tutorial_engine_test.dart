@@ -703,6 +703,31 @@ void main() {
       );
     });
 
+    test('Jouer des cartes seme deux cartes qui tiennent dans le Mana du Mage '
+        'sous Canalisation', () {
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      engine.chooseHero(mage);
+      // Bouclier d'ether coute 3 : avec une attaque a 1, la main depasserait
+      // les 3 Mana, et la lecon obligerait a finir le tour en cours de route.
+      engine.setStarterDeck([
+        engine.fixtures.card('strike_basic'),
+        engine.fixtures.card('ether_shield'),
+        engine.fixtures.card('defend_basic'),
+      ]);
+
+      engine.prepareStep(7);
+
+      final hand = engine.mockState.hand;
+      expect(
+        hand.fold<int>(0, (total, c) => total + c.currentCost),
+        lessThanOrEqualTo(engine.mockState.heroStats.maxMana),
+      );
+      expect(
+        hand.map((c) => c.data.id).toList(),
+        ['strike_basic', 'defend_basic'],
+      );
+    });
+
     test(
       'Jouer des cartes se replie sur les fixtures si le deck ne fournit pas les deux gestes',
       () {

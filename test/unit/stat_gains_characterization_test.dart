@@ -183,8 +183,7 @@ void main() {
     // *Rage* (spec P-41, §6.3). Sa formule et son plancher sont couverts par
     // `test/unit/passives_berserker_test.dart`.
 
-    // Le test de `spell_armor` a ete retire avec le passif : la survie du Mage
-    // passe desormais par *Canalisation*, qui la fait payer (spec P-41, §6.3).
+    // Le test de `spell_armor` a ete retire avec le passif (spec P-41, §6.3).
     // Le filtrage par type de carte est couvert par les declencheurs
     // `onAttackPlayed` / `onSkillPlayed` (`passive_triggers_test.dart`), qui
     // le font en amont de toute strategie.

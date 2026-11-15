@@ -551,11 +551,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     // La réserve de Mana de Canalisation. Le tour ennemi commence, pour
     // l'écran, avec la bannière : l'état Flame le dit avant l'état de combat.
-    final reservePreview = ManaReserve.shown(
-      runState,
-      enemyTurn: combatState.turnPhase == TurnPhase.enemy ||
-          _game.currentPhase == TurnPhase.enemy,
-    );
+    // Un combat fini ne reporte rien : le suivant repart au Mana maximal.
+    final reservePreview = combatState.isCombatEnded
+        ? null
+        : ManaReserve.shown(
+            runState,
+            enemyTurn: combatState.turnPhase == TurnPhase.enemy ||
+                _game.currentPhase == TurnPhase.enemy,
+          );
 
     return PopScope(
       canPop: isCompleted || runState.isDead,
