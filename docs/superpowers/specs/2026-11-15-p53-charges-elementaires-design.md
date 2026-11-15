@@ -20,7 +20,7 @@ Toute référence `fichier:ligne` de ce document a été lue le 2026-11-15 sur l
 (`lib/`, `assets/`, `test/`, `tool/`, `pubspec.yaml`) est celui de `main` à `7aadf8a5` — les trois commits qui
 suivent sont de la documentation. **Les valeurs — seuils, dégâts par point, bonus par coup — sont des ordres de
 grandeur** (D83) : la spec écrit celles des décisions, le test du propriétaire les corrige. Les valeurs des cartes
-et des runes relues (P-b) et les textes (P-a) sont des recommandations, appliquées à titre provisoire (§1.4).
+et des runes relues (P-b) et les textes (P-a) sont les réponses du propriétaire, tranchées le 15/11 (§1.2).
 
 ---
 
@@ -56,7 +56,35 @@ Elles croisent, **sans les amender** :
 
 Toutes les règles du lot sont des réponses du propriétaire (étude, §11 : C1 à C7, C10 à C17 ; §12 : C8.1 à C8.6),
 écrites en D83 à D86 le 15/11. La spec les applique ; aucune n'est une question. Les points de lecture qu'elles
-laissaient à la spec sont tranchés en §1.3 (classe T) ou ouverts en §1.4 (classe P).
+laissaient à la spec sont tranchés en §1.3 (classe T) ou étaient ouverts en §1.4 (classe P) : ces cinq questions P
+sont tranchées ci-dessous.
+
+Les cinq réponses de classe P, **tranchées par le propriétaire le 15/11 sur les
+[maquettes](../../presentations/2026-11-15_charges_elementaires_maquettes.pptx)** :
+
+- **P-a (c) — les noms affichés** : Gel, Feu, Foudre en français ; Freeze, Burn, Shock en anglais ; les états
+  rompus Gelé / Frozen et Chargé / Charged ; les noms des runes — *Brûlant*, *Congelant*, *Surchargé* — ne changent
+  pas. Raison : « Brûlure » dit un dégât sur la durée et « Électrocution » un choc, deux sens que D85 et D86
+  retirent, quand « Feu » et « Foudre » nomment l'élément et sont les mots des décisions ; en anglais, *Burn* et
+  *Shock* sont déjà les noms courants de charges qui s'accumulent dans le genre.
+- **P-b (a) — les valeurs relues** : *Embrasement* passe de 4 à 3 Feu, *Congelant* de 2 à 1 Gel par niveau ; les
+  huit autres contenus, *Braise* comprise, ne changent pas (la table avant → après est en §3.4). Raison : à 3,
+  *Embrasement* est une tranche exacte, dont la première explosion se voit au premier jet, et à 1 *Congelant* pose
+  « +1 pile par niveau » comme ses deux sœurs (D33), là où 2 gèlerait d'un coup sous le seuil.
+- **P-c — les animations de rupture** : **G-a, la gangue**, pour le Gel et **F-a, l'onde**, pour le Feu ; pour la
+  Foudre, **L-b, le halo** — le choix du propriétaire, contre la recommandation L-a (l'arc) : le halo jaune seul,
+  sans éclair, tant que le porteur est chargé, et le bonus en jaune à chaque coup. Les trois sont décrites en §5.2.
+  Raison (celle de G-a et F-a) : chaque rupture se reconnaît sans lire, et l'onde montre d'où part le Feu et où il
+  va, ce qui rend la chaîne lisible vague par vague (fiche 8.7).
+- **P-d (a) — ce qui protège des dégâts du Feu** : l'Armure absorbe ; ni Vulnérable, ni critique, ni Faiblesse,
+  comme la Brûlure et le Poison aujourd'hui (§4.7). Raison : c'est le canal du tic que D85 remplace, Vulnérable
+  n'amplifie aujourd'hui que les coups et D83 veut qu'il ne change pas, et une intention de Défense qui protège de
+  l'explosion se lit — l'étude, §4, qui faisait passer le Feu par le pipeline, ne faisait qu'une remarque de
+  faisabilité.
+- **P-e (a) — l'entrée de debug** : une section « Charges » dans l'onglet Combat du menu de debug, qui pose un point
+  par la vraie règle, sur le héros ou sur un ennemi, et un bouton « Retirer les charges » (§7.2). Raison : aucun
+  ennemi ne pose de charge dans cette vague, et sans elle rien de ce qui touche le héros porteur ne se vérifie à la
+  main, ni l'exemple de l'étude (9 Feu sur un seul ennemi) — le précédent de P-7 (vague 5).
 
 ### 1.3. Les arbitrages
 
@@ -199,7 +227,7 @@ ne montre jamais les PV d'une vague avant qu'elle soit animée, et Flame ne calc
 accesseur, vrai quand l'une de ses pistes de sorte `skipAction` est rompue, que lisent `EnemyCard` (comme
 `effectiveIntent`, `enemy_card.dart:36`), le panneau des intentions (`enemy_intents_panel.dart:66`) et
 `resolveEnemyIntent`. Flame le lit **avant** de lancer l'animation de l'action (`heros_draft_game.dart:381-393`) :
-un ennemi gelé ne fonce pas, il joue l'animation du gel perdu (P-c) ; Flame appelle ensuite
+un ennemi gelé ne fonce pas, il joue l'animation du gel perdu (P-c, §5.2) ; Flame appelle ensuite
 `onResolveEnemyIntent` comme pour tout ennemi — **qu'il ait une intention ou non**, le test `intent == null`
 venant après —, et le contrôleur, qui lit le même accesseur, **consomme le gel sans rien résoudre**. L'intention
 perdue est consommée sans code neuf : `endEnemyTurn` tire l'intention suivante du cycle pour tous les ennemis
@@ -243,102 +271,10 @@ valeur (C10), seul le second changera, et le premier gardera la règle.
 
 ### 1.4. Les questions ouvertes
 
-Cinq questions de **classe P**, à poser en un seul arrêt : P-a, P-b et P-c, que pose la fiche 8.7 ; P-d et P-e,
-nées à l'écriture. Chacune est **appliquée à titre provisoire** selon la recommandation, marquée « (provisoire) »
-là où elle s'applique, pour que le document se termine et se vérifie autour d'elles.
-
-**P-a — Les noms affichés.** Les ids `burn`, `freeze`, `shock` ne sont pas la question (A1).
-
-| Option | Français | Anglais |
-|:---|:---|:---|
-| (a) | Gel, Feu, Foudre | Freeze, Fire, Lightning |
-| (b) | Gel, Brûlure, Électrocution — rien ne change de nom | Freeze, Burn, Shock |
-| (c) | **Gel, Feu, Foudre** | **Freeze, Burn, Shock** — inchangés |
-
-**Recommandation : (c)**, avec les états rompus **Gelé / Frozen** et **Chargé / Charged**. En français,
-« Brûlure » dit un dégât sur la durée et « Électrocution » un choc, deux sens que D85 et D86 retirent ; « Feu » et
-« Foudre » nomment l'élément dont la charge explose ou se charge, et ce sont les mots des décisions. En anglais,
-*Burn* et *Shock* sont déjà les noms courants de charges qui s'accumulent dans le genre, et « Apply 2 Fire »,
-« Apply 1 Lightning » se lisent mal. Les noms des runes ne changent pas : *Brûlant*, *Congelant*, *Surchargé* —
-ce dernier dit déjà la Foudre chargée.
-
-**P-b — Les valeurs des cartes et des runes relues** (rôle `game_designer`). Dix contenus posent une charge — les
-neuf de la fiche et l'évolution *Braise* de *Projectile Magique* (§3.4). Avant → après, recommandation :
-
-| Contenu | `0.5.8` | `0.5.9` (provisoire) | Raison |
-|:---|:---|:---|:---|
-| *Boule de Feu* (`cards/fireball.json`) | 2 mana, 6 dégâts, 2 Brûlure | 6 dégâts, **2 Feu** — inchangé | Seule, 6 + 4 au tour de l'ennemi, contre 6 + 2 + 1 aujourd'hui ; deux, ou une avec *Brûlant*, passent le seuil |
-| *Trait de Glace* (`cards/ice_bolt.json`) | 1 mana, 4 dégâts, 2 Gel | 4 dégâts, **2 Gel** — inchangé | Seul il prépare (2/3) ; un second Gel gèle. À 3, un mana ôterait le tour d'un ennemi à chaque premier jet |
-| *Coup de Tonnerre* (`cards/thunder_clap.json`) | 1 mana, 4 dégâts puis 1 Électrocution | 4 dégâts puis **1 Foudre** — inchangé | Frappe avant de poser : il prépare (D86, étude §12) |
-| *Nova de givre* (`cards/mana_flux/frost_nova.json`) | 2 mana, 2 Gel à tous | **2 Gel** à tous — inchangé | Le cœur du lot Arcaniste ; avec 1 Puissance « altération », elle gèle la salle une fois, puis le seuil monte à 4 : le risque que l'étude signale (§3), laissé au test du propriétaire |
-| *Embrasement* (`cards/mana_flux/kindle.json`) | 1 mana, 4 Brûlure | **3 Feu** (4 → 3) | Une tranche exacte : la première explosion se voit au premier jet (12, puis 12 et 1 Feu à chaque voisin). À 4, le quatrième point ne ferait que 2, et la Puissance du Mage le porterait à deux tranches (24, puis 24 et 2 Feu à chaque voisin) pour un mana |
-| *Rafale d'étincelles* (`cards/mana_flux/spark_barrage.json`) | 2 mana, 1 Électrocution puis 3 × 3 | **1 Foudre** puis 3 × 3 — inchangé | D86 en donne les chiffres : 12 sur un ennemi neuf, 27 sur un ennemi à 2 points |
-| *Brûlant* (`forge_upgrades/burning.json`) | +1 Brûlure par niveau | **+1 Feu** par niveau — inchangé | D33 |
-| *Congelant* (`forge_upgrades/freezing.json`) | **+2 Gel** par niveau (barème de P-1) | **+1 Gel** par niveau (2 → 1) | D33 : les runes élémentaires « restent en piles » ; le brainstorm, §8 (tableau des runes, ligne `burning`, `freezing`, `shocking`), leur donne « +1 pile par niveau », comme à ses deux sœurs. Le 2 de la vague 5 gardait −50 % au premier usage ; sous le seuil, *Congelant* 2 poserait 4 points et gèlerait d'un coup, deux fois de suite (3 puis 4) |
-| *Surchargé* (`forge_upgrades/shocking.json`) | +1 Électrocution par niveau | **+1 Foudre** par niveau — inchangé | D33 |
-| *Braise* (`classes/mage/skills/magic_missile.json`, `ember`) | +1 Brûlure par niveau | **+1 Feu** par niveau — inchangé | Une mineure ; avec la Puissance du Mage et *Nova*, elle charge toute la rangée |
-
-Option (b), écartée par la recommandation mais soumise au propriétaire : **tout garder**, *Embrasement* à 4 et
-*Congelant* à 2. Les textes de chaque contenu : §6.1.
-
-**P-c — La forme des trois animations de rupture**, maquettes à faire par l'orchestrateur. Elles se jouent dans
-Flame et ne lisent que l'état (A12, A13). Partie 2 (§10). Les durées s'entendent à l'échelle des délais de combat
-d'aujourd'hui (`game_constants.dart:62-74` : 200 ms le bond d'un ennemi, 400 ms après une intention).
-
-*Le Gel — le gel qui fige.*
-
-| Option | Ce qu'on voit |
-|:---|:---|
-| **G-a, la gangue** | À la rupture (pendant le tour du joueur, quand la carte pose le dernier point) : une gangue de glace couvre la carte de l'ennemi — un voile bleu glacier (`#81D4FA`, 45 % d'opacité) bordé d'un liseré blanc, qui monte du bas vers le haut en 0,4 s, avec un léger serrement (échelle 1 → 0,97 → 1). Elle reste tant qu'il est gelé. À son tour d'action, à la place du bond : la carte tremble trois fois (0,3 s), la gangue se brise en six à huit éclats blancs et bleu clair projetés autour de la carte (0,4 s), et « Gelé » flotte au-dessus. Chez le héros gelé : la même gangue, plus pâle (25 %), sur la carte du héros pendant tout son tour gelé, et un givre bleu aux quatre coins de l'écran |
-| G-b, le souffle | À la rupture : le flocon d'aujourd'hui (`effect_icon.dart:157`, l'icône des cartes de glace) monte au-dessus de la carte en 1,1 s, et la carte se teinte de gris bleuté jusqu'à son tour. À son tour : la teinte s'efface en 0,3 s, sans bond. Chez le héros : la teinte seule |
-| G-c, le texte | Aucun effet neuf : « Gelé ! » flotte à la rupture, « … » à son tour, à la place du bond |
-
-*Le Feu — l'explosion qui touche les voisins.*
-
-| Option | Ce qu'on voit |
-|:---|:---|
-| **F-a, l'onde** | Une vague de la chaîne à la fois. Sur chaque porteur qui explose : un éclair radial orange (cœur `#FF6D00`, bord `#FFAB40`), d'un rayon d'environ une largeur et demie de carte, en 0,35 s, et ses dégâts en chiffre ; puis une boule de feu part vers chaque voisin touché (0,25 s), qui s'embrase brièvement, affiche ses dégâts et « +1 🔥 ». Un porteur qui ne passe pas le seuil ne fait qu'un rougeoiement de sa carte (0,2 s). Environ 0,6 s par vague, puis une pause de 0,2 s avant la suivante. Chez le héros : l'éclair seul, sans boule de feu |
-| F-b, le brasier | Sur chaque porteur : des flammes montent de la carte (0,5 s), puis un anneau de chaleur s'élargit à l'horizontale jusqu'à ses voisins, qui rougeoient ; pas de projectile |
-| F-c, l'icône | La flamme d'aujourd'hui (`effect_icon.dart:126`) sur chaque porteur, puis sur chaque voisin touché, avec les chiffres ; le délai entre deux vagues seul marque la chaîne |
-
-*La Foudre — la charge électrique.*
-
-| Option | Ce qu'on voit |
-|:---|:---|
-| **L-a, l'arc** | À l'atteinte du seuil : un éclair en zigzag jaune et blanc frappe la carte depuis le haut de l'écran (0,2 s), et la carte garde jusqu'à la fin du tour une bordure qui crépite, un halo jaune (`#FFEA00`) qui pulse toutes les 0,6 s. Chaque coup reçu tant qu'elle est chargée jette trois ou quatre étincelles et affiche son bonus en jaune (« +6 »). Chez le héros : la même bordure sur sa carte |
-| L-b, le halo | Le halo jaune seul, sans éclair, tant qu'elle est chargée ; le bonus en jaune à chaque coup |
-| L-c, l'icône | L'éclair d'aujourd'hui (`effect_icon.dart:206`) à l'atteinte du seuil et « Chargé ! » en texte flottant |
-
-**Recommandation : G-a, F-a, L-a** — chaque rupture se reconnaît sans lire, et l'onde du Feu montre d'où part le Feu
-et où il va, ce qui rend la chaîne lisible vague par vague (fiche 8.7). Les options « c » ne demandent que des
-composants existants, au prix de la lisibilité.
-
-**P-d — Ce qui protège des dégâts du Feu.**
-
-| Option | Règle |
-|:---|:---|
-| **(a)** | **Comme la Brûlure d'aujourd'hui et le Poison** : l'Armure de la cible absorbe, ni Vulnérable, ni critique, ni Faiblesse (`EntityStats.takeDamage`, `status_effect_processor.dart:102-107`) |
-| (b) | Par le pipeline : Vulnérable amplifie le Feu, l'Armure absorbe, sans critique ni attaquant |
-| (c) | Dégâts directs : l'Armure ne protège pas |
-
-**Recommandation : (a)** — le canal du tic que D85 remplace ; Vulnérable n'amplifie aujourd'hui que les coups, et
-D83 veut qu'il ne change pas ; l'exemple de l'étude (48, 64, 48) vaut sur des ennemis sans Armure, et une
-intention de Défense protège de l'explosion, ce qui se lit. L'étude, §4, disait que les dégâts du Feu
-« passent par le pipeline » : une remarque de faisabilité, non une décision.
-
-**P-e — Une entrée de debug pour poser une charge.**
-
-| Option | Règle |
-|:---|:---|
-| **(a)** | Dans l'onglet Combat du menu de debug, une section « Charges » : pour le héros et pour chaque ennemi, un bouton par charge du catalogue (« +1 Gel », « +1 Feu », « +1 Foudre ») qui pose un point **par la règle du jeu** (`ChargeRules.pose` : plafond, refus sur un porteur rompu, rupture), et « Retirer les charges » |
-| (b) | Aucune entrée : les tests manuels n'emploient que les cartes |
-
-**Recommandation : (a)** — aucun ennemi ne pose de charge dans cette vague : sans elle, rien de ce qui touche le
-héros porteur ne se vérifie à la main, ni l'exemple de l'étude (9 Feu sur un seul ennemi). C'est le précédent de
-P-7 (vague 5). Le menu de debug n'existe que dans une run lancée par « Run Debug ».
-
-**Aucune question de classe D** : rien n'exige d'amender une décision acquise. Une prémisse, relevée en §2.1, n'en
-appelle pas : tous les ennemis d'un combat de boss portent `isBoss`.
+Aucune question ouverte : les cinq questions P posées à l'arrêt du 15/11 sont tranchées en §1.2, leurs options
+écartées sont au fichier de vérifications, et aucune question de classe D ne se pose — rien n'exige d'amender
+une décision acquise, et la prémisse relevée en §2.1 (tous les ennemis d'un combat de boss portent `isBoss`)
+n'en appelle pas.
 
 ---
 
@@ -402,7 +338,7 @@ l'ennemi gelé et du héros gelé, les infobulles et les textes ; le tutoriel ; 
 | `explode` | `damagePerPoint` ≥ 0, `explosionDamage` ≥ 0, `chargePerNeighbour` ≥ 0 | `bearerTurn` | Toute la charge se résout et explose sur les voisins (§4.7) |
 | `amplifyHits` | `bonusPerPoint` ≥ 1 | `threshold` | Chaque coup reçu fait plus, davantage une fois rompue (§4.8) |
 
-Les trois fichiers, aux valeurs de D84 à D86 et aux textes de P-a (provisoire) — les descriptions en §6.1 :
+Les trois fichiers, aux valeurs de D84 à D86 et aux noms de P-a, réponse du propriétaire (§1.2) — les descriptions en §6.1 :
 
 ```json
 { "id": "freeze", "name_fr": "Gel", "name_en": "Freeze",
@@ -458,11 +394,27 @@ refusé**, parce que `chargePerNeighbour` vaut 1 (D85).
 
 Dix fichiers posent une charge : les neuf de la fiche et *Braise* (`ember`), une mineure de *Projectile Magique*
 (`classes/mage/skills/magic_missile.json:56-74`), que la fiche ne nommait pas. **Aucun ne change de `statusId`**
-(A1). Valeurs : P-b (provisoire) — *Embrasement* `value` 4 → 3 (`kindle.json:16`), *Congelant* `valuePerLevel`
-2 → 1 (`freezing.json:18`). Les `duration` et `durationPerLevel` restent (A7). Textes : §6.1. Aucun ennemi, aucune
+(A1). Valeurs : celles de P-b (a), la réponse du propriétaire (§1.2) — *Embrasement* `value` 4 → 3
+(`kindle.json:16`), *Congelant* `valuePerLevel` 2 → 1 (`freezing.json:18`) ; les huit autres ne changent pas. Les
+`duration` et `durationPerLevel` restent (A7). Textes : §6.1. Aucun ennemi, aucune
 relique, aucun passif, aucun événement ni aucune récompense de niveau ne pose `burn`, `freeze` ou `shock`
 (re-mesuré : `git grep -n -w -e freeze -e burn -e shock -- assets` ne rend que ces dix fichiers et
 `effect_icons.json:14-16`, qui garde ses trois entrées).
+
+Les dix contenus, relus par le rôle `game_designer`, avant → après :
+
+| Contenu | `0.5.8` | `0.5.9` | Raison |
+|:---|:---|:---|:---|
+| *Boule de Feu* (`cards/fireball.json`) | 2 mana, 6 dégâts, 2 Brûlure | 6 dégâts, **2 Feu** — inchangé | Seule, 6 + 4 au tour de l'ennemi, contre 6 + 2 + 1 aujourd'hui ; deux, ou une avec *Brûlant*, passent le seuil |
+| *Trait de Glace* (`cards/ice_bolt.json`) | 1 mana, 4 dégâts, 2 Gel | 4 dégâts, **2 Gel** — inchangé | Seul il prépare (2/3) ; un second Gel gèle. À 3, un mana ôterait le tour d'un ennemi à chaque premier jet |
+| *Coup de Tonnerre* (`cards/thunder_clap.json`) | 1 mana, 4 dégâts puis 1 Électrocution | 4 dégâts puis **1 Foudre** — inchangé | Frappe avant de poser : il prépare (D86, étude §12) |
+| *Nova de givre* (`cards/mana_flux/frost_nova.json`) | 2 mana, 2 Gel à tous | **2 Gel** à tous — inchangé | Le cœur du lot Arcaniste ; avec 1 Puissance « altération », elle gèle la salle une fois, puis le seuil monte à 4 : le risque que l'étude signale (§3), laissé au test du propriétaire |
+| *Embrasement* (`cards/mana_flux/kindle.json`) | 1 mana, 4 Brûlure | **3 Feu** (4 → 3) | Une tranche exacte : la première explosion se voit au premier jet (12, puis 12 et 1 Feu à chaque voisin). À 4, le quatrième point ne ferait que 2, et la Puissance du Mage le porterait à deux tranches (24, puis 24 et 2 Feu à chaque voisin) pour un mana |
+| *Rafale d'étincelles* (`cards/mana_flux/spark_barrage.json`) | 2 mana, 1 Électrocution puis 3 × 3 | **1 Foudre** puis 3 × 3 — inchangé | D86 en donne les chiffres : 12 sur un ennemi neuf, 27 sur un ennemi à 2 points |
+| *Brûlant* (`forge_upgrades/burning.json`) | +1 Brûlure par niveau | **+1 Feu** par niveau — inchangé | D33 |
+| *Congelant* (`forge_upgrades/freezing.json`) | **+2 Gel** par niveau (barème de P-1) | **+1 Gel** par niveau (2 → 1) | D33 : les runes élémentaires « restent en piles » ; le brainstorm, §8 (tableau des runes, ligne `burning`, `freezing`, `shocking`), leur donne « +1 pile par niveau », comme à ses deux sœurs. Le 2 de la vague 5 gardait −50 % au premier usage ; sous le seuil, *Congelant* 2 poserait 4 points et gèlerait d'un coup, deux fois de suite (3 puis 4) |
+| *Surchargé* (`forge_upgrades/shocking.json`) | +1 Électrocution par niveau | **+1 Foudre** par niveau — inchangé | D33 |
+| *Braise* (`classes/mage/skills/magic_missile.json`, `ember`) | +1 Brûlure par niveau | **+1 Feu** par niveau — inchangé | Une mineure ; avec la Puissance du Mage et *Nova*, elle charge toute la rangée |
 
 ### 3.5. Ce qui disparaît
 
@@ -553,8 +505,9 @@ l'état revient à « aucun ». Seuil, montée, déclin et plafond sont ceux du 
 reste. Le porteur prend `n × T × damagePerPoint` plus la part de reste (A15 : `r × damagePerPoint × 50 %`) ; chaque
 tranche **explose** : chacun de ses voisins prend `explosionDamage` et reçoit `chargePerNeighbour` point de Feu,
 soit `n × 12` dégâts et `n` Feu ; le reste n'explose pas. Puis le Feu du porteur retombe à 0 (D85). 5 points :
-3 × 4 + 2 × 2 = **16** au porteur, **12 et 1 Feu** à chaque voisin. Les dégâts passent par l'Armure, sans
-Vulnérable (P-d (a), provisoire).
+3 × 4 + 2 × 2 = **16** au porteur, **12 et 1 Feu** à chaque voisin. **Contre les dégâts du Feu, l'Armure de la
+cible absorbe ; ni Vulnérable, ni critique, ni Faiblesse** — comme la Brûlure et le Poison aujourd'hui
+(`EntityStats.takeDamage`, `status_effect_processor.dart:102-107`) : P-d (a), la réponse du propriétaire (§1.2).
 
 **Les voisins** : l'ennemi à gauche et l'ennemi à droite du porteur dans `CombatState.enemies`, l'ordre même de la
 rangée Flame (`layout_system.dart:119-121`, `state_sync_system.dart:127-142` : les cartes existantes gardent leur
@@ -592,7 +545,7 @@ lot.
 
 **Le compte rendu de vague** (A12) : à la fin de chaque vague, `CombatState` porte, pour chaque porteur résolu, ses
 tranches et ses dégâts, et pour chaque voisin touché ses dégâts et son Feu reçu ; Flame le lit pour animer la
-vague (P-c), puis appelle la suivante.
+vague (P-c, §5.2), puis appelle la suivante.
 
 ### 4.8. La Foudre : `amplifyHits`
 
@@ -645,7 +598,7 @@ Les trois couches restent séparées : le contrôleur décide, Flame lit l'état
 correspond. Flame lit : l'accesseur de l'ennemi gelé (A13), **avant** de lancer l'animation de son action ; le
 compte rendu de vague (A12) ; la transition d'état d'une piste, comme `EnemyCard.updateStats` compare déjà
 l'ancien et le nouvel état pour ses réactions aux coups (`enemy_card.dart:217-231`) — « aucun » → « rompu » est le
-moment des animations de rupture du Gel et de la Foudre (P-c). Aucune règle ne se calcule dans Flame.
+moment des animations de rupture du Gel et de la Foudre (P-c, §5.2). Aucune règle ne se calcule dans Flame.
 
 ### 4.12. Ce qui ne change pas
 
@@ -662,18 +615,19 @@ même tic. Le Poison reste le seul dégât sur la durée (D83). Les tests qui le
 |:---|:---|
 | **L'ennemi** — les icônes de statut (`status_indicator.dart`, posées par `enemy_card.dart:139-150`) | Une icône par charge portée, son émoji d'aujourd'hui (`:157-162`). **Gel et Foudre sous le seuil : « ❄ 2/3 », « ⚡ 2/3 »** — points sur seuil courant ; **Feu : « 🔥 5 »** — les points seuls, la surcharge étant libre ; **Foudre chargée** : « ⚡ 4 » en jaune vif, sous-titré du nom de l'état (« Chargé ») ; **ennemi gelé** : « ❄ » sous-titré « Gelé ». Aucune durée sous une charge (`:116-132` ne s'écrit pas pour elle). Une charge à 0 point et non rompue ne s'affiche pas : après un gel consommé, le seuil monté se lit à la pose suivante (« ❄ 1/4 » pour un point posé, étude §3) |
 | **Le panneau des intentions** (`enemy_intents_panel.dart:66`) | L'ennemi gelé : son intention barrée, en gris, et la ligne « Gelé : ne fait rien ce tour » ; l'intention n'est plus réduite par le Gel (A14) |
-| **Le héros** — le panneau des effets (`status_effects_panel.dart`, posé par `combat_side_panels.dart:84`) | « Gel : 2/5 », « Feu : 5 », « Foudre : 2/3 » ; gelé en attente : « Gelé : −50 % de dégâts au prochain tour » ; gelé actif : « Gelé : −50 % de dégâts ce tour » ; chargé : « Chargé : +8 par coup » (2 × 4 points). L'icône et la couleur, celles d'`effect_icons.json:14-16` (P-6 de la vague 5, `:153-160`) |
+| **Le héros** — le panneau des effets (`status_effects_panel.dart`, posé par `combat_side_panels.dart:84`) | « Gel : 2/5 », « Feu : 5 », « Foudre : 2/3 » ; gelé en attente : « Gelé : −50 % de dégâts au prochain tour » ; gelé actif : « Gelé : −50 % de dégâts ce tour » ; chargé : « Chargé : +8 par coup » (2 × 4 points). L'icône et la couleur, celles d'`effect_icons.json:14-16` (P-6 de la vague 5, `:153-160`). **Une question laissée au plan, de classe T : la largeur de la ligne du gel en attente.** « Gelé : −50 % de dégâts au prochain tour » mesure 248 px pour 189 de large dans le panneau (Segoe UI gras 13 ; le panneau, large de 250, `status_effects_panel.dart:25`, la coupe d'une ellipse, `overflow: TextOverflow.ellipsis`, `:185`) ; l'anglais « Frozen: −50% damage next turn » aussi (197 px) — maquettes, p. 2. La manière se règle au plan, en classe T ; si la solution change ce que le joueur lit (le texte de la ligne), c'est une question P, que le plan pose avec des maquettes |
 | **Les infobulles des cartes**, Flutter (`ui_card_helpers.dart:408-427`) et Flame (`card_component.dart:432-452`) | « Applique 2 Gel. » sans durée, puis en parenthèse la description de la charge, remplie (§6.1) |
 | **La liste d'une signature** (appui long, `effect_line_texts.dart:26`) | *Braise* : « Applique 1 Feu », sans durée |
 
 **Les lignes d'affichage.** Une fonction pure, à côté des règles (`ChargeRules`), rend pour un porteur une ligne
 par charge à montrer — son id, ses points, son seuil courant, son état et la valeur de la rupture en vigueur
 (pourcentage, bonus par coup) —, lue sur ses statuts et ses pistes (A5, A8) ; une charge à 0 point et non rompue
-n'en a pas. L'indicateur de l'ennemi, le panneau du héros et celui des intentions les lisent. Le panneau du héros
+n'en a pas. L'indicateur de l'ennemi et le panneau du héros les lisent. Le panneau du héros
 ne reçoit aujourd'hui que la liste de ses statuts (`game_screen.dart:640-646`, `heroStatuses:
 runState.heroStats.statuses` ; `combat_side_panels.dart:21`, `:29`) : `game_screen.dart` passe désormais à
 `CombatSidePanels` les lignes du héros, calculées de ses `EntityStats`, et le catalogue, que `CombatSidePanels`
-transmet à `StatusEffectsPanel` et à `EnemyIntentsPanel` ; les noms viennent du
+transmet aux deux panneaux ; les lignes, au seul `StatusEffectsPanel` (`combat_side_panels.dart:84`). Le panneau
+des intentions (`:95`) lit l'accesseur d'A13 et le nom de l'état dans le catalogue. Les noms viennent du
 catalogue, qui leur arrive par les chemins d'A2, dans la langue active — Flame comme pour les textes de cartes qu'il
 écrit déjà (`card_component.dart:432-452`). **L'indicateur se rafraîchit sur ces lignes** : il ne compare
 aujourd'hui que les statuts (`status_indicator.dart:15-36`), si bien qu'un gel consommé, qui ne change que la piste,
@@ -683,13 +637,30 @@ chemins** (`enemy_card.dart:217-246`) : `updateStats`, directement, ou, pendant 
 l'état (`_pendingVisualInstance`, `:217-219`), que `resolvePendingVisualStats` (`:233-246`) applique après
 l'animation (`heros_draft_game.dart:258-263`). Une charge posée par une carte passe par le second — « ❄ Gelé » après
 le second *Trait de Glace* de M1 ; le paramètre obligatoire fait que le compilateur exige les lignes aux deux
-endroits. Les libellés sont provisoires
-(P-a).
+endroits. Les libellés sont ceux de P-a, la réponse du propriétaire (§1.2).
 
 ### 5.2. Les animations — partie 2
 
-Les trois animations de rupture de P-c (provisoire : G-a, F-a, L-a), la gangue de l'ennemi gelé et celle du héros
-gelé, la bordure de la Foudre chargée. En partie 1, sans animation neuve : un ennemi gelé ne fonce pas à son tour
+Les trois animations de rupture de P-c, celles que le propriétaire a retenues (§1.2) — G-a pour le Gel, F-a pour
+le Feu, L-b pour la Foudre —, la gangue de l'ennemi gelé et celle du héros gelé, le halo de la Foudre chargée. Elles
+se jouent dans Flame et ne lisent que l'état (A12, A13). Les durées s'entendent à l'échelle des délais de combat
+d'aujourd'hui (`game_constants.dart:62-74` : 200 ms le bond d'un ennemi, 400 ms après une intention).
+
+| Rupture | Ce qu'on voit |
+|:---|:---|
+| **Le Gel — G-a, la gangue** | À la rupture (pendant le tour du joueur, quand la carte pose le dernier point) : une gangue de glace couvre la carte de l'ennemi — un voile bleu glacier (`#81D4FA`, 45 % d'opacité) bordé d'un liseré blanc, qui monte du bas vers le haut en 0,4 s, avec un léger serrement (échelle 1 → 0,97 → 1). Elle reste tant qu'il est gelé. À son tour d'action, à la place du bond : la carte tremble trois fois (0,3 s), la gangue se brise en six à huit éclats blancs et bleu clair projetés autour de la carte (0,4 s), et « Gelé » flotte au-dessus. Chez le héros gelé : la même gangue, plus pâle (25 %), sur la carte du héros pendant tout son tour gelé, et un givre bleu aux quatre coins de l'écran |
+| **Le Feu — F-a, l'onde** | Une vague de la chaîne à la fois. Sur chaque porteur qui explose : un éclair radial orange (cœur `#FF6D00`, bord `#FFAB40`), d'un rayon d'environ une largeur et demie de carte, en 0,35 s, et ses dégâts en chiffre ; puis une boule de feu part vers chaque voisin touché (0,25 s), qui s'embrase brièvement, affiche ses dégâts et « +1 🔥 ». Un porteur qui ne passe pas le seuil ne fait qu'un rougeoiement de sa carte (0,2 s). Environ 0,6 s par vague, puis une pause de 0,2 s avant la suivante. Chez le héros : l'éclair seul, sans boule de feu |
+| **La Foudre — L-b, le halo** | À l'atteinte du seuil, un halo jaune (`#FFEA00`) naît autour de la carte en 0,2 s, puis pulse toutes les 0,6 s tant qu'elle est chargée. Le bonus en jaune à chaque coup (« +6 » sur la cible chargée de la maquette). Chez le héros chargé : le même halo sur sa carte. Pas d'éclair depuis le haut de l'écran, pas de bordure qui crépite, pas d'étincelles (maquettes, diapositive 12) |
+
+**Une question laissée au plan, de classe T : le bonus de la Foudre à chaque coup.** L'afficher en jaune à chaque
+coup demande que Flame connaisse les coups d'une carte un à un ; aujourd'hui une carte à trois coups ne montre
+qu'un « −27 », Flame comparant deux états (`triggerHitReactions`, `combat_entity.dart:176`) — maquettes, p. 11. La
+maquette de L-b (p. 12) ne montre que la cible chargée ; sous le seuil, D86 donne aussi un bonus (+1 par point),
+que la maquette ne dessine pas. La manière se règle au plan, en classe T ; si la solution change ce que le joueur
+lit (ce qui s'affiche à chaque coup, chargé ou sous le seuil), c'est une question P, que le plan pose avec des
+maquettes.
+
+En partie 1, sans animation neuve : un ennemi gelé ne fonce pas à son tour
 d'action ; chaque vague de la chaîne montre ses dégâts par les réactions aux coups d'aujourd'hui
 (`enemy_card.dart:217-231`) et la flamme existante (`effect_icon.dart:126`) au-dessus de chaque porteur résolu, avec
 le délai entre deux vagues.
@@ -703,8 +674,8 @@ le délai entre deux vagues.
 **Les jetons d'une description** : `{name}`, `{threshold}`, `{bossThreshold}`, `{heroThreshold}`, `{growth}`,
 `{decay}`, et ceux de la rupture — `{percent}`, `{damagePerPoint}`, `{explosionDamage}`,
 `{chargePerNeighbour}`, `{bonusPerPoint}` — ; un jeton dérivé, `{belowValue}`, la valeur par point sous le seuil
-(`damagePerPoint` ou `bonusPerPoint` × `belowThresholdPercent`, A15). Un jeton inconnu est refusé (A3). Les textes
-(provisoires, P-a) :
+(`damagePerPoint` ou `bonusPerPoint` × `belowThresholdPercent`, A15). Un jeton inconnu est refusé (A3). Les textes,
+aux noms de P-a, la réponse du propriétaire (§1.2) :
 
 | Fichier | Clé | Français | Anglais |
 |:---|:---|:---|:---|
@@ -713,7 +684,7 @@ le délai entre deux vagues.
 | `charges/burn.json` | `description` | « S'accumule sans limite. Au tour du porteur, tout se résout : chaque tranche de {threshold} inflige {damagePerPoint} par point au porteur et explose — {explosionDamage} dégâts et {chargePerNeighbour} {name} à chacun de ses voisins ; le reste inflige {belowValue} par point. » | « Builds up without limit. On the bearer's turn, it all resolves: each set of {threshold} deals {damagePerPoint} per point to the bearer and explodes — {explosionDamage} damage and {chargePerNeighbour} {name} to each neighbour; the rest deals {belowValue} per point. » |
 | `charges/shock.json` | `description` | « Chaque coup reçu inflige +{belowValue} par point. À {threshold}, le porteur est chargé jusqu'à la fin du tour : +{bonusPerPoint} par point à chaque coup. Perd {decay} point à son tour sous le seuil. » | « Each hit taken deals +{belowValue} per point. At {threshold}, the bearer is charged until the end of the turn: +{bonusPerPoint} per point on every hit. Loses {decay} point on its turn below the threshold. » |
 
-**Les contenus relus** (P-a, P-b, provisoires) — seuls changent les textes qui nomment la Brûlure ou
+**Les contenus relus**, aux réponses de P-a et de P-b (§1.2) — seuls changent les textes qui nomment la Brûlure ou
 l'Électrocution, et celui d'*Embrasement* :
 
 | Fichier | `description_fr` | `description_en` |
@@ -750,7 +721,7 @@ l'Électrocution, et celui d'*Embrasement* :
 
 | Où | Changement |
 |:---|:---|
-| Étape « Les Effets Élémentaires » (`tutorial_data.dart:220-243`) | FR : « Certaines cartes appliquent des altérations aux ennemis :\n• 🧪 Poison : inflige sa valeur en dégâts au début de leur tour. La valeur ne baisse jamais — seule la durée décrémente.\n• ❄️ Gel, 🔥 Feu et ⚡ Foudre sont des **charges** : leurs points s'accumulent jusqu'à un seuil, où elles rompent.\n• ❄️ Gel : au seuil, l'ennemi gèle et **ne fait rien** à son prochain tour.\n• 🔥 Feu : à son tour, chaque tranche complète le blesse et **explose** sur ses voisins, qui prennent feu à leur tour.\n• ⚡ Foudre : chaque coup qu'il reçoit fait plus ; au seuil, il est **chargé** et le bonus par point double, jusqu'à la fin du tour. » — EN : « Some cards apply status effects to enemies:\n• 🧪 Poison: damage equal to its value at the start of their turn. The value never drops — only the duration ticks down.\n• ❄️ Freeze, 🔥 Burn and ⚡ Shock are **charges**: their points build up to a threshold, where they break.\n• ❄️ Freeze: at the threshold, the enemy freezes and **does nothing** on its next turn.\n• 🔥 Burn: on its turn, each full set hurts it and **explodes** onto its neighbours, who catch fire in turn.\n• ⚡ Shock: every hit it takes deals more; at the threshold, it is **charged** and the bonus per point doubles, until the end of the turn. » Aucun chiffre dans la prose : la galerie et les infobulles les donnent. Les noms Feu et Foudre, Burn et Shock, et les états Gelé et Chargé, sont ceux de P-a (provisoire) |
+| Étape « Les Effets Élémentaires » (`tutorial_data.dart:220-243`) | FR : « Certaines cartes appliquent des altérations aux ennemis :\n• 🧪 Poison : inflige sa valeur en dégâts au début de leur tour. La valeur ne baisse jamais — seule la durée décrémente.\n• ❄️ Gel, 🔥 Feu et ⚡ Foudre sont des **charges** : leurs points s'accumulent jusqu'à un seuil, où elles rompent.\n• ❄️ Gel : au seuil, l'ennemi gèle et **ne fait rien** à son prochain tour.\n• 🔥 Feu : à son tour, chaque tranche complète le blesse et **explose** sur ses voisins, qui prennent feu à leur tour.\n• ⚡ Foudre : chaque coup qu'il reçoit fait plus ; au seuil, il est **chargé** et le bonus par point double, jusqu'à la fin du tour. » — EN : « Some cards apply status effects to enemies:\n• 🧪 Poison: damage equal to its value at the start of their turn. The value never drops — only the duration ticks down.\n• ❄️ Freeze, 🔥 Burn and ⚡ Shock are **charges**: their points build up to a threshold, where they break.\n• ❄️ Freeze: at the threshold, the enemy freezes and **does nothing** on its next turn.\n• 🔥 Burn: on its turn, each full set hurts it and **explodes** onto its neighbours, who catch fire in turn.\n• ⚡ Shock: every hit it takes deals more; at the threshold, it is **charged** and the bonus per point doubles, until the end of the turn. » Aucun chiffre dans la prose : la galerie et les infobulles les donnent. Les noms Feu et Foudre, Burn et Shock, et les états Gelé et Chargé, sont ceux de P-a, la réponse du propriétaire (§1.2) |
 | Étape « Les Intentions Ennemies » (`tutorial_data.dart:258`, `:270`) | EN « …and drops while they are Frozen. » → « …; a Frozen enemy does nothing on its turn. » — FR « …et baisse tant qu'il est Gelé. » → « … ; un ennemi Gelé ne fait rien à son tour. » |
 | La galerie (`tutorial_elements_widget.dart:41-76`) | Les entrées Feu, Gel et Foudre lisent leur nom et leur description dans le catalogue (`widget.engine.data.charges`), au lieu des noms et des phrases en dur (`:54`, `:59-66`, `:71`) |
 | Ses simulations (`tutorial_elements_widget.dart:130-149`, `:188-258`) | Le cycle de deux secondes montre la règle, chiffres lus sur la donnée : Gel « ❄ 1/3 » → « ❄ 2/3 » → « ❄ Gelé » ; Feu « 🔥 1 » → « 🔥 2 » → « 🔥 3 » → « 💥 12 » ; Foudre « ⚡ 1/3 : +1 » → « ⚡ 2/3 : +2 » → « ⚡ Chargé : +6 ». Le « 10 -> 5 » du Gel (`:227`) et la Brûlure qui perd 1 (`:140`) disparaissent |
@@ -771,10 +742,13 @@ l'Électrocution, et celui d'*Embrasement* :
 
 ### 7.2. Le menu de debug
 
-Il ne lit ni ne pose aucun de ces statuts aujourd'hui (`debug_combat_tab.dart`, `debug_actions.dart`). Sous P-e (a)
-(provisoire) : une section « Charges » dans l'onglet Combat, et deux actions, `DebugActions.poseCharge` — un point,
-par `ChargeRules.pose`, sur le héros ou sur un ennemi — et `DebugActions.clearCharges`, gardées comme les autres
-par la run debug (`_allowed`). La pose de debug ne reçoit pas de bonus de Puissance.
+Il ne lit ni ne pose aucun de ces statuts aujourd'hui (`debug_combat_tab.dart`, `debug_actions.dart`). Sous P-e (a),
+la réponse du propriétaire (§1.2) : une section « Charges » dans l'onglet Combat — pour le héros et pour chaque
+ennemi, un bouton par charge du catalogue (« +1 Gel », « +1 Feu », « +1 Foudre »), et « Retirer les charges » —,
+et deux actions, `DebugActions.poseCharge` — un point, par la règle du jeu, `ChargeRules.pose` (plafond, refus sur
+un porteur rompu, rupture), sur le héros ou sur un ennemi — et `DebugActions.clearCharges`, gardées comme les autres
+par la run debug (`_allowed`) : le menu n'existe que dans une run lancée par « Run Debug ». La pose de debug ne
+reçoit pas de bonus de Puissance.
 
 ---
 
@@ -808,10 +782,10 @@ les tests manuels de §9.1.
 | **Le catalogue surchargé** (A2) — valeurs inchangées | `multi_hit_test.dart:266` (2 Foudre posées à la main), `:308-345` (la *Rafale* livrée : 88, 97, 97 et 93) ; `rune_resolution_test.dart:366-390` (l'éclaboussure et la Foudre de sa cible) ; `might_orientation_test.dart:240-250` (*Brûlant* et la Puissance : 1 + 3) | Chacun surcharge `chargeCatalogProvider` avec le catalogue livré ; sous le seuil, la Foudre fait +1 par point, comme l'Électrocution : les valeurs restent justes. La durée d'une entrée de charge vaut 1 (A4) : `might_orientation_test.dart:250` l'attend déjà | 1 |
 | **Le catalogue surchargé** (A2) — valeurs qui changent | `effect_resolver_test.dart:389-422` ; `rune_resolution_test.dart:165-212` | Avec le catalogue livré. *Boule de Feu* + *Brûlant*, *Coup de Tonnerre* + *Brûlant*, *Braise* : mêmes points (5 ; 3 et 1 ; 1 + 2), la durée de l'entrée à 1 (`effect_resolver_test.dart:393`). *Coup de Tonnerre* + *Surchargé*, trois fois dans le tour : 5, **10** puis **14** dégâts au lieu de 5, 7 et 9 — la deuxième pose de la rune amène la Foudre à 3, la cible est chargée (D86) —, et 6 points ; *Brûlant* 2 deux fois : (4, durée 1) ; *Trait de Glace* : 2 Gel, « 2/3 », non gelé, au lieu de −50 % ; *Congelant* 1 : **1** Gel ; *Boule de Feu* + *Brûlant* 1 : (3, durée 1) | 1 |
 | La Puissance et les runes | `effect_resolver_test.dart`, `forge_upgrades_catalog_test.dart:112-124` | Q11 : un bonus, une fois, ajouté avant le plafond du Gel ; *Congelant* 1 point par niveau dans la matrice des runes | 1 |
-| Les textes des runes | `forge_upgrade_data_test.dart:634-636` | « Applique 3 Feu », « Applique 1 Gel », « Applique 2 Foudre » au lieu de « 3 Brûlure », « 2 Gel », « 2 Électrocution » — P-a et P-b (provisoires) | 1 |
+| Les textes des runes | `forge_upgrade_data_test.dart:634-636` | « Applique 3 Feu », « Applique 1 Gel », « Applique 2 Foudre » au lieu de « 3 Brûlure », « 2 Gel », « 2 Électrocution » — les réponses de P-a et de P-b (§1.2) | 1 |
 | L'intention et le Gel | `effect_resolver_test.dart:254-283` | Le test « le Gel reduit l intention de 25 % par point » disparaît avec la règle (A14) ; à sa place, un ennemi qui porte du Gel sous le seuil montre son intention entière | 1 |
 | Les cartes de lot | `card_catalog_test.dart:84-97` | *Embrasement* à 3 Feu | 1 |
-| Intégrité | `referential_integrity_test.dart` | Le test des sortes du document (`:199-216`, assertion `:211-213`), qui exige aujourd'hui que chaque `status:<id>` d'`effect_icons.json` soit créé par `createStatus`, devient « créé par `createStatus` ou charge du catalogue » : `status:burn`, `status:freeze`, `status:shock` (`effect_icons.json:14-16`) ne sont plus créés par la fabrique (A4). Chaque `statusId` posé par une carte, une rune, une signature ou une évolution livrée est soit créé par `createStatus`, soit une charge du catalogue ; chaque charge a son entrée `status:<id>` dans `effect_icons.json` ; la liste des statuts des faces (`:303-314`) garde `burn`, `freeze`, `shock` | 1 |
+| Intégrité | `referential_integrity_test.dart` | Le test des sortes du document (`:199-216`, assertion `:211-213`), qui exige aujourd'hui que chaque `status:<id>` d'`effect_icons.json` soit créé par `createStatus`, devient « créé par `createStatus` ou charge du catalogue » : `status:burn`, `status:freeze`, `status:shock` (`effect_icons.json:14-16`) ne sont plus créés par la fabrique (A4). Deux autres tests du même fichier, pour la même raison, suivent la même règle, « créé par `createStatus` ou charge du catalogue » : celui des évolutions (`:265-294`, assertion `:285-288`), que *Braise* rougirait — elle pose `burn` (`magic_missile.json:68`) —, et celui des runes (`:346-361`, assertion `:356`), que les trois runes élémentaires rougiraient. Chaque `statusId` posé par une carte, une rune, une signature ou une évolution livrée est soit créé par `createStatus`, soit une charge du catalogue ; chaque charge a son entrée `status:<id>` dans `effect_icons.json` ; la liste des statuts des faces (`:303-314`) garde `burn`, `freeze`, `shock` | 1 |
 | Comptes et chargeur | `entity_id_convention_test.dart:72-78`, `game_data_loader_injection_test.dart` | 133 fichiers ; `charges/*.json` injecte l'id | 1 |
 | Éditeur | `entity_descriptor_test.dart`, `shipped_entities_round_trip_test.dart` | Onze catégories, onze sources ; les trois charges livrées repassent la validation et se réécrivent à l'identique | 1 |
 | **Signatures qui changent** | `tickStatuses` (ids des charges, A6) : `effect_resolver_test.dart:83`, `:86`, `status_source_test.dart:118`, `:160`, `:196` ; `DamagePipeline.calculate` (catalogue, A14) : `damage_pipeline_test.dart:17`, `:30`, `:52` ; `CardRuleTexts.scale` (catalogue, A4) : `card_rule_texts_test.dart:45`, `:46`, `:49`, `:51`, `:93` ; `EffectLineTexts.phrase` (catalogue, §6.2) : `effect_line_texts_test.dart:69`, `:70`, `:76-82`, `:89`, `:98`, `referential_integrity_test.dart:233` ; le constructeur de `HerosDraftGame` (catalogue et deux rappels, A2, A12) : `flame_image_prefix_test.dart:12-30`, `heros_draft_game_targeting_test.dart:59-81` | Ces appels reçoivent le catalogue (ou les ids, ou les rappels) ; leurs valeurs attendues ne changent pas — `card_rule_texts_test.dart:90-94` nomme Vulnérable, qui n'est pas une charge. Les valeurs d'`effect_line_texts_test.dart` qui changent sont à la ligne suivante | 1 |
@@ -824,9 +798,10 @@ les tests manuels de §9.1.
 Le fichier de tests manuels de la vague les reprend. Plusieurs ennemis demandent un acte avancé : l'onglet Run du
 menu de debug passe d'acte (« Acte suivant (regenere la carte) », `debug_run_tab.dart:67-75`), deux fois de l'acte 1
 pour un combat normal de **jusqu'à trois ennemis** : trois n'est qu'un plafond, le nombre réel est tiré sous le
-budget du combat (`encounter_system.dart:66-71`, `:274-289`) — s'il y en a moins, passer encore d'acte ou jouer un
-autre combat (M5, M6) ; les charges se posent par les cartes ou par l'entrée de debug de §7.2
-(P-e (a)). Les chiffres sont ceux des décisions et de P-b, provisoires, **sans Puissance** : un héros qui en porte,
+budget du combat (`encounter_system.dart:66-71`, `:275-289`) — s'il y en a moins, passer encore d'acte ou jouer un
+autre combat (M5) ; **M6 veut exactement trois ennemis** : s'il y en a moins, ou quatre après un acte de plus,
+jouer un autre combat ; les charges se posent par les cartes ou par l'entrée de debug de §7.2
+(P-e (a)). Les chiffres sont ceux des décisions et de P-b, la réponse du propriétaire (§1.2), **sans Puissance** : un héros qui en porte,
 et le Mage surtout (Puissance « altération »), pose davantage de points.
 
 | # | Écran | Ce que fait le propriétaire | Ce qu'il doit voir | Partie |
@@ -836,9 +811,9 @@ et le Mage surtout (Puissance « altération »), pose davantage de points.
 | M3 | Combat : le déclin | Pose 2 Gel, finit le tour | Après la phase ennemie : « ❄ 1/3 » | 1 |
 | M4 | Combat : le boss | Pose du Gel sur un boss | « ❄ 2/6 » | 1 |
 | M5 | Combat : le Feu | À l'acte 3, joue *Embrasement* sur l'ennemi du milieu, finit le tour | « 🔥 3 » ; au début de la phase ennemie : 12 au porteur, puis 12 à chaque voisin, « 🔥 1 » sur eux ; vague suivante : 2 à chaque voisin ; les vagues l'une après l'autre ; l'intention de défense d'un ennemi protège de l'explosion par son Armure (P-d) | 1 · 2 |
-| M6 | Combat : la chaîne | À l'acte 3, porte d'abord les PV des trois ennemis au-dessus de 64 par le champ PV de chaque ennemi de l'onglet Combat (`DebugActions.setEnemyHp`, `debug_actions.dart:169-182`, qui ne borne pas aux PV max) — sans quoi les bords meurent dès la première vague et la chaîne change ; puis, par l'entrée de debug, pose 9 Feu sur l'ennemi du milieu, sans Armure, et finit le tour | Trois vagues ; à la fin : 48, 64, 48 de PV perdus | 1 · 2 |
+| M6 | Combat : la chaîne | À l'acte 3, devant **exactement trois ennemis** — sur quatre, la chaîne change ; s'il y en a moins (ou quatre, si l'on a passé un acte de plus), jouer un autre combat —, porte d'abord les PV des trois ennemis au-dessus de 64 par le champ PV de chaque ennemi de l'onglet Combat (`DebugActions.setEnemyHp`, `debug_actions.dart:169-182`, qui ne borne pas aux PV max) — sans quoi les bords meurent dès la première vague et la chaîne change ; puis, par l'entrée de debug, pose 9 Feu sur l'ennemi du milieu, sans Armure, et finit le tour | Trois vagues ; à la fin : 48, 64, 48 de PV perdus | 1 · 2 |
 | M7 | Combat : la mort | Tue un porteur de Feu par une carte ; puis, à un autre combat, laisse un porteur mourir de son propre Feu | Le premier n'explose pas ; le second explose, ses voisins sont touchés, puis il disparaît et la rangée se resserre | 1 |
-| M8 | Combat : la Foudre | Avec le **Paladin** sous *Régénération d'Armure* — ni Puissance ni critique au départ (`classes/paladin/class.json` ne déclare pas `critChance`), sans relique ; *Ferveur* donnerait de la Puissance dès que l'Armure encaisse, et le Berserker porte 10 % de critique (`classes/berserker/class.json:12`) —, au premier tour d'un combat : ajoute *Coup de Tonnerre* et *Rafale d'étincelles* à la main par l'onglet Deck du menu de debug (`DebugActions.addCard`, puis la pioche), et porte d'abord les PV de l'ennemi visé au-dessus de 40 par son champ PV de l'onglet Combat (`DebugActions.setEnemyHp`, `debug_actions.dart:169-182`), pour que les 27 de la Rafale se lisent en entier. Dans ce même tour : joue *Coup de Tonnerre* sur un ennemi (1 mana), pose par l'entrée de debug 1 Foudre de plus sur lui, puis joue *Rafale d'étincelles* (2 mana) — tous les héros ont 3 mana (`classes/*/class.json:10`), et d'un tour à l'autre la Foudre décline | « ⚡ 1/3 » ; après le debug, « ⚡ 2/3 » ; la Rafale le charge : « ⚡ 3 Chargé », 27 dégâts ; au début de la phase ennemie, la Foudre a disparu | 1 |
+| M8 | Combat : la Foudre | Avec le **Paladin** sous *Régénération d'Armure* — ni Puissance ni critique au départ (`classes/paladin/class.json` ne déclare pas `critChance`), sans relique ; *Ferveur* donnerait de la Puissance dès que l'Armure encaisse, et le Berserker porte 10 % de critique (`classes/berserker/class.json:12`) —, **avant le combat, sur la carte** : par l'onglet Deck du menu de debug — il n'existe que hors combat ; en combat, l'onglet Combat reste seul (`debug_drawer.dart:45-52`) —, ajoute *Coup de Tonnerre* et *Rafale d'étincelles* au deck maître (`DebugActions.addCard`, `debug_actions.dart:127-130`), que le début du combat mélange en pioche avant de tirer la main d'ouverture (`deck_controller.dart:159-176`), et retire toutes les autres cartes de la liste « Deck maitre » du même onglet (`DebugActions.removeCard`, `debug_actions.dart:132-135`), pour que la main d'ouverture les contienne. Au premier tour du combat, porte d'abord les PV de l'ennemi visé au-dessus de 40 par son champ PV de l'onglet Combat (`DebugActions.setEnemyHp`, `debug_actions.dart:169-182`), pour que les 27 de la Rafale se lisent en entier. Dans ce même tour : joue *Coup de Tonnerre* sur un ennemi (1 mana), pose par l'entrée de debug 1 Foudre de plus sur lui, puis joue *Rafale d'étincelles* (2 mana) — tous les héros ont 3 mana (`classes/*/class.json:10`), et d'un tour à l'autre la Foudre décline | « ⚡ 1/3 » ; après le debug, « ⚡ 2/3 » ; la Rafale le charge : « ⚡ 3 Chargé », 27 dégâts ; au début de la phase ennemie, la Foudre a disparu | 1 |
 | M9 | Combat : le héros gelé | Par l'entrée de debug, pose 5 Gel sur le héros, finit le tour | « Gelé : −50 % de dégâts au prochain tour » ; au tour suivant, « … ce tour » : il pioche, joue cartes et signatures ; une *Frappe* de 6 en fait 3 ; au tour d'après, plus rien | 1 |
 | M10 | Combat : le héros porteur | Par l'entrée de debug, pose 5 Feu puis 2 Foudre sur le héros, finit le tour | La Foudre : chaque attaque ennemie fait +2 ; au début de son tour, le héros prend 16, sans explosion ; « Foudre : 1/3 » après son déclin | 1 |
 | M11 | Les cartes | Ouvre l'infobulle de *Boule de Feu*, *Trait de Glace*, *Coup de Tonnerre*, au dictionnaire puis en combat (face Flame), en français puis en anglais | « Applique 2 Feu. », puis la règle de la charge, chiffres remplis ; aucun « pendant N tours » ; aucun pourcentage de Gel | 1 |
@@ -846,7 +821,7 @@ et le Mage surtout (Puissance « altération »), pose davantage de points.
 | M13 | La signature | Dans une run debug du Mage, pose *Braise* sur *Projectile Magique* (entrée de debug des évolutions), reste appuyé sur la tuile | « Applique 1 Feu », sans durée | 1 |
 | M14 | Le tutoriel | Arrive à l'étape « Les Effets Élémentaires », puis « Les Intentions Ennemies », en français puis en anglais | La prose des charges ; la galerie et ses cycles (Gel, Feu, Foudre), sans « 10 -> 5 » ; le panneau « Feu : 2 » ; l'étape des intentions dit qu'un ennemi Gelé ne fait rien | 1 |
 | M15 | Le menu de debug | Ouvre la section « Charges » de l'onglet Combat, pose et retire | Un bouton par charge et par porteur ; la pose suit la règle (le Gel plafonné, la rupture) ; « Retirer les charges » vide | 1 |
-| M16 | Combat : les animations | Rejoue M1, M2, M5, M8, M9 | Les animations de P-c : la gangue et ses éclats, l'onde et ses boules de feu vague par vague, l'arc et la bordure qui crépite ; la gangue pâle du héros gelé | 2 |
+| M16 | Combat : les animations | Rejoue M1, M2, M5, M8, M9 | Les animations de P-c : la gangue et ses éclats, l'onde et ses boules de feu vague par vague, le halo jaune de la Foudre chargée, qui pulse, et son bonus en jaune à chaque coup ; la gangue pâle du héros gelé | 2 |
 
 ---
 
@@ -860,17 +835,18 @@ panneaux, intentions, icônes des ennemis — et le tutoriel, prose et galerie ;
 `CLAUDE.md` et `README.md` ; les tests de §9 et les tests manuels marqués 1. Flame n'y gagne aucune animation : il
 appelle les vagues une à une et ne fait plus foncer un ennemi gelé (§5.2).
 
-**Partie 2 — les animations.** Les trois animations de rupture de P-c, la gangue de l'ennemi gelé et celle du
-héros gelé, la bordure de la Foudre chargée, et le délai de vague ajusté ; les tests manuels marqués 2. Aucune
-règle, aucune donnée, aucun test automatique : Flame lit des états que la partie 1 livre.
+**Partie 2 — les animations.** Les trois animations de rupture de P-c (§5.2), la gangue de l'ennemi gelé et celle
+du héros gelé, le halo de la Foudre chargée et son bonus à chaque coup, et le délai de vague ajusté ; les tests manuels marqués 2. Aucune
+règle, aucune donnée, aucun test automatique : Flame lit des états que la partie 1 livre — sauf le moyen de
+transmettre les coups un à un (§5.2) : s'il passe par l'état, il rejoint la partie 1 avec son test.
 
 **L'invariant** : à la fin de chaque partie, `flutter test` est vert et `dart analyze` propre, et **la règle que le
 moteur joue est celle que le joueur lit** — chiffres, textes, infobulles, tutoriel. C'est pourquoi les textes et le
 tutoriel vont avec le moteur, et non avec l'affichage comme le proposait la fiche : après la partie 1, une
 infobulle de Brûlure qui dirait « puis la valeur diminue de 1 » serait fausse (le précédent de la vague 5, dont la
 partie 1 portait déjà les textes du barème). L'ordre suit les dépendances : les animations lisent la piste, son
-état de rupture et le compte rendu de vague, que la partie 1 crée. La partie 2 porte la question P-c : si le
-propriétaire retient d'autres formes, seule elle change.
+état de rupture et le compte rendu de vague, que la partie 1 crée. La partie 2 porte les formes de P-c, tranchées
+en §1.2 : si le propriétaire, à son test, en retient d'autres, seule elle change.
 
 ---
 
