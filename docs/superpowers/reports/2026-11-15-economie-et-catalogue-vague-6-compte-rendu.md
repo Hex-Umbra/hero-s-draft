@@ -6,7 +6,17 @@
 
 ## 0. Pour le propriétaire
 
-*À écrire en §3.8.*
+**À tester d'abord**, par risque — [tests manuels](2026-11-15-economie-et-catalogue-vague-6-tests-manuels.md), 25 tests ; **aucun agent n'a lancé le jeu**, l'écran n'a d'autre filet que toi (D77) :
+1. **T1 à T5, la réserve à l'écran** (C) : flèches, légende « +n au prochain tour », « (plafond) » au-delà du plafond seulement, le tour ennemi, la légende qui part avec le combat gagné.
+2. **T6 à T9, le message de fin de tour** (D) et le téléphone : cyan, deux lignes, le bouton « Fin de Tour » libre ; les autres classes à l'identique ; les petites flèches à plus de cinq cristaux.
+3. **T10 à T13, la banque elle-même** : plafond relevé par la Maîtrise et par un Mana max plus haut, reliques de mana, *Méditation* et sa *Source de Mana*.
+4. **T14 à T23, les quinze cartes et les trois passifs rendus**, le tutoriel du Mage.
+
+**Arbitrages que le joueur verra** — ta réponse : C et D ensemble (A14). **Faits sans toi, à juger au test** : les cartes et leurs valeurs, déléguées en ordres de grandeur — *Frénésie sanglante* à 1 mana au lieu de 3 (à 3, dominée par *Frappe Lourde*), *Fléau béni*, *Charge du croisé*, *Traque*, *Cataclysme*, *Bouclier d'éther* ; le Mage démarre sur *Canalisation* (A11) ; *Persistant* et *Résonant* refusés à *Méditation* (A6, D44) ; au tutoriel, le message reste « Mana restant » et rien ne passe en réserve (T1.1) ; au tour ennemi, la légende sans « (plafond) » (T1.2) ; « +2 par carte jouée ce tour » compte aussi les signatures (S4) ; la main de l'étape « Jouer des cartes » tenue dans le mana (S6). L'autonomie `continu` n'a pas servi : le plan a convergé au troisième tour.
+
+**Risques connus** : la mise en page n'est vue par personne avant toi, ni sur Android ni sur iOS ; à grand facteur de texte, la boîte du message peut passer d'1 ou 2 px sous le bouton (déjà vrai avant) ; *Persistant* n'est pas garanti au tirage sur *Lacération* (T13 demande quatre tirages).
+
+**Trois commandes** : `flutter test` (1682) · `flutter test test/unit/mana_reserve_test.dart test/unit/passives_mage_test.dart` (la banque et ses bornes) · `flutter run -d windows`.
 
 ## 1. La branche et ses chiffres
 
@@ -43,7 +53,7 @@ Une ligne chacun ; les options écartées sont dans le [fichier de vérification
 
 ## 3. Les tests manuels
 
-*À écrire en §3.8.*
+[Le fichier](2026-11-15-economie-et-catalogue-vague-6-tests-manuels.md), 25 tests, à remplir : 0 ✅ · 0 ❌ · 25 non testés. Il reprend les quatorze points du plan (§8, M1 à M14, correspondance dans ses repères) et onze de plus ; sa lecture du code a corrigé quatre prémisses du plan — l'onglet « Héros » du debug n'a pas de champ de Maîtrise (T10 passe par *Affinité*), « Sauter la phase ennemie » n'ouvre pas de tour et ne lit pas la réserve, le cas du poison demande deux ennemis, *Ferveur* donne +2 au Paladin (Maîtrise 1).
 
 ## 4. Trouvé périmé, et pour la file
 
@@ -52,11 +62,29 @@ Une ligne chacun ; les options écartées sont dans le [fichier de vérification
 - Au tutoriel, quand aucun couple attaque + Armure du deck ne tient dans le mana, la main d'avant est gardée : un deck de départ très atypique laisserait l'étape en deux tours.
 - La garde `if (preview == null) return;` de `ManaReservePassive` est inatteignable (prévue par le plan, elle rétrécit le type).
 - Deux rangées de cristaux (seize ou plus) feraient déborder le HUD de 88 px sous *Canalisation* : irréaliste aujourd'hui.
+- `CLAUDE.md` (étape 2 du flux de contenu, paragraphe *Tooling*) ne dit toujours pas qu'un dossier de lot `cards/<passif>/` exige sa ligne de `pubspec.yaml`, comme une classe ou un ennemi (relevé en vague 5, confirmé par `memory-bank-sync`).
+- Un commit local hors vague sur `feat/v0.5.7-p42-tranche-1-p44-lot-1`, `97c24ce7` (« la direction artistique évolutive des cartes »), n'est ni poussé ni fusionné.
 
 ## 5. Les leçons
 
-*À écrire en §3.8.*
+1. **L'essai de R31 — un plan qui s'ouvre par ses décisions, sans spec — tient.** Le plan a coûté 30,54 $ et 64 min d'agents, en trois tours (0/3/5/3, 0/1/0/3, puis prêt), sans arrêt ; la vague 4 avait payé 59,63 $ (spec et deux plans, 3 h 31 d'agents, deux arrêts), la vague 5 198,77 $ (spec et trois plans). Les vagues ne pèsent pas pareil — celle-ci est « moyenne », sans écran neuf à concevoir —, mais aucun constat n'est né d'une décision absente du plan, et les relectures n'ont trouvé aucune exigence qu'une spec aurait portée. Le défaut du test du propriétaire reste à compter (§3). Amendement : garder R31 pour les lots moyens ; le verdict des vagues 7 et 8 au propriétaire, après son test.
+2. **La réponse P tranchée avant la vague, sur maquettes, a supprimé tous les arrêts.** C et D sont passés tels quels dans le plan ; les ambiguïtés de lecture (le n, « (plafond) », la place de la légende) ont été tranchées en T par la maquette elle-même. Amendement : rien, la règle de la vague 5 (une question visible se pose avec ses maquettes) suffit.
+3. **Les mutations de la tâche à risque ont trouvé deux trous que le plan et le rejeu du vérificateur avaient laissés** : un plafond codé à 3 et une réserve passée par `StatGains` restaient verts, parce que tous les héros testés ont 3 de Mana et aucune règle de classe sur le mana. Amendement : le relecteur d'une tâche à risque ajoute ses propres mutations aux cinq du plan — c'est ce que son brief lui demandait, et c'est là qu'il a trouvé.
+4. **Les trois amendements des vagues 4 et 5 ont servi** : le tri des mineurs visibles a corrigé trois écarts (`isPlayerEffect`, le message « Mana restant » des autres classes, la légende après victoire) ; la vérification finale jouée sans agent a tenu en un appel ; le recoupement des exemples avec leurs données a fait corriger au tour 1 trois références et un compte (`audio_catalogue_test`, 71 → 86). Amendement : rien, les garder.
+5. **Une question reclassée P → T par l'orchestrateur** (T1.1, le tutoriel) a évité un arrêt : la vague ne changeait pas le comportement du tutoriel. Le propriétaire le juge au test (T20). Amendement : rien ; la règle « dans le doute, P » reste, le doute se lève par le comportement d'avant la vague.
 
 ## 6. Les statistiques de la session
 
-*À mesurer juste avant le commit de §3.8.*
+**Mesuré le 15/11/2026 à 05:07**, avant le commit de §3.8 — sessions : 1 (`eda831dc`) · arrêts : 0 · durée : du 15/11 à 02:46 au 15/11 à 05:07, dont 1 h 30 de temps actif de l'orchestrateur · tours de spec : 0 (R31) · tours de plan : 3
+Prix lus le 15/11 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1052 $ (BCE, 13/11) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
+
+| | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|
+| Temps actif | — | 1 h 04 | 1 h 02 | 30 min | 1 h 30 | **4 h 07** |
+| Agents — Opus / Sonnet / Haiku | — | 4 / 0 / 0 | 3 / 9 / 0 | 3 / 0 / 1 | 1 / 0 / 0 | **11 / 9 / 1** |
+| Appels au modèle | — | 301 | 230 | 168 | 119 | **818** |
+| Jetons traités, dont hors cache | — | 67,60 M · 2,26 M | 25,77 M · 1,28 M | 31,12 M · 0,61 M | 30,67 M · 0,36 M | **155,15 M · 4,51 M** |
+| Sortie (minimum) | — | 313 k | 177 k | 161 k | 101 k | **752 k** |
+| Coût API — $ / € | — | 30,54 / 27,63 | 10,79 / 9,77 | 12,15 / 10,99 | 10,98 / 9,94 | **64,46 / 58,33** |
+
+*Hors cache* : l'entrée hors cache et les écritures en cache. La porte d'entrée et la note du journal comptent à l'orchestrateur ; les tests manuels, le site et les prix dans la fin de vague.
