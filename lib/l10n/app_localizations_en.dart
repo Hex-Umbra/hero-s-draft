@@ -265,6 +265,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remainingManaWarning => 'Mana remaining.\nEnd your turn?';
 
   @override
+  String manaReserveNextTurn(int count) {
+    return '+$count next turn';
+  }
+
+  @override
+  String manaReserveNextTurnCapped(int count) {
+    return '+$count next turn (cap)';
+  }
+
+  @override
+  String manaReserveWarning(int count) {
+    return '$count Mana in reserve.\nEnd your turn?';
+  }
+
+  @override
+  String manaReserveFullWarning(int count) {
+    return 'Reserve full: $count Mana.\nEnd your turn?';
+  }
+
+  @override
   String turnCount(int count) {
     return 'Turn $count';
   }

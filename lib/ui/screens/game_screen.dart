@@ -10,6 +10,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/reward_controller.dart';
+import '../../game/systems/mana_reserve.dart';
 import '../../models/combat_state.dart';
 import '../../models/map_node.dart';
 import '../../models/signature_instance.dart';
@@ -548,6 +549,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         _game.currentPhase == TurnPhase.player &&
         !_game.isCardAnimating;
 
+    // La réserve de Mana de Canalisation. Le tour ennemi commence, pour
+    // l'écran, avec la bannière : l'état Flame le dit avant l'état de combat.
+    final reservePreview = ManaReserve.shown(
+      runState,
+      enemyTurn: combatState.turnPhase == TurnPhase.enemy ||
+          _game.currentPhase == TurnPhase.enemy,
+    );
+
     return PopScope(
       canPop: isCompleted || runState.isDead,
       child: Scaffold(
@@ -594,6 +603,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       maxPv: runState.heroStats.maxPv,
                       armure: runState.heroStats.armure,
                       effectiveMight: runState.heroStats.effectiveMight,
+                      reservePreview: reservePreview,
                     ),
 
                   if (!runState.isDead && !_showDraft)
@@ -620,6 +630,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       showManaWarning: _showManaWarning,
                       showRemainingManaWarning: _showRemainingManaWarning,
                       turnCount: combatState.turnCount,
+                      reservePreview: reservePreview,
                     ),
 
                   if (!runState.isDead && !_showDraft)

@@ -138,6 +138,30 @@
   "waitingIntents": "Waiting...",
   "manaWarning": "No mana left.\nEnd your turn?",
   "remainingManaWarning": "Mana remaining.\nEnd your turn?",
+  "manaReserveNextTurn": "+{count} next turn",
+  "@manaReserveNextTurn": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveNextTurnCapped": "+{count} next turn (cap)",
+  "@manaReserveNextTurnCapped": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveWarning": "{count} Mana in reserve.\nEnd your turn?",
+  "@manaReserveWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveFullWarning": "Reserve full: {count} Mana.\nEnd your turn?",
+  "@manaReserveFullWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "turnCount": "Turn {count}",
   "@turnCount": {
     "placeholders": {

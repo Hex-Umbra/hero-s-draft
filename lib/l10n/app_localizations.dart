@@ -542,6 +542,30 @@ abstract class AppLocalizations {
   /// **'Mana remaining.\nEnd your turn?'**
   String get remainingManaWarning;
 
+  /// No description provided for @manaReserveNextTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} next turn'**
+  String manaReserveNextTurn(int count);
+
+  /// No description provided for @manaReserveNextTurnCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} next turn (cap)'**
+  String manaReserveNextTurnCapped(int count);
+
+  /// No description provided for @manaReserveWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Mana in reserve.\nEnd your turn?'**
+  String manaReserveWarning(int count);
+
+  /// No description provided for @manaReserveFullWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve full: {count} Mana.\nEnd your turn?'**
+  String manaReserveFullWarning(int count);
+
   /// No description provided for @turnCount.
   ///
   /// In en, this message translates to:

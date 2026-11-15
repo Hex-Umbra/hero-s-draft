@@ -108,4 +108,42 @@ void main() {
     // Plafond 3 + 2 : la Maîtrise de la classe et celle d'un statut.
     expect(ManaReserve.forRun(run), (banked: 5, capped: true));
   });
+
+  group('shown, ce que l ecran montre selon la phase (A14)', () {
+    RunState runUnder(PassiveData passive, {required int reserve}) => RunState(
+          currentLevel: 1,
+          heroClassId: 'mage',
+          activePassive: passive,
+          heroStats: hero(mana: 4),
+          manaReserve: reserve,
+        );
+
+    test('au tour ennemi, l ecran lit la reserve ecrite, pas le mana courant',
+        () {
+      // La réserve écrite à 3, puis 1 Mana d'Essence spirituelle : 4 en main.
+      final run = runUnder(reserve, reserve: 3);
+
+      expect(
+        ManaReserve.shown(run, enemyTurn: true),
+        (banked: 3, capped: false),
+      );
+    });
+
+    test('au tour du joueur, l ecran lit l apercu ; sans reserve, rien', () {
+      final run = runUnder(reserve, reserve: 3);
+
+      expect(
+        ManaReserve.shown(run, enemyTurn: false),
+        ManaReserve.forRun(run),
+      );
+      expect(
+        ManaReserve.shown(run, enemyTurn: false),
+        (banked: 3, capped: true),
+      );
+
+      final underFlux = runUnder(flux, reserve: 0);
+      expect(ManaReserve.shown(underFlux, enemyTurn: true), isNull);
+      expect(ManaReserve.shown(underFlux, enemyTurn: false), isNull);
+    });
+  });
 }

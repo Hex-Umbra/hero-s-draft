@@ -35,4 +35,14 @@ abstract final class ManaReserve {
         run.activePassive?.withMastery(run.heroStats.effectiveMastery),
         run.heroStats,
       );
+
+  /// Ce que l'écran montre selon la phase (A14). Au tour du joueur, c'est
+  /// [forRun]. Au tour ennemi, c'est la réserve écrite, [RunState.manaReserve] :
+  /// un mana gagné après la fin du tour ne va pas en réserve, et le plafond
+  /// n'a plus de choix à éclairer, donc jamais `capped`.
+  static ManaReservePreview? shown(RunState run, {required bool enemyTurn}) {
+    final preview = forRun(run);
+    if (!enemyTurn || preview == null) return preview;
+    return (banked: run.manaReserve, capped: false);
+  }
 }
