@@ -15,6 +15,7 @@ import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -42,7 +43,7 @@ void main() {
   PassiveData channeling() => const PassiveData(
         id: 'channeling',
         trigger: RelicTrigger.endOfTurn,
-        effectType: 'mana_reserve',
+        effectType: ManaReserve.effectType,
         value: 0,
         mastery: PassiveMastery(
           field: 'value',
@@ -240,6 +241,46 @@ void main() {
 
       // Mana max, réserve, Pierre d'énergie, Source de Mana.
       expect(stats().currentMana, 3 + 2 + 1 + 1);
+    });
+
+    test('un Mana max releve releve aussi le plafond de la reserve', () {
+      run.startNewRun(mage, channeling());
+      run.updateState(
+        run.currentState.copyWith(
+          heroStats: stats().copyWith(maxMana: 4, currentMana: 6),
+        ),
+      );
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 4);
+
+      run.startTurn();
+      expect(stats().currentMana, 4 + 4);
+    });
+
+    test('la reserve n est pas un gain : une regle de classe sur le mana ne '
+        'la convertit pas', () {
+      const converter = HeroData(
+        id: 'mage',
+        classCard: 'mage.png',
+        maxHp: 60,
+        maxMana: 3,
+        statRules: [
+          StatRule(
+            stat: RuleStat.mana,
+            mode: RuleMode.convert,
+            to: RuleTarget.statusMight,
+          ),
+        ],
+      );
+      run.startNewRun(converter, channeling());
+      expect(run.consumeResource(mana: 1), isTrue);
+
+      run.endTurn();
+      run.startTurn();
+
+      expect(stats().currentMana, 3 + 2);
+      expect(stats().statuses.where((s) => s.id == 'might'), isEmpty);
     });
 
     test('l apercu dit ce que la fin du tour met en reserve', () {

@@ -72,6 +72,12 @@ void main() {
     );
   });
 
+  test('le plafond suit le Mana max du heros, pas un 3 en dur', () {
+    final bigger = hero(mana: 6).copyWith(maxMana: 4);
+
+    expect(ManaReserve.preview(reserve, bigger), (banked: 4, capped: true));
+  });
+
   test('la valeur du passif releve le plafond', () {
     expect(
       ManaReserve.preview(reserve.withMastery(2), hero(mana: 5)),
