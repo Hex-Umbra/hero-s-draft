@@ -103,7 +103,7 @@ Chaque sujet suit la même chaîne. Tous les documents n'en parcourent pas tous 
 
 | | Document | Date |
 |:---:|:---|:---|
-| 🔍 | [Charges élémentaires — Gel, Feu, Foudre : un seuil plutôt qu'un pourcentage](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md) *(→ P-53, vague 7, `0.5.9`, D76)* — un cadre commun en donnée, symétrique héros / ennemis ; Gel à seuil qui monte, Feu en surcharge qui explose sur les voisins, Foudre à approfondir ; Faiblesse et Poison inchangés ; orientations du propriétaire, hors de la vague 5 | 03/11/2026 |
+| 🔍 | [Charges élémentaires — Gel, Feu, Foudre : un seuil plutôt qu'un pourcentage](possible_upgrades/03-11-2026_charges_elementaires_Opus5.md) *(→ P-53, vague 7, `0.5.9`, D76 ; règles décidées le 15/11, D83 à D86)* — un cadre commun en donnée, symétrique héros / ennemis ; Gel à seuil qui monte, Feu en surcharge qui explose sur les voisins, Foudre chargée au seuil ; Faiblesse et Poison inchangés ; orientations du propriétaire, hors de la vague 5 ; ses réponses du 15/11 (héros gelé à −50 % de dégâts, Feu à 50 % sous le seuil, réaction en chaîne, Foudre) | 03/11/2026 |
 | 🔍 | [Nouveaux ennemis par tier](possible_upgrades/27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) | 27/07/2026 |
 | 🔍 | [Roster tier-1 & mécaniques `onHitEffect`](possible_upgrades/28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md) *(→ P-05)* | 28/07/2026 |
 | 🔍 | [Identité visuelle pixel art — canvas, cadres d'ennemi et palette](possible_upgrades/18-09-2026_identite_visuelle_pixel_art_Opus5.md) *(→ P-08, **tranche les deux options de juillet** ; croise P-05, P-12, P-31)* | 18/09/2026 |

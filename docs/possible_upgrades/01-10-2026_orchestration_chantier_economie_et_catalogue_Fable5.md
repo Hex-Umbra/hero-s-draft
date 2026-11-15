@@ -48,7 +48,7 @@ Le jeu est en `0.5.2`. Chaque vague, sauf la vague 0, livre une version ; `0.6.0
 | **4** | **`0.5.6`** | **E4** | Deux compétences de classe hors du deck, dès le premier tour, à recharge | `feat/v0.5.6-p43-e4-signatures` | Lourd : une spec, deux parties |
 | **5** | **`0.5.7`** | **Tranche 1** et **P-44 lot 1** | Trois lots de cartes (Rempart, Sang, Arcaniste), les mécanismes de profondeur, les évolutions de signature | `feat/v0.5.7-p42-tranche-1-p44-lot-1` | Le plus lourd : une spec, trois parties |
 | **6** | **`0.5.8`** | **Tranche 2** | Trois lots de cartes de plus (Croisé, Vampire, Voile), Canalisation en banque de mana | `feat/v0.5.8-p42-tranche-2` | Moyen : un plan, qui s'ouvre par ses décisions de conception — sans spec (R31, à l'essai) |
-| **7** | **`0.5.9`** | **P-53** | Les charges élémentaires : le Gel, le Feu et la Foudre s'accumulent jusqu'à un seuil qui les fait rompre (D76) | `feat/v0.5.9-p53-charges-elementaires` | À fixer par sa fiche (§8.7) |
+| **7** | **`0.5.9`** | **P-53** | Les charges élémentaires : le Gel, le Feu et la Foudre s'accumulent jusqu'à un seuil qui les fait rompre (D76) | `feat/v0.5.9-p53-charges-elementaires` | Une spec ; le plan, ou les plans, selon son découpage (§8.7) |
 | **8** | **`0.6.0`** | **Tranche 3** | Les trois derniers lots de cartes (Sanctifié, Carnage, Marque) : neuf passifs jouables | `feat/v0.6.0-p42-tranche-3` | Moyen : une spec, un plan |
 | **Clôture** | — | — | Rien | `docs/cloture-chantier-economie-et-catalogue` | Documentation seule (§8.9) |
 
@@ -77,7 +77,7 @@ Chaque vague le met à jour elle-même, à chaque étape franchie. États : *à 
 | 4 | `0.5.6` | **close** | — | `feat/v0.5.6-p43-e4-signatures` | [E4](../superpowers/specs/2026-10-15-p43-e4-signatures-design.md) | [E4 partie 1](../superpowers/plans/2026-10-15-p43-e4-signatures-partie-1.md) · [E4 partie 2](../superpowers/plans/2026-10-16-p43-e4-signatures-partie-2.md) | 1625 → 1663 → 1694 → 1701 | 16/10, corrigée le 16/10 | 24/10 |
 | 5 | `0.5.7` | **close** | — | `feat/v0.5.7-p42-tranche-1-p44-lot-1` | [Tranche 1 et P-44 lot 1](../superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md) | [Partie 1](../superpowers/plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-1.md) · [Partie 2](../superpowers/plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-2.md) · [Partie 3](../superpowers/plans/2026-11-03-p42-tranche-1-p44-lot-1-partie-3.md) | 1701 → 1811 → 1916 → 1524 (D77) → 1612 | 04/11 | 09/11 |
 | 6 | `0.5.8` | **close** | — | `feat/v0.5.8-p42-tranche-2` | — (R31) | [Tranche 2](../superpowers/plans/2026-11-15-p42-tranche-2.md) | 1620 → 1682 | 15/11 | 15/11 |
-| 7 | `0.5.9` | à faire — sa fiche est à compléter avant elle (§8.7) | — | — | — | — | — | — | — |
+| 7 | `0.5.9` | à faire — sa fiche est complète depuis le 15/11 (D83 à D86, §8.7) | — | — | — | — | — | — | — |
 | 8 | `0.6.0` | à faire | — | — | — | — | — | — | — |
 | Clôture | — | à faire | — | — | — | — | — | — | — |
 
@@ -440,7 +440,7 @@ Les décisions du §1 du brainstorm ont été relues une à une contre la table 
 | Signatures | D7 (forme), D41, D49, D53 ; D28 (`magic_missile` en Compétence) | E4 | 4 |
 | Catalogue et profondeur | D4 et D18 (les runes de mécanisme), D7 (les évolutions), D8, D9, D10, D12, D15, D16, D17, D19, D21, D28 (`focus` supprimée), D33 et D35 (`piercing`, `lifesteal`), D34 (ordre des tranches), D38, D40, D44 (`requiresCost` de `transfusion`), D45, D50, D54, D63 (Q9), D65 (cinq runes), D66 | Tranche 1 + P-44 lot 1 | 5 |
 | Tranche 2 | D30 (Voile), D35 (Vampire) | Tranche 2 | 6 |
-| Charges élémentaires | D76 (le périmètre ; les règles sont à décider avant la vague, §8.7) | P-53 | 7 |
+| Charges élémentaires | D76 (le périmètre), D83 à D86 (les règles, décidées le 15/11) | P-53 | 7 |
 | Tranche 3 | D34 (déclencheur de Marque), D55 (*Prière*) | Tranche 3 | 8 |
 | Après `0.6.0` | D29, D52, D56 ; Q4, Q18 ; §9.2 #5 à #9 ; D65 (`retain`) | P-16 · P-44 lots 2 à 4 | — |
 | Méthode | D26 (faite), D64, D65, D66, D68, D69, D70, D71, D73, D74, D76 | Ce fichier | 0 ; D76 le 03/11, pendant la vague 5 |
@@ -617,16 +617,15 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 ### 8.7. Vague 7 — `0.5.9` — les charges élémentaires (P-53)
 
-> **Fiche à compléter avant la vague** (D76, 03/11). Les règles des charges ne sont pas des décisions acquises : l'[étude](03-11-2026_charges_elementaires_Opus5.md) porte les orientations du propriétaire et ses questions ouvertes — la Foudre (§5), C1 à C10 (§10). Elles deviennent des décisions numérotées du brainstorm, avec l'accord du propriétaire, dans une session de documentation avant la vague ; cette fiche se complète alors sur le modèle des autres. **Tant que cette note est là, la porte d'entrée de la vague 7 ne passe pas** : l'orchestrateur s'arrête et le dit (§6).
+**Un lot** — P-53. **Décisions** : D76 (le périmètre et la place de la vague), **D83 à D86** (les règles, décidées le 15/11 : le cadre commun, le Gel, le Feu, la Foudre). Branche `feat/v0.5.9-p53-charges-elementaires`. **Fichiers** : `<AAAA-MM-JJ>-p53-charges-elementaires-design.md` pour la spec ; le plan, ou les plans, selon le découpage que la spec propose.
 
-**Un lot** — P-53. **Décisions** : D76 (le périmètre et la place de la vague) ; les règles, à décider. Branche `feat/v0.5.9-p53-charges-elementaires`. **Fichiers** : `<AAAA-MM-JJ>-p53-charges-elementaires-design.md` pour la spec ; le plan, ou les plans, selon le découpage que la spec propose.
-
-**Ce qui est acquis à ce jour** (étude, §2 à §5 ; orientations du propriétaire, à écrire en décisions) : un cadre commun en donnée — seuil, montée du seuil, plafond de pose, déclin, moment et sorte de la rupture —, **symétrique** : il vit sur le porteur, héros ou ennemi, pour que de futurs ennemis élémentaires posent ces charges sur le héros. **Gel** : seuil 3, le porteur perd sa prochaine action puis retombe à 0, −1 point à son tour s'il n'a pas gelé, seuil +1 à chaque gel pour le combat, pose plafonnée au restant. **Feu** : surcharge libre, seuil fixe ; au tour du porteur, 4 dégâts par point au porteur et 12 par tranche de 3 points à ses voisins seulement. **Foudre** : l'option L1 retenue en principe — au seuil, chaque coup reçu fait plus —, à préciser. Vulnérable, Faiblesse et Poison ne changent pas.
-**À lire** : l'étude en entier ; la spec de la vague 5, §1.2 (P-1) et §4.4 ; brainstorm §7.3, §8 (les runes élémentaires), §9.2 ; les ADR de la vague 5 sur les statuts.
-**État mesuré** : l'étude, §7 — à revérifier sur la branche, les vagues 5 et 6 ayant déplacé les lignes.
-**Ne pas absorber** : la tranche 3 et ses cartes (vague 8) ; l'étourdissement et les épines (P-44 lot 2) ; P-16 ; un ennemi élémentaire — le cadre est symétrique, mais aucun ennemi ne pose de charge dans cette vague.
-**Point propre au vérificateur** : la symétrie — un test pose chaque charge sur le héros et sur un ennemi ; Vulnérable, Faiblesse et Poison n'ont pas changé.
-**Ce que le joueur voit en `0.5.9`** : le Gel, le Feu et la Foudre s'accumulent sur l'ennemi jusqu'à rompre — le Gel lui fait perdre son tour, le Feu explose sur lui et ses voisins, la Foudre fait plus mal à chaque coup ; trois passifs restent masqués jusqu'à `0.6.0`.
+**À lire** : brainstorm §1 (D76, D83 à D86) ; l'[étude](03-11-2026_charges_elementaires_Opus5.md) en entier — §11 et §12 portent les réponses du propriétaire et l'exemple chiffré de la réaction en chaîne ; la spec de la vague 5, §1.2 (P-1, le barème que D84 remplace pour le Gel) et §4.4 ; brainstorm §7.3, §8 (les runes élémentaires), §9.2 ; ADR-023, ADR-104, ADR-111.
+**État mesuré** : l'étude, §7 et §11 — à revérifier sur la branche. Les lieux à reprendre, au 15/11 (`main` à `7aadf8a`) : le Gel lu à l'attaque (`turn_phase_manager.dart:95-126`) et à l'intention (`enemy_instance.dart`), le tic de Brûlure (`status_effect_processor.dart:83-106`), l'Électrocution (`damage_pipeline.dart:37-50`), le traitement des statuts ennemis en bloc puis `cleanDeadEnemies` (`turn_phase_manager.dart:60-77`, `combat_controller.dart:373`). Les contenus qui posent une charge : `fireball`, `ice_bolt`, `thunder_clap`, `mana_flux/frost_nova`, `mana_flux/kindle`, `mana_flux/spark_barrage`, les runes `burning`, `freezing`, `shocking`.
+**La spec doit fixer** : la forme en donnée d'une charge (D83) et sa validation au chargement — un seuil de Feu d'au moins 3 (D85) ; le compteur par porteur et par élément, et les trois sortes de rupture, dont la rupture propre au héros pour le Gel (D84) ; l'ordre du tour — l'état dit qu'un ennemi est gelé **avant** que Flame lance l'animation de son action (`heros_draft_game.dart:381-393`), et les vagues de la chaîne du Feu se jouent l'une après l'autre, lisibles ; l'affichage de la charge (« ❄ 2/3 », « 🔥 5 », « ⚡ 2/3 »), de l'ennemi gelé et du héros gelé ; les cartes et les runes relues sur les nouvelles règles ; le tutoriel (`tutorial_data.dart`, `tutorial_elements_widget.dart`).
+**À arbitrer** *(classe P, groupées en un arrêt)* : les noms affichés — le Feu et la Foudre remplacent-ils « Brûlure » et « Électrocution » à l'écran ; les valeurs des cartes et des runes relues ; la forme des trois animations, maquettes à l'appui.
+**Ne pas absorber** : la tranche 3 et ses cartes (vague 8) ; l'étourdissement et les épines (P-44 lot 2) ; P-16 ; **l'explosion du Feu à la mort** d'un porteur (D85, écartée pour l'instant) ; un ennemi élémentaire — le cadre est symétrique, mais aucun ennemi ne pose de charge dans cette vague.
+**Point propre au vérificateur** : la symétrie — un test pose chaque charge sur le héros et sur un ennemi, et le Gel du héros réduit ses dégâts au lieu de lui ôter son tour (D84) ; l'exemple de l'étude, §11 (9 points de Feu sur B dans A B C : 48, 64, 48), est un test ; la chaîne s'arrête ; Vulnérable, Faiblesse et Poison n'ont pas changé.
+**Ce que le joueur voit en `0.5.9`** : le Gel, le Feu et la Foudre s'accumulent sur l'ennemi jusqu'à rompre — le Gel lui fait perdre toute son action, le Feu explose sur ses voisins et peut se propager de l'un à l'autre, la Foudre fait plus mal à chaque coup, davantage une fois chargée ; trois passifs restent masqués jusqu'à `0.6.0`.
 **Pour `memory-bank-sync`** : ADR « charges élémentaires » ; les fiches `_rules` des statuts ; **P-53 se clôt dans `docs/ROADMAP.md`**.
 
 ### 8.8. Vague 8 — `0.6.0` — la tranche 3
@@ -672,7 +671,7 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 | O12 | Où `maxLevel` s'applique dès E1 | ✅ **Tranché le 01/10** (D72) : aux quatre endroits qui écrivent un niveau de rune — fiche 8.1 |
 | O13 | Le critère de la simulation quand une vague change une valeur | ✅ Tranché le 01/10 (D73), puis **retiré le 13/10 par ADR-108 D5** : aucune vague ne relance la simulation — §3.6, §7.3 |
 | O14 | Deux exemplaires d'une rune plafonnée sur une même carte, en `0.5.3` | ✅ **Tranché le 01/10** (D75) : le prédicat d'E1 ne repropose plus une rune dont le plafond est atteint sur la carte, exemplaires additionnés — fiche 8.1 |
-| O15 | Gel et Faiblesse font la même chose ; une vague pour les charges élémentaires | ✅ **Tranché le 03/11 par le propriétaire** (D76) : vague 7, `0.5.9`, la tranche 3 en vague 8 ; les règles des charges sont à décider avant la vague — fiche 8.7, [étude](03-11-2026_charges_elementaires_Opus5.md) |
+| O15 | Gel et Faiblesse font la même chose ; une vague pour les charges élémentaires | ✅ **Tranché le 03/11 par le propriétaire** (D76) : vague 7, `0.5.9`, la tranche 3 en vague 8 ; les règles des charges décidées le 15/11 (D83 à D86) — fiche 8.7, [étude](03-11-2026_charges_elementaires_Opus5.md) |
 
 ---
 
