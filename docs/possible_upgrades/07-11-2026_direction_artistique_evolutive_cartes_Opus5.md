@@ -1,8 +1,8 @@
 # Direction artistique évolutive — les cartes à jouer d'abord
 
-**Date** : 07/11/2026 · **Mise à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14)
+**Date** : 07/11/2026 · **Mises à jour** : 08/11/2026 (échelle A retenue, série pilote de six cartes, §14) · 09/11/2026 (méthode pixel art retenue, outils conservés dans le dépôt, §15) · 10/11/2026 (la DA évolutive s'étend aux créatures, par le tier, §16 ; le même jour, le tier renonce à fixer leur taille : seuls la qualité et le détail le marquent)
 **Contexte** : idée du propriétaire : le merging fait déjà progresser les valeurs d'une carte, il doit aussi faire progresser son dessin. Une *Frappe* commune est griffonnée, une *Frappe* légendaire est une illustration achevée. Les cartes à jouer ouvrent la marche parce que c'est le terrain le plus simple ; le concept pourra ensuite s'étendre au reste du jeu.
-**Statut** : Exploration — **rien n'est implémenté, aucun asset n'est produit**. Seules les décisions de §2 sont acquises ; tout le reste est une proposition.
+**Statut** : Exploration — **rien n'est implémenté, aucun asset n'est intégré au jeu**. Seules les décisions de §2 sont acquises ; tout le reste est une proposition.
 **Maquettes** : [`docs/presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx`](../presentations/2026-11-07_da_evolutive_cartes_maquettes.pptx) — 19 diapositives, citées ci-dessous sous la forme *(diapo 2)*. Elles sont générées par code : les diapos 1 à 13 à partir d'un seul motif d'épée, les diapos 14 à 19 à partir de six autres cartes (§14). Elles servent à juger l'écart entre les styles, pas la qualité que chaque style peut atteindre.
 **Croise** : [Identité visuelle pixel art](18-09-2026_identite_visuelle_pixel_art_Opus5.md) (voir §12, Q5) · [Rareté et fusion](../../.obsidian_vault/_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md)
 
@@ -23,7 +23,7 @@ La troisième ligne est la différence qui compte, et c'est aussi le principal r
 
 ## 2. Ce qui est acquis
 
-Décisions du propriétaire (échange du 07/11/2026, et du 08/11/2026 pour la sixième) :
+Décisions du propriétaire (échange du 07/11/2026, du 08/11/2026 pour la sixième, du 09/11/2026 pour la septième, du 10/11/2026 pour la huitième) :
 
 1. **Le style suit la rareté de la carte**, pas le nombre de fusions. Une carte pré-forgée de la boutique arrive directement avec le style de sa rareté.
 2. **Le changement est purement visuel** : aucun effet sur l'équilibrage ni sur les règles.
@@ -31,6 +31,8 @@ Décisions du propriétaire (échange du 07/11/2026, et du 08/11/2026 pour la si
 4. **Le critère de réussite** : on connaît le niveau d'une carte **sans regarder ni son niveau ni sa rareté**.
 5. **On commence par les cartes à jouer.**
 6. **L'échelle A est retenue** : griffonnage → pixel 16×16 → pixel 64×64 → dessin animé → peinture numérique (§8). Le test du tri sur de vrais dessins reste à faire, mais il n'est plus là pour choisir l'échelle : il sert à la valider.
+7. **La méthode du pixel art du projet**, cartes et décors : la structure par le code, le détail par ComfyUI en local, le retour sur la grille et la palette Apollo avec un découpage en calques, puis la retouche à la main dans Aseprite (§15). Ni générateur en ligne, ni logiciel tiers payant.
+8. **La DA évolutive s'étend aux créatures, par leur tier.** Comme pour les cartes, le dessin raconte le niveau : plus le tier d'une créature est bas, moins elle a de détail ; plus il est haut, plus elle est riche (§16). **Le tier ne fixe pas la taille de la créature**, seulement sa qualité et surtout son détail. Toutes les créatures portent un liseré de lumière d'un pixel, posé une fois leur design validé.
 
 ## 3. Le point de départ, mesuré
 
@@ -316,11 +318,11 @@ Ce classement est mon jugement sur des échantillons générés. Il se refait su
 | **Q1** | Quelle échelle ? | **Tranchée le 08/11/2026 : A** (§2, décision 6) |
 | **Q2** | Fenêtre ou plein cadre ? | Fenêtre |
 | **Q3** | Le support évolue-t-il avec le dessin, police du titre comprise ? | Oui pour le fond et le cadre ; la police du titre reste à juger en jeu |
-| **Q4** | **Qui dessine, et avec quel budget ?** Le document du 18/09 prévoit des illustrations à la main sous Aseprite, ce qui couvre bien les paliers 2 et 3. Les paliers 1, 4 et 5 demandent d'autres outils et d'autres compétences. Indication du propriétaire (08/11/2026) : le dessin final sera plus probablement fait à la main | À trancher avant le lot de masse : c'est la décision qui pèse le plus sur la faisabilité. En attendant, les images générées de §14 peuvent servir de remplaçants provisoires et de gabarits |
-| **Q5** | **Comment concilier avec l'identité pixel du 18/09 ?** Celle-ci prévoit un fond de carte de 64 × 88 par type, que ce document remplacerait. Le reste du jeu pourrait rester en pixel art, les cartes le traversant : en dessous au palier 1, au même niveau aux paliers 2 et 3, au-delà aux paliers 4 et 5 | Garder le pixel art pour le monde, et ne pas étendre l'échelle aux ennemis tant que les cartes n'ont pas fait leurs preuves |
+| **Q4** | **Qui dessine, et avec quel budget ?** Le document du 18/09 prévoit des illustrations à la main sous Aseprite, ce qui couvre bien les paliers 2 et 3. Les paliers 1, 4 et 5 demandent d'autres outils et d'autres compétences. Indication du propriétaire (08/11/2026) : le dessin final sera plus probablement fait à la main | À trancher avant le lot de masse : c'est la décision qui pèse le plus sur la faisabilité. Le 09/11/2026, une méthode est retenue pour le pixel art (§2, décision 7, §15) ; elle couvre les paliers 2 et 3. Les paliers 1, 4 et 5 restent ouverts |
+| **Q5** | **Comment concilier avec l'identité pixel du 18/09 ?** Celle-ci prévoit un fond de carte de 64 × 88 par type, que ce document remplacerait. Le reste du jeu pourrait rester en pixel art, les cartes le traversant : en dessous au palier 1, au même niveau aux paliers 2 et 3, au-delà aux paliers 4 et 5 | Garder le pixel art pour le monde, et ne pas étendre l'échelle aux ennemis tant que les cartes n'ont pas fait leurs preuves. **Tranchée en partie le 10/11/2026 :** l'échelle s'étend aux créatures, mais par la quantité de détail, en restant en pixel art (§2, décision 8, §16) |
 | **Q6** | Y a-t-il une révélation à la fusion, et sous quelle forme ? | Oui, à concevoir après la carte pilote |
 | **Q7** | Le palier 5 a-t-il droit à un traitement à part (animation, reflet) ? | Le reflet d'abord, car il ne coûte presque rien |
-| **Q8** | Garde-t-on le générateur d'images de §14 ? Il vit hors du dépôt, dans un dossier temporaire, et il est écrit en Python alors que `tool/` ne contient que du Dart | À décider avant d'aller au-delà des sept cartes : sans lui, les images générées ne se refont pas |
+| **Q8** | Garde-t-on le générateur d'images de §14 ? Il vivait hors du dépôt, dans un dossier temporaire, et il est écrit en Python alors que `tool/` ne contient que du Dart | **Tranchée le 09/11/2026 : oui.** Il est rangé dans [`art_src/tools/`](../../art_src/tools/README.md), en Python, à côté des sources d'art et hors de `tool/` (§15) |
 
 ## 13. Les prochaines étapes possibles
 
@@ -367,4 +369,72 @@ Sept cartes sur 33 existent donc maintenant aux cinq paliers, *Frappe* comprise.
 
 - **Le palier 5 est le plus faible :** c'est un filtre posé sur des formes. Les objets clairs (cuirasse, cartes) y pâlissent.
 - **Ce ne sont pas des cibles de qualité :** ces images ne remplacent pas un dessinateur. Elles peuvent servir de remplaçants provisoires derrière la règle de repli de §9, et de gabarits pour le dessin à la main (cadrage, palette et taille par palier).
-- **Le générateur est temporaire :** il n'est pas dans le dépôt (Q8).
+- **Le générateur est conservé :** il est rangé dans [`art_src/tools/`](../../art_src/tools/README.md) depuis le 09/11/2026 (Q8, §15).
+
+## 15. La méthode pixel art retenue (09/11/2026)
+
+Le propriétaire veut des **sources qu'il peut retoucher à la main** : un `.aseprite` à calques nommés, en palette indexée, plutôt qu'une image plate venue d'un générateur. La méthode suivante s'applique désormais à tout le pixel art du projet, cartes et décors (§2, décision 7).
+
+| Étape | Qui | Ce qui en sort |
+|:---|:---|:---|
+| 1. La structure | Le code | La géométrie (pour un décor, une vraie perspective calculée pixel par pixel), la palette [Apollo](18-09-2026_identite_visuelle_pixel_art_Opus5.md) et des calques nommés. Le `.aseprite` est déjà utilisable tel quel |
+| 2. Le détail | ComfyUI, en local | Une image riche guidée par l'image de l'étape 1, et par ses cartes de profondeur et de contours (ControlNet) |
+| 3. Le retour sur la grille | Le code | L'image alignée, ramenée sur la grille avec la seule palette Apollo, puis découpée en calques selon la géométrie de l'étape 1 |
+| 4. La retouche | Le propriétaire | Dans Aseprite |
+
+Les outils, leurs commandes et leurs prérequis sont décrits dans [`art_src/tools/README.md`](../../art_src/tools/README.md).
+
+### 15.1 Ce que les premiers essais ont appris
+
+- **Les paliers pixel des sept cartes** de §14 existent en `.aseprite`, dans [`docs/presentations/2026-11-09_sources_aseprite_serie_pilote/`](../presentations/2026-11-09_sources_aseprite_serie_pilote/). Une fois rouverts dans Aseprite, ils sont identiques aux images de la présentation, au pixel près.
+- **Un fond de combat a fait le trajet complet**, dans [`art_src/backgrounds/dungeon/`](../../art_src/backgrounds/dungeon/) : une salle de donjon de 320 × 180, affichée ×6 en 1080p sans déformation. Ses détails sont sur les côtés et en haut, parce que les ennemis, le héros et la main couvrent le centre. Le générateur de cet essai était Gemini, avant le choix de ComfyUI. Il a tenu la composition : il a suffi d'un décalage de 3 pixels pour la recaler.
+- **Un calque est un objet complet.** Le premier découpage posait la lumière sur des calques à part, qui recopiaient les murs éclairés. Masquer les murs n'enlevait donc que les joints. La règle est maintenant la suivante : chaque objet porte sa propre lumière, et masquer un calque fait disparaître l'objet en entier sur une surface complète. Les outils vérifient cette règle à chaque export.
+- **Une limite du pixel art indexé :** une lumière ne peut pas être un calque qui s'additionne. Masquer une torche retire la flamme, mais pas la lumière peinte sur le mur.
+- **Un second fond a fait le trajet complet avec ComfyUI** : la place de l'horloge, une ville steampunk au crépuscule, dans [`art_src/backgrounds/steampunk/`](../../art_src/backgrounds/steampunk/).
+  - La chaîne s'enchaîne sans copier-coller, pilotée depuis le dépôt. ComfyUI a mis environ 45 secondes par image.
+  - Grâce à ControlNet, l'image générée tombe à un pixel près sur la géométrie, et le découpage en calques devient générique : chaque pixel va au calque de l'objet visible à cet endroit.
+  - Il reste deux faiblesses. Les éléments fins se perdent (les dents de l'engrenage, les enveloppes des dirigeables). Et le LoRA pixel art peint des « pixels » environ deux fois plus gros que la grille de 320 × 180, ce qui donne un aspect par blocs de 2 × 2.
+- **Un troisième fond, pour l'aire de repos**, a suivi le même trajet : un campement à la lisière d'une forêt, à l'heure bleue, dans [`art_src/backgrounds/camp/`](../../art_src/backgrounds/camp/). Sa composition part de l'écran de repos réel : le centre reste calme sous la colonne des options, et le feu brûle juste dessous. Il confirme ce que montrait la place : un détail ambigu de la géométrie est réinterprété par le générateur, et l'ombilic lumineux du bouclier est devenu une lanterne.
+
+### 15.2 Ce qui reste à faire
+
+- **Régler l'étape 2 :** accorder la grille à la taille réelle des pixels du LoRA, et trouver des réglages qui gardent les éléments fins.
+- **Brancher le nouveau fond dans le jeu.** Le combat charge toujours `bg_dungeon.png`, et il étire le fond à la taille de l'écran. Il faudra une échelle entière, comme le prévoit [l'identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §3.1, et un recadrage plutôt qu'un étirement en portrait.
+- **Pour chaque nouveau décor,** comme les 15 fonds de biome de P-12, il faudra son propre script de géométrie. Celui de la salle sert de modèle.
+- **Animer légèrement les fonds** (idée retenue par le propriétaire le 09/11/2026, non planifiée) : quelques images seulement, pour le feu, les lanternes, la brume ou les étoiles. Les images viennent du code ou de la main, pas du générateur, qui ne garde pas la cohérence d'une image à l'autre. Dans le jeu, le fond reste fixe et de petites planches de sprites animées se posent par-dessus ; un GIF de toute l'image reste l'option de repli.
+
+## 16. Les créatures : une DA évolutive par tier (10/11/2026)
+
+**Le principe** (§2, décision 8) : comme une carte, une créature raconte son niveau par son dessin. Un ennemi de tier 1 est simple, un ennemi de tier 3 est une illustration riche. La menace se lisait déjà par le cadre, qui grossit avec le tier ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4). Elle se lit maintenant deux fois : par le cadre, puis par la finesse de la créature.
+
+**Ce qui change par rapport aux cartes :** les cartes changent de style d'un palier à l'autre, du griffonnage à la peinture. Les créatures restent en pixel art, l'identité du monde, et c'est **leur richesse**, la qualité et surtout le détail, qui évolue.
+
+### 16.1 Une seule résolution, un détail qui grandit
+
+**Toutes les créatures sont produites en 128 × 192**, deux fois la fenêtre du cadre (64 × 96). **Le tier ne change ni la résolution ni la taille de la créature dans l'image** : il change le travail porté sur elle.
+
+| Tier | Ce qui fait la différence (proposition) |
+|:---:|:---|
+| 1 | Une silhouette simple et franche, peu de tons par matière, pas d'accessoire fin |
+| 2 | Les volumes modelés, l'équipement lisible, quelques détails |
+| 3 | La matière (tissu, os, métal), une pose qui menace, les petits accessoires |
+| 4 | Une pose plus dramatique, une tenue plus riche (armure, ornements, trophées), une prestance qui s'impose |
+| 5 | La pose la plus spectaculaire, une tenue d'exception, une aura propre (lueur, runes, éléments qui flottent) |
+
+Le tier 3 est le palier du milieu : la matière et la pose, pas encore l'aura. La menace se lit aussi par le cadre, qui grossit avec le tier ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4).
+
+**Pas de limite de taille par tier** (décision du propriétaire du 10/11/2026). Une première version fixait la place de la créature dans l'image : 45 % de la hauteur au tier 1, 56 % au tier 2, 70 % à partir du tier 3. La Faucheuse a été régénérée à cette règle : à 58 %, elle a été jugée bien moins cohérente que l'originale, qui occupe 95 % de la hauteur. La taille se choisit donc créature par créature, pour sa lisibilité ; seules la qualité et le détail marquent le tier. L'essai est raconté dans [l'exemple de la Faucheuse](../../art_src/docs/exemples/creature_faucheuse.md).
+
+### 16.2 L'échelle
+
+**Le jeu vise le 1080p au minimum** (décision du propriétaire du 10/11/2026) : on ne cherche pas la netteté en dessous. Une créature en 128 × 192 fait deux pixels d'illustration par pixel de fenêtre. Elle tombe donc sur un nombre entier de pixels d'écran ([identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §3.1) à tous les paliers pairs : 3 pixels d'écran en 1080p (×6), 4 en 1440p (×8), 6 en 4K (×12).
+
+### 16.3 Ce qui existe, et ce qui est à refaire
+
+- **La Faucheuse** (`art_src/creatures/squelette/tier_3/`) a la pose, la tenue et le niveau de détail d'un tier 3. Sa robe se perdait dans les sous-bois sombres : depuis le 10/11/2026, un calque de liseré de lumière l'en détache ([workflow des créatures](../../art_src/docs/workflow_creature.md), étape 8).
+- **Le Squelette de tier 2** a été fait par l'ancienne méthode : une illustration pleine fenêtre avec sa crypte, en 96 × 144, archivée dans `art_src/archives/squelette/tier_2/`. Il est en cours de refonte en sprite de 128 × 192, qui ira dans `art_src/creatures/squelette/tier_2/`.
+- **Aucune créature de tier 1, 4 ou 5** n'existe encore.
+
+**Les pistes liées** (évoquées le 10/11/2026, non décidées) :
+- **Une lignée :** une créature de tier 2 évolue en une forme de tier 3, comme le Squelette en Faucheuse. C'est une question de game design, à trancher à part.
+- **Des assets séparés :** la créature est un sprite seul, et le jeu la greffe sur un fond de fenêtre choisi selon le biome, parmi trois variations. Le fond de fenêtre ne serait donc plus dessiné dans le cadre, comme le prévoit l'[identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4.3 : ce point serait à amender. La méthode est décrite dans [`art_src/docs/workflow_creature.md`](../../art_src/docs/workflow_creature.md).

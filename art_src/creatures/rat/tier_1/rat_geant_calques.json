@@ -1,0 +1,7 @@
+{
+  "calques": ["Ombre", "Queues", "Corps", "Tête", "Oreilles", "Yeux"],
+  "mots": {"Yeux": ["eyes"], "Oreilles": ["ears", "right ear"], "Queues": ["tail"], "Tête": ["head", "whiskers"], "Corps": ["rat"]},
+  "ombre_sous": ["Corps"],
+  "passe_sous": {"Corps": ["Tête", "Oreilles", "Yeux"]},
+  "miettes": {"Corps": "Tête"}
+}

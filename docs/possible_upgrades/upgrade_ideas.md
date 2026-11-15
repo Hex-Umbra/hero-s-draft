@@ -167,4 +167,9 @@
 - [ ] Modifier la bulle d'affichage des information lors du survol d'une carte a jouer.
 - [ ] Pour l'événement "La fontaine Bénie", la 2eme option affiche "+-12 PV Max", ce qui n'est pas le bon affichage et devrait plutôt être "-12PV Max".
 - [ ] Est ce que l'interaction entre l'altération de foudre et de poison est attendu ? Explication: Actuellement lorsque la cible a l'altération de foudre sur elle placé, attaquer avec la carte qui empoisonne pour "1" empoisonne en réalité pour "2" car l'effet de foudre est a "1". Attention ce n'est pas a corrigé, c'est une question car le fonctionnement est en fait un excellent combo a effectuer et que le joueur peut découvrir par lui même.
-- [ ] 
+- [ ] Le bloc de preview des attaques ennemis peut devenir trop grand et afficher tellement d'info que le bouton de "fin de tour" fini caché par toutes les infos sur des écrans plus petits..
+- [ ] Sur navigateur, lorsque le joueur meurt en combat il peut appuyer sur F5 pour rafraichir la page, ce qui reload le combat avant de cliquer sur les deux bouton du menu de "mort"
+- [ ] Quand la main du joueur deviens "grande", en gros qu'il a plus de 5 cartes, certaines cartes au milieu sont difficile a hover par dessus selon la taille des écrans.
+- [ ] Corriger l'affichage des signature pour que les dégâts affichéen combat se mette bien a jour comme pour les cartes
+- [ ] Dans le menu du noeud de repos, plus précisément le menu de choix pour affuter une carte, actuellement on affiche toutes les cartes du deck du joueur, on vas modifier cela pour n'afficher que les cartes avec des runes qui peuvent être affutés
+

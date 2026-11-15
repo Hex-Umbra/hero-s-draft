@@ -1,0 +1,108 @@
+# Outils de la chaîne pixel art
+
+Les scripts qui produisent les sources `.aseprite` du projet. Ils sont rangés hors de `assets/` et ne sont jamais livrés avec le jeu. Pourquoi cette méthode a été choisie : voir le document de direction artistique, [§15](../../docs/possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md).
+
+## La méthode
+
+Deux documents décrivent le travail pas à pas :
+- [**Produire un fond**](../docs/workflow_fond.md) : le fond d'écran de 320 × 180, avec la structure par le code et le détail par ComfyUI ; et le fond de fenêtre de 128 × 192, généré librement, en trois variations par biome.
+- [**Produire une créature ou un personnage**](../docs/workflow_creature.md) : la créature décrite d'abord dans un brief établi avec le propriétaire, puis générée seule, avec la pose imposée en OpenPose, puis détourée et séparée en calques, et livrée comme un sprite que le jeu greffe sur un fond de fenêtre. Une fois son design validé, elle reçoit un liseré de lumière dans son propre calque.
+
+Les deux finissent de la même façon : un `.aseprite` en palette Apollo, à retoucher à la main. Des cas réels, racontés en détail avec leurs prompts et leurs graines, sont dans [`../docs/exemples/`](../docs/exemples/).
+
+## Règles communes
+
+- **La palette [Apollo](https://lospec.com/palette-list/apollo), exacte.** ComfyUI ne la connaît pas : le prompt la décrit en mots (« muted cold palette of deep navy blue, slate blue and teal greys, with sparse warm accents of rust, ember orange and old ivory »), puis la mise sur la grille la rend exacte. Chaque case prend la couleur du groupe dominant de son bloc, puis la couleur Apollo la plus proche à l'œil, tramée avec sa voisine quand la palette n'a pas le ton.
+- **Générer à 8 fois la taille voulue.** Le LoRA pixel art peint des cases de 8 pixels. À 1024 × 1536, elles tombent pile sur une grille de 128 × 192, et l'import lit le cœur de chaque case au lieu de mélanger ses bords.
+- **Plusieurs graines par tour, une chose changée à la fois.** Trois pour un fond. Pour une créature, six au premier tour, puis moins à mesure que le design se fixe ([workflow des créatures](../docs/workflow_creature.md), étape 3). Une image qu'on aime se relance avec sa graine quand on retouche le prompt : la composition reste souvent proche. Pour une créature, on ne garde une graine qu'une fois son design validé.
+- **Garder la source.** L'image générée se range en PNG à côté de son `.aseprite`, jamais en JPEG. Une image corrigée garde l'originale à côté (`_brute`).
+- **Ne rien supprimer.** Une version remplacée, ou un essai abandonné, va dans [`../archives/`](../archives/README.md), au même chemin que l'original (`<famille>/tier_<n>/` pour une créature), puis dans `<date>_<ce que c'est>/`, avec ses noms de fichiers d'origine. Les archives sont en lecture seule, et aucun outil n'y lit : c'est l'historique de ce qui a été fait. Les outils de l'ancienne méthode des créatures (`creature_squelette.py`, `sprite_import.py`) ont été retirés le 13/11/2026 : leurs sorties sont aux archives, et leur code dans l'historique git.
+- **Un calque est un objet complet.** Le masquer le fait disparaître en entier et laisse voir une surface complète dessous. Seules les surfaces (murs, sol, voûte, fond) n'ont rien derrière elles. `aseprite_io.check_independent` vérifie cette règle à chaque export, et `aseprite_io.build` vérifie que chaque `.aseprite`, rouvert dans Aseprite, redonne exactement son rendu.
+
+## Prérequis
+
+- **Python 3 et Pillow** (`pip install pillow`).
+- **Aseprite 1.3 ou plus récent.** Il est trouvé tout seul dans l'installation Steam ou dans `Program Files`. Sinon, définir `ASEPRITE_PATH` vers `Aseprite.exe`.
+- **Pour les aperçus sur la carte (`pilot_cards.py`) :** la police d'icônes Material du SDK Flutter, au chemin écrit en tête du script.
+- **Pour toute commande `comfy_*` et pour la recette de calques par mots, ComfyUI lancé en local** (`http://127.0.0.1:8188`, ou la variable `COMFY_HOST`), avec trois modèles :
+  - `sd_xl_base_1.0.safetensors` dans `checkpoints/` ;
+  - `controlnet-union-sdxl-1.0-promax.safetensors` dans `controlnet/` : ControlNet Union de xinsir, licence Apache 2.0 ;
+  - `pixel-art-xl.safetensors` dans `loras/` : le LoRA de nerijs, licence OpenRAIL-M.
+  - `sam3.1_multiplex_fp16.safetensors` dans `checkpoints/` : SAM 3.1 de Meta, repris par Comfy-Org, sous la licence SAM de Meta, à lire avant usage. Il découpe les créatures en calques, par des mots ;
+  - en option, `birefnet.safetensors` dans `background_removal/` : le modèle de détourage BiRefNet, repris par Comfy-Org, licence MIT. Il ne sert qu'à `comfy_masque.py`.
+- **Après une mise à jour de ComfyUI, rejouer une figure commitée :** `python comfy_meta.py rejouer <figure brute.png> <sortie.png>`. Rien ne garantit qu'une graine redonne la même image d'une version à l'autre. Si l'image rejouée diffère, les graines retenues ne valent plus : on le note avant de reprendre une créature. Vérifié le 13/11/2026 : les versions 0.45.2 et 0.45.3 redonnent au pixel près la Faucheuse, générée sous la 0.44.2. La mise à jour automatique de Comfy Desktop a été coupée le 13/11/2026 (`autoUpdateComfyUI`, dans son fichier `installations.json`) : les mises à jour se lancent désormais à la main.
+
+Les fichiers intermédiaires vont dans `.work/`, que git ignore. Pour les envoyer ailleurs, définir `ART_WORK`.
+
+## Les commandes
+
+Toutes se lancent depuis ce dossier.
+
+| Commande | Ce qu'elle produit |
+|:---|:---|
+| `python bg_hall.py ../backgrounds/dungeon/dungeon_hall.aseprite` | La salle de la herse, 320 × 180, 12 calques. À côté : `_guide_x4.png`, l'image guide pour le générateur ; `_depth.png` et `_edges.png`, les cartes de guidage pour ControlNet. |
+| `python bg_plaza.py ../backgrounds/steampunk/clockwork_plaza.aseprite` | La place de l'horloge, 320 × 180, 14 calques, avec les mêmes trois fichiers à côté. |
+| `python bg_camp.py ../backgrounds/camp/forest_camp.aseprite` | Le campement de l'aire de repos, 320 × 180, 15 calques. Le centre reste calme sous la colonne du menu de repos, et le feu est juste dessous. |
+| `python comfy_gen.py ../backgrounds/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]` | L'étape 2 : ComfyUI peint le détail, guidé par l'image guide, la profondeur et les contours. L'image arrive dans `.work/comfy/`. `--depth`, `--edges` et `--lora` règlent la force de chaque guide. |
+| `python frame_tier.py 2 ../frames/tier_2.aseprite` | Un cadre de tier d'ennemi, d'après la table du document d'identité visuelle (§4) : canevas et bordure selon le tier, fenêtre fixe de 64 × 96 et son fond. Entièrement par le code : il ne passe pas par ComfyUI. |
+| `python bg_import.py <scène> <image générée> <sortie.aseprite> [<copie PNG de la source>]` | L'étape 3, pour n'importe quelle scène (`hall`, `plaza`…) : l'image générée est alignée, ramenée sur la grille Apollo, puis découpée. Chaque pixel va au calque de l'objet visible à cet endroit, et les autres calques gardent le rendu de la scène. Le script de la scène doit avoir tourné avant. |
+| `python comfy_gen.py <nom> "<prompt>" --libre --exclure "<exclusions>" --size 1024x1536 --seed N --lora 0.8` | Une génération libre, sans guide : pour explorer un design, pour un fond de fenêtre ou pour une créature seule. L'image arrive dans `.work/comfy/<nom>_libre_s<graine>.png`. Pour une créature, `--libre --creature` pose la taille et le LoRA. |
+| `python comfy_gen.py <préfixe> "<prompt>" --creature [--graines N] [--seed a,b,c] [--exclure "<exclusions>"] [--nom <nom>] [--edges-fin F]` | Un tour de génération d'une créature guidée par sa pose : `<préfixe>_pose.png` (OpenPose), `<préfixe>_edges.png` (l'équipement) et `<préfixe>_guide.png`. `--creature` pose les réglages des créatures : pose 0.85, contours 0.55, pas de profondeur, denoise 1.0, LoRA 0.8, 1024 × 1536, et un prompt négatif qui accepte une figure. Une option donnée à la main garde le dessus. `--edges-fin` règle la fin d'effet des contours, en part du débruitage (0.6 par défaut) : `--edges 0.35 --edges-fin 0.4` donne un guide lâche, qui tient la place des formes et laisse leur dessin au générateur. `--graines N` tire N graines neuves, `--seed` rejoue des graines choisies. Avec plusieurs graines, les images sont réunies sur une planche, `.work/comfy/<nom>_planche_s<première graine>.png`. `--nom` donne un autre nom aux images de sortie : plusieurs prompts sur une même graine ne s'écrasent plus. Un guide de force nulle n'est pas utilisé. |
+| `python comfy_gen.py <préfixe> "<prompt>" --retouche --denoise 0.55` | Ne repeint que la zone blanche de `<préfixe>_bande.png` dans `<préfixe>_assemblage.png`, et rend le reste à l'identique. |
+| `python comfy_gen.py <préfixe> "<prompt>" --creature --retouche --repaint 1.0 --zone X0,Y0,X1,Y1` | La repeinte guidée d'une zone entière de `<préfixe>_assemblage.png`, à débruitage complet. `--zone` donne la zone en rectangle, à la place de `<préfixe>_bande.png`. `--repaint` ajoute le guide de repeinte de ControlNet Union : il reçoit l'image, noire dans la zone, et accorde la zone à ce qui l'entoure. |
+| `python comfy_masque.py <figure.png> <masque.png>` | Le masque d'une créature par le modèle de détourage de ComfyUI (BiRefNet), blanc sur la créature. Pour un fond taché, où le détourage par le code se perd. Il ne retire pas un fond en halo. |
+| `python comfy_masque.py <préfixe>_cadree.png <planche.png> --mots scythe robe skeleton` | La planche des mots : ce que SAM3 isole dans la créature pour chaque mot anglais donné. Pour chercher les mots d'une recette de calques. |
+| `python comfy_meta.py lire <image.png> [...]` | Affiche les réglages qu'une image générée embarque : prompt, exclusions, graine, denoise, forces, guides. Pour remplir le journal d'un brief, ou retrouver comment une image a été faite. |
+| `python comfy_meta.py rejouer <image.png> <sortie.png>` | Renvoie à ComfyUI le graphe embarqué dans l'image, et compare le résultat à l'image, pixel par pixel. Le témoin à lancer après une mise à jour de ComfyUI. |
+| `python window_import.py <image générée> <sortie.aseprite> [--taille 128x192] [--source <copie PNG>]` | Un fond de fenêtre : l'image générée à 8 fois la taille, ramenée sur la grille Apollo, en un calque. |
+| `python creature_<nom>_pose.py <préfixe>` | Les guides d'une créature : la carte OpenPose, l'équipement en contours et l'image de départ unie. Un script neuf par créature, écrit d'après son brief ; il ne contient que ses points et son équipement, et importe le dessin de `pose.py`. Existent : `creature_faucheuse_pose.py` (la Faucheuse, la faux), `creature_squelette_pose.py` (le Squelette de tier 2, de face, le bâton et l'écu rond) et `creature_rat_geant_pose.py` (le Rat géant, non humanoïde : des contours seuls ; sans tracé nommé, il redonne le guide de la figure retenue, gardé avec la créature). |
+| `python fond_uni.py <image.png> <sortie.png> [--ecart 30] [--poche 6]` | Aplatit le fond d'une créature générée sur le ton du haut, quand le générateur y a ajouté un sol d'un autre ton. La créature n'est pas touchée. Essayé sur un fond en deux tons, pas sur un fond rayé ou en halo. |
+| `python creature_controle.py <sprite.aseprite> <tier> <planche.png> [--fonds <fond.aseprite> ...] [--voisins <sprite.aseprite> ...] [--avec-lisere]` | La planche du contrôle en situation : le sprite sur les fonds de son biome (la forêt par défaut), dans le cadre de son tier agrandi deux fois, et à côté de ses voisins. Le calque Liseré est masqué, sauf avec `--avec-lisere`. |
+| `python creature_reduire.py reduire <figure.png> <préfixe des guides> <préfixe de sortie> <facteur> --ancre X,Y` | Réduit une créature validée et ses guides autour du milieu des pieds. Écrit `<sortie>_base.png`, `_pose.png` et `_edges.png` (pas de `_pose.png` pour une créature guidée par ses seuls contours), à faire repeindre par `comfy_gen.py --creature --guide base --denoise 0.35`. |
+| `python creature_reduire.py grille <image repeinte.png>` | Dit si la grille de 8 pixels est retombée après la repeinte, avec sa netteté en largeur et en hauteur (minimum 3), et la hauteur de la silhouette. |
+| `python creature_detour.py <figure.png> <préfixe> [--ombre-peinte] [--pieds R] [--dy N] [--dx N] [--sol 183] [--cadre 128x192] [--masque <masque.png> [--miettes]]` | Détoure une créature générée sur fond uni et la pose dans le cadre du sprite, les pieds sur la ligne de sol. Aucun fond n'entre en jeu. Écrit `<préfixe>_cadree.png`, la silhouette (une case par case de 8 pixels) et `<préfixe>_detouree.png`, la créature sur un fond vif. Avec `--ombre-peinte`, il affiche les dernières rangées, où lire celle des pieds, à redonner par `--pieds`. Une figure plus petite que le cadre est posée sans redimensionnement. `--masque` prend le masque de `comfy_masque.py` à la place du détourage par le code. Ce masque retire l'ombre peinte mais en laisse des restes collés à la créature : `--miettes` les retire, en reconnaissant le ton du fond, assombri. |
+| `python creature_mots_layers.py <préfixe> <sprite.aseprite> --recette <nom>_calques.json [--apercu <fond.aseprite> <aperçu.aseprite>] [--sol 183]` | **La recette de calques par défaut**, pour toute forme de créature. Met la figure cadrée sur la grille Apollo, lue sur la créature elle-même, puis demande à SAM3 ce que désigne chaque mot de la recette, un fichier JSON rangé avec la créature : l'ordre de ses calques, les mots de chacun, et ceux qui peuvent descendre sous la ligne de sol. Trois clés facultatives servent à une bête : `passe_sous`, pour un corps à compléter en entier sous la tête ; `miettes`, pour rendre à la tête les moustaches que le mot du corps a prises ; `ombre_sous`, pour une créature vue de dessus, dont l'ombre se pose sous toute l'empreinte du corps. Le calque Ombre vient toujours en premier : l'ombre peinte par le générateur, ou, sans elle, une bande sombre posée par le code. Écrit le sprite, sur fond transparent, et `<préfixe>_calques.png`, chaque calque seul sur un fond vif. `--apercu` écrit aussi la créature posée sur un fond de fenêtre, au-dessus d'un calque Décor. |
+| `python creature_squelette_layers.py <préfixe> <sprite.aseprite> [--apercu <fond.aseprite> <aperçu.aseprite>] [--sol 183] [--manche 2] [--bouclier]` | **Le repli sans ComfyUI** : la recette de calques des squelettes, par la couleur et la forme. Met la figure cadrée sur la grille Apollo, lue sur la créature elle-même, et la sépare en Ombre, Robe, Os et Arme. Écrit le sprite, sur fond transparent, et `<préfixe>_calques.png`, chaque calque seul sur un fond vif. Le calque Ombre vient toujours en premier : l'ombre peinte par le générateur, ou, sans elle, une bande sombre posée par le code sous la tenue et les os. `--apercu` écrit aussi la créature posée sur un fond de fenêtre, au-dessus d'un calque Décor. `--bouclier` range un bouclier dans son propre calque, entre les Os et l'Arme. `--manche` sert à un manche épais : sa demi-largeur, en cases (2 pour le bâton du Squelette), et une lecture de ses reflets dans l'image source, que la grille arrondit au clair des os. La main qui le serre reste alors aux Os. Sans ces deux options, la recette range comme pour la Faucheuse. |
+| `python creature_lisere.py <créature.aseprite> [--calque Robe] [--couleur 819796] [--sol 183]` | Ajoute, ou recalcule, le calque « Liseré » tout en haut : un pixel de lumière sur le bord extérieur de la tenue, sauf en bas, près du sol. Le fichier est relu dans Aseprite, ses autres calques sont recopiés à l'identique (le script le vérifie), puis il est réécrit sur place. Pour toute créature, une fois son design validé : sur le sprite, puis sur l'aperçu. |
+| `python aseprite_layers.py ../../docs/presentations/2026-11-09_sources_aseprite_serie_pilote` | Les paliers pixel 16 et pixel 64 des sept cartes de la série pilote. |
+| `python pilot_cards.py` | Une planche de contrôle des cartes de la série pilote aux cinq paliers, sur la vraie carte. |
+
+## Les fichiers
+
+| Fichier | Rôle |
+|:---|:---|
+| `motifs.py` | Les motifs des cartes : des formes nommées par rôle (clair, sombre, accent, effet…), un sprite pixel 16 posé à la main et sa palette. |
+| `ladder.py` | Les cinq paliers de l'échelle A (griffonnage, pixel 16, pixel 64, dessin animé, peinture numérique), applicables à tout motif. |
+| `styles.py` | Frappe aux cinq paliers, et les outils de dessin partagés (bruit, dilatation, trame de Bayer…). |
+| `cards.py`, `pilot_cards.py` | Le cadre de la carte de combat, et la carte complète avec titre, coût et valeurs par palier. |
+| `aseprite_layers.py` | Le découpage en calques des paliers pixel des cartes. |
+| `bg_hall.py` | Le fond « salle de la herse » : géométrie, matériaux, lumières, calques et cartes de guidage. |
+| `scene.py` | Ce que partagent les fonds peints par calques : la scène et ses calques complets, les cartes de guidage, l'export en `.aseprite` avec ses contrôles. |
+| `bg_plaza.py` | Le fond « place de l'horloge » : chaque objet est rendu dans son propre calque complet, du plus lointain au plus proche. |
+| `bg_camp.py` | Le fond « campement » de l'aire de repos, sur le même modèle. |
+| `frame_tier.py` | Les cadres de tier des ennemis : fond de fenêtre, plaque, liseré, rivets, coins, insigne du tier. |
+| `comfy_gen.py` | Le pilote de ComfyUI : génération guidée (profondeur, contours, pose), libre, ou retouche d'une zone ; les réglages des créatures (`--creature`), les tours de plusieurs graines et leur planche. |
+| `comfy_meta.py` | La relecture des réglages embarqués dans une image générée, et son rejeu, témoin après une mise à jour de ComfyUI. |
+| `comfy_masque.py` | Les masques que ComfyUI tire d'une figure : la créature entière (BiRefNet), en renfort du détourage par le code, ou ce qu'un mot désigne (SAM3), pour les calques. |
+| `bg_import.py` | L'étape 3 des fonds d'écran : alignement, mise sur la grille, découpage. Elle contient aussi la mise sur la grille commune à toute la chaîne, la lecture de la grille du LoRA et le nettoyage des pixels isolés. |
+| `window_import.py` | Les fonds de fenêtre : mise sur la grille, un calque. |
+| `pose.py` | Le dessin commun des guides de pose : le bonhomme OpenPose, avec ses couleurs par membre et la convention gauche-droite, et l'écriture des trois guides. |
+| `creature_faucheuse_pose.py`, `creature_squelette_pose.py` | Les guides de pose de la Faucheuse et du Squelette : leurs points et leur équipement. |
+| `creature_rat_geant_pose.py` | Le guide du Rat géant, en contours seuls : la silhouette et les tracés de queues essayés tour par tour. |
+| `fond_uni.py` | L'aplatissement d'un fond généré en un ou deux tons. |
+| `creature_controle.py` | La planche du contrôle en situation d'une créature. |
+| `creature_reduire.py` | La réduction d'une créature validée, et le contrôle de sa grille. |
+| `creature_detour.py` | Le détourage d'une créature générée seule, et sa pose dans le cadre du sprite. |
+| `creature_layers.py` | Ce que partagent les recettes de calques : la mise sur la grille, les outils de tri, la complétion d'un calque sous ceux qui le couvrent, l'ombre posée par le code, les contrôles, l'écriture du sprite et de l'aperçu. |
+| `creature_mots_layers.py` | La recette de calques par mots, celle par défaut : SAM3 dit ce qui appartient à chaque objet, la créature ne déclare que ses mots. |
+| `creature_squelette_layers.py` | La recette de calques des squelettes par la couleur et la forme : le repli sans ComfyUI. |
+| `creature_lisere.py` | Le calque de liseré de lumière d'une créature, posé sur un `.aseprite` déjà fait. |
+| `aseprite_io.py`, `aseprite_build.lua`, `aseprite_verify.lua`, `aseprite_export.lua` | Le pont vers Aseprite : assemblage en mode indexé, aller-retour vérifié, contrôle des calques, relecture d'un fichier existant calque par calque. |
+
+**À savoir :**
+- **Les fonds sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`…), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée. Les fonds de fenêtre sont dans `../backgrounds/windows/<biome>/`, trois par biome.
+- **Les créatures sont rangées par famille, puis par tier,** dans `../creatures/<famille>/tier_<n>/` : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. Chaque dossier contient le sprite, un aperçu sur un fond, la figure générée brute, la figure corrigée et les guides de génération (`<nom>_pose.png`, `<nom>_edges.png`).
+- **Chaque fond a son propre script de géométrie**, construit sur `scene.py`, avec `bg_plaza.py` et `bg_camp.py` pour modèles : un calque complet par objet, posé à sa profondeur. Le script de la scène ne décrit que ce qui lui est propre ; l'export, les contrôles et les cartes de guidage sont communs.
+- **Le manifeste de la scène guide l'étape 3.** Il dit quels calques sont des surfaces (autorisés à laisser un vide quand on les masque), lesquels l'import doit ignorer, comme l'ombre tramée des bords de la salle, et quelles couleurs il ne doit pas utiliser. Aucune scène n'exclut de couleur aujourd'hui : l'ancien Squelette pleine fenêtre écartait les deux verts pâles d'Apollo, qui faisaient virer l'ivoire des os au vert maladif.
+- **Le fichier `dungeon_hall_detail.aseprite` a été découpé par une version plus ancienne de `bg_import.py`**, qui triait aussi les pixels par couleur. Relancer l'import le découperait selon la règle actuelle.
+- **Les fichiers `_detail` de la salle, de la place et du campement ont été mis sur la grille avant la conversion perceptive** (en Lab, avec trame) utilisée depuis. Les réimporter changerait leurs couleurs.

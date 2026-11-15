@@ -52,3 +52,6 @@ app.*.map.json
 
 # Sauvegardes de l'editeur de contenu, laissees si leur suppression echoue
 *.editor-backup
+
+# Fichiers intermediaires de la chaine pixel art (calques PNG, manifestes, rendus de controle)
+art_src/tools/.work/
