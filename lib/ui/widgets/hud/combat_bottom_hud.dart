@@ -80,25 +80,26 @@ class CombatBottomHud extends StatelessWidget {
   /// La légende cyan sous les cristaux ; la ligne reste quand rien ne passe
   /// en réserve, pour que la barre de vie ne saute pas.
   Widget _reserveLegend(BuildContext context, ManaReservePreview preview) {
+    if (preview.banked == 0) {
+      return const SizedBox(height: reserveLegendHeight);
+    }
     final l10n = AppLocalizations.of(context)!;
     final text = preview.capped
         ? l10n.manaReserveNextTurnCapped(preview.banked)
         : l10n.manaReserveNextTurn(preview.banked);
     return SizedBox(
       height: reserveLegendHeight,
-      child: preview.banked == 0
-          ? null
-          : FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.cyanAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.cyanAccent,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 }

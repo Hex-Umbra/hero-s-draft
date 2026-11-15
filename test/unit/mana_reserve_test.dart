@@ -129,7 +129,8 @@ void main() {
       );
     });
 
-    test('au tour du joueur, l ecran lit l apercu ; sans reserve, rien', () {
+    test('au tour du joueur, l ecran lit l apercu ; sans reserve, rien dans les deux phases',
+        () {
       final run = runUnder(reserve, reserve: 3);
 
       expect(
