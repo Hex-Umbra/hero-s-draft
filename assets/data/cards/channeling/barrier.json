@@ -1,0 +1,20 @@
+{
+  "id": "barrier",
+  "name_en": "Barrier",
+  "name_fr": "Barrière",
+  "description_en": "For 3 turns, gain 3 Block at the start of your turn.",
+  "description_fr": "Pendant 3 tours, gagne 3 Armure au début du tour.",
+  "cost": 2,
+  "type": "power",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "armor_regen",
+      "value": 3,
+      "duration": 3
+    }
+  ]
+}

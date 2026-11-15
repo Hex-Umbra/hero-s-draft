@@ -1,0 +1,21 @@
+{
+  "id": "meditation",
+  "name_en": "Meditation",
+  "name_fr": "Méditation",
+  "description_en": "For 2 turns, gain 1 Mana at the start of your turn.",
+  "description_fr": "Pendant 2 tours, gagne 1 Mana au début du tour.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "mana_regen",
+      "value": 1,
+      "duration": 2
+    }
+  ]
+}

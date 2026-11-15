@@ -505,13 +505,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Mage demarre sur Flux de Mana, seul pourvu d un lot (O5)',
-        () async {
+    test('le Mage propose Canalisation puis Flux de Mana, ses deux passifs '
+        'pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'mage');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['mana_flux']);
+      expect(available, ['channeling', 'mana_flux']);
     });
 
     // D43, D60 (spec P-43 E3, §3.6).

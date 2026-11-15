@@ -1,0 +1,22 @@
+{
+  "id": "bite",
+  "name_en": "Bite",
+  "name_fr": "Morsure",
+  "description_en": "Deal 4 damage and draw 1 card.",
+  "description_fr": "Inflige 4 dégâts et pioche 1 carte.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ]
+}

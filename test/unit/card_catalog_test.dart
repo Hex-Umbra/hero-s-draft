@@ -103,6 +103,63 @@ final _lots = <String, (String, int, int, int, String, String, List<_Fx>)>{
       _fx('apply_status', 2, status: 'vulnerable', duration: 2),
     ],
   ),
+  'riposte': (
+    'fervor', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 3), _fx('armor', 5)],
+  ),
+  'judgment': (
+    'fervor', 3, 0, 0, 'attack', 'allEnemies',
+    [_fx('damage', 5), _fx('armor', 6)],
+  ),
+  'holy_hammer': (
+    'fervor', 2, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 3, hits: 3, mightRatio: 0.75)],
+  ),
+  'blessed_flail': (
+    'fervor', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 3, hits: 2, mightRatio: 0.75)],
+  ),
+  'crusader_charge': (
+    'fervor', 2, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 7), _fx('armor', 7)],
+  ),
+  'bite': (
+    'bloodthirst', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 4), _fx('draw', 1)],
+  ),
+  'laceration': (
+    'bloodthirst', 0, 0, 0, 'attack', 'singleEnemy', [_fx('damage', 4)],
+  ),
+  'feast': (
+    'bloodthirst', 2, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 8), _fx('draw', 1)],
+  ),
+  'blood_frenzy': (
+    'bloodthirst', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 3, scale: 'cardsPlayedThisTurn', ratio: 2)],
+  ),
+  'stalk': (
+    'bloodthirst', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 2), _fx('draw', 2)],
+  ),
+  'barrier': (
+    'channeling', 2, 0, 0, 'power', 'self',
+    [_fx('apply_status', 3, status: 'armor_regen', duration: 3)],
+  ),
+  'meditation': (
+    'channeling', 1, 0, 0, 'skill', 'self',
+    [_fx('apply_status', 1, status: 'mana_regen', duration: 2)],
+  ),
+  'seal': (
+    'channeling', 3, 0, 0, 'power', 'self',
+    [_fx('apply_status', 1, status: 'might_regen', duration: 4)],
+  ),
+  'cataclysm': (
+    'channeling', 3, 0, 0, 'skill', 'allEnemies', [_fx('damage', 8)],
+  ),
+  'ether_shield': (
+    'channeling', 3, 0, 0, 'skill', 'self', [_fx('armor', 18)],
+  ),
 };
 
 void main() {
@@ -151,7 +208,9 @@ void main() {
     expect(faulty, isEmpty);
   });
 
-  test('les 18 cartes de lot sont celles de spec 3.4', () {
+  test(
+      'les 33 cartes de lot sont celles de la spec de la vague 5 et du plan de '
+      'la tranche 2', () {
     // Les enregistrements portent une liste : on compare leur texte.
     expect({
       for (final c in registry.cards.where((c) => c.passive != null))
@@ -179,18 +238,37 @@ void main() {
     }, {for (final e in _lots.entries) e.key: e.value.toString()});
   });
 
-  test('les trois lots : six cartes chacun, communes, aucune isExhaust', () {
+  test(
+      'les six lots : six, six, six, cinq, cinq, cinq cartes, toutes communes ; '
+      'seules laceration et meditation s epuisent', () {
     final lotCards = registry.cards.where((c) => c.passive != null);
     expect(
       {
-        for (final id in const ['regen_armor', 'rage', 'mana_flux'])
+        for (final id in const [
+          'regen_armor',
+          'rage',
+          'mana_flux',
+          'fervor',
+          'bloodthirst',
+          'channeling',
+        ])
           id: lotCards.where((c) => c.passive == id).length,
       },
-      {'regen_armor': 6, 'rage': 6, 'mana_flux': 6},
+      {
+        'regen_armor': 6,
+        'rage': 6,
+        'mana_flux': 6,
+        'fervor': 5,
+        'bloodthirst': 5,
+        'channeling': 5,
+      },
     );
-    expect(lotCards.length, 18);
+    expect(lotCards.length, 33);
     expect(lotCards.every((c) => c.rarity == CardRarity.common), isTrue);
-    expect(lotCards.any((c) => c.isExhaust), isFalse);
+    expect(
+      {for (final c in lotCards.where((c) => c.isExhaust)) c.id},
+      {'laceration', 'meditation'},
+    );
   });
 
   PassiveData passiveOf(String id) =>
@@ -244,6 +322,17 @@ void main() {
     }
   });
 
+  test(
+      'D50 : sous Soif de Sang, les cartes gratuites offertes sont '
+      'concentration et laceration, toutes deux epuisables', () {
+    final free = registry.cards.where(
+      (c) =>
+          c.isOfferable('bloodthirst') && c.cost + c.hpCost + c.armorCost == 0,
+    );
+    expect({for (final c in free) c.id}, {'concentration', 'laceration'});
+    expect(free.every((c) => c.isExhaust), isTrue);
+  });
+
   test('D12 : chaque mecanisme a ses cartes', () {
     final cards = registry.cards;
     int withScale(String source) => cards
@@ -253,6 +342,7 @@ void main() {
     expect(cards.where((c) => c.armorCost > 0).length, greaterThanOrEqualTo(2));
     expect(withScale('armor'), greaterThanOrEqualTo(2));
     expect(withScale('missingHp'), greaterThanOrEqualTo(2));
+    expect(withScale('cardsPlayedThisTurn'), greaterThanOrEqualTo(1));
     expect(
       cards.where((c) => c.effects.any((e) => e.hits >= 2)).length,
       greaterThanOrEqualTo(1),

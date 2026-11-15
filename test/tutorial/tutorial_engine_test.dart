@@ -233,9 +233,9 @@ void main() {
   });
 
   group('Le choix du passif', () {
-    // Le registre livré n'ouvre qu'un passif par classe (O5) : Bénédiction et
-    // Marque du Mage, ouvertes par une carte de lot de test, gardent à ces
-    // tests un second passif à choisir. Le registre ouvert reste le
+    // Le registre livré ouvre deux passifs par classe (O5) : Bénédiction et
+    // Marque du Mage, ouvertes par une carte de lot de test, ajoutent un
+    // troisième passif à choisir. Le registre ouvert reste le
     // singleton de la fin du fichier : il ne diffère du livré que par ces
     // deux cartes, qu'aucun autre groupe ne lit.
     late GameDataRegistry opened;

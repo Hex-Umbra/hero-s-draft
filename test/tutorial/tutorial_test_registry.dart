@@ -22,10 +22,10 @@ import '../unit/lot_card_fixture.dart';
 /// sure — sans lui, le `Future` de lecture mis en cache dans la zone d un
 /// test deja termine ne se resoudrait jamais depuis le suivant.
 ///
-/// Le registre livré n'ouvre qu'un passif par classe (O5, spec P-42 T1 et
-/// P-44 lot 1, §4.8). [openedPassives] en ouvre d'autres, chacun par une
-/// carte de lot de test : un test qui change de passif garde ainsi un choix
-/// à faire, au lieu de « changer » pour le même.
+/// Le registre livré n'ouvre que deux passifs par classe (O5, spec P-42 T1,
+/// P-44 lot 1, §4.8 et tranche 2). [openedPassives] en ouvre d'autres, chacun
+/// par une carte de lot de test : un test qui change de passif garde ainsi
+/// un choix à faire, au lieu de « changer » pour le même.
 Future<GameDataRegistry> buildTutorialTestRegistry({
   Set<String> openedPassives = const {},
 }) async {

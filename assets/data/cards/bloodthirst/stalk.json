@@ -1,0 +1,22 @@
+{
+  "id": "stalk",
+  "name_en": "Stalk",
+  "name_fr": "Traque",
+  "description_en": "Deal 2 damage and draw 2 cards.",
+  "description_fr": "Inflige 2 dégâts et pioche 2 cartes.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 2
+    },
+    {
+      "type": "draw",
+      "value": 2
+    }
+  ]
+}

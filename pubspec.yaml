@@ -34,6 +34,9 @@ flutter:
     - assets/audio/sfx/
     - assets/data/
     - assets/data/cards/
+    - assets/data/cards/bloodthirst/
+    - assets/data/cards/channeling/
+    - assets/data/cards/fervor/
     - assets/data/cards/mana_flux/
     - assets/data/cards/rage/
     - assets/data/cards/regen_armor/

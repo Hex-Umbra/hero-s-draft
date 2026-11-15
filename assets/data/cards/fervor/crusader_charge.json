@@ -1,0 +1,22 @@
+{
+  "id": "crusader_charge",
+  "name_en": "Crusader's Charge",
+  "name_fr": "Charge du croisé",
+  "description_en": "Deal 7 damage and gain 7 Block.",
+  "description_fr": "Inflige 7 dégâts et gagne 7 d'Armure.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 7
+    },
+    {
+      "type": "armor",
+      "value": 7
+    }
+  ]
+}

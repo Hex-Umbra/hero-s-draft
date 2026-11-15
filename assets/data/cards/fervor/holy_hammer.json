@@ -1,0 +1,20 @@
+{
+  "id": "holy_hammer",
+  "name_en": "Holy Hammer",
+  "name_fr": "Marteau sacré",
+  "description_en": "Deal 3 damage 3 times.",
+  "description_fr": "Inflige 3 dégâts 3 fois.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3,
+      "hits": 3,
+      "mightRatio": 0.75
+    }
+  ]
+}

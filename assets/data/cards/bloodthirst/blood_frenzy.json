@@ -1,0 +1,22 @@
+{
+  "id": "blood_frenzy",
+  "name_en": "Blood Frenzy",
+  "name_fr": "Frénésie sanglante",
+  "description_en": "Deal 3 damage, +2 per card played this turn.",
+  "description_fr": "Inflige 3 dégâts, +2 par carte jouée ce tour.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3,
+      "scaleWith": {
+        "source": "cardsPlayedThisTurn",
+        "ratio": 2
+      }
+    }
+  ]
+}
