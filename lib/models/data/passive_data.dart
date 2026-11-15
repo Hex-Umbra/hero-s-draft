@@ -90,7 +90,7 @@ class PassiveData {
   final String descriptionEn;
   final String descriptionFr;
   final RelicTrigger trigger;
-  final String effectType; // ex: 'gain_armor', 'rage', 'channeling'
+  final String effectType; // ex: 'gain_armor', 'rage', 'mana_reserve'
 
   /// Le chiffre principal du passif : ce que sa stratégie en fait lui
   /// appartient — des points d'armure, de Puissance, de mana, de PV.

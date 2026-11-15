@@ -85,6 +85,13 @@ class RunState {
   /// sont, sous `signatureEvolutions` (spec P-42 T1 et P-44 lot 1, §8).
   final List<SignatureInstance> signatures;
 
+  /// Le Mana que la fin du tour a mis en réserve (D30, *Canalisation*) : le
+  /// tour suivant commence au Mana max plus cette réserve, qui se vide en
+  /// étant lue. Vit le temps d'un combat — `RunController.startCombat` la
+  /// vide — et **ne se sauvegarde jamais** : la sauvegarde n'a pas lieu en
+  /// combat ; ni `toJson` ni `fromJsonWithReport` ne la lisent.
+  final int manaReserve;
+
   /// Les signatures dont une évolution attend, dans l'ordre de [signatures] :
   /// elles se choisissent ensemble, sur un seul écran (D79).
   List<SignatureInstance> get pendingEvolutions => [
@@ -130,6 +137,7 @@ class RunState {
     this.runeCapBonus = const {},
     this.statRules = const [],
     this.signatures = const [],
+    this.manaReserve = 0,
   });
 
   RunState copyWith({
@@ -150,6 +158,7 @@ class RunState {
     Map<String, int>? runeCapBonus,
     List<StatRule>? statRules,
     List<SignatureInstance>? signatures,
+    int? manaReserve,
   }) {
     return RunState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -171,6 +180,7 @@ class RunState {
       runeCapBonus: runeCapBonus ?? this.runeCapBonus,
       statRules: statRules ?? this.statRules,
       signatures: signatures ?? this.signatures,
+      manaReserve: manaReserve ?? this.manaReserve,
     );
   }
 
@@ -480,6 +490,12 @@ class RunController extends Notifier<RunState> {
     _playerStatsManager.addStatus(effect);
   }
 
+  /// Écrit la réserve de Mana que lira le prochain `startTurn` (D30) : la
+  /// stratégie de *Canalisation* en est le seul appelant.
+  void setManaReserve(int amount) {
+    state = state.copyWith(manaReserve: amount);
+  }
+
   /// Retire tout statut portant [id]
   void removeStatus(String id) {
     _playerStatsManager.removeStatus(id);
@@ -553,6 +569,8 @@ class RunController extends Notifier<RunState> {
         statuses: [],
         currentMana: state.heroStats.maxMana,
       ),
+      // Une réserve laissée par le combat précédent ne le suit pas (D30).
+      manaReserve: 0,
     );
     // 2. Déclenchement des reliques
     applyRelics(RelicTrigger.startOfCombat);
@@ -571,12 +589,17 @@ class RunController extends Notifier<RunState> {
     // `berserker_armor` hier.
     final survivingArmor = state.heroStats.armure;
 
-    // 1. Restaurer le Mana à sa valeur maximale (ne se cumule pas d'un tour à l'autre) et reset l'armure
+    // 1. Le Mana repart de son maximum, plus la réserve que la fin du tour
+    //    précédent a mise de côté (D30, *Canalisation* ; 0 sous tout autre
+    //    passif) : du mana déjà gagné et gardé, pas un gain — il ne passe pas
+    //    par `StatGains`. La réserve se vide en étant lue ; l'armure repart
+    //    de 0. Les reliques et les statuts s'ajoutent ensuite, par-dessus.
     state = state.copyWith(
       heroStats: state.heroStats.copyWith(
         armure: 0,
-        currentMana: state.heroStats.maxMana,
+        currentMana: state.heroStats.maxMana + state.manaReserve,
       ),
+      manaReserve: 0,
     );
 
     // 2. Déclencher les reliques de début de tour (qui peuvent maintenant rajouter du mana par-dessus)

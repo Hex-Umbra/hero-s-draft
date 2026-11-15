@@ -4,6 +4,7 @@ import '../../controllers/combat_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/run_controller.dart';
 import '../../services/effect_resolver.dart';
+import '../mana_reserve.dart';
 import '../stat_gains.dart';
 import 'passive_counters.dart';
 import 'passive_strategy.dart';
@@ -31,22 +32,19 @@ class GainArmorPassive extends PassiveStrategy {
   }
 }
 
-/// `channeling` : à la fin du tour, chaque point de mana non dépensé devient
-/// `value` d'armure.
-///
-/// Le mana n'est pas consommé : il est remis au maximum au début du tour
-/// suivant de toute façon. Le coût du passif est de **ne pas avoir joué**
-/// (spec §6.3) — l'exact opposé de `mana_flux`, et c'est voulu.
-class ChannelingPassive extends PassiveStrategy {
-  const ChannelingPassive();
+/// `mana_reserve` — *Canalisation* (D30) : à la fin du tour, le mana non
+/// dépensé passe en réserve, jusqu'au plafond de `ManaReserve.preview` ;
+/// `RunController.startTurn` l'ajoute au Mana max du tour suivant. Le passif
+/// arrive Maîtrise appliquée (`TraitSystem.dispatch`) : la stratégie ne la
+/// relit pas.
+class ManaReservePassive extends PassiveStrategy {
+  const ManaReservePassive();
 
   @override
   void resolve(PassiveData passive, PassiveEvent event, RunController run) {
-    final mana = run.currentState.heroStats.currentMana;
-    if (mana <= 0) return;
-    run.grant(
-      StatGain(GainResource.armor, mana * passive.value, GainSource.passive),
-    );
+    final preview = ManaReserve.preview(passive, run.currentState.heroStats);
+    if (preview == null) return;
+    run.setManaReserve(preview.banked);
   }
 }
 
@@ -231,7 +229,7 @@ abstract final class PassiveStrategies {
     'bloodthirst': BloodthirstPassive(),
     'frenzy': FrenzyPassive(),
     // Mage
-    'channeling': ChannelingPassive(),
+    ManaReserve.effectType: ManaReservePassive(),
     'mage_mark': MageMarkPassive(),
     'mana_flux': ManaFluxPassive(),
   };

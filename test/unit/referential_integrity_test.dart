@@ -387,7 +387,7 @@ void main() {
       'bloodthirst': ['attack'],
       'frenzy': ['scale:targetMissingHp', 'scale:enemiesAlive'],
       'mana_flux': ['skill'],
-      'channeling': ['power'],
+      'channeling': ['power', 'skill'],
       'mage_mark': ['damage', 'status:vulnerable', 'scale:targetStatus'],
     });
   });

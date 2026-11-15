@@ -2,18 +2,18 @@
   "id": "channeling",
   "name_en": "Channeling",
   "name_fr": "Canalisation",
-  "description_en": "At the end of your turn, each unspent Mana becomes 1 Block.",
-  "description_fr": "À la fin du tour, chaque point de Mana non dépensé devient 1 point d'Armure.",
+  "description_en": "At the end of your turn, unspent Mana goes into reserve, up to your max Mana: your next turn starts with that Mana on top. Each point of Mastery raises this cap by 1.",
+  "description_fr": "À la fin du tour, le Mana non dépensé est mis en réserve, jusqu'à votre Mana max : le tour suivant commence avec ce Mana en plus. Chaque point de Maîtrise relève ce plafond de 1.",
   "classes": ["mage"],
-  "feeds": ["power"],
+  "feeds": ["power", "skill"],
   "trigger": "endOfTurn",
-  "effectType": "channeling",
-  "value": 1,
+  "effectType": "mana_reserve",
+  "value": 0,
   "displayOrder": 1,
   "mastery": {
     "field": "value",
     "perPoint": 1,
-    "description_en": "+{amount} Block per unspent Mana",
-    "description_fr": "+{amount} Armure par Mana non dépensé"
+    "description_en": "+{amount} to the Mana reserve cap",
+    "description_fr": "+{amount} au plafond de la réserve de Mana"
   }
 }
