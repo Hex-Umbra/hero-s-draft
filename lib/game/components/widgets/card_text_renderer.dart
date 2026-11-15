@@ -120,6 +120,7 @@ class CardTextRenderer {
             (effect.type == 'apply_status' &&
                 (effect.statusId == 'might' ||
                     effect.statusId == 'might_regen' ||
+                    effect.statusId == 'mana_regen' ||
                     effect.statusId == 'armor_regen'));
         final shouldDouble = isAllEnemies && !isPlayerEffect;
 
