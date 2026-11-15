@@ -1,0 +1,22 @@
+{
+  "id": "feast",
+  "name_en": "Feast",
+  "name_fr": "Curée",
+  "description_en": "Deal 8 damage and draw 1 card.",
+  "description_fr": "Inflige 8 dégâts et pioche 1 carte.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 8
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ]
+}

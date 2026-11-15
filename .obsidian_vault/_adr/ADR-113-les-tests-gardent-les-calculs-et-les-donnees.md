@@ -15,6 +15,9 @@ vague teste ; ADR-108 ne change que de Statut. Le tri des tests existants est ap
 en attente du test, de la PR, de la fusion et du tag du propriétaire — par trois commits
 (`fa948c1a`, `27a55f2a`, `5fbbe63f`) ; la spec et le plan de la partie 3 sont repris sous elle
 (`9c1a02a3`, `d125d597`). Le code de jeu (`lib/`, `assets/`) n'est pas touché par le tri.
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

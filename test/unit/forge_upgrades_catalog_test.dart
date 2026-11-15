@@ -126,7 +126,7 @@ final _expected = <String, Map<String, Object?>>{
   ),
   'enduring': _rune(
     eligibleCardTypes: _allTypes,
-    excludesEffects: const ['gain_mana', 'draw'],
+    excludesEffects: const ['gain_mana', 'draw', 'status:mana_regen'],
     requiresExhaust: true,
     excludesRunes: const ['eco', 'quick'],
     maxLevel: 1,
@@ -187,7 +187,7 @@ final _expected = <String, Map<String, Object?>>{
     weight: 50,
   ),
   'echo': _rune(
-    excludesEffects: const ['draw', 'gain_mana'],
+    excludesEffects: const ['draw', 'gain_mana', 'status:mana_regen'],
     excludesRunes: const ['eco', 'quick'],
     maxLevel: 4,
     deltas: const [
@@ -252,7 +252,7 @@ const _breachRank1 = {
   'echo',
 };
 
-/// La matrice de l'offre aux 33 cartes livrées, sans rune, au rang
+/// La matrice de l'offre aux 48 cartes livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
@@ -349,13 +349,58 @@ const _offers = <String, (Set<String>, Set<String>)>{
     {..._skillDamageRank1, 'splash', 'echo'},
     {..._skillDamageRank2, 'splash', 'echo'},
   ),
+  'riposte': (
+    {..._singleTargetRank1, 'hardened', 'echo'},
+    {..._singleTargetRank2, 'hardened', 'echo'},
+  ),
+  'crusader_charge': (
+    {..._singleTargetRank1, 'hardened', 'echo'},
+    {..._singleTargetRank2, 'hardened', 'echo'},
+  ),
+  'judgment': (
+    {..._attackRank1, 'hardened', 'echo'},
+    {..._attackRank2, 'hardened', 'echo'},
+  ),
+  'holy_hammer': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'blessed_flail': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'blood_frenzy': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  // Elles piochent : Resonant les refuse.
+  'bite': (_singleTargetRank1, _singleTargetRank2),
+  'feast': (_singleTargetRank1, _singleTargetRank2),
+  'stalk': (_singleTargetRank1, _singleTargetRank2),
+  // 0 mana, epuisable : Persistant s'y ajoute (A15).
+  'laceration': (
+    {..._breachRank1, 'enduring'},
+    {..._breachRank1, 'enduring', 'quick'},
+  ),
+  'barrier': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'seal': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  // Elle rend du mana par un statut : ni Persistant ni Resonant (A6).
+  'meditation': ({'cheap'}, {'cheap', 'quick', 'eco'}),
+  'cataclysm': (
+    {..._skillDamageRank1, 'echo'},
+    {..._skillDamageRank2, 'echo'},
+  ),
+  'ether_shield': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
   'arcane_wave': (
     {..._skillDamageRank1, 'echo'},
     {..._skillDamageRank2, 'echo'},
   ),
 };
 
-/// Les seize runes livrées, et l'offre qu'elles font aux 33 cartes livrées
+/// Les seize runes livrées, et l'offre qu'elles font aux 48 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -433,7 +478,7 @@ void main() {
     );
   });
 
-  test('la matrice couvre les 33 cartes livrees', () {
+  test('la matrice couvre les 48 cartes livrees', () {
     expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
   });
 

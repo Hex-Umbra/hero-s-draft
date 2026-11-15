@@ -138,6 +138,30 @@
   "waitingIntents": "Waiting...",
   "manaWarning": "No mana left.\nEnd your turn?",
   "remainingManaWarning": "Mana remaining.\nEnd your turn?",
+  "manaReserveNextTurn": "+{count} next turn",
+  "@manaReserveNextTurn": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveNextTurnCapped": "+{count} next turn (cap)",
+  "@manaReserveNextTurnCapped": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveWarning": "{count} Mana in reserve.\nEnd your turn?",
+  "@manaReserveWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manaReserveFullWarning": "Reserve full: {count} Mana.\nEnd your turn?",
+  "@manaReserveFullWarning": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "turnCount": "Turn {count}",
   "@turnCount": {
     "placeholders": {
@@ -367,6 +391,13 @@
   },
   "cardDescStatusMightRegen": "Gains {amount} Might Awakening for {duration} turns.",
   "@cardDescStatusMightRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
+  "cardDescStatusManaRegen": "For {duration} turns, gains {amount} Mana at turn start.",
+  "@cardDescStatusManaRegen": {
     "placeholders": {
       "amount": { "type": "int" },
       "duration": { "type": "int" }
@@ -631,6 +662,12 @@
   },
   "statusMightRegen": "Might Awakening: +{value}",
   "@statusMightRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusManaRegen": "Mana Spring: +{value}",
+  "@statusManaRegen": {
     "placeholders": {
       "value": { "type": "int" }
     }

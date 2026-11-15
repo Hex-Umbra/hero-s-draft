@@ -17,6 +17,9 @@ en attente du test, de la PR, de la fusion et du tag du propriétaire.** Partie 
 et [ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md) (la Puissance par coup). Conception :
 [spec](../../docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md), §3.1, §3.6, §4.1
 à §4.7 — ses arbitrages A6 à A23 et leurs motifs ne se recopient pas ici.
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

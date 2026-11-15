@@ -100,6 +100,15 @@ void main() {
       expect(restoredLegacy.cardsPerTurn, 5);
     });
 
+    test('manaReserve ne se sauvegarde pas : la sauvegarde n a jamais lieu '
+        'en combat', () {
+      final json = buildRunState().copyWith(manaReserve: 2).toJson();
+      expect(json.containsKey('manaReserve'), isFalse);
+
+      final (restored, _) = RunState.fromJsonWithReport(json);
+      expect(restored.manaReserve, 0);
+    });
+
     // La main maximale, stat de run (spec P-43 E3, §4.3, §8).
     test('maxHandSize round-trip et vaut la main de depart quand la cle '
         'manque', () {

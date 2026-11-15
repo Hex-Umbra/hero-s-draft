@@ -542,6 +542,30 @@ abstract class AppLocalizations {
   /// **'Mana remaining.\nEnd your turn?'**
   String get remainingManaWarning;
 
+  /// No description provided for @manaReserveNextTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} next turn'**
+  String manaReserveNextTurn(int count);
+
+  /// No description provided for @manaReserveNextTurnCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} next turn (cap)'**
+  String manaReserveNextTurnCapped(int count);
+
+  /// No description provided for @manaReserveWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Mana in reserve.\nEnd your turn?'**
+  String manaReserveWarning(int count);
+
+  /// No description provided for @manaReserveFullWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve full: {count} Mana.\nEnd your turn?'**
+  String manaReserveFullWarning(int count);
+
   /// No description provided for @turnCount.
   ///
   /// In en, this message translates to:
@@ -943,6 +967,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gains {amount} Might Awakening for {duration} turns.'**
   String cardDescStatusMightRegen(int amount, int duration);
+
+  /// No description provided for @cardDescStatusManaRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration} turns, gains {amount} Mana at turn start.'**
+  String cardDescStatusManaRegen(int amount, int duration);
 
   /// No description provided for @cardDescStatusBurn.
   ///
@@ -1525,6 +1555,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Might Awakening: +{value}'**
   String statusMightRegen(int value);
+
+  /// No description provided for @statusManaRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mana Spring: +{value}'**
+  String statusManaRegen(int value);
 
   /// No description provided for @statusArmorRegen.
   ///

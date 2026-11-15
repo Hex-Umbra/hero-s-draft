@@ -2,8 +2,10 @@
 
 Une seule table dit l'icône et la couleur de chaque **sorte d'effet** en combat : la bande et la
 liste de la tuile de signature, les puces d'évolution, le panneau des statuts du héros et celui du
-tutoriel. Vague 5, en attente du propriétaire — réponse P-6 (a),
-[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md) D6. Le document et ses seize sortes :
+tutoriel. Vague 5, fusionnée dans `main` le 2026-11-09 — réponse P-6 (a),
+[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md) D6. Le document et ses dix-sept sortes — `status:mana_regen` ajoutée par la vague 6
+([ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)), à l'icône et à la couleur de
+`gain_mana`, comme `status:might_regen` reprend celles de `status:might` :
 [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md) §7.1.
 
 > [!IMPORTANT]

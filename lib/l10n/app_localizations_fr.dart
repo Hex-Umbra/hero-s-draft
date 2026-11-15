@@ -266,6 +266,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get remainingManaWarning => 'Mana restant.\nTerminer le tour ?';
 
   @override
+  String manaReserveNextTurn(int count) {
+    return '+$count au prochain tour';
+  }
+
+  @override
+  String manaReserveNextTurnCapped(int count) {
+    return '+$count au prochain tour (plafond)';
+  }
+
+  @override
+  String manaReserveWarning(int count) {
+    return '$count Mana en réserve.\nTerminer le tour ?';
+  }
+
+  @override
+  String manaReserveFullWarning(int count) {
+    return 'Réserve pleine : $count Mana.\nTerminer le tour ?';
+  }
+
+  @override
   String turnCount(int count) {
     return 'Tour $count';
   }
@@ -536,6 +556,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String cardDescStatusMightRegen(int amount, int duration) {
     return 'Gagne $amount Éveil de Puissance pendant $duration tours.';
+  }
+
+  @override
+  String cardDescStatusManaRegen(int amount, int duration) {
+    return 'Pendant $duration tours, gagne $amount Mana au début du tour.';
   }
 
   @override
@@ -904,6 +929,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String statusMightRegen(int value) {
     return 'Éveil de Puissance : +$value';
+  }
+
+  @override
+  String statusManaRegen(int value) {
+    return 'Source de Mana : +$value';
   }
 
   @override

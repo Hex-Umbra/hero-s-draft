@@ -35,12 +35,13 @@ d'entiers d'au moins 1, refusée sinon. Comme `audio.json`, elle n'a ni id ni do
 de l'éditeur de contenu ; **à sa différence, son absence ou sa faute fait échouer le démarrage**,
 avec les fautes des entités.
 
-**`effect_icons.json`** (vague 5, en attente du propriétaire —
+**`effect_icons.json`** (vague 5, fusionnée dans `main` le 2026-11-09 —
 [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md), réponse P-6 (a)) est **la table d'icônes
 d'effet** : pour chaque **sorte** d'effet, l'icône et la couleur, par leur nom, que la bande et la
 liste de la tuile de signature, les puces d'évolution et les panneaux des statuts du héros et du
 tutoriel lui donnent. Une sorte est `damage`, `armor`, `heal`, `draw`, `gain_mana`,
-`status:<id>` (jamais `apply_status` nu), `crit` ou `target:allEnemies` ; **seize sont livrées**,
+`status:<id>` (jamais `apply_status` nu), `crit` ou `target:allEnemies` ; **dix-sept sont livrées**
+(`status:mana_regen` depuis la vague 6, à l'icône et à la couleur de `gain_mana`),
 chacune à l'icône et à la couleur que les faces des cartes donnent à la même sorte — un test garde
 l'égalité. `EffectIconTable.fromJson` refuse une clé qui n'est pas une sorte, une valeur qui n'est
 pas un objet à `icon` et `color` non vides ; un nom inconnu de la table de traduction retombe sur

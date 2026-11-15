@@ -46,10 +46,10 @@ les rendus :
 | *Perforant* (`piercing`) | `armorPierce`, 25 | La cible ignore **25 % × L de son Armure** au coup, au moins L, borné à l'Armure présente ; saturé à 100 % (L ≥ 4) | 4 | 1 | 50 |
 | *Vampirique* (`lifesteal`) | `lifestealPercent`, 20 | **Soigne 20 % × L des dégâts infligés**, au moins L, une fois par carte, après tous les coups | 3 | 1 | 50 |
 | *Ricochant* (`splash`) | `splashPercent`, 25 | Chaque coup touche aussi **les autres ennemis pour 25 % × L** de ses dégâts ; carte à cible unique seulement (`eligibleTargets`) | 3 | 1 | 50 |
-| *Résonant* (`echo`) | `echoChance`, 15 | **15 % × L de chances de rejouer la résolution**, sans aucun événement « carte jouée » (P-3) ; ni sur une carte qui pioche ou rend du Mana, ni avec *Économe* ou *Véloce* | 4 | 1 | 50 |
+| *Résonant* (`echo`) | `echoChance`, 15 | **15 % × L de chances de rejouer la résolution**, sans aucun événement « carte jouée » (P-3) ; ni sur une carte qui pioche, rend du Mana ou pose `mana_regen`, ni avec *Économe* ou *Véloce* | 4 | 1 | 50 |
 | *Transfusion* (`transfusion`) | `refundHpCost`, 50 | **Rend 50 % du coût en PV** (demie vers le haut, jamais au-delà des PV max), en dernier ; carte qui coûte des PV seulement (`requiresCost: "hp"`) ; `binary` | 1 | 1 | 50 |
 
-Les cinq dernières sont les runes de mécanisme de P-44 lot 1, vague 5, en attente du propriétaire
+Les cinq dernières sont les runes de mécanisme de P-44 lot 1, vague 5, fusionnée dans `main` le 2026-11-09
 — [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md) ;
 leurs règles de jeu sont en [`_rules/03-14`](03-14-couts-combines-croissance-et-multi-coups.md).
 
@@ -83,7 +83,11 @@ si, à la fois :
 2. son `eligibleEffects`, s'il existe, nomme un **effet propre** de la carte — les effets qu'une
    autre rune ajoute ne comptent pas ;
 3. aucun effet propre n'est dans son `excludesEffects` — *Persistant* refuse une carte qui pioche ou
-   rend du Mana ;
+   rend du Mana. **Un statut posé compte aussi sous `status:<id>`**, le vocabulaire de `feeds`, pour
+   chaque `apply_status` (vague 6, en attente du test, de la PR, de la fusion et du tag du
+   propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md), D44) : *Persistant*
+   et *Résonant* excluent `status:mana_regen`, et *Méditation*, qui rend du Mana par un statut, ne
+   devient ni rejouable ni doublée ;
 4. `requiresExhaust` est satisfait — *Persistant* ne s'offre qu'à une carte qui s'épuise ;
 5. le coût **courant** de la carte, calculé par l'applicateur sur le catalogue reçu, atteint
    `requiresMinCost` — ni *Économe* ni *Allégé* sur une carte gratuite ;
@@ -100,21 +104,22 @@ si, à la fois :
     seul mana (D61).
 
 Ce que le prédicat offre, sur les cartes livrées sans rune héritée — résumé par famille ; la
-matrice des 33 cartes, carte par carte, est celle de `forge_upgrades_catalog_test.dart`, qui la
-garde (re-lue le 2026-11-04) :
+matrice des 48 cartes, carte par carte, est celle de `forge_upgrades_catalog_test.dart`, qui la
+garde (re-lue le 2026-11-15) :
 
 | Cartes | Première fusion (peu commune) | Deuxième fusion (rare) |
 |:---|:---|:---|
-| Attaques à cible unique : *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Coup de Tonnerre*, *Rempart brisé*, *Dernier souffle* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Ricochant*, *Résonant* | les mêmes, *Économe*, *Véloce* |
-| *Attaque Rapide* (elle pioche) | les mêmes sans *Résonant* | et *Économe*, *Véloce* |
-| Attaques à tous : *Balayage*, *Éclat de bouclier* ; *Cri de Guerre* y ajoute *Endurci* | les mêmes sans *Ricochant* | et *Économe*, *Véloce* |
-| Attaques gratuites : *Percée* ; *Sang versé* y ajoute *Transfusion* | celles d'une attaque à cible unique sans *Allégé* | et *Véloce* — jamais *Économe* |
-| Compétences de dégâts : *Éclat*, *Rafale d'étincelles*, *Décharge* ; *Onde* sans *Ricochant* | *Tranchant*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Allégé*, *Ricochant*, *Résonant* — **aucun élémentaire** | et *Économe*, *Véloce* |
-| *Défense*, *Mur de Fer*, *Muraille*, *Fortification* | *Endurci*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| Attaques à cible unique : *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Coup de Tonnerre*, *Rempart brisé*, *Dernier souffle*, *Marteau sacré*, *Fléau béni*, *Frénésie sanglante* ; *Riposte* et *Charge du croisé* y ajoutent *Endurci* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Ricochant*, *Résonant* | les mêmes, *Économe*, *Véloce* |
+| *Attaque Rapide*, *Morsure*, *Curée*, *Traque* (elles piochent) | les mêmes sans *Résonant* | et *Économe*, *Véloce* |
+| Attaques à tous : *Balayage*, *Éclat de bouclier* ; *Cri de Guerre* et *Jugement* y ajoutent *Endurci* | les mêmes sans *Ricochant* | et *Économe*, *Véloce* |
+| Attaques gratuites : *Percée* ; *Sang versé* y ajoute *Transfusion* ; *Lacération*, qui s'épuise, *Persistant* (A15) | celles d'une attaque à cible unique sans *Allégé* | et *Véloce* — jamais *Économe* |
+| Compétences de dégâts : *Éclat*, *Rafale d'étincelles*, *Décharge* ; *Onde* et *Cataclysme* sans *Ricochant* | *Tranchant*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Allégé*, *Ricochant*, *Résonant* — **aucun élémentaire** | et *Économe*, *Véloce* |
+| *Défense*, *Mur de Fer*, *Muraille*, *Fortification*, *Bouclier d'éther* | *Endurci*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
 | *Éveil* | *Endurci*, *Allégé* | et *Économe*, *Véloce* |
 | *Potion de Soin* | *Persistant*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
-| Pouvoirs et altérations pures : *Forme Démoniaque*, *Métallisation*, *Bastion*, *Fureur sanguine*, *Transe*, *Embrasement*, *Nova de givre* | *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| Pouvoirs et altérations pures : *Forme Démoniaque*, *Métallisation*, *Bastion*, *Fureur sanguine*, *Transe*, *Embrasement*, *Nova de givre*, *Barrière*, *Sceau* | *Allégé*, *Résonant* | et *Économe*, *Véloce* |
 | *Pacte de sang* (il pioche) | *Allégé*, *Transfusion* | et *Économe*, *Véloce* |
+| *Méditation* (elle pose `mana_regen`) | *Allégé* | et *Économe*, *Véloce* |
 | *Concentration* | **aucune** | *Véloce* |
 
 Les six signatures ne sont pas des cartes : aucun chemin de rune ni de fusion ne les atteint (lot E4 de P-43, branche de la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).

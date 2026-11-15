@@ -10,6 +10,7 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 | `might` | Buff | Oui, **par source** (§4.3) | La **Puissance** : ajoute sa valeur à `effectiveMight`, que la classe oriente par `mightTargets` — Attaques, Compétences, altérations ([ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)). `effectiveMight` somme **toutes** les entrées `might`, une par source | Durée -1 chaque tour, chaque entrée pour elle-même |
 | `weakness` | Debuff | Oui | **−25 % de dégâts infligés par point, 2 points au plus** (−50 %) — §4.4 | Durée -1 chaque tour |
 | `might_regen` | Buff | Oui | Ajoute sa valeur au statut `might` au début du tour, sous la source `status:might_regen` | Durée -1 chaque tour |
+| `mana_regen` | Buff | Oui | La **Source de Mana** (vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : donne sa valeur en Mana au début du tour du héros, par `StatGains` (source `status`), après le tic, comme `armor_regen` ; posée par *Méditation* (1 pendant 2 tours). Héros seulement : aucun ennemi n'a de mana. Icône et couleur de `gain_mana`. *Persistant* et *Résonant* ne s'offrent pas à une carte qui la pose ([`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
 | `burn` | Debuff | Oui | Inflige des dégâts de feu = valeur active au début du tour. Le tick réduit la valeur et la durée de 1. | Durée -1 chaque tour |
 | `freeze` | Debuff | Oui | **−25 % à la prochaine attaque par point, 3 points au plus** (−75 %), calculé dans l'intention affichée — §4.4. Ne se dissipe pas en début de tour mais après la résolution de son action d'attaque. | Durée décrémentée après l'action d'attaque |
@@ -66,8 +67,8 @@ if (isStackable) {
 ### 4.4. Les statuts proportionnels
 
 > [!IMPORTANT]
-> **Vulnérable, Faiblesse et Gel comptent leurs points** — P-44 lot 1, vague 5, en attente du
-> propriétaire ; barème de la réponse P-1 (a) du propriétaire, 2026-11-03 —
+> **Vulnérable, Faiblesse et Gel comptent leurs points** — P-44 lot 1, vague 5, fusionnée dans
+> `main` le 2026-11-09 ; barème de la réponse P-1 (a) du propriétaire, 2026-11-03 —
 > [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md).
 > Jusqu'à la vague 4, ils étaient tout ou rien (+50 %, −25 %, −50 %).
 

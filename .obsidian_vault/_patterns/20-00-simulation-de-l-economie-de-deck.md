@@ -21,7 +21,9 @@
 > prend encore *Focalisation*, supprimée, et *Forme Démoniaque* à sa place d'avant ; il ignore
 > `costs`, `hits`, `scaleWith`, les statuts proportionnels et les cinq runes de mécanisme. Le
 > prochain brainstorm qui en aurait besoin le réalignera sur tout cela ([ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md),
-> [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)).
+> [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)). La vague 6 l'en éloigne de
+> même : les quinze cartes de lot de la tranche 2, la banque de mana de *Canalisation* et
+> `mana_regen` lui sont inconnus ([ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)).
 
 `tool/simulations/d26_economy_sim.dart` est un programme Dart autonome, de 4 053 lignes
 (**vérifié le 2026-10-04**, `wc -l`, sur la branche de la vague 3). Il n'est ni un test, ni un

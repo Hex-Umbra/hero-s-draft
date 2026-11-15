@@ -1,0 +1,18 @@
+{
+  "id": "cataclysm",
+  "name_en": "Cataclysm",
+  "name_fr": "Cataclysme",
+  "description_en": "Deal 8 damage to all enemies.",
+  "description_fr": "Inflige 8 dégâts à tous les ennemis.",
+  "cost": 3,
+  "type": "skill",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 8
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 0. OUVERTURE DU COMBAT (une seule fois, depuis initState de GameScreen)
    └→ CombatController.startPlayerCombat()   [TurnPhaseManager]
        ├→ RunController.startCombat()
-       │   ├→ Purge des statuts du combat précédent, mana = maxMana
+       │   ├→ Purge des statuts du combat précédent, mana = maxMana, manaReserve = 0
        │   ├→ applyRelics(startOfCombat)
        │   └→ TraitSystem.onTurnStart(runController)   (ex: Berserker)
        └→ DeckNotifier.startCombat(handSize: cardsPerTurn, maxHandSize: RunState.maxHandSize)
@@ -12,9 +12,9 @@
 1. DÉBUT TOUR JOUEUR
    └→ CombatController.startPlayerTurn()   [TurnPhaseManager]
        ├→ RunController.startTurn()
-       │   ├→ Armure remise à 0, restore mana = maxMana
+       │   ├→ Armure remise à 0, mana = maxMana + manaReserve, puis manaReserve = 0
        │   ├→ applyRelics(startOfTurn)
-       │   ├→ Process statuts: poison (dégâts), strength_regen (→strength), armor_regen (→armure)
+       │   ├→ Process statuts: poison (dégâts), might_regen (→might), armor_regen (→armure), mana_regen (→mana)
        │   ├→ tickStatuses() (décrémente durées, supprime expirés)
        │   └→ TraitSystem.onTurnStart(runController)
        └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: RunState.maxHandSize)
@@ -43,6 +43,7 @@
        ├→ Validation de confirmation (s'il reste du mana et que `_showRemainingManaWarning` est à false, l'avertissement de mana restant est affiché et le clic est intercepté)
        └→ Validation finale (si le mana est égal à 0 ou qu'il s'agit du second clic consécutif confirmant la fin de tour) :
            ├→ TraitSystem.onTurnEnd(ref.read(runProvider.notifier))
+           │   └→ sous Canalisation : ManaReservePassive → RunController.setManaReserve(banked)
            ├→ ref.read(runProvider.notifier).applyRelics(RelicTrigger.endOfTurn)
            ├→ ref.read(deckProvider.notifier).discardHand()
            └→ HerosDraftGame.executeTurn()
@@ -74,6 +75,15 @@
            ├→ SI BOSS (type cards) : Affichage séquentiel du dialogue de draft de cartes (choix/skip gérés par RewardController)
            └→ Une fois isResolved = true : Déblocage du voyage et retour sur la carte du monde
 ```
+
+> [!NOTE]
+> **La réserve de mana traverse la phase ennemie sans bouger** (vague 6, en attente du test, de
+> la PR, de la fusion et du tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)).
+> Écrite à l'étape 3 par la seule stratégie de *Canalisation*, elle est lue une fois à l'étape 1
+> suivante, avant les reliques et les statuts, sans passer par `StatGains`. Un mana gagné pendant la
+> phase 4 (*Essence spirituelle* sur un ennemi tué par le poison) n'y entre pas ; l'écran, dès la
+> bannière « Tour ennemi », lit la réserve écrite (`ManaReserve.shown`). Un combat qui finit en
+> phase 4 la laisse à `startCombat`, qui la vide.
 
 > [!IMPORTANT]
 > **Les étapes 0 et 1 appartiennent à `TurnPhaseManager`, pas à `GameScreen`.** Le widget

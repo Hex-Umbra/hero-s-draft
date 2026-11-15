@@ -15,7 +15,8 @@
   "requiresExhaust": true,
   "excludesEffects": [
     "gain_mana",
-    "draw"
+    "draw",
+    "status:mana_regen"
   ],
   "excludesRunes": [
     "eco",

@@ -45,5 +45,6 @@ vague 3, fusionnée dans `main` le 2026-10-04 : règles en [`_rules/06-00`](06-0
 §6.4 et §6.5, décision en [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md).
 
 Le lot de cartes par passif, le draft à deux quotas et les évolutions de signature sont de la
-tranche 1 de P-42 — vague 5, en attente du propriétaire : règles en [`_rules/02-3`](02-3-catalogue-de-cartes.md)
+tranche 1 de P-42 — vague 5, fusionnée dans `main` le 2026-11-09 ; la tranche 2 rouvre trois passifs (vague 6, en attente du
+test, de la PR, de la fusion et du tag du propriétaire) : règles en [`_rules/02-3`](02-3-catalogue-de-cartes.md)
 et [`_rules/02-8`](02-8-evolutions-de-signature.md).

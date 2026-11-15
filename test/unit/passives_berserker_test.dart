@@ -246,13 +246,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Berserker ne propose que Rage, seul pourvu d un lot (O5)',
-        () async {
+    test('le Berserker propose Rage puis Soif de Sang, ses deux passifs '
+        'pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'berserker');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['rage']);
+      expect(available, ['rage', 'bloodthirst']);
     });
 
     test('berserker_armor n existe plus, ni en donnee ni en strategie', () async {

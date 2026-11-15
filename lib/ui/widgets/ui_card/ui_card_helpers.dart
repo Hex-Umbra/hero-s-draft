@@ -108,6 +108,11 @@ UiCardEffectVisuals getEffectVisuals(CardEffect effect) {
           icon: Icons.bolt_rounded,
           color: Colors.orangeAccent,
         );
+      case 'mana_regen':
+        return const UiCardEffectVisuals(
+          icon: Icons.diamond_rounded,
+          color: Colors.cyanAccent,
+        );
       case 'armor_regen':
         return const UiCardEffectVisuals(
           icon: Icons.autorenew_rounded,
@@ -395,6 +400,10 @@ String buildDetailedDescription(
         case 'might_regen':
           desc +=
               '${l10n.cardDescStatusMightRegen(scaledValue, duration)}\n';
+          break;
+        case 'mana_regen':
+          desc +=
+              '${l10n.cardDescStatusManaRegen(scaledValue, duration)}\n';
           break;
         case 'burn':
           desc +=

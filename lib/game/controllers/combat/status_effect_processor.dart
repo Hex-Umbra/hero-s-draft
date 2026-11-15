@@ -16,6 +16,7 @@ class StatusEffectProcessor {
     int poisonDamage = 0;
     int mightGain = 0;
     int armorGain = 0;
+    int manaGain = 0;
 
     for (var status in stats.statuses) {
       if (status.id == 'poison') {
@@ -24,6 +25,8 @@ class StatusEffectProcessor {
         mightGain += status.value;
       } else if (status.id == 'armor_regen') {
         armorGain += status.value;
+      } else if (status.id == 'mana_regen') {
+        manaGain += status.value;
       }
     }
 
@@ -61,6 +64,13 @@ class StatusEffectProcessor {
       updatedStats = StatGains.apply(
         updatedStats,
         StatGain(GainResource.armor, armorGain, GainSource.status),
+        rules,
+      );
+    }
+    if (manaGain > 0) {
+      updatedStats = StatGains.apply(
+        updatedStats,
+        StatGain(GainResource.mana, manaGain, GainSource.status),
         rules,
       );
     }

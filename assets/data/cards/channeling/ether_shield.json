@@ -1,0 +1,18 @@
+{
+  "id": "ether_shield",
+  "name_en": "Ether Shield",
+  "name_fr": "Bouclier d'éther",
+  "description_en": "Gain 18 Block.",
+  "description_fr": "Gagne 18 d'Armure.",
+  "cost": 3,
+  "type": "skill",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 18
+    }
+  ]
+}

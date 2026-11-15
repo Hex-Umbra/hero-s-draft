@@ -246,22 +246,38 @@ class TutorialEngine extends ChangeNotifier {
   /// se satisferait d'un seul geste au lieu des deux. `_isEnemyTargetingAttack`
   /// écarte donc toute attaque dont les effets contiennent aussi `armor`.
   void _seedPlayCardHand() {
-    CardData? attack;
-    CardData? armorSkill;
+    final attacks = <CardInstance>[];
+    final armorSkills = <CardInstance>[];
     for (final instance in mockState.masterDeck) {
-      final data = instance.data;
-      attack ??= _isEnemyTargetingAttack(data) ? data : null;
-      armorSkill ??= _isArmorGivingSkill(data) ? data : null;
+      if (_isEnemyTargetingAttack(instance.data)) attacks.add(instance);
+      if (_isArmorGivingSkill(instance.data)) armorSkills.add(instance);
     }
 
-    if (attack == null || armorSkill == null) {
+    // Les deux cartes doivent tenir dans le Mana du héros : la leçon dit que
+    // la main est défaussée en fin de tour, elle ne doit pas obliger à finir
+    // le tour avant d'avoir joué les deux gestes. Le premier couple du deck
+    // qui tient l'emporte, donc le choix d'avant quand il tenait déjà ; si
+    // aucun ne tient, on garde ce choix d'avant.
+    if (attacks.isEmpty || armorSkills.isEmpty) {
       _seedHand([TutorialFixtureIds.strike, TutorialFixtureIds.defend]);
       return;
     }
 
+    final maxMana = mockState.heroStats.maxMana;
+    var chosen = (attacks.first, armorSkills.first);
+    search:
+    for (final attack in attacks) {
+      for (final armorSkill in armorSkills) {
+        if (attack.currentCost + armorSkill.currentCost <= maxMana) {
+          chosen = (attack, armorSkill);
+          break search;
+        }
+      }
+    }
+
     mockState.hand = [
-      CardInstance(data: attack),
-      CardInstance(data: armorSkill),
+      CardInstance(data: chosen.$1.data),
+      CardInstance(data: chosen.$2.data),
     ];
   }
 

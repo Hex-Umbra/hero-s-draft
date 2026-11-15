@@ -1,0 +1,22 @@
+{
+  "id": "judgment",
+  "name_en": "Judgment",
+  "name_fr": "Jugement",
+  "description_en": "Deal 5 damage to all enemies and gain 6 Block.",
+  "description_fr": "Inflige 5 dégâts à tous les ennemis et gagne 6 d'Armure.",
+  "cost": 3,
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 5
+    },
+    {
+      "type": "armor",
+      "value": 6
+    }
+  ]
+}

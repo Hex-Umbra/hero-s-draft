@@ -1,5 +1,35 @@
 [
   {
+    "version": "0.5.8",
+    "date": "2026-11-15",
+    "title": "Trois Passifs Reviennent",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Trois passifs reviennent à la sélection, chacun avec son lot de cinq cartes : Ferveur pour le Paladin, Soif de Sang pour le Berserker et Canalisation pour le Mage.",
+          "Le lot Croisé de Ferveur mêle Armure et frappes multiples : Riposte, Charge du croisé, Marteau sacré, Fléau béni et Jugement, qui frappe tous les ennemis.",
+          "Le lot Vampire de Soif de Sang aligne des Attaques bon marché qui piochent : Morsure, Traque, Curée, Lacération, gratuite, et Frénésie sanglante, qui frappe plus fort pour chaque carte jouée avant elle ce tour.",
+          "Le lot Voile de Canalisation récompense les gros tours : Barrière, Sceau, Méditation, Cataclysme et Bouclier d'éther.",
+          "Canalisation garde désormais votre Mana non dépensé pour le tour suivant, au lieu de le changer en Armure. La réserve va jusqu'à votre Mana max, et chaque point de Maîtrise la relève de 1.",
+          "Sous Canalisation, une petite flèche marque pendant le tour chaque cristal de mana qui passera en réserve, et une légende sous les cristaux annonce « +n au prochain tour », avec « (plafond) » quand la réserve ne peut pas tout garder.",
+          "Sous Canalisation, le message de fin de tour annonce « n Mana en réserve » plutôt que « Mana restant », et « Réserve pleine » quand le plafond est atteint.",
+          "Méditation pose un effet nouveau, Source de Mana : +1 Mana au début des deux tours suivants."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Le Mage commence désormais sur Canalisation.",
+          "Bénédiction, Frénésie et Marque du Mage restent masqués jusqu'à l'arrivée de leur lot de cartes, en 0.6.0 ; la version 0.5.9, entre les deux, apportera les charges élémentaires.",
+          "Les runes Persistant et Résonant ne peuvent pas être posées sur Méditation."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.7",
     "date": "2026-11-04",
     "title": "Les Signatures Évoluent",

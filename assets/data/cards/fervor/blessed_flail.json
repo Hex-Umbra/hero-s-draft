@@ -1,0 +1,20 @@
+{
+  "id": "blessed_flail",
+  "name_en": "Blessed Flail",
+  "name_fr": "Fléau béni",
+  "description_en": "Deal 3 damage 2 times.",
+  "description_fr": "Inflige 3 dégâts 2 fois.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 3,
+      "hits": 2,
+      "mightRatio": 0.75
+    }
+  ]
+}

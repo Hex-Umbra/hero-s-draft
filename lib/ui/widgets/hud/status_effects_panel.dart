@@ -118,6 +118,11 @@ class StatusEffectsPanel extends StatelessWidget {
                   color = Colors.orangeAccent;
                   label = l10n.statusMightRegen(status.value);
                   break;
+                case 'mana_regen':
+                  icon = Icons.diamond;
+                  color = Colors.cyanAccent;
+                  label = l10n.statusManaRegen(status.value);
+                  break;
                 case 'lifesteal':
                   icon = Icons.favorite;
                   color = Colors.redAccent;

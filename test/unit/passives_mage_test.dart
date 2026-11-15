@@ -2,8 +2,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
+import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/proportional_status.dart';
+import 'package:roguelike_card_game/game/systems/mana_reserve.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
@@ -12,6 +15,7 @@ import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/passive_data.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/models/data/stat_rule.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -36,16 +40,16 @@ void main() {
     mastery: 2,
   );
 
-  PassiveData channeling({int value = 1}) => PassiveData(
+  PassiveData channeling() => const PassiveData(
         id: 'channeling',
         trigger: RelicTrigger.endOfTurn,
-        effectType: 'channeling',
-        value: value,
-        mastery: const PassiveMastery(
+        effectType: ManaReserve.effectType,
+        value: 0,
+        mastery: PassiveMastery(
           field: 'value',
           perPoint: 1,
-          descriptionEn: '+{amount} Block per Mana',
-          descriptionFr: '+{amount} Armure par Mana',
+          descriptionEn: '+{amount} to the Mana reserve cap',
+          descriptionFr: '+{amount} au plafond de la reserve de Mana',
         ),
       );
 
@@ -128,28 +132,169 @@ void main() {
         ),
       );
 
-  group('Canalisation', () {
-    test('le mana non depense devient de l armure', () {
-      run.startNewRun(mage, channeling());
-      run.endTurn();
+  group('Canalisation (D30)', () {
+    void setMana(int mana) => run.updateState(
+          run.currentState.copyWith(
+            heroStats: stats().copyWith(currentMana: mana),
+          ),
+        );
 
-      // 3 de mana au depart, 1 point d'armure par mana.
-      expect(stats().armure, 3);
+    test(
+        'le mana non depense passe en reserve, et le tour suivant commence a '
+        'maxMana + reserve', () {
+      run.startNewRun(mage, channeling());
+      expect(run.consumeResource(mana: 1), isTrue);
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 2);
+
+      run.startTurn();
+      expect(stats().currentMana, 3 + 2);
+      expect(run.currentState.manaReserve, 0);
     });
 
-    test('sans mana, rien', () {
+    test('la reserve est plafonnee au Mana max', () {
+      run.startNewRun(mage, channeling());
+      setMana(5);
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 3);
+
+      run.startTurn();
+      expect(stats().currentMana, 3 + 3);
+    });
+
+    test('chaque point de Maitrise releve le plafond de 1', () {
+      run.startNewRun(master, channeling());
+      setMana(7);
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 3 + 2);
+
+      run.startTurn();
+      expect(stats().currentMana, 3 + 5);
+    });
+
+    test('sans mana non depense, rien en reserve : le tour repart a maxMana',
+        () {
       run.startNewRun(mage, channeling());
       expect(run.consumeResource(mana: 3), isTrue);
-      run.endTurn();
 
-      expect(stats().armure, 0);
+      run.endTurn();
+      expect(run.currentState.manaReserve, 0);
+
+      run.startTurn();
+      expect(stats().currentMana, 3);
     });
 
-    test('la Maitrise augmente l armure par mana', () {
-      run.startNewRun(master, channeling());
+    test('la reserve ne sert qu une fois : le tour qui la lit la vide', () {
+      run.startNewRun(mage, channeling());
       run.endTurn();
+      run.startTurn();
+      expect(stats().currentMana, 6);
 
-      expect(stats().armure, 3 * (1 + 2));
+      // Un second début de tour sans fin de tour entre les deux.
+      run.startTurn();
+      expect(stats().currentMana, 3);
+    });
+
+    test('startCombat vide la reserve laissee par le combat precedent', () {
+      run.startNewRun(mage, channeling());
+      run.endTurn();
+      expect(run.currentState.manaReserve, 3);
+
+      run.startCombat();
+      expect(run.currentState.manaReserve, 0);
+      expect(stats().currentMana, 3);
+    });
+
+    test('sous un autre passif, la fin du tour ne met rien en reserve', () {
+      run.startNewRun(mage, manaFlux());
+      expect(run.consumeResource(mana: 1), isTrue);
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 0);
+
+      run.startTurn();
+      expect(stats().currentMana, 3);
+    });
+
+    test(
+        'la relique de debut de tour et la Source de Mana s ajoutent '
+        'par-dessus la reserve', () {
+      run.startNewRun(mage, channeling());
+      container.read(inventoryProvider.notifier).addRelic(
+            const RelicData(
+              id: 'energy_stone',
+              trigger: RelicTrigger.startOfTurn,
+              effectType: 'gain_mana',
+              value: 1,
+              rarity: RelicRarity.common,
+              emoji: '',
+            ),
+          );
+      run.addStatus(EffectResolver.createStatus('mana_regen', 1, 2)!);
+      expect(run.consumeResource(mana: 1), isTrue);
+
+      run.endTurn();
+      run.startTurn();
+
+      // Mana max, réserve, Pierre d'énergie, Source de Mana.
+      expect(stats().currentMana, 3 + 2 + 1 + 1);
+    });
+
+    test('un Mana max releve releve aussi le plafond de la reserve', () {
+      run.startNewRun(mage, channeling());
+      run.updateState(
+        run.currentState.copyWith(
+          heroStats: stats().copyWith(maxMana: 4, currentMana: 6),
+        ),
+      );
+
+      run.endTurn();
+      expect(run.currentState.manaReserve, 4);
+
+      run.startTurn();
+      expect(stats().currentMana, 4 + 4);
+    });
+
+    test('la reserve n est pas un gain : une regle de classe sur le mana ne '
+        'la convertit pas', () {
+      const converter = HeroData(
+        id: 'mage',
+        classCard: 'mage.png',
+        maxHp: 60,
+        maxMana: 3,
+        statRules: [
+          StatRule(
+            stat: RuleStat.mana,
+            mode: RuleMode.convert,
+            to: RuleTarget.statusMight,
+          ),
+        ],
+      );
+      run.startNewRun(converter, channeling());
+      expect(run.consumeResource(mana: 1), isTrue);
+
+      run.endTurn();
+      run.startTurn();
+
+      expect(stats().currentMana, 3 + 2);
+      expect(stats().statuses.where((s) => s.id == 'might'), isEmpty);
+    });
+
+    test('l apercu dit ce que la fin du tour met en reserve', () {
+      run.startNewRun(master, channeling());
+      for (final mana in [0, 2, 5, 9]) {
+        setMana(mana);
+        final preview = ManaReserve.forRun(run.currentState)!;
+
+        run.endTurn();
+
+        expect(run.currentState.manaReserve, preview.banked,
+            reason: 'mana $mana');
+        expect(preview.capped, mana > 5, reason: 'mana $mana');
+      }
     });
   });
 
@@ -360,13 +505,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Mage demarre sur Flux de Mana, seul pourvu d un lot (O5)',
-        () async {
+    test('le Mage propose Canalisation puis Flux de Mana, ses deux passifs '
+        'pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'mage');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['mana_flux']);
+      expect(available, ['channeling', 'mana_flux']);
     });
 
     // D43, D60 (spec P-43 E3, §3.6).
@@ -376,6 +521,33 @@ void main() {
       expect(flux.threshold, 3);
       expect(flux.mastery!.field, 'threshold');
       expect(flux.mastery!.floor, 2);
+    });
+
+    test(
+        'channeling.json : une banque de mana du Mage, plafond 3 + 1 par '
+        'point de Maitrise', () async {
+      final registry = await loadGameDataRegistry(rootBundle);
+      final channeling =
+          registry.passives.singleWhere((p) => p.id == 'channeling');
+
+      expect(channeling.effectType, ManaReserve.effectType);
+      expect(channeling.classes, ['mage']);
+
+      final hero = EntityStats(
+        maxPv: 60,
+        currentPv: 60,
+        maxMana: 3,
+        currentMana: 9,
+        armure: 0,
+        might: 0,
+      );
+      for (final points in [0, 1, 2]) {
+        expect(
+          ManaReserve.preview(channeling.withMastery(points), hero)!.banked,
+          3 + points,
+          reason: 'Maitrise $points',
+        );
+      }
     });
 
     test('mage_mark.json pose 2 Vulnerable pendant 2 tours : +50 %', () async {

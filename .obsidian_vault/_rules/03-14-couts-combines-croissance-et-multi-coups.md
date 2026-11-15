@@ -1,7 +1,7 @@
 ### 3.14. 🩸 Coûts Combinés, Croissance et Multi-coups (P-44, lot 1)
 
-Les mécanismes de profondeur des cartes, livrés par le lot 1 de P-44 sur la branche de la vague 5,
-en attente du test, de la PR, de la fusion et du tag du propriétaire —
+Les mécanismes de profondeur des cartes, livrés par le lot 1 de P-44 par la vague 5,
+fusionnée dans `main` le 2026-11-09 —
 [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md).
 Les statuts proportionnels sont en [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.1, les
 cinq runes de mécanisme en [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md) §3.8.2.

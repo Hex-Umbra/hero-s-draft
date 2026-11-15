@@ -13,6 +13,9 @@ la vague 5 sur la question P-1 de sa spec. **Décision de méthode et de périm�
 la table vit dans le fichier d'orchestration) et D7 (le périmètre gagne P-53) ; ADR-102 ne change
 que de Statut. Consignée dans la vague 5, sur sa branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, par
 la passe `memory-bank-sync` de fin de vague.
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

@@ -1,0 +1,19 @@
+{
+  "id": "laceration",
+  "name_en": "Laceration",
+  "name_fr": "Lacération",
+  "description_en": "Deal 4 damage.",
+  "description_fr": "Inflige 4 dégâts.",
+  "cost": 0,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "isExhaust": true,
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4
+    }
+  ]
+}

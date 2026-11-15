@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-09 | commit: 8a5d92b9 -->
+<!-- last-sync: 2026-11-15 | commit: 074d53ac -->
 
 # 🧠 Contexte Actuel
 
@@ -7,47 +7,35 @@
 
 ## Focus courant
 
-**La vague 5 du programme P-43 → P-42 → P-44 lot 1 est livrée sur sa branche,
-`feat/v0.5.7-p42-tranche-1-p44-lot-1`, et attend le propriétaire** : son test manuel, la PR, la
-fusion dans `main`, puis le tag. Elle porte **la tranche 1 de P-42** « Catalogue par lots de
-passif » et **le lot 1 de P-44** « Profondeur », en trois parties : le moteur et les cinq runes
-([ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)) ;
-la forme C, les trois lots, le masquage des passifs sans lot et le draft de départ à deux quotas
-([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) ; les évolutions de signature
-([ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)). **Une série de corrections du
-propriétaire l'a suivie sur la même branche** (2026-11-04 → 2026-11-07, D78 à D82, [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)) :
-le choix libre des évolutions, les deux signatures sur un écran, trois rideaux sur la carte, les
-signatures dans Mon Deck. **Rien n'en est fusionné ni publié** :
-`main` reste à `d99cd815`, et ce que le vault dit de la vague 5 n'y deviendra vrai qu'à la fusion.
-**P-44 lot 1 est clos dans `docs/ROADMAP.md`** ; P-42 reste ouvert, deux tranches à venir. Le
-[compte rendu de la vague](../../docs/superpowers/reports/2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
-porte les chiffres (§1), les arbitrages et les décisions de SDD S1 à S23 (§2) et la file (§4) ;
-sa fin — §0, §3, §6 et le fichier de tests manuels voisin — s'écrit à la fin de la vague
-(orchestration §3.8), en parallèle de cette synchronisation. **Un arbitrage que le propriétaire renverse se corrige sur la branche avant
-la fusion.**
+**La vague 6 du programme P-43 → P-42 → P-44 lot 1 est livrée sur sa branche,
+`feat/v0.5.8-p42-tranche-2`, et attend le propriétaire** : son test manuel, la PR, la fusion dans
+`main`, puis le tag. Elle porte **la tranche 2 de P-42** « Catalogue par lots de passif » : trois
+lots de cinq cartes — Croisé, Vampire, Voile — qui rouvrent *Ferveur*, *Soif de Sang* et
+*Canalisation*, et **la banque de mana de *Canalisation*** (D30,
+[ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md), qui complète ADR-105). **Rien n'en est
+fusionné ni publié** : `main` reste à `df1b671d`, et ce que le vault dit de la vague 6 n'y deviendra
+vrai qu'à la fusion. **Premier lot « sans spec »** (R31, à l'essai) : les « Décisions de
+conception » du [plan](../../docs/superpowers/plans/2026-11-15-p42-tranche-2.md) en tiennent lieu.
+Le [compte rendu de la vague](../../docs/superpowers/reports/2026-11-15-economie-et-catalogue-vague-6-compte-rendu.md)
+porte les chiffres (§1), les arbitrages A1 à A15 et les décisions de SDD S1 à S6 (§2) et la file
+(§4) ; sa fin — §0, §3, §5, §6 et le fichier de tests manuels voisin, dont le plan §8 prépare les
+points M1 à M14 — s'écrit à la fin de la vague (orchestration §3.8). **P-42 reste ouvert dans
+`docs/ROADMAP.md`** : la tranche 3 vient en vague 8. **Un arbitrage que le propriétaire renverse se
+corrige sur la branche avant la fusion.**
 
-**Deux décisions de méthode sont nées pendant la vague**, chacune d'un arrêt :
-
-- **D76** (03/11, [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md),
-  qui amende ADR-102) : **le chantier gagne une vague** — les charges élémentaires (P-53) en vague
-  7, `0.5.9` ; la tranche 3 en vague 8, toujours `0.6.0`. Les règles des charges restent à décider
-  avant la vague 7 (fiche 8.7 de l'orchestration).
-- **D77** (04/11, [ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md), qui
-  amende ADR-108) : **les tests gardent les calculs, les données, les contrôleurs et la
-  sauvegarde ; plus aucun test d'écran** — ce qu'il aurait vérifié devient un point du fichier de
-  tests manuels. Les tests d'écran existants ont été triés et supprimés (1916 → 1524), six règles
-  laissées sans garde par le premier passage ayant été re-gardées
-  ([rapport du tri](../../docs/superpowers/reports/2026-11-04-vague-5-tri-des-tests-d-ecran.md)).
-
-**La vague 4 est close** : fusionnée dans `main` le 2026-10-24 par la PR #50 (commit de fusion
-`d99cd815`), taguée `v0.5.6` sur ce commit, `release.yml` run `40107686574` vert, pré-release
-publiée le même jour — constatée par la porte d'entrée de la vague 5 (`da233ba6`) et re-vérifiée
-par `gh` à cette synchronisation. ADR-109 est désormais vrai sur `main`.
+**La vague 5 est close** : fusionnée dans `main` le 2026-11-09 par la PR #51 (commit de fusion
+`fbfa839a`), taguée `v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constatée par la
+porte d'entrée de la vague 6 (`b8e0641b`) et re-vérifiée par `gh` à cette synchronisation.
+ADR-110 à ADR-115 sont désormais vrais sur `main`. Entre la fusion et la vague 6, `main` a reçu,
+hors programme, la chaîne pixel art des créatures et le skill `/workflow-creature` (PR #52), puis
+la méthode R31 à l'essai et les maquettes de la réserve de mana (PR #53, `df1b671d`).
 
 **La méthode est celle d'[ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
 amendée par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
 [ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md),
-ADR-110 et ADR-113.** **Deux documents font foi, et ne se recopient pas** : le
+[ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md) et
+[ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md).** **Deux documents font
+foi, et ne se recopient pas** : le
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
 pour le *déroulé* et le
 [brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)
@@ -55,6 +43,15 @@ pour les *décisions de conception*.
 
 Réserves à ne pas perdre de vue :
 
+- **Ce que la vague 6 laisse ouvert**, consigné au compte rendu §4 et dans ADR-116 :
+  `effect_line_texts.dart` n'a pas de phrase pour `mana_regen` (à écrire quand une signature
+  posera le statut) ; `'status:${statusId}'` s'écrit dans `forge_rune_rules.dart`,
+  `passive_feeds.dart` et `EffectKind.of`, à factoriser à la quatrième lectrice ; au tutoriel, sans
+  couple attaque + Armure qui tienne dans le mana, la main d'avant est gardée ; la garde
+  `if (preview == null) return;` de `ManaReservePassive` est inatteignable ; seize cristaux ou plus
+  feraient déborder le HUD sous *Canalisation*. **Les flèches, la légende et le message de fin de
+  tour ne sont gardés par aucun test** (D77) : seuls leurs calculs le sont, `preview` et `shown` ;
+  l'écran va au test du propriétaire.
 - **Ce que la vague 5 laisse ouvert**, consigné au compte rendu §4 et dans ses ADR : un `flatBonus`
   qui vise un effet absent de sa signature est accepté en silence ; `DraftScreen` se quitte par le
   retour système sans choisir ; l'éditeur accepte une carte à `costs.armor` sous un passif sans classe unique ;
@@ -66,7 +63,8 @@ Réserves à ne pas perdre de vue :
   (PN12) — lignes de `docs/ROADMAP.md`. À 360 px de large, le compteur d'or de la barre de la carte
   chevauche « RELIQUES » et « CHANCES » dans le rendu de test — à confirmer sur un vrai téléphone
   (ADR-115). *Marque du Mage* ne voit toujours pas *Projectile
-  Magique* : D34 passe en **vague 8** depuis D76 ; le passif est masqué jusque-là.
+  Magique* : D34 passe en **vague 8** depuis D76 ; le passif reste masqué jusque-là, comme
+  *Bénédiction* et *Frénésie*.
 - **Ce que la vague 4 laisse ouvert**, consigné dans ADR-109 : `playSignature` ne vérifie pas que
   l'ennemi visé est présent (S4) ; l'ennemi visé par la dernière carte garde sa bordure ambre
   pendant qu'une signature est armée (S12) ; la glue Flame du ciblage n'a pas de banc de test.
@@ -88,9 +86,9 @@ Réserves à ne pas perdre de vue :
   `snake_case`** (commit `7da5db2`) : la seule étape de `SaveMigrator` migre `attaque` →
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
-  `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 5, les trois porteurs de
-  version portent déjà la sienne (`22da17b5`, note corrigée en `8a5d92b9`), **ni taguée ni publiée** ; sur `main`, celle de la
-  vague 4, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
+  `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 6, les trois porteurs de
+  version portent déjà la sienne (`074d53ac`), **ni taguée ni publiée** ; sur `main`, celle de la
+  vague 5, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
   note — la porte ne suppose jamais.
@@ -101,11 +99,35 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Vague 5 — P-42 tranche 1 et P-44 lot 1 : les lots de cartes par passif, la profondeur, les
+1. **Vague 6 — P-42 tranche 2 : Croisé, Vampire, Voile, et la banque de mana de *Canalisation***
+   (2026-11-15, branche `feat/v0.5.8-p42-tranche-2`, 12 commits `b8e0641b` → `074d53ac` sur `main`
+   à `df1b671d` — **livrée sur la branche, vague 6 du fichier d'orchestration, en attente du test,
+   de la PR, de la fusion et du tag du propriétaire**) — **six passifs sur neuf se jouent.**
+   **Trois lots de cinq cartes**, toutes communes, rangés sous `cards/<passif>/` : **Croisé**
+   (*Ferveur*, Paladin) — cinq Attaques, trois qui donnent de l'Armure, deux multi-coups à
+   `mightRatio` 0,75 ; **Vampire** (*Soif de Sang*, Berserker) — cinq Attaques, trois qui piochent,
+   *Lacération* à 0 qui s'épuise, *Frénésie sanglante* à 1 mana qui grandit avec les cartes jouées
+   ce tour ; **Voile** (*Canalisation*, Mage) — Pouvoirs durables et Compétences à 3, courbe
+   1-2-3-3-3. Leur arrivée **démasque leurs passifs par la donnée** (O5), sans code ; le Mage
+   démarre de nouveau sur *Canalisation*. **La banque de mana** (D30) : à la fin du tour, le mana
+   non dépensé passe en réserve, jusqu'au Mana max + Maîtrise, et le tour suivant commence avec
+   — `RunState.manaReserve`, jamais sauvegardée ; un seul calcul, `ManaReserve.preview`, pour la
+   stratégie et l'écran ; hors de `StatGains`. **À l'écran**, réponse C et D du propriétaire sur
+   maquettes (15/11) : flèches sur les cristaux qui passeront en réserve, légende cyan « +n au
+   prochain tour », message de fin de tour « n Mana en réserve », bordé de cyan ; Mage sous
+   *Canalisation* seulement. **Un statut neuf**, `mana_regen` (*Source de Mana*), posé par
+   *Méditation* ; *Persistant* et *Résonant* le refusent par `excludesEffects`, qui lit désormais
+   `status:<id>` (D44). **Deux corrections de la revue d'ensemble** : la main de l'étape « Jouer des
+   cartes » du tutoriel tient dans le Mana max ; la légende de la réserve quitte le combat fini.
+   Une question P, A14 — l'affichage de la réserve —, tranchée par le propriétaire sur maquettes
+   le 15/11 (`df1b671d`) ; T1.1, rendue P par le vérificateur, reclassée T. Note de version écrite (`074d53ac`). **1682 tests** (+62 sur la base de **1620**, celle
+   de la porte d'entrée), `dart analyze` propre (**vérifié le 2026-11-15**) —
+   [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md).
+2. **Vague 5 — P-42 tranche 1 et P-44 lot 1 : les lots de cartes par passif, la profondeur, les
    évolutions de signature** (2026-10-25 → 2026-11-04, branche
    `feat/v0.5.7-p42-tranche-1-p44-lot-1`, 81 commits `da233ba6` → `22da17b5` sur `main` à
-   `d99cd815` — **livrée sur la branche, vague 5 du fichier d'orchestration, en attente du test,
-   de la PR, de la fusion et du tag du propriétaire**) — **le deckbuilding existe.** **Partie 1,
+   `d99cd815` — **fusionnée dans `main` le 2026-11-09 par la PR #51, merge `fbfa839a`, taguée
+   `v0.5.7`, CI/CD verte**) — **le deckbuilding existe.** **Partie 1,
    le moteur** : une carte peut coûter des PV ou de l'Armure, sous une seule règle — jamais
    mortelle — et un seul débit ; grandir avec une source (`scaleWith`, six sources, arrondi bas) ;
    frapper plusieurs fois, la Puissance par coup au `mightRatio` ; Vulnérable, Faiblesse et Gel
@@ -131,7 +153,7 @@ Réserves à ne pas perdre de vue :
    base de **1701**, celle de la porte d'entrée ; le tri de D77 en a retiré 392), `dart analyze`
    propre (**vérifié le 2026-11-09**) — [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)
    à [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md).
-2. **Vague 4 — P-43 lot E4 : les signatures en compétences de classe** (2026-10-15 → 2026-10-16,
+3. **Vague 4 — P-43 lot E4 : les signatures en compétences de classe** (2026-10-15 → 2026-10-16,
    branche `feat/v0.5.6-p43-e4-signatures`, 25 commits `d0ac431` → `f42a25a` sur `main` à
    `848645b`, puis six retouches de la barre demandées par le propriétaire — **fusionnée dans
    `main` le 2026-10-24 par la PR #50, merge `d99cd815`, taguée `v0.5.6`, CI/CD verte, pré-release
@@ -152,38 +174,10 @@ Réserves à ne pas perdre de vue :
    propriétaire. **1694 tests** à la fin de vague (+69 sur **1625**), **1701** à la fusion,
    `dart analyze` propre (**vérifié le 2026-10-16**) —
    [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md), qui amende ADR-094, ADR-101 et ADR-084.
-3. **Vague 3 — P-43 lot E3 : une carte après chaque combat, la main en stat de run, l'XP par acte,
-   la difficulté sur les rangs, l'affûtage hors du feu** (2026-10-03 → 2026-10-04, branche
-   `feat/v0.5.5-p43-e3-trouvaille`, 34 commits `9282513` → `b6abcb5` sur `main` à `bca35c5` —
-   **fusionnée dans `main` le 2026-10-04 par la PR #49, merge `0ec09ab`, taguée, CI/CD verte,
-   release publiée**) — **chaque combat rapporte une carte, et les fusions cessent
-   d'être rares.** Après un combat normal, une carte commune tirée parmi celles que la classe peut
-   recevoir entre au deck sans choix ; en élite, une seconde à 25 % ; deux reliques rares, le
-   *Registre des primes* et la *Sacoche du glaneur*, le modulent. La carte bonus du boss « XP »
-   disparaît : il **monte une rune** du deck d'un niveau, deux avec la *Meule*, relique légendaire ;
-   le *Rémouleur*, un événement, en monte une contre 10 % des PV max ; une mythique,
-   ***Transcendance***, relève de 1 le plafond d'un type de rune pour la run — *Économe 2* devient
-   possible, et le nom dit le niveau. Le *Colporteur* échange la relique la plus faible contre de
-   l'or, ou contre des soins sous la moitié des PV. **La main maximale devient une stat de run**,
-   lue par les six chemins de pioche — la « pioche infinie » rapportée n'est pas reproduite après
-   15 920 contrôles, ADR-078 D3 est amendé ; **le prix d'un niveau est une table par acte** dans
-   `assets/data/xp_curve.json`, chargée par un `loadDocument` neuf, le palier dérivé de l'acte et
-   jamais stocké ; **la difficulté adaptative lit 2 × Σ des rangs de fusion**, plus le nombre de
-   cartes. *Sagesse* passe mythique ; *Bénédiction* et *Flux de Mana* lisent leurs seuils en
-   donnée, et la Maîtrise affichée dit ce qu'elle change vraiment. **Trois corrections** :
-   l'infobulle du boss d'XP disait « x2 » ; le retour système rejouait un événement dans le même
-   nœud ; la fiche des probabilités affichait des chances qu'aucun tirage n'utilise. **La spec n'a
-   convergé qu'au sixième tour** : trois arrêts de la vague, chacun levé par le propriétaire le
-   2026-10-03 ; deux parties, la boucle puis les sources. La simulation, relancée en deux temps :
-   réalignement à diff vide, puis la relique B, l'événement de D29 et la table d'XP du jeu relancés
-   chacun à part, écarts expliqués, référence recommitée (`11410f3`). Note de version écrite
-   (`b6abcb5`). **1625 tests** (+145 sur la base de **1480**, celle de la porte d'entrée), `dart
-   analyze` propre (**vérifié le 2026-10-04**) — [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md),
-   qui amende ADR-078 D3 et complète ADR-096, ADR-097 D3, ADR-098, ADR-099 D1, ADR-101, ADR-105 D7
-   et ADR-106.
 
 > [!NOTE]
-> **Rotations.** Sortie le 2026-11-04, dans `../_archive/` : `2026-11-04-activeContext-livraisons.md`
+> **Rotations.** Sortie le 2026-11-15, dans `../_archive/` : `2026-11-15-activeContext-livraisons.md`
+> (la vague 3, P-43 lot E3). Sortie le 2026-11-04 : `2026-11-04-activeContext-livraisons.md`
 > (la vague 2, P-43 lot E2). Sortie le 2026-10-16 : `2026-10-16-activeContext-livraisons.md`
 > (la vague 1, P-43 lots E0 et E1). Sortie le 2026-10-04 : `2026-10-04-activeContext-livraisons.md`
 > (le dossier du programme — brainstorm v3, revue, simulation, méthode par vagues). Sorties le
@@ -198,23 +192,23 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire, sur la vague 5** : une fois la fin de vague écrite (orchestration
-§3.8), il joue **le [fichier de tests manuels](../../docs/superpowers/reports/2026-11-04-economie-et-catalogue-vague-5-tests-manuels.md)**
-de la vague, voisin du
-[compte rendu](../../docs/superpowers/reports/2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md)
-— 41 points : ceux que les revues renvoient au test, M7 à M34 de la spec, préparés par l'entrée
-de debug des évolutions, et ceux de la série de corrections, jusqu'à M41 pour les rideaux —, lit la table des arbitrages (§2), ouvre la PR de
-`feat/v0.5.7-p42-tranche-1-p44-lot-1`, la fusionne dans `main`, puis pose le tag de la version sur
-le commit de fusion (ADR-103 D1). Une correction demandée se fait sur la branche, avant la fusion.
+**D'abord le propriétaire, sur la vague 6** : une fois la fin de vague écrite (orchestration
+§3.8) — dont le fichier de tests manuels, qui reprend les points M1 à M14 du
+[plan](../../docs/superpowers/plans/2026-11-15-p42-tranche-2.md) §8, du plus au moins risqué —, il
+le joue, lit la table des arbitrages du
+[compte rendu](../../docs/superpowers/reports/2026-11-15-economie-et-catalogue-vague-6-compte-rendu.md)
+(§2), ouvre la PR de `feat/v0.5.8-p42-tranche-2`, la fusionne dans `main`, puis pose le tag de la
+version sur le commit de fusion (ADR-103 D1). Une correction demandée se fait sur la branche, avant
+la fusion.
 
-**Puis la vague 6 du fichier d'orchestration**, `0.5.8` : **la tranche 2 de P-42** — trois lots,
-Croisé (Paladin, *Ferveur*), Vampire (Berserker, *Soif de Sang*), Voile (Mage, *Canalisation*),
-qui rouvrent leurs passifs. Elle se lance dans une session neuve, **sous D77** — aucun test
-d'écran —, et **sa porte d'entrée attend le tag de la vague 5** : tag ancêtre de `main`, CI/CD
-verte, constatée par `gh` — c'est elle qui notera la vague 5 close. Elle hérite d'ADR-112 : le lot
-d'une tranche ouvre son passif sans code, et les `feeds` des passifs sans lot sont des valeurs de
-départ qu'elle ajuste. **La vague 7 ne s'ouvre pas** tant que les règles des charges élémentaires
-ne sont pas devenues des décisions du brainstorm (D76, fiche 8.7).
+**Puis la vague 7 du fichier d'orchestration** (sa version y est fixée, §1) : **les charges élémentaires** (P-53, D76,
+[ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)) — le Gel, le Feu et la
+Foudre qui s'accumulent jusqu'à un seuil qui les fait rompre. **Elle ne s'ouvre pas encore** : sa fiche, §8.7 de l'orchestration, est **à compléter
+avant elle, dans une session de documentation**, pour que les règles des charges deviennent des
+décisions du brainstorm. Elle se lancera ensuite dans une session neuve, **sous D77** — aucun test
+d'écran —, et **sa porte d'entrée attendra le tag de la vague 6** : tag ancêtre de `main`, CI/CD
+verte, constatée par `gh` — c'est elle qui notera la vague 6 close. La tranche 3 de P-42
+(*Bénédiction*, *Frénésie*, *Marque du Mage*, D34) suit en vague 8.
 
 Une question reste tenue dans `docs/ROADMAP.md` §4, hors programme : la **Maîtrise dans l'onglet
 Héros du menu de debug**.

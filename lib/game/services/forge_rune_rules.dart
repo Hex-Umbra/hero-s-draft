@@ -77,8 +77,16 @@ class ForgeRuneRules {
       return false;
     }
 
-    // Les effets propres de la carte, jamais ceux qu'une rune lui ajoute.
-    final own = {for (final effect in card.data.effects) effect.type};
+    // Les effets propres de la carte, jamais ceux qu'une rune lui ajoute. Un
+    // statut posé compte aussi sous `status:<id>`, le vocabulaire de `feeds`
+    // (spec P-42 tranche 2, A6).
+    final own = {
+      for (final effect in card.data.effects) ...[
+        effect.type,
+        if (effect.type == 'apply_status' && effect.statusId != null)
+          'status:${effect.statusId}',
+      ],
+    };
     final wanted = rune.eligibleEffects;
     if (wanted != null && !wanted.any(own.contains)) return false;
     if (rune.excludesEffects.any(own.contains)) return false;

@@ -233,9 +233,9 @@ void main() {
   });
 
   group('Le choix du passif', () {
-    // Le registre livré n'ouvre qu'un passif par classe (O5) : Bénédiction et
-    // Marque du Mage, ouvertes par une carte de lot de test, gardent à ces
-    // tests un second passif à choisir. Le registre ouvert reste le
+    // Le registre livré ouvre deux passifs par classe (O5) : Bénédiction et
+    // Marque du Mage, ouvertes par une carte de lot de test, ajoutent un
+    // troisième passif à choisir. Le registre ouvert reste le
     // singleton de la fin du fichier : il ne diffère du livré que par ces
     // deux cartes, qu'aucun autre groupe ne lit.
     late GameDataRegistry opened;
@@ -700,6 +700,31 @@ void main() {
       expect(
         engine.mockState.hand.map((c) => c.data.id).toList(),
         ['heavy_strike', 'iron_wall'],
+      );
+    });
+
+    test('Jouer des cartes seme deux cartes qui tiennent dans le Mana du Mage '
+        'sous Canalisation', () {
+      final mage = engine.fixtures.heroes.firstWhere((h) => h.id == 'mage');
+      engine.chooseHero(mage);
+      // Bouclier d'ether coute 3 : avec une attaque a 1, la main depasserait
+      // les 3 Mana, et la lecon obligerait a finir le tour en cours de route.
+      engine.setStarterDeck([
+        engine.fixtures.card('strike_basic'),
+        engine.fixtures.card('ether_shield'),
+        engine.fixtures.card('defend_basic'),
+      ]);
+
+      engine.prepareStep(7);
+
+      final hand = engine.mockState.hand;
+      expect(
+        hand.fold<int>(0, (total, c) => total + c.currentCost),
+        lessThanOrEqualTo(engine.mockState.heroStats.maxMana),
+      );
+      expect(
+        hand.map((c) => c.data.id).toList(),
+        ['strike_basic', 'defend_basic'],
       );
     });
 
