@@ -16,6 +16,9 @@ corrigée sur place, avec l'accord du propriétaire, au commit `8a5d92b9`. Maque
 [choix des évolutions](../../docs/presentations/2026-11-06_choix_des_evolutions_maquettes.pptx),
 [signatures hors combat](../../docs/presentations/2026-11-06_signatures_hors_combat_maquettes.pptx),
 [rideaux](../../docs/presentations/2026-11-07_rideaux_des_evolutions_maquettes.pptx).
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

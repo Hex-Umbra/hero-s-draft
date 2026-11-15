@@ -20,6 +20,9 @@ et le correctif de revue `f9f4da3f`, sur le plan `d125d597`, écrit sous D77
 [spec](../../docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md), §3.7, §4.10, §5.1,
 §5.2, §5.4, §8 — arbitrages A24 à A42 ; décisions de SDD S15 à S23 au
 [compte rendu](../../docs/superpowers/reports/2026-11-03-economie-et-catalogue-vague-5-compte-rendu.md), §2.
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

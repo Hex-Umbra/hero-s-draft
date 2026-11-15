@@ -35,7 +35,7 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 | `rage` | `RagePassive` | `value × (1 + PV manquants ~/ 10)` Puissance pour `duration` |
 | `bloodthirst` | `BloodthirstPassive` | Arme le Vol de vie `duration` tours, valeur croissant par quart de PV manquants |
 | `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** — la pioche bornée par `RunState.maxHandSize` depuis la vague 3 |
-| `channeling` | `ChannelingPassive` | `mana non dépensé × value` armure |
+| `mana_reserve` | `ManaReservePassive` | *Canalisation* (D30, vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : écrit `ManaReserve.preview(passive, heroStats).banked` par `RunController.setManaReserve` — le mana non dépensé, plafonné à `maxMana + value` ; la clé est `ManaReserve.effectType`. Remplace `channeling` / `ChannelingPassive` (`mana non dépensé × value` armure), supprimés |
 | `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
 | `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat — le seuil arrive Maîtrise appliquée, plancher compris ; le plancher codé `threshold < 1 ? 1 : …`, inerte, a disparu depuis la vague 3 |
 
@@ -68,6 +68,12 @@ sérialiser.
 > type** ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)) : *Soif de Sang* s'arme sur *Châtiment*, *Flux de Mana* compte les deux
 > signatures du Mage, et *Marque du Mage* ne voit plus *Projectile Magique*, devenu Compétence.
 
+> [!NOTE]
+> **Une seule lecture hors du répartiteur applique la Maîtrise comme lui** : `ManaReserve.forRun(run)`
+> (`lib/game/systems/mana_reserve.dart`), l'aperçu de la réserve que lit l'écran, appelle
+> `activePassive.withMastery(effectiveMastery)` puis le même `preview` que la stratégie — un test
+> vérifie qu'il rend ce que la fin du tour écrit.
+
 Chaque stratégie implémente `PassiveStrategy.resolve(PassiveData passive, PassiveEvent event, RunController run)`
 (`lib/game/systems/passives/passive_strategy.dart`) et lit `passive.value` **déjà augmenté** par
 `dispatch` — elle ne lit jamais `effectiveMastery` elle-même. Chaque gain d'armure passe par
@@ -78,15 +84,16 @@ et `referential_integrity_test` refuse qu'un passif livré soit dans ce cas.
 
 **Éligibilité et rang** : chaque passif déclare ses `classes` (absent = toutes) ; le point d'accès
 unique `availablePassivesFor(HeroData, GameDataRegistry)` (`lib/game/systems/passive_availability.dart`)
-est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. **Depuis la vague 5** (vague 5, en attente du propriétaire
+est la seule fonction qui les lit, triés par **`(displayOrder, id)`**. **Depuis la vague 5** (vague 5, fusionnée dans `main` le 2026-11-09
 — [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)), « disponible » vaut
 **éligible et pourvu d'un lot** : au moins une carte de `registry.cards` porte l'id du passif dans
 `passive` ; la règle se lit sur le registre, jamais sur une liste, et un dossier `cards/<passif>/`
-neuf ouvre son passif sans code. P-13 y ajoutera le déblocage, sans toucher aux lecteurs. Ses deux lecteurs ne le
+neuf ouvre son passif sans code — ainsi les lots de la tranche 2 ont rouvert *Ferveur*, *Soif de
+Sang* et *Canalisation* (vague 6). P-13 y ajoutera le déblocage, sans toucher aux lecteurs. Ses deux lecteurs ne le
 consomment plus de la même façon depuis le **lot C partie 2** de P-41 : l'écran de sélection de
 classe affiche **toute** la liste et laisse le joueur choisir — jamais un `take(3)`, le compte de
-trois étant celui d'aujourd'hui et non une règle —, tandis que le **tutoriel** prend encore le
-premier (`tutorial_fixtures.dart:58`), son étape de choix de classe étant reportée au **lot D**. Le
+trois étant celui d'aujourd'hui et non une règle —, tandis que le **tutoriel**, depuis le lot D, pose le
+premier comme défaut (`TutorialEngine.chooseHero`) et laisse le joueur en choisir un autre. Le
 rang reste explicite : c'est lui qui fixe l'ordre d'affichage et le choix par défaut, là où l'ordre
 alphabétique déciderait sinon
 ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).

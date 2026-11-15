@@ -84,7 +84,7 @@ Trois lectures et un réglage, posés par
 - **En lecture seule** — la classe, ses règles de stat, son passif actif. Ils viennent du
   `class.json` et du choix de passif ; les écraser produirait une run qu'aucune sauvegarde ne
   saurait relire, `RunState.statRules` étant relu de la classe et non sérialisé.
-- **Les évolutions de signature** (vague 5, en attente du propriétaire, réponse P-7 (a) —
+- **Les évolutions de signature** (vague 5, fusionnée dans `main` le 2026-11-09, réponse P-7 (a) —
   [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)) : par signature de la run, ses
   références prises, **un bouton par évolution admissible** et « Retirer les évolutions ».
   `DebugActions.takeSignatureEvolution` pose par la règle du jeu, `SignatureEvolutionRules.take`

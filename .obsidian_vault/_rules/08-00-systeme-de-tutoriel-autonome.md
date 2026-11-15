@@ -61,7 +61,10 @@ sur l'étape 01.
 2. **Choix de classe, et de son passif** *(une classe choisie)* : les 3 héros avec leurs vraies
    valeurs (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et **tous** les passifs que
    `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/` — depuis la vague 5,
-   un seul par classe, le seul pourvu d'un lot ; le Mage démarre sur *Flux de Mana*. Le bloc dépliant est
+   deux par classe depuis la tranche 2 (vague 6, en attente du test, de la PR, de la fusion et du
+   tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) ; le Mage
+   démarre de nouveau sur *Canalisation*, son premier par `displayOrder`, avec sa description
+   neuve, lue dans la donnée. Le bloc dépliant est
    le `ClassPassiveList` de `ClassSelectionScreen` — le widget de production, pas une seconde
    implémentation : c'est le remède que demande le §1.4 de la spec de P-41. Repliée, chaque carte
    montre le passif avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
@@ -94,7 +97,15 @@ sur l'étape 01.
    (Attaque/Compétence/Pouvoir), cartes rendues par `UiCard.fromInstance`.
 8. **Jouer des cartes & finir le tour** *(dégât porté et armure gagnée)* : glisser-déposer sur
    la cible, cycle de tour complet (pioche, défausse, double confirmation si mana restant,
-   armure remise à 0). Le texte flottant d'une Compétence **mesure le gain réel** de part et
+   armure remise à 0). **La main semée — une attaque qui vise un ennemi et une Compétence qui donne
+   de l'Armure, tirées du deck drafté — tient dans le Mana max du héros** (vague 6,
+   `TutorialEngine._seedPlayCardHand`) : le premier couple du deck dont les coûts courants tiennent
+   l'emporte ; sans couple qui tienne, le premier couple d'avant reste ; sans les deux gestes, les
+   fixtures *Frappe* et *Défense*. *Bouclier d'éther*, à 3, avec une attaque, aurait obligé à finir
+   le tour avant le second geste. **La fin de tour ne joue aucun passif** : le mana revient au
+   maximum, rien ne passe en réserve, et le message reste « Mana restant. Terminer le tour ? » en
+   orange, même pour un Mage sous *Canalisation* (A12) — la leçon apprend à finir un tour, pas un
+   passif. Le texte flottant d'une Compétence **mesure le gain réel** de part et
    d'autre de `playCard` (`armure` et `effectiveMight` avant/après) au lieu de lire la valeur
    imprimée sur la carte : une classe qui convertit son Armure y lit sa Puissance. Le `else if`
    y est délibéré — sans branche qui matche, l'étape ne dit rien plutôt que d'annoncer zéro. Le

@@ -21,6 +21,10 @@ changent) et D10 (l'héritage garde toutes les runes).
 **Complété le 2026-10-04 par [ADR-107](ADR-107-trouvaille-et-progression.md)** (P-43, lot E3, fusionné dans `main` le 2026-10-04 par la PR #49) sur D7 : `boundLevel` et tous ses lecteurs
 reçoivent le bonus de plafond de la run (`capBonus`), et `DeckNotifier.raiseRuneLevel` devient un
 écrivain de niveau de plus.
+**Complété le 2026-11-15 par [ADR-116](ADR-116-canalisation-une-banque-de-mana.md)** (P-42 tranche 2,
+vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire) sur le prédicat
+d'éligibilité : les effets propres d'une carte comptent aussi `status:<id>` pour chaque
+`apply_status`, et `excludesEffects` peut nommer un statut posé.
 **Amende [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)** sur ses
 décisions D1, D3, D4 et D5 ; **complète [ADR-061](ADR-061-strategy-pattern-pour-la-resolution-des-effets-de.md)** ;
 livre la décision D4 d'[ADR-104](ADR-104-un-statut-par-source-et-ratio-de-conversion.md).

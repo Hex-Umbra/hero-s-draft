@@ -4,7 +4,7 @@
 l'écran et le choix des évolutions de signature, sans Riverpod, sans état ni hasard : une
 `SignatureInstance`, rien d'autre. Plus de tirage depuis D78
 ([ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md)). Vague 5
-(P-42 tranche 1, partie 3), en attente du propriétaire —
+(P-42 tranche 1, partie 3), fusionnée dans `main` le 2026-11-09 —
 [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md). Règle de jeu :
 [`_rules/02-8`](../_rules/02-8-evolutions-de-signature.md).
 

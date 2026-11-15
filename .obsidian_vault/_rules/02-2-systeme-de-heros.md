@@ -120,13 +120,16 @@ le joueur **choisit le sien à l'écran de sélection de classe** : la carte dé
 choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-des-recompenses.md)).
 
 > [!IMPORTANT]
-> **Un passif sans lot de cartes n'est pas proposé** (O5 ; vague 5, en attente du propriétaire —
-> [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)). `availablePassivesFor` rend
+> **Un passif sans lot de cartes n'est pas proposé** (O5 ; vague 5, fusionnée dans `main` le
+> 2026-11-09 — [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)). `availablePassivesFor` rend
 > les passifs **éligibles à la classe et pourvus d'un lot** : au moins une carte du registre porte
 > leur id dans `passive` ([`_rules/02-3`](02-3-catalogue-de-cartes.md)). Aucune liste n'est écrite :
-> un lot qui arrive ouvre son passif sans code. **Depuis la tranche 1, un seul passif par classe est
-> jouable** — `regen_armor`, `rage`, `mana_flux` ; les six autres reviennent avec leurs lots,
-> trois à la tranche 2, trois à la tranche 3. Une sauvegarde sous un passif masqué reprend avec
+> un lot qui arrive ouvre son passif sans code. **Depuis la tranche 2, deux passifs par classe sont
+> jouables** (vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+> [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) — `regen_armor` et `fervor`,
+> `rage` et `bloodthirst`, `channeling` et `mana_flux` ; le Mage démarre de nouveau sur
+> *Canalisation*, son premier par `displayOrder`. Les trois autres — `blessing`, `frenzy`,
+> `mage_mark` — reviennent avec la tranche 3. Une sauvegarde sous un passif masqué reprend avec
 > lui. Chaque passif déclare **exactement une classe** dans `classes` (D9) et, dans **`feeds`**, ce
 > qu'une carte de son lot doit toucher (D45).
 
@@ -138,7 +141,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 | 1 | `rage` | Berserker | `startOfTurn` | `rage` | 1, durée 1 | +1 Puissance pour le tour, +1 par tranche de 10 PV manquants |
 | 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
 | 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
-| 1 | `channeling` | Mage | `endOfTurn` | `channeling` | 1 | Chaque Mana non dépensé devient 1 armure |
+| 1 | `channeling` | Mage | `endOfTurn` | `mana_reserve` | 0, Maîtrise +1 | **Banque de mana** (D30) : à la fin du tour, le Mana non dépensé est mis en réserve, jusqu'au Mana max + `value` ; le tour suivant commence à `maxMana` + réserve. La Maîtrise relève le plafond de 1 par point ([`_rules/03-1`](03-1-gestion-du-mana.md), ADR-116). Jusqu'à la vague 5 : chaque Mana non dépensé devenait 1 armure |
 | 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | **2**, durée 2 | La **première** Attaque du tour applique 2 Vulnérable à sa cible pendant 2 tours (1 avant la vague 5, recalibré par le barème proportionnel) — une signature d'Attaque compte, aucune du Mage n'en est une |
 | 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3, plancher 2 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour ; la Maîtrise abaisse le seuil, jamais sous 2 |
 

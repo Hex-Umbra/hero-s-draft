@@ -1,11 +1,13 @@
 ### 2.3. Catalogue de Cartes
 
-Le catalogue compte **33 cartes** : **15 neutres** sous `assets/data/cards/<id>.json` et **18 cartes
-de lot**, six par passif, sous `assets/data/cards/<passif>/<id>.json` — **re-mesuré le 2026-11-04**
-(`find assets/data/cards -name '*.json'`). Le nom du fichier est l'`id` ; le nom du dossier d'un lot
-est l'id de son passif. La forme C est de la tranche 1 de P-42, livrée sur la branche de la vague 5,
-en attente du test, de la PR, de la fusion et du tag du propriétaire —
-[ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md). Les signatures ne sont pas des
+Le catalogue compte **48 cartes** : **15 neutres** sous `assets/data/cards/<id>.json` et **33 cartes
+de lot** sous `assets/data/cards/<passif>/<id>.json` — six par passif de la tranche 1, cinq par
+passif de la tranche 2 (D16) — **re-mesuré le 2026-11-15** (`find assets/data/cards -name '*.json'`).
+Le nom du fichier est l'`id` ; le nom du dossier d'un lot est l'id de son passif. La forme C est de
+la tranche 1 de P-42, vague 5, fusionnée dans `main` le 2026-11-09 —
+[ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md) ; la tranche 2 est livrée sur la
+branche de la vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+[ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md). Les signatures ne sont pas des
 cartes : leur règle est en [`_rules/02-2`](02-2-systeme-de-heros.md) §Signatures
 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 
@@ -25,8 +27,19 @@ cartes : leur règle est en [`_rules/02-2`](02-2-systeme-de-heros.md) §Signatur
 | **Sang** | `rage`, Berserker | *Sang versé*, *Pacte de sang*, *Dernier souffle*, *Fureur sanguine*, *Transe*, *Forme Démoniaque* | `costs.hp`, `scaleWith: missingHp`, l'Éveil de Puissance |
 | **Arcaniste** | `mana_flux`, Mage | *Éclat*, *Onde*, *Embrasement*, *Rafale d'étincelles*, *Nova de givre*, *Décharge* | Compétences seulement : dégâts à 1, altération pure, multi-coups, statuts proportionnels |
 
-Les six autres passifs n'ont pas encore de lot : ils ne sont pas proposés à la sélection
-([`_rules/02-2`](02-2-systeme-de-heros.md) §Passifs). Les mécanismes sont en
+### Les lots de la tranche 2
+
+Cinq cartes par lot, toutes communes ; les valeurs, dans chaque fichier et au
+[plan](../../docs/superpowers/plans/2026-11-15-p42-tranche-2.md) §3.
+
+| Lot | Passif, classe | Cartes | Mécanismes |
+|:---|:---|:---|:---|
+| **Croisé** | `fervor`, Paladin | *Riposte*, *Jugement*, *Marteau sacré*, *Fléau béni*, *Charge du croisé* | Cinq Attaques, trois qui donnent de l'Armure ; deux multi-coups à `mightRatio` 0,75 |
+| **Vampire** | `bloodthirst`, Berserker | *Morsure*, *Lacération*, *Curée*, *Frénésie sanglante*, *Traque* | Cinq Attaques, trois qui piochent (D35) ; *Lacération* à 0, épuisable ; *Frénésie sanglante* à 1 mana, `scaleWith: cardsPlayedThisTurn` |
+| **Voile** | `channeling`, Mage | *Barrière*, *Méditation*, *Sceau*, *Cataclysme*, *Bouclier d'éther* | Pouvoirs durables et Compétences à 3, courbe 1-2-3-3-3 ; *Méditation* pose `mana_regen` et s'épuise ; aucune carte à 0 (D11) |
+
+Les trois passifs restants — `blessing`, `frenzy`, `mage_mark` — n'ont pas encore de lot : ils ne
+sont pas proposés à la sélection ([`_rules/02-2`](02-2-systeme-de-heros.md) §Passifs). Les mécanismes sont en
 [`_rules/03-14`](03-14-couts-combines-croissance-et-multi-coups.md) ; les valeurs de chaque carte,
 dans son fichier — des ordres de grandeur que le test du propriétaire corrige.
 
@@ -35,8 +48,11 @@ dans son fichier — des ordres de grandeur que le test du propriétaire corrige
   d'Armure sous une classe qui convertit la sienne** (A7). Les deux règles vivent dans `LotRules`,
   lu par le test du catalogue et par l'éditeur de contenu, où la carte de lot est la dixième
   catégorie.
-- **Aucune neutre ne coûte autre chose que du mana** (D17), **aucun lot ne porte de carte à coût
-  total nul**, et toutes les cartes de la tranche sont communes.
+- **Aucune neutre ne coûte autre chose que du mana** (D17), et toutes les cartes de lot sont
+  communes. **Une seule carte de lot est à coût total nul**, *Lacération*, et elle s'épuise : sous
+  *Soif de Sang*, les cartes gratuites offertes sont *Concentration* et elle, toutes deux
+  épuisables (D50, le coût total compte `costs`). Seules *Lacération* et *Méditation* s'épuisent
+  parmi les cartes de lot.
 - **Le noyau neutre** : *Focalisation* (`focus`) est **supprimée** (D28) ; *Forme Démoniaque* a
   rejoint le lot Sang, contenu inchangé ; *Trait de Glace* pose 2 Gel au lieu de 1 (barème
   proportionnel). Les 14 autres sont inchangées.

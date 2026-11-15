@@ -3,7 +3,7 @@
 `lib/ui/widgets/hud/signature_bar.dart` — la colonne des signatures au milieu gauche de l'écran de
 combat, en miroir du bouton de fin de tour. Livrée par le lot E4 de P-43
 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), reprise par la vague 5 (P-42 tranche 1,
-partie 3, en attente du propriétaire — [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)) :
+partie 3, fusionnée dans `main` le 2026-11-09 — [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md)) :
 la tuile perd son texte pour une bande d'icônes, gagne un badge et des puces, et déroule sa liste à
 l'appui long. Règle de jeu : [`_rules/02-8`](../_rules/02-8-evolutions-de-signature.md) §2.8.4.
 

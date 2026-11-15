@@ -40,9 +40,9 @@ Le calcul s'exécute selon les étapes logiques strictes suivantes :
 
 Il retourne un tuple `(int finalDamage, bool isCrit)`.
 
-**Statuts que fabrique `EffectResolver.createStatus`** — re-lu le 2026-10-02 : `poison`, `might`, `weakness`, `vulnerable`, `might_regen`, `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution). Seule la branche `might` retient le paramètre facultatif `sourceId` (ADR-104). `strength` et `strength_regen`, que cette ligne citait, sont devenus `might` et `might_regen` avec [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) ; `crit_chance` n'est pas fabriqué ici.
+**Statuts que fabrique `EffectResolver.createStatus`** — re-lu le 2026-11-15 : `poison`, `might`, `weakness`, `vulnerable`, `might_regen`, `mana_regen` (la *Source de Mana*, vague 6, [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)), `armor_regen`, `burn` (Brûlure), `freeze` (Gel), `shock` (Électrocution). Seule la branche `might` retient le paramètre facultatif `sourceId` (ADR-104). `strength` et `strength_regen`, que cette ligne citait, sont devenus `might` et `might_regen` avec [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md) ; `crit_chance` n'est pas fabriqué ici.
 
-**Depuis le lot 1 de P-44** (vague 5, en attente du propriétaire —
+**Depuis le lot 1 de P-44** (vague 5, fusionnée dans `main` le 2026-11-09 —
 [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)) :
 chaque effet reçoit son terme de croissance, `EffectResolver.scaleTerm` (`floor(ratio × source)`,
 lu au moment de l'effet), et le premier `apply_status` de la résolution le bonus de statut ;

@@ -20,6 +20,9 @@ répertoire injecte aussi le passif), [ADR-096](ADR-096-passifs-partages-eligibi
 (une dixième catégorie d'éditeur). Conception :
 [spec](../../docs/superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md), §3.2 à §3.5, §4.8,
 §4.9, §7 — arbitrages A1 à A10 et leurs motifs.
+**Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
+`v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
+la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
 ### Contexte
 

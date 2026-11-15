@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 300 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-11-04** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-11-15** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -15,7 +15,7 @@
 | 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
 | 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 90 |
 | 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 41 |
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 85 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 95 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 117 |
 | 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 151 |
 | 10. Architecture du Système de Runes et de Fusion de Cartes (Runes & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 178 |
@@ -25,7 +25,7 @@
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
 | 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 134 |
 | 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 136 |
-| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 166 |
+| 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 168 |
 
 ### 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`)
 
@@ -33,7 +33,7 @@
 |:---|:---|---:|
 | 2. Rôle des Contrôleurs et Architecture Modulaire (`lib/game/controllers/`) | [02-00-role-des-controleurs-et-architecture-modulair.md](../_patterns/02-00-role-des-controleurs-et-architecture-modulair.md) | 5 |
 | 2.1. `RunController` (`runProvider`) — Superviseur Global (Façade) | [02-1-runcontroller-superviseur-global.md](../_patterns/02-1-runcontroller-superviseur-global.md) | 39 |
-| 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 18 |
+| 2.1.bis Persistance de Run — `SaveService`, Checkpoints et Réhydratation (v3.2.0) | [02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md](../_patterns/02-1-bis-bis-persistance-de-run-saveservice-checkpoint.md) | 19 |
 | 2.2. `CombatController` (`combatProvider`) — Pilote de Combat (Façade) | [02-2-combatcontroller-pilote-de-combat.md](../_patterns/02-2-combatcontroller-pilote-de-combat.md) | 32 |
 | 2.3. `DeckNotifier` (`deckProvider`) — Maître du Deck | [02-3-decknotifier-maitre-du-deck.md](../_patterns/02-3-decknotifier-maitre-du-deck.md) | 35 |
 | 2.4. `EventController` (`eventProvider`) | [02-4-eventcontroller.md](../_patterns/02-4-eventcontroller.md) | 60 |
@@ -48,12 +48,12 @@
 |:---|:---|---:|
 | 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage | [03-1-encountersystem-generateur-de-combats-courbes.md](../_patterns/03-1-encountersystem-generateur-de-combats-courbes.md) | 87 |
 | 3.2. `MapGeneratorService` — Générateur de Graphe de Carte du Monde (DAG World Map) | [03-2-mapgeneratorservice-generateur-de-graphe-de-c.md](../_patterns/03-2-mapgeneratorservice-generateur-de-graphe-de-c.md) | 21 |
-| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 98 |
+| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 105 |
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 52 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 16 |
 | 3.7. Logique des Runes Data-Driven & Puits d'Échange | [03-7-logique-de-forge-data-driven-forge-de-fusion.md](../_patterns/03-7-logique-de-forge-data-driven-forge-de-fusion.md) | 18 |
-| 3.8. `SignatureEvolutionRules` — les Règles Pures des Évolutions de Signature | [03-8-signatureevolutionrules-regles-pures-des-evolutions.md](../_patterns/03-8-signatureevolutionrules-regles-pures-des-evolutions.md) | 47 |
+| 3.8. `SignatureEvolutionRules` — les Règles Pures des Évolutions de Signature | [03-8-signatureevolutionrules-regles-pures-des-evolutions.md](../_patterns/03-8-signatureevolutionrules-regles-pures-des-evolutions.md) | 50 |
 
 ### 5. UI et Composants Graphiques
 
@@ -72,7 +72,7 @@
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
 | 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 29 |
 | 5.12. Barre de Signatures — le `RenderBox` de la Bande et le Calque `OverlayPortal` | [05-12-barre-de-signatures-bande-et-calque.md](../_patterns/05-12-barre-de-signatures-bande-et-calque.md) | 63 |
-| 5.13. Table d'Icônes d'Effet — `EffectIconTable`, `EffectKind` et `effect_style` | [05-13-table-d-icones-d-effet.md](../_patterns/05-13-table-d-icones-d-effet.md) | 46 |
+| 5.13. Table d'Icônes d'Effet — `EffectIconTable`, `EffectKind` et `effect_style` | [05-13-table-d-icones-d-effet.md](../_patterns/05-13-table-d-icones-d-effet.md) | 48 |
 
 ### 19. Éditeur de Contenu (P-30)
 
