@@ -217,8 +217,9 @@ La règle des couches veut que le contrôleur décide et que Flame lise ; « lis
 chaque vague. `startEnemyTurn` ferme le tour du joueur et joue la **première** vague ; une méthode neuve,
 `resolveNextFireWave`, joue la suivante et rend `false` quand il n'y en a plus ; une autre,
 `resolveEnemyStatuses`, joue le reste des statuts et `cleanDeadEnemies`. Chaque vague laisse dans `CombatState` un
-**compte rendu** — pour chaque porteur résolu : ses tranches, ses dégâts, et pour chaque voisin les dégâts et le
-Feu reçus —, que Flame lit pour animer la vague, et qui retombe à `null` après la dernière ; il n'est pas
+**compte rendu** — pour chaque porteur résolu : ses tranches et son élément ; pour chaque voisin, le Feu reçu —
+les dégâts se lisent sur les PV (P-d) ; le plan de la partie 2 a retiré les dégâts nominaux du compte rendu —,
+que Flame lit pour animer la vague, et qui retombe à `null` après la dernière ; il n'est pas
 sauvegardé. `HerosDraftGame._enemyRipostePhase` (`heros_draft_game.dart:369-401`) appelle ces étapes l'une après
 l'autre, avec un délai entre deux vagues ; `game_screen.dart:366-379` câble les deux rappels neufs. Le contrat de `startEnemyTurn` change donc : les tests qui l'appelaient pour tout le début de phase passent par un helper (§9). Ainsi l'état
 ne montre jamais les PV d'une vague avant qu'elle soit animée, et Flame ne calcule aucune règle.
@@ -544,7 +545,8 @@ suit chaque carte jouée (`combat_controller.dart:324`), son Feu avec lui. L'exp
 lot.
 
 **Le compte rendu de vague** (A12) : à la fin de chaque vague, `CombatState` porte, pour chaque porteur résolu, ses
-tranches et ses dégâts, et pour chaque voisin touché ses dégâts et son Feu reçu ; Flame le lit pour animer la
+tranches et son élément ; pour chaque voisin, le Feu reçu — les dégâts se lisent sur les PV (P-d), le plan de la
+partie 2 ayant retiré du compte rendu ses dégâts nominaux, comptés avant l'Armure ; Flame le lit pour animer la
 vague (P-c, §5.2), puis appelle la suivante.
 
 ### 4.8. La Foudre : `amplifyHits`
@@ -590,7 +592,8 @@ Le déroulé de Flame devient : `onStartEnemyTurn` ; animation de la vague 1 s'i
 `onResolveFireWave` rend vrai, animation de la vague et délai ; `onResolveEnemyStatuses` ; délai
 (`combatDelayAfterTicksMs`) ; les actions des ennemis — la liste copiée après ce délai, comme aujourd'hui
 (`heros_draft_game.dart:377`), qui n'a plus les morts de la chaîne ; `onEndEnemyTurn`. Un délai neuf,
-`combatDelayFireWaveMs`, rejoint `game_constants.dart:62-74` (environ 600 ms, P-c).
+`combatDelayFireWaveMs`, rejoint `game_constants.dart:62-74` : 800 ms, 0,6 s d'animation et 0,2 s de pause
+(§5.2), valeur tranchée par le plan de la partie 2.
 
 ### 4.11. Ce que Flame lit, et quand
 
