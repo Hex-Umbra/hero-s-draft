@@ -160,6 +160,11 @@ void main() {
       j.remove('heroDescription_fr');
       j.remove('heroDescription_en');
     }), 'heroRupture');
+    // Une heroRupture qui vaut skipAction : l'erreur nomme cette clé-là.
+    _refused(
+      _with('freeze', (j) => j['heroRupture'] = {'kind': 'skipAction'}),
+      '"heroRupture" skipAction',
+    );
     final accepted = ChargeData.fromJson(_file('freeze'));
     expect(accepted.ruptureFor(ChargeBearer.hero).kind, RuptureKind.weakenDealt);
   });

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
@@ -882,6 +885,26 @@ void main() {
         final elite = thresholds(MapNodeType.elite, 1);
         expect(elite, isNotEmpty);
         expect(elite.every((t) => t == 3), isTrue);
+      });
+
+      test('Nova de givre pose le Gel sur chaque ennemi, au seuil de son porteur',
+          () {
+        final json = jsonDecode(
+          File('assets/data/cards/mana_flux/frost_nova.json').readAsStringSync(),
+        ) as Map<String, dynamic>;
+        final nova = CardData.fromJson(json);
+        final points = nova.effects.single.value;
+        fight([foe('A'), foe('B').copyWith(isBoss: true)]);
+
+        play(CardInstance(data: nova));
+
+        (String, int, int) freezeOn(String id) {
+          final line = ChargeRules.linesFor(byId(id).stats).single;
+          return (line.chargeId, line.points, line.threshold);
+        }
+
+        expect(freezeOn('A'), ('freeze', points, 3));
+        expect(freezeOn('B'), ('freeze', points, 6));
       });
     });
   });

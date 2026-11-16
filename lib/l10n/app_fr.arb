@@ -328,8 +328,7 @@
   "evolutionBoardPickBoth": "Choisissez une évolution par signature",
   "evolutionBoardTakeBoth": "Valider les deux",
   "evolutionBoardTake": "Prendre {name}",
-  "signatures": "Signatures"
-,
+  "signatures": "Signatures",
   "statusWeaknessHint": "−{percent} % de dégâts infligés par point, jusqu'à −{max} %",
   "statusVulnerableHint": "+{percent} % de dégâts subis par point, jusqu'à +{max} %",
   "cardCostHp": "Coûte {amount} PV",

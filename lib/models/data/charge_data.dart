@@ -461,7 +461,7 @@ class ChargeData {
     if ((heroRupture ?? rupture).kind == RuptureKind.skipAction) {
       throw _refuse(
         id,
-        heroRupture == null ? 'heroRupture' : 'rupture',
+        heroRupture == null ? 'rupture' : 'heroRupture',
         'skipAction ne vaut pas pour le héros : déclarer une heroRupture',
       );
     }

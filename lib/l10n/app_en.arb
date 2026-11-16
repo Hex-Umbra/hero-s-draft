@@ -1070,8 +1070,7 @@
   "signatures": "Signatures",
   "@signatures": {
     "description": "Title of the class signatures block and of the dictionary tab."
-  }
-,
+  },
   "statusWeaknessHint": "−{percent}% damage dealt per point, down to −{max}%",
   "@statusWeaknessHint": {
     "placeholders": {
