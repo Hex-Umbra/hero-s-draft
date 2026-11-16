@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/data/charge_data.dart';
 import '../models/data/effect_icon_table.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
@@ -72,10 +73,19 @@ final List<EntitySource<CardData>> cardSources = [
   ),
 ];
 
+/// La source des charges elementaires (spec P-53, §3.3) : a plat, comme les
+/// reliques, le repertoire n injecte que l id. Constante publique pour que le
+/// test d injection lise la declaration meme du chargeur.
+final EntitySource<ChargeData> chargeSource = EntitySource(
+  'assets/data/charges/*.json',
+  ChargeData.fromJson,
+  inject: (c) => {'id': c[0]},
+);
+
 /// Construit le registre complet : les entites et la courbe d XP depuis
 /// [bundle], l audio depuis `rootBundle`.
 ///
-/// **Unique declaration des dix sources du jeu.** Le provider de production
+/// **Unique declaration des onze sources du jeu.** Le provider de production
 /// et le registre des tests du tutoriel passent tous deux par ici : une
 /// seconde declaration serait une seconde verite, et c est exactement ce que
 /// ce chantier supprime.
@@ -150,6 +160,8 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
         inject: (c) => {'id': c[0]}),
   ]);
 
+  final charges = ChargeCatalog.of(await loader.loadAll<ChargeData>([chargeSource]));
+
   // La courbe d XP (spec P-43 E3, §3.2 ; D24) : un document plat, a cote
   // d `audio.json` — mais, a sa difference, elle fait echouer le demarrage.
   final xpCurve = await loader.loadDocument(
@@ -185,6 +197,7 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     levelUpRewards: levelUpRewards,
     xpCurve: xpCurve,
     effectIcons: effectIcons!,
+    charges: charges,
     audio: audio,
   );
 }
@@ -215,3 +228,15 @@ final xpCurveProvider = Provider<XpCurveData>((ref) {
   }
   return curve;
 });
+
+/// Le catalogue des charges elementaires (spec P-53, A2) : un provider, et non
+/// `GameDataRegistry.instance`, pour qu un test le surcharge.
+///
+/// `valueOrNull`, jamais `requireValue` : un `ProviderContainer` sans registre
+/// charge — tous les tests de combat — lit ce provider et doit recevoir le
+/// catalogue vide sans lever.
+final chargeCatalogProvider = Provider<ChargeCatalog>(
+  (ref) =>
+      ref.watch(gameDataLoaderProvider).valueOrNull?.charges ??
+      const ChargeCatalog.empty(),
+);

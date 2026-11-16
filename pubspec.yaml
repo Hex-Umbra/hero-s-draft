@@ -40,6 +40,7 @@ flutter:
     - assets/data/cards/mana_flux/
     - assets/data/cards/rage/
     - assets/data/cards/regen_armor/
+    - assets/data/charges/
     - assets/data/classes/berserker/
     - assets/data/classes/berserker/skills/
     - assets/data/classes/mage/

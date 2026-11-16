@@ -17,7 +17,7 @@ void main() {
     // fichier, a cent lignes l'un de l'autre ; elle ne dit donc rien de
     // `loadGameDataRegistry`, dont c'est le test suivant qui s'occupe.
     expect(kEntityDescriptors.keys.toSet(), EntityCategory.values.toSet());
-    expect(EntityCategory.values, hasLength(10));
+    expect(EntityCategory.values, hasLength(11));
   });
 
   test('aucune source de chargement n a ete ajoutee sans descripteur', () {
@@ -28,15 +28,16 @@ void main() {
     //
     // **Si ce test rougit apres l'ajout d'une `EntitySource` :** ajouter la
     // categorie a `EntityCategory`, son descripteur a `kEntityDescriptors`,
-    // puis relever le compte ci-dessous. Dix sources pour dix categories :
+    // puis relever le compte ci-dessous. Onze sources pour onze categories :
     // la carte en a deux (`cardSources`, spec P-42 T1 / P-44 lot 1, A2), la
     // neutre et celle d'un lot, et chacune a son descripteur, `card` et
     // `lotCard`. La signature de classe a sa propre source et son
     // propre descripteur (spec P-43 E4, §8). Les recompenses de niveau ont
-    // recu le leur au lot D (spec §9.2).
+    // recu le leur au lot D (spec §9.2) ; les charges elementaires, le leur
+    // (spec P-53, §3.3).
     final declared = 'EntitySource('
         .allMatches(File('lib/services/game_data_service.dart').readAsStringSync());
-    expect(declared, hasLength(10));
+    expect(declared, hasLength(11));
   });
 
   test('chaque descripteur est indexe sous sa propre categorie', () {
@@ -374,6 +375,15 @@ void main() {
         'displayOrder',
         'values',
       },
+      EntityCategory.charge: {
+        'threshold',
+        'thresholdGrowth',
+        'overcharge',
+        'decay',
+        'breaksOn',
+        'belowThresholdPercent',
+        'rupture',
+      },
       EntityCategory.heroClass: {
         'maxHp',
         'maxMana',
@@ -399,7 +409,7 @@ void main() {
     expect(
       expected.keys.toSet(),
       EntityCategory.values.toSet(),
-      reason: 'la table doit couvrir les dix categories',
+      reason: 'la table doit couvrir les onze categories',
     );
 
     expected.forEach((category, keys) {

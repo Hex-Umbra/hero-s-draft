@@ -577,6 +577,11 @@ void main() {
 
     testWidgets('Charger relit la cible, et ce qu elle porte survit a Ecrire',
         (tester) async {
+      // Onze onglets de type : la barre prend une ligne de plus que dix, et le
+      // formulaire, serre sur 600 de haut, deborderait.
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       seedRelic();
       await tester.pumpWidget(harness(projectRoot: root));
       await aimAtSeededRelic(tester);
@@ -655,6 +660,11 @@ void main() {
 
     testWidgets('une cle inconnue du gabarit a son champ et survit a Ecrire',
         (tester) async {
+      // Onze onglets de type : la barre prend une ligne de plus que dix, et le
+      // formulaire, serre sur 600 de haut, deborderait.
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       seedRelic();
       final path = '$root/assets/data/relics/talisman_de_fer.json';
       File(path).writeAsStringSync(jsonEncode({

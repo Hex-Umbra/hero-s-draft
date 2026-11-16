@@ -1,3 +1,4 @@
+import 'charge_data.dart';
 import 'effect_icon_table.dart';
 import 'enemy_data.dart';
 import 'hero_data.dart';
@@ -42,6 +43,12 @@ class GameDataRegistry {
   /// registre construit à la main retombe sur l'icône d'aide.
   final EffectIconTable effectIcons;
 
+  /// Les charges élémentaires (spec P-53, §3.3). Défaut vide, comme
+  /// [effectIcons] : `loadGameDataRegistry` les renseigne toujours, et un
+  /// registre construit à la main n'en porte aucune — rien ne se pose alors
+  /// (A4).
+  final ChargeCatalog charges;
+
   final AudioData audio;
 
   static GameDataRegistry? _instance;
@@ -59,6 +66,7 @@ class GameDataRegistry {
     this.signatures = const [],
     this.xpCurve,
     this.effectIcons = const EffectIconTable.empty(),
+    this.charges = const ChargeCatalog.empty(),
     this.audio = const AudioData.disabled(),
   }) {
     _instance = this;

@@ -113,6 +113,7 @@ const Map<EntityCategory, IconData> kCategoryIcons = {
   EntityCategory.event: Icons.explore,
   EntityCategory.forgeUpgrade: Icons.hardware,
   EntityCategory.levelUpReward: Icons.military_tech,
+  EntityCategory.charge: Icons.ac_unit,
   EntityCategory.heroClass: Icons.shield,
   EntityCategory.enemy: Icons.pest_control,
 };
