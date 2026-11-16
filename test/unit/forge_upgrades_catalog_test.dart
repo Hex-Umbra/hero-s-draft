@@ -115,7 +115,7 @@ final _expected = <String, Map<String, Object?>>{
   'freezing': _rune(
     eligibleCardTypes: const ['attack'],
     maxLevel: null,
-    deltas: [_status('freeze', valuePerLevel: 2)],
+    deltas: [_status('freeze')],
     weight: 80,
   ),
   'shocking': _rune(

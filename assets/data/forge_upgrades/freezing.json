@@ -15,7 +15,7 @@
     {
       "type": "addEffect",
       "effect": "apply_status",
-      "valuePerLevel": 2,
+      "valuePerLevel": 1,
       "statusId": "freeze",
       "durationPerLevel": 1
     }

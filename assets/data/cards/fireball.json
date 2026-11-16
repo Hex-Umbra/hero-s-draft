@@ -3,7 +3,7 @@
   "name_en": "Fireball",
   "name_fr": "Boule de Feu",
   "description_en": "Deal 6 damage. Apply 2 Burn.",
-  "description_fr": "Inflige 6 dégâts. Applique 2 Brûlure.",
+  "description_fr": "Inflige 6 dégâts. Applique 2 Feu.",
   "cost": 2,
   "type": "attack",
   "rarity": "common",

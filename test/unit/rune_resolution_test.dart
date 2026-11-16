@@ -199,10 +199,10 @@ void main() {
       expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
     });
 
-    test('Congelant 1 pose 2 Gel : -50 %', () {
+    test('Congelant 1 pose 1 Gel : -25 %', () {
       play(card('strike_basic', runes: const ['freezing:1']));
-      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
-      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+      expect(enemyStatuses('freeze').map((s) => s.value), [1]);
+      expect(ProportionalStatus.freeze.percentOn(enemy()), 25);
     });
 
     test('Boule de Feu et Brulant 1 : une brulure de 3 pour 2 tours', () {

@@ -3,7 +3,7 @@
   "name_en": "Shocking",
   "name_fr": "Surchargé",
   "description_en": "Applies {val} Shock",
-  "description_fr": "Applique {val} Électrocution",
+  "description_fr": "Applique {val} Foudre",
   "icon": "flash_on_rounded",
   "color": "amberAccent",
   "minFusionRank": 1,
