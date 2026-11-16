@@ -369,9 +369,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             .resolveEnemyIntent(enemyId);
       },
       onStartEnemyTurn: () {
-        ref
-            .read(combatProvider.notifier)
-            .startEnemyTurn();
+        // Tout le début de la phase ennemie d'un trait : la fermeture du tour,
+        // les vagues du Feu sans délai entre elles, puis les autres statuts.
+        final combat = ref.read(combatProvider.notifier);
+        combat.startEnemyTurn();
+        while (combat.resolveNextFireWave()) {}
+        combat.resolveEnemyStatuses();
       },
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();

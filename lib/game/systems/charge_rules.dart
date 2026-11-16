@@ -1,4 +1,4 @@
-import 'dart:math' show min;
+import 'dart:math' show max, min;
 
 import 'package:meta/meta.dart';
 
@@ -6,6 +6,7 @@ import '../../models/charge_track.dart';
 import '../../models/data/charge_data.dart';
 import '../../models/enemy_instance.dart';
 import '../../models/entity_stats.dart';
+import '../../models/fire_wave_report.dart';
 import '../../models/status_effect.dart';
 
 /// Une ligne de charge telle que le joueur la lit : les points, le seuil
@@ -79,20 +80,7 @@ abstract final class ChargeRules {
     if (placed <= 0) return stats;
 
     final total = held + placed;
-    final others = [
-      for (final s in stats.statuses)
-        if (s.id != charge.id) s,
-    ];
-    var entries = [
-      ...others,
-      StatusEffect(
-        id: charge.id,
-        name: charge.nameFr,
-        type: StatusType.debuff,
-        value: total,
-        duration: 1,
-      ),
-    ];
+    var entries = _entriesWith(stats, charge, total);
     var written = track;
 
     if (charge.breaksOn == ChargeBreaksOn.threshold &&
@@ -107,7 +95,7 @@ abstract final class ChargeRules {
       if (lasting) {
         written = written.copyWith(state: ChargeState.brokenActive);
       } else {
-        entries = others;
+        entries = _entriesWith(stats, charge, 0);
       }
     }
 
@@ -116,6 +104,271 @@ abstract final class ChargeRules {
       charges: {...stats.charges, charge.id: written},
     );
   }
+
+  /// Les statuts de [stats], l'entrée de [charge] remplacée par une seule à
+  /// [total] points — retirée à 0 : la forme fixe d'une charge (spec P-53, A4).
+  static List<StatusEffect> _entriesWith(
+    EntityStats stats,
+    ChargeData charge,
+    int total,
+  ) =>
+      [
+        for (final s in stats.statuses)
+          if (s.id != charge.id) s,
+        if (total > 0)
+          StatusEffect(
+            id: charge.id,
+            name: charge.nameFr,
+            type: StatusType.debuff,
+            value: total,
+            duration: 1,
+          ),
+      ];
+
+  /// La résolution d'une charge `explode` de [points] points au seuil
+  /// [threshold] : `n` tranches complètes, et les dégâts du porteur —
+  /// `n × seuil × damagePerPoint` plus le reste à [belowThresholdPercent], la
+  /// demie vers le haut (spec P-53, §4.7, A15).
+  static (int tranches, int selfDamage) explosion(
+    int points,
+    int threshold,
+    ChargeRupture rupture,
+    int belowThresholdPercent,
+  ) {
+    final tranches = points ~/ threshold;
+    final rest = points - tranches * threshold;
+    return (
+      tranches,
+      tranches * threshold * rupture.damagePerPoint +
+          halfUp(rest * rupture.damagePerPoint, belowThresholdPercent),
+    );
+  }
+
+  /// Les charges du catalogue qui explosent au tour de leur porteur.
+  static Iterable<ChargeData> _exploding(ChargeCatalog charges) =>
+      charges.all.where((c) => c.rupture.kind == RuptureKind.explode);
+
+  /// Résout toute la charge [charge] de [stats], sans appliquer les dégâts :
+  /// l'entrée retirée, une rupture comptée si une tranche au moins explose.
+  static ({
+    EntityStats spent,
+    int tranches,
+    int selfDamage,
+    ChargeRupture rupture,
+  }) _spend(EntityStats stats, ChargeData charge, ChargeBearer bearer) {
+    final track = stats.charges[charge.id] ?? ChargeTrack.start(charge, bearer);
+    final (tranches, selfDamage) = explosion(
+      points(stats, charge.id),
+      track.threshold,
+      track.rupture,
+      charge.belowThresholdPercent!,
+    );
+    final written = tranches >= 1
+        ? track.copyWith(
+            ruptures: track.ruptures + 1,
+            threshold: track.threshold + charge.thresholdGrowth,
+          )
+        : track;
+    return (
+      spent: stats.copyWith(
+        statuses: _entriesWith(stats, charge, 0),
+        charges: {...stats.charges, charge.id: written},
+      ),
+      tranches: tranches,
+      selfDamage: selfDamage,
+      rupture: track.rupture,
+    );
+  }
+
+  /// Une vague de la chaîne du Feu sur la rangée [row] (spec P-53, §4.7,
+  /// A11) : les porteurs vivants — ceux de [bearerIds] s'il n'est pas nul —
+  /// se résolvent ensemble sur l'état du début de la vague ; les dégâts
+  /// s'appliquent dans l'ordre de la rangée, l'Armure absorbant, hors
+  /// pipeline (P-d) ; puis le Feu des explosions se pose, sans bonus de
+  /// Puissance, sur les seuls vivants. Les morts gardent leur place. Rend la
+  /// rangée et le compte rendu de la vague [wave], `null` sans porteur.
+  static (List<EnemyInstance>, FireWaveReport?) fireWave(
+    List<EnemyInstance> row, {
+    required Set<String>? bearerIds,
+    required int wave,
+    required ChargeCatalog charges,
+  }) {
+    bool alive(EnemyInstance e) => e.stats.currentPv > 0;
+
+    final working = [...row];
+    final hits = List.filled(row.length, 0);
+    final blasts = <({
+      int bearer,
+      ChargeData charge,
+      int tranches,
+      int selfDamage,
+      int splashDamage,
+      int splashCharge,
+      List<int> neighbours,
+    })>[];
+
+    for (var i = 0; i < row.length; i++) {
+      final enemy = row[i];
+      if (!alive(enemy)) continue;
+      if (bearerIds != null && !bearerIds.contains(enemy.id)) continue;
+      for (final charge in _exploding(charges)) {
+        if (points(enemy.stats, charge.id) <= 0) continue;
+        final resolved =
+            _spend(working[i].stats, charge, bearerOf(enemy));
+        working[i] = working[i].copyWith(stats: resolved.spent);
+        hits[i] += resolved.selfDamage;
+
+        final n = resolved.tranches;
+        final neighbours = n >= 1
+            ? [
+                for (final j in [i - 1, i + 1])
+                  if (j >= 0 && j < row.length && alive(row[j])) j,
+              ]
+            : <int>[];
+        final splashDamage = n * resolved.rupture.explosionDamage;
+        for (final j in neighbours) {
+          hits[j] += splashDamage;
+        }
+        blasts.add((
+          bearer: i,
+          charge: charge,
+          tranches: n,
+          selfDamage: resolved.selfDamage,
+          splashDamage: splashDamage,
+          splashCharge: n * resolved.rupture.chargePerNeighbour,
+          neighbours: neighbours,
+        ));
+      }
+    }
+
+    if (blasts.isEmpty) return (row, null);
+
+    for (var i = 0; i < working.length; i++) {
+      if (hits[i] > 0) {
+        working[i] =
+            working[i].copyWith(stats: working[i].stats.takeDamage(hits[i]));
+      }
+    }
+
+    final nextBearerIds = <String>{};
+    final resolved = <FireResolution>[];
+    for (final blast in blasts) {
+      final splashes = <FireSplash>[];
+      for (final j in blast.neighbours) {
+        final target = working[j];
+        var received = 0;
+        if (alive(target)) {
+          final before = points(target.stats, blast.charge.id);
+          final posed = pose(
+            target.stats,
+            blast.charge,
+            blast.splashCharge,
+            bearerOf(target),
+          );
+          received = points(posed, blast.charge.id) - before;
+          working[j] = target.copyWith(stats: posed);
+          if (received > 0) nextBearerIds.add(target.id);
+        }
+        splashes.add(FireSplash(
+          targetId: target.id,
+          damage: blast.splashDamage,
+          charge: received,
+        ));
+      }
+      resolved.add(FireResolution(
+        bearerId: row[blast.bearer].id,
+        chargeId: blast.charge.id,
+        tranches: blast.tranches,
+        damage: blast.selfDamage,
+        splashes: splashes,
+      ));
+    }
+
+    return (
+      working,
+      FireWaveReport(
+        wave: wave,
+        resolved: resolved,
+        nextBearerIds: nextBearerIds,
+      ),
+    );
+  }
+
+  /// Le Feu du héros à son tour : sa part seule, sans voisin (spec P-53,
+  /// §4.7). L'Armure absorbe, hors pipeline.
+  static EntityStats resolveOwnFire(EntityStats stats, ChargeCatalog charges) {
+    var result = stats;
+    for (final charge in _exploding(charges)) {
+      if (points(result, charge.id) <= 0) continue;
+      final resolved = _spend(result, charge, ChargeBearer.hero);
+      result = resolved.spent.takeDamage(resolved.selfDamage);
+    }
+    return result;
+  }
+
+  /// Le déclin au tour du porteur (spec P-53, §4.4) : chaque charge à
+  /// `decay > 0` dont l'état est « aucun » perd `decay` points, sans
+  /// descendre sous 0 ; l'entrée est retirée à 0.
+  static EntityStats decay(EntityStats stats, ChargeCatalog charges) {
+    var result = stats;
+    for (final charge in charges.all.where((c) => c.decay > 0)) {
+      final state = result.charges[charge.id]?.state ?? ChargeState.none;
+      if (state != ChargeState.none) continue;
+      final held = points(result, charge.id);
+      if (held == 0) continue;
+      result = result.copyWith(
+        statuses: _entriesWith(result, charge, max(0, held - charge.decay)),
+      );
+    }
+    return result;
+  }
+
+  /// Une fermeture de phase (spec P-53, A9), chez un porteur : une charge
+  /// `amplifyHits` rompue retombe à 0 et à « aucun » ; à la fin du tour du
+  /// joueur seulement ([endsPlayerTurn]), un `weakenDealt` actif prend fin. Un
+  /// `weakenDealt` en attente reste.
+  static EntityStats closePhase(
+    EntityStats stats, {
+    required bool endsPlayerTurn,
+  }) {
+    var result = stats;
+    for (final MapEntry(key: id, value: track) in stats.charges.entries) {
+      if (track.state != ChargeState.brokenActive) continue;
+      switch (track.rupture.kind) {
+        case RuptureKind.amplifyHits:
+          result = result.copyWith(
+            statuses: [
+              for (final s in result.statuses)
+                if (s.id != id) s,
+            ],
+            charges: {
+              ...result.charges,
+              id: track.copyWith(state: ChargeState.none),
+            },
+          );
+        case RuptureKind.weakenDealt when endsPlayerTurn:
+          result = result.copyWith(charges: {
+            ...result.charges,
+            id: track.copyWith(state: ChargeState.none),
+          });
+        default:
+          break;
+      }
+    }
+    return result;
+  }
+
+  /// Le début du tour du porteur : un `weakenDealt` en attente devient actif
+  /// (spec P-53, §4.6).
+  static EntityStats startBearerTurn(EntityStats stats) => stats.copyWith(
+        charges: {
+          for (final MapEntry(key: id, value: track) in stats.charges.entries)
+            id: track.rupture.kind == RuptureKind.weakenDealt &&
+                    track.state == ChargeState.brokenPending
+                ? track.copyWith(state: ChargeState.brokenActive)
+                : track,
+        },
+      );
 
   /// Le pourcentage de dégâts que l'attaquant perd : celui de sa piste
   /// `weakenDealt` rompue et active, 0 sinon. Une rupture en attente ne

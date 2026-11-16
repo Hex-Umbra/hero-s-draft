@@ -10,6 +10,8 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 
+import 'unit/enemy_phase_helper.dart';
+
 void main() {
   group('EncounterSystem & Wave Reserve Tests', () {
     const slimeData = EnemyData(
@@ -369,7 +371,7 @@ void main() {
       );
 
       // Trigger cleanDeadEnemies by starting enemy turn
-      combatController.startEnemyTurn();
+      runEnemyPhaseStart(combatController);
 
       // Since active_1 was defeated, it should be in defeatedEnemies,
       // and reserve_1 (first in pending list) should be pulled into enemies!
@@ -398,7 +400,7 @@ void main() {
         EntityStats(maxPv: 28, currentPv: 0, armure: 0, might: 5),
       );
 
-      combatController.startEnemyTurn();
+      runEnemyPhaseStart(combatController);
 
       // Both active_2 and reserve_1 died. Since reserve_2 is in pending,
       // reserve_2 should be pulled, and the combat should NOT be ended yet.
@@ -412,7 +414,7 @@ void main() {
         'reserve_2',
         EntityStats(maxPv: 28, currentPv: 0, armure: 0, might: 5),
       );
-      combatController.startEnemyTurn();
+      runEnemyPhaseStart(combatController);
 
       // All enemies dead and no pending. Victory!
       expect(combatController.currentState.enemies.isEmpty, isTrue);

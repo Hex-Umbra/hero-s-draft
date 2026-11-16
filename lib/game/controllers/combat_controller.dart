@@ -339,9 +339,16 @@ class CombatController extends Notifier<CombatState> {
     _turnPhaseManager.startPlayerTurn();
   }
 
-  /// Début du tour de l'ennemi (application des statuts autonomes)
-  void startEnemyTurn() {
-    _turnPhaseManager.startEnemyTurn();
+  /// Début de la phase ennemie : fermeture du tour du joueur et première
+  /// vague du Feu ; vrai si elle s'est jouée (spec P-53, A12).
+  bool startEnemyTurn() => _turnPhaseManager.startEnemyTurn();
+
+  /// La vague suivante du Feu ; faux quand la chaîne est finie.
+  bool resolveNextFireWave() => _turnPhaseManager.resolveNextFireWave();
+
+  /// Les autres statuts des ennemis, puis le nettoyage des morts.
+  void resolveEnemyStatuses() {
+    _turnPhaseManager.resolveEnemyStatuses();
   }
 
   /// Fin de la phase ennemie : roll intents et retour au joueur

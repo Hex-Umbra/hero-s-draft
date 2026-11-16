@@ -2,7 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/charge_rules.dart';
 import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/data/charge_data.dart';
+import 'package:roguelike_card_game/models/data/enemy_data.dart';
+import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
+import 'package:roguelike_card_game/models/fire_wave_report.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 
 import 'charge_test_data.dart';
@@ -253,6 +256,289 @@ void main() {
         line,
         isNot(const ChargeLine('shock', 5, 3, ChargeState.brokenActive, RuptureKind.amplifyHits, 8)),
       );
+    });
+  });
+
+  group('le Feu', () {
+    // Les valeurs de l'exemple de l'étude, écrites ici et non lues dans le
+    // fichier livré (A18) : seuil 3, 4 par point, 12 par explosion, 1 Feu à
+    // chaque voisin.
+    final fire = testCharge({
+      'id': 'test_fire',
+      'brokenName_fr': null,
+      'brokenName_en': null,
+      'overcharge': true,
+      'breaksOn': 'bearerTurn',
+      'rupture': {
+        'kind': 'explode',
+        'damagePerPoint': 4,
+        'explosionDamage': 12,
+        'chargePerNeighbour': 1,
+      },
+    });
+    final fireCatalog = ChargeCatalog.of([fire]);
+    const target = EnemyData(
+      id: 'cible',
+      nameEn: 'Target',
+      maxHp: 200,
+      baseDamage: 0,
+      spritePath: 'cible.png',
+      tier: 1,
+    );
+
+    EnemyInstance foe(String id, {int burning = 0, int pv = 200}) {
+      final stats = EntityStats(maxPv: pv, currentPv: pv, armure: 0, might: 0);
+      return EnemyInstance(
+        id: id,
+        data: target,
+        stats: burning == 0
+            ? stats
+            : ChargeRules.pose(stats, fire, burning, ChargeBearer.enemy),
+      );
+    }
+
+    int lost(EnemyInstance e) => e.stats.maxPv - e.stats.currentPv;
+    int fireOn(EnemyInstance e) => ChargeRules.points(e.stats, 'test_fire');
+
+    (List<EnemyInstance>, FireWaveReport?) wave(
+      List<EnemyInstance> row, {
+      Set<String>? bearers,
+      int number = 1,
+    }) =>
+        ChargeRules.fireWave(
+          row,
+          bearerIds: bearers,
+          wave: number,
+          charges: fireCatalog,
+        );
+
+    test('5 points : 16 au porteur, 12 et 1 Feu a chaque voisin', () {
+      final (row, report) = wave([foe('A'), foe('B', burning: 5), foe('C')]);
+
+      expect(row.map(lost), [12, 16, 12]);
+      expect(row.map(fireOn), [1, 0, 1]);
+      expect(row[1].stats.statuses, isEmpty);
+      expect(row[1].stats.charges['test_fire']!.ruptures, 1);
+
+      final resolution = report!.resolved.single;
+      expect(
+        (
+          resolution.bearerId,
+          resolution.chargeId,
+          resolution.tranches,
+          resolution.damage,
+        ),
+        ('B', 'test_fire', 1, 16),
+      );
+      expect(
+        resolution.splashes.map((s) => (s.targetId, s.damage, s.charge)),
+        [('A', 12, 1), ('C', 12, 1)],
+      );
+      expect(report.wave, 1);
+      expect(report.nextBearerIds, {'A', 'C'});
+    });
+
+    test('2 points : 4 au porteur, sans explosion', () {
+      final (row, report) = wave([foe('A'), foe('B', burning: 2), foe('C')]);
+
+      expect(row.map(lost), [0, 4, 0]);
+      expect(row.map(fireOn), [0, 0, 0]);
+      expect(row[1].stats.charges['test_fire']!.ruptures, 0);
+      expect(report!.resolved.single.tranches, 0);
+      expect(report.resolved.single.splashes, isEmpty);
+      expect(report.nextBearerIds, isEmpty);
+    });
+
+    test('un bout de rangee n a qu un voisin, un ennemi seul aucun', () {
+      final (edge, edgeReport) =
+          wave([foe('A', burning: 3), foe('B'), foe('C')]);
+      expect(edge.map(lost), [12, 12, 0]);
+      expect(edge.map(fireOn), [0, 1, 0]);
+      expect(
+        edgeReport!.resolved.single.splashes.map((s) => s.targetId),
+        ['B'],
+      );
+
+      final (alone, aloneReport) = wave([foe('A', burning: 3)]);
+      expect(lost(alone.single), 12);
+      expect(aloneReport!.resolved.single.splashes, isEmpty);
+      expect(aloneReport.nextBearerIds, isEmpty);
+    });
+
+    test('le heros porteur : sa part seule', () {
+      final hero = ChargeRules.pose(
+        EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+        fire,
+        5,
+        ChargeBearer.hero,
+      );
+
+      final after = ChargeRules.resolveOwnFire(hero, fireCatalog);
+
+      expect(after.currentPv, 100 - 16);
+      expect(ChargeRules.points(after, 'test_fire'), 0);
+    });
+
+    test('l exemple de l etude : A 48, B 64, C 48, en trois vagues', () {
+      var (row, report) = wave([foe('A'), foe('B', burning: 9), foe('C')]);
+      expect(report!.nextBearerIds, {'A', 'C'});
+      expect(row.map(lost), [36, 36, 36]);
+
+      (row, report) = wave(row, bearers: report.nextBearerIds, number: 2);
+      expect(report!.wave, 2);
+      expect(report.nextBearerIds, {'B'});
+      expect(row.map(lost), [48, 60, 48]);
+
+      (row, report) = wave(row, bearers: report.nextBearerIds, number: 3);
+      expect(report!.wave, 3);
+      expect(report.nextBearerIds, isEmpty);
+      expect(row.map(lost), [48, 64, 48]);
+      expect(row.map(fireOn), [0, 0, 0]);
+
+      expect(wave(row, bearers: report.nextBearerIds, number: 4).$2, isNull);
+    });
+
+    test('une vague est simultanee', () {
+      final (row, report) =
+          wave([foe('A', burning: 3), foe('B', burning: 3)]);
+
+      expect(row.map(lost), [12 + 12, 12 + 12]);
+      expect(row.map(fireOn), [1, 1]);
+      expect(report!.nextBearerIds, {'A', 'B'});
+    });
+
+    test('un porteur que sa vague tue explose quand meme', () {
+      final (row, report) =
+          wave([foe('A'), foe('B', burning: 9, pv: 10), foe('C')]);
+
+      expect(row[1].stats.currentPv, 0);
+      expect([lost(row[0]), lost(row[2])], [36, 36]);
+      expect([fireOn(row[0]), fireOn(row[2])], [3, 3]);
+      expect(report!.resolved.single.tranches, 3);
+    });
+
+    test('un mort pendant la chaine garde sa place et ne recoit plus rien', () {
+      // Vague 1 : A explose trois fois sur B ; C, tué par sa propre part,
+      // explose une fois sur B. B porte alors 4 Feu, C est mort.
+      var (row, report) = wave([
+        foe('A', burning: 9),
+        foe('B'),
+        foe('C', burning: 3, pv: 10),
+      ]);
+      expect(row[2].stats.currentPv, 0);
+      expect(fireOn(row[1]), 4);
+      expect(report!.nextBearerIds, {'B'});
+
+      (row, report) = wave(row, bearers: report.nextBearerIds, number: 2);
+
+      expect(row, hasLength(3));
+      expect(row[2].stats.currentPv, 0);
+      expect(fireOn(row[2]), 0);
+      expect(
+        report!.resolved.single.splashes.map((s) => (s.targetId, s.damage)),
+        [('A', 12)],
+      );
+      expect(report.nextBearerIds, {'A'});
+    });
+
+    test('la chaine s arrete', () {
+      var row = [
+        for (final id in ['A', 'B', 'C', 'D', 'E'])
+          foe(id, burning: 9, pv: 10000),
+      ];
+      int inPlay(List<EnemyInstance> r) =>
+          r.fold(0, (sum, e) => sum + fireOn(e));
+
+      Set<String>? bearers;
+      var waves = 0;
+      while (true) {
+        final before = inPlay(row);
+        final (next, report) = wave(row, bearers: bearers, number: waves + 1);
+        if (report == null) break;
+        waves++;
+        expect(waves, lessThan(50));
+        if (report.resolved.any((r) => r.tranches > 0)) {
+          expect(inPlay(next), lessThan(before));
+        }
+        row = next;
+        bearers = report.nextBearerIds;
+      }
+
+      expect(waves, greaterThan(1));
+      expect(inPlay(row), 0);
+    });
+
+    test('l Armure absorbe le Feu ; ni Vulnerable ni critique', () {
+      final bearer = foe('A', burning: 3);
+      final armoured = bearer.copyWith(
+        stats: bearer.stats.copyWith(armure: 5, critChance: 100).addStatus(
+              const StatusEffect(
+                id: 'vulnerable',
+                name: 'Vulnérable',
+                type: StatusType.debuff,
+                value: 2,
+                duration: 2,
+              ),
+            ),
+      );
+
+      final (row, _) = wave([armoured]);
+
+      expect(lost(row.single), 12 - 5);
+      expect(row.single.stats.armure, 0);
+    });
+  });
+
+  group('le declin et les fermetures', () {
+    test('declin : -1 sans rupture, jamais sous 0, aucun sur un porteur rompu',
+        () {
+      final two = ChargeRules.decay(pose(fresh(), freeze, 2), catalog);
+      expect(ChargeRules.points(two, 'freeze'), 1);
+
+      final one = ChargeRules.decay(two, catalog);
+      expect(one.statuses.where((s) => s.id == 'freeze'), isEmpty);
+      expect(ChargeRules.decay(one, catalog).statuses, isEmpty);
+
+      final frozen = pose(fresh(), freeze, 3);
+      final kept = ChargeRules.decay(frozen, catalog);
+      expect(kept.charges['freeze'], frozen.charges['freeze']);
+      expect(kept.charges['freeze']!.state, ChargeState.brokenPending);
+
+      final burning = ChargeRules.decay(pose(fresh(), burn, 4), catalog);
+      expect(ChargeRules.points(burning, 'burn'), 4);
+    });
+
+    test('Foudre : retombe a 0 a la fermeture de phase, declin sous le seuil seulement',
+        () {
+      final charged = pose(fresh(), shock, 3);
+      expect(ChargeRules.points(ChargeRules.decay(charged, catalog), 'shock'), 3);
+
+      final closed = ChargeRules.closePhase(charged, endsPlayerTurn: false);
+      expect(ChargeRules.points(closed, 'shock'), 0);
+      expect(closed.charges['shock']!.state, ChargeState.none);
+
+      final below = ChargeRules.decay(pose(fresh(), shock, 2), catalog);
+      expect(ChargeRules.points(below, 'shock'), 1);
+    });
+
+    test('le gel du heros en attente survit a la fermeture du tour du joueur',
+        () {
+      ChargeState state(EntityStats s) => s.charges['freeze']!.state;
+
+      var hero = pose(fresh(), freeze, 5, ChargeBearer.hero);
+      expect(state(hero), ChargeState.brokenPending);
+
+      hero = ChargeRules.closePhase(hero, endsPlayerTurn: true);
+      expect(state(hero), ChargeState.brokenPending);
+
+      hero = ChargeRules.startBearerTurn(hero);
+      expect(state(hero), ChargeState.brokenActive);
+
+      hero = ChargeRules.closePhase(hero, endsPlayerTurn: false);
+      expect(state(hero), ChargeState.brokenActive);
+
+      hero = ChargeRules.closePhase(hero, endsPlayerTurn: true);
+      expect(state(hero), ChargeState.none);
     });
   });
 }

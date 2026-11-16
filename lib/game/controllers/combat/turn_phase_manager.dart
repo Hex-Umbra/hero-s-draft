@@ -8,6 +8,7 @@ import '../run_controller.dart';
 import '../combat_controller.dart';
 import '../deck_controller.dart';
 import 'status_effect_processor.dart';
+import '../../systems/charge_rules.dart';
 import '../../systems/stat_gains.dart';
 import '../../services/damage_pipeline.dart';
 import '../../../services/audio/audio_providers.dart';
@@ -57,31 +58,101 @@ class TurnPhaseManager {
         );
   }
 
-  /// Début du tour de l'ennemi (application des statuts autonomes)
-  void startEnemyTurn() {
+  /// Une fermeture de phase chez tous les porteurs, héros et ennemis (spec
+  /// P-53, A9).
+  void _closePhase({required bool endsPlayerTurn}) {
+    ref.read(runProvider.notifier).updateHeroStats(
+          (s) => ChargeRules.closePhase(s, endsPlayerTurn: endsPlayerTurn),
+        );
+    controller.updateState(
+      controller.currentState.copyWith(
+        enemies: [
+          for (final enemy in controller.currentState.enemies)
+            enemy.copyWith(
+              stats: ChargeRules.closePhase(
+                enemy.stats,
+                endsPlayerTurn: endsPlayerTurn,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Écrit une vague du Feu dans l'état, ou efface le compte rendu s'il n'y
+  /// en a pas eu ; rend vrai si la vague s'est jouée.
+  bool _playFireWave({required Set<String>? bearerIds, required int wave}) {
+    final (row, report) = ChargeRules.fireWave(
+      controller.currentState.enemies,
+      bearerIds: bearerIds,
+      wave: wave,
+      charges: ref.read(chargeCatalogProvider),
+    );
+    controller.updateState(
+      controller.currentState.copyWith(
+        enemies: row,
+        fireWaveReport: report,
+        clearFireWaveReport: report == null,
+      ),
+    );
+    return report != null;
+  }
+
+  /// Début de la phase ennemie (spec P-53, A12) : la fermeture du tour du
+  /// joueur, puis la première vague du Feu. Rend vrai si elle s'est jouée ;
+  /// les suivantes passent par [resolveNextFireWave], le reste des statuts
+  /// par [resolveEnemyStatuses].
+  bool startEnemyTurn() {
     controller.updateState(
       controller.currentState.copyWith(turnPhase: TurnPhase.enemy),
     );
+    _closePhase(endsPlayerTurn: true);
+    return _playFireWave(bearerIds: null, wave: 1);
+  }
 
-    final List<EnemyInstance> updatedEnemies = [];
-    for (var enemy in controller.currentState.enemies) {
-      final updatedStats = StatusEffectProcessor.processEnemyStatuses(
-        enemy.stats,
-        ref.read(chargeCatalogProvider),
+  /// La vague suivante de la chaîne du Feu, sur les porteurs que la précédente
+  /// a nommés ; faux, compte rendu effacé, quand la chaîne est finie.
+  bool resolveNextFireWave() {
+    final report = controller.currentState.fireWaveReport;
+    if (report == null || report.nextBearerIds.isEmpty) {
+      controller.updateState(
+        controller.currentState.copyWith(clearFireWaveReport: true),
       );
-      updatedEnemies.add(enemy.copyWith(stats: updatedStats));
+      return false;
     }
+    return _playFireWave(
+      bearerIds: report.nextBearerIds,
+      wave: report.wave + 1,
+    );
+  }
 
+  /// Les autres statuts de chaque ennemi, après la chaîne du Feu, puis le
+  /// nettoyage des morts, une seule fois — ceux de la chaîne compris (spec
+  /// P-53, A10).
+  void resolveEnemyStatuses() {
+    final charges = ref.read(chargeCatalogProvider);
     controller.updateState(
-      controller.currentState.copyWith(enemies: updatedEnemies),
+      controller.currentState.copyWith(
+        enemies: [
+          for (final enemy in controller.currentState.enemies)
+            enemy.copyWith(
+              stats: StatusEffectProcessor.processEnemyStatuses(
+                enemy.stats,
+                charges,
+              ),
+            ),
+        ],
+        clearFireWaveReport: true,
+      ),
     );
 
-    // Nettoyer les morts (par exemple à cause du poison de début de tour)
     controller.cleanDeadEnemies();
   }
 
-  /// Fin de la phase ennemie : roll intents et retour au joueur
+  /// Fin de la phase ennemie : sa fermeture (spec P-53, A9), puis roll
+  /// intents et retour au joueur
   void endEnemyTurn() {
+    _closePhase(endsPlayerTurn: false);
     final List<EnemyInstance> rolledEnemies = controller.currentState.enemies
         .map((enemy) => controller.rollIntent(enemy))
         .toList();
