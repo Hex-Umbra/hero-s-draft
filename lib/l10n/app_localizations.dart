@@ -974,41 +974,11 @@ abstract class AppLocalizations {
   /// **'For {duration} turns, gains {amount} Mana at turn start.'**
   String cardDescStatusManaRegen(int amount, int duration);
 
-  /// No description provided for @cardDescStatusBurn.
+  /// No description provided for @cardDescStatusCharge.
   ///
   /// In en, this message translates to:
-  /// **'Applies {amount} Burn.'**
-  String cardDescStatusBurn(int amount);
-
-  /// No description provided for @cardDescStatusBurnDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Burn for {duration} turns.'**
-  String cardDescStatusBurnDuration(int amount, int duration);
-
-  /// No description provided for @cardDescStatusFreeze.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Freeze.'**
-  String cardDescStatusFreeze(int amount);
-
-  /// No description provided for @cardDescStatusFreezeDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Freeze for {duration} turns.'**
-  String cardDescStatusFreezeDuration(int amount, int duration);
-
-  /// No description provided for @cardDescStatusShock.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Shock.'**
-  String cardDescStatusShock(int amount);
-
-  /// No description provided for @cardDescStatusShockDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Shock for {duration} turns.'**
-  String cardDescStatusShockDuration(int amount, int duration);
+  /// **'Applies {amount} {name}.'**
+  String cardDescStatusCharge(int amount, String name);
 
   /// No description provided for @cancel.
   ///
@@ -1838,11 +1808,11 @@ abstract class AppLocalizations {
   /// **'Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}'**
   String effectLineVulnerable(int amount, int duration);
 
-  /// A line of a signature's long-press effect list: the Burn status.
+  /// A line of a signature's long-press effect list: an elemental charge (Burn, Freeze, Shock), by its name.
   ///
   /// In en, this message translates to:
-  /// **'Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}'**
-  String effectLineBurn(int amount, int duration);
+  /// **'Apply {amount} {name}'**
+  String effectLineCharge(int amount, String name);
 
   /// A line of a signature's long-press effect list: a critical-chance bonus.
   ///

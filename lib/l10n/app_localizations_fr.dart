@@ -564,33 +564,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String cardDescStatusBurn(int amount) {
-    return 'Applique $amount Brûlure.';
-  }
-
-  @override
-  String cardDescStatusBurnDuration(int amount, int duration) {
-    return 'Applique $amount Brûlure pendant $duration tours.';
-  }
-
-  @override
-  String cardDescStatusFreeze(int amount) {
-    return 'Applique $amount Gel.';
-  }
-
-  @override
-  String cardDescStatusFreezeDuration(int amount, int duration) {
-    return 'Applique $amount Gel pendant $duration tours.';
-  }
-
-  @override
-  String cardDescStatusShock(int amount) {
-    return 'Applique $amount Électrocution.';
-  }
-
-  @override
-  String cardDescStatusShockDuration(int amount, int duration) {
-    return 'Applique $amount Électrocution pendant $duration tours.';
+  String cardDescStatusCharge(int amount, String name) {
+    return 'Applique $amount $name.';
   }
 
   @override
@@ -1185,14 +1160,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String effectLineBurn(int amount, int duration) {
-    String _temp0 = intl.Intl.pluralLogic(
-      duration,
-      locale: localeName,
-      other: '$duration tours',
-      one: '1 tour',
-    );
-    return 'Applique $amount Brûlure pendant $_temp0';
+  String effectLineCharge(int amount, String name) {
+    return 'Applique $amount $name';
   }
 
   @override

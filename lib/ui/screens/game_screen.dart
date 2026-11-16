@@ -656,6 +656,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       combatState: combatState,
                       heroStats: runState.heroStats,
                       effectIcons: gameData.effectIcons,
+                      charges: ref.watch(chargeCatalogProvider),
                       interactive:
                           isPlayerActionable && !combatState.isCombatEnded,
                       classColor: ClassIdentity.colorOf(

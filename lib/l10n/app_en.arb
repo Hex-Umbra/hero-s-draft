@@ -403,43 +403,11 @@
       "duration": { "type": "int" }
     }
   },
-  "cardDescStatusBurn": "Applies {amount} Burn.",
-  "@cardDescStatusBurn": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "cardDescStatusBurnDuration": "Applies {amount} Burn for {duration} turns.",
-  "@cardDescStatusBurnDuration": {
+  "cardDescStatusCharge": "Applies {amount} {name}.",
+  "@cardDescStatusCharge": {
     "placeholders": {
       "amount": { "type": "int" },
-      "duration": { "type": "int" }
-    }
-  },
-  "cardDescStatusFreeze": "Applies {amount} Freeze.",
-  "@cardDescStatusFreeze": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "cardDescStatusFreezeDuration": "Applies {amount} Freeze for {duration} turns.",
-  "@cardDescStatusFreezeDuration": {
-    "placeholders": {
-      "amount": { "type": "int" },
-      "duration": { "type": "int" }
-    }
-  },
-  "cardDescStatusShock": "Applies {amount} Shock.",
-  "@cardDescStatusShock": {
-    "placeholders": {
-      "amount": { "type": "int" }
-    }
-  },
-  "cardDescStatusShockDuration": "Applies {amount} Shock for {duration} turns.",
-  "@cardDescStatusShockDuration": {
-    "placeholders": {
-      "amount": { "type": "int" },
-      "duration": { "type": "int" }
+      "name": { "type": "String" }
     }
   },
   "cancel": "Cancel",
@@ -902,12 +870,12 @@
       "duration": { "type": "int" }
     }
   },
-  "effectLineBurn": "Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}",
-  "@effectLineBurn": {
-    "description": "A line of a signature's long-press effect list: the Burn status.",
+  "effectLineCharge": "Apply {amount} {name}",
+  "@effectLineCharge": {
+    "description": "A line of a signature's long-press effect list: an elemental charge (Burn, Freeze, Shock), by its name.",
     "placeholders": {
       "amount": { "type": "int" },
-      "duration": { "type": "int" }
+      "name": { "type": "String" }
     }
   },
   "effectLineCrit": "+{amount}% critical chance",

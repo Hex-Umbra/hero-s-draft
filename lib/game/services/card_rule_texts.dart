@@ -1,5 +1,6 @@
 import '../../l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/charge_data.dart';
 import 'effect_resolver.dart';
 
 /// La seule écriture des lignes de coût, de coups et de croissance d'une carte
@@ -28,7 +29,11 @@ abstract final class CardRuleTexts {
 
   /// La ligne de croissance : sous 1, en tranches de `1 / ratio` ; au moins
   /// 1, le ratio tel quel (A11).
-  static String scale(AppLocalizations l10n, ScaleWith scale) {
+  static String scale(
+    AppLocalizations l10n,
+    ScaleWith scale,
+    ChargeCatalog charges,
+  ) {
     final ratio = scale.ratio;
     if (ratio < 1) {
       final per = (1 / ratio).round();
@@ -38,7 +43,7 @@ abstract final class CardRuleTexts {
         ScaleSource.cardsPlayedThisTurn => l10n.cardScaleCardsPlayedPer(per),
         ScaleSource.enemiesAlive => l10n.cardScaleEnemiesAlivePer(per),
         ScaleSource.targetStatus =>
-          l10n.cardScaleTargetStatusPer(per, _statusName(scale)),
+          l10n.cardScaleTargetStatusPer(per, _statusName(l10n, scale, charges)),
         ScaleSource.targetMissingHp => l10n.cardScaleTargetMissingHpPer(per),
       };
     }
@@ -49,7 +54,7 @@ abstract final class CardRuleTexts {
       ScaleSource.cardsPlayedThisTurn => l10n.cardScaleCardsPlayed(text),
       ScaleSource.enemiesAlive => l10n.cardScaleEnemiesAlive(text),
       ScaleSource.targetStatus =>
-        l10n.cardScaleTargetStatus(text, _statusName(scale)),
+        l10n.cardScaleTargetStatus(text, _statusName(l10n, scale, charges)),
       ScaleSource.targetMissingHp => l10n.cardScaleTargetMissingHp(text),
     };
   }
@@ -62,9 +67,16 @@ abstract final class CardRuleTexts {
     return l10n.localeName == 'fr' ? text.replaceAll('.', ',') : text;
   }
 
-  /// Le nom du statut lu, celui que le jeu lui donne ; l'id à défaut.
-  static String _statusName(ScaleWith scale) {
+  /// Le nom du statut lu : celui de sa charge, sinon celui que le jeu lui
+  /// donne ; l'id à défaut.
+  static String _statusName(
+    AppLocalizations l10n,
+    ScaleWith scale,
+    ChargeCatalog charges,
+  ) {
     final id = scale.statusId!;
-    return EffectResolver.createStatus(id, 0, 0)?.name ?? id;
+    return charges[id]?.name(l10n.localeName) ??
+        EffectResolver.createStatus(id, 0, 0)?.name ??
+        id;
   }
 }

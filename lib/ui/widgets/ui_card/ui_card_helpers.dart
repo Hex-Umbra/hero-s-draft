@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import '../../../game/services/card_rule_texts.dart';
 import '../../../game/services/proportional_status.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../../../models/effective_card.dart';
+import '../../../services/game_data_service.dart';
 
 class UiCardEffectVisuals {
   final IconData icon;
@@ -262,6 +264,8 @@ String buildDetailedDescription(
   int? cost,
 }) {
   final l10n = AppLocalizations.of(context)!;
+  final charges = ProviderScope.containerOf(context, listen: false)
+      .read(chargeCatalogProvider);
 
   // Format Card Details header
   final activeLocale = Localizations.localeOf(context).languageCode;
@@ -371,6 +375,11 @@ String buildDetailedDescription(
     if (effect.type == 'apply_status') {
       final duration = effect.duration ?? 1;
       final localeCode = Localizations.localeOf(context).languageCode;
+      final charge = charges[effect.statusId ?? ''];
+      if (charge != null) {
+        desc += '${l10n.cardDescStatusCharge(scaledValue, charge.name(localeCode))}\n';
+        desc += '  (${charge.describe(localeCode)})\n';
+      }
       switch (effect.statusId) {
         case 'might':
           desc += '${l10n.cardDescStatusMight(scaledValue, duration)}\n';
@@ -405,31 +414,11 @@ String buildDetailedDescription(
           desc +=
               '${l10n.cardDescStatusManaRegen(scaledValue, duration)}\n';
           break;
-        case 'burn':
-          desc +=
-              '${l10n.cardDescStatusBurnDuration(scaledValue, duration)}\n';
-          desc += localeCode == 'fr'
-              ? '  (Subit des dégâts de feu égaux à la Brûlure au début de son tour, puis la valeur diminue de 1)\n'
-              : '  (Takes fire damage equal to Burn at turn start, then the value decreases by 1)\n';
-          break;
-        case 'freeze':
-          desc +=
-              '${l10n.cardDescStatusFreezeDuration(scaledValue, duration)}\n';
-          desc +=
-              '  (${l10n.statusFreezeHint(ProportionalStatus.freeze.percentPerPoint, ProportionalStatus.freeze.maxPercent)})\n';
-          break;
-        case 'shock':
-          desc +=
-              '${l10n.cardDescStatusShockDuration(scaledValue, duration)}\n';
-          desc += localeCode == 'fr'
-              ? '  (Subit des dégâts supplémentaires égaux à l\'Électrocution à chaque coup reçu)\n'
-              : '  (Takes extra damage equal to Shock on every hit)\n';
-          break;
       }
     }
     final scale = effect.scaleWith;
     if (scale != null) {
-      desc += '  (${CardRuleTexts.scale(l10n, scale)})\n';
+      desc += '  (${CardRuleTexts.scale(l10n, scale, charges)})\n';
     }
   }
 

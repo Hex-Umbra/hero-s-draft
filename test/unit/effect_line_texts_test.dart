@@ -5,10 +5,13 @@ import 'package:roguelike_card_game/game/services/effect_line_texts.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/signature_instance.dart';
 
+import 'shipped_data.dart';
+
 /// La seule écriture des lignes de la liste de l'appui long (spec A41, §6.1).
 void main() {
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
+  final charges = shippedChargeCatalog();
 
   EffectLine line(String kind, [int? value, int? duration]) =>
       (kind: kind, value: value, duration: duration);
@@ -56,37 +59,34 @@ void main() {
         'Applique 1 Vulnérable pendant 2 tours',
         'Apply 1 Vulnerable for 2 turns'
       ),
-      'status:burn': (
-        'Applique 3 Brûlure pendant 2 tours',
-        'Apply 3 Burn for 2 turns'
-      ),
+      'status:burn': ('Applique 3 Feu', 'Apply 3 Burn'),
       'crit': ('+5 % de critique', '+5% critical chance'),
       'target:allEnemies': ('Touche tous les ennemis', 'Hits all enemies'),
     };
     expect(expected.keys, unorderedEquals([for (final l in thirteen) l.kind]));
     for (final l in thirteen) {
       final (phraseFr, phraseEn) = expected[l.kind]!;
-      expect(EffectLineTexts.phrase(fr, l), phraseFr, reason: l.kind);
-      expect(EffectLineTexts.phrase(en, l), phraseEn ?? isNotNull,
+      expect(EffectLineTexts.phrase(fr, l, charges), phraseFr, reason: l.kind);
+      expect(EffectLineTexts.phrase(en, l, charges), phraseEn ?? isNotNull,
           reason: l.kind);
     }
   });
 
   test('les pluriels se lisent sur la valeur et la duree', () {
-    expect(EffectLineTexts.phrase(fr, line('draw', 1)), 'Pioche 1 carte');
-    expect(EffectLineTexts.phrase(fr, line('draw', 2)), 'Pioche 2 cartes');
-    expect(EffectLineTexts.phrase(fr, line('status:might', 2, 1)),
+    expect(EffectLineTexts.phrase(fr, line('draw', 1), charges), 'Pioche 1 carte');
+    expect(EffectLineTexts.phrase(fr, line('draw', 2), charges), 'Pioche 2 cartes');
+    expect(EffectLineTexts.phrase(fr, line('status:might', 2, 1), charges),
         'Gagne 2 Puissance ce tour-ci');
-    expect(EffectLineTexts.phrase(fr, line('status:might', 2, 2)),
+    expect(EffectLineTexts.phrase(fr, line('status:might', 2, 2), charges),
         'Gagne 2 Puissance pendant 2 tours');
-    expect(EffectLineTexts.phrase(fr, line('status:burn', 1, 1)),
-        'Applique 1 Brûlure pendant 1 tour');
+    expect(EffectLineTexts.phrase(fr, line('status:burn', 1, 1), charges),
+        'Applique 1 Feu');
   });
 
   test('aucune phrase ne finit par un point', () {
     for (final l10n in [fr, en]) {
       for (final l in thirteen) {
-        expect(EffectLineTexts.phrase(l10n, l), isNot(endsWith('.')),
+        expect(EffectLineTexts.phrase(l10n, l, charges), isNot(endsWith('.')),
             reason: '${l.kind} (${l10n.localeName})');
       }
     }
@@ -94,10 +94,21 @@ void main() {
 
   test('hors des treize sortes, aucune phrase', () {
     for (final l10n in [fr, en]) {
-      for (final kind in ['status:poison', 'status:freeze', 'status:shock']) {
-        expect(EffectLineTexts.phrase(l10n, line(kind, 2, 2)), isNull,
+      for (final kind in ['status:poison']) {
+        expect(EffectLineTexts.phrase(l10n, line(kind, 2, 2), charges), isNull,
             reason: kind);
       }
     }
+  });
+
+  test('status:freeze et status:shock ont leur phrase, sans duree', () {
+    expect(EffectLineTexts.phrase(fr, line('status:freeze', 2, 2), charges),
+        'Applique 2 Gel');
+    expect(EffectLineTexts.phrase(fr, line('status:shock', 2, 2), charges),
+        'Applique 2 Foudre');
+    expect(EffectLineTexts.phrase(en, line('status:freeze', 2, 2), charges),
+        'Apply 2 Freeze');
+    expect(EffectLineTexts.phrase(en, line('status:shock', 2, 2), charges),
+        'Apply 2 Shock');
   });
 }

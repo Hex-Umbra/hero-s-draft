@@ -235,7 +235,7 @@ void main() {
           evolutions: [for (final e in s.evolutions) '${e.id}:1'],
         ).effectLines)
           for (final l10n in [fr, en])
-            if (EffectLineTexts.phrase(l10n, line) == null)
+            if (EffectLineTexts.phrase(l10n, line, registry.charges) == null)
               '${s.id} → sorte "${line.kind}" sans phrase (${l10n.localeName})',
     ];
 
