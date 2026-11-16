@@ -33,6 +33,7 @@ class DamageEffectStrategy implements EffectStrategy {
     int dealt = 0;
     // Les runes de la carte : critique, perforation, éclaboussure.
     final effective = card.effective;
+    final charges = runController.ref.read(chargeCatalogProvider);
 
     for (var hit = 0; hit < effect.hits; hit++) {
       // Les ennemis sont relus à chaque coup : un mort ne reçoit plus rien.
@@ -59,6 +60,7 @@ class DamageEffectStrategy implements EffectStrategy {
           enemy,
           heroStats,
           initialDamage,
+          charges,
         );
         // Ricochant : la cible frappée, les autres ennemis vivants prennent
         // leur part du coup (spec §4.6, A17).
@@ -78,6 +80,7 @@ class DamageEffectStrategy implements EffectStrategy {
               other,
               heroStats,
               base,
+              charges,
             );
           }
         }
@@ -97,11 +100,13 @@ class DamageEffectStrategy implements EffectStrategy {
     EnemyInstance enemy,
     EntityStats heroStats,
     int initialDamage,
+    ChargeCatalog charges,
   ) {
     final (finalDmg, isCrit) = DamagePipeline.calculate(
       initialDamage: initialDamage,
       attackerStats: heroStats,
       defenderStats: enemy.stats,
+      charges: charges,
       critChanceBonus: effective.critChanceBonus,
     );
     combatController.updateEnemyStats(

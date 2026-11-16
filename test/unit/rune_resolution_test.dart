@@ -13,6 +13,7 @@ import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -165,15 +166,15 @@ void main() {
   });
 
   group('les statuts des runes : addStatus, sans source (spec E0, A4)', () {
-    test('Coup de Tonnerre et Surcharge, trois fois : 5, 7 puis 9 degats', () {
-      // Chaque choc de rune rejoint le choc en cours, que `DamagePipeline`
-      // lit : +3 et +5 au lieu de +2 et +3.
+    test('Coup de Tonnerre et Surcharge, trois fois : 5, 10 puis 14 degats', () {
+      // La Foudre s'ajoute au coup : sous le seuil +1 par point, chargee (des
+      // la deuxieme pose de la rune, a 3 points) +2 par point (D86).
       final hp = <int>[];
       for (var i = 0; i < 3; i++) {
         play(card('thunder_clap', runes: const ['shocking:1']));
         hp.add(enemy().currentPv);
       }
-      expect(hp, [100 - 5, 100 - 5 - 7, 100 - 5 - 7 - 9]);
+      expect(hp, [100 - 5, 100 - 5 - 10, 100 - 5 - 10 - 14]);
       expect(enemyStatuses('shock').map((s) => (s.value, s.sourceId)),
           [(6, null)]);
     });
@@ -398,6 +399,22 @@ void main() {
       playOnFirst(card('strike_basic', runes: const ['splash:1']));
       // (2 + 2) x 1,5 = 6 ; le troisieme ennemi n'a rien de tout cela.
       expect(pvs(), [94, 94, 98]);
+    });
+
+    test('le heros gele inflige -50 % a l eclaboussure de Ricochant aussi',
+        () {
+      run.updateState(run.currentState.copyWith(
+        heroStats: hero().copyWith(charges: {
+          'freeze': ChargeTrack.start(
+            container.read(chargeCatalogProvider)['freeze']!,
+            ChargeBearer.hero,
+          ).copyWith(state: ChargeState.brokenActive),
+        }),
+      ));
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      // 6 -> 3 sur la cible ; l'eclaboussure, 2 calcules avant le pipeline,
+      // passe le pipeline avec le heros pour attaquant : 1.
+      expect(pvs(), [97, 99, 99]);
     });
 
     test('l eclaboussure est absorbee par l Armure de sa cible, Perforant '

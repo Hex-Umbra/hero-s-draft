@@ -17,6 +17,8 @@ import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
 
+import 'shipped_data.dart';
+
 void main() {
   group('CombatController Tests', () {
     final goblinData = EnemyData(
@@ -553,7 +555,9 @@ void main() {
     test(
       'Burn, Freeze, and Shock status effects are resolved correctly in combat',
       () {
-        final container = ProviderContainer();
+        final container = ProviderContainer(
+          overrides: [shippedChargeOverride()],
+        );
         final combatController = container.read(combatProvider.notifier);
         final runController = container.read(runProvider.notifier);
         final deckNotifier = container.read(deckProvider.notifier);

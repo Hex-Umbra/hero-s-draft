@@ -6,9 +6,12 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -266,6 +269,30 @@ void main() {
       fight([foe(statuses: [status('shock', 2)])]);
       play([volley]);
       expect(enemy().currentPv, 100 - 15);
+    });
+
+    test('Rafale d etincelles : 12 sur un ennemi neuf, 27 sur un ennemi a 2 '
+        'points', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('spark_barrage');
+      expect(enemy().currentPv, 100 - 12);
+
+      final shock = container.read(chargeCatalogProvider)['shock']!;
+      fight([
+        EnemyInstance(
+          data: registry.enemies.first,
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+            shock,
+            2,
+            ChargeBearer.enemy,
+          ),
+        ),
+      ]);
+      playShipped('spark_barrage');
+      // La Foudre posee d'abord la charge : 3 points, +2 par point a chaque coup.
+      expect(enemy().currentPv, 100 - 27);
+      expect(enemy().charges['shock']!.state, ChargeState.brokenActive);
     });
 
     test('le critique se tire a chaque coup', () {

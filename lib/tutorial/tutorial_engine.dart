@@ -411,6 +411,7 @@ class TutorialEngine extends ChangeNotifier {
           initialDamage: scaled + mockState.heroStats.damageBonusFor(card.data.type),
           attackerStats: mockState.heroStats,
           defenderStats: enemy.stats,
+          charges: data.charges,
         );
         mockState.enemy = enemy.copyWith(
           stats: enemy.stats.takeDamage(dealt, isCrit: isCrit),

@@ -1,13 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/damage_pipeline.dart';
 import 'package:roguelike_card_game/game/services/proportional_status.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
+
+import 'shipped_data.dart';
 
 /// Le critique que la carte jouée ajoute à celui de l'attaquant (spec P-43
 /// E2, §4.2, A10) : `precise`.
 void main() {
   // Ni critique, ni statut : seul le bonus de la carte peut critiquer.
+  final charges = shippedChargeCatalog();
+
   EntityStats stats() =>
       EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0);
 
@@ -18,6 +25,7 @@ void main() {
         initialDamage: 10,
         attackerStats: stats(),
         defenderStats: stats(),
+        charges: charges,
         critChanceBonus: 100,
       );
       expect((damage, isCrit), (15, true));
@@ -31,6 +39,7 @@ void main() {
           initialDamage: 10,
           attackerStats: stats(),
           defenderStats: stats(),
+          charges: charges,
         ),
         (10, false),
       );
@@ -53,6 +62,7 @@ void main() {
         initialDamage: 10,
         attackerStats: attacker ?? stats(),
         defenderStats: defender ?? stats(),
+        charges: charges,
         canCrit: false,
       ).$1;
 
@@ -94,5 +104,64 @@ void main() {
     ));
     expect(defender.statuses, hasLength(2));
     expect(damageWith(defender: defender), 15);
+  });
+
+  // Les charges : la Foudre du défenseur, le héros gelé (spec P-53, §4.9).
+  EntityStats charged(String id, int points, ChargeBearer bearer) =>
+      ChargeRules.pose(stats(), charges[id]!, points, bearer);
+
+  test('Foudre sous le seuil : +1 par point, apres le critique', () {
+    final defender = charged('shock', 2, ChargeBearer.enemy);
+    expect(
+      DamagePipeline.calculate(
+        initialDamage: 10,
+        attackerStats: stats(),
+        defenderStats: defender,
+        charges: charges,
+        critChanceBonus: 100,
+      ),
+      (17, true),
+    );
+  });
+
+  test('Foudre chargee : +2 par point, que Vulnerable amplifie', () {
+    final defender = charged('shock', 3, ChargeBearer.enemy)
+        .addStatus(const StatusEffect(
+      id: 'vulnerable',
+      name: 'vulnerable',
+      type: StatusType.debuff,
+      value: 2,
+      duration: 2,
+    ));
+    expect(damageWith(defender: defender), 24);
+  });
+
+  // Le héros gelé : sa piste `weakenDealt`, posée à la main dans l'état voulu.
+  EntityStats frozenHero(ChargeState state) => stats().copyWith(charges: {
+        'freeze': ChargeTrack.start(charges['freeze']!, ChargeBearer.hero)
+            .copyWith(state: state),
+      });
+
+  int hit(EntityStats attacker, int initialDamage) =>
+      DamagePipeline.calculate(
+        initialDamage: initialDamage,
+        attackerStats: attacker,
+        defenderStats: stats(),
+        charges: charges,
+        canCrit: false,
+      ).$1;
+
+  test('gele et Faiblesse : 8 puis 6 puis 3', () {
+    final weak = withStatus('weakness', 1);
+    expect(hit(stats(), 8), 8);
+    expect(hit(weak, 8), 6);
+    final both = frozenHero(ChargeState.brokenActive).addStatus(
+      weak.statuses.single,
+    );
+    expect(hit(both, 8), 3);
+  });
+
+  test('une rupture en attente ne reduit rien', () {
+    expect(hit(frozenHero(ChargeState.brokenPending), 10), 10);
   });
 }

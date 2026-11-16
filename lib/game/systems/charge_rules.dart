@@ -117,6 +117,38 @@ abstract final class ChargeRules {
     );
   }
 
+  /// Le pourcentage de dégâts que l'attaquant perd : celui de sa piste
+  /// `weakenDealt` rompue et active, 0 sinon. Une rupture en attente ne
+  /// réduit rien (spec P-53, §4.9).
+  static int weakenPercent(EntityStats attacker) {
+    for (final track in attacker.charges.values) {
+      if (track.rupture.kind == RuptureKind.weakenDealt &&
+          track.state == ChargeState.brokenActive) {
+        return track.rupture.percent;
+      }
+    }
+    return 0;
+  }
+
+  /// Le bonus que le défenseur ajoute à chaque coup reçu : pour chaque charge
+  /// dont la rupture en vigueur (celle de la piste, à défaut celle du
+  /// catalogue) est `amplifyHits`, `points × bonusPerPoint` une fois la
+  /// charge rompue, et `belowThresholdPercent` de cela, la demie vers le
+  /// haut, en dessous du seuil (spec P-53, §4.9).
+  static int hitBonus(EntityStats defender, ChargeCatalog charges) {
+    var bonus = 0;
+    for (final charge in charges.all) {
+      final track = defender.charges[charge.id];
+      final rupture = track?.rupture ?? charge.rupture;
+      if (rupture.kind != RuptureKind.amplifyHits) continue;
+      final full = points(defender, charge.id) * rupture.bonusPerPoint;
+      bonus += track?.state == ChargeState.brokenActive
+          ? full
+          : halfUp(full, charge.belowThresholdPercent!);
+    }
+    return bonus;
+  }
+
   /// Une ligne par piste dont les points dépassent 0 ou dont l'état n'est pas
   /// « aucun » ; une charge à 0 non rompue n'a pas de ligne.
   static List<ChargeLine> linesFor(EntityStats stats) => [

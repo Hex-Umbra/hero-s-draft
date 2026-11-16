@@ -113,6 +113,7 @@ class TurnPhaseManager {
           initialDamage: intent.value,
           attackerStats: enemy.stats,
           defenderStats: runController.currentState.heroStats,
+          charges: ref.read(chargeCatalogProvider),
         );
 
         runController.takeDamage(dmg, isCrit: isCrit);
