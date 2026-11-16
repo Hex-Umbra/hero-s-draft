@@ -349,16 +349,6 @@ class CombatController extends Notifier<CombatState> {
     _turnPhaseManager.endEnemyTurn();
   }
 
-  /// Décrémente la durée des statuts de l'ennemi
-  void tickEnemyStatuses(String enemyId) {
-    state = state.copyWith(
-      enemies: state.enemies.map((enemy) {
-        if (enemy.id != enemyId) return enemy;
-        return enemy.copyWith(stats: enemy.stats.tickStatuses());
-      }).toList(),
-    );
-  }
-
   /// Calcule et attribue la prochaine intention de l'ennemi
   void rollIntentForEnemy(String enemyId) {
     state = state.copyWith(

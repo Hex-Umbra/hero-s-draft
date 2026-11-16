@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/game/controllers/combat/status_effect_processor.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/systems/stat_gains.dart';
@@ -143,6 +144,7 @@ void main() {
       final converted = StatusEffectProcessor.processPlayerStatuses(
         stats().addStatus(metallicize),
         const [armorToMight],
+        const ChargeCatalog.empty(),
       );
       expect(converted.armure, 2);
       expect(mightOf(converted)!.value, 3);

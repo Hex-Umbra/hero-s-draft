@@ -11,6 +11,7 @@ import 'status_effect_processor.dart';
 import '../../systems/stat_gains.dart';
 import '../../services/damage_pipeline.dart';
 import '../../../services/audio/audio_providers.dart';
+import '../../../services/game_data_service.dart';
 import '../../../services/audio/game_moment.dart';
 
 class TurnPhaseManager {
@@ -64,7 +65,10 @@ class TurnPhaseManager {
 
     final List<EnemyInstance> updatedEnemies = [];
     for (var enemy in controller.currentState.enemies) {
-      final updatedStats = StatusEffectProcessor.processEnemyStatuses(enemy.stats);
+      final updatedStats = StatusEffectProcessor.processEnemyStatuses(
+        enemy.stats,
+        ref.read(chargeCatalogProvider),
+      );
       updatedEnemies.add(enemy.copyWith(stats: updatedStats));
     }
 

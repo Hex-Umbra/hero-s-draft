@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/game/controllers/combat/status_effect_processor.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
@@ -146,6 +147,7 @@ void main() {
       final stats = StatusEffectProcessor.processPlayerStatuses(
         heroStats().addStatus(metallicize),
         const [],
+        const ChargeCatalog.empty(),
       );
       expect(stats.armure, 3);
     });
@@ -158,7 +160,10 @@ void main() {
         might: 2,
         statuses: const [metallicize],
       );
-      expect(StatusEffectProcessor.processEnemyStatuses(enemyStats).armure, 4);
+      expect(StatusEffectProcessor.processEnemyStatuses(
+        enemyStats,
+        const ChargeCatalog.empty(),
+      ).armure, 4);
     });
   });
 
@@ -285,7 +290,11 @@ void main() {
 
       final releves = <int>[];
       for (var tour = 0; tour < 4; tour++) {
-        stats = StatusEffectProcessor.processPlayerStatuses(stats, const []);
+        stats = StatusEffectProcessor.processPlayerStatuses(
+          stats,
+          const [],
+          const ChargeCatalog.empty(),
+        );
         releves.add(stats.effectiveMight);
       }
 
@@ -325,7 +334,10 @@ void main() {
         ],
       );
 
-      final after = StatusEffectProcessor.processEnemyStatuses(orc);
+      final after = StatusEffectProcessor.processEnemyStatuses(
+        orc,
+        const ChargeCatalog.empty(),
+      );
 
       // 2, et non 3 comme avant P-43 E0.
       expect(after.effectiveMight, 2);

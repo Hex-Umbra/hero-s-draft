@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../../../models/card_instance.dart';
+import '../../../models/data/charge_data.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/effective_card.dart';
 import '../../../models/enemy_instance.dart';
@@ -8,11 +9,13 @@ import '../../../models/status_effect.dart';
 import '../../controllers/run_controller.dart';
 import '../../controllers/deck_controller.dart';
 import '../../controllers/combat_controller.dart';
+import '../../systems/charge_rules.dart';
 import '../../systems/stat_gains.dart';
 import '../../systems/power_rules.dart';
 import '../damage_pipeline.dart';
 import '../effect_resolver.dart';
 import '../../../services/audio/audio_providers.dart';
+import '../../../services/game_data_service.dart';
 import '../../../services/audio/game_moment.dart';
 import 'effect_strategy.dart';
 
@@ -229,40 +232,79 @@ class ApplyStatusEffectStrategy implements EffectStrategy {
     required CombatController combatController,
     required String? selectedEnemyId,
   }) {
-    if (effect.statusId != null) {
-      // Le ciblage se lit sur la carte, pas sur l'effet : `CardEffect` n'en a pas.
-      final status = EffectResolver.createStatus(
-        effect.statusId!,
-        // Le bonus de Puissance de statut est déjà dans [scaledValue] : le
-        // résolveur le donne au seul premier statut de la résolution (Q11).
-        scaledValue,
-        effect.duration ?? 1,
-        // L'id de la carte, jamais celui de l'exemplaire : deux exemplaires
-        // d'une même carte s'additionnent (spec P-43 E0, A2).
-        sourceId: StatusSource.card(card.data.id),
-      );
-      if (status != null) {
-        if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
-          final enemyIndex = combatController.currentState.enemies
-              .indexWhere((e) => e.id == selectedEnemyId);
-          if (enemyIndex != -1) {
-            final enemy = combatController.currentState.enemies[enemyIndex];
-            combatController.updateEnemyStats(
-              selectedEnemyId,
-              enemy.stats.addStatus(status),
-            );
-          }
-        } else if (card.data.target == CardTarget.allEnemies) {
-          for (var enemy in combatController.currentState.enemies) {
-            combatController.updateEnemyStats(
-              enemy.id,
-              enemy.stats.addStatus(status),
-            );
-          }
-        } else if (card.data.target == CardTarget.self) {
-          runController.addStatus(status);
-        }
+    final statusId = effect.statusId;
+    if (statusId == null) return;
+
+    // Le ciblage se lit sur la carte, pas sur l'effet : `CardEffect` n'en a pas.
+    final charge = runController.ref.read(chargeCatalogProvider)[statusId];
+    if (charge != null) {
+      // Une charge se pose par sa règle : la durée de l'effet n'est pas lue
+      // (spec P-53, A7). Le bonus de Puissance de statut est déjà dans
+      // [scaledValue] (Q11).
+      _poseCharge(charge, scaledValue, card, runController, combatController, selectedEnemyId);
+      return;
+    }
+
+    final status = EffectResolver.createStatus(
+      statusId,
+      // Le bonus de Puissance de statut est déjà dans [scaledValue] : le
+      // résolveur le donne au seul premier statut de la résolution (Q11).
+      scaledValue,
+      effect.duration ?? 1,
+      // L'id de la carte, jamais celui de l'exemplaire : deux exemplaires
+      // d'une même carte s'additionnent (spec P-43 E0, A2).
+      sourceId: StatusSource.card(card.data.id),
+    );
+    if (status == null) return;
+    if (card.data.target == CardTarget.singleEnemy && selectedEnemyId != null) {
+      final enemyIndex = combatController.currentState.enemies
+          .indexWhere((e) => e.id == selectedEnemyId);
+      if (enemyIndex != -1) {
+        final enemy = combatController.currentState.enemies[enemyIndex];
+        combatController.updateEnemyStats(
+          selectedEnemyId,
+          enemy.stats.addStatus(status),
+        );
       }
+    } else if (card.data.target == CardTarget.allEnemies) {
+      for (var enemy in combatController.currentState.enemies) {
+        combatController.updateEnemyStats(
+          enemy.id,
+          enemy.stats.addStatus(status),
+        );
+      }
+    } else if (card.data.target == CardTarget.self) {
+      runController.addStatus(status);
+    }
+  }
+
+  void _poseCharge(
+    ChargeData charge,
+    int points,
+    CardInstance card,
+    RunController runController,
+    CombatController combatController,
+    String? selectedEnemyId,
+  ) {
+    void poseOn(EnemyInstance enemy) => combatController.updateEnemyStats(
+          enemy.id,
+          ChargeRules.pose(enemy.stats, charge, points, ChargeRules.bearerOf(enemy)),
+        );
+
+    switch (card.data.target) {
+      case CardTarget.singleEnemy:
+        final target = combatController.currentState.enemies
+            .where((e) => e.id == selectedEnemyId)
+            .firstOrNull;
+        if (target != null) poseOn(target);
+      case CardTarget.allEnemies:
+        combatController.currentState.enemies.forEach(poseOn);
+      case CardTarget.self:
+        runController.updateHeroStats(
+          (s) => ChargeRules.pose(s, charge, points, ChargeBearer.hero),
+        );
+      case CardTarget.none:
+        break;
     }
   }
 }

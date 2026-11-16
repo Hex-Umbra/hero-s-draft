@@ -34,7 +34,7 @@ class MapProgressionManager {
     controller.updateState(
       controller.currentState.copyWith(
         mapNodes: updatedNodes,
-        heroStats: controller.currentState.heroStats.copyWith(armure: 0, statuses: []),
+        heroStats: controller.currentState.heroStats.clearCombatEffects().copyWith(armure: 0),
       ),
     );
 

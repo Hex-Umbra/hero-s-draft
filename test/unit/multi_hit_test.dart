@@ -197,7 +197,7 @@ void main() {
         );
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(overrides: [shippedChargeOverride()]);
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);
       deck = container.read(deckProvider.notifier);

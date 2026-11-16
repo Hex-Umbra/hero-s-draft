@@ -65,6 +65,12 @@ void main() {
     registry = await loadGameDataRegistry(rootBundle);
   });
 
+  // Un statut se pose soit par `createStatus`, soit par la pose d'une charge
+  // du catalogue (spec P-53, A4).
+  bool isMade(String statusId) =>
+      EffectResolver.createStatus(statusId, 1, 1) != null ||
+      registry.charges.isCharge(statusId);
+
   // Garde de tete de fichier : sans elle, les tests suivants
   // bouclent sur `registry.heroes` et `registry.enemies` et passeraient a
   // vide si le bundle perdait la totalite de assets/data/classes/*/ ou
@@ -198,7 +204,7 @@ void main() {
   test(
       'chaque sorte que produit une signature livree ou une evolution de son '
       'pool figure au document ; chaque status:<id> du document est cree par '
-      'createStatus', () {
+      'createStatus ou est une charge du catalogue', () {
     final documented = registry.effectIcons.kinds.toSet();
     final offenders = [
       for (final s in registry.signatures)
@@ -208,9 +214,8 @@ void main() {
         ).effectLines)
           if (!documented.contains(line.kind)) '${s.id} → sorte "${line.kind}"',
       for (final kind in documented)
-        if (kind.startsWith('status:') &&
-            EffectResolver.createStatus(kind.substring(7), 1, 1) == null)
-          '$kind → createStatus ne cree rien',
+        if (kind.startsWith('status:') && !isMade(kind.substring(7)))
+          '$kind → ni createStatus ni le catalogue ne creent rien',
     ];
 
     expect(offenders, isEmpty, reason: offenders.join('\n'));
@@ -264,7 +269,7 @@ void main() {
 
   test(
       'chaque effet qu ajoute une evolution a sa strategie, et chaque statut '
-      'qu elle pose est fabrique par createStatus', () {
+      'qu elle pose est cree par createStatus ou est une charge du catalogue', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final strategies = container.read(effectRegistryProvider);
@@ -282,8 +287,7 @@ void main() {
           if (strategies.get(effect) == null) {
             offenders.add('${s.id}/${e.id} → effet "$effect" sans strategie');
           }
-          if (statusId != null &&
-              EffectResolver.createStatus(statusId, 1, 1) == null) {
+          if (statusId != null && !isMade(statusId)) {
             offenders.add('${s.id}/${e.id} → statut "$statusId" non fabrique');
           }
         }
@@ -343,7 +347,9 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('chaque statut que pose une rune est fabrique par createStatus', () {
+  test(
+      'chaque statut que pose une rune est cree par createStatus ou est une '
+      'charge du catalogue', () {
     final statuses = {
       for (final rune in registry.forgeUpgrades)
         for (final delta in rune.deltas)
@@ -353,10 +359,23 @@ void main() {
 
     final offenders = [
       for (final statusId in statuses)
-        if (EffectResolver.createStatus(statusId, 1, 1) == null)
-          'statut "$statusId" que createStatus ne fabrique pas',
+        if (!isMade(statusId))
+          'statut "$statusId" que ni createStatus ni le catalogue ne creent',
     ];
 
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test(
+      'chaque charge du catalogue a son entree status:<id> dans '
+      'effect_icons.json', () {
+    final offenders = [
+      for (final charge in registry.charges.all)
+        if (registry.effectIcons.entryOf('status:${charge.id}') == null)
+          charge.id,
+    ];
+
+    expect(registry.charges.isEmpty, isFalse);
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 

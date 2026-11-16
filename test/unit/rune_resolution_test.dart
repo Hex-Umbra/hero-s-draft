@@ -8,7 +8,8 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
-import 'package:roguelike_card_game/game/services/proportional_status.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
@@ -18,6 +19,7 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
+import 'shipped_data.dart';
 import 'scripted_random.dart';
 
 /// Les runes livrées, jouées sur les vraies cartes par
@@ -42,7 +44,7 @@ void main() {
       run.startNewRun(registry.heroes.singleWhere((h) => h.id == heroId));
 
   setUp(() {
-    container = ProviderContainer();
+    container = ProviderContainer(overrides: [shippedChargeOverride()]);
     run = container.read(runProvider.notifier);
     combat = container.read(combatProvider.notifier);
     deck = container.read(deckProvider.notifier);
@@ -176,39 +178,47 @@ void main() {
           [(6, null)]);
     });
 
-    test('Brulant 2, joue deux fois : une brulure de 4 pour 2 tours', () {
+    test('Brulant 2, joue deux fois : une brulure de 4, duree 1', () {
       for (var i = 0; i < 2; i++) {
         play(card('strike_basic', runes: const ['burning:2']));
       }
       expect(
         enemyStatuses('burn').map((s) => (s.value, s.duration, s.sourceId)),
-        [(4, 2, null)],
+        [(4, 1, null)],
       );
     });
 
-    test('Congelant, joue deux fois : une seule entree de gel', () {
+    test('Congelant, joue deux fois : une seule entree de gel, de 2', () {
       for (var i = 0; i < 2; i++) {
         play(card('strike_basic', runes: const ['freezing:1']));
       }
-      expect(enemyStatuses('freeze'), hasLength(1));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
     });
 
-    test('Trait de Glace pose 2 Gel : -50 %, l effet d avant', () {
+    test('Trait de Glace pose 2 Gel : 2/3, non gele', () {
       play(card('ice_bolt'));
       expect(enemyStatuses('freeze').map((s) => s.value), [2]);
-      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+      final line = ChargeRules.linesFor(enemy()).single;
+      expect(
+        (line.points, line.threshold, line.state),
+        (2, 3, ChargeState.none),
+      );
     });
 
-    test('Congelant 1 pose 1 Gel : -25 %', () {
+    test('Congelant 1 pose 1 Gel : 1/3', () {
       play(card('strike_basic', runes: const ['freezing:1']));
       expect(enemyStatuses('freeze').map((s) => s.value), [1]);
-      expect(ProportionalStatus.freeze.percentOn(enemy()), 25);
+      final line = ChargeRules.linesFor(enemy()).single;
+      expect(
+        (line.points, line.threshold, line.state),
+        (1, 3, ChargeState.none),
+      );
     });
 
-    test('Boule de Feu et Brulant 1 : une brulure de 3 pour 2 tours', () {
+    test('Boule de Feu et Brulant 1 : une brulure de 3, duree 1', () {
       // La rune pose avant la carte, dont la brulure rejoint la sienne.
       play(card('fireball', runes: const ['burning:1']));
-      expect(enemyStatuses('burn').map((s) => (s.value, s.duration)), [(3, 2)]);
+      expect(enemyStatuses('burn').map((s) => (s.value, s.duration)), [(3, 1)]);
     });
   });
 

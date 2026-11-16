@@ -85,30 +85,6 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
-      case 'burn':
-        return StatusEffect(
-          id: 'burn',
-          name: 'Brûlure',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
-      case 'freeze':
-        return StatusEffect(
-          id: 'freeze',
-          name: 'Gel',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
-      case 'shock':
-        return StatusEffect(
-          id: 'shock',
-          name: 'Électrocution',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
       default:
         return null;
     }

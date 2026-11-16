@@ -10,7 +10,9 @@ import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -20,6 +22,7 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 
+import 'shipped_data.dart';
 import 'scripted_random.dart';
 
 void main() {
@@ -80,10 +83,10 @@ void main() {
       expect(stats.statuses.first.duration, 3); // max(2, 3)
 
       // Tick statuses reduces duration
-      stats = stats.tickStatuses();
+      stats = stats.tickStatuses(const {});
       expect(stats.statuses.first.duration, 2);
 
-      stats = stats.tickStatuses();
+      stats = stats.tickStatuses(const {});
       expect(stats.statuses.first.duration, 1);
     });
 
@@ -326,7 +329,7 @@ void main() {
     });
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(overrides: [shippedChargeOverride()]);
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);
       deck = container.read(deckProvider.notifier);
@@ -390,7 +393,7 @@ void main() {
 
       final burn = onEnemy('burn').single;
       expect(burn.value, 5);
-      expect(burn.duration, 2);
+      expect(burn.duration, 1);
     });
 
     test(
@@ -460,6 +463,17 @@ void main() {
       final fromCard = statuses.where((s) => s.sourceId == 'card:test');
       expect(fromCard.singleWhere((s) => s.id == 'might').value, 1);
       expect(statuses.singleWhere((s) => s.id == 'armor_regen').value, 2);
+    });
+
+    test('la Puissance s ajoute avant le plafond du Gel', () {
+      play(shipped('ice_bolt'));
+
+      final stats = combat.currentState.enemies.single.stats;
+      final track = stats.charges['freeze']!;
+      expect(track.state, ChargeState.brokenPending);
+      expect(track.rupture.kind, RuptureKind.skipAction);
+      expect(track.ruptures, 1);
+      expect(onEnemy('freeze'), isEmpty);
     });
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/game/controllers/combat/status_effect_processor.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -35,7 +36,11 @@ void main() {
 
     final gains = <int>[];
     for (var turn = 0; turn < 3; turn++) {
-      stats = StatusEffectProcessor.processPlayerStatuses(stats, const []);
+      stats = StatusEffectProcessor.processPlayerStatuses(
+      stats,
+      const [],
+      const ChargeCatalog.empty(),
+    );
       gains.add(stats.currentMana);
       stats = stats.copyWith(currentMana: 0);
     }
@@ -48,7 +53,11 @@ void main() {
     final source = EffectResolver.createStatus('mana_regen', 1, 2)!;
     var stats = hero().addStatus(source).addStatus(source);
 
-    stats = StatusEffectProcessor.processPlayerStatuses(stats, const []);
+    stats = StatusEffectProcessor.processPlayerStatuses(
+      stats,
+      const [],
+      const ChargeCatalog.empty(),
+    );
 
     expect(stats.currentMana, 2);
   });

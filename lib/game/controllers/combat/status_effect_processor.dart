@@ -1,3 +1,4 @@
+import '../../../models/data/charge_data.dart';
 import '../../../models/data/stat_rule.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/status_effect.dart';
@@ -12,6 +13,7 @@ class StatusEffectProcessor {
   static EntityStats processPlayerStatuses(
     EntityStats stats,
     List<StatRule> rules,
+    ChargeCatalog charges,
   ) {
     int poisonDamage = 0;
     int mightGain = 0;
@@ -58,7 +60,7 @@ class StatusEffectProcessor {
     // délibéré, pour préserver le comportement préexistant de `might_regen`,
     // et non une conséquence du même principe que l'armure. Ne pas aligner
     // `might_regen` sur `armor_regen` sans rouvrir cette décision.
-    updatedStats = updatedStats.tickStatuses();
+    updatedStats = updatedStats.tickStatuses(charges.ids);
 
     if (armorGain > 0) {
       updatedStats = StatGains.apply(
@@ -80,7 +82,10 @@ class StatusEffectProcessor {
 
   /// Applique les effets de statut de début de tour sur un ennemi.
   /// Retourne les nouvelles statistiques de l'ennemi.
-  static EntityStats processEnemyStatuses(EntityStats stats) {
+  static EntityStats processEnemyStatuses(
+    EntityStats stats,
+    ChargeCatalog charges,
+  ) {
     int poisonDamage = 0;
     int mightGain = 0;
     int armorGain = 0;
@@ -130,6 +135,6 @@ class StatusEffectProcessor {
       );
     }
 
-    return updatedStats.tickStatuses();
+    return updatedStats.tickStatuses(charges.ids);
   }
 }

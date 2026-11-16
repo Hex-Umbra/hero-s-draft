@@ -12,6 +12,7 @@ import '../../models/signature_instance.dart';
 import '../../models/map_node.dart';
 import '../../models/status_effect.dart';
 import '../../models/missing_save_item.dart';
+import '../../services/game_data_service.dart';
 import '../../services/map_generator_service.dart';
 import '../game_constants.dart';
 import '../services/level_up_reward_service.dart';
@@ -329,6 +330,11 @@ class RunController extends Notifier<RunState> {
     );
   }
 
+  /// Remplace les stats du héros par ce que [update] en fait.
+  void updateHeroStats(EntityStats Function(EntityStats) update) {
+    state = state.copyWith(heroStats: update(state.heroStats));
+  }
+
   // Permet aux managers internes de mettre à jour l'état
   void updateState(RunState newState) {
     state = newState;
@@ -565,8 +571,7 @@ class RunController extends Notifier<RunState> {
     // 1. Nettoyage des buffs/debuffs du combat précédent,
     // et restauration du mana au max (l'armure est remise à 0 en fin de combat dans completeCurrentNode)
     state = state.copyWith(
-      heroStats: state.heroStats.copyWith(
-        statuses: [],
+      heroStats: state.heroStats.clearCombatEffects().copyWith(
         currentMana: state.heroStats.maxMana,
       ),
       // Une réserve laissée par le combat précédent ne le suit pas (D30).
@@ -609,6 +614,7 @@ class RunController extends Notifier<RunState> {
     final updatedStats = StatusEffectProcessor.processPlayerStatuses(
       state.heroStats,
       state.statRules,
+      ref.read(chargeCatalogProvider),
     );
     state = state.copyWith(heroStats: updatedStats);
 
