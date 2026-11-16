@@ -28,11 +28,11 @@
 | Quand retirer `ProportionalStatus.freeze` et `statusFreezeHint` | tôt, avec des remplacements temporaires | avec leur dernier lecteur, le tutoriel (Task 10) | 8 |
 | Le chiffre « 💥 » du cycle du tutoriel | `threshold × damagePerPoint` | `explosionDamage` (12 dans les deux cas aux valeurs livrées) | 8 |
 
-### Question P ouverte, appliquée « (provisoire) »
+### Question P, tranchée par le propriétaire
 
-| # | Question | Options | Recommandation |
-|:---|:---|:---|:---|
-| Q-P1 | Où le joueur lit-il `heroDescription` ? | (a) l'infobulle des contenus qui posent du Gel ; (b) l'entrée Gel de la galerie du tutoriel ; (c) la ligne du héros gelé, dans son panneau ; (d) nulle part en `0.5.9` | (d) |
+| # | Question | Options | Recommandation | Choix du propriétaire |
+|:---|:---|:---|:---|:---|
+| Q-P1 | Où le joueur lit-il `heroDescription` ? | (a) l'infobulle des contenus qui posent du Gel ; (b) l'entrée Gel de la galerie du tutoriel ; (c) la ligne du héros gelé, dans son panneau ; (d) nulle part en `0.5.9` | (d) | **(d)**, le 16/11, dans le prompt de reprise : le joueur ne lit `heroDescription` nulle part en `0.5.9` ; le texte reste dans le fichier du Gel pour le jour où un ennemi posera du Gel sur le héros. Le plan appliquait déjà (d) : marque « (provisoire) » retirée, contenu inchangé, pas de nouveau tour de vérification |
 
 ## 2. Le journal des tours
 

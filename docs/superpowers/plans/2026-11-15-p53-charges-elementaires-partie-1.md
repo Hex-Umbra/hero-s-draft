@@ -80,7 +80,7 @@ Classe T, tranchées par les filtres de §5 du fichier d'orchestration ; les opt
 - `DebugActions.skipEnemyPhase` ne joue aucune fermeture de phase : un raccourci de debug, documenté par son commentaire et un test (*filtre 8*).
 - `ProportionalStatus.freeze` et `statusFreezeHint` disparaissent avec leur dernier lecteur, le tutoriel (Task 10) (*filtre 8*).
 
-**Une question P reste ouverte** (Q-P1, signalée au rendu) : où le joueur lit-il `heroDescription` (« Sur vous : à 5, vos cartes et signatures infligent 50 % de dégâts en moins… ») ? La spec la fixe en donnée et la valide (A3), sans lui donner d'écran. Options : (a) dans l'infobulle des contenus qui posent du Gel, après la description de la charge (Task 8) ; (b) dans l'entrée Gel de la galerie du tutoriel (Task 10) ; (c) sur la ligne du héros gelé, dans son panneau (Task 9) ; (d) nulle part en `0.5.9` — recommandé : (d). **Appliquée à titre provisoire sous (d)** (provisoire) : le plan la livre en donnée validée et éditable, sans lecteur d'affichage ; une autre réponse du propriétaire ajoute une ligne à la tâche nommée.
+**Q-P1, classe P, tranchée par le propriétaire le 16/11 : (d)** — où le joueur lit-il `heroDescription` (« Sur vous : à 5, vos cartes et signatures infligent 50 % de dégâts en moins… ») ? Nulle part en `0.5.9` : aucun ennemi ne pose de charge, et la ligne du héros gelé dit déjà l'effet. Le plan la livre en donnée validée et éditable (A3), sans lecteur d'affichage ; le texte reste dans le fichier du Gel pour le jour où un ennemi posera du Gel sur le héros.
 
 ---
 
