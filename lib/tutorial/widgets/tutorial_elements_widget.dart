@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../game/services/proportional_status.dart';
+import '../../game/systems/charge_rules.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/data/charge_data.dart';
+import '../../models/entity_stats.dart';
 import '../../models/status_effect.dart';
 import '../../ui/widgets/hud/status_effects_panel.dart';
 import '../tutorial_engine.dart';
@@ -32,48 +35,58 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   Timer? _timer;
   static const int _poisonValue = 3;
   int _poisonDuration = 2;
-  int _burnVal = 6;
-  bool _gelActive = true;
-  int _shockHits = 0;
 
-  // Les entrées lisent la langue active : elles ne sont pas constantes, et le
-  // barème des statuts proportionnels vient de [ProportionalStatus].
-  static List<ElementStatusInfo> _elements(AppLocalizations l10n, bool isFrench) =>
-      [
-        ElementStatusInfo(
-          icon: Icons.science_rounded,
-          color: Colors.greenAccent,
-          name: 'Poison',
-          desc: isFrench
-              ? 'Inflige sa valeur au début du tour. La valeur ne baisse pas ; la durée décrémente.'
-              : 'Deals its value at the start of the turn. The value holds; the duration ticks down.',
-        ),
-        ElementStatusInfo(
-          icon: Icons.local_fire_department_rounded,
-          color: Colors.orangeAccent,
-          name: isFrench ? 'Brûlure' : 'Burn',
-          desc: isFrench
-              ? 'Inflige sa valeur au début du tour ennemi, puis perd 1.'
-              : 'Deals its value at the start of the enemy turn, then loses 1.',
-        ),
-        ElementStatusInfo(
-          icon: Icons.ac_unit_rounded,
-          color: Colors.lightBlueAccent,
-          name: isFrench ? 'Gel' : 'Freeze',
-          desc: l10n.statusFreezeHint(
-            ProportionalStatus.freeze.percentPerPoint,
-            ProportionalStatus.freeze.maxPercent,
-          ),
-        ),
-        ElementStatusInfo(
-          icon: Icons.flash_on_rounded,
-          color: Colors.amberAccent,
-          name: isFrench ? 'Électrocution' : 'Shock',
-          desc: isFrench
-              ? 'Subit des dégâts supplémentaires à chaque coup reçu.'
-              : 'Takes bonus damage on every card hit received.',
-        ),
-      ];
+  // Le pas du cycle des trois charges : chacune le lit modulo sa propre
+  // longueur, ses chiffres viennent de la donnée.
+  int _chargeStep = 0;
+
+  // Les deux points de Feu du panneau de démonstration, posés comme le jeu
+  // les pose, sur un héros de démonstration.
+  late final EntityStats _demoStats = ChargeRules.pose(
+    EntityStats(maxPv: 1, currentPv: 1, armure: 0, might: 0),
+    widget.engine.data.charges['burn']!,
+    2,
+    ChargeBearer.hero,
+  );
+
+  // Les entrées lisent la langue active : elles ne sont pas constantes. Les
+  // charges disent leur nom et leur règle depuis le catalogue ; le barème des
+  // statuts proportionnels vient de [ProportionalStatus].
+  List<ElementStatusInfo> _elements(bool isFrench) {
+    final locale = isFrench ? 'fr' : 'en';
+    final charges = widget.engine.data.charges;
+    final burn = charges['burn']!;
+    final freeze = charges['freeze']!;
+    final shock = charges['shock']!;
+    return [
+      ElementStatusInfo(
+        icon: Icons.science_rounded,
+        color: Colors.greenAccent,
+        name: 'Poison',
+        desc: isFrench
+            ? 'Inflige sa valeur au début du tour. La valeur ne baisse pas ; la durée décrémente.'
+            : 'Deals its value at the start of the turn. The value holds; the duration ticks down.',
+      ),
+      ElementStatusInfo(
+        icon: Icons.local_fire_department_rounded,
+        color: Colors.orangeAccent,
+        name: burn.name(locale),
+        desc: burn.describe(locale),
+      ),
+      ElementStatusInfo(
+        icon: Icons.ac_unit_rounded,
+        color: Colors.lightBlueAccent,
+        name: freeze.name(locale),
+        desc: freeze.describe(locale),
+      ),
+      ElementStatusInfo(
+        icon: Icons.flash_on_rounded,
+        color: Colors.amberAccent,
+        name: shock.name(locale),
+        desc: shock.describe(locale),
+      ),
+    ];
+  }
 
   // Les cinq autres statuts qui circulent en combat mais que la galerie
   // ci-dessus ne montre pas.
@@ -137,14 +150,8 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
         // jusqu'à expiration (2 -> 1 -> 0), puis le cycle repart.
         _poisonDuration = _poisonDuration > 0 ? _poisonDuration - 1 : 2;
 
-        // Brûlure : perd 1 par tour au lieu d'être divisée par deux.
-        _burnVal = _burnVal > 1 ? _burnVal - 1 : 6;
-
-        // Gel : bascule l'état visuel
-        _gelActive = !_gelActive;
-
-        // Électrocution : 0 -> 1 -> 2 -> reset
-        _shockHits = _shockHits < 2 ? _shockHits + 1 : 0;
+        // Les trois charges avancent d'un pas ; chacune reboucle à sa longueur.
+        _chargeStep++;
       });
     });
   }
@@ -153,6 +160,25 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  // Une ligne du cycle d'une charge : son icône et le chiffre du pas.
+  Widget _chargeCycle(IconData icon, Color color, String label, double scale) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color, size: 14 * scale),
+        SizedBox(width: 4 * scale),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 12 * scale,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSimulationVisual(int index, double scale, bool isFrench) {
@@ -185,79 +211,39 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
             ),
           ],
         );
-      case 1: // Brûlure
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.local_fire_department,
-              color: Colors.orangeAccent,
-              size: 14 * scale,
-            ),
-            SizedBox(width: 4 * scale),
-            Text(
-              '$_burnVal',
-              style: TextStyle(
-                color: Colors.orangeAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 16 * scale,
-              ),
-            ),
-            SizedBox(width: 8 * scale),
-            Text(
-              '->  -$_burnVal HP',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12 * scale,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+      case 1: // Feu : 1, 2, 3 points, puis l'explosion
+        final burn = widget.engine.data.charges['burn']!;
+        final step = _chargeStep % (burn.threshold + 1);
+        return _chargeCycle(
+          Icons.local_fire_department,
+          Colors.orangeAccent,
+          step < burn.threshold
+              ? '🔥 ${step + 1}'
+              : '💥 ${burn.rupture.explosionDamage}',
+          scale,
         );
-      case 2: // Gel
-        return AnimatedOpacity(
-          opacity: _gelActive ? 1.0 : 0.4,
-          duration: const Duration(milliseconds: 300),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.hardware_rounded, color: Colors.grey, size: 16 * scale),
-              SizedBox(width: 4 * scale),
-              Text(
-                _gelActive ? '10 -> 5 ⚔️' : '10 ⚔️',
-                style: TextStyle(
-                  color: _gelActive ? Colors.lightBlueAccent : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13 * scale,
-                ),
-              ),
-            ],
-          ),
+      case 2: // Gel : 1/3, 2/3, puis l'état gelé
+        final freeze = widget.engine.data.charges['freeze']!;
+        final step = _chargeStep % freeze.threshold;
+        return _chargeCycle(
+          Icons.ac_unit,
+          Colors.lightBlueAccent,
+          step < freeze.threshold - 1
+              ? '❄ ${step + 1}/${freeze.threshold}'
+              : '❄ ${freeze.brokenName(isFrench ? 'fr' : 'en')}',
+          scale,
         );
-      case 3: // Électrocution
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.flash_on, color: Colors.amberAccent, size: 16 * scale),
-            SizedBox(width: 4 * scale),
-            Text(
-              'HIT ${_shockHits + 1}',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12 * scale,
-              ),
-            ),
-            SizedBox(width: 6 * scale),
-            Text(
-              '+${(_shockHits + 1) * 2} ⚡',
-              style: TextStyle(
-                color: Colors.amberAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 12 * scale,
-              ),
-            ),
-          ],
+      case 3: // Foudre : +1 par point sous le seuil, puis chargée
+        final shock = widget.engine.data.charges['shock']!;
+        final step = _chargeStep % shock.threshold;
+        return _chargeCycle(
+          Icons.flash_on,
+          Colors.amberAccent,
+          step < shock.threshold - 1
+              ? '⚡ ${step + 1}/${shock.threshold} : +${(step + 1) * shock.belowValue!}'
+              : '⚡ ${shock.brokenName(isFrench ? 'fr' : 'en')} : '
+                  '+${shock.threshold * shock.rupture.bonusPerPoint}',
+          scale,
         );
       default:
         return const SizedBox.shrink();
@@ -455,7 +441,7 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
         children: [
           SizedBox(
             height: 300,
-            child: _buildGallery(_elements(l10n, isFrench), isFrench),
+            child: _buildGallery(_elements(isFrench), isFrench),
           ),
           const SizedBox(height: 20),
           Text(
@@ -493,14 +479,9 @@ class _TutorialElementsWidgetState extends State<TutorialElementsWidget> {
                   value: 3,
                   duration: 2,
                 ),
-                StatusEffect(
-                  id: 'burn',
-                  name: 'Brûlure',
-                  type: StatusType.debuff,
-                  value: 2,
-                  duration: 2,
-                ),
               ],
+              chargeLines: ChargeRules.linesFor(_demoStats),
+              charges: widget.engine.data.charges,
             ),
           ),
         ],

@@ -332,7 +332,6 @@
 ,
   "statusWeaknessHint": "−{percent} % de dégâts infligés par point, jusqu'à −{max} %",
   "statusVulnerableHint": "+{percent} % de dégâts subis par point, jusqu'à +{max} %",
-  "statusFreezeHint": "−{percent} % à la prochaine attaque par point, jusqu'à −{max} %",
   "cardCostHp": "Coûte {amount} PV",
   "cardCostArmor": "Coûte {amount} Armure",
   "cardDescDamageHits": "Inflige {amount} dégâts {hits} fois.",

@@ -7,6 +7,7 @@ import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
@@ -258,18 +259,12 @@ void main() {
       'un ennemi qui porte du Gel sous le seuil montre son intention entiere',
       () {
         final enemy = EnemyInstance(
-          stats: EntityStats(
-            maxPv: 20,
-            currentPv: 20,
-            armure: 0,
-            might: 10,
-          ).addStatus(const StatusEffect(
-            id: 'freeze',
-            name: 'Gel',
-            type: StatusType.debuff,
-            value: 2,
-            duration: 1,
-          )),
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 20, currentPv: 20, armure: 0, might: 10),
+            shippedChargeCatalog()['freeze']!,
+            2,
+            ChargeBearer.enemy,
+          ),
           data: const EnemyData(
             id: 'test',
             nameEn: 'Test Enemy',

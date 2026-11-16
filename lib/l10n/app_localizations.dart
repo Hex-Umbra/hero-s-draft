@@ -2036,12 +2036,6 @@ abstract class AppLocalizations {
   /// **'+{percent}% damage taken per point, up to +{max}%'**
   String statusVulnerableHint(int percent, int max);
 
-  /// No description provided for @statusFreezeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'−{percent}% to the next attack per point, down to −{max}%'**
-  String statusFreezeHint(int percent, int max);
-
   /// No description provided for @cardCostHp.
   ///
   /// In en, this message translates to:

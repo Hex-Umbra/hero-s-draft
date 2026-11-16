@@ -1305,11 +1305,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String statusFreezeHint(int percent, int max) {
-    return '−$percent% to the next attack per point, down to −$max%';
-  }
-
-  @override
   String cardCostHp(int amount) {
     return 'Costs $amount HP';
   }

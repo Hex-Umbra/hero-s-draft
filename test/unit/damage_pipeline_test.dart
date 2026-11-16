@@ -66,15 +66,14 @@ void main() {
         canCrit: false,
       ).$1;
 
-  test('le bareme de P-1 : 25 % par point ; Vulnerable 4, Faiblesse 2, Gel 3 '
-      'points au plus', () {
+  test('le bareme de P-1 : 25 % par point ; Vulnerable 4, Faiblesse 2 points '
+      'au plus', () {
     expect(
       [
         ProportionalStatus.vulnerable,
         ProportionalStatus.weakness,
-        ProportionalStatus.freeze,
       ].map((s) => (s.percentPerPoint, s.maxPoints, s.maxPercent)),
-      [(25, 4, 100), (25, 2, 50), (25, 3, 75)],
+      [(25, 4, 100), (25, 2, 50)],
     );
   });
 

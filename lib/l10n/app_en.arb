@@ -1086,13 +1086,6 @@
       "max": { "type": "int" }
     }
   },
-  "statusFreezeHint": "−{percent}% to the next attack per point, down to −{max}%",
-  "@statusFreezeHint": {
-    "placeholders": {
-      "percent": { "type": "int" },
-      "max": { "type": "int" }
-    }
-  },
   "cardCostHp": "Costs {amount} HP",
   "@cardCostHp": {
     "placeholders": {
