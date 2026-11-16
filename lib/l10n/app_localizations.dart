@@ -1550,6 +1550,42 @@ abstract class AppLocalizations {
   /// **'{count} turns'**
   String statusTurns(int count);
 
+  /// No description provided for @statusChargePoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {points}/{threshold}'**
+  String statusChargePoints(String name, int points, int threshold);
+
+  /// No description provided for @statusChargeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {points}'**
+  String statusChargeOpen(String name, int points);
+
+  /// No description provided for @statusChargeWeakenNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: −{percent}% damage next turn'**
+  String statusChargeWeakenNext(String state, int percent);
+
+  /// No description provided for @statusChargeWeakenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: −{percent}% damage this turn'**
+  String statusChargeWeakenNow(String state, int percent);
+
+  /// No description provided for @statusChargeCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: +{bonus} per hit'**
+  String statusChargeCharged(String state, int bonus);
+
+  /// No description provided for @intentSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: does nothing this turn'**
+  String intentSkipped(String state);
+
   /// No description provided for @deckTotalCards.
   ///
   /// In en, this message translates to:

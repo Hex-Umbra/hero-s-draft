@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../game/systems/charge_rules.dart';
+import '../../../models/data/charge_data.dart';
 import '../../../models/data/effect_icon_table.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/status_effect.dart';
@@ -19,6 +21,8 @@ class CombatSidePanels extends StatelessWidget {
   final int drawPileCount;
   final int discardPileCount;
   final List<StatusEffect> heroStatuses;
+  final List<ChargeLine> heroChargeLines;
+  final ChargeCatalog charges;
   final List<EnemyInstance> enemies;
   final EffectIconTable effectIcons;
 
@@ -27,7 +31,9 @@ class CombatSidePanels extends StatelessWidget {
     required this.drawPileCount,
     required this.discardPileCount,
     required this.heroStatuses,
+    required this.heroChargeLines,
     required this.enemies,
+    this.charges = const ChargeCatalog.empty(),
     this.effectIcons = const EffectIconTable.empty(),
   });
 
@@ -83,6 +89,9 @@ class CombatSidePanels extends StatelessWidget {
             left: 20,
             child: StatusEffectsPanel(
               statuses: heroStatuses,
+              chargeLines: heroChargeLines,
+              charges: charges,
+              maxHeight: statusPanelReserve,
               effectIcons: effectIcons,
             ),
           ),
@@ -92,7 +101,7 @@ class CombatSidePanels extends StatelessWidget {
             Positioned(
               bottom: 80,
               right: 20,
-              child: EnemyIntentsPanel(enemies: enemies),
+              child: EnemyIntentsPanel(enemies: enemies, charges: charges),
             ),
         ],
       ),

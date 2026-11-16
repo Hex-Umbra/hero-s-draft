@@ -10,6 +10,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/reward_controller.dart';
+import '../../game/systems/charge_rules.dart';
 import '../../game/systems/mana_reserve.dart';
 import '../../models/combat_state.dart';
 import '../../models/map_node.dart';
@@ -643,6 +644,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       drawPileCount: deckState.drawPile.length,
                       discardPileCount: deckState.discardPile.length,
                       heroStatuses: runState.heroStats.statuses,
+                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
+                      charges: ref.watch(chargeCatalogProvider),
                       enemies: combatState.enemies,
                       effectIcons: gameData.effectIcons,
                     ),

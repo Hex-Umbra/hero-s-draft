@@ -658,6 +658,48 @@
       "count": { "type": "int" }
     }
   },
+  "statusChargePoints": "{name}: {points}/{threshold}",
+  "@statusChargePoints": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "points": { "type": "int" },
+      "threshold": { "type": "int" }
+    }
+  },
+  "statusChargeOpen": "{name}: {points}",
+  "@statusChargeOpen": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "points": { "type": "int" }
+    }
+  },
+  "statusChargeWeakenNext": "{state}: −{percent}% damage next turn",
+  "@statusChargeWeakenNext": {
+    "placeholders": {
+      "state": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "statusChargeWeakenNow": "{state}: −{percent}% damage this turn",
+  "@statusChargeWeakenNow": {
+    "placeholders": {
+      "state": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "statusChargeCharged": "{state}: +{bonus} per hit",
+  "@statusChargeCharged": {
+    "placeholders": {
+      "state": { "type": "String" },
+      "bonus": { "type": "int" }
+    }
+  },
+  "intentSkipped": "{state}: does nothing this turn",
+  "@intentSkipped": {
+    "placeholders": {
+      "state": { "type": "String" }
+    }
+  },
   "deckTotalCards": "Total: {count} cards",
   "@deckTotalCards": {
     "placeholders": {
@@ -1028,7 +1070,8 @@
   "signatures": "Signatures",
   "@signatures": {
     "description": "Title of the class signatures block and of the dictionary tab."
-  },
+  }
+,
   "statusWeaknessHint": "−{percent}% damage dealt per point, down to −{max}%",
   "@statusWeaknessHint": {
     "placeholders": {

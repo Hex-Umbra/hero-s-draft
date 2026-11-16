@@ -927,6 +927,36 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String statusChargePoints(String name, int points, int threshold) {
+    return '$name : $points/$threshold';
+  }
+
+  @override
+  String statusChargeOpen(String name, int points) {
+    return '$name : $points';
+  }
+
+  @override
+  String statusChargeWeakenNext(String state, int percent) {
+    return '$state : −$percent % de dégâts au prochain tour';
+  }
+
+  @override
+  String statusChargeWeakenNow(String state, int percent) {
+    return '$state : −$percent % de dégâts ce tour';
+  }
+
+  @override
+  String statusChargeCharged(String state, int bonus) {
+    return '$state : +$bonus par coup';
+  }
+
+  @override
+  String intentSkipped(String state) {
+    return '$state : ne fait rien ce tour';
+  }
+
+  @override
   String deckTotalCards(int count) {
     return 'Total : $count cartes';
   }

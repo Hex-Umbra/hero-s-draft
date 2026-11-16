@@ -248,6 +248,12 @@
   "statusArmorRegen": "Métallisation : +{value}",
   "statusLifesteal": "Vol de Vie : {value}",
   "statusTurns": "{count} trs",
+  "statusChargePoints": "{name} : {points}/{threshold}",
+  "statusChargeOpen": "{name} : {points}",
+  "statusChargeWeakenNext": "{state} : −{percent} % de dégâts au prochain tour",
+  "statusChargeWeakenNow": "{state} : −{percent} % de dégâts ce tour",
+  "statusChargeCharged": "{state} : +{bonus} par coup",
+  "intentSkipped": "{state} : ne fait rien ce tour",
   "deckTotalCards": "Total : {count} cartes",
   "deckMergeConfirm": "Voulez-vous fusionner 3 exemplaires de \"{cardName}\" (Niv. {level}) pour obtenir un exemplaire de Niveau {nextLevel} ?",
   "deckMergeSuccess": "Fusion réussie : {cardName} est maintenant Niveau {level} !",
@@ -322,7 +328,8 @@
   "evolutionBoardPickBoth": "Choisissez une évolution par signature",
   "evolutionBoardTakeBoth": "Valider les deux",
   "evolutionBoardTake": "Prendre {name}",
-  "signatures": "Signatures",
+  "signatures": "Signatures"
+,
   "statusWeaknessHint": "−{percent} % de dégâts infligés par point, jusqu'à −{max} %",
   "statusVulnerableHint": "+{percent} % de dégâts subis par point, jusqu'à +{max} %",
   "statusFreezeHint": "−{percent} % à la prochaine attaque par point, jusqu'à −{max} %",
