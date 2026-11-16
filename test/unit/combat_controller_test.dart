@@ -794,6 +794,95 @@ void main() {
         combat.startEnemyTurn();
         expect([fireOn('A'), fireOn('C')], [1, 1]);
       });
+
+      // Un ennemi qui porte déjà `points` de Gel, et une intention en cours.
+      EnemyInstance frozenFoe(
+        String id, {
+        int points = 3,
+        bool withIntent = true,
+        int burning = 0,
+        int poison = 0,
+      }) {
+        final base = foe(id, burning: burning, poison: poison);
+        return base.copyWith(
+          stats: ChargeRules.pose(
+            base.stats,
+            shipped['freeze']!,
+            points,
+            ChargeBearer.enemy,
+          ),
+          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+          clearIntent: !withIntent,
+          intentStep: 1,
+        );
+      }
+
+      test('l ennemi gele ne resout rien et consomme son gel', () {
+        fight([
+          frozenFoe('A'),
+          frozenFoe('B', points: 2),
+        ]);
+        final pv = run.currentState.heroStats.currentPv;
+        expect(byId('A').skipsAction, isTrue);
+
+        runEnemyPhaseStart(combat);
+        // Un Gel sous le seuil décline d'un point, à la phase de son porteur.
+        expect(ChargeRules.points(byId('B').stats, 'freeze'), 1);
+
+        combat.resolveEnemyIntent('A');
+        expect(run.currentState.heroStats.currentPv, pv);
+        expect(byId('A').skipsAction, isFalse);
+
+        combat.endEnemyTurn();
+        expect(byId('A').currentIntent, goblinData.intents![1]);
+      });
+
+      test('ses statuts se resolvent quand meme', () {
+        fight([frozenFoe('A', burning: 3, poison: 3)]);
+        final pv = run.currentState.heroStats.currentPv;
+
+        runEnemyPhaseStart(combat);
+        expect(lost('A'), 15);
+
+        combat.resolveEnemyIntent('A');
+        expect(run.currentState.heroStats.currentPv, pv);
+        expect(lost('A'), 15);
+      });
+
+      test('un ennemi gele sans intention consomme son gel', () {
+        fight([frozenFoe('A', withIntent: false)]);
+        expect(byId('A').currentIntent, isNull);
+        expect(byId('A').skipsAction, isTrue);
+
+        combat.resolveEnemyIntent('A');
+
+        expect(byId('A').skipsAction, isFalse);
+      });
+
+      test('un combat de boss : chaque ennemi a 6 ; une elite a 3', () {
+        List<int> thresholds(MapNodeType type, int act) {
+          combat.initializeCombat(1, type, [goblinData], act: act);
+          return [
+            for (final enemy in combat.currentState.enemies)
+              ChargeRules.linesFor(
+                ChargeRules.pose(
+                  enemy.stats,
+                  shipped['freeze']!,
+                  2,
+                  ChargeRules.bearerOf(enemy),
+                ),
+              ).single.threshold,
+          ];
+        }
+
+        final boss = thresholds(MapNodeType.boss, 6);
+        expect(boss, isNotEmpty);
+        expect(boss.every((t) => t == 6), isTrue);
+
+        final elite = thresholds(MapNodeType.elite, 1);
+        expect(elite, isNotEmpty);
+        expect(elite.every((t) => t == 3), isTrue);
+      });
     });
   });
 

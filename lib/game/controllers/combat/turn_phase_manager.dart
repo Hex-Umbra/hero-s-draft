@@ -150,7 +150,7 @@ class TurnPhaseManager {
   }
 
   /// Fin de la phase ennemie : sa fermeture (spec P-53, A9), puis roll
-  /// intents et retour au joueur
+  /// intents et retour au joueur.
   void endEnemyTurn() {
     _closePhase(endsPlayerTurn: false);
     final List<EnemyInstance> rolledEnemies = controller.currentState.enemies
@@ -166,20 +166,26 @@ class TurnPhaseManager {
     );
   }
 
-  /// Applique l'effet de l'intention d'un ennemi
+  /// Applique l'effet de l'intention d'un ennemi ; un ennemi gelé ne résout
+  /// rien et dépense son gel, qu'il ait une intention ou non (spec P-53, A13).
   void resolveEnemyIntent(String enemyId) {
     final runController = ref.read(runProvider.notifier);
     final index = controller.currentState.enemies.indexWhere((e) => e.id == enemyId);
     if (index == -1) return;
     final enemy = controller.currentState.enemies[index];
 
+    if (enemy.skipsAction) {
+      controller.updateEnemy(
+        enemy.copyWith(stats: ChargeRules.consumeSkip(enemy.stats)),
+      );
+      return;
+    }
+
     final intent = enemy.effectiveIntent;
     if (intent == null) return;
 
     switch (intent.type) {
       case IntentType.attack:
-        final hasFreeze = enemy.stats.statuses.any((s) => s.id == 'freeze');
-
         final (dmg, isCrit) = DamagePipeline.calculate(
           initialDamage: intent.value,
           attackerStats: enemy.stats,
@@ -188,20 +194,6 @@ class TurnPhaseManager {
         );
 
         runController.takeDamage(dmg, isCrit: isCrit);
-
-        if (hasFreeze) {
-          final updatedStatuses = enemy.stats.statuses.map((s) {
-            if (s.id == 'freeze') {
-              return s.copyWith(duration: s.duration - 1);
-            }
-            return s;
-          }).where((s) => s.duration > 0).toList();
-
-          final updatedEnemy = enemy.copyWith(
-            stats: enemy.stats.copyWith(statuses: updatedStatuses),
-          );
-          controller.updateEnemy(updatedEnemy);
-        }
         break;
       case IntentType.defend:
         final updatedEnemy = enemy.copyWith(

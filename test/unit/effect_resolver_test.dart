@@ -254,36 +254,36 @@ void main() {
       },
     );
 
-    test('le Gel reduit l intention de 25 % par point, 3 points au plus', () {
-      EnemyInstance frozen(int points) => EnemyInstance(
-            stats: EntityStats(
-              maxPv: 20,
-              currentPv: 20,
-              armure: 0,
-              might: 10,
-            ).addStatus(StatusEffect(
-              id: 'freeze',
-              name: 'Gel',
-              type: StatusType.debuff,
-              value: points,
-              duration: 1,
-            )),
-            data: const EnemyData(
-              id: 'test',
-              nameEn: 'Test Enemy',
-              nameFr: 'Test Ennemi',
-              maxHp: 20,
-              baseDamage: 10,
-              spritePath: '',
-            ),
-            currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
-          );
+    test(
+      'un ennemi qui porte du Gel sous le seuil montre son intention entiere',
+      () {
+        final enemy = EnemyInstance(
+          stats: EntityStats(
+            maxPv: 20,
+            currentPv: 20,
+            armure: 0,
+            might: 10,
+          ).addStatus(const StatusEffect(
+            id: 'freeze',
+            name: 'Gel',
+            type: StatusType.debuff,
+            value: 2,
+            duration: 1,
+          )),
+          data: const EnemyData(
+            id: 'test',
+            nameEn: 'Test Enemy',
+            nameFr: 'Test Ennemi',
+            maxHp: 20,
+            baseDamage: 10,
+            spritePath: '',
+          ),
+          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+        );
 
-      expect(
-        [1, 2, 3, 5].map((p) => frozen(p).effectiveIntent?.value),
-        [8, 5, 3, 3],
-      );
-    });
+        expect(enemy.effectiveIntent?.value, 10);
+      },
+    );
   });
 
   // La portée de la règle s'écrit dans la fabrique, une fois (spec P-43 E0,

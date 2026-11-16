@@ -351,7 +351,8 @@ class CombatController extends Notifier<CombatState> {
     _turnPhaseManager.resolveEnemyStatuses();
   }
 
-  /// Fin de la phase ennemie : roll intents et retour au joueur
+  /// Fin de la phase ennemie : sa fermeture de phase, puis roll intents et
+  /// retour au joueur
   void endEnemyTurn() {
     _turnPhaseManager.endEnemyTurn();
   }

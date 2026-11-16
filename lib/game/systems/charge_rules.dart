@@ -370,6 +370,18 @@ abstract final class ChargeRules {
         },
       );
 
+  /// Le gel est dépensé : la piste `skipAction` rompue et en attente de
+  /// [stats] revient à « aucun » (spec P-53, A13).
+  static EntityStats consumeSkip(EntityStats stats) => stats.copyWith(
+        charges: {
+          for (final MapEntry(key: id, value: track) in stats.charges.entries)
+            id: track.rupture.kind == RuptureKind.skipAction &&
+                    track.state == ChargeState.brokenPending
+                ? track.copyWith(state: ChargeState.none)
+                : track,
+        },
+      );
+
   /// Le pourcentage de dégâts que l'attaquant perd : celui de sa piste
   /// `weakenDealt` rompue et active, 0 sinon. Une rupture en attente ne
   /// réduit rien (spec P-53, §4.9).
