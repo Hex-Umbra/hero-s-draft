@@ -5,6 +5,7 @@ import '../../services/audio/game_moment.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../../models/combat_state.dart';
+import '../../models/fire_wave_report.dart';
 import '../components/entities/hero_card.dart';
 import '../components/entities/enemy_card.dart';
 import '../components/card_component.dart';
@@ -15,6 +16,10 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
   DeckState? nextDeckState;
   CombatState? currentCombatState;
   CombatState? nextCombatState;
+
+  /// Le dernier compte rendu de vague du Feu montré : chaque vague en écrit un
+  /// neuf, que l'état garde tel quel jusqu'à la suivante.
+  FireWaveReport? _lastFireWaveReport;
 
   @override
   void update(double dt) {
@@ -147,7 +152,19 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       game.onEnemiesSpawned?.call();
     }
 
-    // 4. Synchroniser la sélection visuelle
+    // 4. Montrer la vague du Feu : la flamme sur chaque porteur résolu ; ses
+    //    dégâts passent par les réactions aux coups de `updateStats`.
+    final report = state.fireWaveReport;
+    if (report != null && !identical(report, _lastFireWaveReport)) {
+      for (final resolution in report.resolved) {
+        for (final card in game.enemyCards) {
+          if (card.id == resolution.bearerId) card.flameAnimation();
+        }
+      }
+    }
+    _lastFireWaveReport = report;
+
+    // 5. Synchroniser la sélection visuelle
     game.selectedEnemy = null;
     for (var card in game.enemyCards) {
       final isSelected = card.id == state.selectedEnemyId;

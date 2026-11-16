@@ -8,6 +8,7 @@ import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/enemy_instance.dart';
+import '../../systems/charge_rules.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'status_indicator.dart';
@@ -34,6 +35,7 @@ class EnemyCard extends CombatEntity
   EntityStats get stats => instance.stats;
   EnemyIntent? get currentIntent => instance.currentIntent;
   EnemyIntent? get effectiveIntent => instance.effectiveIntent;
+  bool get skipsAction => instance.skipsAction;
   bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
@@ -136,16 +138,19 @@ class EnemyCard extends CombatEntity
     add(hpBadge);
 
     // Positionner les buffs (à gauche) et les debuffs (à droite)
+    final view = _indicatorView();
     buffIndicator = StatusIndicator(
-      statuses: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
+      statuses: view.buffs,
+      chargeLines: const [],
+      brokenNameOf: _brokenNameOf,
       position: Vector2(-36, 10),
     );
     add(buffIndicator);
 
     debuffIndicator = StatusIndicator(
-      statuses: stats.statuses
-          .where((s) => s.type == StatusType.debuff)
-          .toList(),
+      statuses: view.debuffs,
+      chargeLines: view.chargeLines,
+      brokenNameOf: _brokenNameOf,
       position: Vector2(size.x + 4, 10),
     );
     add(debuffIndicator);
@@ -214,6 +219,34 @@ class EnemyCard extends CombatEntity
     );
   }
 
+  /// Ce que montrent les deux indicateurs, lu sur l'état : les buffs à
+  /// gauche ; à droite, les altérations qui ne sont pas des charges, puis une
+  /// ligne par charge (spec P-53, §5.1).
+  ({
+    List<StatusEffect> buffs,
+    List<StatusEffect> debuffs,
+    List<ChargeLine> chargeLines,
+  }) _indicatorView() => (
+        buffs: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
+        debuffs: stats.statuses
+            .where(
+              (s) =>
+                  s.type == StatusType.debuff &&
+                  !game.chargeCatalog.isCharge(s.id),
+            )
+            .toList(),
+        chargeLines: ChargeRules.linesFor(stats),
+      );
+
+  String _brokenNameOf(String chargeId) =>
+      game.chargeCatalog[chargeId]?.brokenName(activeLocale) ?? '';
+
+  void _refreshIndicators() {
+    final view = _indicatorView();
+    buffIndicator.updateStatuses(view.buffs, const []);
+    debuffIndicator.updateStatuses(view.debuffs, view.chargeLines);
+  }
+
   void updateStats(EnemyInstance newInstance) {
     if (game.isCardAnimating) {
       _pendingVisualInstance = newInstance;
@@ -221,12 +254,7 @@ class EnemyCard extends CombatEntity
       triggerHitReactions(stats, newInstance.stats);
       instance = newInstance;
       _refreshBadges();
-      buffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
-      );
-      debuffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
-      );
+      _refreshIndicators();
     }
   }
 
@@ -235,12 +263,7 @@ class EnemyCard extends CombatEntity
       triggerHitReactions(stats, _pendingVisualInstance!.stats);
       instance = _pendingVisualInstance!;
       _refreshBadges();
-      buffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
-      );
-      debuffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
-      );
+      _refreshIndicators();
       _pendingVisualInstance = null;
     }
   }
@@ -326,6 +349,17 @@ class EnemyCard extends CombatEntity
   void buffAnimation(IntentType type) {
     final effectIcon = EffectIcon(
       iconType: type == IntentType.defend ? 'defend' : 'buff',
+      position: position + Vector2(0, -size.y * scale.y / 2),
+    );
+    effectIcon.priority = 200;
+    game.add(effectIcon);
+  }
+
+  /// La flamme existante au-dessus de la carte, quand sa charge de Feu s'est
+  /// résolue pendant une vague (spec P-53, §5.2, partie 1).
+  void flameAnimation() {
+    final effectIcon = EffectIcon(
+      iconType: 'burn',
       position: position + Vector2(0, -size.y * scale.y / 2),
     );
     effectIcon.priority = 200;

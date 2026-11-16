@@ -13,6 +13,7 @@ import '../models/card_instance.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
+import '../models/data/charge_data.dart';
 import '../models/entity_stats.dart';
 import 'game_constants.dart';
 
@@ -63,6 +64,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// de JSON elle-même.
   final List<String> imagesToPreload;
 
+  /// Le catalogue des charges élémentaires, injecté comme [audio] : les
+  /// indicateurs des ennemis y lisent quels statuts sont des charges et le
+  /// nom de leur état rompu (spec P-53, A2).
+  final ChargeCatalog chargeCatalog;
+
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
   final void Function(String title, String description, CardType? cardType) onShowTooltip;
@@ -72,7 +78,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final void Function() onEnemyKilled;
 
   final void Function(String enemyId) onResolveEnemyIntent;
-  final void Function() onStartEnemyTurn;
+  /// Ouvre la phase ennemie ; vrai si une première vague du Feu s'est jouée.
+  final bool Function() onStartEnemyTurn;
+
+  /// La vague suivante de la chaîne du Feu ; faux quand la chaîne est finie.
+  final bool Function() onResolveFireWave;
+
+  /// Les autres statuts des ennemis, après la chaîne du Feu.
+  final void Function() onResolveEnemyStatuses;
   final void Function() onEndEnemyTurn;
   final void Function(String? enemyId) onSelectEnemy;
   final void Function(String enemyId, EntityStats stats) onUpdateEnemyStats;
@@ -96,6 +109,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   HerosDraftGame({
     required this.audio,
     required this.imagesToPreload,
+    required this.chargeCatalog,
     required this.onEnemiesDead,
     required this.onPhaseChanged,
     required this.onShowTooltip,
@@ -104,6 +118,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onEnemyKilled,
     required this.onResolveEnemyIntent,
     required this.onStartEnemyTurn,
+    required this.onResolveFireWave,
+    required this.onResolveEnemyStatuses,
     required this.onEndEnemyTurn,
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
@@ -370,13 +386,29 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     onPhaseChanged(TurnPhase.enemy);
     await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayEnemyTurnStartMs));
 
-    onStartEnemyTurn();
+    // La chaîne du Feu, une vague à la fois : chacune laisse son compte rendu
+    // dans l'état, que `StateSyncSystem` montre avant la suivante (spec
+    // P-53, §4.10).
+    var wave = onStartEnemyTurn();
+    while (wave) {
+      await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayFireWaveMs));
+      wave = onResolveFireWave();
+    }
+    onResolveEnemyStatuses();
 
     await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterTicksMs));
 
     final activeEnemies = List<EnemyCard>.from(enemyCards);
     for (var enemy in activeEnemies) {
       if (currentRunState == null || currentRunState!.isDead) break;
+
+      // Un ennemi gelé ne fonce pas : son action est perdue, et le contrôleur
+      // consomme le gel même sans intention (spec P-53, A13).
+      if (enemy.skipsAction) {
+        onResolveEnemyIntent(enemy.id);
+        await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
+        continue;
+      }
 
       final intent = enemy.effectiveIntent;
       if (intent == null) continue;

@@ -308,6 +308,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       audio: ref.read(audioDirectorProvider),
       imagesToPreload:
           ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
+      chargeCatalog: ref.read(chargeCatalogProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
@@ -368,14 +369,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             .read(combatProvider.notifier)
             .resolveEnemyIntent(enemyId);
       },
-      onStartEnemyTurn: () {
-        // Tout le début de la phase ennemie d'un trait : la fermeture du tour,
-        // les vagues du Feu sans délai entre elles, puis les autres statuts.
-        final combat = ref.read(combatProvider.notifier);
-        combat.startEnemyTurn();
-        while (combat.resolveNextFireWave()) {}
-        combat.resolveEnemyStatuses();
-      },
+      onStartEnemyTurn: () =>
+          ref.read(combatProvider.notifier).startEnemyTurn(),
+      onResolveFireWave: () =>
+          ref.read(combatProvider.notifier).resolveNextFireWave(),
+      onResolveEnemyStatuses: () =>
+          ref.read(combatProvider.notifier).resolveEnemyStatuses(),
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();
         _startPlayerNewTurn();
