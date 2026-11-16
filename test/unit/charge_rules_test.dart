@@ -212,6 +212,15 @@ void main() {
       );
 
       expect(
+        ChargeRules.linesFor(pose(fresh(), shock, 2)),
+        [const ChargeLine('shock', 2, 3, ChargeState.none, RuptureKind.amplifyHits, 0)],
+      );
+      expect(
+        ChargeRules.linesFor(pose(fresh(), freeze, 2, ChargeBearer.hero)),
+        [const ChargeLine('freeze', 2, 5, ChargeState.none, RuptureKind.weakenDealt, 0)],
+      );
+
+      expect(
         ChargeRules.linesFor(pose(fresh(), freeze, 5, ChargeBearer.hero)),
         [
           const ChargeLine('freeze', 0, 6, ChargeState.brokenPending,

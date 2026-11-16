@@ -18,8 +18,9 @@ class ChargeLine {
   final ChargeState state;
   final RuptureKind kind;
 
-  /// Le pourcentage pour `weakenDealt`, `points × bonusPerPoint` pour
-  /// `amplifyHits`, 0 sinon.
+  /// La valeur de la rupture en vigueur : le pourcentage pour `weakenDealt`,
+  /// `points × bonusPerPoint` pour `amplifyHits`, 0 sinon — et 0 tant que la
+  /// charge n'est pas rompue.
   final int value;
 
   const ChargeLine(
@@ -127,12 +128,14 @@ abstract final class ChargeRules {
               track.threshold,
               track.state,
               track.rupture.kind,
-              switch (track.rupture.kind) {
-                RuptureKind.weakenDealt => track.rupture.percent,
-                RuptureKind.amplifyHits =>
-                  points(stats, id) * track.rupture.bonusPerPoint,
-                _ => 0,
-              },
+              track.state == ChargeState.none
+                  ? 0
+                  : switch (track.rupture.kind) {
+                      RuptureKind.weakenDealt => track.rupture.percent,
+                      RuptureKind.amplifyHits =>
+                        points(stats, id) * track.rupture.bonusPerPoint,
+                      _ => 0,
+                    },
             ),
       ];
 }
