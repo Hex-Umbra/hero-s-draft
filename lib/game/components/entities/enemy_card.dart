@@ -251,21 +251,26 @@ class EnemyCard extends CombatEntity
     if (game.isCardAnimating) {
       _pendingVisualInstance = newInstance;
     } else {
-      triggerHitReactions(stats, newInstance.stats);
-      instance = newInstance;
-      _refreshBadges();
-      _refreshIndicators();
+      _applyInstance(newInstance);
     }
   }
 
   void resolvePendingVisualStats() {
-    if (_pendingVisualInstance != null) {
-      triggerHitReactions(stats, _pendingVisualInstance!.stats);
-      instance = _pendingVisualInstance!;
-      _refreshBadges();
-      _refreshIndicators();
+    final pending = _pendingVisualInstance;
+    if (pending != null) {
       _pendingVisualInstance = null;
+      _applyInstance(pending);
     }
+  }
+
+  /// L'unique application d'un etat a la carte, que `updateStats` la joue tout
+  /// de suite ou que `resolvePendingVisualStats` la rejoue apres l'impact.
+  void _applyInstance(EnemyInstance next) {
+    triggerHitReactions(stats, next.stats);
+    refreshChargeVisuals(stats, next.stats);
+    instance = next;
+    _refreshBadges();
+    _refreshIndicators();
   }
 
   void _refreshBorderVisuals() {

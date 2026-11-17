@@ -171,7 +171,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
 
   void _applyStats(EntityStats newStats, bool suppressArmorChange) {
     triggerHitReactions(stats, newStats, suppressArmorChange: suppressArmorChange);
-
+    refreshChargeVisuals(stats, newStats);
     stats = newStats;
   }
 

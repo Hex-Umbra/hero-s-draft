@@ -7,11 +7,18 @@ import '../../heros_draft_game.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/combat_state.dart';
 import '../../../services/audio/game_moment.dart';
+import '../../../models/charge_track.dart';
+import '../../../models/data/charge_data.dart';
 import '../floating_text.dart';
+import '../visual_effects/charge_halo.dart';
 
 abstract class CombatEntity extends PositionComponent
     with HasGameReference<HerosDraftGame> {
   CombatEntity({super.position, super.size, super.scale, super.angle, super.anchor, super.children, super.priority});
+
+  /// Delai entre les « +N » de deux coups d'une meme vague de coups.
+  static const int chargeHitStaggerMs = 100;
+  static const double chargeHitSpreadX = 28;
 
   SpriteComponent get sprite;
   RectangleComponent get borderInfo;
@@ -173,6 +180,44 @@ abstract class CombatEntity extends PositionComponent
     game.add(ft);
   }
 
+  /// Le « +N » de chaque coup que le nouvel etat a de plus que l'ancien, un
+  /// texte par coup, decales dans le temps et de cote pour ne pas se recouvrir.
+  void _spawnChargeHitBonuses(EntityStats oldStats, EntityStats newStats) {
+    final fresh = newStats.chargeHits.skip(oldStats.chargeHits.length).toList();
+    for (var k = 0; k < fresh.length; k++) {
+      final text = '+${fresh[k].bonus}';
+      final offsetX = (k - (fresh.length - 1) / 2) * chargeHitSpreadX;
+      Future.delayed(Duration(milliseconds: k * chargeHitStaggerMs), () {
+        if (!isMounted) return;
+        spawnFloatingText(
+          text,
+          ChargeHalo.color,
+          position + Vector2(offsetX, -size.y * scale.y / 2),
+        );
+      });
+    }
+  }
+
+  /// Pose et retire les etats qui durent, a la transition de leur piste de
+  /// charge : le halo d'une piste `amplifyHits` active.
+  void refreshChargeVisuals(EntityStats oldStats, EntityStats newStats) {
+    final wasHaloed = _hasActiveAmplify(oldStats);
+    final isHaloed = _hasActiveAmplify(newStats);
+    if (isHaloed && !wasHaloed) {
+      add(ChargeHalo(size: size.clone()));
+    } else if (wasHaloed && !isHaloed) {
+      for (final halo in children.whereType<ChargeHalo>()) {
+        halo.fadeOut();
+      }
+    }
+  }
+
+  static bool _hasActiveAmplify(EntityStats stats) => stats.charges.values.any(
+        (t) =>
+            t.rupture.kind == RuptureKind.amplifyHits &&
+            t.state == ChargeState.brokenActive,
+      );
+
   void triggerHitReactions(
     EntityStats oldStats,
     EntityStats newStats, {
@@ -208,6 +253,8 @@ abstract class CombatEntity extends PositionComponent
         game.audio.onMoment(GameMoment.armorGain);
       }
     }
+
+    _spawnChargeHitBonuses(oldStats, newStats);
 
     if (newStats.currentPv < oldStats.currentPv) {
       final lostHp = oldStats.currentPv - newStats.currentPv;
