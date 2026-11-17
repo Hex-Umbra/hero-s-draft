@@ -10,7 +10,9 @@ import '../../../services/audio/game_moment.dart';
 import '../../../models/charge_track.dart';
 import '../../../models/data/charge_data.dart';
 import '../floating_text.dart';
+import '../../game_constants.dart';
 import '../visual_effects/charge_halo.dart';
+import '../visual_effects/frost_shell.dart';
 
 abstract class CombatEntity extends PositionComponent
     with HasGameReference<HerosDraftGame> {
@@ -198,8 +200,13 @@ abstract class CombatEntity extends PositionComponent
     }
   }
 
+  FrostShell? _frostShell;
+  FrostVignette? _frostVignette;
+
   /// Pose et retire les etats qui durent, a la transition de leur piste de
-  /// charge : le halo d'une piste `amplifyHits` active.
+  /// charge : le halo d'une piste `amplifyHits` active, la gangue d'une piste
+  /// `skipAction` en attente ou `weakenDealt` active, et le givre aux coins
+  /// de l'ecran pour cette derniere.
   void refreshChargeVisuals(EntityStats oldStats, EntityStats newStats) {
     final wasHaloed = _hasActiveAmplify(oldStats);
     final isHaloed = _hasActiveAmplify(newStats);
@@ -210,6 +217,78 @@ abstract class CombatEntity extends PositionComponent
         halo.fadeOut();
       }
     }
+
+    final oldFrost = _frostOpacity(oldStats);
+    final newFrost = _frostOpacity(newStats);
+    if (newFrost != null && oldFrost == null) {
+      _frostShell = FrostShell(size: size.clone(), opacity: newFrost);
+      add(_frostShell!);
+      if (newFrost == FrostShell.enemyOpacity) {
+        _squeezeAnimation();
+      } else {
+        _frostVignette = FrostVignette(
+          size: game.size.clone(),
+          priority: GameConstants.priorityFrostVignette,
+        );
+        game.add(_frostVignette!);
+      }
+    } else if (newFrost == null && oldFrost != null) {
+      _frostShell?.fadeOut();
+      _frostShell = null;
+      _frostVignette?.fadeOut();
+      _frostVignette = null;
+    }
+  }
+
+  /// Cesse de tenir la gangue et la rend (nulle s'il n'y en a pas) : elle
+  /// reste affichee, mais aucune transition ne la retrouve plus.
+  FrostShell? releaseFrost() {
+    final shell = _frostShell;
+    _frostShell = null;
+    return shell;
+  }
+
+  /// Le serrement de la carte pendant la montee de la gangue : echelle de
+  /// base × 1 → 0,97 → 1, creux a mi-course.
+  void _squeezeAnimation() {
+    removeAll(children.whereType<ScaleEffect>());
+    final double bScale = entityBaseScale;
+    add(
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(bScale * 0.97),
+          EffectController(duration: FrostShell.riseSeconds / 2),
+        ),
+        ScaleEffect.to(
+          Vector2.all(bScale),
+          EffectController(duration: FrostShell.riseSeconds / 2),
+        ),
+      ]),
+    );
+  }
+
+  @override
+  void onRemove() {
+    _frostVignette?.removeFromParent();
+    _frostVignette = null;
+    super.onRemove();
+  }
+
+  /// L'opacite de la gangue qu'un etat appelle : celle de l'ennemi pour une
+  /// piste `skipAction` en attente, la pale pour une piste `weakenDealt`
+  /// active, nulle sinon.
+  static double? _frostOpacity(EntityStats stats) {
+    for (final track in stats.charges.values) {
+      if (track.rupture.kind == RuptureKind.skipAction &&
+          track.state == ChargeState.brokenPending) {
+        return FrostShell.enemyOpacity;
+      }
+      if (track.rupture.kind == RuptureKind.weakenDealt &&
+          track.state == ChargeState.brokenActive) {
+        return FrostShell.heroOpacity;
+      }
+    }
+    return null;
   }
 
   static bool _hasActiveAmplify(EntityStats stats) => stats.charges.values.any(

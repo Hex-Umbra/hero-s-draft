@@ -8,6 +8,8 @@ typedef CardDropRule = ({int guaranteed, List<int> extraChances});
 class GameConstants {
   // --- Z-INDEX PRIORITIES ---
   static const int priorityBackground = -100;
+  /// Le givre aux coins de l'ecran : au-dessus du fond, sous les cartes.
+  static const int priorityFrostVignette = -50;
   static const int priorityCardBase = 10;
   static const int priorityCardHovered = 100;
   static const int priorityCardFocused = 150;
@@ -70,6 +72,8 @@ class GameConstants {
   static const int combatDelayFireWaveMs = 600;
   /// Délai du dash d'un ennemi lors de son attaque.
   static const int combatDelayEnemyDashMs = 200;
+  /// Durée des trois secousses d'un ennemi gelé, qui perd son action.
+  static const int combatDelayFrozenShakeMs = 300;
   /// Délai après la résolution d'une intention d'ennemi.
   static const int combatDelayAfterIntentResolveMs = 400;
   /// Délai avant de finaliser le tour des ennemis.

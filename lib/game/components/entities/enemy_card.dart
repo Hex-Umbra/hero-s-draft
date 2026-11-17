@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -8,7 +9,9 @@ import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/enemy_instance.dart';
+import '../../game_constants.dart';
 import '../../systems/charge_rules.dart';
+import '../visual_effects/frost_shell.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'status_indicator.dart';
@@ -358,6 +361,36 @@ class EnemyCard extends CombatEntity
     );
     effectIcon.priority = 200;
     game.add(effectIcon);
+  }
+
+  /// L'action perdue d'un ennemi gele (spec P-53, §5.2, G-a) : trois secousses
+  /// a la place de l'elan, puis la gangue se brise et l'etat rompu flotte
+  /// au-dessus de la carte. La gangue n'est plus tenue des le debut, pour que
+  /// l'etat consomme, qui arrive vers la fin des secousses, n'en trouve aucune
+  /// a faire fondre.
+  void frozenTurnAnimation() {
+    final shell = releaseFrost();
+    final skipping = instance.skippingCharge;
+    final name = skipping == null ? '' : _brokenNameOf(skipping);
+    add(
+      MoveEffect.by(
+        Vector2(10, 0),
+        EffectController(
+          duration: GameConstants.combatDelayFrozenShakeMs / 1000 / 6,
+          alternate: true,
+          repeatCount: 3,
+        ),
+        onComplete: () {
+          shell?.shatter();
+          if (name.isEmpty || !isMounted) return;
+          spawnFloatingText(
+            name,
+            FrostShell.veilColor,
+            position + Vector2(0, -size.y * scale.y / 2),
+          );
+        },
+      ),
+    );
   }
 
   /// La flamme existante au-dessus de la carte, quand sa charge de Feu s'est

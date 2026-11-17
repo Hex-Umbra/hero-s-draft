@@ -405,6 +405,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       // Un ennemi gelé ne fonce pas : son action est perdue, et le contrôleur
       // consomme le gel même sans intention (spec P-53, A13).
       if (enemy.skipsAction) {
+        enemy.frozenTurnAnimation();
+        await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayFrozenShakeMs));
         onResolveEnemyIntent(enemy.id);
         await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayAfterIntentResolveMs));
         continue;
