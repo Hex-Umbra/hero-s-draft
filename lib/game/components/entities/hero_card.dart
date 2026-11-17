@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import '../../../models/entity_stats.dart';
 import '../effect_icon.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/data/charge_data.dart';
 import '../../../services/audio/game_moment.dart';
+import '../../systems/charge_rules.dart';
+import '../visual_effects/fire_wave_effects.dart';
 import 'combat_entity.dart';
 
 class HeroCard extends CombatEntity with TapCallbacks {
@@ -170,9 +173,43 @@ class HeroCard extends CombatEntity with TapCallbacks {
   }
 
   void _applyStats(EntityStats newStats, bool suppressArmorChange) {
-    triggerHitReactions(stats, newStats, suppressArmorChange: suppressArmorChange);
+    final fireDamage = _playOwnFire(stats, newStats);
+    triggerHitReactions(
+      stats,
+      newStats,
+      suppressArmorChange: suppressArmorChange,
+      fireDamage: fireDamage,
+    );
     refreshChargeVisuals(stats, newStats);
     stats = newStats;
+  }
+
+  /// Le Feu du heros resolu dans la transition (spec P-53, §5.2, F-a), lu sur
+  /// chaque piste `explode` presente avant et apres : une rupture comptee en
+  /// plus fait l'eclair seul, sans boule de feu ; sinon, des points tombes a 0
+  /// font rougeoyer la carte. Rend vrai si l'un ou l'autre a joue. Le retrait
+  /// de debug, qui vide les pistes, ne declenche rien.
+  bool _playOwnFire(EntityStats oldStats, EntityStats newStats) {
+    var played = false;
+    for (final MapEntry(key: id, value: track) in newStats.charges.entries) {
+      if (track.rupture.kind != RuptureKind.explode) continue;
+      final before = oldStats.charges[id];
+      if (before == null) continue;
+      if (track.ruptures > before.ruptures) {
+        game.add(
+          FireBurst(
+            position: position.clone(),
+            radius: 1.5 * size.x * scale.x,
+          ),
+        );
+        played = true;
+      } else if (ChargeRules.points(oldStats, id) > 0 &&
+          ChargeRules.points(newStats, id) == 0) {
+        emberFlash();
+        played = true;
+      }
+    }
+    return played;
   }
 
   void _refreshBorderVisuals() {

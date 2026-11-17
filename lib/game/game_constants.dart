@@ -68,8 +68,9 @@ class GameConstants {
   static const int combatDelayEnemyTurnStartMs = 600;
   /// Délai après la résolution des ticks (poison, buffs, etc.) au début du tour ennemi.
   static const int combatDelayAfterTicksMs = 400;
-  /// Délai entre deux vagues de la chaîne du Feu (spec P-53, §4.10).
-  static const int combatDelayFireWaveMs = 600;
+  /// Délai entre deux vagues de la chaîne du Feu (spec P-53, §4.10) : 0,6 s
+  /// d'animation — l'éclair puis la boule de feu — et 0,2 s de pause (§5.2).
+  static const int combatDelayFireWaveMs = 800;
   /// Délai du dash d'un ennemi lors de son attaque.
   static const int combatDelayEnemyDashMs = 200;
   /// Durée des trois secousses d'un ennemi gelé, qui perd son action.

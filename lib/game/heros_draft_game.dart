@@ -388,10 +388,12 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
     // La chaîne du Feu, une vague à la fois : chacune laisse son compte rendu
     // dans l'état, que `StateSyncSystem` montre avant la suivante (spec
-    // P-53, §4.10).
+    // P-53, §4.10). Après chaque vague, le filet relâche un voisin que sa
+    // boule de feu n'a pas atteint : aucun état retenu ne lui survit.
     var wave = onStartEnemyTurn();
     while (wave) {
       await Future.delayed(const Duration(milliseconds: GameConstants.combatDelayFireWaveMs));
+      resolvePendingHits();
       wave = onResolveFireWave();
     }
     onResolveEnemyStatuses();

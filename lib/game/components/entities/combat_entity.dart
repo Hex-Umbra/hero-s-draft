@@ -12,6 +12,7 @@ import '../../../models/data/charge_data.dart';
 import '../floating_text.dart';
 import '../../game_constants.dart';
 import '../visual_effects/charge_halo.dart';
+import '../visual_effects/fire_wave_effects.dart';
 import '../visual_effects/frost_shell.dart';
 
 abstract class CombatEntity extends PositionComponent
@@ -144,6 +145,29 @@ abstract class CombatEntity extends PositionComponent
       )..priority = priority + 10,
     );
   }
+
+  /// Le rougeoiement d'une carte que le Feu touche sans eclair, ou que sa
+  /// boule de feu embrase (spec P-53, §5.2, F-a) : une teinte orange sur le
+  /// sprite, qui remplace la teinte en cours.
+  void emberFlash() {
+    sprite.removeAll(sprite.children.whereType<ColorEffect>());
+    sprite.add(
+      SequenceEffect([
+        ColorEffect(
+          FireBurst.core,
+          EffectController(duration: _emberSeconds / 2),
+          opacityTo: 0.7,
+        ),
+        ColorEffect(
+          FireBurst.core,
+          EffectController(duration: _emberSeconds / 2, curve: Curves.easeIn),
+          opacityTo: 0.0,
+        ),
+      ]),
+    );
+  }
+
+  static const double _emberSeconds = 0.2;
 
   void dashAnimation({bool isDownward = false}) {
     final double direction = isDownward ? 1.0 : -1.0;
@@ -301,16 +325,19 @@ abstract class CombatEntity extends PositionComponent
             t.state == ChargeState.brokenActive,
       );
 
+  /// [fireDamage] vrai : les degats viennent du Feu, et ne prennent jamais la
+  /// teinte ni le texte du Poison.
   void triggerHitReactions(
     EntityStats oldStats,
     EntityStats newStats, {
     bool suppressArmorChange = false,
+    bool fireDamage = false,
   }) {
     final isTurnPhaseForPoison = isPlayer
         ? game.currentPhase == TurnPhase.player
         : game.currentPhase == TurnPhase.enemy;
     final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
-    final isPoisonDamage = isTurnPhaseForPoison && hadPoison;
+    final isPoisonDamage = !fireDamage && isTurnPhaseForPoison && hadPoison;
 
     if (!suppressArmorChange) {
       if (newStats.armure < oldStats.armure) {

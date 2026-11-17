@@ -120,7 +120,7 @@ class _IconView {
 
   factory _IconView.ofStatus(StatusEffect status) => _IconView(
         key: status.id,
-        emoji: _getEmoji(status.id),
+        emoji: statusEmoji(status.id),
         value: status.value.toString(),
         valueColor: status.type == StatusType.buff
             ? Colors.greenAccent
@@ -140,7 +140,7 @@ class _IconView {
     final charged = broken && line.kind == RuptureKind.amplifyHits;
     return _IconView(
       key: 'charge:${line.chargeId}',
-      emoji: _getEmoji(line.chargeId),
+      emoji: statusEmoji(line.chargeId),
       value: switch (line) {
         ChargeLine(kind: RuptureKind.explode) => '${line.points}',
         ChargeLine(state: ChargeState.none) =>
@@ -223,7 +223,8 @@ class _StatusIcon extends PositionComponent {
   }
 }
 
-String _getEmoji(String id) {
+/// L'emoji d'un statut ou d'une charge, par son id.
+String statusEmoji(String id) {
   switch (id) {
     case 'poison':
       return '🧪';

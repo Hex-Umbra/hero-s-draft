@@ -126,15 +126,37 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       }
     }
 
-    // 2. Gérer les apparitions ou mises à jour
+    // 2. Gérer les apparitions ou mises à jour. Une vague du Feu neuve : chaque
+    //    voisin retient son état jusqu'à l'arrivée de sa boule de feu, et
+    //    toute carte nommée par le compte rendu montre des dégâts du Feu.
     bool listChanged = immediateRemovals;
+
+    final report = state.fireWaveReport;
+    final freshReport = report != null && !identical(report, _lastFireWaveReport)
+        ? report
+        : null;
+    final fireIds = <String>{};
+    if (freshReport != null) {
+      for (final resolution in freshReport.resolved) {
+        fireIds.add(resolution.bearerId);
+        for (final splash in resolution.splashes) {
+          fireIds.add(splash.targetId);
+          for (final card in game.enemyCards) {
+            if (card.id == splash.targetId) card.holdVisualStats();
+          }
+        }
+      }
+    }
 
     for (var enemyInstance in state.enemies) {
       final existingIndex = game.enemyCards.indexWhere(
         (c) => c.id == enemyInstance.id,
       );
       if (existingIndex != -1) {
-        game.enemyCards[existingIndex].updateStats(enemyInstance);
+        game.enemyCards[existingIndex].updateStats(
+          enemyInstance,
+          fireDamage: fireIds.contains(enemyInstance.id),
+        );
       } else {
         final enemyCard = EnemyCard(
           instance: enemyInstance,
@@ -152,15 +174,10 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       game.onEnemiesSpawned?.call();
     }
 
-    // 4. Montrer la vague du Feu : la flamme sur chaque porteur résolu ; ses
-    //    dégâts passent par les réactions aux coups de `updateStats`.
-    final report = state.fireWaveReport;
-    if (report != null && !identical(report, _lastFireWaveReport)) {
-      for (final resolution in report.resolved) {
-        for (final card in game.enemyCards) {
-          if (card.id == resolution.bearerId) card.flameAnimation();
-        }
-      }
+    // 4. Montrer la vague du Feu : les porteurs ont montré leurs dégâts, les
+    //    voisins attendent leur boule de feu.
+    if (freshReport != null) {
+      game.combatVisualSystem?.playFireWave(freshReport);
     }
     _lastFireWaveReport = report;
 

@@ -45,6 +45,8 @@ class EnemyCard extends CombatEntity
   bool isDead = false;
   bool isPendingDeath = false;
   EnemyInstance? _pendingVisualInstance;
+  bool _pendingFireDamage = false;
+  bool _holdingVisualStats = false;
 
   double _scaleMultiplier = 1.0;
   double get scaleMultiplier => _scaleMultiplier;
@@ -250,26 +252,41 @@ class EnemyCard extends CombatEntity
     debuffIndicator.updateStatuses(view.debuffs, view.chargeLines);
   }
 
-  void updateStats(EnemyInstance newInstance) {
-    if (game.isCardAnimating) {
+  /// [fireDamage] suit l'etat retenu jusqu'a son application : un etat plus
+  /// recent qui le remplace garde les degats du Feu qu'il contient.
+  void updateStats(EnemyInstance newInstance, {bool fireDamage = false}) {
+    if (game.isCardAnimating || _holdingVisualStats) {
       _pendingVisualInstance = newInstance;
+      _pendingFireDamage = _pendingFireDamage || fireDamage;
     } else {
-      _applyInstance(newInstance);
+      _applyInstance(newInstance, fireDamage: fireDamage);
     }
   }
 
+  /// Fait differer `updateStats`, comme pendant l'animation d'une carte,
+  /// jusqu'a `resolvePendingVisualStats` : le voisin d'une explosion attend
+  /// sa boule de feu (spec P-53, §5.2, F-a).
+  void holdVisualStats() {
+    _holdingVisualStats = true;
+  }
+
+  /// Applique ce qui attendait et cesse de retenir. Sans rien en attente, ne
+  /// fait rien d'autre : appelable deux fois sans effet double.
   void resolvePendingVisualStats() {
+    _holdingVisualStats = false;
     final pending = _pendingVisualInstance;
     if (pending != null) {
+      final fireDamage = _pendingFireDamage;
       _pendingVisualInstance = null;
-      _applyInstance(pending);
+      _pendingFireDamage = false;
+      _applyInstance(pending, fireDamage: fireDamage);
     }
   }
 
   /// L'unique application d'un etat a la carte, que `updateStats` la joue tout
   /// de suite ou que `resolvePendingVisualStats` la rejoue apres l'impact.
-  void _applyInstance(EnemyInstance next) {
-    triggerHitReactions(stats, next.stats);
+  void _applyInstance(EnemyInstance next, {bool fireDamage = false}) {
+    triggerHitReactions(stats, next.stats, fireDamage: fireDamage);
     refreshChargeVisuals(stats, next.stats);
     instance = next;
     _refreshBadges();
@@ -391,17 +408,6 @@ class EnemyCard extends CombatEntity
         },
       ),
     );
-  }
-
-  /// La flamme existante au-dessus de la carte, quand sa charge de Feu s'est
-  /// résolue pendant une vague (spec P-53, §5.2, partie 1).
-  void flameAnimation() {
-    final effectIcon = EffectIcon(
-      iconType: 'burn',
-      position: position + Vector2(0, -size.y * scale.y / 2),
-    );
-    effectIcon.priority = 200;
-    game.add(effectIcon);
   }
 
   @override
