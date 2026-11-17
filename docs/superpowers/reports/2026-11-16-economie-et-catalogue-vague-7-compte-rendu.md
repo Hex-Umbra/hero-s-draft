@@ -6,7 +6,21 @@
 
 ## 0. Pour le propriétaire
 
-*S'écrit à la §3.8.*
+**À tester d'abord**, par risque (le détail est au [fichier des tests manuels](2026-11-16-economie-et-catalogue-vague-7-tests-manuels.md)) :
+
+1. **La chaîne du Feu** (T1, T2, T13) : trois vagues l'une après l'autre, 48 / 64 / 48 lus sur les cartes ; aucune carte ne doit garder ses PV d'avant une vague, aucun ennemi tué au milieu ne doit rester affiché.
+2. **Feu et Poison** (T3) : le Feu en rouge, le Poison en vert — le défaut S10 de la partie 1, corrigé par l'onde.
+3. **L'ennemi gelé** (T4, T5) : la gangue naît une fois, éclate à son action, ne survit pas au gel ; dites si le serrement se voit sous le sursaut du coup (S16).
+4. **La Foudre** (T6 à T8, T10, T12) : le « +N » jaune sur les trois chemins — carte, signature, héros —, ni oublié ni doublé ; le halo s'éteint en fin de phase.
+5. **Le héros gelé ou porteur** (T9, T11) : gangue pâle et givre aux coins pendant son tour gelé ; l'éclair, ou le rougeoiement après le flash rouge.
+
+**Les arbitrages que le joueur verra** : vos réponses P-a à P-e, Q-P1 (d) et Q-P2 (c) ; le délai de vague à 800 ms ; un seul « +N 🔥 » par voisin et par vague ; un éclair par porteur, quelles que soient ses tranches ; le héros porteur sous le seuil qui rougeoie ; le givre aux coins sous les cartes de la main.
+
+**Faits sans vous** (autonomie `continu`) : les arbitrages T du §2, et deux retouches — la note de `0.5.9` ne dit pas le Gel du héros, qu'aucun ennemi ne pose encore (Q-P1 (d)) ; T23 des tests manuels pointe l'onglet « Heros » du debug.
+
+**Risques connus** : le rendu visuel n'a aucun test automatique (D77) — vos tests M16 sont sa seule garde ; une boule de feu très en retard (moteur figé) relâcherait trop tôt la vague suivante, sans perte d'état ; le défaut antérieur S9 (un tour ennemi joué après la victoire) reste à la file.
+
+**Rejouer l'essentiel** : `flutter test test/unit/charge_rules_test.dart test/unit/charge_symmetry_test.dart test/unit/multi_hit_test.dart` · `dart analyze` · `bash .github/scripts/verify_version.sh 0.5.9`.
 
 ## 1. La branche et ses chiffres
 
@@ -35,6 +49,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | Q2 | Transmettre les coups un à un à Flame | T | Par l'état : chaque coup note son bonus sur le défenseur (`EntityStats.chargeHits`, hors sauvegarde), testé en tête du plan de la partie 2, avant toute animation | 5 |
 | A12 · §4.10 | Le compte rendu de vague et le délai de vague, à la partie 2 | T | Le compte rendu perd ses dégâts nominaux, les dégâts se lisent sur les PV (P-d) ; 800 ms par vague (0,6 s + 0,2 s, §5.2) — spec amendée | 8, 6 |
 | Q-P2 | Ce qui s'affiche à chaque coup sous le seuil de Foudre | P | (c) : chaque coup affiche son « +N », sous le seuil comme chargé, dans le même jaune `#FFEA00` ; le halo dit qui est chargé (propriétaire, 17/11) | — |
+| Note | La note de `0.5.9` annonçait le Gel du héros | T | Puce retirée : aucun ennemi ne pose de charge en `0.5.9`, et Q-P1 (d) ne montre cette règle nulle part | 6 |
 
 **Décisions de SDD, partie 1** (registre recopié avant sa suppression ; balayage préalable, douze tâches, une passe de correction en Task 3 ; revue d'ensemble sur `b88dfd34..1979ba1f`, « prête avec corrections », une passe) :
 
@@ -65,7 +80,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-*S'écrit à la §3.8.*
+[26 tests](2026-11-16-economie-et-catalogue-vague-7-tests-manuels.md), dont M16 en onze points et les points S10 ; à remplir par le propriétaire.
 
 ## 4. Trouvé périmé, et pour la file
 
@@ -77,8 +92,24 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 5. Les leçons
 
-*S'écrit à la §3.8.*
+1. **Trois arrêts P, dont deux nés des plans** (Q-P1, Q-P2), chacun une session de plus. Écrire le plan pour toutes les options a rendu la levée de Q-P2 d'un seul commit, sans nouveau tour. Amendement proposé : au §4.3, un rédacteur de plan qui pose une question P l'écrit pour toutes ses options, la recommandée appliquée.
+2. **Un vérificateur bloqué vingt minutes** sur une recherche `find /` laissée en arrière-plan, sans rien rendre. Amendement proposé : aux gabarits §4.2, §4.4 et de revue, « aucune commande en arrière-plan, aucune recherche sur le disque entier ; les sources de Flame sont dans le cache de `pub` ».
+3. **Sans test d'écran (D77), la revue par tâche est la seule garde automatique de Flame** : elle a trouvé deux vrais défauts — un rôle lu sur une opacité, une teinte jamais retirée. Rien.
+4. **La note de version annonçait une règle que le joueur ne rencontre pas.** Amendement proposé : le gabarit §4.5 transmet aussi ce que la note ne doit pas dire (les réponses P qui cachent une règle).
+5. **Un plan de décisions pour du Flame tient** : quatre tâches sans code écrit d'avance, deux passes de correction en tout. Rien.
 
 ## 6. Les statistiques de la session
 
-*Mesurées à la §3.8.*
+**Mesuré le 17/11/2026 à 09:39**, avant le commit de §3.8 — sessions : 4 (`6e0e7bc0`, `c30d4a04`, `c2298e26`, `bb0be5f8`) · arrêts : 3 (15/11, 16/11, 16/11) · durée : du 15/11 à 20:36 au 17/11 à 09:38, dont 4 h 28 de temps actif des orchestrateurs · tours de spec : 4 · tours de plan : 5 (3 + 2)
+Prix lus le 17/11 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,1014 $ (BCE, 16/11) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
+
+| | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|
+| Temps actif | 1 h 52 | 2 h 10 | 2 h 14 | 26 min | 4 h 28 | **11 h 11** |
+| Agents — Opus / Sonnet / Haiku | 7 / 0 / 0 | 9 / 0 / 0 | 8 / 29 / 2 | 1 / 2 / 0 | 4 / 0 / 0 | **29 / 31 / 2** |
+| Appels au modèle | 538 | 521 | 593 | 149 | 373 | **2 174** |
+| Jetons traités, dont hors cache | 119,76 M · 2,63 M | 109,08 M · 4,03 M | 67,17 M · 3,52 M | 37,47 M · 0,60 M | 92,64 M · 1,29 M | **426,12 M · 12,06 M** |
+| Sortie (minimum) | 608 k | 656 k | 594 k | 150 k | 298 k | **2 306 k** |
+| Coût API — $ / € | 48,60 / 44,13 | 54,14 / 49,16 | 29,92 / 27,17 | 12,18 / 11,06 | 34,46 / 31,29 | **179,30 / 162,80** |
+
+*Hors cache* : l'entrée hors cache et les écritures en cache. La session `9549eeda` (préparation, avant l'ouverture de la branche) et l'agent de cette mesure ne sont pas comptés. Les maquettes des cinq questions P comptent à la spec, celles de Q-P1 et Q-P2 aux plans ; la porte d'entrée et les levées d'arrêt à l'orchestrateur.
