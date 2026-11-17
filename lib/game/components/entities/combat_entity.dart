@@ -60,7 +60,6 @@ abstract class CombatEntity extends PositionComponent
     final double bScale = entityBaseScale;
 
     removeAll(children.whereType<ScaleEffect>());
-    sprite.removeAll(sprite.children.whereType<ColorEffect>());
 
     // 1. Sleek Scale Bump (Elastic Out)
     final double bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22);
@@ -97,7 +96,7 @@ abstract class CombatEntity extends PositionComponent
     final flashColor = isCritical
         ? const Color(0xFFF59E0B)
         : (isPoison ? const Color(0xFF10B981) : Colors.redAccent);
-    sprite.add(
+    _replaceSpriteTint(
       SequenceEffect([
         ColorEffect(
           flashColor,
@@ -146,12 +145,21 @@ abstract class CombatEntity extends PositionComponent
     );
   }
 
+  /// La teinte qui joue sur le sprite : deux `ColorEffect` concurrents se
+  /// disputeraient son filtre, la suivante remplace donc celle-ci.
+  Effect? _spriteTint;
+
+  void _replaceSpriteTint(Effect tint) {
+    _spriteTint?.removeFromParent();
+    _spriteTint = tint;
+    sprite.add(tint);
+  }
+
   /// Le rougeoiement d'une carte que le Feu touche sans eclair, ou que sa
   /// boule de feu embrase (spec P-53, §5.2, F-a) : une teinte orange sur le
   /// sprite, qui remplace la teinte en cours.
   void emberFlash() {
-    sprite.removeAll(sprite.children.whereType<ColorEffect>());
-    sprite.add(
+    _replaceSpriteTint(
       SequenceEffect([
         ColorEffect(
           FireBurst.core,
@@ -161,6 +169,7 @@ abstract class CombatEntity extends PositionComponent
         ColorEffect(
           FireBurst.core,
           EffectController(duration: _emberSeconds / 2, curve: Curves.easeIn),
+          opacityFrom: 0.7,
           opacityTo: 0.0,
         ),
       ]),

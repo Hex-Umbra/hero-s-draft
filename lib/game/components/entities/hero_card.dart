@@ -173,43 +173,50 @@ class HeroCard extends CombatEntity with TapCallbacks {
   }
 
   void _applyStats(EntityStats newStats, bool suppressArmorChange) {
-    final fireDamage = _playOwnFire(stats, newStats);
+    final ownFire = _ownFire(stats, newStats);
     triggerHitReactions(
       stats,
       newStats,
       suppressArmorChange: suppressArmorChange,
-      fireDamage: fireDamage,
+      fireDamage: ownFire.burst || ownFire.ember,
     );
+    // Apres les reactions : le rougeoiement remplace la teinte des degats.
+    if (ownFire.burst) {
+      game.add(
+        FireBurst(
+          position: position.clone(),
+          radius: 1.5 * size.x * scale.x,
+        ),
+      );
+    }
+    if (ownFire.ember) emberFlash();
     refreshChargeVisuals(stats, newStats);
     stats = newStats;
   }
 
   /// Le Feu du heros resolu dans la transition (spec P-53, §5.2, F-a), lu sur
   /// chaque piste `explode` presente avant et apres : une rupture comptee en
-  /// plus fait l'eclair seul, sans boule de feu ; sinon, des points tombes a 0
-  /// font rougeoyer la carte. Rend vrai si l'un ou l'autre a joue. Le retrait
-  /// de debug, qui vide les pistes, ne declenche rien.
-  bool _playOwnFire(EntityStats oldStats, EntityStats newStats) {
-    var played = false;
+  /// plus appelle l'eclair seul, sans boule de feu ; sinon, des points tombes
+  /// a 0 appellent le rougeoiement. Le retrait de debug, qui vide les pistes,
+  /// n'appelle rien.
+  static ({bool burst, bool ember}) _ownFire(
+    EntityStats oldStats,
+    EntityStats newStats,
+  ) {
+    var burst = false;
+    var ember = false;
     for (final MapEntry(key: id, value: track) in newStats.charges.entries) {
       if (track.rupture.kind != RuptureKind.explode) continue;
       final before = oldStats.charges[id];
       if (before == null) continue;
       if (track.ruptures > before.ruptures) {
-        game.add(
-          FireBurst(
-            position: position.clone(),
-            radius: 1.5 * size.x * scale.x,
-          ),
-        );
-        played = true;
+        burst = true;
       } else if (ChargeRules.points(oldStats, id) > 0 &&
           ChargeRules.points(newStats, id) == 0) {
-        emberFlash();
-        played = true;
+        ember = true;
       }
     }
-    return played;
+    return (burst: burst, ember: ember);
   }
 
   void _refreshBorderVisuals() {
