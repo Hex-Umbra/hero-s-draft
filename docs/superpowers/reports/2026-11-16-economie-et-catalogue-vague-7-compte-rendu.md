@@ -1,6 +1,6 @@
 # Vague 7 — `0.5.9` — les charges élémentaires (P-53) — compte rendu
 
-**Branche** : `feat/v0.5.9-p53-charges-elementaires` · **Spec** : [P-53](../specs/2026-11-15-p53-charges-elementaires-design.md) ([vérifications](../specs/2026-11-15-p53-charges-elementaires-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-11-15-p53-charges-elementaires-partie-1.md) ([vérifications](../plans/2026-11-15-p53-charges-elementaires-partie-1-verifications.md)) · **Maquettes** : [les cinq questions P](../../presentations/2026-11-15_charges_elementaires_maquettes.pptx), [Q-P1](../../presentations/2026-11-16_charges_elementaires_q-p1_maquettes.pptx) · **Forme** : [README](README.md).
+**Branche** : `feat/v0.5.9-p53-charges-elementaires` · **Spec** : [P-53](../specs/2026-11-15-p53-charges-elementaires-design.md) ([vérifications](../specs/2026-11-15-p53-charges-elementaires-design-verifications.md)) · **Plans** : [partie 1](../plans/2026-11-15-p53-charges-elementaires-partie-1.md) ([vérifications](../plans/2026-11-15-p53-charges-elementaires-partie-1-verifications.md)), [partie 2](../plans/2026-11-16-p53-charges-elementaires-partie-2.md) ([vérifications](../plans/2026-11-16-p53-charges-elementaires-partie-2-verifications.md)) · **Maquettes** : [les cinq questions P](../../presentations/2026-11-15_charges_elementaires_maquettes.pptx), [Q-P1](../../presentations/2026-11-16_charges_elementaires_q-p1_maquettes.pptx), [Q-P2](../../presentations/2026-11-16_charges_elementaires_q-p2_maquettes.pptx) · **Forme** : [README](README.md).
 
 *Ouvert à la fin du plan de la partie 1 (§3.5), fermé à la §3.8.*
 
@@ -13,6 +13,7 @@
 | Partie | Commits de code | Tests | `dart analyze` | Superpowers | Claude Code |
 |:---|:---|:---|:---|:---|:---|
 | 1 | 13 (`7a256deb..b155d6a2`, après la levée `b88dfd34`) | 1682 → **1766** | `No issues found!` | 7.0.0, `bb92a77` | 2.1.319 |
+| 2 | 6 (`f0e7bb47..21050357`, après la levée `71af72ba`) | 1766 → **1772** | `No issues found!` | 7.0.0, `bb92a77` | 2.1.319 |
 
 ## 2. Les arbitrages
 
@@ -52,6 +53,16 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | S10 | Aux tests manuels : les dégâts du Feu affichés en vert sur un ennemi empoisonné (à régler avec l'animation F-a) ; l'éditeur de contenu qui déborde à 600 px de haut avec onze onglets | T | — |
 | S11 | À la partie 2 : les champs du compte rendu de vague et `ChargeTrack.ruptures`, écrits sans lecteur dans `lib/`, se lisent ou se retirent ; à la file : les tests sans surcharge qui lancent le chargement du registre en arrière-plan | T | Du code sans lecteur à la fin de la vague |
 
+**Décisions de SDD, partie 2** (registre recopié avant sa suppression ; balayage préalable sans conflit, cinq tâches, deux passes de correction ; revue d'ensemble sur `71af72ba..21050357`, « prête à fusionner », 0 critique, 0 important, sans passe) :
+
+| # | Décision | Classe | Coût si fausse |
+|:---|:---|:---:|:---|
+| S12 | Le test 1 de Task 1 se lit « 2 Foudre posées, puis `noteHit` → `[ChargeHit(2)]` ; une de plus, puis `noteHit` → `[ChargeHit(2), ChargeHit(6)]` » : `pose` ne note aucun coup | T | Une assertion à réécrire |
+| S13 | Task 3, corrigé en revue : la gangue choisit serrement (ennemi) et givre aux coins (héros) par la sorte de rupture, non par la valeur d'opacité | T | — |
+| S14 | Task 4, corrigé en revue : le rougeoiement et l'éclair du héros se jouent après le flash des dégâts, et une teinte du sprite remplace vraiment la précédente (`_replaceSpriteTint`) — l'ancien retrait ne trouvait rien | T | — |
+| S15 | Task 5, la vérification finale, rejouée par l'orchestrateur sans implémenteur (aucun fichier) | T | — |
+| S16 | Revue d'ensemble, aux tests manuels : le serrement de la gangue (3 %) ne se voit pas sous le sursaut du coup de *Trait de Glace* (22 %), deux `ScaleEffect` imbriqués s'additionnant — M16-G1 dira s'il faut le jouer après le sursaut ; un porteur sous le seuil, voisin d'un porteur qui explose, rougeoie deux fois (debug seulement) | T | Un serrement invisible |
+
 ## 3. Les tests manuels
 
 *S'écrit à la §3.8.*
@@ -61,6 +72,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 - **La fin de la phase ennemie après une victoire** (S9) : `_enemyRipostePhase` ne regarde jamais `isCombatEnded` ; garde suggérée dans `startPlayerTurn` et `endEnemyTurn`, avec un test.
 - **Le chargement du registre en arrière-plan dans les tests** (S11) : un harnais de test commun qui surcharge le provider.
 - **`entity_writer_test.dart`** (« une sauvegarde ratée ne laisse aucune copie partielle ») a échoué une fois en suite complète pendant la partie 1, vert seul et aux exécutions suivantes : un test de fichiers temporaires, étranger au diff, à surveiller.
+- **Les rendus Flame de la partie 2** (revue d'ensemble, mineurs) : `FrostVignette` recrée quatre dégradés plein écran à chaque frame d'un tour gelé, `ChargeHalo` et `FireBurst` leur `Paint` ; la règle « 1,5 largeur de carte » de l'éclair est écrite deux fois — à mettre en cache et en commun au prochain passage.
 - **Une aide de test pour les cartes de lot** : `shippedCard(id)` ne lit que `cards/<id>.json` à plat ; le test de *Nova de givre* lit son JSON de lot directement.
 
 ## 5. Les leçons
