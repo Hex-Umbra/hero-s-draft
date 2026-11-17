@@ -218,12 +218,17 @@ abstract class CombatEntity extends PositionComponent
       }
     }
 
-    final oldFrost = _frostOpacity(oldStats);
-    final newFrost = _frostOpacity(newStats);
+    final oldFrost = _frostKind(oldStats);
+    final newFrost = _frostKind(newStats);
     if (newFrost != null && oldFrost == null) {
-      _frostShell = FrostShell(size: size.clone(), opacity: newFrost);
+      _frostShell = FrostShell(
+        size: size.clone(),
+        opacity: newFrost == RuptureKind.skipAction
+            ? FrostShell.enemyOpacity
+            : FrostShell.heroOpacity,
+      );
       add(_frostShell!);
-      if (newFrost == FrostShell.enemyOpacity) {
+      if (newFrost == RuptureKind.skipAction) {
         _squeezeAnimation();
       } else {
         _frostVignette = FrostVignette(
@@ -274,18 +279,17 @@ abstract class CombatEntity extends PositionComponent
     super.onRemove();
   }
 
-  /// L'opacite de la gangue qu'un etat appelle : celle de l'ennemi pour une
-  /// piste `skipAction` en attente, la pale pour une piste `weakenDealt`
-  /// active, nulle sinon.
-  static double? _frostOpacity(EntityStats stats) {
+  /// La sorte de rupture dont la gangue est appelee par un etat : `skipAction`
+  /// en attente ou `weakenDealt` active, nulle sinon.
+  static RuptureKind? _frostKind(EntityStats stats) {
     for (final track in stats.charges.values) {
       if (track.rupture.kind == RuptureKind.skipAction &&
           track.state == ChargeState.brokenPending) {
-        return FrostShell.enemyOpacity;
+        return RuptureKind.skipAction;
       }
       if (track.rupture.kind == RuptureKind.weakenDealt &&
           track.state == ChargeState.brokenActive) {
-        return FrostShell.heroOpacity;
+        return RuptureKind.weakenDealt;
       }
     }
     return null;
