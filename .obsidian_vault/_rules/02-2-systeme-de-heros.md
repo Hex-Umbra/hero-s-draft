@@ -125,7 +125,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 > les passifs **éligibles à la classe et pourvus d'un lot** : au moins une carte du registre porte
 > leur id dans `passive` ([`_rules/02-3`](02-3-catalogue-de-cartes.md)). Aucune liste n'est écrite :
 > un lot qui arrive ouvre son passif sans code. **Depuis la tranche 2, deux passifs par classe sont
-> jouables** (vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+> jouables** (vague 6, fusionnée dans `main` le 2026-11-15 —
 > [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) — `regen_armor` et `fervor`,
 > `rage` et `bloodthirst`, `channeling` et `mana_flux` ; le Mage démarre de nouveau sur
 > *Canalisation*, son premier par `displayOrder`. Les trois autres — `blessing`, `frenzy`,

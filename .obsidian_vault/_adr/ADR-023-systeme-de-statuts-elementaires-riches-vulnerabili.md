@@ -1,7 +1,12 @@
 ## ⚔️ ADR-023 : Système de Statuts Élémentaires Riches & Vulnérabilité Universelle
 
 ### Statut
-✅ Accepté & Implémenté
+✅ Accepté & Implémenté. **D1 (Brûlure), D2 (Gel) et D3 (Électrocution) amendées le 2026-11-17 par
+[ADR-117](ADR-117-les-charges-elementaires.md)** (P-53, vague 7, livré sur la branche
+`feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la fusion et du tag du
+propriétaire) : les trois deviennent des charges élémentaires — le Feu, le Gel, la Foudre —, des
+points qui rompent à un seuil. **D4 (Vulnérable) est inchangée** (son barème est celui
+d'[ADR-111](ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md) D4).
 
 ### Contexte
 Les combats tactiques manquaient d'altérations d'état dynamiques et de synergies élémentaires. Les effets de statut initiaux étaient soit trop basiques, soit limités aux forces et armures. Pour offrir des opportunités de build plus poussées (jeux basés sur le temps, le burst ou le contrôle), il était nécessaire d'introduire des effets élémentaires riches et une gestion propre de la vulnérabilité affectant toutes les entités en jeu.

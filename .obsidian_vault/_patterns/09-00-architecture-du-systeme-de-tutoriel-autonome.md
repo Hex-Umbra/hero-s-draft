@@ -98,7 +98,10 @@ constructeur, jamais de `xpCurveProvider`.
 résout contre le `GameDataRegistry` par `firstWhere` **sans `orElse`** : renommer une carte
 dans `assets/data/` fait échouer le tutoriel bruyamment, au lieu de le laisser afficher une
 valeur périmée. Le tutoriel manipule ensuite les vrais modèles du jeu — `CardInstance`,
-`EnemyInstance`, `EntityStats` — et fait passer ses dégâts par `DamagePipeline`.
+`EnemyInstance`, `EntityStats` — et fait passer ses dégâts par `DamagePipeline`, qui reçoit
+`data.charges` depuis la vague 7 ; la galerie des effets élémentaires lit le nom, la description et
+les chiffres des charges dans ce même catalogue, rien en dur
+([`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md), étape 10).
 
 Sur la branche de la vague 4 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), les
 signatures ne sont plus des cartes : `TutorialFixtures.signature(id)` les résout, de même

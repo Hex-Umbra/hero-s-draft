@@ -38,7 +38,7 @@ ne lit le registre lui-même** : la table descend par paramètre, comme les autr
 | Garde | Ce qu'il rend impossible |
 |:---|:---|
 | `test/unit/effect_icon_table_test.dart` | Une sorte mal formée acceptée, une faute non nommée |
-| `test/unit/referential_integrity_test.dart` | Un nom d'icône ou de couleur livré absent de `effectIcons` / `effectColors` ; un `status:<id>` que `EffectResolver.createStatus` ne fabrique pas ; **une sorte que les faces des cartes dessinent autrement** — Flutter (`getEffectVisuals`, `ui_card_helpers.dart`) et Flame (`CardTextRenderer.getEffectVisuals`) comparés au document, P-6 (a) |
+| `test/unit/referential_integrity_test.dart` | Un nom d'icône ou de couleur livré absent de `effectIcons` / `effectColors` ; un `status:<id>` que `EffectResolver.createStatus` ne fabrique pas **et qui n'est pas une charge du catalogue** — `status:burn`, `status:freeze`, `status:shock` depuis la vague 7 ([ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), chaque charge devant avoir son entrée ; **une sorte que les faces des cartes dessinent autrement** — Flutter (`getEffectVisuals`, `ui_card_helpers.dart`) et Flame (`CardTextRenderer.getEffectVisuals`) comparés au document, P-6 (a) |
 
 > [!NOTE]
 > **Trois jeux d'icônes subsistent à côté de la table** : les faces des cartes, qui gardent leur

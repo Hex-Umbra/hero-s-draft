@@ -61,8 +61,8 @@ sur l'étape 01.
 2. **Choix de classe, et de son passif** *(une classe choisie)* : les 3 héros avec leurs vraies
    valeurs (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et **tous** les passifs que
    `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/` — depuis la vague 5,
-   deux par classe depuis la tranche 2 (vague 6, en attente du test, de la PR, de la fusion et du
-   tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) ; le Mage
+   deux par classe depuis la tranche 2 (vague 6, fusionnée
+   dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) ; le Mage
    démarre de nouveau sur *Canalisation*, son premier par `displayOrder`, avec sa description
    neuve, lue dans la donnée. Le bloc dépliant est
    le `ClassPassiveList` de `ClassSelectionScreen` — le widget de production, pas une seconde
@@ -125,10 +125,19 @@ sur l'étape 01.
    l'entier supérieur — 6 Armure → 3 Puissance. »). Le Berserker y voit +2 Puissance pour les 4
    Armure de la démonstration, et *Défense* lui en donne 3 à l'étape des cartes —
    [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md).
-10. **Effets Élémentaires** : galerie animée Poison, Brûlure, Gel, Électrocution, avec leurs
-    règles exactes (valeur de Poison qui ne baisse jamais, Brûlure en début de tour, etc.).
+10. **Effets Élémentaires** : galerie animée Poison, Feu, Gel, Foudre. Depuis la vague 7 (livrée
+    sur la branche, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+    [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), la prose présente le Gel, le Feu et la
+    Foudre comme des **charges** qui rompent à un seuil, sans un chiffre ; **la galerie lit leur nom
+    et leur description dans le catalogue des charges** (`engine.data.charges`), plus rien en dur,
+    et ses cycles montrent la règle, chiffres lus sur la donnée — Gel « ❄ 1/3 » → « ❄ 2/3 » →
+    « ❄ Gelé », Feu « 🔥 1 » → « 🔥 2 » → « 🔥 3 » → « 💥 12 », Foudre « ⚡ 1/3 : +1 » →
+    « ⚡ 2/3 : +2 » → « ⚡ Chargé : +6 ».
+    Le panneau de démonstration porte Poison 3 et « Feu : 2 », posé comme une charge. La valeur de
+    Poison ne baisse toujours jamais ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5).
 11. **Intentions Ennemies** : lues dans le panneau `EnemyIntentsPanel` réel, en bas à droite —
-    pas au-dessus de l'ennemi — avec ses 4 paliers d'attaque.
+    pas au-dessus de l'ennemi — avec ses 4 paliers d'attaque ; depuis la vague 7, la prose dit
+    qu'un ennemi Gelé ne fait rien à son tour, au lieu d'une attaque réduite.
 12. **Fusion de Cartes** *(fusion effectuée)* : manuelle, hors combat, 3 exemplaires de même
     rareté ; la rareté **augmente** les valeurs sans jamais changer le coût — ×1,2 à ×2,0, et
     toujours d'au moins 1 par fusion —, mais ni la pioche ni le Mana qu'une carte rend (G1, G2,

@@ -16,6 +16,11 @@ la passe `memory-bank-sync` de fin de vague.
 **Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
 `v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
 la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
+**Clos le 2026-11-17 par [ADR-117](ADR-117-les-charges-elementaires.md)** : la vague de plus est
+livrée sur la branche `feat/v0.5.9-p53-charges-elementaires` — vague 7 du fichier d'orchestration,
+en attente du test, de la PR, de la fusion et du tag du propriétaire. La condition de D3 a été
+remplie le 2026-11-15 (D83 à D86, la fiche 8.7 complète) ; D4 a cessé de valoir pour le Gel, le Feu
+et la Foudre avec cette vague.
 
 ### Contexte
 

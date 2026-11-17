@@ -22,7 +22,7 @@ changent) et D10 (l'héritage garde toutes les runes).
 reçoivent le bonus de plafond de la run (`capBonus`), et `DeckNotifier.raiseRuneLevel` devient un
 écrivain de niveau de plus.
 **Complété le 2026-11-15 par [ADR-116](ADR-116-canalisation-une-banque-de-mana.md)** (P-42 tranche 2,
-vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire) sur le prédicat
+vague 6, fusionné dans `main` le 2026-11-15 par la PR #54) sur le prédicat
 d'éligibilité : les effets propres d'une carte comptent aussi `status:<id>` pour chaque
 `apply_status`, et `excludesEffects` peut nommer un statut posé.
 **Amende [ADR-094](ADR-094-echelle-de-rarete-explicite-et-runes-non-cumulables.md)** sur ses
@@ -35,6 +35,8 @@ d'exécution au
 §2.4 à §2.6.
 
 **Complété le 2026-11-04 par [ADR-111](ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : cinq sortes de delta (`armorPierce`, `lifestealPercent`, `splashPercent`, `echoChance`, `refundHpCost`) et deux champs d'éligibilité (`eligibleTargets`, `requiresCost`) — le principe « une sorte par mécanisme » (D1) tient.
+
+**D2 complétée le 2026-11-17 par [ADR-117](ADR-117-les-charges-elementaires.md)** (P-53, vague 7, livré sur la branche `feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : les statuts des runes élémentaires passent toujours par `ApplyStatusEffectStrategy`, qui les pose désormais comme des charges (`ChargeRules.pose`) et non plus par `addStatus`.
 
 ### Contexte
 

@@ -19,6 +19,9 @@ arbitrages et décisions de SDD S1 à S6 au
 **Complète [ADR-105](ADR-105-moteur-de-runes-data-driven.md)** (D5 ci-dessous : le prédicat
 d'éligibilité lit aussi les statuts posés), qui ne change que de Statut. **ADR-097 reste vrai** : sa
 D5 nommait `channeling` premier passif du Mage, et il le redevient (D6).
+**Fusionné dans `main` le 2026-11-15 par la PR #54** (commit de fusion `56fae9df`), tagué sur ce
+commit, `release.yml` run `43727018143` vert — constaté par la porte d'entrée de la vague 7
+(`b50eca31`) et re-vérifié par `gh` le 2026-11-17.
 
 ### Contexte
 

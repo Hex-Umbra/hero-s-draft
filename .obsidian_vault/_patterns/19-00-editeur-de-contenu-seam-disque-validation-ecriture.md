@@ -26,7 +26,7 @@ Cette fiche décrit le moteur, `lib/services/content_editor/` ; l'écran vit en
 La racine est **passée en paramètre** à tout le moteur : les tests écrivent sur une arborescence
 jetable, comme `bundle` pour `GameDataLoader`.
 
-### 19.2. La table déclarative des 9 catégories
+### 19.2. La table déclarative des 11 catégories
 
 `kEntityDescriptors` (`entity_descriptor.dart`) décrit chaque catégorie en données : motif de
 chemin, clés requises et interdites, bases bilingues, `construct` (le vrai `fromJson`), gabarit,
@@ -39,7 +39,14 @@ portait la carte : chemin `classes/<classe>/skills/<id>.json`, classe exigée, `
 `cost`, `cooldown`, `type` (sans `status`, lu sur `SignatureData.playableTypes`) ; `forbiddenKeys`
 `heroClass`, `rarity`, `isExhaust`, `category` ; même vocabulaire que la carte, union des fichiers
 de carte et de signature. La carte est désormais **neutre seulement**, sans chemin sous une classe ;
-neuf sources de chargement, neuf descripteurs. `_construct` passe au `fromJson` le document
+neuf sources de chargement, neuf descripteurs. La 10ᵉ, **carte de lot** (vague 5,
+[ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)), est rangée sous `cards/<passif>/`.
+La 11ᵉ, **charge élémentaire** (vague 7, sur la branche —
+[ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), `EntityCategory.charge` : chemin
+`charges/<id>.json`, id injecté, `construct` = `ChargeData.fromJson`, qui valide tout ; `breaksOn`,
+`rupture.kind` et `heroRupture.kind` en énumérations lues sur le modèle. Onze sources, onze
+descripteurs ; les descripteurs de carte, de signature et de rune gardent leur vocabulaire de
+`statusId`, lu sur les fichiers. `_construct` passe au `fromJson` le document
 augmenté de `heroClass: draft.heroClass` quand le descripteur porte la propriété de classe — le
 document **écrit** n'a jamais la clé.
 

@@ -17,10 +17,13 @@
 | `GameDataLoader` | Lit le manifeste une fois, apparie, décode, fusionne, trie, déduplique — en **accumulant** les fautes. Depuis la vague 3, il charge aussi les **documents plats** (§17.7) |
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des dix sources du jeu** — la neuvième est celle des signatures depuis la vague 4,
+déclaration des onze sources du jeu** — la neuvième est celle des signatures depuis la vague 4,
 à la place de celle des cartes de classe ; **la dixième, `cards/*/*.json`, celle des cartes de
 lot, depuis la vague 5** ([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) :
-`registry.cards` est la somme de deux sources, `cardSources`. Le provider de production et le registre des tests du
+`registry.cards` est la somme de deux sources, `cardSources` ; **la onzième, `charges/*.json`, celle
+des charges élémentaires, depuis la vague 7** (sur la branche — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)),
+`chargeSource`, que `registry.charges` porte et `chargeCatalogProvider` expose — un catalogue vide
+si le registre n'est pas encore chargé. Le provider de production et le registre des tests du
 tutoriel passent tous deux par elle : une seconde déclaration serait une seconde vérité.
 
 ### 17.2. Le motif de chemin porte la sélection *et* l'injection
@@ -36,7 +39,8 @@ capturés alimentent `inject`, dans leur ordre d'apparition.
 | `assets/data/classes/*/skills/*.json` | `[classe, id]` | `id`, `heroClass` → `SignatureData`, dans `registry.signatures` |
 | `assets/data/classes/*/class.json` | `[id]` | `id` |
 | `assets/data/enemies/*/enemy.json` | `[id]` | `id` |
-| `assets/data/relics/*.json` · `events/` · `forge_upgrades/` · `passives/` | `[id]` | `id` |
+| `assets/data/relics/*.json` · `events/` · `forge_upgrades/` · `passives/` · `level_up_rewards/` | `[id]` | `id` |
+| `assets/data/charges/*.json` | `[id]` | `id` → `ChargeData`, dans `registry.charges` (vague 7) |
 
 > [!NOTE]
 > **Le nombre de segments doit correspondre exactement.** C'est ce seul fait qui sépare
