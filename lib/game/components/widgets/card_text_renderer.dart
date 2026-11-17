@@ -108,6 +108,7 @@ class CardTextRenderer {
           effect,
           damageBonus: damageBonus,
           scaleTerm: card.heroScaleTerm(effect),
+          statusBonus: card.heroStatusBonusAt(i),
         );
 
         final visuals = getEffectVisuals(effect);
@@ -263,16 +264,18 @@ class CardTextRenderer {
       effect.value + scaleTerm;
 
   /// Le chiffre du badge d'un effet : sa valeur plus le terme de croissance,
-  /// plus la part de Puissance par coup pour un `damage`, suivi de `×coups` dès
-  /// deux coups.
+  /// plus la part de Puissance par coup pour un `damage` ou [statusBonus] pour
+  /// un `apply_status`, suivi de `×coups` dès deux coups.
   static String badgeValue(
     CardEffect effect, {
     int damageBonus = 0,
     int scaleTerm = 0,
+    int statusBonus = 0,
   }) {
     final isDamage = effect.type == 'damage';
     final value = playedValue(effect, scaleTerm) +
-        (isDamage ? effect.mightPerHit(damageBonus) : 0);
+        (isDamage ? effect.mightPerHit(damageBonus) : 0) +
+        (effect.type == 'apply_status' ? statusBonus : 0);
     return isDamage && effect.hits >= 2 ? '$value×${effect.hits}' : '$value';
   }
 

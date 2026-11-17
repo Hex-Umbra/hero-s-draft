@@ -268,6 +268,14 @@ class CardComponent extends PositionComponent
     );
   }
 
+  /// La Puissance de statut que l'effet propre [index] de la carte reçoit,
+  /// lue sur le héros comme la Puissance des dégâts : 0 sauf pour le premier
+  /// statut de la résolution (Q11, A15). Lue par le badge et l'infobulle.
+  int heroStatusBonusAt(int index) =>
+      EffectResolver.cardEffectGetsStatusBonus(card.effective, index)
+          ? game.heroCard?.stats.statusBonusFor(card.data.target) ?? 0
+          : 0;
+
   String buildDetailedDescription() {
     String desc = '';
 
@@ -354,11 +362,14 @@ class CardComponent extends PositionComponent
 
     // Les valeurs que la carte joue — rareté et runes comprises — viennent de
     // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
-    for (final effect in card.effective.effects) {
+    final effects = card.effective.effects;
+    for (var i = 0; i < effects.length; i++) {
+      final effect = effects[i];
       // La valeur jouée plus le terme de croissance des sources du héros, le
-      // même que le badge ; 0 hors combat.
+      // même que le badge ; 0 hors combat. Un statut y ajoute sa Puissance.
       final scaledValue =
-          CardTextRenderer.playedValue(effect, heroScaleTerm(effect));
+          CardTextRenderer.playedValue(effect, heroScaleTerm(effect)) +
+              heroStatusBonusAt(i);
       if (effect.type == 'damage') {
         // Puis la part de Puissance de chaque coup.
         final totalDmg = scaledValue + effect.mightPerHit(damageBonus);

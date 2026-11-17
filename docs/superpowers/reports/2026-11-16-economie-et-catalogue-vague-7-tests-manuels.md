@@ -50,6 +50,7 @@
 24. **T24** — Le tutoriel : prose, galerie animée, panneau, étape des intentions (M14).
 25. **T25** — L'éditeur de contenu à 600 px de haut, avec ses onze onglets (S10).
 26. **T26** — La note de version `0.5.9`.
+27. **T27** — La Puissance de statut affichée sur la carte (défaut D1, ajouté le 17/11).
 
 ## T1 — La chaîne du Feu : trois ennemis, trois vagues (M6, M16-F1)
 *La chaîne se joue vague par vague ; la vague 2 touche B deux fois, la vague 3 le résout seul. Le défaut visé : une carte qui garde ses PV d'avant une vague, faute de boule de feu arrivée (revue de plan, point 4).*
@@ -243,6 +244,13 @@
 - **Ne doit pas changer** : l'entrée `0.5.8` et les précédentes.
 - **Résultat** : ✅ · ❌ · non testé —
 
+## T27 — La Puissance de statut affichée sur la carte (défaut D1)
+- **Atteindre la situation** : un Paladin (ou un Mage) avec au moins 1 de Puissance — la relique *Pierre à aiguiser*, ou le menu de debug ; en combat, *Trait de Glace*, *Coup de Tonnerre* et *Coup Empoisonné* en main.
+- **Faire** : lire le badge et l'infobulle de chaque carte, puis la jouer sur un ennemi et lire sa piste.
+- **Attendu** : avec 1 de Puissance, *Trait de Glace* affiche 5 dégâts et **3 Gel**, et le boss passe à « ❄ 3/6 » ; *Coup de Tonnerre* affiche **2 Foudre** ; *Coup Empoisonné* affiche **2 Poison**. Le chiffre de la carte et celui posé sont **toujours égaux**. Avec un Berserker, orienté vers les seules Attaques, le statut garde son chiffre de base.
+- **Ne doit pas changer** : les dégâts affichés (Puissance comprise, comme avant) ; un buff posé sur soi (*Puissance* temporaire) ne reçoit rien ; une carte qui pose deux statuts n'en renforce qu'un, le premier.
+- **Résultat** : ✅ · ❌ · non testé —
+
 ## Ce qui doit rester inchangé
 - **Vulnérable** (barème de P-1 ; Vulnérable amplifie toujours les coups, bonus de Foudre compris, mais jamais le Feu), **Faiblesse** (−25 % par point, avant le gel du héros, sans s'y additionner) et **Poison** (inflige sa valeur, vieillit au tic, seul dégât sur la durée) : mêmes chiffres, mêmes couleurs (Poison vert), mêmes icônes, même moment.
 - Les trois passifs encore masqués : *Bénédiction*, *Frénésie* et *Marque du Mage* absents de la sélection de classe, du tutoriel et du draft.
@@ -257,3 +265,4 @@
 ## Défauts trouvés
 | # | Test | Ce qui a été vu | Gravité ressentie | Corrigé par |
 |:---:|:---|:---|:---|:---|
+| D1 | T4 (boss) | Paladin à 1 de Puissance : *Trait de Glace*, *Coup de Tonnerre* et *Coup Empoisonné* posent un point de plus que le chiffre affiché. La règle Q11/A15 (la Puissance renforce le premier statut posé sur un ennemi) est juste ; la carte n'affichait pas ce bonus. Antérieur à la vague. | Moyenne : le joueur est trompé sur ce qu'il pose | Le commit suivant `167357d5` ; retester par T27 |
