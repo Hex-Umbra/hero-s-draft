@@ -295,6 +295,44 @@ void main() {
       expect(enemy().charges['shock']!.state, ChargeState.brokenActive);
     });
 
+    test('Rafale d etincelles note trois coups : +1 sur un ennemi neuf, +6 sur '
+        'un ennemi a 2 points', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('spark_barrage');
+      expect(enemy().chargeHits, List.filled(3, const ChargeHit(1)));
+
+      final shock = container.read(chargeCatalogProvider)['shock']!;
+      fight([
+        EnemyInstance(
+          data: registry.enemies.first,
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+            shock,
+            2,
+            ChargeBearer.enemy,
+          ),
+        ),
+      ]);
+      playShipped('spark_barrage');
+      expect(enemy().chargeHits, List.filled(3, const ChargeHit(6)));
+    });
+
+    test('Coup de Tonnerre frappe avant de poser : aucun coup note', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('thunder_clap');
+      expect(enemy().chargeHits, isEmpty);
+      expect(ChargeRules.points(enemy(), 'shock'), 1);
+    });
+
+    test('Ricochant : chaque cible eclaboussee note son propre bonus', () {
+      setHero((h) => h.copyWith(might: 0));
+      fight([foe(), foe(statuses: [status('shock', 2)]), foe()]);
+      playShipped('strike_basic', runes: const ['splash:1']);
+      expect(enemy(1).chargeHits, [const ChargeHit(2)]);
+      expect(enemy(0).chargeHits, isEmpty);
+      expect(enemy(2).chargeHits, isEmpty);
+    });
+
     test('le critique se tire a chaque coup', () {
       setHero((h) => h.copyWith(might: 0));
       play([volley], runes: const ['precise:20']);

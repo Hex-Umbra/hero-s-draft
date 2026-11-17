@@ -25,6 +25,11 @@ class EntityStats {
   /// La piste de chaque charge posée sur ce porteur, par id (spec P-53, §4.1).
   /// Hors sauvegarde : ni `toJson` ni `fromJson` n'y touchent.
   final Map<String, ChargeTrack> charges;
+
+  /// Un [ChargeHit] par coup reçu qui a eu un bonus de Foudre, dans l'ordre.
+  /// Ne sert qu'à l'affichage : il grossit le temps d'un combat, et
+  /// [clearCombatEffects] le vide. Hors sauvegarde : ni `toJson` ni `fromJson`.
+  final List<ChargeHit> chargeHits;
   final bool lastActionWasCrit;
 
   EntityStats({
@@ -43,9 +48,11 @@ class EntityStats {
     this.critMultiplier = 1.5,
     List<StatusEffect> statuses = const [],
     Map<String, ChargeTrack> charges = const {},
+    List<ChargeHit> chargeHits = const [],
     this.lastActionWasCrit = false,
   })  : statuses = List.unmodifiable(statuses),
-        charges = Map.unmodifiable(charges);
+        charges = Map.unmodifiable(charges),
+        chargeHits = List.unmodifiable(chargeHits);
 
   EntityStats copyWith({
     int? maxPv,
@@ -63,6 +70,7 @@ class EntityStats {
     double? critMultiplier,
     List<StatusEffect>? statuses,
     Map<String, ChargeTrack>? charges,
+    List<ChargeHit>? chargeHits,
     bool? lastActionWasCrit,
   }) {
     return EntityStats(
@@ -81,6 +89,7 @@ class EntityStats {
       critMultiplier: critMultiplier ?? this.critMultiplier,
       statuses: statuses ?? this.statuses,
       charges: charges ?? this.charges,
+      chargeHits: chargeHits ?? this.chargeHits,
       lastActionWasCrit: lastActionWasCrit ?? this.lastActionWasCrit,
     );
   }
@@ -164,8 +173,10 @@ class EntityStats {
     return copyWith(statuses: newStatuses);
   }
 
-  /// Vide ce que le combat a posé : les statuts et les pistes des charges.
-  EntityStats clearCombatEffects() => copyWith(statuses: const [], charges: const {});
+  /// Vide ce que le combat a posé : les statuts, les pistes des charges et le
+  /// journal des coups.
+  EntityStats clearCombatEffects() =>
+      copyWith(statuses: const [], charges: const {}, chargeHits: const []);
 
   int get effectiveMastery {
     int bonus = 0;

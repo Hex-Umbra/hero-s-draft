@@ -216,6 +216,18 @@ void main() {
     expect(hero().currentPv, 100 - 12);
   });
 
+  test('Foudre du heros chargee : +2 par point, chaque coup ennemi note', () {
+    startRun();
+    final hit = EnemyIntent(type: IntentType.attack, value: 10);
+    fight([foe('A', might: 10).copyWith(currentIntent: hit)]);
+    poseOnHero(shock, 3);
+
+    combat.resolveEnemyIntent('A');
+
+    expect(hero().currentPv, 100 - 16);
+    expect(hero().chargeHits, [const ChargeHit(6)]);
+  });
+
   test('Feu : un ennemi entre deux voisins explose', () {
     startRun();
     fight([foe('A'), foe('B'), foe('C')]);

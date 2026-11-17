@@ -197,6 +197,49 @@ void main() {
     });
   });
 
+  group('les coups', () {
+    test('noteHit note le bonus de chaque coup, rien sans Foudre', () {
+      final plain = fresh();
+      expect(ChargeRules.noteHit(plain, catalog), same(plain));
+
+      var stats = pose(fresh(), shock, 2);
+      stats = ChargeRules.noteHit(stats, catalog);
+      expect(stats.chargeHits, [const ChargeHit(2)]);
+
+      stats = pose(stats, shock, 1);
+      stats = ChargeRules.noteHit(stats, catalog);
+      expect(stats.chargeHits, [const ChargeHit(2), const ChargeHit(6)]);
+    });
+
+    test(
+        'le journal des coups survit a takeDamage, addStatus, tickStatuses et '
+        'copyWith ; toJson ne l ecrit pas ; clearCombatEffects le vide', () {
+      final stats = ChargeRules.noteHit(pose(fresh(), shock, 2), catalog);
+      final hits = stats.chargeHits;
+      expect(hits, isNotEmpty);
+
+      expect(stats.takeDamage(5).chargeHits, hits);
+      expect(
+        stats
+            .addStatus(const StatusEffect(
+              id: 'poison',
+              name: 'Poison',
+              type: StatusType.debuff,
+              value: 1,
+              duration: 2,
+            ))
+            .chargeHits,
+        hits,
+      );
+      expect(stats.tickStatuses({'shock'}).chargeHits, hits);
+      expect(stats.copyWith(currentPv: 50).chargeHits, hits);
+
+      expect(stats.toJson().containsKey('chargeHits'), isFalse);
+      expect(EntityStats.fromJson(stats.toJson()).chargeHits, isEmpty);
+      expect(stats.clearCombatEffects().chargeHits, isEmpty);
+    });
+  });
+
   group('les lignes', () {
     test('une ligne par charge : points, seuil, etat et valeur', () {
       expect(
@@ -326,13 +369,12 @@ void main() {
           resolution.bearerId,
           resolution.chargeId,
           resolution.tranches,
-          resolution.damage,
         ),
-        ('B', 'test_fire', 1, 16),
+        ('B', 'test_fire', 1),
       );
       expect(
-        resolution.splashes.map((s) => (s.targetId, s.damage, s.charge)),
-        [('A', 12, 1), ('C', 12, 1)],
+        resolution.splashes.map((s) => (s.targetId, s.charge)),
+        [('A', 1), ('C', 1)],
       );
       expect(report.wave, 1);
       expect(report.nextBearerIds, {'A', 'C'});
@@ -435,9 +477,10 @@ void main() {
       expect(row[2].stats.currentPv, 0);
       expect(fireOn(row[2]), 0);
       expect(
-        report!.resolved.single.splashes.map((s) => (s.targetId, s.damage)),
-        [('A', 12)],
+        report!.resolved.single.splashes.map((s) => (s.targetId, s.charge)),
+        [('A', 1)],
       );
+      expect(lost(row[0]), 48);
       expect(report.nextBearerIds, {'A'});
     });
 

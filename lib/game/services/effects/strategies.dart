@@ -111,7 +111,7 @@ class DamageEffectStrategy implements EffectStrategy {
     );
     combatController.updateEnemyStats(
       enemy.id,
-      enemy.stats.takeDamage(
+      ChargeRules.noteHit(enemy.stats, charges).takeDamage(
         finalDmg,
         isCrit: isCrit,
         armorPiercePercent: effective.armorPiercePercent,

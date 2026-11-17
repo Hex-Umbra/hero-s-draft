@@ -186,13 +186,15 @@ class TurnPhaseManager {
 
     switch (intent.type) {
       case IntentType.attack:
+        final charges = ref.read(chargeCatalogProvider);
         final (dmg, isCrit) = DamagePipeline.calculate(
           initialDamage: intent.value,
           attackerStats: enemy.stats,
           defenderStats: runController.currentState.heroStats,
-          charges: ref.read(chargeCatalogProvider),
+          charges: charges,
         );
 
+        runController.updateHeroStats((s) => ChargeRules.noteHit(s, charges));
         runController.takeDamage(dmg, isCrit: isCrit);
         break;
       case IntentType.defend:

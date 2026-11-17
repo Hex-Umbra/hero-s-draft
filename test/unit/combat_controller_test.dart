@@ -651,12 +651,12 @@ void main() {
         expect(first.wave, 1);
         final resolution = first.resolved.single;
         expect(
-          (resolution.bearerId, resolution.tranches, resolution.damage),
-          ('B', 3, 36),
+          (resolution.bearerId, resolution.tranches),
+          ('B', 3),
         );
         expect(
-          resolution.splashes.map((s) => (s.targetId, s.damage, s.charge)),
-          [('A', 36, 3), ('C', 36, 3)],
+          resolution.splashes.map((s) => (s.targetId, s.charge)),
+          [('A', 3), ('C', 3)],
         );
         expect([lost('A'), lost('B'), lost('C')], [36, 36, 36]);
 

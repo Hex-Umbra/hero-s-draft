@@ -201,8 +201,6 @@ abstract final class ChargeRules {
       int bearer,
       ChargeData charge,
       int tranches,
-      int selfDamage,
-      int splashDamage,
       int splashCharge,
       List<int> neighbours,
     })>[];
@@ -233,8 +231,6 @@ abstract final class ChargeRules {
           bearer: i,
           charge: charge,
           tranches: n,
-          selfDamage: resolved.selfDamage,
-          splashDamage: splashDamage,
           splashCharge: n * resolved.rupture.chargePerNeighbour,
           neighbours: neighbours,
         ));
@@ -271,7 +267,6 @@ abstract final class ChargeRules {
         }
         splashes.add(FireSplash(
           targetId: target.id,
-          damage: blast.splashDamage,
           charge: received,
         ));
       }
@@ -279,7 +274,6 @@ abstract final class ChargeRules {
         bearerId: row[blast.bearer].id,
         chargeId: blast.charge.id,
         tranches: blast.tranches,
-        damage: blast.selfDamage,
         splashes: splashes,
       ));
     }
@@ -412,6 +406,17 @@ abstract final class ChargeRules {
           : halfUp(full, charge.belowThresholdPercent!);
     }
     return bonus;
+  }
+
+  /// Note le coup que [defender] va recevoir : une entrée de plus à son
+  /// journal, du bonus que [hitBonus] lit sur son état d'avant le coup. Sans
+  /// bonus, [defender] elle-même.
+  static EntityStats noteHit(EntityStats defender, ChargeCatalog charges) {
+    final bonus = hitBonus(defender, charges);
+    if (bonus <= 0) return defender;
+    return defender.copyWith(
+      chargeHits: [...defender.chargeHits, ChargeHit(bonus)],
+    );
   }
 
   /// Une ligne par piste dont les points dépassent 0 ou dont l'état n'est pas

@@ -1,35 +1,31 @@
 import 'package:meta/meta.dart';
 
-/// Ce qu'une explosion fait à un voisin : les dégâts annoncés et le Feu
-/// réellement reçu — 0 pour un voisin que la vague a tué (spec P-53, §4.7).
+/// Le Feu qu'une explosion fait recevoir à un voisin, réellement reçu — 0 pour
+/// un voisin que la vague a tué (spec P-53, §4.7).
 @immutable
 class FireSplash {
   final String targetId;
-  final int damage;
   final int charge;
 
   const FireSplash({
     required this.targetId,
-    required this.damage,
     required this.charge,
   });
 }
 
-/// La résolution d'un porteur pendant une vague : ses tranches complètes, les
-/// dégâts qu'il prend, et ce que ses explosions font à chaque voisin.
+/// La résolution d'un porteur pendant une vague : ses tranches complètes, et
+/// ce que ses explosions posent à chaque voisin.
 @immutable
 class FireResolution {
   final String bearerId;
   final String chargeId;
   final int tranches;
-  final int damage;
   final List<FireSplash> splashes;
 
   FireResolution({
     required this.bearerId,
     required this.chargeId,
     required this.tranches,
-    required this.damage,
     required List<FireSplash> splashes,
   }) : splashes = List.unmodifiable(splashes);
 }

@@ -15,6 +15,21 @@ enum ChargeState {
   brokenActive,
 }
 
+/// Un coup reçu qui a eu un bonus de Foudre : le bonus qu'il a reçu (spec
+/// P-53, Q-P2 (c)).
+@immutable
+class ChargeHit {
+  final int bonus;
+
+  const ChargeHit(this.bonus);
+
+  @override
+  bool operator ==(Object other) => other is ChargeHit && other.bonus == bonus;
+
+  @override
+  int get hashCode => bonus.hashCode;
+}
+
 /// La piste d'une charge sur un porteur : ce que les points seuls ne disent
 /// pas — le seuil courant, le nombre de ruptures du combat, l'état, et la
 /// rupture en vigueur pour ce porteur (spec P-53, §4.1). Hors sauvegarde : une
