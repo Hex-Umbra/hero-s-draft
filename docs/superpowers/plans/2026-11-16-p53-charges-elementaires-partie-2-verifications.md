@@ -20,11 +20,11 @@
 | Le moment du total « −N » | le retarder après les bonus (décale le son à l'impact) | les « +N » partent à l'impact, décalés de 100 ms ; le total ne bouge pas | 8 |
 | Le héros porteur de Feu sous le seuil | rien | un rougeoiement, comme un porteur ennemi | 6 |
 
-### Question P ouverte
+### Question P, tranchée par le propriétaire
 
-| # | Question | Options | Recommandation |
-|:---|:---|:---|:---|
-| Q-P2 | Ce qui s'affiche à chaque coup quand la Foudre est **sous** le seuil (+1 par point, D86), que la maquette ne dessine pas | (a) tout bonus, en jaune atténué sous le seuil, en `#FFEA00` une fois chargé ; (b) seul le bonus sur une cible chargée (la maquette telle quelle) ; (c) tout bonus, dans le même `#FFEA00` | (c) |
+| # | Question | Options | Recommandation | Choix du propriétaire |
+|:---|:---|:---|:---|:---|
+| Q-P2 | Ce qui s'affiche à chaque coup quand la Foudre est **sous** le seuil (+1 par point, D86), que la maquette ne dessine pas | (a) tout bonus, en jaune atténué sous le seuil, en `#FFEA00` une fois chargé ; (b) seul le bonus sur une cible chargée (la maquette telle quelle) ; (c) tout bonus, dans le même `#FFEA00` | (c) | **(c)**, le 17/11, dans le prompt de reprise : chaque coup de Foudre affiche son bonus « +N », que la cible soit sous le seuil ou chargée, toujours dans le même jaune `#FFEA00` ; le halo suffit à montrer qui est chargé. Le plan, écrit pour les trois options, garde (c) : les branches (a) et (b) retirées — `ChargeHit` sans `charged`, une seule couleur en Task 2 —, la marque de question ouverte retirée, le décompte inchangé (1772). Retirer (a) et (b) ne change qu'un champ et une couleur : pas de nouveau tour de vérification |
 
 ## 2. Le journal des tours
 

@@ -33,7 +33,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 | Q1 | La ligne du gel en attente déborde du panneau du héros | T | Pas de colonne de durée, libellé replié sur deux lignes ; au-delà de la réserve de 120 px, la liste défile, barre visible | 6, 7 |
 | Q2 | Transmettre les coups un à un à Flame | T | Par l'état : chaque coup note son bonus sur le défenseur (`EntityStats.chargeHits`, hors sauvegarde), testé en tête du plan de la partie 2, avant toute animation | 5 |
 | A12 · §4.10 | Le compte rendu de vague et le délai de vague, à la partie 2 | T | Le compte rendu perd ses dégâts nominaux, les dégâts se lisent sur les PV (P-d) ; 800 ms par vague (0,6 s + 0,2 s, §5.2) — spec amendée | 8, 6 |
-| Q-P2 | Ce qui s'affiche à chaque coup sous le seuil de Foudre | P | **Ouverte** — arrêt du 16/11 ; recommandé : (c), un seul jaune | — |
+| Q-P2 | Ce qui s'affiche à chaque coup sous le seuil de Foudre | P | (c) : chaque coup affiche son « +N », sous le seuil comme chargé, dans le même jaune `#FFEA00` ; le halo dit qui est chargé (propriétaire, 17/11) | — |
 
 **Décisions de SDD, partie 1** (registre recopié avant sa suppression ; balayage préalable, douze tâches, une passe de correction en Task 3 ; revue d'ensemble sur `b88dfd34..1979ba1f`, « prête avec corrections », une passe) :
 

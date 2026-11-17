@@ -661,7 +661,9 @@ qu'un « −27 », Flame comparant deux états (`triggerHitReactions`, `combat_e
 maquette de L-b (p. 12) ne montre que la cible chargée ; sous le seuil, D86 donne aussi un bonus (+1 par point),
 que la maquette ne dessine pas. La manière se règle au plan, en classe T ; si la solution change ce que le joueur
 lit (ce qui s'affiche à chaque coup, chargé ou sous le seuil), c'est une question P, que le plan pose avec des
-maquettes.
+maquettes. *Posée par le plan de la partie 2 (Q-P2), tranchée par le propriétaire le 17/11 : chaque coup de Foudre
+affiche son bonus « +N », sous le seuil comme chargé, toujours dans le même jaune `#FFEA00` ; le halo suffit à
+montrer qui est chargé.*
 
 En partie 1, sans animation neuve : un ennemi gelé ne fonce pas à son tour
 d'action ; chaque vague de la chaîne montre ses dégâts par les réactions aux coups d'aujourd'hui
