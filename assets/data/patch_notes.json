@@ -1,5 +1,34 @@
 [
   {
+    "version": "0.6.0",
+    "date": "2026-11-18",
+    "title": "Les Neuf Passifs",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Les neuf passifs sont désormais jouables, chacun avec son lot de cartes : Bénédiction, Frénésie et Marque du Mage, indisponibles depuis la version 0.5.7, reviennent à la sélection de classe.",
+          "Le lot Sanctifié de Bénédiction affaiblit l'ennemi : Sommation applique 1 Faiblesse pendant 3 tours, Édit 2 Faiblesse à tous les ennemis pendant 2 tours, et Réprimande donne 4 d'Armure en appliquant 1 Faiblesse pendant 2 tours. Métallisation et Prière complètent le lot.",
+          "Prière pose un effet nouveau, Source de Vie : vous récupérez 2 PV au début de chacun des trois tours suivants.",
+          "Le lot Carnage de Frénésie mise sur les Attaques de groupe : Moulinet inflige 7 dégâts à tous les ennemis, Tourbillon 2 dégâts à tous en piochant 1 carte, Coup de grâce 10 dégâts à tous ; Cri de Guerre rejoint le lot.",
+          "Exécution, dans le lot Carnage, inflige 4 dégâts, plus 1 par tranche de 5 PV manquants de la cible : elle frappe d'autant plus fort que l'ennemi est blessé.",
+          "Le lot Marque de Marque du Mage réunit Boule de Feu, Trait de Glace, Coup de Tonnerre et Coup Empoisonné, avec deux Compétences : Exploitation, qui inflige 4 dégâts plus 1 par point de Vulnérable de la cible, et Salve, qui inflige 2 dégâts 3 fois."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Marque du Mage change de règle : à chaque tour, la première carte de dégâts, Attaque ou Compétence, qui vise un seul ennemi sans le tuer lui applique 2 Vulnérable pendant 2 tours. Elle se déclenche donc de nouveau sur Projectile Magique, qui ne la déclenchait plus depuis la version 0.5.6.",
+          "Une carte qui vise tous les ennemis ne marque personne et ne fait pas perdre la marque du tour ; une carte qui tue sa cible non plus : c'est la carte de dégâts suivante qui marque.",
+          "Boule de Feu, Trait de Glace, Coup de Tonnerre, Coup Empoisonné, Métallisation et Cri de Guerre quittent les cartes neutres pour le lot de leur passif : sous les autres passifs, elles ne sont plus proposées, ni au draft de départ, ni en butin, ni à la boutique.",
+          "Au draft de départ, le groupe des cartes neutres compte désormais neuf cartes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.9",
     "date": "2026-11-17",
     "title": "Les Charges Élémentaires",
