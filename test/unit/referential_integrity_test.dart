@@ -308,6 +308,7 @@ void main() {
         'might',
         'might_regen',
         'mana_regen',
+        'hp_regen',
         'armor_regen',
         'poison',
         'weakness',

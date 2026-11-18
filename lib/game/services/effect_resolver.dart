@@ -85,6 +85,14 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
+      case 'hp_regen':
+        return StatusEffect(
+          id: 'hp_regen',
+          name: 'Source de Vie',
+          type: StatusType.buff,
+          value: value,
+          duration: duration,
+        );
       default:
         return null;
     }

@@ -446,6 +446,10 @@ class CardComponent extends PositionComponent
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusManaRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Mana au début du tour.')}\n';
             break;
+          case 'hp_regen':
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusHpRegen(scaledValue, duration), fallback: 'Pendant $duration tours, récupère $scaledValue PV au début du tour.')}\n';
+            break;
         }
       }
       // La croissance de l'effet, en parenthèse ; vide sans contexte, la ligne

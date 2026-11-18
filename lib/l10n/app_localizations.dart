@@ -980,6 +980,12 @@ abstract class AppLocalizations {
   /// **'For {duration} turns, gains {amount} Mana at turn start.'**
   String cardDescStatusManaRegen(int amount, int duration);
 
+  /// No description provided for @cardDescStatusHpRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration} turns, heals {amount} HP at turn start.'**
+  String cardDescStatusHpRegen(int amount, int duration);
+
   /// No description provided for @cardDescStatusCharge.
   ///
   /// In en, this message translates to:
@@ -1537,6 +1543,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mana Spring: +{value}'**
   String statusManaRegen(int value);
+
+  /// No description provided for @statusHpRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Life Spring: +{value}'**
+  String statusHpRegen(int value);
 
   /// No description provided for @statusArmorRegen.
   ///

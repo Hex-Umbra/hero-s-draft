@@ -122,6 +122,7 @@ class CardTextRenderer {
                 (effect.statusId == 'might' ||
                     effect.statusId == 'might_regen' ||
                     effect.statusId == 'mana_regen' ||
+                    effect.statusId == 'hp_regen' ||
                     effect.statusId == 'armor_regen'));
         final shouldDouble = isAllEnemies && !isPlayerEffect;
 
@@ -325,6 +326,11 @@ class CardTextRenderer {
           return const RendererEffectVisuals(
             icon: Icons.diamond_rounded,
             color: Colors.cyanAccent,
+          );
+        case 'hp_regen':
+          return const RendererEffectVisuals(
+            icon: Icons.favorite_rounded,
+            color: Colors.pinkAccent,
           );
         case 'armor_regen':
           return const RendererEffectVisuals(

@@ -404,6 +404,13 @@
       "duration": { "type": "int" }
     }
   },
+  "cardDescStatusHpRegen": "For {duration} turns, heals {amount} HP at turn start.",
+  "@cardDescStatusHpRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusCharge": "Applies {amount} {name}.",
   "@cardDescStatusCharge": {
     "placeholders": {
@@ -637,6 +644,12 @@
   },
   "statusManaRegen": "Mana Spring: +{value}",
   "@statusManaRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusHpRegen": "Life Spring: +{value}",
+  "@statusHpRegen": {
     "placeholders": {
       "value": { "type": "int" }
     }

@@ -146,6 +146,11 @@ class _StatusEffectsPanelState extends State<StatusEffectsPanel> {
         color = Colors.cyanAccent;
         label = l10n.statusManaRegen(status.value);
         break;
+      case 'hp_regen':
+        icon = Icons.favorite;
+        color = Colors.pinkAccent;
+        label = l10n.statusHpRegen(status.value);
+        break;
       case 'lifesteal':
         icon = Icons.favorite;
         color = Colors.redAccent;

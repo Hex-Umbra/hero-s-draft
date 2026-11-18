@@ -66,6 +66,7 @@ class CardCompactDescription extends StatelessWidget {
               (effect.statusId == 'might' ||
                   effect.statusId == 'might_regen' ||
                   effect.statusId == 'mana_regen' ||
+                  effect.statusId == 'hp_regen' ||
                   effect.statusId == 'armor_regen'));
       final shouldDouble = isAllEnemies && !isPlayerEffect;
       // Un multi-coups dit `valeur×coups` ; la rune garde sa place entre les deux.

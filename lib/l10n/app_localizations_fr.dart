@@ -567,6 +567,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusHpRegen(int amount, int duration) {
+    return 'Pendant $duration tours, récupère $amount PV au début du tour.';
+  }
+
+  @override
   String cardDescStatusCharge(int amount, String name) {
     return 'Applique $amount $name.';
   }
@@ -912,6 +917,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String statusManaRegen(int value) {
     return 'Source de Mana : +$value';
+  }
+
+  @override
+  String statusHpRegen(int value) {
+    return 'Source de Vie : +$value';
   }
 
   @override

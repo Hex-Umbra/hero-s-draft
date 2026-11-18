@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../../models/data/charge_data.dart';
 import '../../../models/data/stat_rule.dart';
 import '../../../models/entity_stats.dart';
@@ -10,8 +12,8 @@ class StatusEffectProcessor {
   /// Retourne les nouvelles statistiques du joueur.
   ///
   /// L'ordre est celui de la spec P-53, §4.10 : son Feu d'abord, puis le
-  /// Poison, l'Éveil, le tic, la Métallisation et la Source de Mana, puis les
-  /// déclins ; un gel en attente devient enfin actif.
+  /// Poison, l'Éveil, le tic, la Métallisation, la Source de Mana et la Source
+  /// de Vie, puis les déclins ; un gel en attente devient enfin actif.
   ///
   /// [rules] vient de l'appelant, `RunController.startTurn` : cette méthode ne
   /// reçoit que des stats et ne peut pas les deviner (spec P-41, §4.1).
@@ -25,6 +27,7 @@ class StatusEffectProcessor {
     int mightGain = 0;
     int armorGain = 0;
     int manaGain = 0;
+    int hpGain = 0;
 
     for (var status in burned.statuses) {
       if (status.id == 'poison') {
@@ -35,6 +38,8 @@ class StatusEffectProcessor {
         armorGain += status.value;
       } else if (status.id == 'mana_regen') {
         manaGain += status.value;
+      } else if (status.id == 'hp_regen') {
+        hpGain += status.value;
       }
     }
 
@@ -82,6 +87,7 @@ class StatusEffectProcessor {
         rules,
       );
     }
+    updatedStats = _heal(updatedStats, hpGain);
 
     return ChargeRules.startBearerTurn(
       ChargeRules.decay(updatedStats, charges),
@@ -90,7 +96,8 @@ class StatusEffectProcessor {
 
   /// Applique les effets de statut de début de tour sur un ennemi, après la
   /// chaîne du Feu (spec P-53, A10) : Poison, Éveil, Métallisation, le tic,
-  /// puis les déclins. Retourne les nouvelles statistiques de l'ennemi.
+  /// la Source de Vie, puis les déclins. Retourne les nouvelles statistiques de
+  /// l'ennemi.
   static EntityStats processEnemyStatuses(
     EntityStats stats,
     ChargeCatalog charges,
@@ -98,6 +105,7 @@ class StatusEffectProcessor {
     int poisonDamage = 0;
     int mightGain = 0;
     int armorGain = 0;
+    int hpGain = 0;
 
     for (var status in stats.statuses) {
       if (status.id == 'poison') {
@@ -106,6 +114,8 @@ class StatusEffectProcessor {
         mightGain += status.value;
       } else if (status.id == 'armor_regen') {
         armorGain += status.value;
+      } else if (status.id == 'hp_regen') {
+        hpGain += status.value;
       }
     }
 
@@ -138,6 +148,18 @@ class StatusEffectProcessor {
       );
     }
 
-    return ChargeRules.decay(updatedStats.tickStatuses(charges.ids), charges);
+    updatedStats = _heal(updatedStats.tickStatuses(charges.ids), hpGain);
+
+    return ChargeRules.decay(updatedStats, charges);
+  }
+
+  /// Rend [amount] PV au porteur, bornés à ses PV max. Un porteur à 0 PV n'est
+  /// pas relevé : le Poison ou le Feu du même début de tour vient de le tuer.
+  /// Ni `StatGains`, ni critique, ni vol de vie (spec P-42 tranche 3, A6).
+  static EntityStats _heal(EntityStats stats, int amount) {
+    if (amount <= 0 || stats.currentPv <= 0) return stats;
+    return stats.copyWith(
+      currentPv: min(stats.maxPv, stats.currentPv + amount),
+    );
   }
 }

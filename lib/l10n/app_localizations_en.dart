@@ -564,6 +564,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusHpRegen(int amount, int duration) {
+    return 'For $duration turns, heals $amount HP at turn start.';
+  }
+
+  @override
   String cardDescStatusCharge(int amount, String name) {
     return 'Applies $amount $name.';
   }
@@ -903,6 +908,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String statusManaRegen(int value) {
     return 'Mana Spring: +$value';
+  }
+
+  @override
+  String statusHpRegen(int value) {
+    return 'Life Spring: +$value';
   }
 
   @override

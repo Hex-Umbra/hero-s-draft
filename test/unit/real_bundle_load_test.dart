@@ -196,10 +196,10 @@ void main() {
     expect(shock.belowThresholdPercent, 50);
   });
 
-  test('le registre reel charge les dix-sept sortes d effect_icons.json',
+  test('le registre reel charge les dix-huit sortes d effect_icons.json',
       () async {
     final registry = await loadGameDataRegistry(rootBundle);
 
-    expect(registry.effectIcons.kinds, hasLength(17));
+    expect(registry.effectIcons.kinds, hasLength(18));
   });
 }

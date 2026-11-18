@@ -115,6 +115,11 @@ UiCardEffectVisuals getEffectVisuals(CardEffect effect) {
           icon: Icons.diamond_rounded,
           color: Colors.cyanAccent,
         );
+      case 'hp_regen':
+        return const UiCardEffectVisuals(
+          icon: Icons.favorite_rounded,
+          color: Colors.pinkAccent,
+        );
       case 'armor_regen':
         return const UiCardEffectVisuals(
           icon: Icons.autorenew_rounded,
@@ -413,6 +418,10 @@ String buildDetailedDescription(
         case 'mana_regen':
           desc +=
               '${l10n.cardDescStatusManaRegen(scaledValue, duration)}\n';
+          break;
+        case 'hp_regen':
+          desc +=
+              '${l10n.cardDescStatusHpRegen(scaledValue, duration)}\n';
           break;
       }
     }
