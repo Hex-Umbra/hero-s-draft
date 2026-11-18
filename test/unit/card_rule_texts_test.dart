@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/services/card_rule_texts.dart';
+import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 
@@ -22,6 +23,7 @@ void main() {
 
   /// Les clés d'une source : la forme en tranches, puis la forme nue.
   (String, String) expected(AppLocalizations l10n, ScaleSource source) {
+    final vulnerable = l10n.localeName == 'fr' ? 'Vulnérable' : 'Vulnerable';
     return switch (source) {
       ScaleSource.armor => (l10n.cardScaleArmorPer(5), l10n.cardScaleArmor('1')),
       ScaleSource.missingHp =>
@@ -31,8 +33,8 @@ void main() {
       ScaleSource.enemiesAlive =>
         (l10n.cardScaleEnemiesAlivePer(5), l10n.cardScaleEnemiesAlive('1')),
       ScaleSource.targetStatus => (
-          l10n.cardScaleTargetStatusPer(5, 'Vulnérable'),
-          l10n.cardScaleTargetStatus('1', 'Vulnérable')
+          l10n.cardScaleTargetStatusPer(5, vulnerable),
+          l10n.cardScaleTargetStatus('1', vulnerable)
         ),
       ScaleSource.targetMissingHp =>
         (l10n.cardScaleTargetMissingHpPer(5), l10n.cardScaleTargetMissingHp('1')),
@@ -53,6 +55,39 @@ void main() {
         fr.cardScaleArmor('1,5'));
     expect(CardRuleTexts.scale(en, scale(ScaleSource.armor, 1.5), charges),
         en.cardScaleArmor('1.5'));
+  });
+
+  test('les lignes d Execution et d Exploitation en toutes lettres', () {
+    final missingHp = ScaleWith(source: ScaleSource.targetMissingHp, ratio: 0.2);
+    final vulnerable = ScaleWith(
+      source: ScaleSource.targetStatus,
+      ratio: 1,
+      statusId: 'vulnerable',
+    );
+    expect(CardRuleTexts.scale(fr, missingHp, charges),
+        '+1 par tranche de 5 PV manquants de la cible');
+    expect(CardRuleTexts.scale(en, missingHp, charges),
+        '+1 per 5 missing HP on the target');
+    expect(CardRuleTexts.scale(fr, vulnerable, charges),
+        '+1 par point de Vulnérable de la cible');
+    expect(CardRuleTexts.scale(en, vulnerable, charges),
+        '+1 per point of Vulnerable on the target');
+  });
+
+  test('statusName donne a chaque statut le nom francais de createStatus', () {
+    for (final id in [
+      'poison',
+      'might',
+      'weakness',
+      'vulnerable',
+      'might_regen',
+      'mana_regen',
+      'armor_regen',
+      'hp_regen',
+    ]) {
+      expect(fr.statusName(id), EffectResolver.createStatus(id, 1, 1)!.name);
+    }
+    expect(fr.statusName('inconnu'), 'inconnu');
   });
 
   test('les degats : une ligne a coups au-dela d un coup', () {

@@ -921,6 +921,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String statusName(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'poison': 'Poison',
+      'might': 'Might',
+      'weakness': 'Weakness',
+      'vulnerable': 'Vulnerable',
+      'might_regen': 'Might Awakening',
+      'mana_regen': 'Mana Spring',
+      'armor_regen': 'Plated Armor',
+      'hp_regen': 'Life Spring',
+      'other': '$id',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String statusLifesteal(int value) {
     return 'Lifesteal: $value';
   }

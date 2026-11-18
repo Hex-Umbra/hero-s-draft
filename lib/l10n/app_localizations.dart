@@ -1556,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'Plated Armor: +{value}'**
   String statusArmorRegen(int value);
 
+  /// No description provided for @statusName.
+  ///
+  /// In en, this message translates to:
+  /// **'{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} other{{id}}}'**
+  String statusName(String id);
+
   /// No description provided for @statusLifesteal.
   ///
   /// In en, this message translates to:
