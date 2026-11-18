@@ -1,0 +1,22 @@
+{
+  "id": "execution",
+  "name_en": "Execution",
+  "name_fr": "Exécution",
+  "description_en": "Deal 4 damage, +1 per 5 missing HP on the target.",
+  "description_fr": "Inflige 4 dégâts, +1 par tranche de 5 PV manquants de la cible.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "melee",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 4,
+      "scaleWith": {
+        "source": "targetMissingHp",
+        "ratio": 0.2
+      }
+    }
+  ]
+}

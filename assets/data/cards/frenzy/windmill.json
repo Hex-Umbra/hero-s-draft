@@ -1,0 +1,18 @@
+{
+  "id": "windmill",
+  "name_en": "Windmill",
+  "name_fr": "Moulinet",
+  "description_en": "Deal 7 damage to all enemies.",
+  "description_fr": "Inflige 7 dégâts à tous les ennemis.",
+  "cost": 2,
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 7
+    }
+  ]
+}

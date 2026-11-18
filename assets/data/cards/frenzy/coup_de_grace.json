@@ -1,0 +1,18 @@
+{
+  "id": "coup_de_grace",
+  "name_en": "Coup de Grâce",
+  "name_fr": "Coup de grâce",
+  "description_en": "Deal 10 damage to all enemies.",
+  "description_fr": "Inflige 10 dégâts à tous les ennemis.",
+  "cost": 3,
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 10
+    }
+  ]
+}

@@ -102,6 +102,7 @@ void main() {
     test('Boule de Feu applique bien Feu', () {
       final fireball = fixtures.card(TutorialFixtureIds.fireball);
       expect(fireball.type, CardType.attack);
+      expect(fireball.passive, 'mage_mark');
       expect(
         fireball.effects.any((e) => e.type == 'apply_status' && e.statusId == 'burn'),
         isTrue,
@@ -131,7 +132,7 @@ void main() {
         ..sort(CardData.compareByDisplayOrder);
       expect(draft.lot, offered.where((c) => c.passive != null).toList());
       expect(draft.neutrals, offered.where((c) => c.passive == null).toList());
-      expect(draft.neutrals, hasLength(15));
+      expect(draft.neutrals, hasLength(9));
     });
   });
 

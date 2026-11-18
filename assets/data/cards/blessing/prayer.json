@@ -1,0 +1,20 @@
+{
+  "id": "prayer",
+  "name_en": "Prayer",
+  "name_fr": "Prière",
+  "description_en": "For 3 turns, heal 2 HP at the start of your turn.",
+  "description_fr": "Pendant 3 tours, récupère 2 PV au début du tour.",
+  "cost": 2,
+  "type": "power",
+  "rarity": "common",
+  "target": "self",
+  "animation": "buff",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "hp_regen",
+      "value": 2,
+      "duration": 3
+    }
+  ]
+}

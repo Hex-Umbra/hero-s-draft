@@ -1,0 +1,24 @@
+{
+  "id": "rebuke",
+  "name_en": "Rebuke",
+  "name_fr": "Réprimande",
+  "description_en": "Gain 4 Block. Apply 1 Weakness for 2 turns.",
+  "description_fr": "Gagne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "armor",
+      "value": 4
+    },
+    {
+      "type": "apply_status",
+      "statusId": "weakness",
+      "value": 1,
+      "duration": 2
+    }
+  ]
+}

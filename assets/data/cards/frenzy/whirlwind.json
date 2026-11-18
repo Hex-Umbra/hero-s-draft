@@ -1,0 +1,22 @@
+{
+  "id": "whirlwind",
+  "name_en": "Whirlwind",
+  "name_fr": "Tourbillon",
+  "description_en": "Deal 2 damage to all enemies and draw 1 card.",
+  "description_fr": "Inflige 2 dégâts à tous les ennemis et pioche 1 carte.",
+  "cost": 1,
+  "type": "attack",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 2
+    },
+    {
+      "type": "draw",
+      "value": 1
+    }
+  ]
+}

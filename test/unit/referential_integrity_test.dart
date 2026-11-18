@@ -396,7 +396,13 @@ void main() {
     expect({for (final p in registry.passives) p.id: p.feeds}, {
       'regen_armor': ['armor', 'status:armor_regen', 'scale:armor', 'cost:armor'],
       'fervor': ['armor', 'attack'],
-      'blessing': ['armor', 'status:armor_regen', 'status:weakness', 'heal'],
+      'blessing': [
+        'armor',
+        'status:armor_regen',
+        'status:weakness',
+        'status:hp_regen',
+        'heal',
+      ],
       'rage': [
         'cost:hp',
         'scale:missingHp',
@@ -405,7 +411,7 @@ void main() {
         'status:might_regen',
       ],
       'bloodthirst': ['attack'],
-      'frenzy': ['scale:targetMissingHp', 'scale:enemiesAlive'],
+      'frenzy': ['damage', 'scale:targetMissingHp', 'scale:enemiesAlive'],
       'mana_flux': ['skill'],
       'channeling': ['power', 'skill'],
       'mage_mark': ['damage', 'status:vulnerable', 'scale:targetStatus'],
@@ -441,6 +447,24 @@ void main() {
       isEmpty,
       reason: 'classes sans passif : ${offenders.join(', ')}',
     );
+  });
+
+  test(
+      'chaque passif livre est disponible pour sa classe : aucun passif '
+      'masque', () {
+    final offenders = <String>[];
+    for (final hero in registry.heroes) {
+      final available =
+          availablePassivesFor(hero, registry).map((p) => p.id).toSet();
+      for (final passive in registry.passives) {
+        if (!(passive.classes?.contains(hero.id) ?? true)) continue;
+        if (!available.contains(passive.id)) {
+          offenders.add('${hero.id} → ${passive.id}');
+        }
+      }
+      expect(available, hasLength(3), reason: hero.id);
+    }
+    expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
   // O5 (spec P-42 T1 et P-44 lot 1, §4.8) : la disponibilité se lit sur le

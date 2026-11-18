@@ -16,8 +16,18 @@ Iterable<(String, int, List<CardEffect>)> _costed(GameDataRegistry registry) =>
     ];
 
 /// (type, statusId, value, duration, hits, mightRatio, scaleWith.source,
-/// scaleWith.ratio) d'un effet.
-typedef _Fx = (String, String?, int, int?, int, double, String?, double?);
+/// scaleWith.ratio, scaleWith.statusId) d'un effet.
+typedef _Fx = (
+  String,
+  String?,
+  int,
+  int?,
+  int,
+  double,
+  String?,
+  double?,
+  String?,
+);
 
 _Fx _fx(
   String type,
@@ -28,8 +38,19 @@ _Fx _fx(
   double mightRatio = 1,
   String? scale,
   double? ratio,
+  String? scaleStatus,
 }) =>
-    (type, status, value, duration, hits, mightRatio, scale, ratio);
+    (
+      type,
+      status,
+      value,
+      duration,
+      hits,
+      mightRatio,
+      scale,
+      ratio,
+      scaleStatus,
+    );
 
 /// Spec §3.4 : passif, mana, PV, Armure, type, cible, effets.
 final _lots = <String, (String, int, int, int, String, String, List<_Fx>)>{
@@ -160,6 +181,86 @@ final _lots = <String, (String, int, int, int, String, String, List<_Fx>)>{
   'ether_shield': (
     'channeling', 3, 0, 0, 'skill', 'self', [_fx('armor', 18)],
   ),
+  'fireball': (
+    'mage_mark', 2, 0, 0, 'attack', 'singleEnemy',
+    [
+      _fx('damage', 6),
+      _fx('apply_status', 2, status: 'burn', duration: 2),
+    ],
+  ),
+  'ice_bolt': (
+    'mage_mark', 1, 0, 0, 'attack', 'singleEnemy',
+    [
+      _fx('damage', 4),
+      _fx('apply_status', 2, status: 'freeze', duration: 1),
+    ],
+  ),
+  'thunder_clap': (
+    'mage_mark', 1, 0, 0, 'attack', 'singleEnemy',
+    [
+      _fx('damage', 4),
+      _fx('apply_status', 1, status: 'shock', duration: 1),
+    ],
+  ),
+  'poison_stab': (
+    'mage_mark', 1, 0, 0, 'attack', 'singleEnemy',
+    [
+      _fx('damage', 3),
+      _fx('apply_status', 1, status: 'poison', duration: 2),
+    ],
+  ),
+  'exploit': (
+    'mage_mark', 2, 0, 0, 'skill', 'singleEnemy',
+    [
+      _fx('damage', 4,
+          scale: 'targetStatus', ratio: 1, scaleStatus: 'vulnerable'),
+    ],
+  ),
+  'volley': (
+    'mage_mark', 1, 0, 0, 'skill', 'singleEnemy',
+    [_fx('damage', 2, hits: 3, mightRatio: 0.5)],
+  ),
+  'metallicize': (
+    'blessing', 1, 0, 0, 'power', 'self',
+    [_fx('apply_status', 2, status: 'armor_regen', duration: 2)],
+  ),
+  'summons': (
+    'blessing', 1, 0, 0, 'skill', 'singleEnemy',
+    [_fx('apply_status', 1, status: 'weakness', duration: 3)],
+  ),
+  'edict': (
+    'blessing', 2, 0, 0, 'skill', 'allEnemies',
+    [_fx('apply_status', 2, status: 'weakness', duration: 2)],
+  ),
+  'rebuke': (
+    'blessing', 1, 0, 0, 'skill', 'singleEnemy',
+    [
+      _fx('armor', 4),
+      _fx('apply_status', 1, status: 'weakness', duration: 2),
+    ],
+  ),
+  'prayer': (
+    'blessing', 2, 0, 0, 'power', 'self',
+    [_fx('apply_status', 2, status: 'hp_regen', duration: 3)],
+  ),
+  'warcry': (
+    'frenzy', 2, 0, 0, 'attack', 'allEnemies',
+    [_fx('damage', 4), _fx('armor', 4)],
+  ),
+  'windmill': (
+    'frenzy', 2, 0, 0, 'attack', 'allEnemies', [_fx('damage', 7)],
+  ),
+  'whirlwind': (
+    'frenzy', 1, 0, 0, 'attack', 'allEnemies',
+    [_fx('damage', 2), _fx('draw', 1)],
+  ),
+  'coup_de_grace': (
+    'frenzy', 3, 0, 0, 'attack', 'allEnemies', [_fx('damage', 10)],
+  ),
+  'execution': (
+    'frenzy', 1, 0, 0, 'attack', 'singleEnemy',
+    [_fx('damage', 4, scale: 'targetMissingHp', ratio: 0.2)],
+  ),
 };
 
 void main() {
@@ -209,8 +310,7 @@ void main() {
   });
 
   test(
-      'les 33 cartes de lot sont celles de la spec de la vague 5 et du plan de '
-      'la tranche 2', () {
+      'les 49 cartes de lot sont celles des specs des vagues 5, 6 et 8', () {
     // Les enregistrements portent une liste : on compare leur texte.
     expect({
       for (final c in registry.cards.where((c) => c.passive != null))
@@ -232,6 +332,7 @@ void main() {
                 e.mightRatio,
                 e.scaleWith?.source.name,
                 e.scaleWith?.ratio,
+                e.scaleWith?.statusId,
               ),
           ],
         ).toString(),
@@ -239,8 +340,9 @@ void main() {
   });
 
   test(
-      'les six lots : six, six, six, cinq, cinq, cinq cartes, toutes communes ; '
-      'seules laceration et meditation s epuisent', () {
+      'les neuf lots : six, six, six, cinq, cinq, cinq, cinq, cinq, six '
+      'cartes, toutes communes ; seules laceration et meditation s epuisent',
+      () {
     final lotCards = registry.cards.where((c) => c.passive != null);
     expect(
       {
@@ -251,6 +353,9 @@ void main() {
           'fervor',
           'bloodthirst',
           'channeling',
+          'blessing',
+          'frenzy',
+          'mage_mark',
         ])
           id: lotCards.where((c) => c.passive == id).length,
       },
@@ -261,9 +366,12 @@ void main() {
         'fervor': 5,
         'bloodthirst': 5,
         'channeling': 5,
+        'blessing': 5,
+        'frenzy': 5,
+        'mage_mark': 6,
       },
     );
-    expect(lotCards.length, 33);
+    expect(lotCards.length, 49);
     expect(lotCards.every((c) => c.rarity == CardRarity.common), isTrue);
     expect(
       {for (final c in lotCards.where((c) => c.isExhaust)) c.id},
@@ -343,6 +451,8 @@ void main() {
     expect(withScale('armor'), greaterThanOrEqualTo(2));
     expect(withScale('missingHp'), greaterThanOrEqualTo(2));
     expect(withScale('cardsPlayedThisTurn'), greaterThanOrEqualTo(1));
+    expect(withScale('targetStatus'), greaterThanOrEqualTo(1));
+    expect(withScale('targetMissingHp'), greaterThanOrEqualTo(1));
     expect(
       cards.where((c) => c.effects.any((e) => e.hits >= 2)).length,
       greaterThanOrEqualTo(1),

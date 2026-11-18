@@ -1,0 +1,20 @@
+{
+  "id": "summons",
+  "name_en": "Summons",
+  "name_fr": "Sommation",
+  "description_en": "Apply 1 Weakness for 3 turns.",
+  "description_fr": "Applique 1 Faiblesse pendant 3 tours.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "weakness",
+      "value": 1,
+      "duration": 3
+    }
+  ]
+}

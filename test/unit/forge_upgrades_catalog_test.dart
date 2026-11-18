@@ -252,7 +252,7 @@ const _breachRank1 = {
   'echo',
 };
 
-/// La matrice de l'offre aux 48 cartes livrées, sans rune, au rang
+/// La matrice de l'offre aux 58 cartes livrées, sans rune, au rang
 /// qu'atteint leur première fusion (peu commune), puis leur deuxième (rare) :
 /// la table de la spec P-43 E2, §4.12.
 const _offers = <String, (Set<String>, Set<String>)>{
@@ -398,9 +398,33 @@ const _offers = <String, (Set<String>, Set<String>)>{
     {..._skillDamageRank1, 'echo'},
     {..._skillDamageRank2, 'echo'},
   ),
+  'summons': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'edict': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'rebuke': (
+    {'hardened', 'cheap', 'echo'},
+    {'hardened', 'cheap', 'echo', 'quick', 'eco'},
+  ),
+  // Elle soigne sans rendre ni mana ni pioche : Resonant la prend (D10).
+  'prayer': ({'cheap', 'echo'}, {'cheap', 'echo', 'quick', 'eco'}),
+  'windmill': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  // Elle pioche : Resonant la refuse.
+  'whirlwind': (_attackRank1, _attackRank2),
+  'coup_de_grace': ({..._attackRank1, 'echo'}, {..._attackRank2, 'echo'}),
+  'execution': (
+    {..._singleTargetRank1, 'echo'},
+    {..._singleTargetRank2, 'echo'},
+  ),
+  'exploit': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
+  'volley': (
+    {..._skillDamageRank1, 'splash', 'echo'},
+    {..._skillDamageRank2, 'splash', 'echo'},
+  ),
 };
 
-/// Les seize runes livrées, et l'offre qu'elles font aux 48 cartes livrées
+/// Les seize runes livrées, et l'offre qu'elles font aux 58 cartes livrées
 /// (spec P-43 E1, §3.2, §4.8 ; spec P-43 E2, §3.2, §4.12, §8).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -478,7 +502,7 @@ void main() {
     );
   });
 
-  test('la matrice couvre les 48 cartes livrees', () {
+  test('la matrice couvre les 58 cartes livrees', () {
     expect(registry.cards.map((c) => c.id).toSet(), _offers.keys.toSet());
   });
 
