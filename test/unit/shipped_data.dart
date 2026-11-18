@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/forge_upgrade_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Les entités telles que le jeu les livre, lues dans leur fichier par leur
 /// vrai `fromJson`, l'id injecté comme le fait le chargeur : un test du moteur
@@ -25,6 +28,18 @@ CardData shippedCard(String id) =>
 /// Une relique telle que le jeu la livre (`assets/data/relics/`).
 RelicData shippedRelic(String id) =>
     RelicData.fromJson(_shipped('assets/data/relics/$id.json', id));
+
+/// Le catalogue des charges tel que le jeu le livre (`assets/data/charges/`).
+ChargeCatalog shippedChargeCatalog() => ChargeCatalog.of([
+      for (final id in _idsIn('assets/data/charges'))
+        ChargeData.fromJson(_shipped('assets/data/charges/$id.json', id)),
+    ]);
+
+/// La surcharge qui donne le catalogue livré à un test qui joue ou pose une
+/// charge : sans elle, `chargeCatalogProvider` rend le catalogue vide et rien
+/// ne se pose (spec P-53, A4).
+Override shippedChargeOverride() =>
+    chargeCatalogProvider.overrideWithValue(shippedChargeCatalog());
 
 /// Les ids des fichiers d'un dossier livré, triés.
 List<String> _idsIn(String directory) => [

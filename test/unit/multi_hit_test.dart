@@ -6,9 +6,12 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -197,7 +200,7 @@ void main() {
         );
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(overrides: [shippedChargeOverride()]);
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);
       deck = container.read(deckProvider.notifier);
@@ -266,6 +269,68 @@ void main() {
       fight([foe(statuses: [status('shock', 2)])]);
       play([volley]);
       expect(enemy().currentPv, 100 - 15);
+    });
+
+    test('Rafale d etincelles : 12 sur un ennemi neuf, 27 sur un ennemi a 2 '
+        'points', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('spark_barrage');
+      expect(enemy().currentPv, 100 - 12);
+
+      final shock = container.read(chargeCatalogProvider)['shock']!;
+      fight([
+        EnemyInstance(
+          data: registry.enemies.first,
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+            shock,
+            2,
+            ChargeBearer.enemy,
+          ),
+        ),
+      ]);
+      playShipped('spark_barrage');
+      // La Foudre posee d'abord la charge : 3 points, +2 par point a chaque coup.
+      expect(enemy().currentPv, 100 - 27);
+      expect(enemy().charges['shock']!.state, ChargeState.brokenActive);
+    });
+
+    test('Rafale d etincelles note trois coups : +1 sur un ennemi neuf, +6 sur '
+        'un ennemi a 2 points', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('spark_barrage');
+      expect(enemy().chargeHits, List.filled(3, const ChargeHit(1)));
+
+      final shock = container.read(chargeCatalogProvider)['shock']!;
+      fight([
+        EnemyInstance(
+          data: registry.enemies.first,
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 100, currentPv: 100, armure: 0, might: 0),
+            shock,
+            2,
+            ChargeBearer.enemy,
+          ),
+        ),
+      ]);
+      playShipped('spark_barrage');
+      expect(enemy().chargeHits, List.filled(3, const ChargeHit(6)));
+    });
+
+    test('Coup de Tonnerre frappe avant de poser : aucun coup note', () {
+      setHero((h) => h.copyWith(might: 0));
+      playShipped('thunder_clap');
+      expect(enemy().chargeHits, isEmpty);
+      expect(ChargeRules.points(enemy(), 'shock'), 1);
+    });
+
+    test('Ricochant : chaque cible eclaboussee note son propre bonus', () {
+      setHero((h) => h.copyWith(might: 0));
+      fight([foe(), foe(statuses: [status('shock', 2)]), foe()]);
+      playShipped('strike_basic', runes: const ['splash:1']);
+      expect(enemy(1).chargeHits, [const ChargeHit(2)]);
+      expect(enemy(0).chargeHits, isEmpty);
+      expect(enemy(2).chargeHits, isEmpty);
     });
 
     test('le critique se tire a chaque coup', () {

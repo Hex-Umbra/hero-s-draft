@@ -7,11 +7,21 @@ import '../../heros_draft_game.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/combat_state.dart';
 import '../../../services/audio/game_moment.dart';
+import '../../../models/charge_track.dart';
+import '../../../models/data/charge_data.dart';
 import '../floating_text.dart';
+import '../../game_constants.dart';
+import '../visual_effects/charge_halo.dart';
+import '../visual_effects/fire_wave_effects.dart';
+import '../visual_effects/frost_shell.dart';
 
 abstract class CombatEntity extends PositionComponent
     with HasGameReference<HerosDraftGame> {
   CombatEntity({super.position, super.size, super.scale, super.angle, super.anchor, super.children, super.priority});
+
+  /// Delai entre les « +N » de deux coups d'une meme vague de coups.
+  static const int chargeHitStaggerMs = 100;
+  static const double chargeHitSpreadX = 28;
 
   SpriteComponent get sprite;
   RectangleComponent get borderInfo;
@@ -50,7 +60,6 @@ abstract class CombatEntity extends PositionComponent
     final double bScale = entityBaseScale;
 
     removeAll(children.whereType<ScaleEffect>());
-    sprite.removeAll(sprite.children.whereType<ColorEffect>());
 
     // 1. Sleek Scale Bump (Elastic Out)
     final double bumpMultiplier = isCritical ? 1.45 : (isPoison ? 1.12 : 1.22);
@@ -87,7 +96,7 @@ abstract class CombatEntity extends PositionComponent
     final flashColor = isCritical
         ? const Color(0xFFF59E0B)
         : (isPoison ? const Color(0xFF10B981) : Colors.redAccent);
-    sprite.add(
+    _replaceSpriteTint(
       SequenceEffect([
         ColorEffect(
           flashColor,
@@ -136,6 +145,39 @@ abstract class CombatEntity extends PositionComponent
     );
   }
 
+  /// La teinte qui joue sur le sprite : deux `ColorEffect` concurrents se
+  /// disputeraient son filtre, la suivante remplace donc celle-ci.
+  Effect? _spriteTint;
+
+  void _replaceSpriteTint(Effect tint) {
+    _spriteTint?.removeFromParent();
+    _spriteTint = tint;
+    sprite.add(tint);
+  }
+
+  /// Le rougeoiement d'une carte que le Feu touche sans eclair, ou que sa
+  /// boule de feu embrase (spec P-53, §5.2, F-a) : une teinte orange sur le
+  /// sprite, qui remplace la teinte en cours.
+  void emberFlash() {
+    _replaceSpriteTint(
+      SequenceEffect([
+        ColorEffect(
+          FireBurst.core,
+          EffectController(duration: _emberSeconds / 2),
+          opacityTo: 0.7,
+        ),
+        ColorEffect(
+          FireBurst.core,
+          EffectController(duration: _emberSeconds / 2, curve: Curves.easeIn),
+          opacityFrom: 0.7,
+          opacityTo: 0.0,
+        ),
+      ]),
+    );
+  }
+
+  static const double _emberSeconds = 0.2;
+
   void dashAnimation({bool isDownward = false}) {
     final double direction = isDownward ? 1.0 : -1.0;
     add(
@@ -173,16 +215,138 @@ abstract class CombatEntity extends PositionComponent
     game.add(ft);
   }
 
+  /// Le « +N » de chaque coup que le nouvel etat a de plus que l'ancien, un
+  /// texte par coup, decales dans le temps et de cote pour ne pas se recouvrir.
+  void _spawnChargeHitBonuses(EntityStats oldStats, EntityStats newStats) {
+    final fresh = newStats.chargeHits.skip(oldStats.chargeHits.length).toList();
+    for (var k = 0; k < fresh.length; k++) {
+      final text = '+${fresh[k].bonus}';
+      final offsetX = (k - (fresh.length - 1) / 2) * chargeHitSpreadX;
+      Future.delayed(Duration(milliseconds: k * chargeHitStaggerMs), () {
+        if (!isMounted) return;
+        spawnFloatingText(
+          text,
+          ChargeHalo.color,
+          position + Vector2(offsetX, -size.y * scale.y / 2),
+        );
+      });
+    }
+  }
+
+  FrostShell? _frostShell;
+  FrostVignette? _frostVignette;
+
+  /// Pose et retire les etats qui durent, a la transition de leur piste de
+  /// charge : le halo d'une piste `amplifyHits` active, la gangue d'une piste
+  /// `skipAction` en attente ou `weakenDealt` active, et le givre aux coins
+  /// de l'ecran pour cette derniere.
+  void refreshChargeVisuals(EntityStats oldStats, EntityStats newStats) {
+    final wasHaloed = _hasActiveAmplify(oldStats);
+    final isHaloed = _hasActiveAmplify(newStats);
+    if (isHaloed && !wasHaloed) {
+      add(ChargeHalo(size: size.clone()));
+    } else if (wasHaloed && !isHaloed) {
+      for (final halo in children.whereType<ChargeHalo>()) {
+        halo.fadeOut();
+      }
+    }
+
+    final oldFrost = _frostKind(oldStats);
+    final newFrost = _frostKind(newStats);
+    if (newFrost != null && oldFrost == null) {
+      _frostShell = FrostShell(
+        size: size.clone(),
+        opacity: newFrost == RuptureKind.skipAction
+            ? FrostShell.enemyOpacity
+            : FrostShell.heroOpacity,
+      );
+      add(_frostShell!);
+      if (newFrost == RuptureKind.skipAction) {
+        _squeezeAnimation();
+      } else {
+        _frostVignette = FrostVignette(
+          size: game.size.clone(),
+          priority: GameConstants.priorityFrostVignette,
+        );
+        game.add(_frostVignette!);
+      }
+    } else if (newFrost == null && oldFrost != null) {
+      _frostShell?.fadeOut();
+      _frostShell = null;
+      _frostVignette?.fadeOut();
+      _frostVignette = null;
+    }
+  }
+
+  /// Cesse de tenir la gangue et la rend (nulle s'il n'y en a pas) : elle
+  /// reste affichee, mais aucune transition ne la retrouve plus.
+  FrostShell? releaseFrost() {
+    final shell = _frostShell;
+    _frostShell = null;
+    return shell;
+  }
+
+  /// Le serrement de la carte pendant la montee de la gangue : echelle de
+  /// base × 1 → 0,97 → 1, creux a mi-course.
+  void _squeezeAnimation() {
+    removeAll(children.whereType<ScaleEffect>());
+    final double bScale = entityBaseScale;
+    add(
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(bScale * 0.97),
+          EffectController(duration: FrostShell.riseSeconds / 2),
+        ),
+        ScaleEffect.to(
+          Vector2.all(bScale),
+          EffectController(duration: FrostShell.riseSeconds / 2),
+        ),
+      ]),
+    );
+  }
+
+  @override
+  void onRemove() {
+    _frostVignette?.removeFromParent();
+    _frostVignette = null;
+    super.onRemove();
+  }
+
+  /// La sorte de rupture dont la gangue est appelee par un etat : `skipAction`
+  /// en attente ou `weakenDealt` active, nulle sinon.
+  static RuptureKind? _frostKind(EntityStats stats) {
+    for (final track in stats.charges.values) {
+      if (track.rupture.kind == RuptureKind.skipAction &&
+          track.state == ChargeState.brokenPending) {
+        return RuptureKind.skipAction;
+      }
+      if (track.rupture.kind == RuptureKind.weakenDealt &&
+          track.state == ChargeState.brokenActive) {
+        return RuptureKind.weakenDealt;
+      }
+    }
+    return null;
+  }
+
+  static bool _hasActiveAmplify(EntityStats stats) => stats.charges.values.any(
+        (t) =>
+            t.rupture.kind == RuptureKind.amplifyHits &&
+            t.state == ChargeState.brokenActive,
+      );
+
+  /// [fireDamage] vrai : les degats viennent du Feu, et ne prennent jamais la
+  /// teinte ni le texte du Poison.
   void triggerHitReactions(
     EntityStats oldStats,
     EntityStats newStats, {
     bool suppressArmorChange = false,
+    bool fireDamage = false,
   }) {
     final isTurnPhaseForPoison = isPlayer
         ? game.currentPhase == TurnPhase.player
         : game.currentPhase == TurnPhase.enemy;
     final hadPoison = oldStats.statuses.any((s) => s.id == 'poison');
-    final isPoisonDamage = isTurnPhaseForPoison && hadPoison;
+    final isPoisonDamage = !fireDamage && isTurnPhaseForPoison && hadPoison;
 
     if (!suppressArmorChange) {
       if (newStats.armure < oldStats.armure) {
@@ -208,6 +372,8 @@ abstract class CombatEntity extends PositionComponent
         game.audio.onMoment(GameMoment.armorGain);
       }
     }
+
+    _spawnChargeHitBonuses(oldStats, newStats);
 
     if (newStats.currentPv < oldStats.currentPv) {
       final lostHp = oldStats.currentPv - newStats.currentPv;

@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
+import '../../../models/data/charge_data.dart';
 import '../../../models/enemy_instance.dart';
 import '../../../models/enemy_intent.dart';
 
 class EnemyIntentsPanel extends StatelessWidget {
   final List<EnemyInstance> enemies;
 
-  const EnemyIntentsPanel({super.key, required this.enemies});
+  /// Les noms des états rompus : celui d'un ennemi qui ne fait rien ce tour.
+  final ChargeCatalog charges;
+
+  const EnemyIntentsPanel({
+    super.key,
+    required this.enemies,
+    this.charges = const ChargeCatalog.empty(),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +73,7 @@ class EnemyIntentsPanel extends StatelessWidget {
           ...enemies.map((enemy) {
             final intent = enemy.effectiveIntent;
             final name = enemy.data.getName(locale);
+            final skippingCharge = enemy.skippingCharge;
 
             Widget intentWidget;
             if (intent == null) {
@@ -135,6 +144,11 @@ class EnemyIntentsPanel extends StatelessWidget {
                   break;
               }
 
+              // Un ennemi qui ne fait rien ce tour : son intention reste lisible
+              // mais grisee et barree.
+              final skipped = skippingCharge != null;
+              if (skipped) color = Colors.white38;
+
               intentWidget = Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -159,6 +173,9 @@ class EnemyIntentsPanel extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
+                          decoration: skipped
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
                       ),
                     ),
@@ -202,6 +219,20 @@ class EnemyIntentsPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   intentWidget,
+                  if (skippingCharge != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        l10n.intentSkipped(
+                          charges[skippingCharge]?.brokenName(locale) ?? '',
+                        ),
+                        style: const TextStyle(
+                          color: Colors.lightBlueAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   if (enemy != enemies.last)
                     const Divider(color: Colors.white10, height: 12),
                 ],

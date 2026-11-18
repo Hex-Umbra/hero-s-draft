@@ -35,7 +35,7 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 | `rage` | `RagePassive` | `value × (1 + PV manquants ~/ 10)` Puissance pour `duration` |
 | `bloodthirst` | `BloodthirstPassive` | Arme le Vol de vie `duration` tours, valeur croissant par quart de PV manquants |
 | `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** — la pioche bornée par `RunState.maxHandSize` depuis la vague 3 |
-| `mana_reserve` | `ManaReservePassive` | *Canalisation* (D30, vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : écrit `ManaReserve.preview(passive, heroStats).banked` par `RunController.setManaReserve` — le mana non dépensé, plafonné à `maxMana + value` ; la clé est `ManaReserve.effectType`. Remplace `channeling` / `ChannelingPassive` (`mana non dépensé × value` armure), supprimés |
+| `mana_reserve` | `ManaReservePassive` | *Canalisation* (D30, vague 6, fusionnée dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : écrit `ManaReserve.preview(passive, heroStats).banked` par `RunController.setManaReserve` — le mana non dépensé, plafonné à `maxMana + value` ; la clé est `ManaReserve.effectType`. Remplace `channeling` / `ChannelingPassive` (`mana non dépensé × value` armure), supprimés |
 | `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
 | `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat — le seuil arrive Maîtrise appliquée, plancher compris ; le plancher codé `threshold < 1 ? 1 : …`, inerte, a disparu depuis la vague 3 |
 

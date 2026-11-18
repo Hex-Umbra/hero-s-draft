@@ -14,15 +14,19 @@
        ├→ RunController.startTurn()
        │   ├→ Armure remise à 0, mana = maxMana + manaReserve, puis manaReserve = 0
        │   ├→ applyRelics(startOfTurn)
-       │   ├→ Process statuts: poison (dégâts), might_regen (→might), armor_regen (→armure), mana_regen (→mana)
-       │   ├→ tickStatuses() (décrémente durées, supprime expirés)
+       │   ├→ Process statuts: Feu d'abord (ChargeRules.resolveOwnFire — sa part seule, sans explosion),
+       │   │   puis poison (dégâts), might_regen (→might), armor_regen (→armure), mana_regen (→mana)
+       │   ├→ tickStatuses(charges.ids) (décrémente durées, supprime expirés — les charges exemptes)
+       │   ├→ ChargeRules.decay, puis startBearerTurn : un gel du héros « en attente » passe « actif »
        │   └→ TraitSystem.onTurnStart(runController)
        └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: RunState.maxHandSize)
            └→ remélange à sec si la pioche se vide en cours de route
 
 2. JOUEUR JOUE UNE CARTE
    └→ CombatController.applyPlayerCardPlay(card, runCtrl, deckNotif)
-       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts augmentés par shock/vulnerable, jet de coup critique pour dégâts/soins)
+       ├→ EffectResolver.resolveCard() → consomme mana, applique effets (dégâts par DamagePipeline : Foudre et
+       │   vulnerable du défenseur, gel du héros, jet de coup critique) ; une charge posée passe par
+       │   ChargeRules.pose — le Gel et la Foudre peuvent rompre aussitôt ; chaque coup note son bonus de Foudre
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        └→ _afterCardPlayed(card, enemyId:) — la suite commune :
            ├→ TraitSystem : onCardPlayed, puis l'événement du type
@@ -50,14 +54,24 @@
                └→ _enemyRipostePhase()
 
 4. PHASE ENNEMIE
-   ├→ CombatController.startEnemyTurn()
-   │   ├→ Pour chaque ennemi: process poison/regen/burn (Brûlure), tick statuts
-   │   └→ _cleanDeadEnemies() (morts par poison ou brûlure, avec transfert de réserve si nécessaire)
-   ├→ Pour chaque ennemi actif vivant:
-   │   ├→ Animation (dash/buff)
-   │   └→ resolveEnemyIntent() → dégâts héros (divisés par 2 si gelé, augmentés par vulnerable, jet de coup critique) / armure / strength
+   ├→ CombatController.startEnemyTurn() → bool   [vague 7 : la phase ennemie s'ouvre en trois temps]
+   │   ├→ fermeture du tour du joueur : toute Foudre chargée à 0, le gel actif du héros prend fin
+   │   └→ vague 1 de la chaîne du Feu : tous les porteurs vivants se résolvent ensemble,
+   │       compte rendu dans CombatState.fireWaveReport ; vrai si une vague s'est jouée
+   ├→ tant que vrai : délai combatDelayFireWaveMs (800 ms), l'onde animée par StateSyncSystem →
+   │   CombatVisualSystem.playFireWave, puis CombatController.resolveNextFireWave() — la vague
+   │   suivante, formée du seul Feu que la précédente a posé ; faux et compte rendu effacé à la fin
+   ├→ CombatController.resolveEnemyStatuses()
+   │   ├→ Pour chaque ennemi : poison/regen, tick statuts (charges exemptes), déclins des charges
+   │   └→ _cleanDeadEnemies() — une seule fois, les morts de la chaîne compris
+   ├→ Pour chaque ennemi actif vivant :
+   │   ├→ gelé (EnemyInstance.skipsAction) → frozenTurnAnimation, puis resolveEnemyIntent() consomme
+   │   │   le gel sans rien résoudre
+   │   ├→ sinon Animation (dash/buff)
+   │   └→ resolveEnemyIntent() → dégâts héros (DamagePipeline : Foudre du héros, vulnerable, jet de coup critique) / armure / strength
    └→ CombatController.endEnemyTurn()
-       ├→ Re-roll toutes les intentions pour les ennemis actifs
+       ├→ fermeture de la phase ennemie : toute Foudre chargée à 0 (un gel du héros « en attente » reste)
+       ├→ Re-roll toutes les intentions pour les ennemis actifs (l'intention perdue d'un gelé est consommée)
        ├→ Phase → player
        └→ turnCount++
 
@@ -77,13 +91,23 @@
 ```
 
 > [!NOTE]
-> **La réserve de mana traverse la phase ennemie sans bouger** (vague 6, en attente du test, de
-> la PR, de la fusion et du tag du propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)).
+> **La réserve de mana traverse la phase ennemie sans bouger** (vague 6, fusionnée
+> dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)).
 > Écrite à l'étape 3 par la seule stratégie de *Canalisation*, elle est lue une fois à l'étape 1
 > suivante, avant les reliques et les statuts, sans passer par `StatGains`. Un mana gagné pendant la
 > phase 4 (*Essence spirituelle* sur un ennemi tué par le poison) n'y entre pas ; l'écran, dès la
 > bannière « Tour ennemi », lit la réserve écrite (`ManaReserve.shown`). Un combat qui finit en
 > phase 4 la laisse à `startCombat`, qui la vide.
+
+> [!NOTE]
+> **La phase ennemie lit l'état avant d'animer** (vague 7, livrée sur la branche, en attente du
+> test, de la PR, de la fusion et du tag du propriétaire —
+> [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)). Le contrôleur joue la chaîne du Feu
+> une vague à la fois et Flame l'appelle (`HerosDraftGame._enemyRipostePhase` : `onStartEnemyTurn`,
+> `onResolveFireWave`, `onResolveEnemyStatuses`) ; l'ennemi gelé se lit sur `skipsAction` **avant**
+> que Flame lance son action, si bien qu'il ne fonce jamais. Aucune règle ne se calcule dans Flame.
+> ⚠️ La phase ennemie se joue jusqu'au bout après une victoire constatée par les statuts (défaut
+> antérieur, porté à la file : compte rendu de la vague 7, §4).
 
 > [!IMPORTANT]
 > **Les étapes 0 et 1 appartiennent à `TurnPhaseManager`, pas à `GameScreen`.** Le widget

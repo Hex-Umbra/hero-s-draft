@@ -19,6 +19,12 @@ import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
+import 'package:roguelike_card_game/models/status_effect.dart';
+
+import 'shipped_data.dart';
 
 const paladin = HeroData(
   id: 'paladin',
@@ -43,7 +49,7 @@ const _d67 = XpCurveData([
 /// Une run *debug*, seule dans laquelle `DebugActions` accepte d'agir.
 ProviderContainer _startedRun() {
   final container = ProviderContainer(
-    overrides: [xpCurveProvider.overrideWithValue(_d67)],
+    overrides: [xpCurveProvider.overrideWithValue(_d67), shippedChargeOverride()],
   );
   container.read(debugRunProvider.notifier).requestDebugRun();
   container.read(runProvider.notifier).startNewRun(paladin);
@@ -273,6 +279,111 @@ void main() {
 
       DebugActions.skipEnemyPhase(container.read);
 
+      expect(container.read(combatProvider).turnPhase, TurnPhase.player);
+    });
+
+    test('poseCharge suit la regle : le Gel plafonne, la rupture au seuil', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final a = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a]));
+
+      for (var i = 0; i < 3; i++) {
+        DebugActions.poseCharge(container.read, 'freeze', enemyId: a.id);
+      }
+      EnemyInstance foe() => container.read(combatProvider).enemies.single;
+      expect(foe().skipsAction, isTrue);
+      final frozen = foe().stats;
+
+      DebugActions.poseCharge(container.read, 'freeze', enemyId: a.id);
+      expect(foe().stats, same(frozen));
+
+      for (var i = 0; i < 3; i++) {
+        DebugActions.poseCharge(container.read, 'shock');
+      }
+      final hero = container.read(runProvider).heroStats;
+      expect(hero.charges['shock']!.state, ChargeState.brokenActive);
+    });
+
+    test('hors d une run debug, poseCharge et clearCharges n ecrivent rien', () {
+      final container = ProviderContainer(overrides: [shippedChargeOverride()]);
+      addTearDown(container.dispose);
+      container.read(debugRunProvider.notifier).requestNormalRun();
+      container.read(runProvider.notifier).startNewRun(paladin);
+      final a = freshGoblin();
+      final combat = container.read(combatProvider.notifier);
+      combat.updateState(CombatState(enemies: [a]));
+      final heroBefore = container.read(runProvider).heroStats;
+
+      DebugActions.poseCharge(container.read, 'shock');
+      DebugActions.poseCharge(container.read, 'freeze', enemyId: a.id);
+      expect(container.read(runProvider).heroStats, same(heroBefore));
+      expect(container.read(combatProvider).enemies.single.stats, same(a.stats));
+
+      container.read(runProvider.notifier).updateHeroStats(
+        (s) => ChargeRules.pose(
+          s,
+          shippedChargeCatalog()['shock']!,
+          1,
+          ChargeBearer.hero,
+        ),
+      );
+      final posed = container.read(runProvider).heroStats;
+      DebugActions.clearCharges(container.read);
+      expect(container.read(runProvider).heroStats, same(posed));
+    });
+
+    test('clearCharges vide les points et les pistes du heros et des ennemis', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final a = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a]));
+      final poison = StatusEffect(
+        id: 'poison',
+        name: 'Poison',
+        type: StatusType.debuff,
+        value: 2,
+        duration: 3,
+      );
+      container.read(combatProvider.notifier).updateEnemyStats(
+        a.id,
+        a.stats.copyWith(statuses: [poison]),
+      );
+      for (var i = 0; i < 3; i++) {
+        DebugActions.poseCharge(container.read, 'freeze', enemyId: a.id);
+      }
+      DebugActions.poseCharge(container.read, 'burn');
+      DebugActions.poseCharge(container.read, 'shock');
+
+      DebugActions.clearCharges(container.read);
+
+      final hero = container.read(runProvider).heroStats;
+      final foe = container.read(combatProvider).enemies.single.stats;
+      expect(hero.charges, isEmpty);
+      expect(hero.statuses, isEmpty);
+      expect(foe.charges, isEmpty);
+      expect(foe.statuses.map((s) => s.id), ['poison']);
+    });
+
+    test('skipEnemyPhase ne joue aucune fermeture de phase', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final a = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a], turnPhase: TurnPhase.enemy));
+      for (var i = 0; i < 3; i++) {
+        DebugActions.poseCharge(container.read, 'shock', enemyId: a.id);
+      }
+
+      DebugActions.skipEnemyPhase(container.read);
+
+      final foe = container.read(combatProvider).enemies.single.stats;
+      expect(foe.charges['shock']!.state, ChargeState.brokenActive);
       expect(container.read(combatProvider).turnPhase, TurnPhase.player);
     });
   });

@@ -1,8 +1,8 @@
 ### 2.8. ✨ Évolutions de Signature
 
 Les signatures de classe ([`_rules/02-2`](02-2-systeme-de-heros.md) §Signatures) évoluent avec le
-niveau du héros — P-42 tranche 1, partie 3, livrée sur la branche de la vague 5, en attente du test,
-de la PR, de la fusion et du tag du propriétaire — [ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md), dont le
+niveau du héros — P-42 tranche 1, partie 3, vague 5, fusionnée dans `main` le 2026-11-09 —
+[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md), dont le
 tirage et l'écran sont amendés par [ADR-115](../_adr/ADR-115-le-choix-libre-des-evolutions-et-les-rideaux-de-la-carte.md) (D78 à D82).
 Architecture : [`_patterns/03-8`](../_patterns/03-8-signatureevolutionrules-regles-pures-des-evolutions.md)
 (les règles), [`_patterns/05-12`](../_patterns/05-12-barre-de-signatures-bande-et-calque.md) (la tuile).
@@ -32,9 +32,12 @@ Architecture : [`_patterns/03-8`](../_patterns/03-8-signatureevolutionrules-regl
 | *Bouclier Sacré* (`holy_shield`) | *Garde* (+2 Armure), *Miséricorde* (+1 soin), *Résolution* (+1 Puissance) | *Célérité*, *Consécration* (2 Puissance 2 tours), *Inspiration* (pioche 1), *Égide durable* (3 Armure 2 tours) |
 | *Frappe Téméraire* (`reckless_strike`) | *Brutalité* (+3 dégâts), *Instinct* (+5 % de critique), *Fracas* (+1 Vulnérable) | *Célérité* ⟂ *Dévastation* (+10 dégâts, recharge +1), *Fauchage* (tous les ennemis), *Sang-froid* (−1 mana) |
 | *Posture de Rage* (`rage_form`) | *Colère* (+1 Puissance), *Carapace* (+2 Armure), *Second souffle* (+2 soin) | *Célérité*, *Démence* (1 Éveil de Puissance 3 tours), *Ralliement* (pioche +1), *Furie* (−1 mana) |
-| *Projectile Magique* (`magic_missile`) | *Acuité* (+2 dégâts), *Précision* (+5 % de critique), *Braise* (+1 Brûlure) | *Célérité* ⟂ *Surcharge* (+8 dégâts, recharge +1), *Nova* (tous les ennemis), *Mise à nu* (2 Vulnérable 2 tours) |
+| *Projectile Magique* (`magic_missile`) | *Acuité* (+2 dégâts), *Précision* (+5 % de critique), *Braise* (+1 Feu) | *Célérité* ⟂ *Surcharge* (+8 dégâts, recharge +1), *Nova* (tous les ennemis), *Mise à nu* (2 Vulnérable 2 tours) |
 | *Surtension de Mana* (`mana_surge`) | *Bouclier de mana* (+2 Armure), *Harmonie* (+1 Puissance), *Clarté* (+1 soin) | *Prescience* (pioche +1), *Glyphe de garde* (3 Armure 2 tours), *Exaltation* (2 Puissance 2 tours), *Sérénité* (soin 4) — **pas de *Célérité*** |
 
+*Braise* pose une charge de Feu, « Applique 1 Feu » sans durée dans la liste de la tuile, valeur
+inchangée par la vague 7 (P-53, livrée sur la branche, en attente du test, de la PR, de la fusion et
+du tag du propriétaire — [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5).
 ⟂ : les deux majeures s'excluent. Valeurs par niveau de mineure ; **des ordres de grandeur**, que le
 test du propriétaire corrige. *Célérité* (`haste`) raccourcit la recharge d'un tour, **jamais sous
 1** (D54) ; elle porte le même id dans cinq pools mais reste déclarée dans chaque fichier (D7). Sur

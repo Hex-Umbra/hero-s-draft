@@ -2,8 +2,8 @@
   "id": "kindle",
   "name_en": "Kindle",
   "name_fr": "Embrasement",
-  "description_en": "Apply 4 Burn.",
-  "description_fr": "Applique 4 Brûlure.",
+  "description_en": "Apply 3 Burn.",
+  "description_fr": "Applique 3 Feu.",
   "cost": 1,
   "type": "skill",
   "rarity": "common",
@@ -13,7 +13,7 @@
     {
       "type": "apply_status",
       "statusId": "burn",
-      "value": 4,
+      "value": 3,
       "duration": 3
     }
   ]

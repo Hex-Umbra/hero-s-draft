@@ -58,7 +58,7 @@
       "tier": "minor",
       "name_fr": "Braise",
       "name_en": "Ember",
-      "description_fr": "Applique {val} Brûlure",
+      "description_fr": "Applique {val} Feu",
       "description_en": "Apply {val} Burn",
       "deltas": [
         {

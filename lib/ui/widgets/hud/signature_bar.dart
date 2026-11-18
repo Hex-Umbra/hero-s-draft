@@ -8,6 +8,7 @@ import '../../../game/services/effect_resolver.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/combat_state.dart';
 import '../../../models/data/card_data.dart';
+import '../../../models/data/charge_data.dart';
 import '../../../models/data/effect_icon_table.dart';
 import '../../../models/data/effect_kind.dart';
 import '../../../models/data/signature_evolution_data.dart';
@@ -66,6 +67,7 @@ class SignatureBar extends StatelessWidget {
   final CombatState combatState;
   final EntityStats heroStats;
   final EffectIconTable effectIcons;
+  final ChargeCatalog charges;
   final bool interactive;
   final Color classColor;
   final String? armedId;
@@ -80,6 +82,7 @@ class SignatureBar extends StatelessWidget {
     required this.combatState,
     required this.heroStats,
     this.effectIcons = const EffectIconTable.empty(),
+    this.charges = const ChargeCatalog.empty(),
     required this.interactive,
     required this.classColor,
     required this.armedId,
@@ -141,6 +144,7 @@ class SignatureBar extends StatelessWidget {
         compact: compact,
         classColor: classColor,
         effectIcons: effectIcons,
+        charges: charges,
         turnsLeft: turnsLeft,
         state: signatureTileStateOf(
           interactive: interactive,
@@ -242,6 +246,7 @@ class _SignatureTile extends StatefulWidget {
   final bool compact;
   final Color classColor;
   final EffectIconTable effectIcons;
+  final ChargeCatalog charges;
   final int turnsLeft;
   final SignatureTileState state;
   final VoidCallback onPlay;
@@ -254,6 +259,7 @@ class _SignatureTile extends StatefulWidget {
     required this.compact,
     required this.classColor,
     required this.effectIcons,
+    required this.charges,
     required this.turnsLeft,
     required this.state,
     required this.onPlay,
@@ -401,6 +407,7 @@ class _SignatureTileState extends State<_SignatureTile>
           _EffectList(
             lines: signature.effectLines,
             effectIcons: widget.effectIcons,
+            charges: widget.charges,
             compact: compact,
             grayedOut: grayedOut,
           )
@@ -810,19 +817,21 @@ class _EffectBand extends StatelessWidget {
 class _EffectList extends StatelessWidget {
   final List<EffectLine> lines;
   final EffectIconTable effectIcons;
+  final ChargeCatalog charges;
   final bool compact;
   final bool grayedOut;
 
   const _EffectList({
     required this.lines,
     required this.effectIcons,
+    required this.charges,
     required this.compact,
     required this.grayedOut,
   });
 
   Widget _line(EffectLine line, AppLocalizations l10n) {
     final visuals = effectVisualsOf(effectIcons, line.kind);
-    final phrase = EffectLineTexts.phrase(l10n, line);
+    final phrase = EffectLineTexts.phrase(l10n, line, charges);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 4,

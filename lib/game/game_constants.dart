@@ -8,6 +8,8 @@ typedef CardDropRule = ({int guaranteed, List<int> extraChances});
 class GameConstants {
   // --- Z-INDEX PRIORITIES ---
   static const int priorityBackground = -100;
+  /// Le givre aux coins de l'ecran : au-dessus du fond, sous les cartes.
+  static const int priorityFrostVignette = -50;
   static const int priorityCardBase = 10;
   static const int priorityCardHovered = 100;
   static const int priorityCardFocused = 150;
@@ -66,8 +68,13 @@ class GameConstants {
   static const int combatDelayEnemyTurnStartMs = 600;
   /// Délai après la résolution des ticks (poison, buffs, etc.) au début du tour ennemi.
   static const int combatDelayAfterTicksMs = 400;
+  /// Délai entre deux vagues de la chaîne du Feu (spec P-53, §4.10) : 0,6 s
+  /// d'animation — l'éclair puis la boule de feu — et 0,2 s de pause (§5.2).
+  static const int combatDelayFireWaveMs = 800;
   /// Délai du dash d'un ennemi lors de son attaque.
   static const int combatDelayEnemyDashMs = 200;
+  /// Durée des trois secousses d'un ennemi gelé, qui perd son action.
+  static const int combatDelayFrozenShakeMs = 300;
   /// Délai après la résolution d'une intention d'ennemi.
   static const int combatDelayAfterIntentResolveMs = 400;
   /// Délai avant de finaliser le tour des ennemis.

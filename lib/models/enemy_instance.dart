@@ -1,8 +1,9 @@
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
-import '../game/services/proportional_status.dart';
 import 'entity_stats.dart';
 import 'data/enemy_data.dart';
+import 'charge_track.dart';
+import 'data/charge_data.dart';
 import 'enemy_intent.dart';
 
 @immutable
@@ -14,6 +15,21 @@ class EnemyInstance {
   final int intentStep;
   final bool isBoss;
 
+  /// L'id de la charge qui lui ôte sa prochaine action : sa piste `skipAction`
+  /// rompue et en attente ; `null` sans elle. Sans catalogue, la piste porte
+  /// tout ce qu'il faut (spec P-53, A5).
+  String? get skippingCharge {
+    for (final MapEntry(key: id, value: track) in stats.charges.entries) {
+      if (track.rupture.kind == RuptureKind.skipAction &&
+          track.state == ChargeState.brokenPending) {
+        return id;
+      }
+    }
+    return null;
+  }
+
+  bool get skipsAction => skippingCharge != null;
+
   EnemyIntent? get effectiveIntent {
     final intent = currentIntent;
     if (intent == null) return null;
@@ -23,13 +39,9 @@ class EnemyInstance {
           : 1.0;
       final int scaledValue = (intent.value * spawnMultiplier).round();
       final int inBattleBonus = stats.effectiveMight - stats.might;
-      int finalValue = (stats.effectiveMight > (scaledValue + inBattleBonus))
+      final int finalValue = (stats.effectiveMight > (scaledValue + inBattleBonus))
           ? stats.effectiveMight
           : (scaledValue + inBattleBonus);
-      final freezePercent = ProportionalStatus.freeze.percentOn(stats);
-      if (freezePercent > 0) {
-        finalValue = (finalValue * (100 - freezePercent) / 100).round();
-      }
       return EnemyIntent(
         type: intent.type,
         value: finalValue,

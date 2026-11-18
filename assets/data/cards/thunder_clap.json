@@ -3,7 +3,7 @@
   "name_en": "Thunderclap",
   "name_fr": "Coup de Tonnerre",
   "description_en": "Deal 4 damage. Apply 1 Shock.",
-  "description_fr": "Inflige 4 dégâts. Applique 1 Électrocution.",
+  "description_fr": "Inflige 4 dégâts. Applique 1 Foudre.",
   "cost": 1,
   "type": "attack",
   "rarity": "common",

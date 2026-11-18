@@ -5,11 +5,14 @@ import 'package:roguelike_card_game/game/services/card_rule_texts.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 
+import 'shipped_data.dart';
+
 /// La seule écriture des lignes de coût, de coups et de croissance, lue par
 /// les deux infobulles (spec P-44 lot 1, §6.1).
 void main() {
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
+  final charges = shippedChargeCatalog();
 
   ScaleWith scale(ScaleSource source, double ratio) => ScaleWith(
         source: source,
@@ -42,13 +45,13 @@ void main() {
     for (final l10n in [fr, en]) {
       for (final source in ScaleSource.values) {
         final (per, bare) = expected(l10n, source);
-        expect(CardRuleTexts.scale(l10n, scale(source, 0.2)), per);
-        expect(CardRuleTexts.scale(l10n, scale(source, 1)), bare);
+        expect(CardRuleTexts.scale(l10n, scale(source, 0.2), charges), per);
+        expect(CardRuleTexts.scale(l10n, scale(source, 1), charges), bare);
       }
     }
-    expect(CardRuleTexts.scale(fr, scale(ScaleSource.armor, 1.5)),
+    expect(CardRuleTexts.scale(fr, scale(ScaleSource.armor, 1.5), charges),
         fr.cardScaleArmor('1,5'));
-    expect(CardRuleTexts.scale(en, scale(ScaleSource.armor, 1.5)),
+    expect(CardRuleTexts.scale(en, scale(ScaleSource.armor, 1.5), charges),
         en.cardScaleArmor('1.5'));
   });
 
@@ -90,7 +93,21 @@ void main() {
 
   test('targetStatus nomme le statut', () {
     final text =
-        CardRuleTexts.scale(fr, scale(ScaleSource.targetStatus, 1));
+        CardRuleTexts.scale(fr, scale(ScaleSource.targetStatus, 1), charges);
     expect(text, contains('Vulnérable'));
+  });
+
+  test('targetStatus sur une charge dit son nom, jamais l id', () {
+    final text = CardRuleTexts.scale(
+      fr,
+      const ScaleWith(
+        source: ScaleSource.targetStatus,
+        ratio: 1,
+        statusId: 'freeze',
+      ),
+      charges,
+    );
+    expect(text, contains('Gel'));
+    expect(text, isNot(contains('freeze')));
   });
 }

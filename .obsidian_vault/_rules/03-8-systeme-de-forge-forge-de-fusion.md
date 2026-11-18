@@ -39,7 +39,7 @@ les rendus :
 | *Spectral* (`spectral`) | `percentBonus` dégâts, 40 ; `addExhaust` | **40 % × L de la valeur à la rareté, au moins +L** — la Puissance n'y entre pas — et **la carte s'épuise** | — | 1 | 50 |
 | *Précis* (`precise`) | `critBonus`, 5 | **+5 × L points de chance critique** sur les dégâts de la carte ([`_rules/03-11`](03-11-systeme-de-coup-critique.md)) | 10 | 1 | 50 |
 | *Allégé* (`cheap`) | `reduceCost`, 1 | **La carte coûte L Mana de moins**, jamais sous 0 | 1 | 1 | 50 |
-| *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent `burn`, `freeze`, `shock` de valeur L pour L tours — *Congelant* 2 points de Gel par niveau depuis la vague 5 —, par `addStatus` : ils fusionnent avec le statut que la cible porte ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3, §4.4) | — | 1 | 80 |
+| *Brûlant*, *Congelant*, *Surchargé* | `addEffect` `apply_status` | Posent L points de **Feu**, de **Gel** ou de **Foudre** — *Congelant* 1 point par niveau depuis la vague 7 (2 aux vagues 5 et 6) —, avant les effets de la carte ; depuis la vague 7 (livrée sur la branche, en attente du test, de la PR, de la fusion et du tag du propriétaire — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), c'est **la pose d'une charge** : les points rejoignent ceux de la cible, sous son plafond et sa rupture, sans durée lue ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.3, §4.5). Les noms des runes ne changent pas | — | 1 | 80 |
 | *Véloce* (`quick`) | `addEffect` `draw` | Pioche L cartes à la pose | 1 | **2** | 60 |
 | *Économe* (`eco`) | `addEffect` `gain_mana` | Rend L Mana **à la pose** — ce n'est pas une réduction de coût | 1 | **2** | 40 |
 | *Persistant* (`enduring`) | `removeExhaust` | La carte ne s'épuise plus | 1 | 1 | 30 |
@@ -84,8 +84,8 @@ si, à la fois :
    autre rune ajoute ne comptent pas ;
 3. aucun effet propre n'est dans son `excludesEffects` — *Persistant* refuse une carte qui pioche ou
    rend du Mana. **Un statut posé compte aussi sous `status:<id>`**, le vocabulaire de `feeds`, pour
-   chaque `apply_status` (vague 6, en attente du test, de la PR, de la fusion et du tag du
-   propriétaire — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md), D44) : *Persistant*
+   chaque `apply_status` (vague 6, fusionnée
+   dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md), D44) : *Persistant*
    et *Résonant* excluent `status:mana_regen`, et *Méditation*, qui rend du Mana par un statut, ne
    devient ni rejouable ni doublée ;
 4. `requiresExhaust` est satisfait — *Persistant* ne s'offre qu'à une carte qui s'épuise ;
@@ -146,9 +146,10 @@ Au feu de camp, « AFFÛTER » remplace l'ancienne forge parmi trois options exc
 - **une rune d'une carte gagne un niveau**, une seule, une fois par visite (D4, D14) ;
 - **coût : 50 × le niveau porté** — 50, 100, 150, 200… (`ForgeRuneRules.sharpenCost`, D20, D63) ;
   il croît avec le niveau de la rune, pas avec le rang de la carte ;
-- se montent : *Tranchant*, *Endurci*, *Brûlant*, *Surchargé*, *Spectral* sans plafond, *Précis*
-  jusqu'au niveau 10 ; jamais *Économe*, *Véloce*, *Congelant*, *Persistant*, *Allégé*, au plafond
-  dès le niveau 1 (`canSharpen`) — sauf, pour les trois premières, sous *Transcendance* (§3.8.7) ;
+- se montent : *Tranchant*, *Endurci*, *Brûlant*, *Surchargé*, *Spectral* sans plafond — et
+  *Congelant*, sans plafond depuis la vague 5 —, *Précis* jusqu'au niveau 10 ; jamais *Économe*,
+  *Véloce*, *Persistant*, *Allégé*, au plafond dès le niveau 1 (`canSharpen`) — sauf, pour les deux
+  premières, sous *Transcendance* (§3.8.7) ;
 - la référence `id:n` devient `id:n+1` à sa place, par `GoldManager.sharpenRune`, qui refuse — sans
   rien toucher — une rune au plafond ou l'or qui manque. Depuis la vague 3, il vérifie,
   paie, puis délègue l'écriture à `DeckNotifier.raiseRuneLevel` ; `capBonus` lui est **requis**,

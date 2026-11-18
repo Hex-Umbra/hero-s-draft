@@ -8,16 +8,19 @@ import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
-import 'package:roguelike_card_game/game/services/proportional_status.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/models/status_effect.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
+import 'shipped_data.dart';
 import 'scripted_random.dart';
 
 /// Les runes livrées, jouées sur les vraies cartes par
@@ -42,7 +45,7 @@ void main() {
       run.startNewRun(registry.heroes.singleWhere((h) => h.id == heroId));
 
   setUp(() {
-    container = ProviderContainer();
+    container = ProviderContainer(overrides: [shippedChargeOverride()]);
     run = container.read(runProvider.notifier);
     combat = container.read(combatProvider.notifier);
     deck = container.read(deckProvider.notifier);
@@ -163,52 +166,60 @@ void main() {
   });
 
   group('les statuts des runes : addStatus, sans source (spec E0, A4)', () {
-    test('Coup de Tonnerre et Surcharge, trois fois : 5, 7 puis 9 degats', () {
-      // Chaque choc de rune rejoint le choc en cours, que `DamagePipeline`
-      // lit : +3 et +5 au lieu de +2 et +3.
+    test('Coup de Tonnerre et Surcharge, trois fois : 5, 10 puis 14 degats', () {
+      // La Foudre s'ajoute au coup : sous le seuil +1 par point, chargee (des
+      // la deuxieme pose de la rune, a 3 points) +2 par point (D86).
       final hp = <int>[];
       for (var i = 0; i < 3; i++) {
         play(card('thunder_clap', runes: const ['shocking:1']));
         hp.add(enemy().currentPv);
       }
-      expect(hp, [100 - 5, 100 - 5 - 7, 100 - 5 - 7 - 9]);
+      expect(hp, [100 - 5, 100 - 5 - 10, 100 - 5 - 10 - 14]);
       expect(enemyStatuses('shock').map((s) => (s.value, s.sourceId)),
           [(6, null)]);
     });
 
-    test('Brulant 2, joue deux fois : une brulure de 4 pour 2 tours', () {
+    test('Brulant 2, joue deux fois : une brulure de 4, duree 1', () {
       for (var i = 0; i < 2; i++) {
         play(card('strike_basic', runes: const ['burning:2']));
       }
       expect(
         enemyStatuses('burn').map((s) => (s.value, s.duration, s.sourceId)),
-        [(4, 2, null)],
+        [(4, 1, null)],
       );
     });
 
-    test('Congelant, joue deux fois : une seule entree de gel', () {
+    test('Congelant, joue deux fois : une seule entree de gel, de 2', () {
       for (var i = 0; i < 2; i++) {
         play(card('strike_basic', runes: const ['freezing:1']));
       }
-      expect(enemyStatuses('freeze'), hasLength(1));
+      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
     });
 
-    test('Trait de Glace pose 2 Gel : -50 %, l effet d avant', () {
+    test('Trait de Glace pose 2 Gel : 2/3, non gele', () {
       play(card('ice_bolt'));
       expect(enemyStatuses('freeze').map((s) => s.value), [2]);
-      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+      final line = ChargeRules.linesFor(enemy()).single;
+      expect(
+        (line.points, line.threshold, line.state),
+        (2, 3, ChargeState.none),
+      );
     });
 
-    test('Congelant 1 pose 2 Gel : -50 %', () {
+    test('Congelant 1 pose 1 Gel : 1/3', () {
       play(card('strike_basic', runes: const ['freezing:1']));
-      expect(enemyStatuses('freeze').map((s) => s.value), [2]);
-      expect(ProportionalStatus.freeze.percentOn(enemy()), 50);
+      expect(enemyStatuses('freeze').map((s) => s.value), [1]);
+      final line = ChargeRules.linesFor(enemy()).single;
+      expect(
+        (line.points, line.threshold, line.state),
+        (1, 3, ChargeState.none),
+      );
     });
 
-    test('Boule de Feu et Brulant 1 : une brulure de 3 pour 2 tours', () {
+    test('Boule de Feu et Brulant 1 : une brulure de 3, duree 1', () {
       // La rune pose avant la carte, dont la brulure rejoint la sienne.
       play(card('fireball', runes: const ['burning:1']));
-      expect(enemyStatuses('burn').map((s) => (s.value, s.duration)), [(3, 2)]);
+      expect(enemyStatuses('burn').map((s) => (s.value, s.duration)), [(3, 1)]);
     });
   });
 
@@ -388,6 +399,22 @@ void main() {
       playOnFirst(card('strike_basic', runes: const ['splash:1']));
       // (2 + 2) x 1,5 = 6 ; le troisieme ennemi n'a rien de tout cela.
       expect(pvs(), [94, 94, 98]);
+    });
+
+    test('le heros gele inflige -50 % a l eclaboussure de Ricochant aussi',
+        () {
+      run.updateState(run.currentState.copyWith(
+        heroStats: hero().copyWith(charges: {
+          'freeze': ChargeTrack.start(
+            container.read(chargeCatalogProvider)['freeze']!,
+            ChargeBearer.hero,
+          ).copyWith(state: ChargeState.brokenActive),
+        }),
+      ));
+      playOnFirst(card('strike_basic', runes: const ['splash:1']));
+      // 6 -> 3 sur la cible ; l'eclaboussure, 2 calcules avant le pipeline,
+      // passe le pipeline avec le heros pour attaquant : 1.
+      expect(pvs(), [97, 99, 99]);
     });
 
     test('l eclaboussure est absorbee par l Armure de sa cible, Perforant '

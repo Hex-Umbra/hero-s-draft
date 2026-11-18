@@ -705,6 +705,8 @@ class EntityValidator {
         return r.forgeUpgrades.map((e) => e.id).toSet();
       case EntityCategory.levelUpReward:
         return r.levelUpRewards.map((e) => e.id).toSet();
+      case EntityCategory.charge:
+        return r.charges.ids;
       case EntityCategory.heroClass:
         return r.heroes.map((e) => e.id).toSet();
       case EntityCategory.enemy:

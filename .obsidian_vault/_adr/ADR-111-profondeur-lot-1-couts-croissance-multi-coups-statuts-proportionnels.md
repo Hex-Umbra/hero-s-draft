@@ -20,6 +20,10 @@ et [ADR-097](ADR-097-puissance-unique-orientee-par-la-classe.md) (la Puissance p
 **Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
 `v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
 la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
+**D4 amendée le 2026-11-17 par [ADR-117](ADR-117-les-charges-elementaires.md)** (P-53, vague 7,
+livré sur la branche `feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la
+fusion et du tag du propriétaire) : le Gel quitte le barème — `ProportionalStatus` n'en garde que
+Vulnérable et Faiblesse — et devient une charge ; *Congelant* pose 1 point par niveau, 2 avant.
 
 ### Contexte
 

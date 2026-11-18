@@ -1,7 +1,7 @@
 # Les charges élémentaires — Gel, Feu, Foudre : un seuil plutôt qu'un pourcentage
 
 **Date** : 03/11/2026 — étude née pendant l'arrêt de la vague 5 (`0.5.7`), sur la question P-1 de sa spec.
-**Statut** : **exploré, orienté par le propriétaire, programmé le 03/11 par D76** (brainstorm v3, §1) : **vague 7, `0.5.9`**. Les points marqués *tranché par le propriétaire* sont ses orientations du 02-03/11 ; ils ne sont pas des décisions acquises du brainstorm v3 et ne s'appliqueront qu'une fois le chantier spécifié. Rien n'est implémenté. Chantier **P-53** de [`docs/ROADMAP.md`](../ROADMAP.md) ; fiche 8.7 du [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md).
+**Statut** : **exploré, orienté par le propriétaire, programmé le 03/11 par D76** (brainstorm v3, §1) : **vague 7, `0.5.9`**. Les points marqués *tranché par le propriétaire* sont ses orientations du 02-03/11 ; ils ne sont pas des décisions acquises du brainstorm v3 et ne s'appliqueront qu'une fois le chantier spécifié. **Le 15/11, le propriétaire a répondu à C1-C7 et C10-C16** (§11) — le héros gelé inflige 50 % de dégâts en moins au lieu de perdre son tour ; C17 et la Foudre (C8, §12) sont acceptés le même jour : **toutes les règles sont décidées, D83 à D86** (brainstorm v3, §1), et la fiche 8.7 est complète. Rien n'est implémenté. Chantier **P-53** de [`docs/ROADMAP.md`](../ROADMAP.md) ; fiche 8.7 du [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md).
 **Calendrier** : **pas en `0.5.7`** (option T3, §8) — la vague 5 ne porte que les cartes et le joueur ; les charges élémentaires touchent le gameplay fondamental des cartes. **Une vague à elles, la vague 7, `0.5.9`** (D76, 03/11) : la tranche 3 passe en vague 8, `0.6.0`.
 **Vérifié contre** : la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1` à `4377a0a` (code de `main` à `d99cd81`, `0.5.6`). Chaque constat de code porte le `fichier:ligne` qui l'établit.
 **Sources** : la spec de la vague 5, [`2026-10-25-p42-tranche-1-p44-lot-1-design.md`](../superpowers/specs/2026-10-25-p42-tranche-1-p44-lot-1-design.md), §1.4 (P-1) et §4.4 ; sa présentation, [`2026-10-26_vague_5_trois_questions_p.pptx`](../presentations/2026-10-26_vague_5_trois_questions_p.pptx) ; le [brainstorm v3](22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md), §7, §8, §9.2.
@@ -161,10 +161,92 @@ Quand P-53 sera ouvert, ses arbitrages s'écriront comme des décisions numérot
 | C5 | Le Feu après la rupture : consommé en entier, ou le reste au-delà des tranches complètes demeure ? | §4 |
 | C6 | Le Feu et la réaction en chaîne | §4 |
 | C7 | Le voisinage quand un ennemi meurt | §4 |
-| C8 | La Foudre : durée, surcharge, déclin, seuil | §5 |
+| C8 | ~~La Foudre : durée, surcharge, déclin, seuil~~ — ✅ tranché le 15/11 (D86) | §5, §12 |
 | C9 | ~~Où loger P-53~~ — ✅ tranché le 03/11 (D76) : vague 7, `0.5.9`, avant la tranche 3 | §8 |
 | C10 | Les valeurs — seuils, 4 par point, 12 par tranche, +3 par coup : des ordres de grandeur, que le test du propriétaire corrigera | §3 à §5 |
 
+C1 à C7 ont reçu leur réponse le 15/11 (§11) ; il leur reste des points de lecture, C11 à C16, à confirmer avant de devenir des décisions.
+
+## 11. Les réponses du propriétaire — 15/11 (C1 à C7)
+
+**Vérifié contre** `main` à `7aadf8a` (`0.5.8`).
+
+| # | Réponse du propriétaire | Ce que l'étude en lit |
+|:---:|:---|:---|
+| C1 | Le héros gelé perd son tour, comme un ennemi, mais **son seuil est à 5** | Mêmes règles que pour un ennemi (déclin, seuil qui monte, pas de surcharge) ; seul le seuil de départ diffère |
+| C2 | **Une entité gelée ne fait rien** : elle perd toute son action | Attaque, défense, renforcement : tout. Le §3 (« ouvert », 2ᵉ point) est confirmé |
+| C3 | **Le seuil d'un boss part plus haut** : 6 par exemple, au lieu de 3 | 6, 7, 8… pour un boss, qu'on reconnaît à `EnemyInstance.isBoss` (`combat_controller.dart:67`) |
+| C4 | **Sous le seuil, le porteur prend 50 %** des dégâts par point ; **100 %** seulement pour les points qui atteignent le seuil | À 4 par point : 2 par point sous le seuil, 4 par point dans une tranche complète. Sans explosion sous le seuil |
+| C5 | **La charge ne reste pas** : toute la charge se résout. Les tranches complètes font 100 % et explosent ; le reste, qui n'atteint pas la tranche suivante, fait 50 % et n'explose pas | 5 points au seuil 3 : 3 × 4 + 2 × 2 = **16** au porteur (et non 20 comme au §4), une explosion de 12 aux voisins. Après la rupture, le Feu est à 0 |
+| C6 | **L'explosion pose 1 point de Feu** sur chaque voisin touché, et chaque explosion en pose un : la réaction en chaîne est voulue | Voir l'exemple ci-dessous. Elle remplace l'orientation du §4 (« à écarter d'abord ») |
+| C7 | **Si le porteur meurt** et qu'il a provoqué une explosion, **ses voisins prennent d'abord les dégâts**, puis il sort de la liste des ennemis | Les voisins se lisent sur la rangée telle qu'elle est au moment de la rupture ; le mort ne quitte la rangée qu'à la fin de la résolution |
+
+**L'exemple de C6, chiffré** aux valeurs du §4 (4 par point, 12 par tranche, C10 les corrigera). Trois ennemis, A B C ; B porte 9 points de Feu, A et C aucun.
+
+| Vague | Ce qui se résout | A | B | C |
+|:---:|:---|:---:|:---:|:---:|
+| 1 | B : 9 points, 3 tranches → 36 à B ; 3 explosions → 36 et 3 Feu à A et à C | 36 | 36 | 36 |
+| 2 | A et C : 3 points chacun, 1 tranche → 12 à chacun ; 1 explosion chacun → 12 + 12 et 2 Feu à B | 12 | 24 | 12 |
+| 3 | B : 2 points, sous le seuil → 2 × 2 à B, pas d'explosion. Fin | — | 4 | — |
+| | **Total** | **48** | **64** | **48** |
+
+Sans la chaîne, ces 9 points feraient 108 ; avec elle, 160. Et l'exemple du §4 devient : le porteur central de 5 points prend 16, chacun de ses voisins 12 puis 2 (son point de Feu, sous le seuil) — 14.
+
+**La chaîne s'arrête toujours** : chaque explosion consomme une tranche de 3 points et en pose au plus 2 (un par voisin), donc le Feu en jeu baisse à chaque explosion. Cela tient tant que **le seuil du Feu dépasse le nombre de voisins, 2** : à 2, la chaîne pourrait tourner sans fin. Le chargement des données devra refuser un seuil de Feu inférieur à 3.
+
+**Ce que le code fait aujourd'hui, et que la spec reprendra.** Les statuts des ennemis se traitent **tous ensemble, au début de la phase ennemie** (`turn_phase_manager.dart:60-77`), puis les morts sont retirés par `cleanDeadEnemies` (`combat_controller.dart:373`), qui **resserre la rangée** et ajoute les renforts (`pendingEnemies`) **au bout** : le voisinage change d'un tour à l'autre, ce qui répond à la question du §4 (« les survivants se resserrent-ils ? » — oui).
+
+### Les points de lecture à confirmer
+
+Chacun porte une proposition ; un « ok » les retient toutes.
+
+| # | Point | Proposition |
+|:---:|:---|:---|
+| C11 | **Ce que le héros gelé perd** (C1) | Son tour commence comme d'habitude — pioche, Mana, statuts de début de tour, recharges des signatures —, mais il ne peut jouer **ni carte ni signature** ; le tour se termine aussitôt. Son seuil monte aussi de 1 à chaque gel (5, 6, 7) |
+| C12 | **L'intention perdue d'un ennemi gelé** (C2) | Elle est **consommée** : au tour suivant, l'ennemi montre l'intention d'après dans son cycle. Ses statuts (Poison, Feu) se résolvent quand même : le gel ne retire que l'action |
+| C13 | **Le boss et les autres charges** (C3) | Le seuil plus haut du boss ne vaut **que pour le Gel**, parce qu'il est seul à ôter une action ; le Feu garde 3 pour tous. Les élites gardent le seuil de 3 |
+| C14 | **Le moment de la chaîne** (C6) | La première rupture se joue au tour du porteur, comme au §4 ; **le Feu posé par une explosion se résout aussitôt**, par vagues : toutes les explosions d'une vague, puis le Feu qu'elles ont posé, puis la vague suivante (c'est ce que fait l'exemple). Au début de la phase ennemie, tous les porteurs se résolvent ensemble, comme la vague 1. Le Feu d'une explosion ne reçoit **pas** le bonus de Puissance « altération » (Q11 : une fois par carte, et une explosion n'est pas une carte) |
+| C15 | **Un porteur tué avant son tour** (C7) | Tué par une carte pendant le tour du joueur, il **perd son Feu sans exploser** : la rupture n'a lieu qu'à son tour. L'explosion à la mort serait un autre verbe, à décider à part |
+| C16 | **Un ennemi qui meurt au milieu de la chaîne** (C7) | Il garde sa place dans la rangée jusqu'à la fin de la chaîne : il ne reçoit plus ni Feu ni dégâts, et ne rapproche pas ses deux voisins. La rangée se resserre après |
+
+**Les réponses du propriétaire, 15/11** :
+
+| # | Réponse |
+|:---:|:---|
+| C11 | **Amendé** : le héros gelé **ne perd pas son tour** ; il **inflige 50 % de dégâts en moins**. La rupture du Gel n'est donc pas la même pour le héros et pour un ennemi — le cadre la déclare par porteur (§2). Ses détails : C17 |
+| C12 | ok |
+| C13 | ok — le seuil de 6 ne vaut que pour le Gel du boss |
+| C14 | ok |
+| C15 | ok, **pas d'explosion à la mort pour l'instant** : un porteur tué avant son tour perd son Feu. Une explosion à la mort reste une idée pour plus tard, hors de la vague 7 |
+| C16 | ok |
+| C10 | Confirmé : les seuils du héros (5) et du boss (6) sont des valeurs de C10, que le test corrigera |
+
+**C17 — le Gel du héros, après C11.** ✅ **Accepté par le propriétaire le 15/11** :
+- **Durée** : son **prochain tour** entier, puis le Gel retombe à 0, comme pour un ennemi.
+- **Ce qui est réduit** : les dégâts de ses **cartes et signatures** pendant ce tour, chaque coup d'un multi-coups compris. Pas les dégâts de ses statuts (Poison, Feu) : ils se résolvent au tour de leur porteur, pas au sien.
+- **Avec la Faiblesse** : les deux s'appliquent l'une après l'autre dans le pipeline (`damage_pipeline.dart:19-24`), sans s'additionner : 25 % de Faiblesse puis le gel font 37,5 % du coup, et non 25 %.
+- **Le seuil** reste celui de C1 : 5, puis +1 à chaque gel, avec le déclin et sans surcharge.
+- **Un point à garder en vue** : pour le héros, le gel ressemble à une forte Faiblesse d'un tour, le doublon que le §0 voulait défaire. Il reste distinct par la forme (un seuil, un tour entier, 50 % d'un coup), et il ne concerne que le héros.
+
+**C8**, la Foudre, a été discuté en dernier (§12). C8 tranché, C1 à C8 et C11 à C17 s'écrivent en décisions numérotées du brainstorm v3, §1 (D83 et suivantes), et la fiche 8.7 du fichier d'orchestration se complète. ✅ **Fait le 15/11 : D83 à D86.**
+
+## 12. La Foudre — les questions de C8, 15/11 — ✅ six propositions acceptées (D86)
+
+**Aujourd'hui** (`main` à `7aadf8a`), l'Électrocution ajoute ses points à chaque coup reçu (`damage_pipeline.dart:37-50`), après le critique et avant Vulnérable, qui l'amplifie donc. Trois sources en posent : *Coup de Tonnerre* (4 dégâts, puis 1 Électrocution, `cards/thunder_clap.json`), *Rafale d'étincelles* (1 Électrocution, puis 3 × 3 dégâts, `cards/mana_flux/spark_barrage.json`) et la rune *Électrisant* (`forge_upgrades/shocking.json`). Aucun ennemi ne frappe en plusieurs coups (`enemy_data.dart` n'a pas de `hits`) : le héros porteur de Foudre ne compte qu'avec de futurs ennemis élémentaires.
+
+**Le principe proposé** reprend L1 (§5) et le rapport que C4 a fixé pour le Feu, **la moitié sous le seuil** : chaque coup reçu fait **+1 par point** de Foudre sous le seuil, comme l'Électrocution d'aujourd'hui ; au seuil, le porteur est **chargé** et chaque coup fait **+2 par point**.
+
+| # | Question | Options | Proposition |
+|:---:|:---|:---|:---|
+| C8.1 | Sous le seuil | (a) rien, comme L1 ; (b) +1 par point et par coup | **(b)** : *Coup de Tonnerre* et *Rafale d'étincelles* gardent leur effet sur un ennemi neuf, et la charge se lit (« ⚡ 2/3 : +2 par coup ») |
+| C8.2 | Le moment de la rupture | (a) à l'atteinte du seuil, comme le Gel ; (b) au tour du porteur, comme le Feu | **(a)** : les coups qui suivent, dans la même carte ou le même tour, en profitent — c'est le combo Foudre × multi-coups |
+| C8.3 | La durée de la charge | (a) jusqu'à la fin du tour en cours, puis la Foudre retombe à 0 ; (b) un nombre de coups ; (c) jusqu'au tour du porteur | **(a)** : se joue dans le tour, comme le Gel, et vaut pour le héros comme pour un ennemi (chargé pendant la phase ennemie, il l'est contre tous les coups de cette phase) |
+| C8.4 | La surcharge | (a) plafonnée au seuil, comme le Gel ; (b) libre, chaque point comptant dans le bonus | **(b)** : un point posé sur un porteur chargé ajoute +2 à chaque coup suivant ; la Puissance « altération » la fait grandir, comme le Feu |
+| C8.5 | Le déclin sous le seuil | (a) −1 au tour du porteur, comme le Gel ; (b) aucun | **(a)** : un reste passe au tour suivant, sans s'accumuler sans fin |
+| C8.6 | Le seuil | (a) fixe, 3, pour tous, boss et héros compris ; (b) qui monte comme le Gel | **(a)** : la charge ne dure qu'un tour et n'ôte rien, elle ne bloque personne ; le seuil reste une valeur de C10 |
+
+**Ce que ça donne**, aux valeurs proposées : *Rafale d'étincelles* sur un ennemi neuf, 1 point, fait 3 × (3 + 1) = 12, comme aujourd'hui ; sur un ennemi qui porte déjà 2 points, elle l'amène au seuil, il est chargé à 3 points et la carte fait 3 × (3 + 6) = 27. *Coup de Tonnerre* frappe avant de poser son point : il n'en profite pas lui-même, il prépare.
+
 ---
 
-*Étude. Rien n'est implémenté ; ce document ne vaut décision que pour les points que le propriétaire a tranchés, et seulement une fois P-53 spécifié. Prochaine étape : poursuivre la discussion sur la Foudre (§5) et trancher C1 à C10, pour écrire les décisions et compléter la fiche 8.7 du fichier d'orchestration avant la vague 7.*
+*Étude. Rien n'est implémenté ; ce document ne vaut décision que pour les points que le propriétaire a tranchés, et seulement une fois P-53 spécifié. Les règles sont décidées le 15/11 (D83 à D86) ; prochaine étape : la vague 7, qui écrit la spec de P-53.*

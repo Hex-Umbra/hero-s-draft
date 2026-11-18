@@ -2,6 +2,7 @@ import 'dart:math' show max;
 
 import 'package:meta/meta.dart';
 import 'enemy_instance.dart';
+import 'fire_wave_report.dart';
 
 enum TurnPhase { player, enemy }
 
@@ -30,6 +31,10 @@ class CombatState {
   final int lastPlayedTurn;
   final int playedOnLastPlayedTurn;
 
+  /// Le compte rendu de la dernière vague du Feu jouée, `null` hors de la
+  /// chaîne (spec P-53, A12). **Jamais sérialisé**, comme [signaturesReadyOn].
+  final FireWaveReport? fireWaveReport;
+
   CombatState({
     List<EnemyInstance> enemies = const [],
     List<EnemyInstance> pendingEnemies = const [],
@@ -42,6 +47,7 @@ class CombatState {
     Map<String, int> signaturesReadyOn = const {},
     this.lastPlayedTurn = 0,
     this.playedOnLastPlayedTurn = 0,
+    this.fireWaveReport,
   })  : enemies = List.unmodifiable(enemies),
         pendingEnemies = List.unmodifiable(pendingEnemies),
         defeatedEnemies = List.unmodifiable(defeatedEnemies),
@@ -59,7 +65,9 @@ class CombatState {
     Map<String, int>? signaturesReadyOn,
     int? lastPlayedTurn,
     int? playedOnLastPlayedTurn,
+    FireWaveReport? fireWaveReport,
     bool clearSelectedEnemy = false,
+    bool clearFireWaveReport = false,
   }) {
     return CombatState(
       enemies: enemies ?? this.enemies,
@@ -76,6 +84,9 @@ class CombatState {
       lastPlayedTurn: lastPlayedTurn ?? this.lastPlayedTurn,
       playedOnLastPlayedTurn:
           playedOnLastPlayedTurn ?? this.playedOnLastPlayedTurn,
+      fireWaveReport: clearFireWaveReport
+          ? null
+          : (fireWaveReport ?? this.fireWaveReport),
     );
   }
 

@@ -10,6 +10,7 @@ import '../../game/controllers/deck_controller.dart';
 import '../../game/controllers/combat_controller.dart';
 import '../../game/controllers/inventory_controller.dart';
 import '../../game/controllers/reward_controller.dart';
+import '../../game/systems/charge_rules.dart';
 import '../../game/systems/mana_reserve.dart';
 import '../../models/combat_state.dart';
 import '../../models/map_node.dart';
@@ -308,6 +309,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       audio: ref.read(audioDirectorProvider),
       imagesToPreload:
           ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
+      chargeCatalog: ref.read(chargeCatalogProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
@@ -368,11 +370,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             .read(combatProvider.notifier)
             .resolveEnemyIntent(enemyId);
       },
-      onStartEnemyTurn: () {
-        ref
-            .read(combatProvider.notifier)
-            .startEnemyTurn();
-      },
+      onStartEnemyTurn: () =>
+          ref.read(combatProvider.notifier).startEnemyTurn(),
+      onResolveFireWave: () =>
+          ref.read(combatProvider.notifier).resolveNextFireWave(),
+      onResolveEnemyStatuses: () =>
+          ref.read(combatProvider.notifier).resolveEnemyStatuses(),
       onEndEnemyTurn: () {
         ref.read(combatProvider.notifier).endEnemyTurn();
         _startPlayerNewTurn();
@@ -641,6 +644,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       drawPileCount: deckState.drawPile.length,
                       discardPileCount: deckState.discardPile.length,
                       heroStatuses: runState.heroStats.statuses,
+                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
+                      charges: ref.watch(chargeCatalogProvider),
                       enemies: combatState.enemies,
                       effectIcons: gameData.effectIcons,
                     ),
@@ -654,6 +659,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       combatState: combatState,
                       heroStats: runState.heroStats,
                       effectIcons: gameData.effectIcons,
+                      charges: ref.watch(chargeCatalogProvider),
                       interactive:
                           isPlayerActionable && !combatState.isCombatEnded,
                       classColor: ClassIdentity.colorOf(

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../game/controllers/combat_controller.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
+import '../../../../models/data/charge_data.dart';
+import '../../../../services/game_data_service.dart';
 import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
 
@@ -19,6 +21,7 @@ class DebugCombatTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enemies = ref.watch(combatProvider).enemies;
     final stats = ref.watch(runProvider).heroStats;
+    final charges = ref.watch(chargeCatalogProvider);
 
     return ListView(
       children: [
@@ -128,6 +131,56 @@ class DebugCombatTab extends ConsumerWidget {
           },
           child: const Text('Sauter la phase ennemie'),
         ),
+        const Divider(),
+        const Text('Charges'),
+        _ChargeButtons(
+          label: 'Heros',
+          charges: charges,
+          onPose: (chargeId) => DebugActions.poseCharge(ref.read, chargeId),
+        ),
+        for (var i = 0; i < enemies.length; i++)
+          _ChargeButtons(
+            label: '${i + 1}. ${enemies[i].data.nameFr}',
+            charges: charges,
+            onPose: (chargeId) => DebugActions.poseCharge(
+              ref.read,
+              chargeId,
+              enemyId: enemies[i].id,
+            ),
+          ),
+        TextButton(
+          onPressed: () => DebugActions.clearCharges(ref.read),
+          child: const Text('Retirer les charges'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Une ligne de la section « Charges » : un bouton « +1 » par charge du
+/// catalogue, pour un porteur.
+class _ChargeButtons extends StatelessWidget {
+  final String label;
+  final ChargeCatalog charges;
+  final void Function(String chargeId) onPose;
+
+  const _ChargeButtons({
+    required this.label,
+    required this.charges,
+    required this.onPose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('$label :'),
+        for (final charge in charges.all)
+          TextButton(
+            onPressed: () => onPose(charge.id),
+            child: Text('+1 ${charge.nameFr}'),
+          ),
       ],
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
 /// Le SEUL test qui prouve que l application voit reellement les fichiers.
@@ -22,7 +23,7 @@ import 'package:roguelike_card_game/services/game_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('le manifeste declare les 130 fichiers d entite, par categorie', () async {
+  test('le manifeste declare les 133 fichiers d entite, par categorie', () async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final json = manifest
         .listAssets()
@@ -41,6 +42,7 @@ void main() {
     expect(countUnder('assets/data/passives/', 4), 9, reason: 'passifs');
     expect(countUnder('assets/data/level_up_rewards/', 4), 9,
         reason: 'recompenses de niveau');
+    expect(countUnder('assets/data/charges/', 4), 3, reason: 'charges');
 
     expect(
       json
@@ -142,6 +144,56 @@ void main() {
       115, 200, 310, 480, 590, 775, 955, 1100, //
       1040, 1185, 1370, 1370, 1300, 1375, 1015,
     ]);
+  });
+
+  // Les trois charges, valeur par valeur (spec P-53, D84 a D86, A18).
+  test('le registre reel charge les trois charges aux valeurs de D84 a D86',
+      () async {
+    final registry = await loadGameDataRegistry(rootBundle);
+    final charges = registry.charges;
+
+    expect(charges.ids, {'freeze', 'burn', 'shock'});
+
+    final freeze = charges['freeze']!;
+    expect(
+      [
+        freeze.threshold,
+        freeze.bossThreshold,
+        freeze.heroThreshold,
+        freeze.thresholdGrowth,
+        freeze.overcharge,
+        freeze.decay,
+      ],
+      [3, 6, 5, 1, false, 1],
+    );
+    expect(freeze.rupture.kind, RuptureKind.skipAction);
+    expect(freeze.heroRupture!.kind, RuptureKind.weakenDealt);
+    expect(freeze.heroRupture!.percent, 50);
+
+    final burn = charges['burn']!;
+    expect(
+      [burn.threshold, burn.thresholdGrowth, burn.overcharge, burn.decay],
+      [3, 0, true, 0],
+    );
+    expect(burn.rupture.kind, RuptureKind.explode);
+    expect(
+      [
+        burn.rupture.damagePerPoint,
+        burn.rupture.explosionDamage,
+        burn.rupture.chargePerNeighbour,
+      ],
+      [4, 12, 1],
+    );
+    expect(burn.belowThresholdPercent, 50);
+
+    final shock = charges['shock']!;
+    expect(
+      [shock.threshold, shock.thresholdGrowth, shock.overcharge, shock.decay],
+      [3, 0, true, 1],
+    );
+    expect(shock.rupture.kind, RuptureKind.amplifyHits);
+    expect(shock.rupture.bonusPerPoint, 2);
+    expect(shock.belowThresholdPercent, 50);
   });
 
   test('le registre reel charge les dix-sept sortes d effect_icons.json',

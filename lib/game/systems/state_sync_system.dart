@@ -5,6 +5,7 @@ import '../../services/audio/game_moment.dart';
 import '../controllers/run_controller.dart';
 import '../controllers/deck_controller.dart';
 import '../../models/combat_state.dart';
+import '../../models/fire_wave_report.dart';
 import '../components/entities/hero_card.dart';
 import '../components/entities/enemy_card.dart';
 import '../components/card_component.dart';
@@ -15,6 +16,10 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
   DeckState? nextDeckState;
   CombatState? currentCombatState;
   CombatState? nextCombatState;
+
+  /// Le dernier compte rendu de vague du Feu montré : chaque vague en écrit un
+  /// neuf, que l'état garde tel quel jusqu'à la suivante.
+  FireWaveReport? _lastFireWaveReport;
 
   @override
   void update(double dt) {
@@ -121,15 +126,37 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       }
     }
 
-    // 2. Gérer les apparitions ou mises à jour
+    // 2. Gérer les apparitions ou mises à jour. Une vague du Feu neuve : chaque
+    //    voisin retient son état jusqu'à l'arrivée de sa boule de feu, et
+    //    toute carte nommée par le compte rendu montre des dégâts du Feu.
     bool listChanged = immediateRemovals;
+
+    final report = state.fireWaveReport;
+    final freshReport = report != null && !identical(report, _lastFireWaveReport)
+        ? report
+        : null;
+    final fireIds = <String>{};
+    if (freshReport != null) {
+      for (final resolution in freshReport.resolved) {
+        fireIds.add(resolution.bearerId);
+        for (final splash in resolution.splashes) {
+          fireIds.add(splash.targetId);
+          for (final card in game.enemyCards) {
+            if (card.id == splash.targetId) card.holdVisualStats();
+          }
+        }
+      }
+    }
 
     for (var enemyInstance in state.enemies) {
       final existingIndex = game.enemyCards.indexWhere(
         (c) => c.id == enemyInstance.id,
       );
       if (existingIndex != -1) {
-        game.enemyCards[existingIndex].updateStats(enemyInstance);
+        game.enemyCards[existingIndex].updateStats(
+          enemyInstance,
+          fireDamage: fireIds.contains(enemyInstance.id),
+        );
       } else {
         final enemyCard = EnemyCard(
           instance: enemyInstance,
@@ -147,7 +174,14 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
       game.onEnemiesSpawned?.call();
     }
 
-    // 4. Synchroniser la sélection visuelle
+    // 4. Montrer la vague du Feu : les porteurs ont montré leurs dégâts, les
+    //    voisins attendent leur boule de feu.
+    if (freshReport != null) {
+      game.combatVisualSystem?.playFireWave(freshReport);
+    }
+    _lastFireWaveReport = report;
+
+    // 5. Synchroniser la sélection visuelle
     game.selectedEnemy = null;
     for (var card in game.enemyCards) {
       final isSelected = card.id == state.selectedEnemyId;

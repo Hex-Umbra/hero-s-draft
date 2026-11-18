@@ -974,41 +974,11 @@ abstract class AppLocalizations {
   /// **'For {duration} turns, gains {amount} Mana at turn start.'**
   String cardDescStatusManaRegen(int amount, int duration);
 
-  /// No description provided for @cardDescStatusBurn.
+  /// No description provided for @cardDescStatusCharge.
   ///
   /// In en, this message translates to:
-  /// **'Applies {amount} Burn.'**
-  String cardDescStatusBurn(int amount);
-
-  /// No description provided for @cardDescStatusBurnDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Burn for {duration} turns.'**
-  String cardDescStatusBurnDuration(int amount, int duration);
-
-  /// No description provided for @cardDescStatusFreeze.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Freeze.'**
-  String cardDescStatusFreeze(int amount);
-
-  /// No description provided for @cardDescStatusFreezeDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Freeze for {duration} turns.'**
-  String cardDescStatusFreezeDuration(int amount, int duration);
-
-  /// No description provided for @cardDescStatusShock.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Shock.'**
-  String cardDescStatusShock(int amount);
-
-  /// No description provided for @cardDescStatusShockDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies {amount} Shock for {duration} turns.'**
-  String cardDescStatusShockDuration(int amount, int duration);
+  /// **'Applies {amount} {name}.'**
+  String cardDescStatusCharge(int amount, String name);
 
   /// No description provided for @cancel.
   ///
@@ -1580,6 +1550,42 @@ abstract class AppLocalizations {
   /// **'{count} turns'**
   String statusTurns(int count);
 
+  /// No description provided for @statusChargePoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {points}/{threshold}'**
+  String statusChargePoints(String name, int points, int threshold);
+
+  /// No description provided for @statusChargeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {points}'**
+  String statusChargeOpen(String name, int points);
+
+  /// No description provided for @statusChargeWeakenNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: −{percent}% damage next turn'**
+  String statusChargeWeakenNext(String state, int percent);
+
+  /// No description provided for @statusChargeWeakenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: −{percent}% damage this turn'**
+  String statusChargeWeakenNow(String state, int percent);
+
+  /// No description provided for @statusChargeCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: +{bonus} per hit'**
+  String statusChargeCharged(String state, int bonus);
+
+  /// No description provided for @intentSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{state}: does nothing this turn'**
+  String intentSkipped(String state);
+
   /// No description provided for @deckTotalCards.
   ///
   /// In en, this message translates to:
@@ -1838,11 +1844,11 @@ abstract class AppLocalizations {
   /// **'Apply {amount} Vulnerable for {duration, plural, =1{1 turn} other{{duration} turns}}'**
   String effectLineVulnerable(int amount, int duration);
 
-  /// A line of a signature's long-press effect list: the Burn status.
+  /// A line of a signature's long-press effect list: an elemental charge (Burn, Freeze, Shock), by its name.
   ///
   /// In en, this message translates to:
-  /// **'Apply {amount} Burn for {duration, plural, =1{1 turn} other{{duration} turns}}'**
-  String effectLineBurn(int amount, int duration);
+  /// **'Apply {amount} {name}'**
+  String effectLineCharge(int amount, String name);
 
   /// A line of a signature's long-press effect list: a critical-chance bonus.
   ///
@@ -2029,12 +2035,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{percent}% damage taken per point, up to +{max}%'**
   String statusVulnerableHint(int percent, int max);
-
-  /// No description provided for @statusFreezeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'−{percent}% to the next attack per point, down to −{max}%'**
-  String statusFreezeHint(int percent, int max);
 
   /// No description provided for @cardCostHp.
   ///

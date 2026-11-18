@@ -3,11 +3,13 @@ import 'package:flutter/foundation.dart';
 import '../../models/card_instance.dart';
 import '../../models/combat_state.dart';
 import '../../models/data/card_data.dart';
+import '../../models/data/charge_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../models/signature_instance.dart';
 import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
+import '../systems/charge_rules.dart';
 import '../systems/signature_evolution_rules.dart';
 import '../controllers/combat_controller.dart';
 import '../controllers/debug_run_controller.dart';
@@ -211,6 +213,53 @@ class DebugActions {
     updateHeroStats(read, (s) => s.copyWith(currentPv: 0));
   }
 
+  /// Pose un point de la charge [chargeId] par `ChargeRules.pose` : plafond,
+  /// refus sur un porteur rompu, rupture au seuil. Sans bonus de Puissance.
+  /// [enemyId] nul : le heros ; un id absent du catalogue, ou un ennemi
+  /// absent du combat : rien.
+  static void poseCharge(RefReader read, String chargeId, {String? enemyId}) {
+    if (!_allowed(read)) return;
+    final charge = read(chargeCatalogProvider)[chargeId];
+    if (charge == null) return;
+    if (enemyId == null) {
+      read(runProvider.notifier).updateHeroStats(
+        (s) => ChargeRules.pose(s, charge, 1, ChargeBearer.hero),
+      );
+      return;
+    }
+    final combat = read(combatProvider.notifier);
+    final enemy = combat.currentState.enemies
+        .where((e) => e.id == enemyId)
+        .firstOrNull;
+    if (enemy == null) return;
+    combat.updateEnemyStats(
+      enemyId,
+      ChargeRules.pose(enemy.stats, charge, 1, ChargeRules.bearerOf(enemy)),
+    );
+  }
+
+  /// Vide les charges du heros et de chaque ennemi : les entrees des ids du
+  /// catalogue et les pistes. Les autres statuts, Poison compris, restent.
+  static void clearCharges(RefReader read) {
+    if (!_allowed(read)) return;
+    final ids = read(chargeCatalogProvider).ids;
+    EntityStats cleared(EntityStats s) => s.copyWith(
+      statuses: [
+        for (final status in s.statuses)
+          if (!ids.contains(status.id)) status,
+      ],
+      charges: const {},
+    );
+    read(runProvider.notifier).updateHeroStats(cleared);
+    final combat = read(combatProvider.notifier);
+    for (final enemy in List.of(combat.currentState.enemies)) {
+      combat.updateEnemyStats(enemy.id, cleared(enemy.stats));
+    }
+  }
+
+  /// Raccourci de debug : ne force que la phase joueur. Elle ne joue ni la
+  /// chaine du Feu ni les fermetures de phase des charges — une charge
+  /// rompue le reste (decision du plan P-53).
   static void skipEnemyPhase(RefReader read) {
     if (!_allowed(read)) return;
     final combat = read(combatProvider.notifier);

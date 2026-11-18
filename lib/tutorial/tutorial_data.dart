@@ -224,22 +224,26 @@ const List<TutorialStep> kTutorialSteps = [
         'Some cards apply status effects to enemies:\n'
         '• 🧪 Poison: damage equal to its value at the start of their turn. '
         'The value never drops — only the duration ticks down.\n'
-        '• 🔥 Burn: damage at the start of their turn, then the value drops by 1. '
-        'It vanishes when it reaches 0.\n'
-        '• ❄️ Freeze: reduces their next attack, more with each point, up to a '
-        'cap. The duration only ticks down once they have attacked.\n'
-        '• ⚡ Shock: adds its value to **every** hit they take while it lasts.',
+        '• ❄️ Freeze, 🔥 Burn and ⚡ Shock are **charges**: their points build up '
+        'to a threshold, where they break.\n'
+        '• ❄️ Freeze: at the threshold, the enemy freezes and **does nothing** '
+        'on its next turn.\n'
+        '• 🔥 Burn: on its turn, each full set hurts it and **explodes** onto '
+        'its neighbours, who catch fire in turn.\n'
+        '• ⚡ Shock: every hit it takes deals more; at the threshold, it is '
+        '**charged** and the bonus per point doubles, until the end of the turn.',
     bodyFr:
         'Certaines cartes appliquent des altérations aux ennemis :\n'
         '• 🧪 Poison : inflige sa valeur en dégâts au début de leur tour. '
         'La valeur ne baisse jamais — seule la durée décrémente.\n'
-        '• 🔥 Brûlure : inflige des dégâts au début de leur tour, puis la valeur '
-        'perd 1. Elle disparaît en atteignant 0.\n'
-        '• ❄️ Gel : réduit leur prochaine attaque, d\'autant plus qu\'il compte '
-        'de points, jusqu\'à un plafond. La durée ne décrémente qu\'une fois '
-        'qu\'ils ont attaqué.\n'
-        '• ⚡ Électrocution : ajoute sa valeur à **chaque** coup qu\'ils '
-        'subissent tant qu\'elle dure.',
+        '• ❄️ Gel, 🔥 Feu et ⚡ Foudre sont des **charges** : leurs points '
+        's\'accumulent jusqu\'à un seuil, où elles rompent.\n'
+        '• ❄️ Gel : au seuil, l\'ennemi gèle et **ne fait rien** à son prochain '
+        'tour.\n'
+        '• 🔥 Feu : à son tour, chaque tranche complète le blesse et **explose** '
+        'sur ses voisins, qui prennent feu à leur tour.\n'
+        '• ⚡ Foudre : chaque coup qu\'il reçoit fait plus ; au seuil, il est '
+        '**chargé** et le bonus par point double, jusqu\'à la fin du tour.',
     type: TutorialStepType.elements,
   ),
   TutorialStep(
@@ -255,7 +259,7 @@ const List<TutorialStep> kTutorialSteps = [
         'Until an enemy has an intent, that same panel shows an hourglass and '
         '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Might, and drops while they are Frozen.',
+        'accumulated Might; a Frozen enemy does nothing on its turn.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
@@ -267,7 +271,8 @@ const List<TutorialStep> kTutorialSteps = [
         'Tant qu\'un ennemi n\'a pas encore d\'intention, ce même panneau '
         'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
-        'l\'ennemi et sa Puissance accumulée, et baisse tant qu\'il est Gelé.',
+        'l\'ennemi et sa Puissance accumulée ; un ennemi Gelé ne fait rien à son '
+        'tour.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(

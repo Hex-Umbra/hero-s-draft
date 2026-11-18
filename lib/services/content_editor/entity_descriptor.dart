@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import '../../models/data/card_data.dart';
 import '../../models/data/card_delta.dart';
+import '../../models/data/charge_data.dart';
 import '../../models/data/enemy_data.dart';
 import '../../models/data/event_data.dart';
 import '../../models/data/forge_upgrade_data.dart';
@@ -17,7 +18,7 @@ import '../../models/data/stat_rule.dart';
 import '../../models/enemy_intent.dart';
 import '../../models/might_target.dart';
 
-/// Les dix categories d'entites editables, en regard exact des dix sources
+/// Les onze categories d'entites editables, en regard exact des onze sources
 /// de `loadGameDataRegistry` : une par categorie, sans ecart. La carte est
 /// neutre seulement ; la carte d'un lot a la sienne, `lotCard`, et un passif
 /// pour proprietaire (spec P-42 T1 / P-44 lot 1, A31) ; la signature de classe
@@ -32,6 +33,7 @@ enum EntityCategory {
   passive,
   forgeUpgrade,
   levelUpReward,
+  charge,
   heroClass,
   enemy,
 }
@@ -256,7 +258,7 @@ const String _cardTemplate = '''
   ]
 }''';
 
-/// **La declaration des categories editables.** A tenir en regard des dix
+/// **La declaration des categories editables.** A tenir en regard des onze
 /// sources de `loadGameDataRegistry`, une par categorie ; un test verifie
 /// qu'aucune ne manque.
 final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
@@ -566,6 +568,52 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
     "rare": 3,
     "epic": 5,
     "legendary": 7
+  }
+}''',
+  ),
+  EntityCategory.charge: EntityDescriptor(
+    category: EntityCategory.charge,
+    label: 'Charge élémentaire',
+    directory: 'charges',
+    requiredKeys: const {
+      'threshold',
+      'thresholdGrowth',
+      'overcharge',
+      'decay',
+      'breaksOn',
+      'rupture',
+    },
+    // Le moment et la sorte de chaque rupture, lus sur les enumerations du
+    // modele : `heroRupture` est facultative, mais sa sorte est bornee des
+    // qu'elle est ecrite.
+    enumKeys: {
+      'breaksOn': _names(ChargeBreaksOn.values),
+      'rupture.kind': _names(RuptureKind.values),
+      'heroRupture.kind': _names(RuptureKind.values),
+    },
+    // `name` et `description` seulement : `brokenName` et `heroDescription`
+    // sont **facultatifs et par paires**, ce que `ChargeData.fromJson`
+    // verifie (exiges ou refuses selon la rupture), comme les paires
+    // facultatives d'une recompense de niveau.
+    bilingualBases: const ['name', 'description'],
+    construct: ChargeData.fromJson,
+    // Le gabarit est celui du Feu, le seul livre sans paire facultative
+    // (`brokenName`, `heroDescription`) : elles sont ecartees a dessein, comme
+    // celles d'une recompense de niveau. Comme tous les gabarits, il ne porte
+    // pas la prose : elle vient des `bilingualBases`.
+    template: '''
+{
+  "threshold": 3,
+  "thresholdGrowth": 0,
+  "overcharge": true,
+  "decay": 0,
+  "breaksOn": "bearerTurn",
+  "belowThresholdPercent": 50,
+  "rupture": {
+    "kind": "explode",
+    "damagePerPoint": 4,
+    "explosionDamage": 12,
+    "chargePerNeighbour": 1
   }
 }''',
   ),

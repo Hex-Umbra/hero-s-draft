@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
@@ -16,6 +19,13 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/game/controllers/inventory_controller.dart';
 import 'package:roguelike_card_game/models/data/relic_data.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
+import 'package:roguelike_card_game/models/might_target.dart';
+
+import 'enemy_phase_helper.dart';
+import 'shipped_data.dart';
 
 void main() {
   group('CombatController Tests', () {
@@ -286,7 +296,7 @@ void main() {
         expect(combatController.currentState.enemies[1].stats.currentPv, 30);
 
         // Act
-        combatController.startEnemyTurn();
+        runEnemyPhaseStart(combatController);
 
         // Assert: Orc should be dead (cleared), goblin should take 3 poison damage (current HP: 17)
         expect(combatController.currentState.enemies.length, 1);
@@ -543,212 +553,360 @@ void main() {
           actualEnemy1Id,
           EntityStats(maxPv: 20, currentPv: 0, armure: 0, might: 5),
         );
-        combatController.startEnemyTurn(); // This will clean up dead enemies (enemy1)
+        runEnemyPhaseStart(combatController); // This will clean up dead enemies (enemy1)
 
         // enemy1 is dead, selectedEnemyId should now be null, NOT fallback to enemy2
         expect(combatController.currentState.selectedEnemyId, isNull);
       },
     );
 
-    test(
-      'Burn, Freeze, and Shock status effects are resolved correctly in combat',
-      () {
-        final container = ProviderContainer();
-        final combatController = container.read(combatProvider.notifier);
-        final runController = container.read(runProvider.notifier);
-        final deckNotifier = container.read(deckProvider.notifier);
+    // P-53 (spec §4.7, §4.10) : la fermeture du tour du joueur, la chaîne du
+    // Feu vague par vague, puis les autres statuts et le nettoyage des morts.
+    group('Les charges au tour ennemi', () {
+      final shipped = shippedChargeCatalog();
+      final burn = shipped['burn']!;
+      final shock = shipped['shock']!;
 
-        runController.startNewRun(paladinHero);
+      late ProviderContainer container;
+      late CombatController combat;
+      late RunController run;
 
-        final enemy = EnemyInstance(
-          data: goblinData,
-          stats: EntityStats(
-            maxPv: 20,
-            currentPv: 20,
-            armure: 0,
-            might: 5,
-          ),
-          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
-        );
+      setUp(() {
+        container = ProviderContainer(overrides: [shippedChargeOverride()]);
+        combat = container.read(combatProvider.notifier);
+        run = container.read(runProvider.notifier);
+        run.startNewRun(paladinHero);
+      });
 
-        combatController.state = CombatState(
-          enemies: [enemy],
-          selectedEnemyId: enemy.id,
+      tearDown(() => container.dispose());
+
+      EnemyInstance foe(
+        String id, {
+        int burning = 0,
+        int poison = 0,
+        int pv = 200,
+      }) {
+        var stats = EntityStats(maxPv: pv, currentPv: pv, armure: 0, might: 0);
+        if (burning > 0) {
+          stats = ChargeRules.pose(stats, burn, burning, ChargeBearer.enemy);
+        }
+        if (poison > 0) {
+          stats = stats.addStatus(StatusEffect(
+            id: 'poison',
+            name: 'Poison',
+            type: StatusType.debuff,
+            value: poison,
+            duration: 2,
+          ));
+        }
+        return EnemyInstance(id: id, data: goblinData, stats: stats);
+      }
+
+      void fight(List<EnemyInstance> row, {String? selected}) {
+        combat.state = CombatState(
+          enemies: row,
+          selectedEnemyId: selected,
           turnPhase: TurnPhase.player,
         );
+      }
 
-        // 1. SHOCK TEST
-        // Apply shock status with value 4 to the enemy
-        combatController.updateEnemyStats(
-          enemy.id,
-          combatController.currentState.enemies.first.stats.addStatus(
-            const StatusEffect(
-              id: 'shock',
-              name: 'Électrocution',
-              type: StatusType.debuff,
-              value: 4,
-              duration: 2,
-            ),
-          ),
+      EnemyInstance byId(String id) =>
+          combat.currentState.enemies.singleWhere((e) => e.id == id);
+      int lost(String id) => 200 - byId(id).stats.currentPv;
+      int fireOn(String id) => ChargeRules.points(byId(id).stats, 'burn');
+      Iterable<String> rowIds() => combat.currentState.enemies.map((e) => e.id);
+
+      void resolveRemainingWaves() {
+        while (combat.resolveNextFireWave()) {}
+      }
+
+      void play(CardInstance card) {
+        final deck = container.read(deckProvider.notifier);
+        deck.initializeStarterDeck([card]);
+        deck.startCombat(
+            handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
+        deck.state = deck.state.copyWith(hand: [card]);
+        combat.applyPlayerCardPlay(card);
+      }
+
+      test('le Feu se resout avant le Poison', () {
+        fight([foe('B', burning: 3, poison: 3, pv: 20)]);
+
+        combat.startEnemyTurn();
+        expect(byId('B').stats.currentPv, 20 - 12);
+        final poison =
+            byId('B').stats.statuses.singleWhere((s) => s.id == 'poison');
+        expect((poison.value, poison.duration), (3, 2));
+
+        resolveRemainingWaves();
+        combat.resolveEnemyStatuses();
+        expect(byId('B').stats.currentPv, 20 - 12 - 3);
+      });
+
+      test('les vagues une a une', () {
+        fight([foe('A'), foe('B', burning: 9), foe('C')]);
+
+        expect(combat.startEnemyTurn(), isTrue);
+        final first = combat.currentState.fireWaveReport!;
+        expect(first.wave, 1);
+        final resolution = first.resolved.single;
+        expect(
+          (resolution.bearerId, resolution.tranches),
+          ('B', 3),
+        );
+        expect(
+          resolution.splashes.map((s) => (s.targetId, s.charge)),
+          [('A', 3), ('C', 3)],
+        );
+        expect([lost('A'), lost('B'), lost('C')], [36, 36, 36]);
+
+        expect(combat.resolveNextFireWave(), isTrue);
+        expect(combat.currentState.fireWaveReport!.wave, 2);
+        expect(combat.resolveNextFireWave(), isTrue);
+        expect(combat.currentState.fireWaveReport!.wave, 3);
+        expect(combat.resolveNextFireWave(), isFalse);
+        expect(combat.currentState.fireWaveReport, isNull);
+        expect([lost('A'), lost('B'), lost('C')], [48, 64, 48]);
+      });
+
+      test('cleanDeadEnemies apres les statuts, la rangee se resserre', () {
+        fight([foe('A', pv: 20), foe('B', burning: 9), foe('C')]);
+
+        combat.startEnemyTurn();
+        expect(byId('A').stats.currentPv, 0);
+        resolveRemainingWaves();
+        expect(rowIds(), ['A', 'B', 'C']);
+
+        combat.resolveEnemyStatuses();
+        expect(rowIds(), ['B', 'C']);
+        expect(
+          combat.currentState.defeatedEnemies.map((e) => e.id),
+          ['A'],
+        );
+      });
+
+      test('un porteur que son Poison acheve a son tour explose quand meme',
+          () {
+        fight([
+          foe('A'),
+          foe('B', burning: 3, poison: 15, pv: 20),
+          foe('C'),
+        ]);
+
+        combat.startEnemyTurn();
+        expect([lost('A'), lost('C')], [12, 12]);
+        expect([fireOn('A'), fireOn('C')], [1, 1]);
+        expect(byId('B').stats.currentPv, greaterThan(0));
+
+        resolveRemainingWaves();
+        combat.resolveEnemyStatuses();
+
+        // Le point de Feu de chaque voisin, sous le seuil, fait
+        // halfUp(1 × 4, 50) = 2 à la vague 2.
+        expect([lost('A'), lost('C')], [12 + 2, 12 + 2]);
+        expect([fireOn('A'), fireOn('C')], [0, 0]);
+        expect(rowIds(), ['A', 'C']);
+        expect(
+          combat.currentState.defeatedEnemies.map((e) => e.id),
+          ['B'],
+        );
+      });
+
+      test('un ennemi tue par une carte perd son Feu sans exploser', () {
+        fight(
+          [foe('A'), foe('B', burning: 3, pv: 6), foe('C')],
+          selected: 'B',
         );
 
-        // Play a card that deals 6 damage (Strike).
-        // Since strength is 0, base damage = 6. With shock, it should do 6 + 4 = 10 damage.
-        final strikeCard = CardInstance(
+        play(CardInstance(
           data: const CardData(
             id: 'strike',
             nameEn: 'Strike',
             nameFr: 'Frappe',
-            descriptionEn: 'Deals 6 damage.',
-            descriptionFr: 'Inflige 6 dégâts.',
-            cost: 1,
+            cost: 0,
             type: CardType.attack,
             rarity: CardRarity.common,
             target: CardTarget.singleEnemy,
             effects: [CardEffect(type: 'damage', value: 6)],
           ),
+        ));
+        expect(rowIds(), ['A', 'C']);
+
+        expect(combat.startEnemyTurn(), isFalse);
+        expect([lost('A'), lost('C')], [0, 0]);
+      });
+
+      test('les deux fermetures de phase', () {
+        fight([foe('A')]);
+        void charge() {
+          combat.updateEnemyStats(
+            'A',
+            ChargeRules.pose(byId('A').stats, shock, 3, ChargeBearer.enemy),
+          );
+          run.updateHeroStats(
+            (s) => ChargeRules.pose(s, shock, 3, ChargeBearer.hero),
+          );
+        }
+
+        (int, ChargeState) onFoe() => (
+              ChargeRules.points(byId('A').stats, 'shock'),
+              byId('A').stats.charges['shock']!.state,
+            );
+        (int, ChargeState) onHero() => (
+              ChargeRules.points(run.currentState.heroStats, 'shock'),
+              run.currentState.heroStats.charges['shock']!.state,
+            );
+
+        charge();
+        expect(onFoe(), (3, ChargeState.brokenActive));
+        expect(onHero(), (3, ChargeState.brokenActive));
+
+        combat.startEnemyTurn();
+        expect(onFoe(), (0, ChargeState.none));
+        expect(onHero(), (0, ChargeState.none));
+
+        charge();
+        expect(onFoe(), (3, ChargeState.brokenActive));
+        expect(onHero(), (3, ChargeState.brokenActive));
+
+        combat.endEnemyTurn();
+        expect(onFoe(), (0, ChargeState.none));
+        expect(onHero(), (0, ChargeState.none));
+      });
+
+      test('le Feu d une explosion ne recoit aucun bonus de Puissance', () {
+        run.updateHeroStats(
+          (s) => s.copyWith(might: 2, mightTargets: {MightTarget.alteration}),
         );
+        fight([foe('A'), foe('B'), foe('C')], selected: 'B');
 
-        deckNotifier.initializeStarterDeck([strikeCard]);
-        deckNotifier.startCombat(handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
-        deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
-
-        combatController.applyPlayerCardPlay(
-          strikeCard,
-        );
-
-        // Enemy HP should be 20 - 10 = 10
-        expect(combatController.currentState.enemies.first.stats.currentPv, 10);
-
-        // 2. FREEZE TEST
-        // Add freeze status to the enemy
-        combatController.updateEnemyStats(
-          enemy.id,
-          combatController.currentState.enemies.first.stats.addStatus(
-            const StatusEffect(
-              id: 'freeze',
-              name: 'Gel',
-              type: StatusType.debuff,
-              value: 2,
-              duration: 2,
-            ),
+        play(CardInstance(
+          data: const CardData(
+            id: 'allumage_test',
+            cost: 0,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [
+              CardEffect(type: 'apply_status', value: 3, statusId: 'burn'),
+            ],
           ),
-        );
+        ));
+        expect(fireOn('B'), 3 + 2);
 
-        // Set enemy's intent to Attack 10
-        combatController.state = combatController.state.copyWith(
-          enemies: [
-            combatController.currentState.enemies.first.copyWith(
-              currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
-            ),
-          ],
-        );
+        combat.startEnemyTurn();
+        expect([fireOn('A'), fireOn('C')], [1, 1]);
+      });
 
-        final playerHpBeforeAttack =
-            runController.currentState.heroStats.currentPv; // should be 100
-        combatController.resolveEnemyIntent(enemy.id);
-
-        // Attack damage of 10 should be halved to 5 because of freeze
-        expect(
-          runController.currentState.heroStats.currentPv,
-          playerHpBeforeAttack - 5,
-        );
-
-        // Verify that freeze duration decreased by 1 (was 2, now 1)
-        expect(
-          combatController.currentState.enemies.first.stats.statuses.firstWhere((s) => s.id == 'freeze').duration,
-          1,
-        );
-
-        // 3. VULNERABLE TEST (Enemy to Player)
-        // Reset player HP to 100
-        runController.heal(100);
-        // Add vulnerable status to hero
-        runController.addStatus(
-          const StatusEffect(
-            id: 'vulnerable',
-            name: 'Vulnérable',
-            type: StatusType.debuff,
-            value: 2,
-            duration: 2,
+      // Un ennemi qui porte déjà `points` de Gel, et une intention en cours.
+      EnemyInstance frozenFoe(
+        String id, {
+        int points = 3,
+        bool withIntent = true,
+        int burning = 0,
+        int poison = 0,
+      }) {
+        final base = foe(id, burning: burning, poison: poison);
+        return base.copyWith(
+          stats: ChargeRules.pose(
+            base.stats,
+            shipped['freeze']!,
+            points,
+            ChargeBearer.enemy,
           ),
+          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+          clearIntent: !withIntent,
+          intentStep: 1,
         );
-        // Enemy attacks with 10. Halved to 5 because of freeze (which is now at duration 1),
-        // then multiplied by 1.5 because of vulnerable: 5 * 1.5 = 7.5 -> 8.
-        final playerHpBeforeVulnerableAttack =
-            runController.currentState.heroStats.currentPv; // 100
-        combatController.resolveEnemyIntent(enemy.id);
+      }
 
-        expect(
-          runController.currentState.heroStats.currentPv,
-          playerHpBeforeVulnerableAttack - 8,
-        );
+      test('l ennemi gele ne resout rien et consomme son gel', () {
+        fight([
+          frozenFoe('A'),
+          frozenFoe('B', points: 2),
+        ]);
+        final pv = run.currentState.heroStats.currentPv;
+        expect(byId('A').skipsAction, isTrue);
 
-        // Verify that freeze status is now removed because its duration dropped to 0
-        expect(
-          combatController.currentState.enemies.first.stats.statuses.any((s) => s.id == 'freeze'),
-          isFalse,
-        );
+        runEnemyPhaseStart(combat);
+        // Un Gel sous le seuil décline d'un point, à la phase de son porteur.
+        expect(ChargeRules.points(byId('B').stats, 'freeze'), 1);
 
-        // 4. VULNERABLE TEST (Player to Enemy)
-        // Reset enemy HP to 20 and clear existing statuses (like shock)
-        combatController.updateEnemyStats(
-          enemy.id,
-          combatController.currentState.enemies.first.stats.copyWith(currentPv: 20, statuses: []),
-        );
-        // Add vulnerable status to enemy
-        combatController.updateEnemyStats(
-          enemy.id,
-          combatController.currentState.enemies.first.stats.addStatus(
-            const StatusEffect(
-              id: 'vulnerable',
-              name: 'Vulnérable',
-              type: StatusType.debuff,
-              value: 2,
-              duration: 2,
-            ),
-          ),
-        );
-        // Play a card that deals 6 damage (Strike).
-        // Since strength is 0, base damage = 6.
-        // Enemy has vulnerable, so damage should be 6 * 1.5 = 9.
-        deckNotifier.state = deckNotifier.state.copyWith(hand: [strikeCard]);
-        combatController.applyPlayerCardPlay(
-          strikeCard,
-        );
-        // Enemy HP should be 20 - 9 = 11.
-        expect(combatController.currentState.enemies.first.stats.currentPv, 11);
+        combat.resolveEnemyIntent('A');
+        expect(run.currentState.heroStats.currentPv, pv);
+        expect(byId('A').skipsAction, isFalse);
 
-        // 5. BURN TEST
-        // Add burn status with value 3 to the enemy
-        combatController.updateEnemyStats(
-          enemy.id,
-          combatController.currentState.enemies.first.stats.addStatus(
-            const StatusEffect(
-              id: 'burn',
-              name: 'Brûlure',
-              type: StatusType.debuff,
-              value: 3,
-              duration: 2,
-            ),
-          ),
-        );
+        combat.endEnemyTurn();
+        expect(byId('A').currentIntent, goblinData.intents![1]);
+      });
 
-        final enemyHpBeforeBurn = combatController
-            .currentState
-            .enemies
-            .first
-            .stats
-            .currentPv; // should be 11
-        combatController.startEnemyTurn();
+      test('ses statuts se resolvent quand meme', () {
+        fight([frozenFoe('A', burning: 3, poison: 3)]);
+        final pv = run.currentState.heroStats.currentPv;
 
-        // Enemy HP should decrease by 3 due to burn, so 11 - 3 = 8
-        expect(
-          combatController.currentState.enemies.first.stats.currentPv,
-          enemyHpBeforeBurn - 3,
-        );
-      },
-    );
+        runEnemyPhaseStart(combat);
+        expect(lost('A'), 15);
+
+        combat.resolveEnemyIntent('A');
+        expect(run.currentState.heroStats.currentPv, pv);
+        expect(lost('A'), 15);
+      });
+
+      test('un ennemi gele sans intention consomme son gel', () {
+        fight([frozenFoe('A', withIntent: false)]);
+        expect(byId('A').currentIntent, isNull);
+        expect(byId('A').skipsAction, isTrue);
+
+        combat.resolveEnemyIntent('A');
+
+        expect(byId('A').skipsAction, isFalse);
+      });
+
+      test('un combat de boss : chaque ennemi a 6 ; une elite a 3', () {
+        List<int> thresholds(MapNodeType type, int act) {
+          combat.initializeCombat(1, type, [goblinData], act: act);
+          return [
+            for (final enemy in combat.currentState.enemies)
+              ChargeRules.linesFor(
+                ChargeRules.pose(
+                  enemy.stats,
+                  shipped['freeze']!,
+                  2,
+                  ChargeRules.bearerOf(enemy),
+                ),
+              ).single.threshold,
+          ];
+        }
+
+        final boss = thresholds(MapNodeType.boss, 6);
+        expect(boss, isNotEmpty);
+        expect(boss.every((t) => t == 6), isTrue);
+
+        final elite = thresholds(MapNodeType.elite, 1);
+        expect(elite, isNotEmpty);
+        expect(elite.every((t) => t == 3), isTrue);
+      });
+
+      test('Nova de givre pose le Gel sur chaque ennemi, au seuil de son porteur',
+          () {
+        final json = jsonDecode(
+          File('assets/data/cards/mana_flux/frost_nova.json').readAsStringSync(),
+        ) as Map<String, dynamic>;
+        final nova = CardData.fromJson(json);
+        final points = nova.effects.single.value;
+        fight([foe('A'), foe('B').copyWith(isBoss: true)]);
+
+        play(CardInstance(data: nova));
+
+        (String, int, int) freezeOn(String id) {
+          final line = ChargeRules.linesFor(byId(id).stats).single;
+          return (line.chargeId, line.points, line.threshold);
+        }
+
+        expect(freezeOn('A'), ('freeze', points, 3));
+        expect(freezeOn('B'), ('freeze', points, 6));
+      });
+    });
   });
 
   group('CombatController — moitié joueur du cycle de tour', () {

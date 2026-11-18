@@ -7,10 +7,13 @@ import 'package:roguelike_card_game/game/controllers/combat_controller.dart';
 import 'package:roguelike_card_game/game/controllers/deck_controller.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
+import 'package:roguelike_card_game/game/systems/charge_rules.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
+import 'package:roguelike_card_game/models/charge_track.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -20,6 +23,7 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 
+import 'shipped_data.dart';
 import 'scripted_random.dart';
 
 void main() {
@@ -80,10 +84,10 @@ void main() {
       expect(stats.statuses.first.duration, 3); // max(2, 3)
 
       // Tick statuses reduces duration
-      stats = stats.tickStatuses();
+      stats = stats.tickStatuses(const {});
       expect(stats.statuses.first.duration, 2);
 
-      stats = stats.tickStatuses();
+      stats = stats.tickStatuses(const {});
       expect(stats.statuses.first.duration, 1);
     });
 
@@ -251,36 +255,30 @@ void main() {
       },
     );
 
-    test('le Gel reduit l intention de 25 % par point, 3 points au plus', () {
-      EnemyInstance frozen(int points) => EnemyInstance(
-            stats: EntityStats(
-              maxPv: 20,
-              currentPv: 20,
-              armure: 0,
-              might: 10,
-            ).addStatus(StatusEffect(
-              id: 'freeze',
-              name: 'Gel',
-              type: StatusType.debuff,
-              value: points,
-              duration: 1,
-            )),
-            data: const EnemyData(
-              id: 'test',
-              nameEn: 'Test Enemy',
-              nameFr: 'Test Ennemi',
-              maxHp: 20,
-              baseDamage: 10,
-              spritePath: '',
-            ),
-            currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
-          );
+    test(
+      'un ennemi qui porte du Gel sous le seuil montre son intention entiere',
+      () {
+        final enemy = EnemyInstance(
+          stats: ChargeRules.pose(
+            EntityStats(maxPv: 20, currentPv: 20, armure: 0, might: 10),
+            shippedChargeCatalog()['freeze']!,
+            2,
+            ChargeBearer.enemy,
+          ),
+          data: const EnemyData(
+            id: 'test',
+            nameEn: 'Test Enemy',
+            nameFr: 'Test Ennemi',
+            maxHp: 20,
+            baseDamage: 10,
+            spritePath: '',
+          ),
+          currentIntent: EnemyIntent(type: IntentType.attack, value: 10),
+        );
 
-      expect(
-        [1, 2, 3, 5].map((p) => frozen(p).effectiveIntent?.value),
-        [8, 5, 3, 3],
-      );
-    });
+        expect(enemy.effectiveIntent?.value, 10);
+      },
+    );
   });
 
   // La portée de la règle s'écrit dans la fabrique, une fois (spec P-43 E0,
@@ -326,7 +324,7 @@ void main() {
     });
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(overrides: [shippedChargeOverride()]);
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);
       deck = container.read(deckProvider.notifier);
@@ -390,7 +388,7 @@ void main() {
 
       final burn = onEnemy('burn').single;
       expect(burn.value, 5);
-      expect(burn.duration, 2);
+      expect(burn.duration, 1);
     });
 
     test(
@@ -460,6 +458,17 @@ void main() {
       final fromCard = statuses.where((s) => s.sourceId == 'card:test');
       expect(fromCard.singleWhere((s) => s.id == 'might').value, 1);
       expect(statuses.singleWhere((s) => s.id == 'armor_regen').value, 2);
+    });
+
+    test('la Puissance s ajoute avant le plafond du Gel', () {
+      play(shipped('ice_bolt'));
+
+      final stats = combat.currentState.enemies.single.stats;
+      final track = stats.charges['freeze']!;
+      expect(track.state, ChargeState.brokenPending);
+      expect(track.rupture.kind, RuptureKind.skipAction);
+      expect(track.ruptures, 1);
+      expect(onEnemy('freeze'), isEmpty);
     });
   });
 }

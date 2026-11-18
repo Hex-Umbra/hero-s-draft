@@ -8,6 +8,8 @@ import 'package:roguelike_card_game/models/data/hero_data.dart';
 import 'package:roguelike_card_game/models/data/xp_curve_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
+import 'enemy_phase_helper.dart';
+
 /// La courbe de D67, écrite ici et non lue dans le fichier : ces cas gardent
 /// la règle du palier ; `real_bundle_load_test.dart` garde la donnée livrée.
 const _d67 = XpCurveData([
@@ -228,7 +230,7 @@ void main() {
         }
 
         // Trigger dead enemy cleaning by starting enemy turn
-        combatController.startEnemyTurn();
+        runEnemyPhaseStart(combatController);
 
         // Verify that all enemies have been moved to defeatedEnemies
         expect(combatController.currentState.enemies.length, 0);

@@ -83,7 +83,7 @@ final _lots = <String, (String, int, int, int, String, String, List<_Fx>)>{
   ),
   'kindle': (
     'mana_flux', 1, 0, 0, 'skill', 'singleEnemy',
-    [_fx('apply_status', 4, status: 'burn', duration: 3)],
+    [_fx('apply_status', 3, status: 'burn', duration: 3)],
   ),
   'spark_barrage': (
     'mana_flux', 2, 0, 0, 'skill', 'singleEnemy',

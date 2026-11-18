@@ -10,6 +10,7 @@ import 'package:roguelike_card_game/models/card_instance.dart';
 import 'package:roguelike_card_game/models/combat_state.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
@@ -63,6 +64,7 @@ void main() {
         settings: () => const AudioSettings(),
       ),
       imagesToPreload: const [],
+      chargeCatalog: const ChargeCatalog.empty(),
       onEnemiesDead: () {},
       onPhaseChanged: (_) {},
       onShowTooltip: (_, _, _) {},
@@ -73,7 +75,9 @@ void main() {
       },
       onEnemyKilled: () {},
       onResolveEnemyIntent: (_) {},
-      onStartEnemyTurn: () {},
+      onStartEnemyTurn: () => false,
+      onResolveFireWave: () => false,
+      onResolveEnemyStatuses: () {},
       onEndEnemyTurn: () {},
       onSelectEnemy: selectedIds.add,
       onUpdateEnemyStats: (_, _) {},

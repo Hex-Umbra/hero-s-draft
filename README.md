@@ -68,7 +68,7 @@ signature du paladin, le chargeur l'en déduit, sans qu'aucun champ du fichier n
 assets/data/
 ├── cards/<id>.json              # carte neutre
 ├── cards/<passif>/<id>.json     # carte de lot : le dossier est le passif
-├── relics/<id>.json             # idem pour events/, forge_upgrades/, passives/
+├── relics/<id>.json             # idem pour events/, forge_upgrades/, passives/, charges/
 ├── classes/<id>/                # un dossier auto-suffisant par classe
 │   ├── class.json
 │   ├── icon.png

@@ -3,7 +3,7 @@
 Les mécanismes de profondeur des cartes, livrés par le lot 1 de P-44 par la vague 5,
 fusionnée dans `main` le 2026-11-09 —
 [ADR-111](../_adr/ADR-111-profondeur-lot-1-couts-croissance-multi-coups-statuts-proportionnels.md).
-Les statuts proportionnels sont en [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.1, les
+Les statuts proportionnels sont en [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.4, les charges §4.5, les
 cinq runes de mécanisme en [`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md) §3.8.2.
 
 #### 3.14.1. Les coûts en PV et en Armure
@@ -64,9 +64,17 @@ Un effet grandit d'un terme **`floor(ratio × quantité)`**, lu au moment de l'e
 
 `hits` (entier ≥ 1, 1 par défaut) et `mightRatio` (]0, 1], 1 par défaut), sur un effet de dégâts
 seulement. Pour chaque coup et chaque cible vivante : la valeur jouée plus
-**`floor(Puissance × mightRatio)`**, puis le pipeline — critique et Électrocution par coup —, puis
+**`floor(Puissance × mightRatio)`**, puis le pipeline — critique et Foudre par coup —, puis
 l'absorption et l'éclaboussure. Un coup ne tombe que sur une cible vivante ; le vol de vie, de
 statut comme de rune, se paie **une fois**, après tous les coups. Le badge affiche `3×3`.
+
+**La Foudre se lit à chaque coup**, sur les points du moment (vague 7, livrée sur la branche, en
+attente du test, de la PR, de la fusion et du tag du propriétaire —
+[ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) : *Rafale d'étincelles* pose 1 Foudre puis
+frappe 3 × (3 + 1) = **12** sur un ennemi neuf ; sur un ennemi à 2 Foudre, sa pose le charge et
+chaque coup fait +2 par point : 3 × (3 + 6) = **27**. Le joueur voit le bonus « +N » de chaque
+coup en jaune ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5). Chez le héros gelé,
+chaque coup perd 50 % ([`_rules/03-3`](03-3-pipeline-de-degats-centralise.md)).
 
 > [!NOTE]
 > **Garde de donnée (D38)** : sur chaque carte, Σ `hits` × `mightRatio` ≤ coût en mana + 1. Une
@@ -75,8 +83,9 @@ statut comme de rune, se paie **une fois**, après tous les coups. Le badge affi
 #### 3.14.4. Un seul bonus de Puissance de statut par résolution
 
 **Le premier `apply_status` de la résolution reçoit le bonus de Puissance** de statut
-(`statusBonusFor`), tous statuts confondus ; les suivants, non (Q11). Une carte qui pose une
-Brûlure et porte la rune *Brûlant* ne compte la Puissance qu'une fois. **Un écho est une seconde
+(`statusBonusFor`), tous statuts confondus ; les suivants, non (Q11). Une carte qui pose du
+Feu et porte la rune *Brûlant* ne compte la Puissance qu'une fois — depuis la vague 7, le bonus
+ajoute des points de charge, avant le plafond du Gel ; une explosion de Feu n'en reçoit aucun. **Un écho est une seconde
 résolution** : son premier `apply_status` reçoit le sien.
 
 #### 3.14.5. L'ordre d'un jeu de carte

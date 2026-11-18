@@ -99,7 +99,7 @@ void main() {
       expect(defend.effects.any((e) => e.type == 'armor'), isTrue);
     });
 
-    test('Boule de Feu applique bien Brûlure', () {
+    test('Boule de Feu applique bien Feu', () {
       final fireball = fixtures.card(TutorialFixtureIds.fireball);
       expect(fireball.type, CardType.attack);
       expect(

@@ -22,6 +22,10 @@ Conception : [spec E0](../../docs/superpowers/specs/2026-10-01-p43-e0-puissance-
 et décisions d'exécution recopiés au
 [compte rendu de la vague](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-1-compte-rendu.md),
 §2.1 à §2.3.
+**D4 complétée le 2026-11-17 par [ADR-117](ADR-117-les-charges-elementaires.md)** (P-53, vague 7,
+livré sur la branche `feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la
+fusion et du tag du propriétaire) : devenus des charges, ces statuts restent sans source, leurs
+points en somme par id, leur piste hors sauvegarde.
 
 ### Contexte
 

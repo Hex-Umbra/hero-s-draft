@@ -5,8 +5,8 @@ de lot** sous `assets/data/cards/<passif>/<id>.json` — six par passif de la tr
 passif de la tranche 2 (D16) — **re-mesuré le 2026-11-15** (`find assets/data/cards -name '*.json'`).
 Le nom du fichier est l'`id` ; le nom du dossier d'un lot est l'id de son passif. La forme C est de
 la tranche 1 de P-42, vague 5, fusionnée dans `main` le 2026-11-09 —
-[ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md) ; la tranche 2 est livrée sur la
-branche de la vague 6, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+[ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md) ; la tranche 2, vague 6, est fusionnée
+dans `main` le 2026-11-15 —
 [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md). Les signatures ne sont pas des
 cartes : leur règle est en [`_rules/02-2`](02-2-systeme-de-heros.md) §Signatures
 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
@@ -56,6 +56,14 @@ dans son fichier — des ordres de grandeur que le test du propriétaire corrige
 - **Le noyau neutre** : *Focalisation* (`focus`) est **supprimée** (D28) ; *Forme Démoniaque* a
   rejoint le lot Sang, contenu inchangé ; *Trait de Glace* pose 2 Gel au lieu de 1 (barème
   proportionnel). Les 14 autres sont inchangées.
+- **Les cartes relues sur les charges élémentaires** (vague 7, livrée sur la branche, en attente du
+  test, de la PR, de la fusion et du tag du propriétaire —
+  [ADR-117](../_adr/ADR-117-les-charges-elementaires.md), réponses P-a et P-b) : le Gel, le Feu et
+  la Foudre deviennent des charges ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5) ;
+  la Brûlure se nomme le Feu, l'Électrocution la Foudre. *Embrasement* pose **3 Feu** (4 avant) ;
+  *Boule de Feu* (2 Feu), *Trait de Glace* (2 Gel), *Coup de Tonnerre* (1 Foudre, après son coup),
+  *Nova de givre* (2 Gel à tous) et *Rafale d'étincelles* (1 Foudre, puis 3 × 3) gardent leurs
+  valeurs ; aucun `statusId` ne change, aucune durée ne s'affiche plus sous une charge.
 
 ### L'offre et le draft de départ
 

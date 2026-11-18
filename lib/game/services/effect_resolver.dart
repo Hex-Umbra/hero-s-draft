@@ -85,30 +85,6 @@ class EffectResolver {
           value: value,
           duration: duration,
         );
-      case 'burn':
-        return StatusEffect(
-          id: 'burn',
-          name: 'Brûlure',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
-      case 'freeze':
-        return StatusEffect(
-          id: 'freeze',
-          name: 'Gel',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
-      case 'shock':
-        return StatusEffect(
-          id: 'shock',
-          name: 'Électrocution',
-          type: StatusType.debuff,
-          value: value,
-          duration: duration,
-        );
       default:
         return null;
     }
@@ -202,8 +178,10 @@ class EffectResolver {
     String? selectedEnemyId,
     EffectRegistry registry,
   ) {
-    var statusBonusPending = true;
-    for (final effect in [...effective.addedEffects, ...effective.effects]) {
+    final order = [...effective.addedEffects, ...effective.effects];
+    final bonusIndex = statusBonusIndex(effective);
+    for (var i = 0; i < order.length; i++) {
+      final effect = order[i];
       final heroStats = runController.currentState.heroStats;
       var value = effect.value +
           scaleTerm(
@@ -212,10 +190,8 @@ class EffectResolver {
             combat: combatController.currentState,
             targetId: selectedEnemyId,
           );
-      // Le drapeau tombe au premier statut, que le bonus vaille 0 ou non.
-      if (effect.type == 'apply_status' && statusBonusPending) {
+      if (i == bonusIndex) {
         value += heroStats.statusBonusFor(card.data.target);
-        statusBonusPending = false;
       }
       registry.get(effect.type)?.resolve(
             card: card,
@@ -228,6 +204,25 @@ class EffectResolver {
           );
     }
   }
+
+  /// L'indice, dans l'ordre de résolution — les effets ajoutés puis ceux de la
+  /// carte —, du seul effet qui reçoit la Puissance de statut : le premier
+  /// `apply_status`, tous statuts confondus, même s'il est posé sur soi et que
+  /// le bonus y vaut 0 (Q11, A15) ; -1 sans statut. Lu par la résolution et
+  /// par la face de la carte.
+  static int statusBonusIndex(EffectiveCard effective) {
+    bool isStatus(CardEffect e) => e.type == 'apply_status';
+    final added = effective.addedEffects.indexWhere(isStatus);
+    if (added != -1) return added;
+    final own = effective.effects.indexWhere(isStatus);
+    return own == -1 ? -1 : effective.addedEffects.length + own;
+  }
+
+  /// Vrai si l'effet propre [index] de la carte — celui de
+  /// `EffectiveCard.effects` qu'une face affiche — reçoit la Puissance de
+  /// statut.
+  static bool cardEffectGetsStatusBonus(EffectiveCard effective, int index) =>
+      statusBonusIndex(effective) == effective.addedEffects.length + index;
 
   /// Ce que la croissance de [effect] ajoute à sa valeur : 0 sans `scaleWith`,
   /// sinon le terme de la quantité que sa source lit (spec P-44 lot 1, §4.2).

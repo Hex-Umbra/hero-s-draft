@@ -1,0 +1,14 @@
+{
+  "id": "burn",
+  "name_fr": "Feu",
+  "name_en": "Burn",
+  "description_fr": "S'accumule sans limite. Au tour du porteur, tout se résout : chaque tranche de {threshold} inflige {damagePerPoint} par point au porteur et explose — {explosionDamage} dégâts et {chargePerNeighbour} {name} à chacun de ses voisins ; le reste inflige {belowValue} par point.",
+  "description_en": "Builds up without limit. On the bearer's turn, it all resolves: each set of {threshold} deals {damagePerPoint} per point to the bearer and explodes — {explosionDamage} damage and {chargePerNeighbour} {name} to each neighbour; the rest deals {belowValue} per point.",
+  "threshold": 3,
+  "thresholdGrowth": 0,
+  "overcharge": true,
+  "decay": 0,
+  "breaksOn": "bearerTurn",
+  "belowThresholdPercent": 50,
+  "rupture": { "kind": "explode", "damagePerPoint": 4, "explosionDamage": 12, "chargePerNeighbour": 1 }
+}

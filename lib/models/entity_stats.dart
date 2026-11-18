@@ -1,6 +1,7 @@
 import 'dart:math' show max, min;
 
 import 'package:meta/meta.dart';
+import 'charge_track.dart';
 import 'might_target.dart';
 import 'status_effect.dart';
 
@@ -20,6 +21,15 @@ class EntityStats {
   final int critChance;
   final double critMultiplier;
   final List<StatusEffect> statuses;
+
+  /// La piste de chaque charge posée sur ce porteur, par id (spec P-53, §4.1).
+  /// Hors sauvegarde : ni `toJson` ni `fromJson` n'y touchent.
+  final Map<String, ChargeTrack> charges;
+
+  /// Un [ChargeHit] par coup reçu qui a eu un bonus de Foudre, dans l'ordre.
+  /// Ne sert qu'à l'affichage : il grossit le temps d'un combat, et
+  /// [clearCombatEffects] le vide. Hors sauvegarde : ni `toJson` ni `fromJson`.
+  final List<ChargeHit> chargeHits;
   final bool lastActionWasCrit;
 
   EntityStats({
@@ -37,8 +47,12 @@ class EntityStats {
     this.critChance = 0,
     this.critMultiplier = 1.5,
     List<StatusEffect> statuses = const [],
+    Map<String, ChargeTrack> charges = const {},
+    List<ChargeHit> chargeHits = const [],
     this.lastActionWasCrit = false,
-  }) : statuses = List.unmodifiable(statuses);
+  })  : statuses = List.unmodifiable(statuses),
+        charges = Map.unmodifiable(charges),
+        chargeHits = List.unmodifiable(chargeHits);
 
   EntityStats copyWith({
     int? maxPv,
@@ -55,6 +69,8 @@ class EntityStats {
     int? critChance,
     double? critMultiplier,
     List<StatusEffect>? statuses,
+    Map<String, ChargeTrack>? charges,
+    List<ChargeHit>? chargeHits,
     bool? lastActionWasCrit,
   }) {
     return EntityStats(
@@ -72,6 +88,8 @@ class EntityStats {
       critChance: critChance ?? this.critChance,
       critMultiplier: critMultiplier ?? this.critMultiplier,
       statuses: statuses ?? this.statuses,
+      charges: charges ?? this.charges,
+      chargeHits: chargeHits ?? this.chargeHits,
       lastActionWasCrit: lastActionWasCrit ?? this.lastActionWasCrit,
     );
   }
@@ -140,26 +158,25 @@ class EntityStats {
     return copyWith(statuses: newStatuses);
   }
 
-  /// Décrémente la durée des statuts et supprime ceux expirés
-  EntityStats tickStatuses() {
-    List<StatusEffect> newStatuses = statuses
-        .map((s) {
-          if (s.id == 'freeze') {
-            return s;
-          }
-          if (s.id == 'burn') {
-            return s.copyWith(
-              value: s.value - 1,
-              duration: s.duration - 1,
-            );
-          }
-          return s.copyWith(duration: s.duration - 1);
-        })
-        .where((s) => s.duration > 0 && (s.id != 'burn' || s.value > 0))
-        .toList();
+  /// Décrémente la durée des statuts et supprime ceux expirés. Les entrées
+  /// des charges de [chargeIds] passent intactes : leurs points ne vieillissent
+  /// pas, ils se règlent par les règles des charges.
+  EntityStats tickStatuses(Set<String> chargeIds) {
+    final newStatuses = [
+      for (final s in statuses)
+        if (chargeIds.contains(s.id))
+          s
+        else
+          s.copyWith(duration: s.duration - 1),
+    ].where((s) => s.duration > 0).toList();
 
     return copyWith(statuses: newStatuses);
   }
+
+  /// Vide ce que le combat a posé : les statuts, les pistes des charges et le
+  /// journal des coups.
+  EntityStats clearCombatEffects() =>
+      copyWith(statuses: const [], charges: const {}, chargeHits: const []);
 
   int get effectiveMastery {
     int bonus = 0;

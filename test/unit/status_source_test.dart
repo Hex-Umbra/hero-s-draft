@@ -115,7 +115,7 @@ void main() {
       final stats = hero([
         might(2, 4, sourceId: demonForm),
         might(5, 1, sourceId: armorRule),
-      ]).tickStatuses();
+      ]).tickStatuses(const {});
 
       expect(mightOf(stats), hasLength(1));
       expect(mightOf(stats).single.sourceId, demonForm);
@@ -157,7 +157,7 @@ void main() {
     test('deux Forme Demoniaque a un tic d ecart : une entree de 4', () {
       final stats = hero()
           .addStatus(might(2, 4, sourceId: demonForm))
-          .tickStatuses()
+          .tickStatuses(const {})
           .addStatus(might(2, 4, sourceId: demonForm));
 
       expect(mightOf(stats), hasLength(1));
@@ -193,7 +193,7 @@ void main() {
 
       final releves = <int>[];
       for (var tic = 0; tic < 4; tic++) {
-        stats = stats.tickStatuses();
+        stats = stats.tickStatuses(const {});
         releves.add(stats.effectiveMight);
       }
       expect(releves, [2, 2, 2, 0]);

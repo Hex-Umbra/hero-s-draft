@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/heros_draft_game.dart';
 import 'package:roguelike_card_game/models/data/audio_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/services/audio/audio_director.dart';
 import 'package:roguelike_card_game/services/audio/audio_settings.dart';
 import 'package:roguelike_card_game/services/audio/silent_audio_backend.dart';
@@ -16,6 +17,7 @@ HerosDraftGame _buildGame({List<String> imagesToPreload = const []}) =>
         settings: () => const AudioSettings(),
       ),
       imagesToPreload: imagesToPreload,
+      chargeCatalog: const ChargeCatalog.empty(),
       onEnemiesDead: () {},
       onPhaseChanged: (_) {},
       onShowTooltip: (_, _, _) {},
@@ -23,7 +25,9 @@ HerosDraftGame _buildGame({List<String> imagesToPreload = const []}) =>
       onPlayCard: (_, _) => false,
       onEnemyKilled: () {},
       onResolveEnemyIntent: (_) {},
-      onStartEnemyTurn: () {},
+      onStartEnemyTurn: () => false,
+      onResolveFireWave: () => false,
+      onResolveEnemyStatuses: () {},
       onEndEnemyTurn: () {},
       onSelectEnemy: (_) {},
       onUpdateEnemyStats: (_, _) {},

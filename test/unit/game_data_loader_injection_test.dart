@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
+import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
@@ -258,5 +259,26 @@ void main() {
         })),
       );
     });
+  });
+
+  test('charges/<id>.json injecte l id', () async {
+    final loader = GameDataLoader(FakeBundle({
+      'assets/data/charges/freeze.json': '''
+{
+  "name_fr": "Gel", "name_en": "Freeze",
+  "brokenName_fr": "Gelé", "brokenName_en": "Frozen",
+  "description_fr": "Gèle.", "description_en": "Freezes.",
+  "heroDescription_fr": "Sur vous.", "heroDescription_en": "On you.",
+  "threshold": 3, "thresholdGrowth": 1, "overcharge": false, "decay": 1,
+  "breaksOn": "threshold",
+  "rupture": { "kind": "skipAction" },
+  "heroRupture": { "kind": "weakenDealt", "percent": 50 }
+}''',
+    }));
+
+    final charges = await loader.loadAll<ChargeData>([chargeSource]);
+
+    loader.throwIfFailed();
+    expect(charges.single.id, 'freeze');
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -8,6 +9,9 @@ import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/status_effect.dart';
 import '../../../models/enemy_instance.dart';
+import '../../game_constants.dart';
+import '../../systems/charge_rules.dart';
+import '../visual_effects/frost_shell.dart';
 import '../effect_icon.dart';
 import 'stat_badge.dart';
 import 'status_indicator.dart';
@@ -34,12 +38,15 @@ class EnemyCard extends CombatEntity
   EntityStats get stats => instance.stats;
   EnemyIntent? get currentIntent => instance.currentIntent;
   EnemyIntent? get effectiveIntent => instance.effectiveIntent;
+  bool get skipsAction => instance.skipsAction;
   bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
   bool isDead = false;
   bool isPendingDeath = false;
   EnemyInstance? _pendingVisualInstance;
+  bool _pendingFireDamage = false;
+  bool _holdingVisualStats = false;
 
   double _scaleMultiplier = 1.0;
   double get scaleMultiplier => _scaleMultiplier;
@@ -136,16 +143,19 @@ class EnemyCard extends CombatEntity
     add(hpBadge);
 
     // Positionner les buffs (à gauche) et les debuffs (à droite)
+    final view = _indicatorView();
     buffIndicator = StatusIndicator(
-      statuses: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
+      statuses: view.buffs,
+      chargeLines: const [],
+      brokenNameOf: _brokenNameOf,
       position: Vector2(-36, 10),
     );
     add(buffIndicator);
 
     debuffIndicator = StatusIndicator(
-      statuses: stats.statuses
-          .where((s) => s.type == StatusType.debuff)
-          .toList(),
+      statuses: view.debuffs,
+      chargeLines: view.chargeLines,
+      brokenNameOf: _brokenNameOf,
       position: Vector2(size.x + 4, 10),
     );
     add(debuffIndicator);
@@ -214,35 +224,73 @@ class EnemyCard extends CombatEntity
     );
   }
 
-  void updateStats(EnemyInstance newInstance) {
-    if (game.isCardAnimating) {
+  /// Ce que montrent les deux indicateurs, lu sur l'état : les buffs à
+  /// gauche ; à droite, les altérations qui ne sont pas des charges, puis une
+  /// ligne par charge (spec P-53, §5.1).
+  ({
+    List<StatusEffect> buffs,
+    List<StatusEffect> debuffs,
+    List<ChargeLine> chargeLines,
+  }) _indicatorView() => (
+        buffs: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
+        debuffs: stats.statuses
+            .where(
+              (s) =>
+                  s.type == StatusType.debuff &&
+                  !game.chargeCatalog.isCharge(s.id),
+            )
+            .toList(),
+        chargeLines: ChargeRules.linesFor(stats),
+      );
+
+  String _brokenNameOf(String chargeId) =>
+      game.chargeCatalog[chargeId]?.brokenName(activeLocale) ?? '';
+
+  void _refreshIndicators() {
+    final view = _indicatorView();
+    buffIndicator.updateStatuses(view.buffs, const []);
+    debuffIndicator.updateStatuses(view.debuffs, view.chargeLines);
+  }
+
+  /// [fireDamage] suit l'etat retenu jusqu'a son application : un etat plus
+  /// recent qui le remplace garde les degats du Feu qu'il contient.
+  void updateStats(EnemyInstance newInstance, {bool fireDamage = false}) {
+    if (game.isCardAnimating || _holdingVisualStats) {
       _pendingVisualInstance = newInstance;
+      _pendingFireDamage = _pendingFireDamage || fireDamage;
     } else {
-      triggerHitReactions(stats, newInstance.stats);
-      instance = newInstance;
-      _refreshBadges();
-      buffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
-      );
-      debuffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
-      );
+      _applyInstance(newInstance, fireDamage: fireDamage);
     }
   }
 
+  /// Fait differer `updateStats`, comme pendant l'animation d'une carte,
+  /// jusqu'a `resolvePendingVisualStats` : le voisin d'une explosion attend
+  /// sa boule de feu (spec P-53, §5.2, F-a).
+  void holdVisualStats() {
+    _holdingVisualStats = true;
+  }
+
+  /// Applique ce qui attendait et cesse de retenir. Sans rien en attente, ne
+  /// fait rien d'autre : appelable deux fois sans effet double.
   void resolvePendingVisualStats() {
-    if (_pendingVisualInstance != null) {
-      triggerHitReactions(stats, _pendingVisualInstance!.stats);
-      instance = _pendingVisualInstance!;
-      _refreshBadges();
-      buffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.buff).toList(),
-      );
-      debuffIndicator.updateStatuses(
-        instance.stats.statuses.where((s) => s.type == StatusType.debuff).toList(),
-      );
+    _holdingVisualStats = false;
+    final pending = _pendingVisualInstance;
+    if (pending != null) {
+      final fireDamage = _pendingFireDamage;
       _pendingVisualInstance = null;
+      _pendingFireDamage = false;
+      _applyInstance(pending, fireDamage: fireDamage);
     }
+  }
+
+  /// L'unique application d'un etat a la carte, que `updateStats` la joue tout
+  /// de suite ou que `resolvePendingVisualStats` la rejoue apres l'impact.
+  void _applyInstance(EnemyInstance next, {bool fireDamage = false}) {
+    triggerHitReactions(stats, next.stats, fireDamage: fireDamage);
+    refreshChargeVisuals(stats, next.stats);
+    instance = next;
+    _refreshBadges();
+    _refreshIndicators();
   }
 
   void _refreshBorderVisuals() {
@@ -330,6 +378,36 @@ class EnemyCard extends CombatEntity
     );
     effectIcon.priority = 200;
     game.add(effectIcon);
+  }
+
+  /// L'action perdue d'un ennemi gele (spec P-53, §5.2, G-a) : trois secousses
+  /// a la place de l'elan, puis la gangue se brise et l'etat rompu flotte
+  /// au-dessus de la carte. La gangue n'est plus tenue des le debut, pour que
+  /// l'etat consomme, qui arrive vers la fin des secousses, n'en trouve aucune
+  /// a faire fondre.
+  void frozenTurnAnimation() {
+    final shell = releaseFrost();
+    final skipping = instance.skippingCharge;
+    final name = skipping == null ? '' : _brokenNameOf(skipping);
+    add(
+      MoveEffect.by(
+        Vector2(10, 0),
+        EffectController(
+          duration: GameConstants.combatDelayFrozenShakeMs / 1000 / 6,
+          alternate: true,
+          repeatCount: 3,
+        ),
+        onComplete: () {
+          shell?.shatter();
+          if (name.isEmpty || !isMounted) return;
+          spawnFloatingText(
+            name,
+            FrostShell.veilColor,
+            position + Vector2(0, -size.y * scale.y / 2),
+          );
+        },
+      ),
+    );
   }
 
   @override

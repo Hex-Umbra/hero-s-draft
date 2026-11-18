@@ -69,7 +69,14 @@ tour, « Main max » (`RunState.maxHandSize`, vague 3), « Acte suivant » — l
 forges bonus est partie avec `bonusForgeSlots`
 ([ADR-106](../_adr/ADR-106-fusion-egale-forge.md)) ; **Deck** — piocher 1, défausser la main, ajouter/retirer
 une carte ; **Reliques** — ajouter/retirer ; **Combat** — PV/mana/armure du héros, soin et mana
-complets, PV par ennemi ou « 0 PV », tous les ennemis à 0, gagner/perdre, sauter la phase ennemie.
+complets, PV par ennemi ou « 0 PV », tous les ennemis à 0, gagner/perdre, sauter la phase ennemie ;
+depuis la vague 7 (sur la branche, réponse P-e (a) — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)),
+une section **« Charges »** : pour le héros et pour chaque ennemi, un bouton par charge du catalogue
+(« +1 Gel », « +1 Feu », « +1 Foudre »), et « Retirer les charges ». `DebugActions.poseCharge` pose
+un point **par la règle du jeu**, `ChargeRules.pose` — plafond, refus sur un porteur rompu,
+rupture —, sans bonus de Puissance ; `DebugActions.clearCharges` vide statuts et pistes ; tous deux
+gardés par `_allowed`. Sans elle, rien de ce qui touche le héros porteur ne se vérifierait à la
+main : aucun ennemi ne pose de charge.
 
 ### 18.3 bis. L'identité de la run dans l'onglet Héros
 
@@ -130,7 +137,7 @@ pause.
 | `test/widget/debug_drawer_test.dart` | Une seule règle depuis le tri de D77 : la dernière cible de Puissance ne se retire pas |
 
 Depuis la vague 5, `debug_actions_test.dart` couvre aussi `takeSignatureEvolution` et
-`clearSignatureEvolutions`. Le tiroir lui-même — poignée, onglets, ouverture — et la correction de
+`clearSignatureEvolutions` ; depuis la vague 7, `poseCharge` et `clearCharges`. Le tiroir lui-même — poignée, onglets, ouverture — et la correction de
 sortie de combat se vérifient au test manuel
 ([ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md)) ; `GameScreen` exige
 Flame.

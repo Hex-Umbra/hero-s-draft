@@ -564,33 +564,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String cardDescStatusBurn(int amount) {
-    return 'Applique $amount Brûlure.';
-  }
-
-  @override
-  String cardDescStatusBurnDuration(int amount, int duration) {
-    return 'Applique $amount Brûlure pendant $duration tours.';
-  }
-
-  @override
-  String cardDescStatusFreeze(int amount) {
-    return 'Applique $amount Gel.';
-  }
-
-  @override
-  String cardDescStatusFreezeDuration(int amount, int duration) {
-    return 'Applique $amount Gel pendant $duration tours.';
-  }
-
-  @override
-  String cardDescStatusShock(int amount) {
-    return 'Applique $amount Électrocution.';
-  }
-
-  @override
-  String cardDescStatusShockDuration(int amount, int duration) {
-    return 'Applique $amount Électrocution pendant $duration tours.';
+  String cardDescStatusCharge(int amount, String name) {
+    return 'Applique $amount $name.';
   }
 
   @override
@@ -952,6 +927,36 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String statusChargePoints(String name, int points, int threshold) {
+    return '$name : $points/$threshold';
+  }
+
+  @override
+  String statusChargeOpen(String name, int points) {
+    return '$name : $points';
+  }
+
+  @override
+  String statusChargeWeakenNext(String state, int percent) {
+    return '$state : −$percent % de dégâts au prochain tour';
+  }
+
+  @override
+  String statusChargeWeakenNow(String state, int percent) {
+    return '$state : −$percent % de dégâts ce tour';
+  }
+
+  @override
+  String statusChargeCharged(String state, int bonus) {
+    return '$state : +$bonus par coup';
+  }
+
+  @override
+  String intentSkipped(String state) {
+    return '$state : ne fait rien ce tour';
+  }
+
+  @override
   String deckTotalCards(int count) {
     return 'Total : $count cartes';
   }
@@ -1185,14 +1190,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String effectLineBurn(int amount, int duration) {
-    String _temp0 = intl.Intl.pluralLogic(
-      duration,
-      locale: localeName,
-      other: '$duration tours',
-      one: '1 tour',
-    );
-    return 'Applique $amount Brûlure pendant $_temp0';
+  String effectLineCharge(int amount, String name) {
+    return 'Applique $amount $name';
   }
 
   @override
@@ -1312,11 +1311,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String statusVulnerableHint(int percent, int max) {
     return '+$percent % de dégâts subis par point, jusqu\'à +$max %';
-  }
-
-  @override
-  String statusFreezeHint(int percent, int max) {
-    return '−$percent % à la prochaine attaque par point, jusqu\'à −$max %';
   }
 
   @override

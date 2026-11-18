@@ -3,7 +3,7 @@
   "name_en": "Burning",
   "name_fr": "Brûlant",
   "description_en": "Applies {val} Burn",
-  "description_fr": "Applique {val} Brûlure",
+  "description_fr": "Applique {val} Feu",
   "icon": "local_fire_department_rounded",
   "color": "orangeAccent",
   "minFusionRank": 1,

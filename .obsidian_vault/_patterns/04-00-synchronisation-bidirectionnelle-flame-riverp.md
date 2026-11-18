@@ -72,7 +72,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 2. **Diffèrement des Statistiques HUD & Effets d'Impact (`updateStats`)** :
    - Lors de la réception de nouvelles statistiques dans `EnemyCard.updateStats(newInstance)` :
      - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie (`HealthBar`), du badge d'armure (`StatBadge`), de la liste des icônes de buffs/debuffs ainsi que **l'intégralité des effets visuels d'impact** (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, `FloatingText` de dégâts, et éjection de particules `spawnDamageParticles`) sont **différés** et stockés dans `_pendingVisualInstance`.
-     - Si `game.isCardAnimating == false` (dégâts passifs comme le poison ou la brûlure), les indicateurs et effets d'impact physiques sont appliqués et déclenchés immédiatement.
+     - Si `game.isCardAnimating == false` (dégâts passifs comme le poison ou le Feu), les indicateurs et effets d'impact physiques sont appliqués et déclenchés immédiatement.
 
 3. **Interception du Nettoyage Visuel (`_applyCombatState`)** :
    Dans `_applyCombatState`, lors de l'application du delta des ennemis :

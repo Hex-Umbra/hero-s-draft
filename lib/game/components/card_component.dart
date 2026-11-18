@@ -268,6 +268,14 @@ class CardComponent extends PositionComponent
     );
   }
 
+  /// La Puissance de statut que l'effet propre [index] de la carte reçoit,
+  /// lue sur le héros comme la Puissance des dégâts : 0 sauf pour le premier
+  /// statut de la résolution (Q11, A15). Lue par le badge et l'infobulle.
+  int heroStatusBonusAt(int index) =>
+      EffectResolver.cardEffectGetsStatusBonus(card.effective, index)
+          ? game.heroCard?.stats.statusBonusFor(card.data.target) ?? 0
+          : 0;
+
   String buildDetailedDescription() {
     String desc = '';
 
@@ -354,11 +362,14 @@ class CardComponent extends PositionComponent
 
     // Les valeurs que la carte joue — rareté et runes comprises — viennent de
     // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
-    for (final effect in card.effective.effects) {
+    final effects = card.effective.effects;
+    for (var i = 0; i < effects.length; i++) {
+      final effect = effects[i];
       // La valeur jouée plus le terme de croissance des sources du héros, le
-      // même que le badge ; 0 hors combat.
+      // même que le badge ; 0 hors combat. Un statut y ajoute sa Puissance.
       final scaledValue =
-          CardTextRenderer.playedValue(effect, heroScaleTerm(effect));
+          CardTextRenderer.playedValue(effect, heroScaleTerm(effect)) +
+              heroStatusBonusAt(i);
       if (effect.type == 'damage') {
         // Puis la part de Puissance de chaque coup.
         final totalDmg = scaledValue + effect.mightPerHit(damageBonus);
@@ -391,6 +402,12 @@ class CardComponent extends PositionComponent
       }
       if (effect.type == 'apply_status') {
         final duration = effect.duration ?? 1;
+        final charge = game.chargeCatalog[effect.statusId ?? ''];
+        if (charge != null) {
+          desc +=
+              '• ${getTranslation((l) => l.cardDescStatusCharge(scaledValue, charge.name(activeLocale)), fallback: '${charge.name(activeLocale)} $scaledValue')}\n';
+          desc += '  (${charge.describe(activeLocale)})\n';
+        }
         switch (effect.statusId) {
           case 'might':
             desc +=
@@ -429,34 +446,13 @@ class CardComponent extends PositionComponent
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusManaRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Mana au début du tour.')}\n';
             break;
-          case 'burn':
-            desc +=
-                '• ${getTranslation((l) => l.cardDescStatusBurnDuration(scaledValue, duration), fallback: 'Applique $scaledValue Brûlure pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Subit des dégâts de feu égaux à la Brûlure au début de son tour, puis la valeur diminue de 1)\n'
-                : '  (Takes fire damage equal to Burn at turn start, then the value decreases by 1)\n';
-            break;
-          case 'freeze':
-            desc +=
-                '• ${getTranslation((l) => l.cardDescStatusFreezeDuration(scaledValue, duration), fallback: 'Applique $scaledValue Gel pendant $duration tours.')}\n';
-            desc += _statusHintLine((l) => l.statusFreezeHint(
-                ProportionalStatus.freeze.percentPerPoint,
-                ProportionalStatus.freeze.maxPercent));
-            break;
-          case 'shock':
-            desc +=
-                '• ${getTranslation((l) => l.cardDescStatusShockDuration(scaledValue, duration), fallback: 'Applique $scaledValue Électrocution pendant $duration tours.')}\n';
-            desc += activeLocale == 'fr'
-                ? '  (Subit des dégâts supplémentaires égaux à l\'Électrocution à chaque coup reçu)\n'
-                : '  (Takes extra damage equal to Shock on every hit)\n';
-            break;
         }
       }
       // La croissance de l'effet, en parenthèse ; vide sans contexte, la ligne
       // ne s'écrit pas.
       final scale = effect.scaleWith;
       if (scale != null) {
-        final text = getTranslation((l) => CardRuleTexts.scale(l, scale));
+        final text = getTranslation((l) => CardRuleTexts.scale(l, scale, game.chargeCatalog));
         if (text.isNotEmpty) desc += '  ($text)\n';
       }
     }

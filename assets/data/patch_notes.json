@@ -1,5 +1,42 @@
 [
   {
+    "version": "0.5.9",
+    "date": "2026-11-17",
+    "title": "Les Charges Élémentaires",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Le Gel, le Feu et la Foudre sont désormais des charges : leurs points s'accumulent sur l'ennemi jusqu'à un seuil, où elles rompent.",
+          "Le Gel rompt à 3 points (6 pour un boss) : l'ennemi, pris dans une gangue de glace qui éclate à son tour, est Gelé et perd toute son action. Le seuil monte de 1 à chaque gel, et le Gel perd 1 point à chaque tour de l'ennemi tant qu'il n'a pas gelé.",
+          "Le Feu s'accumule sans limite. Au tour de l'ennemi, chaque tranche de 3 points le blesse et explose sur ses voisins (12 dégâts et 1 Feu chacun), dans un éclair orange suivi de boules de feu : l'incendie peut se propager de voisin en voisin, vague après vague.",
+          "La Foudre fait plus mal à chaque coup reçu, et davantage encore une fois l'ennemi Chargé, à 3 points, jusqu'à la fin du tour. Un halo jaune l'entoure alors et le bonus de chaque coup s'affiche en jaune.",
+          "Les charges s'affichent sur l'ennemi, par exemple « ❄ 2/3 », « 🔥 5 » ou « ⚡ 2/3 », avec les états « Gelé » et « Chargé » une fois la charge rompue.",
+          "Le tutoriel enseigne désormais les charges, avec une démonstration animée du Gel, du Feu et de la Foudre."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "La Brûlure devient le Feu et l'Électrocution devient la Foudre, dans les cartes, les signatures, les améliorations de forge et les descriptions.",
+          "L'intention affichée d'un ennemi n'est plus réduite par le Gel : un ennemi Gelé ne fait simplement rien à son tour.",
+          "Les infobulles et la galerie du tutoriel décrivent maintenant chaque charge avec ses vrais seuils et ses vrais chiffres."
+        ]
+      },
+      {
+        "category": "Équilibrage",
+        "emoji": "⚖️",
+        "entries": [
+          "Embrasement applique désormais 3 Feu.",
+          "L'amélioration de forge Congelant applique 1 Gel par niveau.",
+          "Trois passifs restent masqués à la sélection jusqu'à la version 0.6.0."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.5.8",
     "date": "2026-11-15",
     "title": "Trois Passifs Reviennent",

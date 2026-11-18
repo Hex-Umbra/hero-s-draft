@@ -3,9 +3,8 @@ import '../../models/entity_stats.dart';
 /// Un statut qui compte ses points : chaque point pèse [percentPerPoint] %,
 /// jusqu'à [maxPoints] points (spec P-42/P-44 lot 1, §4.4, réponse P-1).
 ///
-/// Ces trois constantes sont les seules valeurs du barème : le pipeline de
-/// dégâts, l'intention effective et tous les textes qui le chiffrent les
-/// lisent ici.
+/// Ces deux constantes sont les seules valeurs du barème : le pipeline de
+/// dégâts et tous les textes qui le chiffrent les lisent ici.
 class ProportionalStatus {
   final String id;
   final int percentPerPoint;
@@ -18,9 +17,6 @@ class ProportionalStatus {
 
   /// -25 % de dégâts infligés par point, 2 points au plus.
   static const weakness = ProportionalStatus._('weakness', 25, 2);
-
-  /// -25 % à la prochaine attaque par point, 3 points au plus.
-  static const freeze = ProportionalStatus._('freeze', 25, 3);
 
   int get maxPercent => percentPerPoint * maxPoints;
 

@@ -16,7 +16,7 @@ assets/data/
 ├── audio.json, patch_notes.json,   # à plat : documents de configuration, pas des catalogues
 │   xp_curve.json, effect_icons.json
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
-│                                   #   forge_upgrades/, passives/, level_up_rewards/
+│                                   #   forge_upgrades/, passives/, level_up_rewards/, charges/
 ├── cards/<passif>/<id>.json        # cartes de lot : le dossier est le passif (vague 5)
 ├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
@@ -49,6 +49,17 @@ l'icône d'aide. Chargée par `loadDocument`, sa faute fait échouer le démarra
 courbe d'XP. Les faces des cartes, les émojis des statuts ennemis et l'icône de la rune *Précis* ne
 la lisent pas encore (`docs/ROADMAP.md`).
 
+**`charges/<id>.json`** (vague 7, livrée sur la branche, en attente du test, de la PR, de la fusion
+et du tag du propriétaire — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) est **le
+catalogue des charges élémentaires** : trois fichiers, `freeze`, `burn`, `shock`, l'id du fichier
+étant l'id du statut que posent les cartes. Chacun déclare ses noms, son état rompu, sa description
+à jetons, ses seuils, leur montée, la surcharge, le déclin, le moment et la sorte de sa rupture
+([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5) ; `ChargeData.fromJson`
+(`lib/models/data/charge_data.dart`) refuse au chargement une clé inconnue, une sorte et un moment
+incompatibles, un jeton inconnu, un seuil de Feu inférieur à 3. Une charge future est un fichier de
+plus. Les trois entrées `status:burn`, `status:freeze`, `status:shock` d'`effect_icons.json`
+restent : chaque charge du catalogue doit y avoir la sienne.
+
 Un dossier de classe ou d'ennemi est **auto-suffisant**, image comprise : l'ajouter, c'est
 créer un dossier, pas toucher quatre fichiers dispersés.
 
@@ -69,8 +80,9 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 ```
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
-déclaration des dix sources du jeu** — la dixième, `cards/*/*.json`, celle des cartes de lot
-(vague 5) ; le provider de production et le registre des tests du
+déclaration des onze sources du jeu** — la dixième, `cards/*/*.json`, celle des cartes de lot
+(vague 5) ; la onzième, `charges/*.json`, celle des charges élémentaires (vague 7, sur la branche),
+que `chargeCatalogProvider` expose ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
 en une fois, en nommant fichier et champ. Depuis la vague 3, elle charge aussi la
 courbe d'XP, un document plat, par `GameDataLoader.loadDocument`, avant la levée ; le registre la

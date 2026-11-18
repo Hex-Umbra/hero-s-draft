@@ -129,7 +129,7 @@ void main() {
       // Brûlant, tel que le jeu le livre : le moteur lit la rune dans le
       // registre (spec P-43 E1, §4.4).
       shippedRuneRegistry(const ['burning']);
-      container = ProviderContainer();
+      container = ProviderContainer(overrides: [shippedChargeOverride()]);
       run = container.read(runProvider.notifier);
       combat = container.read(combatProvider.notifier);
       run.startNewRun(mage);
