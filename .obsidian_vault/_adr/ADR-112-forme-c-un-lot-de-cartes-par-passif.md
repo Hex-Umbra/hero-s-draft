@@ -23,6 +23,7 @@ répertoire injecte aussi le passif), [ADR-096](ADR-096-passifs-partages-eligibi
 **Fusionné dans `main` le 2026-11-09 par la PR #51** (commit de fusion `fbfa839a`), tagué
 `v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
 la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
+**Complété le 2026-11-18 par [ADR-118](ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)** (P-42 tranche 3, vague 8, livré sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : neuf lots, aucun passif masqué — la règle d'O5 reste, sans plus rien masquer.
 
 ### Contexte
 

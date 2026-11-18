@@ -3,9 +3,12 @@
 Une seule table dit l'icône et la couleur de chaque **sorte d'effet** en combat : la bande et la
 liste de la tuile de signature, les puces d'évolution, le panneau des statuts du héros et celui du
 tutoriel. Vague 5, fusionnée dans `main` le 2026-11-09 — réponse P-6 (a),
-[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md) D6. Le document et ses dix-sept sortes — `status:mana_regen` ajoutée par la vague 6
+[ADR-114](../_adr/ADR-114-les-evolutions-de-signature.md) D6. Le document et ses dix-huit sortes — `status:mana_regen` ajoutée par la vague 6
 ([ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)), à l'icône et à la couleur de
-`gain_mana`, comme `status:might_regen` reprend celles de `status:might` :
+`gain_mana`, comme `status:might_regen` reprend celles de `status:might` ; `status:hp_regen` par la
+vague 8, sur sa branche ([ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)),
+au cœur rose du `heal` (`favorite_rounded`, `pinkAccent`) — le Vol de vie, absent de la table, garde
+son cœur rouge au panneau ; 18 re-comptées le 2026-11-18 (`grep -c '"icon"' assets/data/effect_icons.json`) :
 [`_rules/07-00`](../_rules/07-00-architecture-des-donnees.md) §7.1.
 
 > [!IMPORTANT]

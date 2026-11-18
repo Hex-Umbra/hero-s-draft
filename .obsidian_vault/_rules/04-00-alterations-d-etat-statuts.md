@@ -8,10 +8,11 @@ Les combattants accumulent des altérations d'état. Le décompte (`tickStatuses
 |:---|:---:|:---:|:---|:---|
 | `poison` | Debuff | Oui | Inflige dégâts directs = valeur au début du tour. Depuis la vague 7, **le seul dégât sur la durée** (D83) | Durée -1 chaque tour |
 | `might` | Buff | Oui, **par source** (§4.3) | La **Puissance** : ajoute sa valeur à `effectiveMight`, que la classe oriente par `mightTargets` — Attaques, Compétences, altérations ([ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md)). `effectiveMight` somme **toutes** les entrées `might`, une par source | Durée -1 chaque tour, chaque entrée pour elle-même |
-| `weakness` | Debuff | Oui | **−25 % de dégâts infligés par point, 2 points au plus** (−50 %) — §4.4 | Durée -1 chaque tour |
+| `weakness` | Debuff | Oui | **−25 % de dégâts infligés par point, 2 points au plus** (−50 %) — §4.4. Posée par les cartes du lot Sanctifié depuis la vague 8, par l'évolution *Sentence* avant | Durée -1 chaque tour |
 | `might_regen` | Buff | Oui | Ajoute sa valeur au statut `might` au début du tour, sous la source `status:might_regen` | Durée -1 chaque tour |
 | `mana_regen` | Buff | Oui | La **Source de Mana** (vague 6, fusionnée dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : donne sa valeur en Mana au début du tour du héros, par `StatGains` (source `status`), après le tic, comme `armor_regen` ; posée par *Méditation* (1 pendant 2 tours). Héros seulement : aucun ennemi n'a de mana. Icône et couleur de `gain_mana`. *Persistant* et *Résonant* ne s'offrent pas à une carte qui la pose ([`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md)) | Durée -1 chaque tour |
 | `armor_regen` | Buff | Oui | Génère de l'armure = valeur au début du tour | Durée -1 chaque tour |
+| `hp_regen` | Buff | Oui | La **Source de Vie** (vague 8, livrée sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du propriétaire — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md), D55) : rend sa valeur en PV au début du tour du porteur, après le tic, avec la Métallisation et la Source de Mana ; bornée aux PV max ; **ne relève jamais un porteur à 0 PV** (le Poison ou le Feu du même début de tour l'ont tué). Ni `StatGains`, ni critique, ni vol de vie. **Symétrique** : le début de tour d'un ennemi la traite de même, bien qu'aucun n'en pose. Posée par *Prière* (2 pendant 3 tours). Icône et couleur du soin (cœur rose) ; jamais sauvegardée | Durée -1 chaque tour |
 | `burn` — **le Feu** | Charge | Points | Une **charge** (§4.5) : au tour du porteur, chaque tranche de 3 points le blesse et explose sur ses voisins | Aucun : la charge se résout entière |
 | `freeze` — **le Gel** | Charge | Points | Une **charge** (§4.5) : au seuil, l'ennemi perd sa prochaine action ; le héros frappe moitié moins à son tour suivant | Aucun ; déclin −1 sans gel |
 | `shock` — **la Foudre** | Charge | Points | Une **charge** (§4.5) : chaque coup reçu fait plus, deux fois plus une fois chargé | Aucun ; déclin −1 sous le seuil |
@@ -87,15 +88,22 @@ if (isStackable) {
   cartes et la galerie du tutoriel le lisent : aucun texte n'écrit plus un pourcentage en dur.
 - **La Puissance « altération » ajoute des points** à ces statuts, comme à leur durée avant.
   Un seul `apply_status` par résolution reçoit ce bonus ([`_rules/03-14`](03-14-couts-combines-croissance-et-multi-coups.md) §3.14.4).
-- **Recalibré pour garder son premier effet** : *Marque du Mage* pose 2 Vulnérable.
+- **Recalibré pour garder son premier effet** : *Marque du Mage* pose 2 Vulnérable — depuis la
+  vague 8, sur la première **carte de dégâts** du tour, Attaque ou Compétence, à cible unique et
+  vivante ([`_rules/02-2`](02-2-systeme-de-heros.md) §Passifs, ADR-118). Ses points s'additionnent
+  d'un tour à l'autre sur la même cible : l'ennemi affiche la somme brute, que lit aussi
+  `targetStatus` (*Exploitation*), le pipeline n'en compte que 4.
+- **La Faiblesse vieillit avant l'action de son porteur** : l'ennemi décompte ses statuts au début
+  de sa phase, avant ses intentions — une Faiblesse de N tours posée par une carte réduit N − 1
+  attaques. Le moteur n'a pas changé en vague 8 (A19, D83) : les durées des cartes de Sanctifié ont
+  un tour de plus ; le décalage, antérieur (*Sentence*), est à la file.
 
 ### 4.5. Les charges élémentaires — le Gel, le Feu, la Foudre
 
 > [!IMPORTANT]
 > **Une charge est faite de points qui s'accumulent sur leur porteur, héros ou ennemi, jusqu'à un
-> seuil où ils rompent** — P-53, vague 7, livrée sur la branche
-> `feat/v0.5.9-p53-charges-elementaires`, **en attente du test, de la PR, de la fusion et du tag du
-> propriétaire** ; brainstorm v3, D83 à D86 —
+> seuil où ils rompent** — P-53, vague 7, fusionnée dans `main` le 2026-11-18 par la PR #55 et
+> taguée `v0.5.9` ; brainstorm v3, D83 à D86 —
 > [ADR-117](../_adr/ADR-117-les-charges-elementaires.md). Le cadre est **symétrique** et **en
 > donnée** : un fichier par charge sous `assets/data/charges/` ([`_rules/07-00`](07-00-architecture-des-donnees.md)),
 > seules quatre sortes de rupture sont écrites en Dart. Aucun ennemi ne pose encore de charge.

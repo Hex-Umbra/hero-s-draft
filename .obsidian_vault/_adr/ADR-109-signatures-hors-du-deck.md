@@ -29,6 +29,7 @@ d'exécution (PL1 à PL10, PM1 à PM19) et décisions de SDD (S1 à S12) au
 [compte rendu de la vague](../../docs/superpowers/reports/2026-10-16-economie-et-catalogue-vague-4-compte-rendu.md), §2.
 
 **Fusionné dans `main` le 2026-10-24 par la PR #50** (commit de fusion `d99cd815`), tagué `v0.5.6` sur ce commit, `release.yml` run `40107686574` vert, pré-release publiée le même jour — constaté par la porte d'entrée de la vague 5 (`da233ba6`) et re-vérifié par `gh` le 2026-11-04. **Amendé le 2026-11-04 par [ADR-112](ADR-112-forme-c-un-lot-de-cartes-par-passif.md)** (vague 5, livré sur la branche `feat/v0.5.7-p42-tranche-1-p44-lot-1`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `isOfferable` reçoit le passif actif ; **complété par [ADR-114](ADR-114-les-evolutions-de-signature.md)** : `SignatureInstance` porte les évolutions. *Marque du Mage* attend D34 en vague 8 depuis D76 ([ADR-110](ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)).
+**Ce qu'il disait de la Marque perdue par *Projectile Magique* (D4, Conséquences) est clos le 2026-11-18 par [ADR-118](ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)** (P-42 tranche 3, vague 8, livré sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : *Marque du Mage* écoute `onDamagingCardPlayed`, et la signature marque de nouveau — hors son évolution *Nova*, de groupe.
 
 ### Contexte
 

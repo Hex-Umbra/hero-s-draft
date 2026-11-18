@@ -48,17 +48,21 @@ Un effet grandit d'un terme **`floor(ratio × quantité)`**, lu au moment de l'e
 |:---|:---|:---|
 | `armor` | L'Armure du héros | *Rempart brisé*, *Fortification* |
 | `missingHp` | PV max − PV du héros | *Dernier souffle*, *Fureur sanguine* |
-| `cardsPlayedThisTurn` | Cartes et signatures jouées avant celle-ci ce tour | — |
+| `cardsPlayedThisTurn` | Cartes et signatures jouées avant celle-ci ce tour | *Frénésie sanglante* (vague 6) |
 | `enemiesAlive` | Ennemis vivants | — |
-| `targetStatus` | Somme d'un statut (`statusId`) sur la cible | — *(cible unique seulement)* |
-| `targetMissingHp` | PV max − PV de la cible | — *(cible unique seulement)* |
+| `targetStatus` | Somme brute d'un statut (`statusId`) sur la cible — celle que l'ennemi affiche, au-delà du plafond du barème | *Exploitation* (`vulnerable` × 1, vague 8) *(cible unique seulement)* |
+| `targetMissingHp` | PV max − PV de la cible | *Exécution* (× 0,2, vague 8) *(cible unique seulement)* |
 
 - **Les effets se résolvent dans l'ordre** : l'Armure d'un effet précédent de la même carte compte
   pour le suivant ; *Fortification* lit l'Armure avant de donner la sienne.
 - **La rareté ne multiplie jamais le terme** ; `scaleWith` est refusé sur `draw` et `gain_mana`
   (ce que G2 gèle ne grandit pas) et sur un effet à plusieurs coups.
 - **À l'écran** : hors combat, la valeur de base et une ligne de croissance ; en combat, la valeur
-  jouée, terme compris, quand le héros est connu.
+  jouée, terme compris, quand le héros est connu. Une source de cible vaut 0 tant qu'aucune cible
+  n'est visée : la face d'*Exécution* ou d'*Exploitation* en main affiche sa base. La ligne de
+  `targetStatus` nomme le statut **dans la langue du joueur** depuis la vague 8 (A10) : le nom de la
+  charge s'il en est une, sinon la clé ARB `statusName` — « +1 per point of Vulnerable on the
+  target », plus « Vulnérable » en anglais.
 
 #### 3.14.3. Multi-coups et `mightRatio`
 
@@ -68,8 +72,7 @@ seulement. Pour chaque coup et chaque cible vivante : la valeur jouée plus
 l'absorption et l'éclaboussure. Un coup ne tombe que sur une cible vivante ; le vol de vie, de
 statut comme de rune, se paie **une fois**, après tous les coups. Le badge affiche `3×3`.
 
-**La Foudre se lit à chaque coup**, sur les points du moment (vague 7, livrée sur la branche, en
-attente du test, de la PR, de la fusion et du tag du propriétaire —
+**La Foudre se lit à chaque coup**, sur les points du moment (vague 7, fusionnée dans `main` le 2026-11-18 par la PR #55 —
 [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) : *Rafale d'étincelles* pose 1 Foudre puis
 frappe 3 × (3 + 1) = **12** sur un ennemi neuf ; sur un ennemi à 2 Foudre, sa pose le charge et
 chaque coup fait +2 par point : 3 × (3 + 6) = **27**. Le joueur voit le bonus « +N » de chaque
@@ -78,7 +81,9 @@ chaque coup perd 50 % ([`_rules/03-3`](03-3-pipeline-de-degats-centralise.md)).
 
 > [!NOTE]
 > **Garde de donnée (D38)** : sur chaque carte, Σ `hits` × `mightRatio` ≤ coût en mana + 1. Une
-> seule carte porte `hits` : *Rafale d'étincelles* (3 coups de 3 à 0,5, soit 1,5 pour 2 mana).
+> Quatre cartes portent `hits`, re-comptées le 2026-11-18 (`grep -rl '"hits"' assets/data/cards`) :
+> *Rafale d'étincelles* (3 × 3 à 0,5, soit 1,5 pour 2 mana), *Fléau béni* (2 × 3 à 0,75, 1,5 pour 1),
+> *Marteau sacré* (3 × 3 à 0,75, 2,25 pour 2) et *Salve* (vague 8 : 3 × 2 à 0,5, 1,5 pour 1).
 
 #### 3.14.4. Un seul bonus de Puissance de statut par résolution
 

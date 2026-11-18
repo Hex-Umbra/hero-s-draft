@@ -36,8 +36,7 @@ Architecture : [`_patterns/03-8`](../_patterns/03-8-signatureevolutionrules-regl
 | *Surtension de Mana* (`mana_surge`) | *Bouclier de mana* (+2 Armure), *Harmonie* (+1 Puissance), *Clarté* (+1 soin) | *Prescience* (pioche +1), *Glyphe de garde* (3 Armure 2 tours), *Exaltation* (2 Puissance 2 tours), *Sérénité* (soin 4) — **pas de *Célérité*** |
 
 *Braise* pose une charge de Feu, « Applique 1 Feu » sans durée dans la liste de la tuile, valeur
-inchangée par la vague 7 (P-53, livrée sur la branche, en attente du test, de la PR, de la fusion et
-du tag du propriétaire — [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5).
+inchangée par la vague 7 (P-53, fusionnée dans `main` le 2026-11-18 par la PR #55 — [`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5).
 ⟂ : les deux majeures s'excluent. Valeurs par niveau de mineure ; **des ordres de grandeur**, que le
 test du propriétaire corrige. *Célérité* (`haste`) raccourcit la recharge d'un tour, **jamais sous
 1** (D54) ; elle porte le même id dans cinq pools mais reste déclarée dans chaque fichier (D7). Sur

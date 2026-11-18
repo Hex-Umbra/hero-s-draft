@@ -22,6 +22,7 @@ D5 nommait `channeling` premier passif du Mage, et il le redevient (D6).
 **Fusionné dans `main` le 2026-11-15 par la PR #54** (commit de fusion `56fae9df`), tagué sur ce
 commit, `release.yml` run `43727018143` vert — constaté par la porte d'entrée de la vague 7
 (`b50eca31`) et re-vérifié par `gh` le 2026-11-17.
+**Complété le 2026-11-18 par [ADR-118](ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)** (P-42 tranche 3, vague 8, livré sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : `hp_regen`, la *Source de Vie*, suit le modèle de `mana_regen`, symétrique et bornée aux PV max.
 
 ### Contexte
 

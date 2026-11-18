@@ -78,11 +78,13 @@ Sacré* et *Surtension de Mana* se rechargent comme les quatre autres.
   nombre de tours joueur restants. La recharge ne survit pas au combat et n'est jamais sauvegardée.
 - **Jouée comme une carte de son type** : coût en Mana, Puissance et critique de la classe,
   mêmes effets que les cartes. Une signature jouée **déclenche les passifs** (`onCardPlayed`, puis
-  `onAttackPlayed` ou `onSkillPlayed`) **et les reliques** qui écoutent une carte jouée — *Amulette
-  du Mage*, *Plume de scribe*, *Shuriken*, *Croc Kunaï*. Conséquence voulue : *Marque du Mage*
-  (`onAttackPlayed`) ne se déclenche plus sur *Projectile Magique*, devenu Compétence, et *Flux de
-  Mana* compte les deux signatures du Mage (D34 corrige la Marque en vague 8 depuis D76,
-  [ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)).
+  `onAttackPlayed` ou `onSkillPlayed`, puis `onDamagingCardPlayed` si elle porte un effet `damage`)
+  **et les reliques** qui écoutent une carte jouée — *Amulette du Mage*, *Plume de scribe*,
+  *Shuriken*, *Croc Kunaï*. *Flux de Mana* compte les deux signatures du Mage. De la vague 4 à la
+  vague 7, *Marque du Mage* (`onAttackPlayed`) ne voyait plus *Projectile Magique*, devenu
+  Compétence ; **depuis la vague 8** (D34, livrée sur la branche, en attente du propriétaire —
+  [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)), elle écoute
+  `onDamagingCardPlayed` et la signature marque de nouveau — hors son évolution *Nova*, de groupe.
 - **Où le joueur les voit** : une barre à gauche du HUD de combat, une tuile par signature, cinq
   états (inactive, en recharge, Mana insuffisant, armée, disponible) ; une signature à cible
   unique s'**arme** au toucher, puis se joue sur l'ennemi touché. Aussi : un bloc « Signatures »
@@ -128,21 +130,24 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 > jouables** (vague 6, fusionnée dans `main` le 2026-11-15 —
 > [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) — `regen_armor` et `fervor`,
 > `rage` et `bloodthirst`, `channeling` et `mana_flux` ; le Mage démarre de nouveau sur
-> *Canalisation*, son premier par `displayOrder`. Les trois autres — `blessing`, `frenzy`,
-> `mage_mark` — reviennent avec la tranche 3. Une sauvegarde sous un passif masqué reprend avec
-> lui. Chaque passif déclare **exactement une classe** dans `classes` (D9) et, dans **`feeds`**, ce
+> *Canalisation*, son premier par `displayOrder`. **Depuis la tranche 3, les neuf sont jouables,
+> trois par classe** (vague 8, livrée sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du
+> test, de la PR, de la fusion et du tag du propriétaire —
+> [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)) : `blessing`,
+> `frenzy` et `mage_mark` reviennent avec leurs lots, par la donnée ; la règle d'O5 reste, sans
+> plus rien masquer. Le passif choisi par défaut reste le premier de chaque classe. Chaque passif déclare **exactement une classe** dans `classes` (D9) et, dans **`feeds`**, ce
 > qu'une carte de son lot doit toucher (D45).
 
 | Rang | ID | Classe | Trigger | EffectType | Valeurs | Mécanisme |
 |:---:|:---|:---|:---|:---|:---|:---|
 | 1 | `regen_armor` | Paladin | `endOfTurn` | `gain_armor` | 2 | +2 armure à chaque fin de tour |
 | 2 | `fervor` | Paladin | `onDamageTaken` | `fervor` | 1, durée 2 | Quand l'armure encaisse des dégâts, +1 Puissance pendant 2 tours |
-| 3 | `blessing` | Paladin | `startOfTurn` | `blessing` | 1, seuil 5 | Chaque tranche de 5 d'**armure survivante** devient 1 PV |
+| 3 | `blessing` | Paladin | `startOfTurn` | `blessing` | 1, seuil 5 | Chaque tranche de 5 d'**armure survivante** devient 1 PV ; son soin s'ajoute à celui de la *Source de Vie* (`hp_regen`) du même début de tour, sous les PV max |
 | 1 | `rage` | Berserker | `startOfTurn` | `rage` | 1, durée 1 | +1 Puissance pour le tour, +1 par tranche de 10 PV manquants |
 | 2 | `bloodthirst` | Berserker | `onAttackPlayed` | `bloodthirst` | 1, durée 2 | Arme le Vol de vie 2 tours : 1 PV par carte de dégâts, +1 par quart de PV manquants |
 | 3 | `frenzy` | Berserker | `onEnemyKilled` | `frenzy` | 2, durée 1, pioche 1 | Chaque ennemi abattu : +2 Puissance pour le tour et 1 carte piochée |
 | 1 | `channeling` | Mage | `endOfTurn` | `mana_reserve` | 0, Maîtrise +1 | **Banque de mana** (D30) : à la fin du tour, le Mana non dépensé est mis en réserve, jusqu'au Mana max + `value` ; le tour suivant commence à `maxMana` + réserve. La Maîtrise relève le plafond de 1 par point ([`_rules/03-1`](03-1-gestion-du-mana.md), ADR-116). Jusqu'à la vague 5 : chaque Mana non dépensé devenait 1 armure |
-| 2 | `mage_mark` | Mage | `onAttackPlayed` | `mage_mark` | **2**, durée 2 | La **première** Attaque du tour applique 2 Vulnérable à sa cible pendant 2 tours (1 avant la vague 5, recalibré par le barème proportionnel) — une signature d'Attaque compte, aucune du Mage n'en est une |
+| 2 | `mage_mark` | Mage | `onDamagingCardPlayed` | `mage_mark` | **2**, durée 2 | La **première carte de dégâts** du tour, Attaque ou Compétence, signature comprise, **qui vise un seul ennemi sans le tuer**, lui applique 2 Vulnérable pendant 2 tours. Une carte de groupe ne marque ni ne consomme (A3 (c)) ; une carte qui tue sa cible non plus, la suivante marque (A4 (ii)) ; les points s'additionnent d'un tour à l'autre, le pipeline en compte 4 au plus. Vague 8 ; `onAttackPlayed` et la première Attaque avant, 1 Vulnérable avant la vague 5 |
 | 3 | `mana_flux` | Mage | `onSkillPlayed` | `mana_flux` | 1, seuil 3, plancher 2 | Toutes les 3 Compétences d'un combat, +1 Mana pour le tour ; la Maîtrise abaisse le seuil, jamais sous 2 |
 
 > [!NOTE]

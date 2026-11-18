@@ -36,7 +36,7 @@ est une `Map<String, PassiveStrategy>` **constante** — table de code, pas un �
 | `bloodthirst` | `BloodthirstPassive` | Arme le Vol de vie `duration` tours, valeur croissant par quart de PV manquants |
 | `frenzy` | `FrenzyPassive` | `value` Puissance pour `duration` et `draw` cartes, **par ennemi abattu** — la pioche bornée par `RunState.maxHandSize` depuis la vague 3 |
 | `mana_reserve` | `ManaReservePassive` | *Canalisation* (D30, vague 6, fusionnée dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) : écrit `ManaReserve.preview(passive, heroStats).banked` par `RunController.setManaReserve` — le mana non dépensé, plafonné à `maxMana + value` ; la clé est `ManaReserve.effectType`. Remplace `channeling` / `ChannelingPassive` (`mana non dépensé × value` armure), supprimés |
-| `mage_mark` | `MageMarkPassive` | Rend `event.enemyId` Vulnérable `duration` tours, une fois par tour |
+| `mage_mark` | `MageMarkPassive` | Sur `onDamagingCardPlayed` (vague 8) : rend `event.enemyId` Vulnérable `duration` tours, une fois par tour. Sans `enemyId` (carte de groupe), rien ; une cible absente **ou à `currentPv <= 0`** — l'ennemi tué est encore dans `enemies` avant `cleanDeadEnemies` — ne consomme pas le compteur (A3 (c), A4 (ii), [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)) |
 | `mana_flux` | `ManaFluxPassive` | `value` Mana toutes les `threshold` Compétences du combat — le seuil arrive Maîtrise appliquée, plancher compris ; le plancher codé `threshold < 1 ? 1 : …`, inerte, a disparu depuis la vague 3 |
 
 La Puissance que posent *Ferveur*, *Rage* et *Frénésie* passe par une fabrique locale qui lui donne
@@ -61,12 +61,15 @@ sérialiser.
 
 > [!IMPORTANT]
 > **Un passif choisit son déclencheur par sa donnée, pas par son code.** Les points de dispatch
-> couvrent le type de carte jouée (`onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`), la mort d'un
+> couvrent le type de carte jouée (`onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`), la carte de
+> dégâts (`onDamagingCardPlayed`, vague 8 : `EffectiveCard.dealsDamage`, un effet `damage` propre ou
+> ajouté, sans lire ni la cible ni les dégâts infligés), la mort d'un
 > ennemi (`onEnemyKilled`, une fois **par ennemi**) et les dégâts encaissés (`onDamageTaken`). Une
 > stratégie ne re-teste jamais son propre trigger : `dispatch` l'a déjà fait. Sur la branche de la
 > vague 4, **une signature jouée passe par les mêmes points de dispatch qu'une carte de son
 > type** ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)) : *Soif de Sang* s'arme sur *Châtiment*, *Flux de Mana* compte les deux
-> signatures du Mage, et *Marque du Mage* ne voit plus *Projectile Magique*, devenu Compétence.
+> signatures du Mage ; *Marque du Mage* ne voyait plus *Projectile Magique*, devenu Compétence, et le
+> revoit depuis la vague 8 par `onDamagingCardPlayed` — hors *Nova*, de groupe.
 
 > [!NOTE]
 > **Une seule lecture hors du répartiteur applique la Maîtrise comme lui** : `ManaReserve.forRun(run)`

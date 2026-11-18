@@ -62,9 +62,13 @@ sur l'étape 01.
    valeurs (Paladin 100 PV, Berserker 80, Mage 60, tous à 3 mana) et **tous** les passifs que
    `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/` — depuis la vague 5,
    deux par classe depuis la tranche 2 (vague 6, fusionnée
-   dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) ; le Mage
-   démarre de nouveau sur *Canalisation*, son premier par `displayOrder`, avec sa description
-   neuve, lue dans la donnée. Le bloc dépliant est
+   dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)), **trois
+   par classe depuis la tranche 3** (vague 8, livrée sur la branche `feat/v0.6.0-p42-tranche-3`, en
+   attente du test, de la PR, de la fusion et du tag du propriétaire —
+   [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)) ; le premier de
+   chaque classe reste préselectionné, le Mage sur *Canalisation*, son premier par `displayOrder`,
+   avec sa description lue dans la donnée — comme celle, neuve, de *Marque du Mage*. Le tutoriel ne
+   simule aucun passif. Le bloc dépliant est
    le `ClassPassiveList` de `ClassSelectionScreen` — le widget de production, pas une seconde
    implémentation : c'est le remède que demande le §1.4 de la spec de P-41. Repliée, chaque carte
    montre le passif avec lequel la run partirait ; la carte choisie est dépliée et ses tuiles
@@ -94,7 +98,10 @@ sur l'étape 01.
    défausse à droite, boutons Deck/Pause en haut à droite). **Ne montre pas de
    « Compétences »** — le widget réel n'en affiche pas.
 7. **Cartes & Mana** : médaillon de coût, appui pour la description complète, 3 types
-   (Attaque/Compétence/Pouvoir), cartes rendues par `UiCard.fromInstance`.
+   (Attaque/Compétence/Pouvoir), cartes rendues par `UiCard.fromInstance`. *Boule de Feu*
+   (`fireball`), lue par son id quel que soit son dossier, y est montrée à toute classe : depuis la
+   vague 8, c'est une carte du lot Marque (`passive == 'mage_mark'`) — une démonstration de face, pas
+   une offre.
 8. **Jouer des cartes & finir le tour** *(dégât porté et armure gagnée)* : glisser-déposer sur
    la cible, cycle de tour complet (pioche, défausse, double confirmation si mana restant,
    armure remise à 0). **La main semée — une attaque qui vise un ennemi et une Compétence qui donne
@@ -125,8 +132,7 @@ sur l'étape 01.
    l'entier supérieur — 6 Armure → 3 Puissance. »). Le Berserker y voit +2 Puissance pour les 4
    Armure de la démonstration, et *Défense* lui en donne 3 à l'étape des cartes —
    [ADR-104](../_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md).
-10. **Effets Élémentaires** : galerie animée Poison, Feu, Gel, Foudre. Depuis la vague 7 (livrée
-    sur la branche, en attente du test, de la PR, de la fusion et du tag du propriétaire —
+10. **Effets Élémentaires** : galerie animée Poison, Feu, Gel, Foudre. Depuis la vague 7 (fusionnée dans `main` le 2026-11-18 par la PR #55 —
     [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), la prose présente le Gel, le Feu et la
     Foudre comme des **charges** qui rompent à un seuil, sans un chiffre ; **la galerie lit leur nom
     et leur description dans le catalogue des charges** (`engine.data.charges`), plus rien en dur,

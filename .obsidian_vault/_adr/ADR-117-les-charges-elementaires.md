@@ -30,6 +30,7 @@ le Gel quitte le barème proportionnel, *Congelant* pose 1 point par niveau. **C
 [ADR-100](ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md) (la onzième catégorie de
 l'éditeur). **Clôt [ADR-110](ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)** : la vague
 de plus est livrée. Chacun de ces ADR ne change que de Statut. **Clôt P-53** dans `docs/ROADMAP.md`.
+**Fusionné dans `main` le 2026-11-18 par la PR #55** (commit de fusion `5d894785`), tagué `v0.5.9` sur ce commit ; CI de tête `44271012349` et `release.yml` run `44271100229` verts — constaté par la porte d'entrée de la vague 8 (`eb7945fb`) et re-vérifié par `gh` le 2026-11-18.
 
 ### Contexte
 
