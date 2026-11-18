@@ -177,6 +177,7 @@
   "relicTriggerTurnEnd": "Turn End",
   "relicTriggerCardPlayed": "Card Played",
   "relicTriggerEnemyKilled": "Enemy Killed",
+  "relicTriggerDamagingCardPlayed": "Damage Card Played",
 
   "rarityCommon": "Common",
   "rarityUncommon": "Uncommon",

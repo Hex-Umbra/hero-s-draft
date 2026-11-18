@@ -315,6 +315,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get relicTriggerEnemyKilled => 'Ennemi Tué';
 
   @override
+  String get relicTriggerDamagingCardPlayed => 'Carte de dégâts jouée';
+
+  @override
   String get rarityCommon => 'Commun';
 
   @override

@@ -91,6 +91,7 @@
   "relicTriggerTurnEnd": "Fin Tour",
   "relicTriggerCardPlayed": "Carte Jouée",
   "relicTriggerEnemyKilled": "Ennemi Tué",
+  "relicTriggerDamagingCardPlayed": "Carte de dégâts jouée",
 
   "rarityCommon": "Commun",
   "rarityUncommon": "Peu Commun",

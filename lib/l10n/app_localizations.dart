@@ -620,6 +620,12 @@ abstract class AppLocalizations {
   /// **'Enemy Killed'**
   String get relicTriggerEnemyKilled;
 
+  /// No description provided for @relicTriggerDamagingCardPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Damage Card Played'**
+  String get relicTriggerDamagingCardPlayed;
+
   /// No description provided for @rarityCommon.
   ///
   /// In en, this message translates to:

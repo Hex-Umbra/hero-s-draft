@@ -314,6 +314,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get relicTriggerEnemyKilled => 'Enemy Killed';
 
   @override
+  String get relicTriggerDamagingCardPlayed => 'Damage Card Played';
+
+  @override
   String get rarityCommon => 'Common';
 
   @override

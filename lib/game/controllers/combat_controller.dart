@@ -289,8 +289,9 @@ class CombatController extends Notifier<CombatState> {
   }
 
   /// Ce qui suit le jeu d'une carte comme celui d'une signature : les
-  /// passifs (l'événement générique, puis celui du type), les reliques des
-  /// mêmes événements, puis le nettoyage des morts. Un seul chemin : tout ce
+  /// passifs (l'événement générique, celui du type, puis celui de la carte de
+  /// dégâts, qui n'atteint pas les reliques), les reliques des deux premiers
+  /// événements, puis le nettoyage des morts. Un seul chemin : tout ce
   /// qui écoute une carte jouée voit une signature jouée (spec P-43 E4,
   /// §4.4 ; Q-P1).
   void _afterCardPlayed(CardInstance card, {required String? enemyId}) {
@@ -315,6 +316,16 @@ class CombatController extends Notifier<CombatState> {
       TraitSystem.dispatch(
         runController,
         PassiveEvent(typedTrigger, card: card, enemyId: enemyId),
+      );
+    }
+    if (card.effective.dealsDamage) {
+      TraitSystem.dispatch(
+        runController,
+        PassiveEvent(
+          RelicTrigger.onDamagingCardPlayed,
+          card: card,
+          enemyId: enemyId,
+        ),
       );
     }
 

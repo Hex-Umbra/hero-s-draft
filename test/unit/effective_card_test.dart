@@ -163,6 +163,36 @@ void main() {
     });
   });
 
+  group('dealsDamage', () {
+    final skill = CardData(
+      id: 'test_skill',
+      cost: 1,
+      type: CardType.skill,
+      rarity: CardRarity.common,
+      target: CardTarget.self,
+      effects: const [CardEffect(type: 'armor', value: 5)],
+    );
+
+    test('dealsDamage : vrai pour un effet damage propre, faux sans', () {
+      expect(
+        EffectiveCard.apply(_card([_damage(3)]), CardRarity.common, const [])
+            .dealsDamage,
+        isTrue,
+      );
+      expect(
+        EffectiveCard.apply(skill, CardRarity.common, const []).dealsDamage,
+        isFalse,
+      );
+    });
+
+    test('dealsDamage lit les effets ajoutes par un delta', () {
+      final effective = EffectiveCard.apply(skill, CardRarity.common, [
+        (const AddEffectDelta(effect: 'damage', valuePerLevel: 3), 1),
+      ]);
+      expect(effective.dealsDamage, isTrue);
+    });
+  });
+
   group('addEffect', () {
     test('valeur et duree par niveau', () {
       final card = EffectiveCard.apply(
