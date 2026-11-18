@@ -243,6 +243,42 @@ void main() {
       );
       expect(container.read(deckProvider).hand, hasLength(1));
     });
+
+    test('une Attaque de groupe qui abat deux ennemis donne 4 Puissance et '
+        'deux pioches', () {
+      run.startNewRun(berserker, frenzy());
+
+      final deck = container.read(deckProvider.notifier);
+      deck.initializeStarterDeck([attack(1), attack(1), attack(1)]);
+      deck.startCombat(handSize: 0, maxHandSize: 10);
+
+      final doomed = [
+        for (var i = 0; i < 2; i++)
+          EnemyInstance(
+            data: slime,
+            stats: EntityStats(maxPv: 40, currentPv: 1, armure: 0, might: 0),
+          ),
+      ];
+      combat.state = CombatState(
+        enemies: doomed,
+        selectedEnemyId: doomed.first.id,
+        turnPhase: TurnPhase.player,
+      );
+      combat.applyPlayerCardPlay(CardInstance(
+        data: CardData(
+          id: 'test_sweep',
+          cost: 0,
+          type: CardType.attack,
+          rarity: CardRarity.common,
+          target: CardTarget.allEnemies,
+          effects: [CardEffect(type: 'damage', value: 5)],
+        ),
+      ));
+
+      expect(combat.currentState.enemies, isEmpty);
+      expect(temporaryMight(), 4);
+      expect(container.read(deckProvider).hand, hasLength(2));
+    });
   });
 
   group('le catalogue', () {
