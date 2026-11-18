@@ -29,7 +29,7 @@ plan les écrit, le test du propriétaire les corrige.
 
 | # | Ce que le lot en livre | Où |
 |:---|:---|:---|
-| **D34** | *Marque du Mage* se déclenche sur la première carte de dégâts du tour, Attaque ou Compétence, signature comprise : le déclencheur neuf `onDamagingCardPlayed`, un prédicat unique « carte de dégâts » ; *Projectile Magique*, Compétence depuis `0.5.6`, marque de nouveau — hors son évolution *Nova*, qui en fait une carte de groupe (A3, **provisoire**) | §3.1, §4.1, §4.2 |
+| **D34** | *Marque du Mage* se déclenche sur la première carte de dégâts du tour, Attaque ou Compétence, signature comprise : le déclencheur neuf `onDamagingCardPlayed`, un prédicat unique « carte de dégâts » ; *Projectile Magique*, Compétence depuis `0.5.6`, marque de nouveau — hors son évolution *Nova*, qui en fait une carte de groupe (A3) | §3.1, §4.1, §4.2 |
 | **D55** | *Prière* : un soin **dans le temps**, différencié de `heal_potion` (qui reste neutre, inchangée) — le statut `hp_regen` | §3.2, §4.3 |
 | **D43** | Pour ce lot, la seule variante « armure conservée » — **non retenue** par le propriétaire (§1.2) : aucune carte, aucun mécanisme d'armure conservée | §1.2 |
 | **D16** | Cinq à six cartes par lot : Sanctifié 5, Carnage 5, Marque 6 | §3.2 |
@@ -53,6 +53,9 @@ vague 5, §1.2) : aucune carte-pont.
 | **Q12** *(P)* | **Oui : les quatre élémentaires restent des Attaques.** `fireball`, `ice_bolt`, `thunder_clap`, `poison_stab` changent de dossier, pas de type |
 | **D43, la variante « armure conservée »** *(P)* | **Non : on ne la prend pas.** Aucune carte, aucun mécanisme d'armure conservée dans ce lot ; l'armure de *Bénédiction* survit par la Faiblesse posée sur l'ennemi |
 | **Q11** *(vérifiée, close)* | Tranchée en vague 5 : « Un seul bonus de Puissance par carte : une carte qui pose `burn` et porte la rune `burning` ne compte la Puissance qu'une fois » (spec de la vague 5, §1.2 ligne Q11 ; appliquée par A15 et §4.5 : seul le premier `apply_status` d'une résolution, ceux des runes compris, reçoit la Puissance de statut) ; reprise par D83 (« une fois par carte (Q11 de la vague 5) »). Rien à trancher : *Boule de Feu* + *Brûlant* dans le lot Marque suit cette règle |
+| **A3** *(P, levée de l'arrêt du 18/11)* | **(c) : une carte de dégâts de groupe jouée la première du tour ne marque personne et ne consomme pas la marque ; c'est la première carte de dégâts à cible unique qui marque.** *Nova*, l'évolution de groupe de *Projectile Magique*, suit la même règle |
+| **A4** *(P, levée de l'arrêt du 18/11)* | **(ii) : une carte à cible unique qui tue sa cible ne compte pas ; la carte de dégâts suivante marque.** Texte du passif : « À chaque tour, la première carte de dégâts, Attaque ou Compétence, qui vise un seul ennemi sans le tuer lui applique 2 Vulnérable pendant 2 tours. » / « Each turn, the first damage card, Attack or Skill, that hits a single enemy without killing it applies 2 Vulnerable to it for 2 turns. » |
+| **Les arbitrages de l'orchestrateur** *(levée de l'arrêt du 18/11)* | **Acceptés tels quels** : D-1 reclassée T, option (b) — le moteur de la Faiblesse inchangé, les durées des cartes allongées d'un tour (A19) ; « Source de Vie » / « Life Spring » pour `hp_regen` (A20) ; les cartes et leurs valeurs déléguées en ordres de grandeur, avec leurs écarts au brainstorm — *Exploitation* et *Salve* en Compétences, *Exécution* et *Exploitation* en +1 par tranche ou par point, *Salve* 2 × 3, *Moulinet* et *Coup de grâce* +1 (A8, A9, A14 à A16, §3.2) |
 
 ### 1.3. Les arbitrages
 
@@ -80,11 +83,23 @@ un drapeau `dealsDamage` sur la carte serait une donnée qui peut mentir sur ses
 rune n'ajoute d'effet `damage` (les fichiers de `forge_upgrades/` ne nomment `damage` que comme effet éligible ou
 renforcé) : le prédicat est écrit pour la vue effective parce que c'est elle que la résolution joue.
 
-*A3, la carte de dégâts de groupe jouée la première, est une question ouverte : §1.4.* La marque est posée après la
-résolution de la carte qui la déclenche, comme aujourd'hui : cette carte-là ne profite pas de son propre
-Vulnérable.
+**A3 — La carte de dégâts de groupe jouée la première ne marque ni ne consomme** *(P, tranchée par le propriétaire :
+§1.2)*. C'est le comportement d'aujourd'hui : `MageMarkPassive` (`passive_strategies.dart:62-95`) rend la main sans
+rien compter quand l'événement ne porte pas d'ennemi (`:67-68`), et `applyPlayerCardPlay` ne renseigne `enemyId` que
+pour une carte `singleEnemy` (`combat_controller.dart:231-236`). D34 n'en change que la famille des cartes qui
+déclenchent, et le payoff de Marque reste une rafale sur une cible unique vulnérable. *Nova*
+(`classes/mage/skills/magic_missile.json:111-119`, `"target": "allEnemies"`) fait de la signature une carte de groupe
+— la vue évoluée prend la cible de la dernière évolution qui en déclare une (`signature_instance.dart:141-145`), et
+`playSignature` ne transmet `enemyId` qu'à une signature à cible unique (`combat_controller.dart:251`, `:287`) : elle
+suit la même règle. La marque est posée après la résolution de la carte qui la déclenche, comme aujourd'hui : cette
+carte-là ne profite pas de son propre Vulnérable.
 
-*A4, la carte à cible unique qui tue sa cible, est une question ouverte : §1.4.*
+**A4 — La carte à cible unique qui tue sa cible ne compte pas** *(P, tranchée par le propriétaire : §1.2)*. Le
+commentaire de `MageMarkPassive` (`passive_strategies.dart:73-77`) le voulait déjà ; or la stratégie ne cherche que
+l'absence (`index == -1`, `:77`), et l'ennemi tué est encore dans `enemies`, à 0 PV, quand le passif se résout —
+`cleanDeadEnemies` vient après (`combat_controller.dart:324`, `:371-381`). La stratégie tient donc pour absente une
+cible à `currentPv <= 0` : la carte de dégâts suivante marque, et le joueur ne perd pas la marque du tour pour avoir
+tué.
 
 **A5 — Les reliques n'écoutent pas `onDamagingCardPlayed` ; son libellé d'affichage est une clé ARB**
 *(T, filtres 7 puis 5)*. Aucune relique ne l'emploie : la suite commune n'appelle pas `applyRelics` pour lui, sur le
@@ -233,67 +248,15 @@ textes délégués)*. Le nom se lit au panneau des effets du héros et dans les 
 
 ### 1.4. Les questions ouvertes
 
-**A3 — Une carte de dégâts de groupe jouée la première du tour** *(classe P, ouverte, par la règle du doute : une
-règle que le joueur lit dans la description du passif, que D34 — « la première carte de dégâts du tour » — ne
-tranche pas)*. Aujourd'hui, `MageMarkPassive` (`passive_strategies.dart:62-95`) rend la main sans rien compter quand
-l'événement ne porte pas d'ennemi (`:67-68`), et `applyPlayerCardPlay` ne renseigne `enemyId` que pour une carte
-`singleEnemy` (`combat_controller.dart:231-236`) : une Attaque de groupe jouée la première laisse la marque à
-l'Attaque suivante (`passives_mage_test.dart:384`). La question touche aussi *Projectile Magique* : son évolution
-majeure *Nova* (`classes/mage/skills/magic_missile.json:111-119`, `"target": "allEnemies"`) fait de la signature une
-carte de groupe — la vue évoluée prend la cible de la dernière évolution qui en déclare une
-(`signature_instance.dart:141-145`), et `playSignature` ne transmet `enemyId` qu'à une signature à cible unique
-(`combat_controller.dart:251`, `:287`). **Options**, et ce que chacune changerait :
-
-- (a) **la carte de groupe marque chaque ennemi qu'elle vise** — les ennemis vivants que vise sa cible
-  `allEnemies`, **éclaboussure non comprise** : `splash` est une rune d'une carte à cible unique, un pourcentage de
-  ses dégâts versé aux voisins (`strategies.dart:68-71`), et la marque suit la cible que le joueur a choisie, ce qu'il
-  lit sur la carte (filtre 6). Texte du passif : « À chaque tour, la première carte de dégâts, Attaque ou Compétence,
-  applique 2 Vulnérable à chaque ennemi qu'elle vise pendant 2 tours. » / « Each turn, the first damage card, Attack
-  or Skill, applies 2 Vulnerable to each enemy it targets for 2 turns. » ; *Nova* marque tous les ennemis ; le test
-  `:384` se renverse (les deux ennemis marqués, le tour consommé), un test *Nova* le dit ;
-- (b) **elle consomme le tour sans marquer** — texte : « À chaque tour, la première carte de dégâts, Attaque ou
-  Compétence, applique 2 Vulnérable à sa cible pendant 2 tours ; une carte qui vise tous les ennemis n'en applique
-  pas. » / « Each turn, the first damage card, Attack or Skill, applies 2 Vulnerable to its target for 2 turns; a
-  card that targets all enemies applies none. » ; le compteur avance avant le test d'`enemyId` ; *Nova* consomme le
-  tour sans marquer ; le test `:384` gagne « la carte suivante ne marque pas », un test *Nova* le dit ;
-- (c) **le comportement actuel : elle ne marque ni ne consomme ; la première carte de dégâts à cible unique
-  marque**, et la description le dit — texte de §3.1 ; stratégie inchangée sur ce point ; *Nova* ne marque plus et
-  ne consomme pas ; le test `:384` reste, et gagne « la carte à cible unique suivante marque », un test *Nova* le dit.
-
-**Recommandation : (c)**, appliquée à titre provisoire et marquée « (provisoire) » là où elle se lit (§1.1, §2.1,
-§3.1, §4.2, §9, §9.1, §11) : elle ne change pas ce que le passif faisait, D34 n'en change que la famille des cartes
-qui déclenchent, et elle garde le payoff de Marque, une rafale sur une cible unique vulnérable. Sous (b) et (c),
-« la signature marque de nouveau » vaut pour *Projectile Magique* hors *Nova*.
-
-**A4 — La carte à cible unique qui tue sa cible compte-t-elle comme la première carte de dégâts du tour** *(classe
-P, ouverte : la même phrase du passif ; reclassée par l'orchestrateur)*. Le commentaire de `MageMarkPassive`
-(`passive_strategies.dart:73-77`) veut qu'une cible morte de la carte qui vient d'être jouée ne consomme pas le
-compteur ; or la stratégie ne cherche que l'absence (`index == -1`, `:77`), et l'ennemi tué est encore dans
-`enemies`, à 0 PV, quand le passif se résout — `cleanDeadEnemies` vient après (`combat_controller.dart:324`,
-`:371-381`). Re-mesuré : la carte qui tue sa cible consomme aujourd'hui la marque du tour sur un mort ; sous D34, où
-*Projectile Magique* ouvre souvent le tour, le cas est courant. **Options**, et ce que chacune changerait :
-
-- (i) **elle compte : le tour est consommé sur un mort** (comportement actuel) — texte de §3.1 sans « sans le tuer »
-  : « À chaque tour, la première carte de dégâts, Attaque ou Compétence, qui vise un seul ennemi lui applique 2
-  Vulnérable pendant 2 tours. » / « Each turn, the first damage card, Attack or Skill, aimed at a single enemy
-  applies 2 Vulnerable to it for 2 turns. » ; stratégie inchangée ; un test « une cible tuée consomme le tour : la
-  carte suivante ne marque pas » ;
-- (ii) **elle ne compte pas : la carte de dégâts suivante marque** — la stratégie tient pour absente une cible à
-  `currentPv <= 0`, ce que son commentaire voulait ; texte de §3.1 (« sans le tuer ») ; le test « une cible tuée
-  par la carte ne consomme pas, la carte suivante marque ».
-
-**Recommandation : (ii)**, appliquée à titre provisoire et marquée « (provisoire) » là où elle se lit (§3.1, §4.2,
-§9, §9.1, §11) : le joueur ne perd pas la marque du tour pour avoir tué, et la phrase dit la règle. **Texte exact
-proposé**, sous A3 (c) et A4 (ii) : « À chaque tour, la première carte de dégâts, Attaque ou Compétence, qui vise un
-seul ennemi sans le tuer lui applique 2 Vulnérable pendant 2 tours. » / « Each turn, the first damage card, Attack
-or Skill, that hits a single enemy without killing it applies 2 Vulnerable to it for 2 turns. »
+Aucune. A3 et A4, ouvertes au premier tour, sont tranchées par le propriétaire le 18/11 (§1.2) ; leurs options
+écartées sont au fichier de vérifications.
 
 ---
 
 ## 2. Périmètre
 
 **Dans le lot** : le déclencheur `onDamagingCardPlayed` et son prédicat ; *Marque du Mage* — son fichier, sa
-stratégie (A3 et A4, provisoires), sa description ; le statut `hp_regen` (A6, A7) ; les seize fichiers des trois lots, dont six
+stratégie (A3 et A4), sa description ; le statut `hp_regen` (A6, A7) ; les seize fichiers des trois lots, dont six
 déplacés ; les `feeds` de *Frénésie* et de *Bénédiction* ; le nom traduit du statut de `targetStatus` (A10) ; trois
 lignes de `pubspec.yaml` ; les textes ; les tests de données, de calcul et de contrôleur.
 
@@ -316,7 +279,7 @@ lignes de `pubspec.yaml` ; les textes ; les tests de données, de calcul et de c
 
 | Frontière | État | Réglé par |
 |:---|:---|:---|
-| E4 → tranche 3 | Depuis `0.5.6`, *Projectile Magique* est une Compétence et *Marque du Mage*, sur `onAttackPlayed`, ne se déclenche plus sur elle (`combat_signature_test.dart:290-299` le garde) ; le passif est masqué de `0.5.7` à `0.5.9` | D34 (A1, A2) : la signature marque de nouveau, hors *Nova* (A3, **provisoire**) ; le test se renverse |
+| E4 → tranche 3 | Depuis `0.5.6`, *Projectile Magique* est une Compétence et *Marque du Mage*, sur `onAttackPlayed`, ne se déclenche plus sur elle (`combat_signature_test.dart:290-299` le garde) ; le passif est masqué de `0.5.7` à `0.5.9` | D34 (A1, A2) : la signature marque de nouveau, hors *Nova* (A3) ; le test se renverse |
 | Tranches 1 → 2 → 3 | Trois passifs masqués depuis `0.5.7` ; `fireball` neutre jusqu'au lot Marque | A13 : démasqués par la donnée ; A12 : `fireball` garde son id |
 | Charges élémentaires → tranche 3 | Les quatre élémentaires et la Faiblesse de Sanctifié s'écrivent sur les règles livrées en vague 7 | Aucun moteur neuf : une carte qui pose une charge pose un `statusId` du catalogue ; `targetStatus` lit la somme des entrées de même id ; la Faiblesse garde son barème et son tic (A19) |
 | Tranches → P-44 lots 2 à 4 | *Forge de guerre* ne s'écrit pas avant `0.6.0` | Carnage atteint cinq cartes sans elle (A15) ; la session de clôture la porte en ROADMAP (orchestration §8.9) |
@@ -359,9 +322,8 @@ lignes de `pubspec.yaml` ; les textes ; les tests de données, de calcul et de c
 inchangé. `assets/data/passives/blessing.json` : `"feeds": ["armor", "status:armor_regen", "status:weakness",
 "status:hp_regen", "heal"]`, le reste inchangé (D60).
 
-Dans la description de *Marque du Mage*, « qui vise un seul ennemi » / « a single enemy » est **(provisoire)** : il
-dit l'option (c) d'A3 (§1.4), et changerait sous (a) ou (b) ; « sans le tuer » / « without killing it » est
-**(provisoire)** : il dit l'option (ii) d'A4, et disparaîtrait sous (i).
+Dans la description de *Marque du Mage*, « qui vise un seul ennemi » / « a single enemy » dit A3 (c), et « sans le
+tuer » / « without killing it » A4 (ii) : le texte est celui que le propriétaire a fixé (§1.2).
 
 ### 3.2. Les trois lots
 
@@ -479,8 +441,8 @@ ne marque pas une seconde fois. Un seul passif étant actif, l'ordre des trois e
 ### 4.2. *Marque du Mage*
 
 `MageMarkPassive` (`passive_strategies.dart:62-95`) : sans `enemyId`, rien — la carte de groupe ne marque ni ne
-consomme (A3, **provisoire**) ; une cible absente **ou à
-`currentPv <= 0`** ne consomme pas le compteur (A4, **provisoire**) ; sinon le compteur de tour (`:79`) et la pose, inchangés. Son
+consomme (A3) ; une cible absente **ou à
+`currentPv <= 0`** ne consomme pas le compteur (A4) ; sinon le compteur de tour (`:79`) et la pose, inchangés. Son
 commentaire dit « la première carte de dégâts du tour » au lieu de « la première Attaque ». Les points
 s'additionnent d'un tour à l'autre sur la même cible (A9) ; le pipeline les plafonne à 4.
 
@@ -596,8 +558,8 @@ tout test de dégâts qui le joue met `critChance` à 0.
 |:---|:---|:---|
 | **Le déclencheur** | `test/unit/passive_triggers_test.dart` | `onDamagingCardPlayed` atteint le passif pour une Attaque et une Compétence de dégâts, une signature de dégâts, une carte de groupe de dégâts ; pas pour une carte sans effet `damage` (*Embrasement*, `concentration`) ; une rune ou une évolution qui ajouterait un effet `damage` rend la carte « de dégâts » (`dealsDamage` sur une vue effective construite par le test) |
 | ***Marque du Mage*** | `test/unit/passives_mage_test.dart`, groupe « Marque du Mage » (`:301-437`) | Réécrit sur D34 : la première carte de dégâts, Attaque ou Compétence, marque ; la deuxième non ; au tour suivant, la marque revient ; **« une Compétence ne marque jamais » (`:338`) se renverse** ; une carte sans dégâts ne marque ni ne consomme ; une carte de groupe ne marque ni ne consomme, et la carte à cible unique suivante marque (`:384`, complété —
-A3, **provisoire**) ; une cible absente ne consomme pas (`:418`, inchangé) ; **une cible tuée par la carte ne consomme pas, la carte suivante marque** (A4, **provisoire**) ; deux marques sur la même cible s'additionnent |
-| La signature | `test/unit/combat_signature_test.dart:290-299` | Renversé : *Projectile Magique* pose 2 Vulnérable sous *Marque du Mage* ; **un test neuf, « *Projectile Magique* évolué en *Nova* ne marque personne et ne consomme pas le tour »** (A3 (c), **provisoire**) |
+A3) ; une cible absente ne consomme pas (`:418`, inchangé) ; **une cible tuée par la carte ne consomme pas, la carte suivante marque** (A4) ; deux marques sur la même cible s'additionnent |
+| La signature | `test/unit/combat_signature_test.dart:290-299` | Renversé : *Projectile Magique* pose 2 Vulnérable sous *Marque du Mage* ; **un test neuf, « *Projectile Magique* évolué en *Nova* ne marque personne et ne consomme pas le tour »** (A3 (c)) |
 | **`hp_regen`** | `test/unit/hp_regen_test.dart` *(nouveau, sur le modèle de `mana_regen_test.dart`)* | Posé pour 3 tours, +valeur au début des trois tours suivants, rien au quatrième ; borné aux PV max ; **aucun soin à 0 PV** (le Poison du même début de tour tue, la Source ne relève pas) ; le même calcul sur un ennemi ; `createStatus('hp_regen')` buff |
 | **Les cartes** | `test/unit/tranche_3_cards_test.dart` *(nouveau)* | Par le contrôleur, `critChance` à 0 : *Exécution* sur une cible à 20 PV manquants fait 8, sur une cible saine 4 ; *Exploitation* sur une cible à 0, 2 et 6 points de Vulnérable fait 4, puis (4 + 2) × 1,5, puis (4 + 6) × 2 ; *Salve* : trois coups, la Puissance du Mage ×0,5 arrondie par coup ; *Moulinet* et *Coup de grâce* touchent chaque ennemi vivant, la Puissance du Berserker par ennemi ; *Tourbillon* pioche ; *Édit* pose la Faiblesse sur tous ; *Réprimande* : l'Armure au héros, la Faiblesse à la cible, la Puissance du Paladin sur la Faiblesse ; *Prière* pose `hp_regen` ; **la Faiblesse de *Sommation* réduit les deux attaques suivantes de la cible et pas la troisième** (A19) |
 | Frénésie | `test/unit/passives_berserker_test.dart` | Une Attaque de groupe qui tue deux ennemis donne 4 Puissance et deux pioches |
@@ -623,8 +585,8 @@ ennemi.
 | M1 | Sélection de classe | Ouvre les trois classes, en français puis en anglais | Trois passifs chacune, le premier préselectionné comme avant ; la description neuve de *Marque du Mage* |
 | M2 | Draft de départ | Démarre sous *Bénédiction*, *Frénésie*, *Marque du Mage* | 2 cartes du lot et 3 neutres ; le groupe neutre montre 9 cartes ; sous *Flux de Mana*, plus d'élémentaire |
 | M3 | Combat : la Marque | Mage sous *Marque du Mage* : joue *Projectile Magique*, puis *Exploitation* sur la même cible | Vulnérable 2 sur la cible après la signature ; *Exploitation* frappe plus fort ; une seconde carte de dégâts ne remarque pas ; au tour suivant, la marque revient |
-| M4 | Combat : ce qui ne marque pas | Ouvre le tour par `concentration`, puis par *Balayage*, puis joue *Salve* | Ni l'une ni l'autre ne marque (*Balayage* : A3, **provisoire**) ; *Salve*, Compétence, marque |
-| M5 | Combat : la cible tuée | Ouvre le tour par une carte de dégâts qui tue sa cible, puis frappe un autre ennemi | Le second ennemi est marqué (A4, **provisoire**) |
+| M4 | Combat : ce qui ne marque pas | Ouvre le tour par `concentration`, puis par *Balayage*, puis joue *Salve* | Ni l'une ni l'autre ne marque (*Balayage* : A3) ; *Salve*, Compétence, marque |
+| M5 | Combat : la cible tuée | Ouvre le tour par une carte de dégâts qui tue sa cible, puis frappe un autre ennemi | Le second ennemi est marqué (A4) |
 | M6 | Les faces | *Exécution*, *Exploitation*, *Salve*, *Prière* au dictionnaire, en main et en combat, FR puis EN | « +1 par tranche de 5 PV manquants de la cible », « +1 per point of Vulnerable on the target », « 2×3 » ; en main, la face affiche la base (4) tant qu'aucune cible n'est visée — à juger |
 | M7 | Combat : Vulnérable qui s'accumule | Marque la même cible quatre tours de suite, puis joue *Exploitation* | L'ennemi affiche Vulnérable 8 ; *Exploitation* compte 8, le pipeline plafonne à +100 % — à juger (A9) |
 | M8 | Combat : *Salve* et la Foudre | *Coup de Tonnerre* puis *Salve* sur la même cible | Chaque coup de *Salve* reçoit le bonus de Foudre |
@@ -644,20 +606,13 @@ ennemi.
 **Un seul plan.** Le lot est moyen : un déclencheur et son prédicat, une stratégie retouchée, un statut, une clé de
 nom, seize fichiers de données et trois passifs, sans écran neuf ni animation. Rien n'impose d'ordre entre deux
 livraisons ; à l'intérieur du plan, le moteur (déclencheur, `hp_regen`, nom du statut) précède les données, dont les
-tests lisent le moteur. Si le propriétaire tranche A3 ou A4 autrement que la recommandation, le changement reste
-dans le même plan : sous A3 (b), la stratégie de *Marque du Mage*, sa description (§3.1, §11), le test
-`passives_mage_test.dart:384`, le test *Nova* et M4 ; sous A3 (a), de plus, le calcul des ennemis visés — sans
-champ neuf sur `PassiveEvent`, qui ne porte qu'`enemyId` (`passive_strategy.dart:19-21`) : la stratégie lit la cible
-de `event.card` et marque les ennemis vivants qu'elle vise — ; sous A4 (i), la condition `currentPv <= 0` de la
-stratégie, « sans le tuer » dans la description (§3.1, §11), le test de la cible tuée et M5.
-
----
+tests lisent le moteur.
 
 ## 11. Documentation et livraison
 
 | Quoi | Où, par qui |
 |:---|:---|
-| ADR « la tranche 3 » — le déclencheur `onDamagingCardPlayed` et le prédicat de carte de dégâts (D34), la Marque sur une cible vivante et à cible unique (A4 et A3, telles que le propriétaire les aura tranchées), `hp_regen` symétrique (D55), le nom traduit du statut de `targetStatus` ; **complète ADR-112** (forme C : neuf lots, aucun passif masqué — la règle d'O5 reste, sans plus rien masquer), **ADR-111** (premières cartes à `targetMissingHp` et `targetStatus` ; la Faiblesse posée par des cartes) et **ADR-116** (`hp_regen` sur le modèle de `mana_regen`) ; **clôt** ce que **ADR-109** disait de la Marque perdue par *Projectile Magique* | `memory-bank-sync` |
+| ADR « la tranche 3 » — le déclencheur `onDamagingCardPlayed` et le prédicat de carte de dégâts (D34), la Marque sur une cible vivante et à cible unique (A3 (c) et A4 (ii), tranchées par le propriétaire), `hp_regen` symétrique (D55), le nom traduit du statut de `targetStatus` ; **complète ADR-112** (forme C : neuf lots, aucun passif masqué — la règle d'O5 reste, sans plus rien masquer), **ADR-111** (premières cartes à `targetMissingHp` et `targetStatus` ; la Faiblesse posée par des cartes) et **ADR-116** (`hp_regen` sur le modèle de `mana_regen`) ; **clôt** ce que **ADR-109** disait de la Marque perdue par *Projectile Magique* | `memory-bank-sync` |
 | Fiches `_rules/02-2` (les passifs : `mage_mark` sur `onDamagingCardPlayed`, neuf jouables), `02-3` (catalogue : 9 neutres, 49 de lot, 58), `04-00` (`hp_regen` ; la Faiblesse posée par Sanctifié ; Vulnérable par toute carte de dégâts), `03-14` (les deux sources de cible ont leurs cartes), `08-00` (le tutoriel : *Boule de Feu* au lot Marque, trois passifs par classe), `07-00` (trois dossiers de lot de plus) ; `_patterns/02-2` (`_afterCardPlayed` envoie `onDamagingCardPlayed`), `03-4` (`createStatus('hp_regen')`), `07-00` (le flux du tour : la Source de Vie), `05-13` (18 sortes d'icônes) — un minimum, que le diff complétera | `memory-bank-sync` |
 | **P-42 se clôt** dans `docs/ROADMAP.md`, comme P-43 en vague 4 et P-53 en vague 7 | `memory-bank-sync`, à la fin de la vague |
 | La note de version | Celle de la vague, écrite à la fin par `patch-notes-writer` ; ce lot n'en prévoit pas d'autre, ni de lien dans `docs/ROADMAP.md` |
@@ -665,7 +620,7 @@ stratégie, « sans le tuer » dans la description (§3.1, §11), le test de la 
 **Ce que le joueur voit en `0.6.0`** : les neuf passifs sont jouables, chacun avec son lot — *Bénédiction* avec
 Sanctifié (la Faiblesse, la Métallisation, *Prière*), *Frénésie* avec Carnage (les Attaques de groupe et
 *Exécution*), *Marque du Mage* avec Marque (les quatre élémentaires, *Exploitation*, *Salve*) ; *Marque du Mage* se
-déclenche sur la première carte de dégâts du tour qui vise un seul ennemi sans le tuer (A3 et A4, **provisoires**),
+déclenche sur la première carte de dégâts du tour qui vise un seul ennemi sans le tuer (A3 et A4),
 Attaque ou Compétence, et donc de nouveau sur *Projectile Magique*, hors *Nova*. **À dire dans la note** : les quatre élémentaires, *Métallisation* et *Cri
 de Guerre* quittent les cartes neutres pour leur lot — sous les autres passifs, ils ne sont plus offerts. **À ne pas
 dire** : une règle de la Faiblesse — son décompte ne change pas (A19).

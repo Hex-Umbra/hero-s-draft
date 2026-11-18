@@ -37,6 +37,16 @@
 | P-1 | Le nom affiché d'`hp_regen` | P → **T** | « Grâce » / « Grace » ; « Régénération » (confusion avec *Régénération d'Armure*) | « Source de Vie » / « Life Spring », par le précédent de la vague 6 (A5 du plan de la tranche 2 : « Source de Mana », nommée dans un arbitrage T) | 6 |
 | A3 | Une carte de dégâts de groupe jouée la première du tour | T → **P** | — | **Ouverte** : une règle que le joueur lit dans la description du passif, que D34 ne tranche pas ; recommandation (c) appliquée à titre provisoire | — |
 
+### Réponses du propriétaire à la levée de l'arrêt (18/11)
+
+Écrites en §1.2 de la spec, §1.4 vidée, marques « (provisoire) » retirées, **sans nouveau tour de vérification** : ce sont les recommandations déjà appliquées.
+
+| # | Question | Classe | Options écartées | Choix |
+|:---|:---|:---:|:---|:---|
+| A3 | Une carte de dégâts de groupe jouée la première du tour | P | (a) elle marque chaque ennemi qu'elle vise, éclaboussure non comprise — « … applique 2 Vulnérable à chaque ennemi qu'elle vise pendant 2 tours » ; *Nova* marque tous les ennemis ; (b) elle consomme le tour sans marquer — « … une carte qui vise tous les ennemis n'en applique pas » | **(c)** : elle ne marque ni ne consomme ; la première carte de dégâts à cible unique marque ; *Nova* de même |
+| A4 | La carte à cible unique qui tue sa cible | P | (i) elle compte : le tour est consommé sur un mort (comportement d'avant la vague) — « … qui vise un seul ennemi lui applique 2 Vulnérable pendant 2 tours » | **(ii)** : elle ne compte pas, la carte de dégâts suivante marque ; texte « … qui vise un seul ennemi sans le tuer lui applique 2 Vulnérable pendant 2 tours » / « … that hits a single enemy without killing it applies 2 Vulnerable to it for 2 turns » |
+| D-1, P-1, cartes | Les arbitrages de l'orchestrateur ci-dessus et les cartes déléguées ci-dessous | — | — | **Acceptés tels quels** par le propriétaire, écarts au brainstorm compris |
+
 ### Les cartes, déléguées (`game_designer`)
 
 Comme aux vagues 5 et 6, les cartes qui complètent les lots et leurs valeurs sont déléguées en ordres de grandeur (brainstorm, en-tête ; D83), le test du propriétaire les corrige. Retenues : Sanctifié — *Sommation*, *Édit*, *Réprimande* (neuve), *Prière*, `metallicize` ; Carnage — *Moulinet* (7 à tous), *Tourbillon*, *Coup de grâce* (10 à tous), *Exécution*, `warcry` ; Marque — `fireball`, `ice_bolt`, `thunder_clap`, `poison_stab`, *Exploitation*, *Salve*. Écarts au brainstorm, à signaler au propriétaire : *Exploitation* et *Salve* en Compétences (D34 et R6 : sans quoi la Puissance du Mage ne toucherait aucun dégât du lot) ; *Moulinet* et *Coup de grâce* relevés de 1.
@@ -46,6 +56,7 @@ Comme aux vagues 5 et 6, les cartes qui complètent les lots et leurs valeurs so
 | Tour | Mode | Bloquants / moyens / mineurs / rédaction | Corrigé | Contesté et tranché |
 |:---:|:---|:---:|:---|:---|
 | 1 | complet | 0 / 0 / 6 / 3 | Les neuf, au passage, par le rédacteur repris avec son contexte : *Nova* et `splash` sous chaque option d'A3 ; A8, A9 et *Salve* étiquetées « délégué pour la règle de la carte », leurs écarts au brainstorm dits ; la Faiblesse affichée au-delà de son plafond portée à la file avec Vulnérable ; un test de données sur l'accord des trois exemplaires des noms de statut ; trois citations | **n° 1, A4 reclassée P** par l'orchestrateur (règle du doute : la même phrase du passif qu'A3), groupée avec A3 ; n° 4 et n° 8, rendus P par le vérificateur, gardés délégué et file : des règles de carte, déléguées, et un affichage antérieur au lot. Aucun bloquant ni moyen : la spec a convergé, il ne reste que les questions P |
+| — | levée, 18/11 | — | A3 (c) et A4 (ii) écrites en §1.2, §1.4 vidée, marques retirées | Pas de nouveau tour : les recommandations appliquées à titre provisoire sont celles que le propriétaire retient |
 
 ## 3. Pour le Review Focus du plan (tour 1)
 
