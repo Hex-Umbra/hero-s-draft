@@ -287,7 +287,7 @@ void main() {
       expect(PassiveCounters.valueOf(run, flux), 1);
     });
 
-    test('magic_missile ne pose pas Vulnerable sous Marque du Mage', () {
+    test('magic_missile pose 2 Vulnerable sous Marque du Mage (D34)', () {
       start('mage', withPassive: passive('mage_mark'));
 
       expect(
@@ -296,7 +296,33 @@ void main() {
       );
 
       expect(
+        enemy().stats.statuses.singleWhere((s) => s.id == 'vulnerable').value,
+        2,
+      );
+    });
+
+    test(
+        'magic_missile evolue en Nova ne marque personne et ne consomme pas '
+        'le tour (A3)', () {
+      start('mage', withPassive: passive('mage_mark'));
+
+      expect(
+        combat.playSignature(
+          SignatureInstance(shipped('magic_missile'),
+              evolutions: const ['nova:1']),
+        ),
+        isTrue,
+      );
+      expect(
           enemy().stats.statuses.any((s) => s.id == 'vulnerable'), isFalse);
+
+      combat.selectEnemy(enemy().id);
+      combat.applyPlayerCardPlay(container.read(deckProvider).hand.first);
+
+      expect(
+        enemy().stats.statuses.singleWhere((s) => s.id == 'vulnerable').value,
+        2,
+      );
     });
 
     test('l Amulette du Mage voit une signature jouee (Q-P1)', () {

@@ -48,7 +48,8 @@ class ManaReservePassive extends PassiveStrategy {
   }
 }
 
-/// `mage_mark` : la première Attaque de chaque tour rend sa cible
+/// `mage_mark` : la première carte de dégâts de chaque tour, Attaque ou
+/// Compétence, à cible unique, sur une cible vivante, rend sa cible
 /// `vulnerable`, pendant `duration` tours.
 ///
 /// Première source de `vulnerable` du jeu : le statut était pleinement
@@ -68,12 +69,12 @@ class MageMarkPassive extends PassiveStrategy {
     if (enemyId == null) return;
 
     final combat = run.ref.read(combatProvider.notifier);
-    final index =
-        combat.currentState.enemies.indexWhere((e) => e.id == enemyId);
+    final index = combat.currentState.enemies
+        .indexWhere((e) => e.id == enemyId && e.stats.currentPv > 0);
     // La cible peut être morte de la carte qui vient d'être jouée, ou d'une
     // sélection restée en place au-delà de sa mort : dans les deux cas, la
     // marque ne peut pas s'appliquer, et le compteur ne doit donc pas être
-    // consommé sur rien (finding 3 de la revue finale).
+    // consommé sur rien (A4 : la carte de dégâts suivante marque).
     if (index == -1) return;
 
     if (PassiveCounters.bump(run, passive, scope: CounterScope.turn) > 1) {
