@@ -250,11 +250,6 @@
   "statusHpRegen": "Source de Vie : +{value}",
   "statusArmorRegen": "Métallisation : +{value}",
   "statusName": "{id, select, poison{Poison} might{Puissance} weakness{Faiblesse} vulnerable{Vulnérable} might_regen{Éveil de Puissance} mana_regen{Source de Mana} armor_regen{Métallisation} hp_regen{Source de Vie} other{{id}}}",
-  "@statusName": {
-    "placeholders": {
-      "id": { "type": "String" }
-    }
-  },
   "statusLifesteal": "Vol de Vie : {value}",
   "statusTurns": "{count} trs",
   "statusChargePoints": "{name} : {points}/{threshold}",

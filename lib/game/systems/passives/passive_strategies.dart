@@ -52,11 +52,6 @@ class ManaReservePassive extends PassiveStrategy {
 /// Compétence, à cible unique, sur une cible vivante, rend sa cible
 /// `vulnerable`, pendant `duration` tours.
 ///
-/// Première source de `vulnerable` du jeu : le statut était pleinement
-/// consommé par `DamagePipeline` sans qu'aucune donnée ne l'applique
-/// (spec §6.3). Le passif ne dépend d'aucune carte : R4 est satisfaite dès
-/// aujourd'hui.
-///
 /// Le pipeline lit l'intensité : `value` points de `vulnerable`, au barème de
 /// `ProportionalStatus.vulnerable`. La Maîtrise, elle, allonge toujours la
 /// **durée**.
