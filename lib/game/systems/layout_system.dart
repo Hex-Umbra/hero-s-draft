@@ -3,6 +3,8 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
 import '../heros_draft_game.dart';
+import '../game_constants.dart';
+import 'hand_geometry.dart';
 
 class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
   void layoutHand() {
@@ -12,10 +14,12 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
     final int count = handCards.length;
     final double radius = game.size.y * 1.5;
 
-    double angleStep = 0.08;
-    if (count > 4) {
-      angleStep = (0.4 / count).clamp(0.04, 0.08);
-    }
+    final double angleStep = handAngleStep(
+      count: count,
+      availableWidth: game.size.x - 2 * GameConstants.handSideReserve,
+      cardWidth: GameConstants.cardWidth * game.scaleFactor * 0.88,
+      radius: radius,
+    );
 
     final double totalAngle = (count - 1) * angleStep;
     final double startAngle = -totalAngle / 2;
@@ -48,7 +52,9 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
         targetScale = Vector2.all(game.scaleFactor * 0.88 * 1.25);
       } else if (card == game.hoveredCard) {
         targetPos = Vector2(x, y);
-        targetScale = Vector2.all(game.scaleFactor * 0.88 * 1.2);
+        targetScale = Vector2.all(
+          game.scaleFactor * 0.88 * GameConstants.cardHoverScale,
+        );
       } else {
         targetPos = Vector2(x, y);
         targetScale = Vector2.all(game.scaleFactor * 0.88);
@@ -78,6 +84,9 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
           EffectController(duration: duration, curve: Curves.easeOutCubic),
           onComplete: card.isEnteringHand ? () {
             card.isEnteringHand = false;
+            // Arrivée en main, la carte devient survolable : le pointeur
+            // immobile au-dessus d'elle doit la désigner sans bouger.
+            game.refreshHover();
           } : null,
         ),
       );
@@ -86,6 +95,10 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
         card.priority = card.basePriority;
       }
     }
+
+    // Les places au repos viennent de changer sous un pointeur peut-être
+    // immobile : l'arbitre du survol relit la main.
+    game.refreshHover();
   }
 
   void repositionEnemies() {

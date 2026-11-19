@@ -28,6 +28,7 @@ import 'systems/state_sync_system.dart';
 import 'systems/card_animation_system.dart';
 import 'systems/combat_visual_system.dart';
 import 'systems/layout_system.dart';
+import 'systems/hand_geometry.dart';
 
 class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
@@ -44,7 +45,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   LayoutSystem? layoutSystem;
 
   TargetingLine get targetingLine => combatVisualSystem!.targetingLine;
-  Vector2 _lastPointerPos = Vector2.zero();
+
+  /// Le dernier point connu de la souris, nul tant qu'elle n'a pas bougé
+  /// au-dessus du jeu (un écran tactile ne survole jamais) et après un
+  /// glisser, qui l'emporte ailleurs.
+  Vector2? _lastPointerPos;
 
   double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 
@@ -160,11 +165,80 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   @override
   void onPointerMove(PointerMoveEvent event) {
-    _lastPointerPos = event.localPosition;
-    combatVisualSystem?.updatePointer(_lastPointerPos);
+    final pointer = event.localPosition;
+    _lastPointerPos = pointer;
+    combatVisualSystem?.updatePointer(pointer);
     if (_awaitingEnemyTarget) {
-      highlightEnemy(_livingEnemyAt(_lastPointerPos));
+      highlightEnemy(_livingEnemyAt(pointer));
     }
+    refreshHover();
+  }
+
+  /// Oublie le dernier point de la souris : un glisser l'a emportée ailleurs,
+  /// et le survol attend son prochain mouvement.
+  void forgetPointer() {
+    _lastPointerPos = null;
+  }
+
+  /// La souris a quitté le jeu (bord de la fenêtre) : plus aucune carte
+  /// n'est sous elle.
+  void pointerLeft() {
+    forgetPointer();
+    setHoveredCard(null);
+  }
+
+  /// Le seul arbitre du survol de la main : désigne la carte sous le dernier
+  /// point connu de la souris (voir [pickHoveredCard]). Appelé à chaque
+  /// mouvement, et quand la main change sous un pointeur immobile.
+  void refreshHover() {
+    final pointer = _lastPointerPos;
+    if (pointer == null) return;
+
+    // La carte focalisée, levée et grossie, est dessinée au-dessus de toute
+    // la main : elle passe en dernier, lue telle qu'elle est à l'écran. Les
+    // autres sont lues à leur place au repos.
+    final focused = focusedCard;
+    final drawn = [
+      for (final card in handCards)
+        if (card != focused) card,
+      if (focused != null && handCards.contains(focused)) focused,
+    ];
+    final baseScale = scaleFactor * 0.88;
+    final index = pickHoveredCard(
+      cards: [
+        for (final card in drawn)
+          card == focused
+              ? HandCardPose(
+                  x: card.position.x,
+                  y: card.position.y,
+                  angle: card.angle,
+                  scale: card.scale.x / baseScale,
+                  hoverable: _isHoverable(card),
+                )
+              : HandCardPose(
+                  x: card.originalPosition.x,
+                  y: card.originalPosition.y,
+                  angle: card.originalAngle,
+                  hoverable: _isHoverable(card),
+                ),
+      ],
+      pointerX: pointer.x,
+      pointerY: pointer.y,
+      width: GameConstants.cardWidth * baseScale,
+      height: GameConstants.cardHeight * baseScale,
+      hoverScale: GameConstants.cardHoverScale,
+      current: _indexOrNull(drawn, hoveredCard),
+    );
+    setHoveredCard(index == null ? null : drawn[index]);
+  }
+
+  bool _isHoverable(CardComponent card) =>
+      !card.isEnteringHand && !card.isPlayed && !card.isDragging;
+
+  int? _indexOrNull(List<CardComponent> cards, CardComponent? card) {
+    if (card == null) return null;
+    final index = cards.indexOf(card);
+    return index < 0 ? null : index;
   }
 
   EnemyCard? _livingEnemyAt(Vector2 canvasPos) {

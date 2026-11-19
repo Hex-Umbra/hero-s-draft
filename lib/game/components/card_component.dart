@@ -23,7 +23,6 @@ class CardComponent extends PositionComponent
     with
         DragCallbacks,
         TapCallbacks,
-        HoverCallbacks,
         HasGameReference<HerosDraftGame>
     implements OpacityProvider {
   final CardInstance card;
@@ -486,9 +485,6 @@ class CardComponent extends PositionComponent
   RibbonTrail? activeTrail;
   double foilTime = 0.0;
 
-  @override
-  bool isHovered = false;
-
   // Paramètres visuels
   static const double cardWidth = GameConstants.cardWidth;
   static const double cardHeight = GameConstants.cardHeight;
@@ -505,12 +501,6 @@ class CardComponent extends PositionComponent
     renderer = CardRenderer(this);
     interactionHandler = CardInteractionHandler(this);
   }
-
-  @override
-  void onHoverEnter() => interactionHandler.onHoverEnter();
-
-  @override
-  void onHoverExit() => interactionHandler.onHoverExit();
 
   @override
   void update(double dt) {

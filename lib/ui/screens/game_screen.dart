@@ -568,8 +568,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       child: Scaffold(
         body: Stack(
           children: [
-            // Le jeu prend tout l'écran
-            Positioned.fill(child: GameWidget(game: _game)),
+            // Le jeu prend tout l'écran. `GameWidget` ne signale pas la sortie
+            // de la souris : sans elle, une carte resterait survolée.
+            Positioned.fill(
+              child: MouseRegion(
+                onExit: (_) => _game.pointerLeft(),
+                child: GameWidget(game: _game),
+              ),
+            ),
 
             // HUD et Overlays dans une SafeArea
             SafeArea(

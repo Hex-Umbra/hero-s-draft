@@ -12,37 +12,39 @@ class CardAnimationSystem extends Component with HasGameReference<HerosDraftGame
     final focusedCard = game.focusedCard;
     if (hoveredCard == card) return;
 
-    if (hoveredCard != null && hoveredCard != focusedCard) {
-      hoveredCard.isHovered = false;
+    // Seule une carte encore en main reprend sa taille : une carte jouée garde
+    // son animation, une carte défaussée n'est plus dessinée.
+    if (hoveredCard != null &&
+        hoveredCard != focusedCard &&
+        game.handCards.contains(hoveredCard)) {
       hoveredCard.priority = hoveredCard.basePriority;
-      hoveredCard.removeAll(hoveredCard.children.whereType<Effect>());
       hoveredCard.refreshVisuals();
       if (!hoveredCard.isDragging) {
-        hoveredCard.add(
-          ScaleEffect.to(
-            Vector2.all(game.scaleFactor * 0.88),
-            EffectController(duration: 0.1, curve: Curves.easeIn),
-          ),
-        );
+        _scaleForHover(hoveredCard, 1.0, Curves.easeIn);
       }
     }
 
     game.hoveredCard = card;
 
     if (card != null && card != focusedCard) {
-      card.isHovered = true;
       card.priority = GameConstants.priorityCardHovered;
-      card.removeAll(card.children.whereType<Effect>());
       card.refreshVisuals();
       if (!card.isDragging) {
-        card.add(
-          ScaleEffect.to(
-            Vector2.all(game.scaleFactor * 0.88 * 1.2),
-            EffectController(duration: 0.1, curve: Curves.easeOut),
-          ),
-        );
+        _scaleForHover(card, GameConstants.cardHoverScale, Curves.easeOut);
       }
     }
+  }
+
+  /// Le survol ne touche que la taille : le déplacement et la rotation d'une
+  /// remise en page en cours vont à leur terme.
+  void _scaleForHover(CardComponent card, double factor, Curve curve) {
+    card.removeAll(card.children.whereType<ScaleEffect>());
+    card.add(
+      ScaleEffect.to(
+        Vector2.all(game.scaleFactor * 0.88 * factor),
+        EffectController(duration: 0.1, curve: curve),
+      ),
+    );
   }
 
   void setFocusedCard(CardComponent? card) {
@@ -51,7 +53,6 @@ class CardAnimationSystem extends Component with HasGameReference<HerosDraftGame
 
     if (focusedCard != null) {
       final oldFocused = focusedCard;
-      oldFocused.isHovered = false;
       oldFocused.priority = oldFocused.basePriority;
       oldFocused.removeAll(oldFocused.children.whereType<Effect>());
       oldFocused.refreshVisuals();
@@ -77,7 +78,6 @@ class CardAnimationSystem extends Component with HasGameReference<HerosDraftGame
     game.focusedCard = card;
 
     if (card != null) {
-      card.isHovered = true;
       card.priority = GameConstants.priorityCardFocused;
       card.removeAll(card.children.whereType<Effect>());
       card.refreshVisuals();
