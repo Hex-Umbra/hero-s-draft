@@ -36,7 +36,7 @@
            ├→ applyRelics(onCardPlayed), puis l'événement du type (jamais onDamagingCardPlayed)
            └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
 
-2 bis. JOUEUR JOUE UNE SIGNATURE (branche de la vague 4 — ADR-109)
+2 bis. JOUEUR JOUE UNE SIGNATURE (vague 4 — ADR-109)
    └→ SignatureBar → GameScreen._playSignature(signature, enemyId:) — une signature à cible
       unique s'arme d'abord, et l'ennemi arrive par onSelectEnemy (_patterns/04-00)
        └→ CombatController.playSignature(signature, enemyId:)

@@ -4,7 +4,7 @@ Le système de reliques a été étendu pour prendre en charge deux nouveaux mé
 
 ### 11.1. Déclencheurs par Type de Carte
 
-Lorsqu'une carte est jouée par le joueur, la propagation des événements de déclenchement s'effectue dans la suite commune `CombatController._afterCardPlayed`, qu'appellent `applyPlayerCardPlay` et, sur la branche de la vague 4, `playSignature` — **une signature jouée compte comme une carte de son type** ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md), réponse du propriétaire Q-P1) :
+Lorsqu'une carte est jouée par le joueur, la propagation des événements de déclenchement s'effectue dans la suite commune `CombatController._afterCardPlayed`, qu'appellent `applyPlayerCardPlay` et, depuis la vague 4, `playSignature` — **une signature jouée compte comme une carte de son type** ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md), réponse du propriétaire Q-P1) :
 1. Les reliques génériques `onCardPlayed` sont déclenchées en premier.
 2. Le type de carte (`CardType`) est ensuite évalué afin de propager le déclencheur spécifique approprié :
    - `CardType.attack` → Déclenche `RelicTrigger.onAttackPlayed`.

@@ -199,6 +199,7 @@ fusionne — ni test manuel, ni tag (orchestration §8.9, point 6).
 choisit aucun. S'il se livre par vagues, il part d'ADR-102, 103, 108, 113 et des amendements
 d'[ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1, et
 tranche à son ouverture D3, D4 et R31. **Le défaut S9** (la phase ennemie après une victoire) reste
-bloquant pour le premier contenu qui posera du Feu ou du Poison sur le héros. **P-07 doit lire
+bloquant pour le premier contenu qui posera du Feu ou du Poison sur le héros ; il est porté au Tier E
+de `docs/ROADMAP.md`, avec les autres réserves du chantier. **P-07 doit lire
 [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
 aux animations.**

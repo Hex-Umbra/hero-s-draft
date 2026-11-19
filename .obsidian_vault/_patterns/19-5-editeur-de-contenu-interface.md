@@ -38,7 +38,7 @@ Retaper le type ou le mode courant ne change rien : ni l'identifiant ni la saisi
 | Couleur | `color_field.dart` | Roue `flutter_colorpicker`, sans alpha ; le hex est en lecture seule |
 
 Création et modification partagent ce formulaire. Les pastilles de propriétaire et les
-signatures de la recette restent propres à la création ; sur la branche de la vague 4, le
+signatures de la recette restent propres à la création ; depuis la vague 4, le
 propriétaire ne sert plus qu'à la signature — une carte n'en a plus
 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 
@@ -48,7 +48,7 @@ propriétaire ne sert plus qu'à la signature — une carte n'en a plus
   propriétaire ou `themeColor` ; titre `Créer · Classe` ; chemin visé ; état `EntityFileStatus` —
   `Nouveau fichier`, `Relu du disque`, `Non chargé` (qu'« Écrire » refusera).
 - **Sections** `EditorPanel` : Identité, Textes, Mécanique (bascule Formulaire / JSON brut dans
-  son en-tête), Ressources, Signatures (« Cartes de signature » avant la branche de la vague 4).
+  son en-tête), Ressources, Signatures (« Cartes de signature » avant la vague 4).
 - **Rangée de propriété** `PropertyRow` : clé JSON réelle en chasse fixe (`editorMono`), point bleu
   si obligatoire ; la clé passe au-dessus du contrôle sous 240 px de contrôle. Textes FR et EN côte
   à côte.

@@ -5,7 +5,7 @@
 > `assets/data/classes/paladin/skills/` *est* une signature du paladin : le chargeur l'injecte
 > depuis le chemin. Un JSON qui déclarerait `heroClass` échoue au chargement. Voir
 > [ADR-086](../_adr/ADR-086-autorite-du-repertoire-avec-expiration-de-la-toler.md), complété par
-> [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) (branche de la vague 4), qui a déplacé les signatures de `cards/` à `skills/`.
+> [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) (vague 4), qui a déplacé les signatures de `cards/` à `skills/`.
 
 ### 17.1. Les deux classes
 
@@ -65,7 +65,7 @@ fichier, le champ, la valeur imposée et la valeur trouvée.
 
 `redundantFields` vaut `const {'id'}` partout en production. `heroClass` et `category` y ont
 été tolérés le temps de la migration ; **cette tolérance a expiré** et les déclarer est
-désormais une erreur de chargement. Sur la branche de la vague 4, le refus est porté par les
+désormais une erreur de chargement. Depuis la vague 4, le refus est porté par les
 modèles eux-mêmes : `CardData.fromJson` refuse `heroClass` et `category`, que plus rien
 n'injecte ; `SignatureData.fromJson` exige `heroClass` — injecté — et refuse `rarity`,
 `isExhaust` et `category`, nommés ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)). `id` y reste à titre permanent : le porter dans le
