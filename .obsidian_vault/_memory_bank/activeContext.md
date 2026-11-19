@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-18 | commit: 147f564c -->
+<!-- last-sync: 2026-11-19 | commit: ee60f62f -->
 
 # 🧠 Contexte Actuel
 
@@ -22,7 +22,9 @@ porte les chiffres (§1), les arbitrages et les décisions de SDD S0 à S5 (§2)
 et le fichier de tests manuels, dont la spec §9.1 prépare les points M1 à M16 — s'écrit à la fin de
 la vague (orchestration §3.8). **P-42 est clos dans `docs/ROADMAP.md`** ; **le chantier, lui, ne
 l'est pas** : c'est la session de clôture qui le fera, après le tag (orchestration §8.9). **Un
-arbitrage que le propriétaire renverse se corrige sur la branche avant la fusion.**
+arbitrage que le propriétaire renverse se corrige sur la branche avant la fusion.** Le 2026-11-19,
+**six corrections de fin de vague** y sont faites, options choisies sur maquettes, un commit chacune
+(`70fce82b` → `ee60f62f`) — [ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md), tests manuels C1 à C6.
 
 **La vague 7 est close** : fusionnée dans `main` le 2026-11-18 par la PR #55 (commit de fusion
 `5d894785`), taguée `v0.5.9` sur ce commit, CI de tête `44271012349` et `release.yml` run
@@ -140,7 +142,10 @@ Réserves à ne pas perdre de vue :
    corrections » et sa passe (`a65bf4c7`). Note de version écrite (`147f564c`). **1826 tests**
    (+50 sur la base de **1776**, celle de `main`), `dart analyze` propre (**vérifié le
    2026-11-18**) — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md),
-   qui complète ADR-112, ADR-111 et ADR-116. **Clôt P-42.**
+   qui complète ADR-112, ADR-111 et ADR-116. **Clôt P-42.** **Puis six corrections de fin de vague**
+   (2026-11-19, `70fce82b` → `ee60f62f`) : la mort efface la sauvegarde, l'affûtage ne liste que l'affûtable,
+   les intentions en lignes compactes à infobulles, un arbitre du survol de la main, la
+   Puissance sur les tuiles de signature, « -12 PV Max » — **1859 tests** (vérifié le 2026-11-19), ADR-119.
 2. **Vague 7 — P-53 : les charges élémentaires, le Gel, le Feu et la Foudre** (2026-11-15 →
    2026-11-17, branche `feat/v0.5.9-p53-charges-elementaires`, 30 commits `b50eca31` → `d15bcd04`
    sur `main` à `535f9ded` — **fusionnée dans `main` le 2026-11-18 par la PR #55, merge
@@ -208,9 +213,9 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire, sur la vague 8** : une fois la fin de vague écrite (orchestration
-§3.8) — dont le fichier de tests manuels, qui reprend les points M1 à M16 de la
-[spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md) §9.1 —, il le joue, lit la
+**D'abord le propriétaire, sur la vague 8** : la fin de vague écrite (orchestration §3.8), il
+joue le fichier de tests manuels — les points M1 à M16 de la
+[spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md) §9.1, validés, et C1 à C6 —, lit la
 table des arbitrages du
 [compte rendu](../../docs/superpowers/reports/2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
 (§2), ouvre la PR de `feat/v0.6.0-p42-tranche-3`, la fusionne dans `main`, puis pose le tag de la

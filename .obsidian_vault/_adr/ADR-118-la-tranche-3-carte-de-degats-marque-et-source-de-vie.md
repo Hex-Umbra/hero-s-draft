@@ -28,6 +28,8 @@ passif masqué — la règle d'O5 reste, sans plus rien masquer), **[ADR-111](AD
 *Projectile Magique*** (D4 et Conséquences : « *Marque du Mage* attend D34 ») : la signature marque de
 nouveau. Chacun de ces ADR ne change que de Statut. **Clôt P-42** dans `docs/ROADMAP.md`.
 
+**Complété le 2026-11-19 par [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** : six corrections de fin de vague, sur la même branche, avant la fusion.
+
 ### Contexte
 
 Depuis le lot E4 de P-43 (`0.5.6`), *Projectile Magique* est une Compétence, et *Marque du Mage*,

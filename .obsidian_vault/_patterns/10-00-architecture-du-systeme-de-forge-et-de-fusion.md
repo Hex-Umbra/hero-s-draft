@@ -101,8 +101,8 @@ appelant est `RunController`, qui passe `RunState.runeCapBonus`.
   état de déroulé d'écran, qui ne survit pas à l'écran et n'est partagé avec personne (A4, A5).
   Une action faite, le retour système appelle le même `_leave` que le bouton de sortie, qui résout
   le nœud (`canPop` et `onPopInvokedWithResult` de `ScreenScaffold`).
-- **Les écrans** : `RestScreen` → `RestCardSelectionScreen` en mode affûtage (refus d'une carte
-  sans rune affûtable, `hasSharpenableRune`) → `SharpenRuneDialog` — la sélection et le dialogue
+- **Les écrans** : `RestScreen` → `RestCardSelectionScreen` en mode affûtage (seules les cartes
+  à rune affûtable sont listées, filtre `hasSharpenableRune` — ADR-119) → `SharpenRuneDialog` — la sélection et le dialogue
   gagnent, depuis la vague 3, un **mode sans or** (`isFree`), que pousse le *Rémouleur* :
   le bouton dit « Choisir », sans coût, sans condition d'or ni solde affiché, et **n'écrit rien** —
   il rend l'id de la rune, la sélection rend la paire, et l'événement la monte ; le Puits réécrit

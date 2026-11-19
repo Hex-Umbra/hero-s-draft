@@ -7,7 +7,7 @@ Afin de décomposer la classe monolithique de rendu `HerosDraftGame`, ses tâche
   - Évite les collisions d'états graphiques en sérialisant l'application des données Riverpod pendant les phases critiques d'animations ou de transitions.
 - **`CardAnimationSystem`** (`card_animation_system.dart`) :
   - Gère les animations physiques et graphiques des cartes en main (effets visuels de zoom, d'inclinaison dynamique/tilt au drag, de translation de pioche, de tremblements de mana insuffisant).
-  - Centralise l'état visuel du survol (`hover`) et de focalisation.
+  - Centralise l'état visuel du survol (`hover`) et de focalisation : au survol, seule la `ScaleEffect` est retirée puis remise (`_scaleForHover`, `cardHoverScale` = 1,2). Quelle carte est survolée, c'est l'arbitre `HerosDraftGame.refreshHover` qui le décide ([ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)).
 - **`CombatVisualSystem`** (`combat_visual_system.dart`) :
   - Gère le tracé des effets graphiques de combat, notamment la ligne de ciblage Bézier quadratique réactive et texturée (`TargetingLine`).
   - Gère l'apparition d'effets visuels lors des résolutions de dégâts ou d'utilisation de compétences (flashes sprite, explosions de particules Canvas, dômes de bouclier).

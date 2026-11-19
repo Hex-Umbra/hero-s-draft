@@ -5,15 +5,15 @@
 
 ## Métriques
 
-**Vérifié le 2026-11-18**
+**Vérifié le 2026-11-19**
 
 | Métrique | Valeur | Commande |
 |:---|:---|:---|
-| Tests automatisés (jeu) | 1826 au vert | `flutter test` |
-| Fichiers de test | 156 | `find test -name "*.dart" \| wc -l` |
+| Tests automatisés (jeu) | 1859 au vert | `flutter test` |
+| Fichiers de test | 159 | `find test -name "*.dart" \| wc -l` |
 | Analyse statique | 0 erreur (`No issues found!`) | `dart analyze` |
-| Fichiers Dart (`lib/`) | 282 | `find lib -name "*.dart" \| wc -l` |
-| Lignes de code (`lib/`) | 61 938 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
+| Fichiers Dart (`lib/`) | 284 | `find lib -name "*.dart" \| wc -l` |
+| Lignes de code (`lib/`) | 62 455 | `find lib -name "*.dart" -exec cat {} + \| wc -l` |
 | Fichiers de données | 147 | `find assets/data -name '*.json' \| wc -l` |
 | Tests de la logique du site | 20 au vert | `cd site && node --test` |
 | Assertions du harnais CI | 57 au vert | `bash .github/scripts/test_scripts.sh` |
@@ -21,11 +21,12 @@
 
 > [!NOTE]
 > **Métriques ci-dessus mesurées sur la branche `feat/v0.6.0-p42-tranche-3`** (commit
-> `147f564c`), qui porte la **vague 8** du programme — P-42 tranche 3, Sanctifié, Carnage, Marque —,
+> `ee60f62f`, corrections de fin de vague comprises), qui porte la **vague 8** du programme — P-42 tranche 3, Sanctifié, Carnage, Marque —,
 > **livrée sur la branche, en attente du test, de la PR, de la fusion et du tag du propriétaire**.
 > Rien n'en est encore dans `main`. **Base de la vague : 1776 tests** — re-mesurés le 2026-11-18 sur
-> un export de `main` à `5d894785` (`git archive main`, puis `flutter test`) ; la vague en ajoute 50.
-> `git diff main...HEAD --shortstat -- lib test assets` : 61 fichiers, +1275 / −127. Décision :
+> un export de `main` à `5d894785` (`git archive main`, puis `flutter test`) ; la vague en ajoute 50,
+> ses six corrections de fin de vague 33 ([ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)).
+> `git diff main...HEAD --shortstat -- lib test assets` : 92 fichiers, +3006 / −695. Décision :
 > [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md) ; détail en §1 et
 > dans `activeContext.md`. Les lignes marquées *Vague 8* ne sont vraies que sur la branche.
 >
@@ -59,7 +60,7 @@
 | Sauvegarde corrompue = échec total | `SaveService.load()` | JSON illisible ou `schemaVersion` absente/invalide → échec propre, pas de récupération partielle |
 | Sauvegarde d'un build plus récent | `SaveFromNewerBuildException`, `SaveLoadResult.savedByNewerBuild` | Jamais effacée : conservée pour le build qui sait la lire, message dédié à l'accueil — [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md) |
 | Run debug sans persistance | `SaveService._isDebugRun`, `debugRunProvider` | `save` et `clear` inopérants pendant une run debug, mode rabaissé au chargement — [ADR-087](../_adr/ADR-087-run-debug-declaree-au-lancement-et-verrou-de-persis.md) |
-| Fin de run | `DeathOverlay` (`lib/ui/widgets/hud/death_overlay.dart`) | Sauvegarde effacée à la mort du héros — vérifié le 2026-09-05, `grep -rn 'SaveService.clear' lib/` |
+| Fin de run | `autosaveOrchestratorProvider` (`lib/game/controllers/checkpoint_controller.dart`) | Sauvegarde effacée au moment de la mort du héros, avant tout clic sur `DeathOverlay` ; `SaveService.save` refuse un héros mort — *corrections de fin de vague 8*, ADR-119 — vérifié le 2026-11-19, `grep -rn 'SaveService.clear' lib/` |
 
 Design complet — [ADR-069](../_adr/ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md),
 amendé par [ADR-095](../_adr/ADR-095-passage-unique-des-gains-scission-des-puissances-et.md).

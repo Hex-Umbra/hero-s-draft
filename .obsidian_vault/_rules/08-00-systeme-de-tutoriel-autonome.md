@@ -143,7 +143,9 @@ sur l'étape 01.
     Poison ne baisse toujours jamais ([`_rules/04-00`](04-00-alterations-d-etat-statuts.md) §4.5).
 11. **Intentions Ennemies** : lues dans le panneau `EnemyIntentsPanel` réel, en bas à droite —
     pas au-dessus de l'ennemi — avec ses 4 paliers d'attaque ; depuis la vague 7, la prose dit
-    qu'un ennemi Gelé ne fait rien à son tour, au lieu d'une attaque réduite.
+    qu'un ennemi Gelé ne fait rien à son tour, au lieu d'une attaque réduite. Depuis les corrections
+    de fin de vague 8 (ADR-119), le panneau est en lignes compactes : le libellé de chaque palier est
+    dans l'infobulle de sa pastille, la légende des paliers reste à côté.
 12. **Fusion de Cartes** *(fusion effectuée)* : manuelle, hors combat, 3 exemplaires de même
     rareté ; la rareté **augmente** les valeurs sans jamais changer le coût — ×1,2 à ×2,0, et
     toujours d'au moins 1 par fusion —, mais ni la pioche ni le Mana qu'une carte rend (G1, G2,

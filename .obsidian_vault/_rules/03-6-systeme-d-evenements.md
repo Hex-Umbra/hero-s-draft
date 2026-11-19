@@ -29,7 +29,10 @@ dans le tirage uniforme de `initializeEvent` : chacun une fois sur sept.
 
 Table **relue fichier par fichier le 2026-10-04** : `gain_strength`, que cette fiche écrivait, est
 `gain_might` depuis [ADR-097](../_adr/ADR-097-puissance-unique-orientee-par-la-classe.md), et les
-valeurs de l'Autel Mystérieux et du Marchand Gobelin avaient dérivé de leurs fichiers.
+valeurs de l'Autel Mystérieux et du Marchand Gobelin avaient dérivé de leurs fichiers. Un
+`gain_max_hp` négatif — seul *Purifier son esprit* en porte un — se lit « -12 PV Max », badge rouge,
+et non « +-12 » (`EventScreen.maxHpText`, corrections de fin de vague 8 —
+[ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)).
 
 **Les actions et la condition d'E3** (vague 3, fusionnée dans `main` le 2026-10-04 —
 [ADR-107](../_adr/ADR-107-trouvaille-et-progression.md), A2, A4, A19 à A22), composables comme

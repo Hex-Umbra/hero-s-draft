@@ -7,8 +7,10 @@ Trois options interactives s'offrent au joueur sur l'écran `RestScreen`, **une 
    2026-10-03) : **une rune d'une carte gagne un niveau, contre 50 or × son niveau**
    ([`_rules/03-8`](03-8-systeme-de-forge-forge-de-fusion.md) §3.8.5). L'option se montre **inactive,
    avec son motif**, quand aucune rune du deck ne peut monter (« Aucune rune de votre deck ne peut
-   gagner de niveau. »). Elle ouvre l'écran de sélection de cartes, où **une carte sans rune
-   affûtable est grisée et refusée au toucher**, avec son message ; puis un dialogue liste les runes
+   gagner de niveau. »). Elle ouvre l'écran de sélection de cartes, qui **ne liste que les cartes
+   dont une rune peut encore monter** — plafond effectif compris ; une carte sans rune affûtable
+   n'y paraît pas (corrections de fin de vague 8, sur la branche, amendant A4 —
+   [ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)) ; puis un dialogue liste les runes
    de la carte, chacune avec ce que le niveau suivant lui ajoute et « Affûter — coût or », inactif au
    plafond (« Niveau maximal ») ou faute d'or. **Annuler ramène à la sélection** ; affûter ferme le
    dialogue et la sélection, et la visite est faite. **Le feu n'est plus la seule source

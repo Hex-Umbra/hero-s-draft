@@ -24,6 +24,8 @@ et le correctif de revue `f9f4da3f`, sur le plan `d125d597`, écrit sous D77
 `v0.5.7` sur ce commit, `release.yml` run `42538736623` vert — constaté par la porte d'entrée de
 la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 
+**A40 complétée le 2026-11-19 par [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** (corrections de fin de vague 8, sur la branche) : la tuile lit ses valeurs de combat d'un calcul partagé avec les cartes, `DisplayedEffectValue` — Puissance comprise ; aucun widget ne calcule.
+
 ### Contexte
 
 ADR-109 a sorti les signatures du deck sans leur donner de progression : une signature au niveau 30
