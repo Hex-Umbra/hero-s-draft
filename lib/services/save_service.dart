@@ -44,15 +44,20 @@ class SaveService {
   /// Une run debug ne persiste rien : ni ecriture, ni effacement.
   ///
   /// Le verrou est ici, et non chez les appelants, pour deux raisons. Il y a
-  /// quatre points d'appel — un pour `save`, trois pour `clear` — et rien ne
-  /// garantit qu'il n'y en aura pas un cinquieme. Surtout, l'effacement est
+  /// trois points d'appel — un pour `save`, deux pour `clear` — et rien ne
+  /// garantit qu'il n'y en aura pas un quatrieme. Surtout, l'effacement est
   /// aussi destructeur que l'ecriture : un menu de debug capable de tuer le
-  /// heros mene a `DeathOverlay`, qui efface la sauvegarde. Proteger la seule
-  /// ecriture aurait laisse la vraie partie disparaitre par la porte d'a cote.
+  /// heros declenche `autosaveOrchestratorProvider`, qui efface la sauvegarde
+  /// a la mort. Proteger la seule ecriture aurait laisse la vraie partie
+  /// disparaitre par la porte d'a cote.
   static bool _isDebugRun(RefReader read) => read(debugRunProvider).isDebugRun;
 
   static Future<void> save(RefReader read) async {
     if (_isDebugRun(read)) return;
+    // Un héros mort ne se sauvegarde pas : la mort a déjà effacé la partie,
+    // et un checkpoint tardif — un nœud résolu dans la même frame, héros et
+    // dernier ennemi tombés ensemble — la ferait renaître morte.
+    if (read(runProvider).isDead) return;
     final prefs = await SharedPreferences.getInstance();
     final payload = {
       'schemaVersion': saveMigrator.currentVersion,

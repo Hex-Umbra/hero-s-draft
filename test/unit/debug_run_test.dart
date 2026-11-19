@@ -115,7 +115,8 @@ void main() {
       container.read(debugRunProvider.notifier).requestDebugRun();
       container.read(runProvider.notifier).startNewRun(paladin);
 
-      // C'est le chemin de `DeathOverlay`, atteint par « Perdre le combat » du
+      // C'est l'effacement de `autosaveOrchestratorProvider` a la mort, atteint
+      // par « Perdre le combat » du
       // menu de debug. Sans ce verrou, tester une mort effacerait la vraie
       // partie — proteger la seule ecriture n'aurait servi a rien.
       await SaveService.clear(container.read);
