@@ -4,14 +4,13 @@ Le catalogue compte **58 cartes** : **9 neutres** sous `assets/data/cards/<id>.j
 de lot** sous `assets/data/cards/<passif>/<id>.json`, neuf lots — 6, 6, 6 en tranche 1 ; 5, 5, 5 en
 tranche 2 ; 5, 5, 6 en tranche 3 (D16) — **re-mesuré le 2026-11-18** (`find assets/data/cards
 -maxdepth 1 -name '*.json' | wc -l` → 9, `find assets/data/cards -mindepth 2 -name '*.json' | wc -l`
-→ 49, sur la branche `feat/v0.6.0-p42-tranche-3`).
+→ 49 ; re-compté le 2026-11-19, `assets/` identique à `main` à `84a1ee34` : mêmes comptes).
 Le nom du fichier est l'`id` ; le nom du dossier d'un lot est l'id de son passif. La forme C est de
 la tranche 1 de P-42, vague 5, fusionnée dans `main` le 2026-11-09 —
 [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md) ; la tranche 2, vague 6, est fusionnée
 dans `main` le 2026-11-15 —
-[ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md) ; la tranche 3, vague 8, est **livrée sur
-la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du
-propriétaire** — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md). Les signatures ne sont pas des
+[ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md) ; la tranche 3, vague 8, est **fusionnée
+dans `main` le 2026-11-19 par la PR #56**, taguée `v0.6.0` — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md). Les signatures ne sont pas des
 cartes : leur règle est en [`_rules/02-2`](02-2-systeme-de-heros.md) §Signatures
 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)).
 

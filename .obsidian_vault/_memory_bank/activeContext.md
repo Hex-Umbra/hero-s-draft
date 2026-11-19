@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-19 | commit: ee60f62f -->
+<!-- last-sync: 2026-11-19 | commit: ddcd5b97 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,40 +7,31 @@
 
 ## Focus courant
 
-**La vague 8 du programme P-43 → P-42 → P-44 lot 1 est livrée sur sa branche,
-`feat/v0.6.0-p42-tranche-3`, et attend le propriétaire** : son test manuel, la PR, la fusion dans
-`main`, puis le tag. Elle porte **la tranche 3 de P-42, la dernière** : les lots Sanctifié
-(*Bénédiction*), Carnage (*Frénésie*) et Marque (*Marque du Mage*) arrivent et **les neuf passifs sont
-jouables** ; *Marque du Mage* se déclenche sur la première carte de dégâts du tour, Attaque ou
-Compétence, à cible unique et vivante (D34, A3 (c), A4 (ii)) ; *Prière* pose un statut neuf, la
-*Source de Vie* (D55) — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md).
-**Rien n'en est fusionné ni publié** : `main` reste à `5d894785`, et ce que le vault dit de la vague 8
-n'y deviendra vrai qu'à la fusion. La [spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md)
-et le [plan](../../docs/superpowers/plans/2026-11-18-p42-tranche-3.md) font foi ; le
-[compte rendu de la vague](../../docs/superpowers/reports/2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
-porte les chiffres (§1), les arbitrages et les décisions de SDD S0 à S5 (§2) ; sa fin — §0, §3 à §6
-et le fichier de tests manuels, dont la spec §9.1 prépare les points M1 à M16 — s'écrit à la fin de
-la vague (orchestration §3.8). **P-42 est clos dans `docs/ROADMAP.md`** ; **le chantier, lui, ne
-l'est pas** : c'est la session de clôture qui le fera, après le tag (orchestration §8.9). **Un
-arbitrage que le propriétaire renverse se corrige sur la branche avant la fusion.** Le 2026-11-19,
-**six corrections de fin de vague** y sont faites, options choisies sur maquettes, un commit chacune
-(`70fce82b` → `ee60f62f`) — [ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md), tests manuels C1 à C6.
+**Le chantier « Économie unifiée et catalogue » est clos (2026-11-19)** — P-43, P-42, P-44 lot 1 et
+P-53, de `0.5.2` à `0.6.0`, en neuf vagues, de la vague 0 à la vague 8. **Le focus revient à
+`docs/ROADMAP.md`** : aucun chantier n'est ouvert, et le prochain est celui que le propriétaire y
+choisira. La session de clôture (orchestration §8.9) écrit sur la branche
+`docs/cloture-chantier-economie-et-catalogue` : le journal (`004753db`), le bilan du suivi et les
+en-têtes (`ddcd5b97`), puis cette synchronisation ; **ce qu'elle dit clos le devient sur `main` à
+sa fusion**, sans test ni tag.
 
-**La vague 7 est close** : fusionnée dans `main` le 2026-11-18 par la PR #55 (commit de fusion
-`5d894785`), taguée `v0.5.9` sur ce commit, CI de tête `44271012349` et `release.yml` run
-`44271100229` verts, release publiée — constatée par la porte d'entrée de la vague 8 (`eb7945fb`) et
-re-vérifiée par `gh` à cette synchronisation. ADR-117 est désormais vrai sur `main`.
+**La vague 8 est close** : fusionnée dans `main` le 2026-11-19 par la PR #56 (commit de fusion
+`84a1ee34`), taguée `v0.6.0` sur ce commit, CI de tête `44548499546` et `release.yml` run
+`44556736195` verts, release `v0.6.0` publiée le 2026-11-19, `verify_version.sh 0.6.0` cohérent —
+re-vérifié par `gh` à cette synchronisation. ADR-118 et ADR-119 sont désormais vrais sur `main`.
 
-**La méthode est celle d'[ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
-amendée par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
+**La méthode du chantier** : [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
+amendé par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
 [ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md),
-[ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md) — clos par la vague 7 — et
-[ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md).** **Deux documents font
-foi, et ne se recopient pas** : le
+[ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md) et
+[ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md) ; **ce qu'elle lègue au
+prochain chantier** : [ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md)
+— cinq amendements adoptés en vagues 4 à 6, cinq propositions et R31 laissées au propriétaire, le
+gel des blueprints d'ADR-108 D8 échu. Le
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
-pour le *déroulé* et le
+reste le texte de ce chantier, figé ; le
 [brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)
-pour les *décisions de conception*.
+garde ses décisions de conception.
 
 Réserves à ne pas perdre de vue :
 
@@ -53,7 +44,7 @@ Réserves à ne pas perdre de vue :
   `onDamagingCardPlayed`**. **Aux tests manuels** : *Exécution* face aux boss (M10) et le Vulnérable
   qui s'accumule (M7), à juger — la calibration est P-16 ; **Carnage à l'acte 1**, où chaque combat
   n'a qu'un ennemi (M9). **Dues à P-44, hors du programme** : les épines de Rempart, la carte
-  `retain` de Voile, *Forge de guerre* de Carnage — la session de clôture les porte en ROADMAP.
+  `retain` de Voile, *Forge de guerre* de Carnage — portées sur la ligne de P-44 de `docs/ROADMAP.md`.
 - **Ce que la vague 7 laisse ouvert**, consigné au compte rendu §4 et dans ADR-117 : **la phase
   ennemie se joue jusqu'au bout après une victoire constatée par les statuts** (`_enemyRipostePhase`
   ne regarde jamais `isCombatEnded`) — un soin de trop de *Bénédiction*, et depuis la vague 8 de la
@@ -93,7 +84,7 @@ Réserves à ne pas perdre de vue :
   imports, a échoué une fois dans une suite complète pendant la vague 1 ;
   `test/unit/content_editor/entity_writer_test.dart` (« une sauvegarde ratée ne laisse aucune copie
   partielle ») une fois pendant la partie 1 de la vague 7. Tous deux verts dans la suite complète
-  de cette synchronisation (2026-11-18). À surveiller.
+  de cette synchronisation (2026-11-19). À surveiller.
 - **Ce que la vague 3 laisse ouvert**, consigné dans ADR-107 : le boss « XP » ne monte rien en
   début de run ; l'or dort (constat de P-16) ; **à la file** : l'écart de « Butin de Reliques » de
   la fiche des probabilités, `DebugActions.gainLevel` qui peut donner deux niveaux, une garde de
@@ -106,9 +97,9 @@ Réserves à ne pas perdre de vue :
   `snake_case`** (commit `7da5db2`) : la seule étape de `SaveMigrator` migre `attaque` →
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
-  `assets/data/patch_notes.json`, jamais ici.** Sur la branche de la vague 8, les trois porteurs de
-  version portent déjà la sienne (`147f564c`), **ni taguée ni publiée** ; sur `main`, celle de la
-  vague 7, publiée. Les versions que visent les vagues font foi dans le fichier d'orchestration, §1.
+  `assets/data/patch_notes.json`, jamais ici.** Sur `main`, les trois porteurs de version portent
+  celle de la vague 8, taguée et publiée ; la clôture n'en pose aucune. Les versions qu'ont visées
+  les vagues font foi dans le fichier d'orchestration, §1.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
   note — la porte ne suppose jamais.
@@ -119,10 +110,21 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Vague 8 — P-42 tranche 3 : Sanctifié, Carnage, Marque, les neuf passifs jouables**
+1. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
+   `docs/cloture-chantier-economie-et-catalogue`, sur `main` à `84a1ee34` — **sans code, sans
+   version, sans tag**, orchestration §8.9) — **le chantier est clos.** La porte d'entrée constate
+   la vague 8 fusionnée, taguée, publiée, CI/CD verte ; le journal passe la vague 8 à « close » et
+   la ligne « Clôture » à « faite » ; le suivi reçoit son bilan. **Les trois cartes dues à P-44** —
+   une carte d'épines pour Rempart (lot 2), une carte `retain` pour Voile et *Forge de guerre* pour
+   Carnage (lot 3) — sont portées sur la ligne de P-44 de `docs/ROADMAP.md` (brainstorm v3 §7.1 à
+   §7.3 et §11, orchestration §7.2). **Un ADR de clôture**,
+   [ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md).
+   **1859 tests**, `dart analyze` propre (**vérifié le 2026-11-19**, `lib/`, `test/` et `assets/`
+   identiques à `84a1ee34`).
+2. **Vague 8 — P-42 tranche 3 : Sanctifié, Carnage, Marque, les neuf passifs jouables**
    (2026-11-18, branche `feat/v0.6.0-p42-tranche-3`, 13 commits `eb7945fb` → `147f564c` sur `main`
-   à `5d894785` — **livrée sur la branche, vague 8 du fichier d'orchestration, en attente du test,
-   de la PR, de la fusion et du tag du propriétaire**) — **chaque passif a son lot.** **Le
+   à `5d894785` — **fusionnée dans `main` le 2026-11-19 par la PR #56, merge `84a1ee34`, taguée
+   `v0.6.0`, CI/CD verte**) — **chaque passif a son lot.** **Le
    déclencheur de D34** : `onDamagingCardPlayed`, que la suite commune envoie après l'événement du
    type si la carte porte un effet `damage` — un seul prédicat, `EffectiveCard.dealsDamage`, effets
    ajoutés compris, sans lire la cible ni les dégâts ; aucune relique ne l'écoute. ***Marque du
@@ -146,7 +148,7 @@ Réserves à ne pas perdre de vue :
    (2026-11-19, `70fce82b` → `ee60f62f`) : la mort efface la sauvegarde, l'affûtage ne liste que l'affûtable,
    les intentions en lignes compactes à infobulles, un arbitre du survol de la main, la
    Puissance sur les tuiles de signature, « -12 PV Max » — **1859 tests** (vérifié le 2026-11-19), ADR-119.
-2. **Vague 7 — P-53 : les charges élémentaires, le Gel, le Feu et la Foudre** (2026-11-15 →
+3. **Vague 7 — P-53 : les charges élémentaires, le Gel, le Feu et la Foudre** (2026-11-15 →
    2026-11-17, branche `feat/v0.5.9-p53-charges-elementaires`, 30 commits `b50eca31` → `d15bcd04`
    sur `main` à `535f9ded` — **fusionnée dans `main` le 2026-11-18 par la PR #55, merge
    `5d894785`, taguée `v0.5.9`, CI/CD verte**) — **les éléments rompent.** **Le
@@ -170,32 +172,9 @@ Réserves à ne pas perdre de vue :
    **1682**, celle de la porte d'entrée), `dart analyze` propre (**vérifié le 2026-11-17**) —
    [ADR-117](../_adr/ADR-117-les-charges-elementaires.md), qui amende ADR-023 et ADR-111 et clôt
    ADR-110.
-3. **Vague 6 — P-42 tranche 2 : Croisé, Vampire, Voile, et la banque de mana de *Canalisation***
-   (2026-11-15, branche `feat/v0.5.8-p42-tranche-2`, 12 commits `b8e0641b` → `074d53ac` sur `main`
-   à `df1b671d` — **fusionnée dans `main` le 2026-11-15 par la PR #54, merge `56fae9df`, taguée,
-   CI/CD verte**) — **six passifs sur neuf se jouent.**
-   **Trois lots de cinq cartes**, toutes communes, rangés sous `cards/<passif>/` : **Croisé**
-   (*Ferveur*, Paladin) — cinq Attaques, trois qui donnent de l'Armure, deux multi-coups à
-   `mightRatio` 0,75 ; **Vampire** (*Soif de Sang*, Berserker) — cinq Attaques, trois qui piochent,
-   *Lacération* à 0 qui s'épuise, *Frénésie sanglante* à 1 mana qui grandit avec les cartes jouées
-   ce tour ; **Voile** (*Canalisation*, Mage) — Pouvoirs durables et Compétences à 3, courbe
-   1-2-3-3-3. Leur arrivée **démasque leurs passifs par la donnée** (O5), sans code ; le Mage
-   démarre de nouveau sur *Canalisation*. **La banque de mana** (D30) : à la fin du tour, le mana
-   non dépensé passe en réserve, jusqu'au Mana max + Maîtrise, et le tour suivant commence avec
-   — `RunState.manaReserve`, jamais sauvegardée ; un seul calcul, `ManaReserve.preview`, pour la
-   stratégie et l'écran ; hors de `StatGains`. **À l'écran**, réponse C et D du propriétaire sur
-   maquettes (15/11) : flèches sur les cristaux qui passeront en réserve, légende cyan « +n au
-   prochain tour », message de fin de tour « n Mana en réserve », bordé de cyan ; Mage sous
-   *Canalisation* seulement. **Un statut neuf**, `mana_regen` (*Source de Mana*), posé par
-   *Méditation* ; *Persistant* et *Résonant* le refusent par `excludesEffects`, qui lit désormais
-   `status:<id>` (D44). **Deux corrections de la revue d'ensemble** : la main de l'étape « Jouer des
-   cartes » du tutoriel tient dans le Mana max ; la légende de la réserve quitte le combat fini.
-   Une question P, A14 — l'affichage de la réserve —, tranchée par le propriétaire sur maquettes
-   le 15/11 (`df1b671d`) ; T1.1, rendue P par le vérificateur, reclassée T. Note de version écrite (`074d53ac`). **1682 tests** (+62 sur la base de **1620**, celle
-   de la porte d'entrée), `dart analyze` propre (**vérifié le 2026-11-15**) —
-   [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md).
 > [!NOTE]
-> **Rotations.** Sortie le 2026-11-18, dans `../_archive/` : `2026-11-18-activeContext-livraisons.md`
+> **Rotations.** Sortie le 2026-11-19, dans `../_archive/` : `2026-11-19-activeContext-livraisons.md`
+> (la vague 6, P-42 tranche 2). Sortie le 2026-11-18 : `2026-11-18-activeContext-livraisons.md`
 > (la vague 5, P-42 tranche 1 et P-44 lot 1). Sortie le 2026-11-17 : `2026-11-17-activeContext-livraisons.md`
 > (la vague 4, P-43 lot E4). Sortie le 2026-11-15 : `2026-11-15-activeContext-livraisons.md`
 > (la vague 3, P-43 lot E3). Sortie le 2026-11-04 : `2026-11-04-activeContext-livraisons.md`
@@ -213,26 +192,13 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire, sur la vague 8** : la fin de vague écrite (orchestration §3.8), il
-joue le fichier de tests manuels — les points M1 à M16 de la
-[spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md) §9.1 et C1 à C6, tous validés le 19/11 —, lit la
-table des arbitrages du
-[compte rendu](../../docs/superpowers/reports/2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
-(§2), ouvre la PR de `feat/v0.6.0-p42-tranche-3`, la fusionne dans `main`, puis pose le tag de la
-version sur le commit de fusion (ADR-103 D1). Une correction demandée se fait sur la branche, avant la
-fusion ; une valeur de carte que le test corrige se change dans son fichier, sans code.
+**D'abord le propriétaire** : il ouvre la PR de `docs/cloture-chantier-economie-et-catalogue` et la
+fusionne — ni test manuel, ni tag (orchestration §8.9, point 6).
 
-**Puis la session de clôture du programme** (orchestration §8.9), dans une session neuve, une fois la
-version de la vague 8 taguée : elle constate la vague 8 close et dit le chantier clos ; elle porte
-en `docs/ROADMAP.md` les trois cartes dues à P-44 — les épines de Rempart, la carte `retain` de
-Voile, *Forge de guerre* de Carnage. **Le défaut S9** (la phase ennemie après une victoire) reste
-bloquant pour le premier contenu qui posera du Feu ou du Poison sur le héros. **P-16** calibrera
-ensuite sur les neuf lots.
-
-Une question reste tenue dans `docs/ROADMAP.md` §4, hors programme : la **Maîtrise dans l'onglet
-Héros du menu de debug**.
-
-Le Jalon 2 « Feel & contenu » (`docs/ROADMAP.md` §9) reste ouvert : P-06, P-07, le prototype de
-P-08, P-05 — dont dépendent les lots 2 à 4 de P-44, après le programme. **P-07 doit lire
+**Puis le prochain chantier, que le propriétaire choisit dans `docs/ROADMAP.md`** — ce fichier n'en
+choisit aucun. S'il se livre par vagues, il part d'ADR-102, 103, 108, 113 et des amendements
+d'[ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1, et
+tranche à son ouverture D3, D4 et R31. **Le défaut S9** (la phase ennemie après une victoire) reste
+bloquant pour le premier contenu qui posera du Feu ou du Poison sur le héros. **P-07 doit lire
 [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
 aux animations.**

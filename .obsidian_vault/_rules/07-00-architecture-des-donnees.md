@@ -74,8 +74,8 @@ Les identifiants sont en `snake_case` ASCII minuscule, épinglé par
 `test/unit/entity_id_convention_test.dart`.
 
 **Neuf dossiers de lot sous `cards/`**, un par passif — trois par tranche ; ceux de la tranche 3,
-`blessing/`, `frenzy/`, `mage_mark/`, ont chacun leur ligne de `pubspec.yaml` (vague 8, livrée sur la
-branche `feat/v0.6.0-p42-tranche-3`, en attente du propriétaire —
+`blessing/`, `frenzy/`, `mage_mark/`, ont chacun leur ligne de `pubspec.yaml` (vague 8, fusionnée dans
+`main` le 2026-11-19 par la PR #56 —
 [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)). Six cartes y sont
 entrées par `git mv`, sans retouche : un déplacement de dossier ne change ni l'id ni une sauvegarde.
 

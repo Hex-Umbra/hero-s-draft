@@ -30,6 +30,8 @@ nouveau. Chacun de ces ADR ne change que de Statut. **Clôt P-42** dans `docs/RO
 
 **Complété le 2026-11-19 par [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** : six corrections de fin de vague, sur la même branche, avant la fusion.
 
+**Fusionné dans `main` le 2026-11-19 par la PR #56** (commit de fusion `84a1ee34`), tagué `v0.6.0` sur ce commit ; CI de tête `44548499546` et `release.yml` run `44556736195` verts, release `v0.6.0` publiée le 2026-11-19 — constaté par la session de clôture du chantier et re-vérifié par `gh` le 2026-11-19. **Clôt le chantier** « Économie unifiée et catalogue » ; méthode léguée : [ADR-120](ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md).
+
 ### Contexte
 
 Depuis le lot E4 de P-43 (`0.5.6`), *Projectile Magique* est une Compétence, et *Marque du Mage*,

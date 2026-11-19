@@ -23,6 +23,8 @@ grisée, elle n'est plus listée). **Complète [ADR-069](ADR-069-systeme-de-sauv
 partagé, toujours sans widget qui calcule) et **[ADR-118](ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)**
 (la vague qu'elles corrigent). Chacun de ces ADR ne change que de Statut.
 
+**Fusionné dans `main` le 2026-11-19 par la PR #56** (commit de fusion `84a1ee34`), avec la vague 8, tagué `v0.6.0` sur ce commit ; CI de tête `44548499546` et `release.yml` run `44556736195` verts — re-vérifié par `gh` le 2026-11-19.
+
 ### Contexte
 
 Le propriétaire a relevé, au fil des vagues, des défauts que la vague 8 corrige avant sa fusion :

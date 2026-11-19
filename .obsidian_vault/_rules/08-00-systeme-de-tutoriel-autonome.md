@@ -63,8 +63,8 @@ sur l'étape 01.
    `availablePassivesFor` ouvre à la classe, sous `assets/data/passives/` — depuis la vague 5,
    deux par classe depuis la tranche 2 (vague 6, fusionnée
    dans `main` le 2026-11-15 — [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)), **trois
-   par classe depuis la tranche 3** (vague 8, livrée sur la branche `feat/v0.6.0-p42-tranche-3`, en
-   attente du test, de la PR, de la fusion et du tag du propriétaire —
+   par classe depuis la tranche 3** (vague 8, fusionnée dans `main` le 2026-11-19 par la
+   PR #56 —
    [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)) ; le premier de
    chaque classe reste préselectionné, le Mage sur *Canalisation*, son premier par `displayOrder`,
    avec sa description lue dans la donnée — comme celle, neuve, de *Marque du Mage*. Le tutoriel ne
