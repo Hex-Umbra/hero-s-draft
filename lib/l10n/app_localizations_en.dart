@@ -747,7 +747,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgeNoEligibleRune => 'No rune can be added to this card.';
 
   @override
-  String get sharpenNothingOnCard => 'No rune on this card can gain a level.';
+  String get restCardSelectionDeckEmpty => 'Your deck is empty';
 
   @override
   String sharpenAction(int cost) {

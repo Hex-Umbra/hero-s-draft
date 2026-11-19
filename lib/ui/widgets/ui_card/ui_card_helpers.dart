@@ -183,8 +183,7 @@ Color getCardTypeColor(CardType? type, {bool isGrayedOut = false}) {
 /// signature : une signature n'est pas une carte, son type ne la teinte pas.
 const Color neutralCardBackground = Color(0xFF2A2A3D);
 
-Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
-  if (isGrayedOut) return const Color(0xFF1A1A1A);
+Color getCardBackgroundColor(CardType? type) {
   switch (type) {
     case CardType.attack:
       return const Color(0xFF4A1D1D);

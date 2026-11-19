@@ -30,7 +30,6 @@ class UiCard extends StatelessWidget {
   final CardTarget? targetType;
   final bool isExhaust;
   final bool isSelected;
-  final bool isGrayedOut;
   final VoidCallback? onTap;
 
   const UiCard({
@@ -48,7 +47,6 @@ class UiCard extends StatelessWidget {
     this.targetType,
     this.isExhaust = false,
     this.isSelected = false,
-    this.isGrayedOut = false,
     this.onTap,
   });
 
@@ -58,7 +56,6 @@ class UiCard extends StatelessWidget {
     required String locale,
     required AppLocalizations l10n,
     bool isSelected = false,
-    bool isGrayedOut = false,
     VoidCallback? onTap,
   }) {
     return UiCard(
@@ -76,7 +73,6 @@ class UiCard extends StatelessWidget {
       targetType: card.data.target,
       isExhaust: card.exhaustsOnPlay,
       isSelected: isSelected,
-      isGrayedOut: isGrayedOut,
       onTap: onTap,
     );
   }
@@ -88,7 +84,6 @@ class UiCard extends StatelessWidget {
     required AppLocalizations l10n,
     List<String> forgeUpgrades = const [],
     bool isSelected = false,
-    bool isGrayedOut = false,
     VoidCallback? onTap,
   }) {
     return UiCard(
@@ -106,7 +101,6 @@ class UiCard extends StatelessWidget {
       targetType: card.target,
       isExhaust: card.isExhaust,
       isSelected: isSelected,
-      isGrayedOut: isGrayedOut,
       onTap: onTap,
     );
   }
@@ -114,8 +108,8 @@ class UiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final typeColor = getCardTypeColor(type, isGrayedOut: isGrayedOut);
-    final bgColor = getCardBackgroundColor(type, isGrayedOut: isGrayedOut);
+    final typeColor = getCardTypeColor(type);
+    final bgColor = getCardBackgroundColor(type);
     final rarityColor = getCardRarityColor(context, rarity);
 
     final showBadge = isExhaust || type == CardType.power;

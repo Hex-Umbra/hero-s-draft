@@ -508,7 +508,7 @@
   "restCampSharpenTitle": "SHARPEN A RUNE",
   "restCampSharpenSubtitle": "Choose a card, then the rune that gains a level.",
   "forgeNoEligibleRune": "No rune can be added to this card.",
-  "sharpenNothingOnCard": "No rune on this card can gain a level.",
+  "restCardSelectionDeckEmpty": "Your deck is empty",
   "sharpenAction": "Sharpen — {cost} gold",
   "@sharpenAction": {
     "placeholders": {

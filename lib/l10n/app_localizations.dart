@@ -1298,11 +1298,11 @@ abstract class AppLocalizations {
   /// **'No rune can be added to this card.'**
   String get forgeNoEligibleRune;
 
-  /// No description provided for @sharpenNothingOnCard.
+  /// No description provided for @restCardSelectionDeckEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No rune on this card can gain a level.'**
-  String get sharpenNothingOnCard;
+  /// **'Your deck is empty'**
+  String get restCardSelectionDeckEmpty;
 
   /// No description provided for @sharpenAction.
   ///

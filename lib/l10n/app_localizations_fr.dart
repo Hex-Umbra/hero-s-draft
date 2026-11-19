@@ -753,8 +753,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune rune ne peut être ajoutée à cette carte.';
 
   @override
-  String get sharpenNothingOnCard =>
-      'Aucune rune de cette carte ne peut gagner de niveau.';
+  String get restCardSelectionDeckEmpty => 'Votre deck est vide';
 
   @override
   String sharpenAction(int cost) {

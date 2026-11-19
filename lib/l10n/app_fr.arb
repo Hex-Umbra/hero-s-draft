@@ -206,7 +206,7 @@
   "restCampSharpenTitle": "AFFÛTER UNE RUNE",
   "restCampSharpenSubtitle": "Choisissez une carte, puis la rune qui gagne un niveau.",
   "forgeNoEligibleRune": "Aucune rune ne peut être ajoutée à cette carte.",
-  "sharpenNothingOnCard": "Aucune rune de cette carte ne peut gagner de niveau.",
+  "restCardSelectionDeckEmpty": "Votre deck est vide",
   "sharpenAction": "Affûter — {cost} or",
   "sharpenLevel": "Niveau {from} → {to}",
   "runeMaxLevel": "Niveau maximal",

@@ -10,7 +10,6 @@ import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 import 'package:roguelike_card_game/ui/screens/rest_card_selection_screen.dart';
 import 'package:roguelike_card_game/ui/widgets/forge/sharpen_rune_dialog.dart';
-import 'package:roguelike_card_game/ui/widgets/notification_overlay.dart';
 import 'package:roguelike_card_game/ui/widgets/ui_card.dart';
 
 import '../unit/shipped_data.dart';
@@ -59,20 +58,13 @@ Future<ProviderContainer> _pumpSharpenSelection(
   return container;
 }
 
-/// Une notification programme un minuteur de 3,5 s qu'aucun overlay ne
-/// démonte ici : il doit expirer avant la fin du test.
-Future<void> _settleNotifications(WidgetTester tester) async {
-  await tester.pump(const Duration(seconds: 4));
-  await tester.pumpWidget(const SizedBox());
-}
-
-/// La sélection de l'affûtage (spec P-43 E2, A4, §4.7).
+/// La sélection de l'affûtage (spec P-43 E2, §4.7).
 void main() {
   // Transcendance, lue par la sélection dans ses deux modes — le feu et le
   // Rémouleur (spec P-43 E3, §4.8, §8 ; A17 ; constat n° 2 du tour 3).
   for (final isFree in [false, true]) {
-    testWidgets('${isFree ? 'sans or' : 'au feu'}, une rune plafonnee se '
-        'grise, puis ouvre le dialogue sur Niveau 1 -> 2 sous un plafond '
+    testWidgets('${isFree ? 'sans or' : 'au feu'}, une rune plafonnee est '
+        'masquee, puis ouvre le dialogue sur Niveau 1 -> 2 sous un plafond '
         'releve', (tester) async {
       final card = CardInstance(
         data: shippedCard('strike_basic'),
@@ -82,23 +74,18 @@ void main() {
       final container =
           await _pumpSharpenSelection(tester, card, isFree: isFree);
 
-      expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isTrue);
-      await tester.tap(find.byType(UiCard));
-      await tester.pumpAndSettle();
-      expect(find.byType(SharpenRuneDialog), findsNothing);
-      expect(container.read(notificationProvider).last.message,
-          'Aucune rune de cette carte ne peut gagner de niveau.');
+      expect(find.byType(UiCard), findsNothing);
+      expect(find.text('Aucune rune de votre deck ne peut gagner de niveau.'),
+          findsOneWidget);
 
       container.read(runProvider.notifier).raiseRuneCap('eco');
       await tester.pumpAndSettle();
 
-      expect(tester.widget<UiCard>(find.byType(UiCard)).isGrayedOut, isFalse);
+      expect(find.byType(UiCard), findsOneWidget);
       await tester.tap(find.byType(UiCard));
       await tester.pumpAndSettle();
       expect(find.byType(SharpenRuneDialog), findsOneWidget);
       expect(find.text('Niveau 1 → 2'), findsOneWidget);
-
-      await _settleNotifications(tester);
     });
   }
 }
