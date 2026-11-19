@@ -166,7 +166,6 @@
 - [ ] Il faudrait également modifier l'interface pour la sélection de carte, que ce soit pour la constitution du deck ou du choix de cartes en récompenses pour le boss correspondant.
 - [ ] Modifier la bulle d'affichage des information lors du survol d'une carte a jouer.
 - [x] Pour l'événement "La fontaine Bénie", la 2eme option affiche "+-12 PV Max", ce qui n'est pas le bon affichage et devrait plutôt être "-12PV Max".
-- [ ] Est ce que l'interaction entre l'altération de foudre et de poison est attendu ? Explication: Actuellement lorsque la cible a l'altération de foudre sur elle placé, attaquer avec la carte qui empoisonne pour "1" empoisonne en réalité pour "2" car l'effet de foudre est a "1". Attention ce n'est pas a corrigé, c'est une question car le fonctionnement est en fait un excellent combo a effectuer et que le joueur peut découvrir par lui même.
 - [x] Le bloc de preview des attaques ennemis peut devenir trop grand et afficher tellement d'info que le bouton de "fin de tour" fini caché par toutes les infos sur des écrans plus petits..
 - [x] Sur navigateur, lorsque le joueur meurt en combat il peut appuyer sur F5 pour rafraichir la page, ce qui reload le combat avant de cliquer sur les deux bouton du menu de "mort"
 - [x] Quand la main du joueur deviens "grande", en gros qu'il a plus de 5 cartes, certaines cartes au milieu sont difficile a hover par dessus selon la taille des écrans.
