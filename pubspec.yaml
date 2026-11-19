@@ -1,7 +1,7 @@
 name: roguelike_card_game
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.5.9+1
+version: 0.6.0+1
 
 environment:
   sdk: ^3.11.4
@@ -34,9 +34,12 @@ flutter:
     - assets/audio/sfx/
     - assets/data/
     - assets/data/cards/
+    - assets/data/cards/blessing/
     - assets/data/cards/bloodthirst/
     - assets/data/cards/channeling/
     - assets/data/cards/fervor/
+    - assets/data/cards/frenzy/
+    - assets/data/cards/mage_mark/
     - assets/data/cards/mana_flux/
     - assets/data/cards/rage/
     - assets/data/cards/regen_armor/

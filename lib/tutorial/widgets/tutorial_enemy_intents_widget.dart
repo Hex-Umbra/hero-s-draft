@@ -32,8 +32,8 @@ class _IntentTierLegend {
 /// réutilisé tel quel, avec quatre `EnemyInstance` fixtures qui ne varient
 /// que par la valeur de leur intention (4, 8, 15, 22). `effectiveIntent`
 /// range chacune dans un des quatre paliers d'attaque réels : les icônes,
-/// couleurs et libellés affichés viennent du panneau lui-même, jamais d'une
-/// copie locale.
+/// couleurs et valeurs de chaque ligne, comme les libellés de leur
+/// infobulle, viennent du panneau lui-même, jamais d'une copie locale.
 class TutorialEnemyIntentsWidget extends StatelessWidget {
   final TutorialEngine engine;
   const TutorialEnemyIntentsWidget({super.key, required this.engine});

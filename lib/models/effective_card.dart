@@ -71,6 +71,13 @@ class EffectiveCard {
   /// §4.1, A20).
   final int hpRefundPercent;
 
+  /// Vrai si la carte porte un effet `damage`, propre ou ajouté par un delta :
+  /// ni la cible ni les dégâts réellement infligés ne sont lus (spec P-42
+  /// tranche 3, A2).
+  bool get dealsDamage =>
+      addedEffects.any((effect) => effect.type == 'damage') ||
+      effects.any((effect) => effect.type == 'damage');
+
   /// La couture commune aux runes et aux évolutions de signature : une
   /// fonction pure, qui ne lit ni registre ni rune — elle reçoit des paires
   /// *(delta, niveau)*.

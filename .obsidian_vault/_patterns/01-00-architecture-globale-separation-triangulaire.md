@@ -21,7 +21,7 @@ graph TD
 
     subgraph "Couche Rendu — Flame (Muscles)"
         Game["HerosDraftGame<br/>(FlameGame + TapCallbacks + PointerMoveCallbacks)"]
-        CardComp["CardComponent<br/>(DragCallbacks, HoverCallbacks)"]
+        CardComp["CardComponent<br/>(DragCallbacks)"]
         EnemyComp["EnemyCard<br/>(TapCallbacks)"]
         HeroComp["HeroCard"]
         TargetLine["TargetingLine"]

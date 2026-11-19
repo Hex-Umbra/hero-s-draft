@@ -315,6 +315,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get relicTriggerEnemyKilled => 'Ennemi Tué';
 
   @override
+  String get relicTriggerDamagingCardPlayed => 'Carte de dégâts jouée';
+
+  @override
   String get rarityCommon => 'Commun';
 
   @override
@@ -564,6 +567,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusHpRegen(int amount, int duration) {
+    return 'Pendant $duration tours, récupère $amount PV au début du tour.';
+  }
+
+  @override
   String cardDescStatusCharge(int amount, String name) {
     return 'Applique $amount $name.';
   }
@@ -745,8 +753,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune rune ne peut être ajoutée à cette carte.';
 
   @override
-  String get sharpenNothingOnCard =>
-      'Aucune rune de cette carte ne peut gagner de niveau.';
+  String get restCardSelectionDeckEmpty => 'Votre deck est vide';
 
   @override
   String sharpenAction(int cost) {
@@ -912,8 +919,29 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String statusHpRegen(int value) {
+    return 'Source de Vie : +$value';
+  }
+
+  @override
   String statusArmorRegen(int value) {
     return 'Métallisation : +$value';
+  }
+
+  @override
+  String statusName(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'poison': 'Poison',
+      'might': 'Puissance',
+      'weakness': 'Faiblesse',
+      'vulnerable': 'Vulnérable',
+      'might_regen': 'Éveil de Puissance',
+      'mana_regen': 'Source de Mana',
+      'armor_regen': 'Métallisation',
+      'hp_regen': 'Source de Vie',
+      'other': '$id',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -954,6 +982,32 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String intentSkipped(String state) {
     return '$state : ne fait rien ce tour';
+  }
+
+  @override
+  String intentAttackExplanation(String enemy, int value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      value,
+      locale: localeName,
+      other: 'À son tour, $enemy attaquera le héros pour $value dégâts.',
+      one: 'À son tour, $enemy attaquera le héros pour 1 dégât.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String intentDefendExplanation(String enemy, int value) {
+    return 'À son tour, $enemy gagnera $value d\'Armure.';
+  }
+
+  @override
+  String intentBuffExplanation(String enemy, int value) {
+    return 'À son tour, $enemy gagnera $value de Puissance.';
+  }
+
+  @override
+  String intentWaitingExplanation(String enemy) {
+    return 'L\'intention de $enemy n\'est pas encore connue.';
   }
 
   @override
@@ -1008,6 +1062,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String eventGainMaxHp(int amount) {
     return '+$amount PV Max';
+  }
+
+  @override
+  String eventLoseMaxHp(int amount) {
+    return '-$amount PV Max';
   }
 
   @override

@@ -2,7 +2,7 @@
 
 | Composant | Héritage | Rôle | Priorité Z |
 |:---|:---|:---|:---|
-| `CardComponent` | `PositionComponent` + `DragCallbacks` + `HoverCallbacks` | Carte en main : façade déléguant son rendu à `CardRenderer` et ses gestes à `CardInteractionHandler` | base=10+index, hover=100, focused=150, dragging=500 |
+| `CardComponent` | `PositionComponent` + `DragCallbacks` — le survol est décidé par `HerosDraftGame.refreshHover` et `pickHoveredCard` (`hand_geometry.dart`), arbitre géométrique unique ([ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)) | Carte en main : façade déléguant son rendu à `CardRenderer` et ses gestes à `CardInteractionHandler` | base=10+index, hover=100, focused=150, dragging=500 |
 | `TargetingLine` | `PositionComponent` | Arc de ciblage : gradient vert→rouge, pattern pointillé animé, cercles pulsants sur cibles valides | 300 |
 | `EnemyCard` | `CombatEntity` + `TapCallbacks` | Entité ennemie : barre de vie, badges stats, indicateur d'intention, bordure pulsante si ciblé, hérite des animations de combat communes | 20 |
 | `HeroCard` | `CombatEntity` | Entité héros : portrait, `HealthBar`, `StatBadge` (armure/mana), icônes de statuts, hérite des animations de combat communes | 10 |
@@ -19,4 +19,4 @@ Afin de nettoyer la classe `CardComponent` de ses centaines de lignes de dessin 
   - Encapsule tout le dessin 2D de la face avant de la carte (fond avec coins arrondis, dégradés selon le type de carte, liseré et halo de rareté de carte, et dessin des fentes de runes de forge avec wrapping Canvas).
   - Délègue le dessin des textes à `CardTextRenderer`.
 - **`CardInteractionHandler`** (`lib/game/components/widgets/card_interaction_handler.dart`) :
-  - Centralise la gestion des gestes du pointeur : détection du survol (`hover`), calcul du glissement (`drag`), détection d'entrée dans la zone d'annulation (`cancel zone`) et détection de survol d'un ennemi pour ciblage.
+  - Centralise la gestion des gestes du pointeur : calcul du glissement (`drag`) — dont le début fait oublier le pointeur au survol (`forgetPointer`) —, détection d'entrée dans la zone d'annulation (`cancel zone`) et détection de survol d'un ennemi pour ciblage.

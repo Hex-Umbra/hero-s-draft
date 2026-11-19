@@ -620,6 +620,12 @@ abstract class AppLocalizations {
   /// **'Enemy Killed'**
   String get relicTriggerEnemyKilled;
 
+  /// No description provided for @relicTriggerDamagingCardPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Damage Card Played'**
+  String get relicTriggerDamagingCardPlayed;
+
   /// No description provided for @rarityCommon.
   ///
   /// In en, this message translates to:
@@ -974,6 +980,12 @@ abstract class AppLocalizations {
   /// **'For {duration} turns, gains {amount} Mana at turn start.'**
   String cardDescStatusManaRegen(int amount, int duration);
 
+  /// No description provided for @cardDescStatusHpRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'For {duration} turns, heals {amount} HP at turn start.'**
+  String cardDescStatusHpRegen(int amount, int duration);
+
   /// No description provided for @cardDescStatusCharge.
   ///
   /// In en, this message translates to:
@@ -1286,11 +1298,11 @@ abstract class AppLocalizations {
   /// **'No rune can be added to this card.'**
   String get forgeNoEligibleRune;
 
-  /// No description provided for @sharpenNothingOnCard.
+  /// No description provided for @restCardSelectionDeckEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No rune on this card can gain a level.'**
-  String get sharpenNothingOnCard;
+  /// **'Your deck is empty'**
+  String get restCardSelectionDeckEmpty;
 
   /// No description provided for @sharpenAction.
   ///
@@ -1532,11 +1544,23 @@ abstract class AppLocalizations {
   /// **'Mana Spring: +{value}'**
   String statusManaRegen(int value);
 
+  /// No description provided for @statusHpRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Life Spring: +{value}'**
+  String statusHpRegen(int value);
+
   /// No description provided for @statusArmorRegen.
   ///
   /// In en, this message translates to:
   /// **'Plated Armor: +{value}'**
   String statusArmorRegen(int value);
+
+  /// No description provided for @statusName.
+  ///
+  /// In en, this message translates to:
+  /// **'{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} other{{id}}}'**
+  String statusName(String id);
 
   /// No description provided for @statusLifesteal.
   ///
@@ -1585,6 +1609,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{state}: does nothing this turn'**
   String intentSkipped(String state);
+
+  /// Sentence of the tooltip on an enemy's attack intent, in the combat intents panel. {enemy} is the localized enemy name.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will attack the hero for {value} damage.'**
+  String intentAttackExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy's defend intent, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will gain {value} Armor.'**
+  String intentDefendExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy's buff intent, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will gain {value} Might.'**
+  String intentBuffExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy whose intent is not chosen yet, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'The intent of {enemy} is not known yet.'**
+  String intentWaitingExplanation(String enemy);
 
   /// No description provided for @deckTotalCards.
   ///
@@ -1657,6 +1705,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{amount} Max HP'**
   String eventGainMaxHp(int amount);
+
+  /// No description provided for @eventLoseMaxHp.
+  ///
+  /// In en, this message translates to:
+  /// **'-{amount} Max HP'**
+  String eventLoseMaxHp(int amount);
 
   /// No description provided for @eventGainMight.
   ///

@@ -1,8 +1,16 @@
 [
   {
+    "id": "v0.6.0",
+    "label": "0.6.0",
+    "channel": "current",
+    "date": "2026-11-18",
+    "notes": "0.6.0",
+    "windows": true
+  },
+  {
     "id": "v0.5.9",
     "label": "0.5.9",
-    "channel": "current",
+    "channel": "stable",
     "date": "2026-11-17",
     "notes": "0.5.9",
     "windows": true

@@ -9,7 +9,6 @@ import '../../models/data/game_data_registry.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/ui_card.dart';
-import '../widgets/notification_overlay.dart';
 import '../widgets/forge/sharpen_rune_dialog.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
@@ -20,10 +19,12 @@ class RestCardSelectionScreen extends ConsumerWidget {
   final String title;
   final String subtitle;
 
-  /// Vrai pour l'affûtage (spec P-43 E2, A4, §4.7) : une carte sans rune
-  /// affûtable est grisée et refusée au toucher, avec son motif ; une autre
-  /// ouvre le dialogue d'affûtage, et l'écran se ferme sur la carte et la
-  /// rune choisie. Faux pour l'oubli : l'écran se ferme sur la carte touchée.
+  /// Vrai pour l'affûtage (spec P-43 E2, §4.7) : seules les cartes portant
+  /// une rune affûtable sont listées — les autres sont masquées, non plus
+  /// grisées comme le voulait A4 ; une carte touchée ouvre le dialogue
+  /// d'affûtage, et l'écran se ferme sur la carte et la rune choisie. Faux
+  /// pour l'oubli : tout le deck est listé, et l'écran se ferme sur la carte
+  /// touchée.
   final bool isSharpen;
 
   /// Vrai pour l'affûtage sans or du *Rémouleur* (spec P-43 E3, §4.9, A21) :
@@ -40,20 +41,9 @@ class RestCardSelectionScreen extends ConsumerWidget {
     this.isFree = false,
   });
 
-  void _onCardTapped(
-    BuildContext context,
-    CardInstance card, {
-    required bool sharpenable,
-  }) async {
+  void _onCardTapped(BuildContext context, CardInstance card) async {
     if (!isSharpen) {
       Navigator.of(context).pop(card);
-      return;
-    }
-    if (!sharpenable) {
-      context.showNotification(
-        AppLocalizations.of(context)!.sharpenNothingOnCard,
-        type: NotificationType.error,
-      );
       return;
     }
 
@@ -73,11 +63,23 @@ class RestCardSelectionScreen extends ConsumerWidget {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
     final locale = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
-    final deck = ref.watch(deckProvider).masterDeck;
+    final masterDeck = ref.watch(deckProvider).masterDeck;
     final catalog = GameDataRegistry.instance?.forgeUpgrades ?? const [];
     // Le plafond effectif de la run (spec P-43 E3, §4.8, A17), au feu comme
-    // au *Rémouleur*.
+    // au *Rémouleur* : relevé, il rend une carte affûtable, et l'écran la
+    // montre aussitôt.
     final capBonus = ref.watch(runProvider).runeCapBonus;
+    final deck = isSharpen
+        ? [
+            for (final card in masterDeck)
+              if (ForgeRuneRules.hasSharpenableRune(
+                card,
+                catalog,
+                capBonus: capBonus,
+              ))
+                card,
+          ]
+        : masterDeck;
 
     final appBar = PageHeader(
       title: title,
@@ -110,8 +112,13 @@ class RestCardSelectionScreen extends ConsumerWidget {
               child: deck.isEmpty
                   ? Center(
                       child: Text(
-                        locale == 'fr' ? 'Votre deck est vide' : 'Your deck is empty',
+                        // Un filet : les deux appelants ferment déjà
+                        // l'affûtage quand rien n'est affûtable.
+                        isSharpen
+                            ? l10n.restCampSharpenNone
+                            : l10n.restCardSelectionDeckEmpty,
                         style: const TextStyle(color: Colors.white54, fontSize: 16),
+                        textAlign: TextAlign.center,
                       ),
                     )
                   : GridView.builder(
@@ -126,22 +133,11 @@ class RestCardSelectionScreen extends ConsumerWidget {
                       // non par celui d'une case de la grille.
                       itemBuilder: (_, index) {
                         final card = deck[index];
-                        final sharpenable = isSharpen &&
-                            ForgeRuneRules.hasSharpenableRune(
-                              card,
-                              catalog,
-                              capBonus: capBonus,
-                            );
                         return UiCard.fromInstance(
                           card: card,
                           locale: locale,
                           l10n: l10n,
-                          isGrayedOut: isSharpen && !sharpenable,
-                          onTap: () => _onCardTapped(
-                            context,
-                            card,
-                            sharpenable: sharpenable,
-                          ),
+                          onTap: () => _onCardTapped(context, card),
                         );
                       },
                     ),

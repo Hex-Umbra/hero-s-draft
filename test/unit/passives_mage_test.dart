@@ -55,7 +55,7 @@ void main() {
 
   PassiveData mageMark() => const PassiveData(
         id: 'mage_mark',
-        trigger: RelicTrigger.onAttackPlayed,
+        trigger: RelicTrigger.onDamagingCardPlayed,
         effectType: 'mage_mark',
         value: 1,
         duration: 2,
@@ -299,7 +299,7 @@ void main() {
   });
 
   group('Marque du Mage', () {
-    test('la premiere Attaque du tour rend la cible Vulnerable', () {
+    test('la premiere carte de degats du tour rend la cible Vulnerable', () {
       run.startNewRun(mage, mageMark());
       seedEnemy();
 
@@ -314,12 +314,12 @@ void main() {
       );
     });
 
-    test('la deuxieme Attaque du meme tour ne marque rien', () {
+    test('la deuxieme carte de degats du meme tour ne marque rien', () {
       run.startNewRun(mage, mageMark());
       seedEnemy();
 
       combat.applyPlayerCardPlay(card(CardType.attack));
-      combat.applyPlayerCardPlay(card(CardType.attack));
+      combat.applyPlayerCardPlay(card(CardType.skill));
 
       expect(vulnerableOnEnemy(), 1, reason: 'une seule marque posee');
     });
@@ -335,13 +335,64 @@ void main() {
       expect(vulnerableOnEnemy(), 2, reason: 'une seconde marque empilee');
     });
 
-    test('une Competence ne marque jamais', () {
+    test('une Competence de degats marque', () {
       run.startNewRun(mage, mageMark());
       seedEnemy();
 
       combat.applyPlayerCardPlay(card(CardType.skill));
 
+      expect(vulnerableOnEnemy(), 1);
+    });
+
+    test('une carte sans degats ne marque ni ne consomme', () {
+      run.startNewRun(mage, mageMark());
+      seedEnemy();
+
+      combat.applyPlayerCardPlay(
+        CardInstance(
+          data: const CardData(
+            id: 'test_armor',
+            cost: 0,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: [CardEffect(type: 'armor', value: 3)],
+          ),
+        ),
+      );
       expect(vulnerableOnEnemy(), 0);
+
+      combat.applyPlayerCardPlay(card(CardType.attack));
+      expect(vulnerableOnEnemy(), 1);
+    });
+
+    test(
+        'une cible tuee par la carte ne consomme pas la marque : la carte de '
+        'degats suivante marque', () {
+      run.startNewRun(mage, mageMark());
+      final enemyA = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 1, armure: 0, might: 0),
+      );
+      final enemyB = EnemyInstance(
+        data: slime,
+        stats: EntityStats(maxPv: 40, currentPv: 40, armure: 0, might: 0),
+      );
+      combat.state = CombatState(
+        enemies: [enemyA, enemyB],
+        selectedEnemyId: enemyA.id,
+        turnPhase: TurnPhase.player,
+      );
+
+      combat.applyPlayerCardPlay(card(CardType.attack));
+      combat.selectEnemy(enemyB.id);
+      combat.applyPlayerCardPlay(card(CardType.attack));
+
+      final b = combat.currentState.enemies.singleWhere((e) => e.id == enemyB.id);
+      expect(
+        b.stats.statuses.where((s) => s.id == 'vulnerable').single.value,
+        1,
+      );
     });
 
     test('seule la cible visee est marquee, pas les autres ennemis', () {
@@ -381,7 +432,9 @@ void main() {
     // n'etre renseigne que pour une carte a cible unique. Une Attaque a
     // portee de groupe ne doit marquer personne, meme si une selection
     // residuelle (d'une carte precedente) pointe encore vers un ennemi.
-    test('une Attaque a portee de groupe ne marque personne', () {
+    test(
+        'une carte de degats de groupe ne marque ni ne consomme : la carte a '
+        'cible unique suivante marque', () {
       run.startNewRun(mage, mageMark());
       final enemyA = EnemyInstance(
         data: slime,
@@ -410,6 +463,13 @@ void main() {
       expect(isVulnerable(enemyA.id), isFalse,
           reason: 'la selection residuelle ne doit pas etre lue');
       expect(isVulnerable(enemyB.id), isFalse);
+
+      combat.selectEnemy(enemyB.id);
+      combat.applyPlayerCardPlay(card(CardType.attack));
+
+      expect(isVulnerable(enemyB.id), isTrue,
+          reason: 'la carte de groupe n a pas consomme le compteur');
+      expect(isVulnerable(enemyA.id), isFalse);
     });
 
     // Finding 3 de la revue finale : si la cible visee n'existe plus dans le
@@ -505,13 +565,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Mage propose Canalisation puis Flux de Mana, ses deux passifs '
-        'pourvus d un lot (O5)', () async {
+    test('le Mage propose Canalisation, Marque du Mage puis Flux de Mana, ses '
+        'trois passifs pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'mage');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['channeling', 'mana_flux']);
+      expect(available, ['channeling', 'mage_mark', 'mana_flux']);
     });
 
     // D43, D60 (spec P-43 E3, §3.6).
@@ -550,12 +610,14 @@ void main() {
       }
     });
 
-    test('mage_mark.json pose 2 Vulnerable pendant 2 tours : +50 %', () async {
+    test(
+        'mage_mark.json pose 2 Vulnerable pendant 2 tours, sur la carte de '
+        'degats', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final mark = registry.passives.singleWhere((p) => p.id == 'mage_mark');
       expect(mark.value, 2);
       expect(mark.duration, 2);
-      expect(mark.trigger, RelicTrigger.onAttackPlayed);
+      expect(mark.trigger, RelicTrigger.onDamagingCardPlayed);
       expect(ProportionalStatus.vulnerable.percentPerPoint * mark.value, 50);
     });
 

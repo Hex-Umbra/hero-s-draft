@@ -17,7 +17,8 @@ assets/data/
 │   xp_curve.json, effect_icons.json
 ├── cards/<id>.json                 # cartes neutres ; idem relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/, charges/
-├── cards/<passif>/<id>.json        # cartes de lot : le dossier est le passif (vague 5)
+├── cards/<passif>/<id>.json        # cartes de lot : le dossier est le passif (vague 5) ;
+│                                   #   neuf dossiers depuis la vague 8
 ├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```
@@ -40,8 +41,10 @@ avec les fautes des entités.
 d'effet** : pour chaque **sorte** d'effet, l'icône et la couleur, par leur nom, que la bande et la
 liste de la tuile de signature, les puces d'évolution et les panneaux des statuts du héros et du
 tutoriel lui donnent. Une sorte est `damage`, `armor`, `heal`, `draw`, `gain_mana`,
-`status:<id>` (jamais `apply_status` nu), `crit` ou `target:allEnemies` ; **dix-sept sont livrées**
-(`status:mana_regen` depuis la vague 6, à l'icône et à la couleur de `gain_mana`),
+`status:<id>` (jamais `apply_status` nu), `crit` ou `target:allEnemies` ; **dix-huit sont livrées**
+(`status:mana_regen` depuis la vague 6, à l'icône et à la couleur de `gain_mana` ; `status:hp_regen`
+depuis la vague 8, sur sa branche, au cœur rose du `heal` — re-compté le 2026-11-18, `grep -c '"icon"'
+assets/data/effect_icons.json`),
 chacune à l'icône et à la couleur que les faces des cartes donnent à la même sorte — un test garde
 l'égalité. `EffectIconTable.fromJson` refuse une clé qui n'est pas une sorte, une valeur qui n'est
 pas un objet à `icon` et `color` non vides ; un nom inconnu de la table de traduction retombe sur
@@ -49,8 +52,7 @@ l'icône d'aide. Chargée par `loadDocument`, sa faute fait échouer le démarra
 courbe d'XP. Les faces des cartes, les émojis des statuts ennemis et l'icône de la rune *Précis* ne
 la lisent pas encore (`docs/ROADMAP.md`).
 
-**`charges/<id>.json`** (vague 7, livrée sur la branche, en attente du test, de la PR, de la fusion
-et du tag du propriétaire — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) est **le
+**`charges/<id>.json`** (vague 7, fusionnée dans `main` le 2026-11-18 par la PR #55 — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) est **le
 catalogue des charges élémentaires** : trois fichiers, `freeze`, `burn`, `shock`, l'id du fichier
 étant l'id du statut que posent les cartes. Chacun déclare ses noms, son état rompu, sa description
 à jetons, ses seuils, leur montée, la surcharge, le déclin, le moment et la sorte de sa rupture
@@ -71,6 +73,12 @@ créer un dossier, pas toucher quatre fichiers dispersés.
 Les identifiants sont en `snake_case` ASCII minuscule, épinglé par
 `test/unit/entity_id_convention_test.dart`.
 
+**Neuf dossiers de lot sous `cards/`**, un par passif — trois par tranche ; ceux de la tranche 3,
+`blessing/`, `frenzy/`, `mage_mark/`, ont chacun leur ligne de `pubspec.yaml` (vague 8, livrée sur la
+branche `feat/v0.6.0-p42-tranche-3`, en attente du propriétaire —
+[ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)). Six cartes y sont
+entrées par `git mv`, sans retouche : un déplacement de dossier ne change ni l'id ni une sauvegarde.
+
 ### 7.2. Chaîne de chargement
 
 ```
@@ -81,7 +89,7 @@ AssetManifest.listAssets()  →  appariement par motif de chemin  →  loadStrin
 
 `loadGameDataRegistry(bundle)` (`lib/services/game_data_service.dart`) est l'**unique
 déclaration des onze sources du jeu** — la dixième, `cards/*/*.json`, celle des cartes de lot
-(vague 5) ; la onzième, `charges/*.json`, celle des charges élémentaires (vague 7, sur la branche),
+(vague 5) ; la onzième, `charges/*.json`, celle des charges élémentaires (vague 7, fusionnée dans `main` le 2026-11-18),
 que `chargeCatalogProvider` expose ; le provider de production et le registre des tests du
 tutoriel passent tous deux par elle. Les fautes de chargement **s'accumulent** et sont levées
 en une fois, en nommant fichier et champ. Depuis la vague 3, elle charge aussi la

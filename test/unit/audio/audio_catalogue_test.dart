@@ -50,8 +50,8 @@ void main() {
             .where((f) => f.path.endsWith('enemy.json')),
       ].where((f) => f.path.endsWith('.json'));
 
-      expect(contentFiles.length, 86,
-          reason: '15 cartes neutres + 33 cartes de lot + 28 reliques + 6 '
+      expect(contentFiles.length, 96,
+          reason: '9 cartes neutres + 49 cartes de lot + 28 reliques + 6 '
               'signatures + 4 ennemis');
 
       final declared = audio.sounds.keys.toSet();

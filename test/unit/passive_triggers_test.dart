@@ -14,6 +14,8 @@ import 'package:roguelike_card_game/models/enemy_instance.dart';
 import 'package:roguelike_card_game/models/enemy_intent.dart';
 import 'package:roguelike_card_game/models/entity_stats.dart';
 
+import 'shipped_data.dart';
+
 /// Ce qui déclenche un passif (spec P-41, §6.4) : les déclencheurs que le
 /// lot B pose, et les compteurs par tour et par combat.
 void main() {
@@ -110,6 +112,59 @@ void main() {
       seedEnemy();
       combat.applyPlayerCardPlay(card(CardType.attack));
       expect(armor(), 2);
+    });
+  });
+
+  group('onDamagingCardPlayed', () {
+    test('une Attaque et une Competence de degats l envoient', () {
+      run.startNewRun(hero, armorOn(RelicTrigger.onDamagingCardPlayed));
+      seedEnemy();
+      combat.applyPlayerCardPlay(card(CardType.attack));
+      expect(armor(), 2);
+      combat.applyPlayerCardPlay(card(CardType.skill));
+      expect(armor(), 4);
+    });
+
+    test('une carte de degats de groupe l envoie aussi', () {
+      run.startNewRun(hero, armorOn(RelicTrigger.onDamagingCardPlayed));
+      seedEnemy();
+      combat.applyPlayerCardPlay(
+        CardInstance(
+          data: CardData(
+            id: 'test_sweep',
+            cost: 0,
+            type: CardType.attack,
+            rarity: CardRarity.common,
+            target: CardTarget.allEnemies,
+            effects: const [CardEffect(type: 'damage', value: 1)],
+          ),
+        ),
+      );
+      expect(armor(), 2);
+    });
+
+    test('une carte sans effet damage ne l envoie pas', () {
+      run.startNewRun(hero, armorOn(RelicTrigger.onDamagingCardPlayed));
+      seedEnemy();
+      combat.applyPlayerCardPlay(
+        CardInstance(data: shippedCard('concentration')),
+      );
+      expect(armor(), 0);
+      combat.applyPlayerCardPlay(
+        CardInstance(
+          data: CardData(
+            id: 'test_kindle',
+            cost: 0,
+            type: CardType.skill,
+            rarity: CardRarity.common,
+            target: CardTarget.singleEnemy,
+            effects: const [
+              CardEffect(type: 'apply_status', value: 3, statusId: 'burn'),
+            ],
+          ),
+        ),
+      );
+      expect(armor(), 0);
     });
   });
 

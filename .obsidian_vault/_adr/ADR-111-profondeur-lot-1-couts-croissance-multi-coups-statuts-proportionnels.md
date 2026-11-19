@@ -24,6 +24,7 @@ la vague 6 (`b8e0641b`) et re-vérifié par `gh` le 2026-11-15.
 livré sur la branche `feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la
 fusion et du tag du propriétaire) : le Gel quitte le barème — `ProportionalStatus` n'en garde que
 Vulnérable et Faiblesse — et devient une charge ; *Congelant* pose 1 point par niveau, 2 avant.
+**Complété le 2026-11-18 par [ADR-118](ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)** (P-42 tranche 3, vague 8, livré sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du test, de la PR, de la fusion et du tag du propriétaire) : *Exécution* et *Exploitation* sont les premières cartes à lire `targetMissingHp` et `targetStatus` ; les cartes du lot Sanctifié, les premières à poser la Faiblesse ; le barème et le tic ne changent pas.
 
 ### Contexte
 

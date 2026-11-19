@@ -217,13 +217,13 @@ void main() {
   test('effectLines : les effets propres puis les verbales, dans l ordre de '
       'premiere prise, a leurs valeurs evoluees', () {
     expect(
-      _taken(['zeal:2', 'sentence:1', 'ardor:1', 'radiance:1']).effectLines,
+      _taken(['zeal:2', 'sentence:1', 'ardor:1', 'radiance:1']).effectLines(),
       [
-        (kind: 'damage', value: 10, duration: null),
-        (kind: 'armor', value: 4, duration: null),
-        (kind: 'status:weakness', value: 1, duration: 2),
-        (kind: 'crit', value: 5, duration: null),
-        (kind: 'target:allEnemies', value: null, duration: null),
+        (kind: 'damage', value: 10, duration: null, hits: 1),
+        (kind: 'armor', value: 4, duration: null, hits: 1),
+        (kind: 'status:weakness', value: 1, duration: 2, hits: 1),
+        (kind: 'crit', value: 5, duration: null, hits: 1),
+        (kind: 'target:allEnemies', value: null, duration: null, hits: 1),
       ],
     );
     expect(EffectKind.crit, 'crit');
@@ -231,9 +231,9 @@ void main() {
   });
 
   test('effectLines : une chiffree n ajoute aucune entree', () {
-    expect(_taken(['zeal:1', 'devotion:1', 'haste:1']).effectLines, [
-      (kind: 'damage', value: 8, duration: null),
-      (kind: 'armor', value: 4, duration: null),
+    expect(_taken(['zeal:1', 'devotion:1', 'haste:1']).effectLines(), [
+      (kind: 'damage', value: 8, duration: null, hits: 1),
+      (kind: 'armor', value: 4, duration: null, hits: 1),
     ]);
   });
 
@@ -276,19 +276,19 @@ void main() {
     );
     expect(
       _taken(['clarity:1', 'serenity:1'], data: surge)
-          .effectLines
+          .effectLines()
           .map((l) => (l.kind, l.value)),
       [('gain_mana', 1), ('draw', 1), ('heal', 1), ('heal', 4)],
     );
     // Au niveau 2, une verbale ajoutee double sa valeur et sa duree, et la
     // ligne de critique sa valeur par niveau.
     expect(
-      _taken(['hex:2'], data: surge).effectLines.last,
-      (kind: 'status:weakness', value: 2, duration: 4),
+      _taken(['hex:2'], data: surge).effectLines().last,
+      (kind: 'status:weakness', value: 2, duration: 4, hits: 1),
     );
     expect(
-      _taken(['ardor:2']).effectLines.last,
-      (kind: 'crit', value: 10, duration: null),
+      _taken(['ardor:2']).effectLines().last,
+      (kind: 'crit', value: 10, duration: null, hits: 1),
     );
   });
 

@@ -7,6 +7,8 @@ et efface la clé, mais un `schemaVersion` **supérieur** à la version courante
 effacé » — il est refusé et **conservé** pour le build qui sait le lire, `SaveMigrator` amenant tout
 le reste à la version courante au lieu d'échouer dès qu'il diffère de 1.
 
+**Point 3 complété le 2026-11-19 par [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** (corrections de fin de vague 8, sur la branche) : la sauvegarde s'efface au moment de la mort, par l'orchestrateur d'autosave, et non plus au clic d'un bouton de `DeathOverlay`.
+
 ### Contexte
 `RunState`, `DeckState`, `InventoryState` et `SkillState` ne vivaient qu'en mémoire dans les `Notifier` Riverpod (cf. ADR-011). Fermer l'application, la mettre en arrière-plan ou un crash entraînait la perte totale d'une run pouvant durer 30 à 60+ minutes sur ~10 étages. Le point d'extension existait déjà mais était un stub vide (`RunPersistenceManager`), et `shared_preferences` était déjà une dépendance du projet (utilisée par `TutorialProgressService`).
 

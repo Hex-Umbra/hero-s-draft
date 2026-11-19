@@ -245,6 +245,13 @@ void main() {
       expect(passive.displayOrder, 2);
     });
 
+    test('le declencheur onDamagingCardPlayed se lit', () {
+      final passive = PassiveData.fromJson(
+        {...passiveJson(), 'trigger': 'onDamagingCardPlayed'},
+      );
+      expect(passive.trigger, RelicTrigger.onDamagingCardPlayed);
+    });
+
     test('la Maitrise sait allonger une duree', () {
       final passive = PassiveData.fromJson({
         ...passiveJson(),

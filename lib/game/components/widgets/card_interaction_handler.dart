@@ -13,20 +13,6 @@ class CardInteractionHandler {
 
   CardInteractionHandler(this.cardComponent);
 
-  void onHoverEnter() {
-    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
-    if (cardComponent.isDragging) return;
-    cardComponent.game.setHoveredCard(cardComponent);
-  }
-
-  void onHoverExit() {
-    if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
-    if (cardComponent.isDragging) return;
-    if (cardComponent.game.hoveredCard == cardComponent) {
-      cardComponent.game.setHoveredCard(null);
-    }
-  }
-
   void onTapDown(TapDownEvent event) {
     if (cardComponent.isEnteringHand || cardComponent.isPlayed) return;
     if (cardComponent.game.focusedCard == cardComponent) {
@@ -72,6 +58,9 @@ class CardInteractionHandler {
     if (cardComponent.game.hoveredCard == cardComponent) {
       cardComponent.game.setHoveredCard(null);
     }
+    // Le glisser emporte le pointeur loin du dernier survol : sa position ne
+    // vaut plus rien jusqu'au prochain mouvement de la souris.
+    cardComponent.game.forgetPointer();
 
     cardComponent.clearEffects();
     cardComponent.priority = 200;

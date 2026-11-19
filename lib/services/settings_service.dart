@@ -7,9 +7,9 @@ import 'audio/audio_settings.dart';
 
 /// Persistance des preferences du joueur.
 ///
-/// Cle distincte de celle de `SaveService` : `GameOverScreen` efface la
-/// sauvegarde de run a la mort du heros, et le volume ne doit pas mourir
-/// avec le personnage.
+/// Cle distincte de celle de `SaveService` : `autosaveOrchestratorProvider`
+/// efface la sauvegarde de run a la mort du heros, et le volume ne doit pas
+/// mourir avec le personnage.
 ///
 /// Asymetrie assumee avec `SaveService` : un JSON illisible ou une version
 /// de schema inconnue retombe **silencieusement** sur les defauts. Perdre un

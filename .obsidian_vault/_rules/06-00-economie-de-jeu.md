@@ -118,7 +118,7 @@ probabilités. La copie de la fiche, qui affichait 0,5 / 4,5 / 15 / 20, a dispar
 - **Les cartes** : tirées uniformément, avec remise, parmi celles qu'un joueur peut recevoir —
   `CardData.isOfferable`, le prédicat d'offre unique d'ADR-101, sans paramètre depuis la branche de
   la vague 4 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)) ; les signatures, hors de
-  `registry.cards`, n'y sont pas —, soit les 17 neutres ; **toujours communes, donc sans rune** ; ajoutées au deck sans refus par
+  `registry.cards`, n'y sont pas —, au passif actif depuis la vague 5 ([ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)) : les 9 neutres et le lot du passif de la run (re-compté le 2026-11-18, vague 8 sur sa branche) ; **toujours communes, donc sans rune** ; ajoutées au deck sans refus par
   `collectGoldAndXp`, une notification « 🃏 Carte trouvée : … » par carte. Pool vide : aucune
   carte, sans repli.
 - **La carte bonus du boss « XP » a disparu** : la trouvaille lit le prédicat à sa place ; le boss

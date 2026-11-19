@@ -9,9 +9,9 @@ import '../../models/data/forge_upgrade_data.dart';
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
 import '../services/card_rule_texts.dart';
+import '../services/displayed_effect_value.dart';
 import '../services/effect_resolver.dart';
 import '../services/proportional_status.dart';
-import '../systems/power_rules.dart';
 import 'entities/enemy_card.dart';
 import 'visual_effects/ribbon_trail.dart';
 import 'widgets/card_text_renderer.dart';
@@ -23,7 +23,6 @@ class CardComponent extends PositionComponent
     with
         DragCallbacks,
         TapCallbacks,
-        HoverCallbacks,
         HasGameReference<HerosDraftGame>
     implements OpacityProvider {
   final CardInstance card;
@@ -253,28 +252,15 @@ class CardComponent extends PositionComponent
     }
   }
 
-  /// Le terme de croissance de [effect] sur les sources du héros, tel que le
-  /// moteur le lirait maintenant ; 0 sans run ni combat. Une source de cible,
-  /// sans cible avant le jeu, vaut 0. Lu par le badge et l'infobulle.
-  int heroScaleTerm(CardEffect effect) {
-    final heroStats = game.currentRunState?.heroStats;
-    final combat = game.currentCombatState;
-    if (heroStats == null || combat == null) return 0;
-    return EffectResolver.scaleTerm(
-      effect,
-      hero: heroStats,
-      combat: combat,
-      targetId: null,
-    );
-  }
-
-  /// La Puissance de statut que l'effet propre [index] de la carte reçoit,
-  /// lue sur le héros comme la Puissance des dégâts : 0 sauf pour le premier
-  /// statut de la résolution (Q11, A15). Lue par le badge et l'infobulle.
-  int heroStatusBonusAt(int index) =>
-      EffectResolver.cardEffectGetsStatusBonus(card.effective, index)
-          ? game.heroCard?.stats.statusBonusFor(card.data.target) ?? 0
-          : 0;
+  /// La valeur que la face montre pour l'effet propre [index] de la carte,
+  /// lue sur le héros et le combat comme le moteur la jouerait maintenant
+  /// (`DisplayedEffectValue`). Lue par le badge et l'infobulle.
+  int heroDisplayedValueAt(int index) => DisplayedEffectValue.ofCardEffect(
+        card,
+        index,
+        hero: game.currentRunState?.heroStats,
+        combat: game.currentCombatState,
+      );
 
   String buildDetailedDescription() {
     String desc = '';
@@ -358,29 +344,23 @@ class CardComponent extends PositionComponent
           '${getTranslation((l) => l.exhaustWarning, fallback: '⚠️ USAGE UNIQUE (Épuisement)')}\n\n';
     }
 
-    final damageBonus = game.heroCard?.stats.damageBonusFor(card.data.type) ?? 0;
-
     // Les valeurs que la carte joue — rareté et runes comprises — viennent de
     // l'applicateur, seul à les calculer (spec P-43 E1, §4.2).
     final effects = card.effective.effects;
     for (var i = 0; i < effects.length; i++) {
       final effect = effects[i];
-      // La valeur jouée plus le terme de croissance des sources du héros, le
-      // même que le badge ; 0 hors combat. Un statut y ajoute sa Puissance.
-      final scaledValue =
-          CardTextRenderer.playedValue(effect, heroScaleTerm(effect)) +
-              heroStatusBonusAt(i);
+      // La valeur du badge : croissance, Puissance des dégâts par coup et
+      // Puissance de statut comprises.
+      final scaledValue = heroDisplayedValueAt(i);
       if (effect.type == 'damage') {
-        // Puis la part de Puissance de chaque coup.
-        final totalDmg = scaledValue + effect.mightPerHit(damageBonus);
         final line = getTranslation(
           (l) => CardRuleTexts.damage(
             l,
-            amount: totalDmg,
+            amount: scaledValue,
             hits: effect.hits,
             allEnemies: card.data.target == CardTarget.allEnemies,
           ),
-          fallback: 'Inflige $totalDmg dégâts.',
+          fallback: 'Inflige $scaledValue dégâts.',
         );
         desc += '• $line\n';
       }
@@ -446,6 +426,10 @@ class CardComponent extends PositionComponent
             desc +=
                 '• ${getTranslation((l) => l.cardDescStatusManaRegen(scaledValue, duration), fallback: 'Pendant $duration tours, gagne $scaledValue Mana au début du tour.')}\n';
             break;
+          case 'hp_regen':
+            desc +=
+                '• ${getTranslation((l) => l.cardDescStatusHpRegen(scaledValue, duration), fallback: 'Pendant $duration tours, récupère $scaledValue PV au début du tour.')}\n';
+            break;
         }
       }
       // La croissance de l'effet, en parenthèse ; vide sans contexte, la ligne
@@ -482,9 +466,6 @@ class CardComponent extends PositionComponent
   RibbonTrail? activeTrail;
   double foilTime = 0.0;
 
-  @override
-  bool isHovered = false;
-
   // Paramètres visuels
   static const double cardWidth = GameConstants.cardWidth;
   static const double cardHeight = GameConstants.cardHeight;
@@ -501,12 +482,6 @@ class CardComponent extends PositionComponent
     renderer = CardRenderer(this);
     interactionHandler = CardInteractionHandler(this);
   }
-
-  @override
-  void onHoverEnter() => interactionHandler.onHoverEnter();
-
-  @override
-  void onHoverExit() => interactionHandler.onHoverExit();
 
   @override
   void update(double dt) {

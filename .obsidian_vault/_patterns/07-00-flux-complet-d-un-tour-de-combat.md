@@ -17,6 +17,8 @@
        │   ├→ Process statuts: Feu d'abord (ChargeRules.resolveOwnFire — sa part seule, sans explosion),
        │   │   puis poison (dégâts), might_regen (→might), armor_regen (→armure), mana_regen (→mana)
        │   ├→ tickStatuses(charges.ids) (décrémente durées, supprime expirés — les charges exemptes)
+       │   ├→ hp_regen (→PV, vague 8) : la Source de Vie, sommée avant le tic, rendue après lui,
+       │   │   bornée aux PV max, rien si le Feu ou le poison viennent de tuer le porteur
        │   ├→ ChargeRules.decay, puis startBearerTurn : un gel du héros « en attente » passe « actif »
        │   └→ TraitSystem.onTurnStart(runController)
        └→ DeckNotifier.drawCards(cardsPerTurn, maxHandSize: RunState.maxHandSize)
@@ -29,8 +31,9 @@
        │   ChargeRules.pose — le Gel et la Foudre peuvent rompre aussitôt ; chaque coup note son bonus de Foudre
        ├→ DeckNotifier.playCard() → main → défausse (ou exhaust)
        └→ _afterCardPlayed(card, enemyId:) — la suite commune :
-           ├→ TraitSystem : onCardPlayed, puis l'événement du type
-           ├→ applyRelics(onCardPlayed), puis l'événement du type
+           ├→ TraitSystem : onCardPlayed, puis l'événement du type, puis onDamagingCardPlayed si
+           │   card.effective.dealsDamage (vague 8 — Marque du Mage, son seul lecteur)
+           ├→ applyRelics(onCardPlayed), puis l'événement du type (jamais onDamagingCardPlayed)
            └→ _cleanDeadEnemies() → onEnemyKilled() → si ennemis actifs < 5 et réserve non vide, transfère le premier ennemi de pendingEnemies vers enemies et roule son intention.
 
 2 bis. JOUEUR JOUE UNE SIGNATURE (branche de la vague 4 — ADR-109)
@@ -62,7 +65,8 @@
    │   CombatVisualSystem.playFireWave, puis CombatController.resolveNextFireWave() — la vague
    │   suivante, formée du seul Feu que la précédente a posé ; faux et compte rendu effacé à la fin
    ├→ CombatController.resolveEnemyStatuses()
-   │   ├→ Pour chaque ennemi : poison/regen, tick statuts (charges exemptes), déclins des charges
+   │   ├→ Pour chaque ennemi : poison/regen, tick statuts (charges exemptes), Source de Vie
+   │   │   (symétrique, vague 8 — aucun ennemi n'en pose), déclins des charges
    │   └→ _cleanDeadEnemies() — une seule fois, les morts de la chaîne compris
    ├→ Pour chaque ennemi actif vivant :
    │   ├→ gelé (EnemyInstance.skipsAction) → frozenTurnAnimation, puis resolveEnemyIntent() consomme
@@ -100,8 +104,7 @@
 > phase 4 la laisse à `startCombat`, qui la vide.
 
 > [!NOTE]
-> **La phase ennemie lit l'état avant d'animer** (vague 7, livrée sur la branche, en attente du
-> test, de la PR, de la fusion et du tag du propriétaire —
+> **La phase ennemie lit l'état avant d'animer** (vague 7, fusionnée dans `main` le 2026-11-18 par la PR #55 —
 > [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)). Le contrôleur joue la chaîne du Feu
 > une vague à la fois et Flame l'appelle (`HerosDraftGame._enemyRipostePhase` : `onStartEnemyTurn`,
 > `onResolveFireWave`, `onResolveEnemyStatuses`) ; l'ennemi gelé se lit sur `skipsAction` **avant**

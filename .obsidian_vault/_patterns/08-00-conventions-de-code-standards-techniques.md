@@ -21,7 +21,7 @@ Le codebase utilise exhaustivement des enums pour éliminer les typos et optimis
 | `IntentType` | `enemy_intent.dart` | `attack`, `defend`, `buff` |
 | `StatusType` | `status_effect.dart` | `buff`, `debuff` |
 | `TurnPhase` | `combat_state.dart` | `player`, `enemy` |
-| `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`, `onEnemyKilled` |
+| `RelicTrigger` | `relic_data.dart` | `startOfRun`, `startOfCombat`, `startOfTurn`, `endOfTurn`, `onCardPlayed`, `onEnemyKilled`, `onAttackPlayed`, `onSkillPlayed`, `onPowerPlayed`, `onDamageTaken` (P-41 lot B, *Ferveur*), `onDamagingCardPlayed` (vague 8, *Marque du Mage*) — re-lu le 2026-11-18 ; les deux derniers ne sont écoutés par aucune relique |
 | `RelicRarity` | `relic_data.dart` | `common`, `uncommon`, `rare`, `epic`, `legendary` |
 
 > [!IMPORTANT]

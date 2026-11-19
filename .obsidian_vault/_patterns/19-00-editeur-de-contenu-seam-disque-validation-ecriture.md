@@ -41,7 +41,7 @@ portait la carte : chemin `classes/<classe>/skills/<id>.json`, classe exigée, `
 de carte et de signature. La carte est désormais **neutre seulement**, sans chemin sous une classe ;
 neuf sources de chargement, neuf descripteurs. La 10ᵉ, **carte de lot** (vague 5,
 [ADR-112](../_adr/ADR-112-forme-c-un-lot-de-cartes-par-passif.md)), est rangée sous `cards/<passif>/`.
-La 11ᵉ, **charge élémentaire** (vague 7, sur la branche —
+La 11ᵉ, **charge élémentaire** (vague 7, fusionnée dans `main` le 2026-11-18 —
 [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), `EntityCategory.charge` : chemin
 `charges/<id>.json`, id injecté, `construct` = `ChargeData.fromJson`, qui valide tout ; `breaksOn`,
 `rupture.kind` et `heroRupture.kind` en énumérations lues sur le modèle. Onze sources, onze

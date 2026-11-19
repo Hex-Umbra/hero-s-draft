@@ -18,6 +18,34 @@ class CombatSidePanels extends StatelessWidget {
   /// statuts : deux rangées. La barre des signatures n'y descend pas (A38).
   static const double statusPanelReserve = 120;
 
+  /// La hauteur, depuis le bas, où se pose le panneau des intentions ennemies.
+  static const double intentsPanelBottom = 80;
+
+  /// Le bas du compteur de tour, mesuré depuis le milieu de l'écran.
+  /// Recopie les positions de `TurnControlPanel` : son compteur se pose à
+  /// `hauteur / 2 + 33` et mesure environ 30 px (6 px de marge de chaque côté
+  /// d'un texte de 12). Si ces positions bougent, cette constante suit.
+  static const double turnCounterBottomFromMiddle = 33 + 30;
+
+  /// L'écart gardé entre le haut du panneau des intentions et le compteur.
+  static const double intentsPanelMargin = 8;
+
+  /// La hauteur sous laquelle le panneau des intentions ne descend pas, même
+  /// sur un écran trop bas : le titre et un ennemi restent lisibles.
+  static const double intentsPanelMinHeight = 100;
+
+  /// La hauteur maximale du panneau des intentions pour un écran haut de
+  /// [screenHeight] (la mesure de `TurnControlPanel`, `MediaQuery` size) :
+  /// son haut ne remonte jamais au-dessus du compteur de tour, et il ne
+  /// recouvre ni le bouton de fin de tour ni le compteur. Au-delà, il défile.
+  static double intentsPanelMaxHeight(double screenHeight) {
+    final available = (screenHeight - intentsPanelBottom) -
+        (screenHeight / 2 + turnCounterBottomFromMiddle + intentsPanelMargin);
+    return available < intentsPanelMinHeight
+        ? intentsPanelMinHeight
+        : available;
+  }
+
   final int drawPileCount;
   final int discardPileCount;
   final List<StatusEffect> heroStatuses;
@@ -99,9 +127,15 @@ class CombatSidePanels extends StatelessWidget {
           // Panneau des Intentions Ennemies (Bas Droite, au-dessus de la Défausse)
           if (enemies.isNotEmpty)
             Positioned(
-              bottom: 80,
+              bottom: intentsPanelBottom,
               right: 20,
-              child: EnemyIntentsPanel(enemies: enemies, charges: charges),
+              child: EnemyIntentsPanel(
+                enemies: enemies,
+                charges: charges,
+                maxHeight: intentsPanelMaxHeight(
+                  MediaQuery.of(context).size.height,
+                ),
+              ),
             ),
         ],
       ),

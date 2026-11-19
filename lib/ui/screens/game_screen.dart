@@ -568,8 +568,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       child: Scaffold(
         body: Stack(
           children: [
-            // Le jeu prend tout l'écran
-            Positioned.fill(child: GameWidget(game: _game)),
+            // Le jeu prend tout l'écran. `GameWidget` ne signale pas la sortie
+            // de la souris : sans elle, une carte resterait survolée.
+            Positioned.fill(
+              child: MouseRegion(
+                onExit: (_) => _game.pointerLeft(),
+                child: GameWidget(game: _game),
+              ),
+            ),
 
             // HUD et Overlays dans une SafeArea
             SafeArea(
@@ -613,6 +619,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
 
                   if (!runState.isDead && !_showDraft)
+                    CombatSidePanels(
+                      drawPileCount: deckState.drawPile.length,
+                      discardPileCount: deckState.discardPile.length,
+                      heroStatuses: runState.heroStats.statuses,
+                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
+                      charges: ref.watch(chargeCatalogProvider),
+                      enemies: combatState.enemies,
+                      effectIcons: gameData.effectIcons,
+                    ),
+
+                  // Après les panneaux latéraux : le bouton de fin de tour est
+                  // peint et touché au-dessus du panneau des intentions.
+                  if (!runState.isDead && !_showDraft)
                     TurnControlPanel(
                       canEndTurn: isPlayerActionable,
                       onEndTurnTap: () {
@@ -637,17 +656,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       showRemainingManaWarning: _showRemainingManaWarning,
                       turnCount: combatState.turnCount,
                       reservePreview: reservePreview,
-                    ),
-
-                  if (!runState.isDead && !_showDraft)
-                    CombatSidePanels(
-                      drawPileCount: deckState.drawPile.length,
-                      discardPileCount: deckState.discardPile.length,
-                      heroStatuses: runState.heroStats.statuses,
-                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
-                      charges: ref.watch(chargeCatalogProvider),
-                      enemies: combatState.enemies,
-                      effectIcons: gameData.effectIcons,
                     ),
 
                   // La barre passe au-dessus du panneau de statuts du héros.

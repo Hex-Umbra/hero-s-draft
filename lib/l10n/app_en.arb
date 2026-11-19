@@ -177,6 +177,7 @@
   "relicTriggerTurnEnd": "Turn End",
   "relicTriggerCardPlayed": "Card Played",
   "relicTriggerEnemyKilled": "Enemy Killed",
+  "relicTriggerDamagingCardPlayed": "Damage Card Played",
 
   "rarityCommon": "Common",
   "rarityUncommon": "Uncommon",
@@ -403,6 +404,13 @@
       "duration": { "type": "int" }
     }
   },
+  "cardDescStatusHpRegen": "For {duration} turns, heals {amount} HP at turn start.",
+  "@cardDescStatusHpRegen": {
+    "placeholders": {
+      "amount": { "type": "int" },
+      "duration": { "type": "int" }
+    }
+  },
   "cardDescStatusCharge": "Applies {amount} {name}.",
   "@cardDescStatusCharge": {
     "placeholders": {
@@ -500,7 +508,7 @@
   "restCampSharpenTitle": "SHARPEN A RUNE",
   "restCampSharpenSubtitle": "Choose a card, then the rune that gains a level.",
   "forgeNoEligibleRune": "No rune can be added to this card.",
-  "sharpenNothingOnCard": "No rune on this card can gain a level.",
+  "restCardSelectionDeckEmpty": "Your deck is empty",
   "sharpenAction": "Sharpen — {cost} gold",
   "@sharpenAction": {
     "placeholders": {
@@ -640,10 +648,22 @@
       "value": { "type": "int" }
     }
   },
+  "statusHpRegen": "Life Spring: +{value}",
+  "@statusHpRegen": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
   "statusArmorRegen": "Plated Armor: +{value}",
   "@statusArmorRegen": {
     "placeholders": {
       "value": { "type": "int" }
+    }
+  },
+  "statusName": "{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} other{{id}}}",
+  "@statusName": {
+    "placeholders": {
+      "id": { "type": "String" }
     }
   },
   "statusLifesteal": "Lifesteal: {value}",
@@ -698,6 +718,37 @@
   "@intentSkipped": {
     "placeholders": {
       "state": { "type": "String" }
+    }
+  },
+  "intentAttackExplanation": "On its turn, {enemy} will attack the hero for {value} damage.",
+  "@intentAttackExplanation": {
+    "description": "Sentence of the tooltip on an enemy's attack intent, in the combat intents panel. {enemy} is the localized enemy name.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentDefendExplanation": "On its turn, {enemy} will gain {value} Armor.",
+  "@intentDefendExplanation": {
+    "description": "Sentence of the tooltip on an enemy's defend intent, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentBuffExplanation": "On its turn, {enemy} will gain {value} Might.",
+  "@intentBuffExplanation": {
+    "description": "Sentence of the tooltip on an enemy's buff intent, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentWaitingExplanation": "The intent of {enemy} is not known yet.",
+  "@intentWaitingExplanation": {
+    "description": "Sentence of the tooltip on an enemy whose intent is not chosen yet, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" }
     }
   },
   "deckTotalCards": "Total: {count} cards",
@@ -757,6 +808,12 @@
   },
   "eventGainMaxHp": "+{amount} Max HP",
   "@eventGainMaxHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
+  "eventLoseMaxHp": "-{amount} Max HP",
+  "@eventLoseMaxHp": {
     "placeholders": {
       "amount": { "type": "int" }
     }

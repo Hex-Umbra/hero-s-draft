@@ -243,16 +243,52 @@ void main() {
       );
       expect(container.read(deckProvider).hand, hasLength(1));
     });
+
+    test('une Attaque de groupe qui abat deux ennemis donne 4 Puissance et '
+        'deux pioches', () {
+      run.startNewRun(berserker, frenzy());
+
+      final deck = container.read(deckProvider.notifier);
+      deck.initializeStarterDeck([attack(1), attack(1), attack(1)]);
+      deck.startCombat(handSize: 0, maxHandSize: 10);
+
+      final doomed = [
+        for (var i = 0; i < 2; i++)
+          EnemyInstance(
+            data: slime,
+            stats: EntityStats(maxPv: 40, currentPv: 1, armure: 0, might: 0),
+          ),
+      ];
+      combat.state = CombatState(
+        enemies: doomed,
+        selectedEnemyId: doomed.first.id,
+        turnPhase: TurnPhase.player,
+      );
+      combat.applyPlayerCardPlay(CardInstance(
+        data: CardData(
+          id: 'test_sweep',
+          cost: 0,
+          type: CardType.attack,
+          rarity: CardRarity.common,
+          target: CardTarget.allEnemies,
+          effects: [CardEffect(type: 'damage', value: 5)],
+        ),
+      ));
+
+      expect(combat.currentState.enemies, isEmpty);
+      expect(temporaryMight(), 4);
+      expect(container.read(deckProvider).hand, hasLength(2));
+    });
   });
 
   group('le catalogue', () {
-    test('le Berserker propose Rage puis Soif de Sang, ses deux passifs '
-        'pourvus d un lot (O5)', () async {
+    test('le Berserker propose Rage, Soif de Sang puis Frenesie, ses trois '
+        'passifs pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'berserker');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['rage', 'bloodthirst']);
+      expect(available, ['rage', 'bloodthirst', 'frenzy']);
     });
 
     test('berserker_armor n existe plus, ni en donnee ni en strategie', () async {

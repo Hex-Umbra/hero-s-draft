@@ -18,6 +18,11 @@ enum RelicTrigger {
   /// l'énumération étant exhaustifs, le compilateur désigne ses trois lecteurs
   /// d'affichage.
   onDamageTaken,
+
+  /// Le héros vient de jouer une carte qui a un effet `damage`. Posé par la
+  /// tranche 3 de P-42 pour le passif *Marque du Mage*, son seul lecteur ;
+  /// aucune relique ne l'emploie. Les trois `switch` d'affichage le nomment.
+  onDamagingCardPlayed,
 }
 
 enum RelicRarity { common, uncommon, rare, epic, legendary }

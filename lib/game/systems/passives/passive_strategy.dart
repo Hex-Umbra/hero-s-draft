@@ -12,8 +12,8 @@ import '../../controllers/run_controller.dart';
 class PassiveEvent {
   final RelicTrigger trigger;
 
-  /// Renseignée pour `onCardPlayed` et les déclencheurs par type de carte,
-  /// `null` sinon.
+  /// Renseignée pour `onCardPlayed`, les déclencheurs par type de carte et
+  /// `onDamagingCardPlayed`, `null` sinon.
   final CardInstance? card;
 
   /// L'ennemi que visait la carte jouée, `null` s'il n'y en avait pas ou si la

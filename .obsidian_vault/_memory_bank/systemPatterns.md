@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 300 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-11-17** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-11-18** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -15,7 +15,7 @@
 | 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
 | 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 90 |
 | 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 41 |
-| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 119 |
+| 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 122 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 117 |
 | 9. Architecture du Système de Tutoriel Autonome (Tutorial System Technical Design) | [09-00-architecture-du-systeme-de-tutoriel-autonome.md](../_patterns/09-00-architecture-du-systeme-de-tutoriel-autonome.md) | 154 |
 | 10. Architecture du Système de Runes et de Fusion de Cartes (Runes & Card Merge Technical Design) | [10-00-architecture-du-systeme-de-forge-et-de-fusion.md](../_patterns/10-00-architecture-du-systeme-de-forge-et-de-fusion.md) | 178 |
@@ -48,7 +48,7 @@
 |:---|:---|---:|
 | 3.1. `EncounterSystem` — Générateur de Combats & Courbes d'Équilibrage | [03-1-encountersystem-generateur-de-combats-courbes.md](../_patterns/03-1-encountersystem-generateur-de-combats-courbes.md) | 87 |
 | 3.2. `MapGeneratorService` — Générateur de Graphe de Carte du Monde (DAG World Map) | [03-2-mapgeneratorservice-generateur-de-graphe-de-c.md](../_patterns/03-2-mapgeneratorservice-generateur-de-graphe-de-c.md) | 21 |
-| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 105 |
+| 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 108 |
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 53 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
 | 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 17 |
@@ -72,7 +72,7 @@
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
 | 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 29 |
 | 5.12. Barre de Signatures — le `RenderBox` de la Bande et le Calque `OverlayPortal` | [05-12-barre-de-signatures-bande-et-calque.md](../_patterns/05-12-barre-de-signatures-bande-et-calque.md) | 63 |
-| 5.13. Table d'Icônes d'Effet — `EffectIconTable`, `EffectKind` et `effect_style` | [05-13-table-d-icones-d-effet.md](../_patterns/05-13-table-d-icones-d-effet.md) | 48 |
+| 5.13. Table d'Icônes d'Effet — `EffectIconTable`, `EffectKind` et `effect_style` | [05-13-table-d-icones-d-effet.md](../_patterns/05-13-table-d-icones-d-effet.md) | 51 |
 
 ### 19. Éditeur de Contenu (P-30)
 

@@ -11,9 +11,13 @@ import 'effective_card.dart';
 import 'missing_save_item.dart';
 
 /// Une entrée de la bande et de la liste de combat : la sorte d'un effet
-/// (`EffectKind`), sa valeur évoluée — absente pour une cible — et, pour un
-/// statut, sa durée (spec A40).
-typedef EffectLine = ({String kind, int? value, int? duration});
+/// (`EffectKind`), sa valeur — absente pour une cible —, pour un statut sa
+/// durée (spec A40), et ses coups : ceux d'un `damage`, 1 sinon.
+typedef EffectLine = ({String kind, int? value, int? duration, int hits});
+
+/// La valeur qu'une entrée montre pour [effect], de rang [order] dans l'ordre
+/// de résolution : les effets ajoutés, puis les propres (`EffectResolver`).
+typedef EffectValueReader = int Function(CardEffect effect, int order);
 
 /// Une signature en jeu : sa donnée, ses évolutions prises, et sa vue de
 /// carte (spec P-43 E4, §4.1 ; spec P-42 T1 et P-44 lot 1, §4.10).
@@ -191,34 +195,37 @@ class SignatureInstance {
 
   /// Les entrées de la bande et de la liste (A40), lues sur la vue évoluée :
   /// une par effet propre, puis une par changement de chaque évolution
-  /// verbale prise. Une évolution chiffrée n'en ajoute aucune.
-  List<EffectLine> get effectLines {
+  /// verbale prise. Une évolution chiffrée n'en ajoute aucune. [valueOf] lit
+  /// la valeur de chaque effet ; sans lui, sa valeur évoluée.
+  List<EffectLine> effectLines([EffectValueReader valueOf = _evolvedValue]) {
     final evolved = asCard.effective;
-    final added = evolved.addedEffects.iterator;
+    final added = evolved.addedEffects;
+    var addedIndex = 0;
+    EffectLine line(CardEffect effect, int order) => (
+          kind: EffectKind.of(effect),
+          value: valueOf(effect, order),
+          duration: effect.type == 'apply_status' ? effect.duration : null,
+          hits: effect.type == 'damage' ? effect.hits : 1,
+        );
     return [
-      for (final e in evolved.effects)
-        (
-          kind: EffectKind.of(e),
-          value: e.value,
-          duration: e.type == 'apply_status' ? e.duration : null,
-        ),
+      for (final (index, effect) in evolved.effects.indexed)
+        line(effect, added.length + index),
       for (final (evolution, level) in taken.where((t) => t.$1.isVerbal)) ...[
         for (final delta in evolution.deltas)
-          if (delta is AddEffectDelta && added.moveNext())
-            (
-              kind: EffectKind.of(added.current),
-              value: added.current.value,
-              duration: added.current.duration,
-            )
+          if (delta is AddEffectDelta && addedIndex < added.length)
+            line(added[addedIndex], addedIndex++)
           else if (delta is CritBonusDelta)
             (
               kind: EffectKind.crit,
               value: delta.valuePerLevel * level,
               duration: null,
+              hits: 1,
             ),
         if (evolution.target != null)
-          (kind: EffectKind.allEnemies, value: null, duration: null),
+          (kind: EffectKind.allEnemies, value: null, duration: null, hits: 1),
       ],
     ];
   }
+
+  static int _evolvedValue(CardEffect effect, int order) => effect.value;
 }

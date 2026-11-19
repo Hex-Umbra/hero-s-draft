@@ -115,6 +115,11 @@ UiCardEffectVisuals getEffectVisuals(CardEffect effect) {
           icon: Icons.diamond_rounded,
           color: Colors.cyanAccent,
         );
+      case 'hp_regen':
+        return const UiCardEffectVisuals(
+          icon: Icons.favorite_rounded,
+          color: Colors.pinkAccent,
+        );
       case 'armor_regen':
         return const UiCardEffectVisuals(
           icon: Icons.autorenew_rounded,
@@ -178,8 +183,7 @@ Color getCardTypeColor(CardType? type, {bool isGrayedOut = false}) {
 /// signature : une signature n'est pas une carte, son type ne la teinte pas.
 const Color neutralCardBackground = Color(0xFF2A2A3D);
 
-Color getCardBackgroundColor(CardType? type, {bool isGrayedOut = false}) {
-  if (isGrayedOut) return const Color(0xFF1A1A1A);
+Color getCardBackgroundColor(CardType? type) {
   switch (type) {
     case CardType.attack:
       return const Color(0xFF4A1D1D);
@@ -413,6 +417,10 @@ String buildDetailedDescription(
         case 'mana_regen':
           desc +=
               '${l10n.cardDescStatusManaRegen(scaledValue, duration)}\n';
+          break;
+        case 'hp_regen':
+          desc +=
+              '${l10n.cardDescStatusHpRegen(scaledValue, duration)}\n';
           break;
       }
     }

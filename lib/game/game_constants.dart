@@ -22,6 +22,15 @@ class GameConstants {
   static const double cardHeight = 196.0;
   static final Vector2 cardSize = Vector2(cardWidth, cardHeight);
 
+  // --- MAIN EN ÉVENTAIL ---
+  /// L'agrandissement d'une carte survolée, relatif à sa taille en main.
+  static const double cardHoverScale = 1.2;
+  /// La réserve laissée de chaque côté de l'éventail de la main. Elle reflète
+  /// les panneaux latéraux du HUD de combat (`combat_side_panels.dart`) : le
+  /// panneau des statuts à gauche et celui des intentions ennemies à droite,
+  /// larges de 250 et posés à 20 du bord, plus 16 de marge (20 + 250 + 16).
+  static const double handSideReserve = 286.0;
+
   // --- STAT BADGE DIMENSIONS ---
   static final Vector2 badgeHpSize = Vector2(130.0, 16.0);
   static final Vector2 badgeStandardSize = Vector2(48.0, 22.0);

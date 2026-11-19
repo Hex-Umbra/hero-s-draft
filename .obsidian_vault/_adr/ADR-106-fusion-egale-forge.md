@@ -39,6 +39,8 @@ décisions d'exécution au
 [compte rendu de la vague](../../docs/superpowers/reports/2026-10-02-economie-et-catalogue-vague-2-compte-rendu.md),
 §2.
 
+**A4 amendée le 2026-11-19 par [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** (corrections de fin de vague 8, sur la branche) : la sélection d'affûtage ne liste plus que les cartes à rune affûtable — la carte grisée et `sharpenNothingOnCard` disparaissent.
+
 ### Contexte
 
 Jusqu'à E1, une rune s'obtenait au feu de camp : de une à cinq fentes tirées, un ciblage par

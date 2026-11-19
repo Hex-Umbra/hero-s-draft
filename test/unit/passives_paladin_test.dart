@@ -204,13 +204,13 @@ void main() {
   });
 
   group('le catalogue', () {
-    test('le Paladin propose la Regeneration d Armure puis Ferveur, ses deux '
-        'passifs pourvus d un lot (O5)', () async {
+    test('le Paladin propose la Regeneration d Armure, Ferveur puis '
+        'Benediction, ses trois passifs pourvus d un lot (O5)', () async {
       final registry = await loadGameDataRegistry(rootBundle);
       final hero = registry.heroes.firstWhere((h) => h.id == 'paladin');
       final available = availablePassivesFor(hero, registry).map((p) => p.id);
 
-      expect(available, ['regen_armor', 'fervor']);
+      expect(available, ['regen_armor', 'fervor', 'blessing']);
     });
 
     // D60 (spec P-43 E3, §3.6) : la tranche en donnée, la Maîtrise sur la

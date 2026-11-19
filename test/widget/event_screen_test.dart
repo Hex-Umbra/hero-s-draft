@@ -202,10 +202,9 @@ void main() {
       await tester.tap(find.text(handRune));
       await tester.pumpAndSettle();
 
-      // La sélection du feu, sans or : la carte sans rune est grisée.
+      // La sélection du feu, sans or : la carte sans rune est masquée.
       final cards = find.byType(UiCard);
-      expect(cards, findsNWidgets(2));
-      expect(tester.widget<UiCard>(cards.at(1)).isGrayedOut, isTrue);
+      expect(cards, findsOneWidget);
 
       await tester.tap(cards.first);
       await tester.pumpAndSettle();

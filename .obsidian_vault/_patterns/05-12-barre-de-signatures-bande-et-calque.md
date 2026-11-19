@@ -55,7 +55,7 @@ ni en changer l'échelle (PN12 (d), A42).
 
 | Élément | Source |
 |:---|:---|
-| Bande d'icônes et liste | `SignatureInstance.effectLines` — sorte, valeur, durée, lues sur la vue évoluée ; **aucun widget ne recalcule une valeur** (A40) |
+| Bande d'icônes et liste | `DisplayedEffectValue.signatureLines`, sur `SignatureInstance.effectLines` — sorte, valeur, durée, coups, lues sur la vue évoluée, à leur valeur de combat (Puissance, croissance, bonus de statut) comme une carte ; **aucun widget ne recalcule une valeur** (A40, [ADR-119](../_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)) |
 | Icône et couleur d'une sorte | `EffectIconTable` du registre, traduite par `effect_style.dart` ([`_patterns/05-13`](05-13-table-d-icones-d-effet.md)) |
 | Phrase d'une ligne | `effect_line_texts.dart`, une clé ARB par sorte (13 clés) |
 | Badge « Niv. n » | `SignatureInstance.level` ; `Colors.amberAccent` quand la tuile répond, `white38` sinon (PN13) |

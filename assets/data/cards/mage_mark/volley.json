@@ -1,0 +1,20 @@
+{
+  "id": "volley",
+  "name_en": "Volley",
+  "name_fr": "Salve",
+  "description_en": "Deal 2 damage 3 times.",
+  "description_fr": "Inflige 2 dégâts 3 fois.",
+  "cost": 1,
+  "type": "skill",
+  "rarity": "common",
+  "target": "singleEnemy",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "damage",
+      "value": 2,
+      "hits": 3,
+      "mightRatio": 0.5
+    }
+  ]
+}

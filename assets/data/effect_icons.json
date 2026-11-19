@@ -7,6 +7,7 @@
   "status:might": { "icon": "bolt_rounded", "color": "orangeAccent" },
   "status:might_regen": { "icon": "bolt_rounded", "color": "orangeAccent" },
   "status:mana_regen": { "icon": "diamond_rounded", "color": "cyanAccent" },
+  "status:hp_regen": { "icon": "favorite_rounded", "color": "pinkAccent" },
   "status:armor_regen": { "icon": "autorenew_rounded", "color": "blueAccent" },
   "status:poison": { "icon": "science_rounded", "color": "greenAccent" },
   "status:weakness": { "icon": "trending_down_rounded", "color": "purpleAccent" },

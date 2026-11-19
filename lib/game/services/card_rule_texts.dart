@@ -1,7 +1,6 @@
 import '../../l10n/app_localizations.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/charge_data.dart';
-import 'effect_resolver.dart';
 
 /// La seule écriture des lignes de coût, de coups et de croissance d'une carte
 /// (spec P-44 lot 1, §6.1) : l'infobulle Flutter et l'infobulle Flame la lisent
@@ -68,15 +67,13 @@ abstract final class CardRuleTexts {
   }
 
   /// Le nom du statut lu : celui de sa charge, sinon celui que le jeu lui
-  /// donne ; l'id à défaut.
+  /// donne dans la langue du joueur ; l'id à défaut.
   static String _statusName(
     AppLocalizations l10n,
     ScaleWith scale,
     ChargeCatalog charges,
   ) {
     final id = scale.statusId!;
-    return charges[id]?.name(l10n.localeName) ??
-        EffectResolver.createStatus(id, 0, 0)?.name ??
-        id;
+    return charges[id]?.name(l10n.localeName) ?? l10n.statusName(id);
   }
 }

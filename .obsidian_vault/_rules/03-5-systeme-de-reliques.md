@@ -62,6 +62,11 @@
 - `onAttackPlayed` : Par la même suite, si le type de la carte jouée est `CardType.attack`.
 - `onSkillPlayed` : Par la même suite, si le type de la carte jouée est `CardType.skill`.
 - `onPowerPlayed` : Par la même suite, si le type de la carte jouée est `CardType.power`.
+- `onDamageTaken` et `onDamagingCardPlayed` (vague 8) : valeurs de l'énumération partagée, posées
+  pour un passif seul — *Ferveur*, *Marque du Mage* ; `applyRelics` n'est jamais appelé pour elles
+  et aucune relique ne les porte. Les trois `switch` d'affichage du déclencheur d'une relique les
+  nomment, le second par la clé ARB `relicTriggerDamagingCardPlayed`
+  ([ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)).
 
 > [!NOTE]
 > **Une signature jouée compte comme une carte de son type** (lot E4 de P-43, branche de la

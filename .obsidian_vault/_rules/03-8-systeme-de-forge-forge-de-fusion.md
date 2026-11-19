@@ -104,20 +104,20 @@ si, à la fois :
     seul mana (D61).
 
 Ce que le prédicat offre, sur les cartes livrées sans rune héritée — résumé par famille ; la
-matrice des 48 cartes, carte par carte, est celle de `forge_upgrades_catalog_test.dart`, qui la
-garde (re-lue le 2026-11-15) :
+matrice des 58 cartes, carte par carte, est celle de `forge_upgrades_catalog_test.dart`, qui la
+garde (re-lue le 2026-11-15, puis le 2026-11-18 pour les dix cartes de la vague 8, sur sa branche) :
 
 | Cartes | Première fusion (peu commune) | Deuxième fusion (rare) |
 |:---|:---|:---|
-| Attaques à cible unique : *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Coup de Tonnerre*, *Rempart brisé*, *Dernier souffle*, *Marteau sacré*, *Fléau béni*, *Frénésie sanglante* ; *Riposte* et *Charge du croisé* y ajoutent *Endurci* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Ricochant*, *Résonant* | les mêmes, *Économe*, *Véloce* |
+| Attaques à cible unique : *Frappe*, *Frappe Lourde*, *Boule de Feu*, *Trait de Glace*, *Coup Empoisonné*, *Coup de Tonnerre*, *Rempart brisé*, *Dernier souffle*, *Marteau sacré*, *Fléau béni*, *Frénésie sanglante*, *Exécution* ; *Riposte* et *Charge du croisé* y ajoutent *Endurci* | *Tranchant*, les trois élémentaires, *Allégé*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Ricochant*, *Résonant* | les mêmes, *Économe*, *Véloce* |
 | *Attaque Rapide*, *Morsure*, *Curée*, *Traque* (elles piochent) | les mêmes sans *Résonant* | et *Économe*, *Véloce* |
-| Attaques à tous : *Balayage*, *Éclat de bouclier* ; *Cri de Guerre* et *Jugement* y ajoutent *Endurci* | les mêmes sans *Ricochant* | et *Économe*, *Véloce* |
+| Attaques à tous : *Balayage*, *Éclat de bouclier*, *Moulinet*, *Coup de grâce* ; *Cri de Guerre* et *Jugement* y ajoutent *Endurci* ; *Tourbillon*, qui pioche, sans *Résonant* | les mêmes sans *Ricochant* | et *Économe*, *Véloce* |
 | Attaques gratuites : *Percée* ; *Sang versé* y ajoute *Transfusion* ; *Lacération*, qui s'épuise, *Persistant* (A15) | celles d'une attaque à cible unique sans *Allégé* | et *Véloce* — jamais *Économe* |
-| Compétences de dégâts : *Éclat*, *Rafale d'étincelles*, *Décharge* ; *Onde* et *Cataclysme* sans *Ricochant* | *Tranchant*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Allégé*, *Ricochant*, *Résonant* — **aucun élémentaire** | et *Économe*, *Véloce* |
-| *Défense*, *Mur de Fer*, *Muraille*, *Fortification*, *Bouclier d'éther* | *Endurci*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| Compétences de dégâts : *Éclat*, *Rafale d'étincelles*, *Décharge*, *Exploitation*, *Salve* ; *Onde* et *Cataclysme* sans *Ricochant* | *Tranchant*, *Précis*, *Spectral*, *Perforant*, *Vampirique*, *Allégé*, *Ricochant*, *Résonant* — **aucun élémentaire** | et *Économe*, *Véloce* |
+| *Défense*, *Mur de Fer*, *Muraille*, *Fortification*, *Bouclier d'éther*, *Réprimande* | *Endurci*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
 | *Éveil* | *Endurci*, *Allégé* | et *Économe*, *Véloce* |
 | *Potion de Soin* | *Persistant*, *Allégé*, *Résonant* | et *Économe*, *Véloce* |
-| Pouvoirs et altérations pures : *Forme Démoniaque*, *Métallisation*, *Bastion*, *Fureur sanguine*, *Transe*, *Embrasement*, *Nova de givre*, *Barrière*, *Sceau* | *Allégé*, *Résonant* | et *Économe*, *Véloce* |
+| Pouvoirs et altérations pures : *Forme Démoniaque*, *Métallisation*, *Bastion*, *Fureur sanguine*, *Transe*, *Embrasement*, *Nova de givre*, *Barrière*, *Sceau*, *Sommation*, *Édit*, *Prière* — qui soigne sans rendre ni mana ni pioche : *Résonant* la prend (D10 du plan de la vague 8) | *Allégé*, *Résonant* | et *Économe*, *Véloce* |
 | *Pacte de sang* (il pioche) | *Allégé*, *Transfusion* | et *Économe*, *Véloce* |
 | *Méditation* (elle pose `mana_regen`) | *Allégé* | et *Économe*, *Véloce* |
 | *Concentration* | **aucune** | *Véloce* |

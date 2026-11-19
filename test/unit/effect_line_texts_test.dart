@@ -14,7 +14,7 @@ void main() {
   final charges = shippedChargeCatalog();
 
   EffectLine line(String kind, [int? value, int? duration]) =>
-      (kind: kind, value: value, duration: duration);
+      (kind: kind, value: value, duration: duration, hits: 1);
 
   /// Les treize sortes, chacune avec une valeur et, pour un statut, une durée.
   final thirteen = [

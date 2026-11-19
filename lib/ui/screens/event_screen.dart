@@ -18,6 +18,11 @@ import 'rest_card_selection_screen.dart';
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
 
+  /// Le badge d'une action `gain_max_hp` : un gain « +8 PV Max », ou une
+  /// perte « -12 PV Max » quand la valeur est négative — jamais « +-12 ».
+  static String maxHpText(AppLocalizations l10n, int value) =>
+      value < 0 ? l10n.eventLoseMaxHp(-value) : l10n.eventGainMaxHp(value);
+
   @override
   ConsumerState<EventScreen> createState() => _EventScreenState();
 }
@@ -169,11 +174,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         text = l10n.eventGainHp(action.value);
         break;
       case 'gain_max_hp':
-        icon = Icons.add_box;
-        iconColor = Colors.pinkAccent;
-        textColor = Colors.pinkAccent;
-        bgColor = Colors.pink.withValues(alpha: 0.12);
-        text = l10n.eventGainMaxHp(action.value);
+        final loss = (action.value as int) < 0;
+        icon = loss ? Icons.indeterminate_check_box : Icons.add_box;
+        iconColor = loss ? Colors.redAccent : Colors.pinkAccent;
+        textColor = loss ? Colors.redAccent : Colors.pinkAccent;
+        bgColor = (loss ? Colors.red : Colors.pink).withValues(alpha: 0.12);
+        text = EventScreen.maxHpText(l10n, action.value as int);
         break;
       case 'gain_might':
         icon = Icons.bolt;
@@ -331,11 +337,12 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         text = l10n.eventGainHp(action.value);
         break;
       case 'gain_max_hp':
-        icon = Icons.add_box;
-        iconColor = Colors.pinkAccent;
-        textColor = Colors.pinkAccent;
-        bgColor = Colors.pink.withValues(alpha: 0.08);
-        text = l10n.eventGainMaxHp(action.value);
+        final loss = (action.value as int) < 0;
+        icon = loss ? Icons.indeterminate_check_box : Icons.add_box;
+        iconColor = loss ? Colors.redAccent : Colors.pinkAccent;
+        textColor = loss ? Colors.redAccent : Colors.pinkAccent;
+        bgColor = (loss ? Colors.red : Colors.pink).withValues(alpha: 0.08);
+        text = EventScreen.maxHpText(l10n, action.value as int);
         break;
       case 'gain_might':
         icon = Icons.bolt;

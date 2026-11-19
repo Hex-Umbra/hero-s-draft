@@ -1,0 +1,20 @@
+{
+  "id": "edict",
+  "name_en": "Edict",
+  "name_fr": "Édit",
+  "description_en": "Apply 2 Weakness to all enemies for 2 turns.",
+  "description_fr": "Applique 2 Faiblesse à tous les ennemis pendant 2 tours.",
+  "cost": 2,
+  "type": "skill",
+  "rarity": "common",
+  "target": "allEnemies",
+  "animation": "magic",
+  "effects": [
+    {
+      "type": "apply_status",
+      "statusId": "weakness",
+      "value": 2,
+      "duration": 2
+    }
+  ]
+}

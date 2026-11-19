@@ -314,6 +314,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get relicTriggerEnemyKilled => 'Enemy Killed';
 
   @override
+  String get relicTriggerDamagingCardPlayed => 'Damage Card Played';
+
+  @override
   String get rarityCommon => 'Common';
 
   @override
@@ -561,6 +564,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String cardDescStatusHpRegen(int amount, int duration) {
+    return 'For $duration turns, heals $amount HP at turn start.';
+  }
+
+  @override
   String cardDescStatusCharge(int amount, String name) {
     return 'Applies $amount $name.';
   }
@@ -739,7 +747,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgeNoEligibleRune => 'No rune can be added to this card.';
 
   @override
-  String get sharpenNothingOnCard => 'No rune on this card can gain a level.';
+  String get restCardSelectionDeckEmpty => 'Your deck is empty';
 
   @override
   String sharpenAction(int cost) {
@@ -903,8 +911,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String statusHpRegen(int value) {
+    return 'Life Spring: +$value';
+  }
+
+  @override
   String statusArmorRegen(int value) {
     return 'Plated Armor: +$value';
+  }
+
+  @override
+  String statusName(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'poison': 'Poison',
+      'might': 'Might',
+      'weakness': 'Weakness',
+      'vulnerable': 'Vulnerable',
+      'might_regen': 'Might Awakening',
+      'mana_regen': 'Mana Spring',
+      'armor_regen': 'Plated Armor',
+      'hp_regen': 'Life Spring',
+      'other': '$id',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -945,6 +974,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String intentSkipped(String state) {
     return '$state: does nothing this turn';
+  }
+
+  @override
+  String intentAttackExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will attack the hero for $value damage.';
+  }
+
+  @override
+  String intentDefendExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will gain $value Armor.';
+  }
+
+  @override
+  String intentBuffExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will gain $value Might.';
+  }
+
+  @override
+  String intentWaitingExplanation(String enemy) {
+    return 'The intent of $enemy is not known yet.';
   }
 
   @override
@@ -999,6 +1048,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String eventGainMaxHp(int amount) {
     return '+$amount Max HP';
+  }
+
+  @override
+  String eventLoseMaxHp(int amount) {
+    return '-$amount Max HP';
   }
 
   @override
