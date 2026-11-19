@@ -1,5 +1,7 @@
 # Orchestration — le chantier « Économie unifiée et catalogue », de `0.5.2` à `0.6.0`, vague par vague
 
+**Chantier clos le 19/11/2026** — neuf vagues, de la vague 0 à la vague 8 ; `0.6.0` fusionnée par la PR #56 et taguée `v0.6.0`, puis la session de clôture (§8.9, D74). Le journal (§2) donne l'état final de chaque vague. Ce fichier ne se déplace pas : une douzaine de fichiers y renvoient par chemin.
+
 **Date** : 01/10/2026 — réécrit le même jour pour la méthode par vagues (brainstorm, D69), puis corrigé après la cinquième passe de revue (revue §14 ; brainstorm, D70 et D71) et après la sixième (revue §15 ; D72 à D74), puis après un contrôle ciblé du texte neuf (revue §16 ; D75).
 **Amendé le 13/10/2026 par [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md)**, après la mesure des trois vagues livrées ([audit](05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md)) : les plans consignent des décisions, pas du code (§3.4, §4.3, §4.4) ; la vérification est différentielle dès le deuxième tour, avec une grille de gravité à critères (§3.3, §4.2) ; chaque question a une classe T · P · D et un niveau d'autonomie (§5, §6) ; la spec ne garde que ses choix, l'historique va dans un fichier de vérifications (§3.3) ; **la simulation n'est plus relancée par une vague** (§3.6, §7.3) ; le compte rendu est plafonné à 150 lignes et le cahier de test devient un fichier que le propriétaire remplit (§3.8) ; l'outillage est noté (§3.1). La vague 4 est l'essai mesuré de ces changements.
 **Amendé le 03/11/2026 par D76** (brainstorm v3, §1), à la demande du propriétaire : **une vague de plus**, la vague 7, `0.5.9`, pour les **charges élémentaires** (P-53) ; la tranche 3 devient la vague 8, toujours `0.6.0` (§1, §2, §8.7, §8.8).
@@ -679,4 +681,4 @@ Deux lots, en série : E0 en entier (spec, plan, implémentation), puis E1. Bran
 
 ---
 
-*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Prochaine étape : la vague 6, sans spec (R31, à l'essai), puis les vagues 7 et 8 et la clôture (D76).*
+*Orchestration. Ce fichier fait foi pour le déroulé ; le brainstorm v3 pour les décisions. Chantier clos le 19/11/2026 : les vagues 0 à 8 sont closes, la clôture est faite (§8.9) — la suite se lit dans `docs/ROADMAP.md`.*
