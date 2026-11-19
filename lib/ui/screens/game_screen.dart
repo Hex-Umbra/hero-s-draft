@@ -613,6 +613,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     ),
 
                   if (!runState.isDead && !_showDraft)
+                    CombatSidePanels(
+                      drawPileCount: deckState.drawPile.length,
+                      discardPileCount: deckState.discardPile.length,
+                      heroStatuses: runState.heroStats.statuses,
+                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
+                      charges: ref.watch(chargeCatalogProvider),
+                      enemies: combatState.enemies,
+                      effectIcons: gameData.effectIcons,
+                    ),
+
+                  // Après les panneaux latéraux : le bouton de fin de tour est
+                  // peint et touché au-dessus du panneau des intentions.
+                  if (!runState.isDead && !_showDraft)
                     TurnControlPanel(
                       canEndTurn: isPlayerActionable,
                       onEndTurnTap: () {
@@ -637,17 +650,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       showRemainingManaWarning: _showRemainingManaWarning,
                       turnCount: combatState.turnCount,
                       reservePreview: reservePreview,
-                    ),
-
-                  if (!runState.isDead && !_showDraft)
-                    CombatSidePanels(
-                      drawPileCount: deckState.drawPile.length,
-                      discardPileCount: deckState.discardPile.length,
-                      heroStatuses: runState.heroStats.statuses,
-                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
-                      charges: ref.watch(chargeCatalogProvider),
-                      enemies: combatState.enemies,
-                      effectIcons: gameData.effectIcons,
                     ),
 
                   // La barre passe au-dessus du panneau de statuts du héros.

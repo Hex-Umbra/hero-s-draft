@@ -977,6 +977,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String intentAttackExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will attack the hero for $value damage.';
+  }
+
+  @override
+  String intentDefendExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will gain $value Armor.';
+  }
+
+  @override
+  String intentBuffExplanation(String enemy, int value) {
+    return 'On its turn, $enemy will gain $value Might.';
+  }
+
+  @override
+  String intentWaitingExplanation(String enemy) {
+    return 'The intent of $enemy is not known yet.';
+  }
+
+  @override
   String deckTotalCards(int count) {
     return 'Total: $count cards';
   }

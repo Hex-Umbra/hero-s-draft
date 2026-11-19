@@ -720,6 +720,37 @@
       "state": { "type": "String" }
     }
   },
+  "intentAttackExplanation": "On its turn, {enemy} will attack the hero for {value} damage.",
+  "@intentAttackExplanation": {
+    "description": "Sentence of the tooltip on an enemy's attack intent, in the combat intents panel. {enemy} is the localized enemy name.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentDefendExplanation": "On its turn, {enemy} will gain {value} Armor.",
+  "@intentDefendExplanation": {
+    "description": "Sentence of the tooltip on an enemy's defend intent, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentBuffExplanation": "On its turn, {enemy} will gain {value} Might.",
+  "@intentBuffExplanation": {
+    "description": "Sentence of the tooltip on an enemy's buff intent, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "intentWaitingExplanation": "The intent of {enemy} is not known yet.",
+  "@intentWaitingExplanation": {
+    "description": "Sentence of the tooltip on an enemy whose intent is not chosen yet, in the combat intents panel.",
+    "placeholders": {
+      "enemy": { "type": "String" }
+    }
+  },
   "deckTotalCards": "Total: {count} cards",
   "@deckTotalCards": {
     "placeholders": {

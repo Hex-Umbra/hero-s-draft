@@ -1610,6 +1610,30 @@ abstract class AppLocalizations {
   /// **'{state}: does nothing this turn'**
   String intentSkipped(String state);
 
+  /// Sentence of the tooltip on an enemy's attack intent, in the combat intents panel. {enemy} is the localized enemy name.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will attack the hero for {value} damage.'**
+  String intentAttackExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy's defend intent, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will gain {value} Armor.'**
+  String intentDefendExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy's buff intent, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'On its turn, {enemy} will gain {value} Might.'**
+  String intentBuffExplanation(String enemy, int value);
+
+  /// Sentence of the tooltip on an enemy whose intent is not chosen yet, in the combat intents panel.
+  ///
+  /// In en, this message translates to:
+  /// **'The intent of {enemy} is not known yet.'**
+  String intentWaitingExplanation(String enemy);
+
   /// No description provided for @deckTotalCards.
   ///
   /// In en, this message translates to:

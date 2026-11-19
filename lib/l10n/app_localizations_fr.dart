@@ -985,6 +985,32 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String intentAttackExplanation(String enemy, int value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      value,
+      locale: localeName,
+      other: 'À son tour, $enemy attaquera le héros pour $value dégâts.',
+      one: 'À son tour, $enemy attaquera le héros pour 1 dégât.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String intentDefendExplanation(String enemy, int value) {
+    return 'À son tour, $enemy gagnera $value d\'Armure.';
+  }
+
+  @override
+  String intentBuffExplanation(String enemy, int value) {
+    return 'À son tour, $enemy gagnera $value de Puissance.';
+  }
+
+  @override
+  String intentWaitingExplanation(String enemy) {
+    return 'L\'intention de $enemy n\'est pas encore connue.';
+  }
+
+  @override
   String deckTotalCards(int count) {
     return 'Total : $count cartes';
   }
