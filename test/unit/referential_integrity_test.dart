@@ -211,7 +211,7 @@ void main() {
         for (final line in SignatureInstance(
           s,
           evolutions: [for (final e in s.evolutions) '${e.id}:1'],
-        ).effectLines)
+        ).effectLines())
           if (!documented.contains(line.kind)) '${s.id} → sorte "${line.kind}"',
       for (final kind in documented)
         if (kind.startsWith('status:') && !isMade(kind.substring(7)))
@@ -233,7 +233,7 @@ void main() {
         for (final line in SignatureInstance(
           s,
           evolutions: [for (final e in s.evolutions) '${e.id}:1'],
-        ).effectLines)
+        ).effectLines())
           for (final l10n in [fr, en])
             if (EffectLineTexts.phrase(l10n, line, registry.charges) == null)
               '${s.id} → sorte "${line.kind}" sans phrase (${l10n.localeName})',

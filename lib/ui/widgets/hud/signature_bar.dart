@@ -3,6 +3,7 @@ import 'dart:math' show max, min;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../game/services/displayed_effect_value.dart';
 import '../../../game/services/effect_line_texts.dart';
 import '../../../game/services/effect_resolver.dart';
 import '../../../l10n/app_localizations.dart';
@@ -141,6 +142,11 @@ class SignatureBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: _SignatureTile(
         signature: signature,
+        lines: DisplayedEffectValue.signatureLines(
+          signature,
+          hero: heroStats,
+          combat: combatState,
+        ),
         compact: compact,
         classColor: classColor,
         effectIcons: effectIcons,
@@ -243,6 +249,9 @@ const double _medallionGap = 6;
 
 class _SignatureTile extends StatefulWidget {
   final SignatureInstance signature;
+
+  /// Les entrées de la bande et de la liste, à leurs valeurs de combat.
+  final List<EffectLine> lines;
   final bool compact;
   final Color classColor;
   final EffectIconTable effectIcons;
@@ -256,6 +265,7 @@ class _SignatureTile extends StatefulWidget {
 
   const _SignatureTile({
     required this.signature,
+    required this.lines,
     required this.compact,
     required this.classColor,
     required this.effectIcons,
@@ -405,7 +415,7 @@ class _SignatureTileState extends State<_SignatureTile>
         const SizedBox(height: 4),
         if (expanded)
           _EffectList(
-            lines: signature.effectLines,
+            lines: widget.lines,
             effectIcons: widget.effectIcons,
             charges: widget.charges,
             compact: compact,
@@ -413,7 +423,7 @@ class _SignatureTileState extends State<_SignatureTile>
           )
         else
           _EffectBand(
-            lines: signature.effectLines,
+            lines: widget.lines,
             effectIcons: widget.effectIcons,
             compact: compact,
             grayedOut: grayedOut,
@@ -747,14 +757,15 @@ class _EffectBand extends StatelessWidget {
 
   static const int _perRow = 3;
 
-  /// La valeur affichée : le critique en pourcentage, rien pour la cible ; la
-  /// durée d'un statut jamais.
+  /// La valeur affichée : le critique en pourcentage, rien pour la cible, des
+  /// dégâts en plusieurs coups suivis de `×coups` ; la durée d'un statut
+  /// jamais.
   static String? _valueLabel(EffectLine line, AppLocalizations l10n) {
     final value = line.value;
     if (value == null || line.kind == EffectKind.allEnemies) return null;
     return line.kind == EffectKind.crit
         ? l10n.effectValuePercent(value)
-        : '$value';
+        : DisplayedEffectValue.format(value, hits: line.hits);
   }
 
   Widget _cell(EffectLine line, AppLocalizations l10n) {

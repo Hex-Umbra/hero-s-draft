@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../models/data/card_data.dart';
 import '../../../models/data/forge_upgrade_data.dart';
 import '../card_component.dart';
+import '../../services/displayed_effect_value.dart';
 import '../../systems/cost_rules.dart';
-import '../../systems/power_rules.dart';
 
 /// L'icône et la couleur d'un effet sur la face Flame d'une carte.
 class RendererEffectVisuals {
@@ -95,8 +95,6 @@ class CardTextRenderer {
     } else {
       descPainter = null;
       badges.clear();
-      final damageBonus = card.game.heroCard?.stats.damageBonusFor(card.card.data.type) ?? 0;
-
       final isAllEnemies = card.card.data.target == CardTarget.allEnemies;
 
       // Les valeurs que la carte joue — rareté et runes comprises — viennent
@@ -104,12 +102,8 @@ class CardTextRenderer {
       final effects = card.card.effective.effects;
       for (int i = 0; i < effects.length; i++) {
         final effect = effects[i];
-        final valueToDisplay = badgeValue(
-          effect,
-          damageBonus: damageBonus,
-          scaleTerm: card.heroScaleTerm(effect),
-          statusBonus: card.heroStatusBonusAt(i),
-        );
+        final valueToDisplay =
+            DisplayedEffectValue.label(effect, card.heroDisplayedValueAt(i));
 
         final visuals = getEffectVisuals(effect);
         final iconColor = visuals.color.withAlpha(alpha);
@@ -257,27 +251,6 @@ class CardTextRenderer {
       text: const TextSpan(text: ''),
       textDirection: TextDirection.ltr,
     )..layout();
-  }
-
-  /// La valeur jouée d'un effet en combat : sa valeur plus [scaleTerm]. Lue
-  /// par le badge et par les lignes de l'infobulle Flame.
-  static int playedValue(CardEffect effect, int scaleTerm) =>
-      effect.value + scaleTerm;
-
-  /// Le chiffre du badge d'un effet : sa valeur plus le terme de croissance,
-  /// plus la part de Puissance par coup pour un `damage` ou [statusBonus] pour
-  /// un `apply_status`, suivi de `×coups` dès deux coups.
-  static String badgeValue(
-    CardEffect effect, {
-    int damageBonus = 0,
-    int scaleTerm = 0,
-    int statusBonus = 0,
-  }) {
-    final isDamage = effect.type == 'damage';
-    final value = playedValue(effect, scaleTerm) +
-        (isDamage ? effect.mightPerHit(damageBonus) : 0) +
-        (effect.type == 'apply_status' ? statusBonus : 0);
-    return isDamage && effect.hits >= 2 ? '$value×${effect.hits}' : '$value';
   }
 
   /// L'icône et la couleur de la face d'un effet, sans état : la table
