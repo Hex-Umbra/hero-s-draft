@@ -63,7 +63,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-[20 tests](2026-11-18-economie-et-catalogue-vague-8-tests-manuels.md), les seize points M1 à M16 de la spec et trois de plus (*Nova*, les élémentaires dans leur lot, *Résonant* sur *Prière*) ; validés par le propriétaire le 19/11. Six de plus, C1 à C6, pour les corrections du §7, à tester.
+[20 tests](2026-11-18-economie-et-catalogue-vague-8-tests-manuels.md), les seize points M1 à M16 de la spec et trois de plus (*Nova*, les élémentaires dans leur lot, *Résonant* sur *Prière*) ; validés par le propriétaire le 19/11. Six de plus, C1 à C6, pour les corrections du §7, validés eux aussi le 19/11.
 
 ## 4. Trouvé périmé, et pour la file
 

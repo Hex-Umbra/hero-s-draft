@@ -13,8 +13,8 @@ propriétaire le 2026-11-19 : **B** pour le panneau des intentions (lignes compa
 infobulle par intention, ajoutée par le propriétaire), les recommandations pour les quatre autres ;
 la sixième, un signe en trop, sans présentation. **Livré sur la branche `feat/v0.6.0-p42-tranche-3`**,
 un commit par point (`70fce82b`, `2e6c440f`, `c921d52e`, `c64f66ff`, `4db6c1bb`, `ee60f62f`), tests
-manuels C1 à C6 et section « Corrections et Améliorations » de la note 0.6.0 (`40974c0f`) ; **en
-attente du test, de la PR, de la fusion et du tag du propriétaire.** Rien n'en est dans `main`.
+manuels C1 à C6 et section « Corrections et Améliorations » de la note 0.6.0 (`40974c0f`) ; tests C1 à C6
+**validés par le propriétaire le 2026-11-19 ; en attente de la fusion et du tag.** Rien n'en est dans `main`.
 
 **Amende [ADR-106](ADR-106-fusion-egale-forge.md) A4** (la carte sans rune affûtable n'est plus
 grisée, elle n'est plus listée). **Complète [ADR-069](ADR-069-systeme-de-sauvegarde-de-run-checkpoint-carte-refr.md)**

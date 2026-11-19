@@ -215,7 +215,7 @@ Réserves à ne pas perdre de vue :
 
 **D'abord le propriétaire, sur la vague 8** : la fin de vague écrite (orchestration §3.8), il
 joue le fichier de tests manuels — les points M1 à M16 de la
-[spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md) §9.1, validés, et C1 à C6 —, lit la
+[spec](../../docs/superpowers/specs/2026-11-18-p42-tranche-3-design.md) §9.1 et C1 à C6, tous validés le 19/11 —, lit la
 table des arbitrages du
 [compte rendu](../../docs/superpowers/reports/2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
 (§2), ouvre la PR de `feat/v0.6.0-p42-tranche-3`, la fusionne dans `main`, puis pose le tag de la

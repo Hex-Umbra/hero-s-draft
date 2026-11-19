@@ -2,7 +2,7 @@
 
 **Branche** : `feat/v0.6.0-p42-tranche-3` · **Compte rendu** : [2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md](2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
 **Testé le** : 19/11/2026, par le propriétaire ; les tests ont été joués un par un, leurs résultats reportés ici sur sa déclaration
-**Résultat** : 20 ✅ · 0 ❌ · 0 non testé
+**Résultat** : 26 ✅ · 0 ❌ · 0 non testé (T1 à T20, puis C1 à C6)
 
 **Repères communs.** Les tests sont numérotés T1 à T20 **dans l'ordre du risque**. Les seize points de la spec (§9.1, M1 à M16) y sont tous, sous un T, et chaque titre rappelle son M : M3 → T1, M4 → T2 et T13, M5 → T3, M11 → T5 et T8, M13 → T6, M9 → T7, M12 → T9, M10 → T10, M2 → T11, M1 → T12, M8 → T13, M6 → T16, M14 → T17, M15 → T18, M7 → T19, M16 → T20. Les autres tests sont neufs : la Nova (A3), les élémentaires qui changent de dossier (Q12), la rune *Résonant* sur *Prière* (D10).
 
@@ -219,42 +219,42 @@
 - **Faire** : lire le panneau « INTENTIONS ENNEMIES » ; survoler à la souris, puis maintenir appuyé au tactile, la pastille de chaque type d'intention (attaque rapide, attaque, lourde, dévastatrice, défense, buff) ; refaire en anglais.
 - **Attendu** : une ligne par ennemi (nom, Niv., PV, pastille icône + valeur) ; le panneau s'arrête sous le compteur de tour, avec une barre de défilement s'il manque de place ; « Fin de Tour » est entièrement visible et cliquable. La bulle montre le libellé complet (« Attaque Dévastatrice : 25 ») puis la phrase (« À son tour, … attaquera le héros pour 25 dégâts. »). L'ennemi gelé : pastille grise et barrée, plus de ligne « Gelé : ne fait rien ce tour » sous lui ; sa bulle donne le libellé barré puis cette phrase, en bleu.
 - **Ne doit pas changer** : le panneau des effets du héros ; l'étape des intentions du tutoriel (même panneau, hauteur libre).
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ### C2 — La mort efface la sauvegarde, F5 ne la rend plus
 - **Atteindre la situation** : une run **normale** (pas « RUN DEBUG »), au moins un nœud résolu pour qu'une sauvegarde existe.
 - **Faire** : mourir en combat ; sur l'écran de mort, sans cliquer, appuyer sur **F5** (web) ou fermer l'application (PC, mobile) ; relancer. Recommencer en faisant « Retour » sur l'écran de mort, puis menu pause → accueil. Recommencer enfin avec chacun des deux boutons de l'écran de mort.
 - **Attendu** : l'accueil ne propose plus « Continuer », dans tous les cas. « Menu principal » ramène à l'accueil, « Changer de classe » ouvre le choix de classe et la nouvelle run marche.
 - **Ne doit pas changer** : quitter un combat **sans mourir** (menu pause → menu principal) propose toujours « Continuer », au checkpoint d'avant le combat (ADR-069) ; une mort en run debug n'efface pas la vraie partie.
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ### C3 — La carte survolée est celle qu'on voit, même à 10 cartes
 - **Atteindre la situation** : « RUN DEBUG », fenêtre **1280 × 720**, une main de **10 cartes**.
 - **Faire** : balayer lentement de gauche à droite, puis de droite à gauche ; arriver par le haut sur une carte du milieu ; jouer une carte sans bouger la souris ; finir le tour en laissant le curseur immobile là où une carte arrive ; sortir la souris de la fenêtre. Refaire les balayages dans une fenêtre plus basse (moins de 680 px).
 - **Attendu** : l'éventail s'étale entre les deux panneaux latéraux ; chaque carte grossit à son tour, aucune sautée, aucune zone morte ; par le haut, c'est la carte visible sous le curseur qui grossit. La voisine qui glisse sous le curseur grossit et finit son déplacement sans se figer ; la carte piochée grossit dès son arrivée ; hors de la fenêtre, plus rien n'est survolé.
 - **Ne doit pas changer** : une main de 5 cartes ou moins garde son éventail ; le glisser-déposer, la zone d'annulation et le jeu au clic (carte, puis cible) marchent comme avant ; aucun survol au tactile.
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ### C4 — Les dégâts des signatures suivent la Puissance
 - **Atteindre la situation** : « RUN DEBUG », **Berserker** ; un ennemi sans Armure ni Vulnérable.
 - **Faire** : jouer *Posture de Rage*, lire la tuile *Frappe Téméraire* et son appui long ; la jouer sur l'ennemi ; au tour suivant, relire la tuile. Puis **Mage** avec de la Puissance permanente : lire *Projectile Magique*, évolué ou non en *Mise à nu*.
 - **Attendu** : la tuile affiche **17**, et non 15 ; l'appui long dit « Inflige 17 dégâts » ; l'ennemi perd 17 PV hors critique ; la Puissance retombée, la tuile revient à 15. Le Mage : 5 + Puissance en dégâts, et le Vulnérable de *Mise à nu* vaut 2 + Puissance, ce que l'ennemi reçoit.
 - **Ne doit pas changer** : les dégâts réellement infligés ; les badges et infobulles des cartes de la main ; la signature hors combat (deck, Stats), qui montre ses valeurs de base comme les cartes.
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ### C5 — L'affûtage ne propose que les cartes affûtables
 - **Atteindre la situation** : un deck qui mêle une carte à rune affûtable, une carte dont la rune est à son plafond et une carte sans rune ; un feu de camp, puis l'événement du *Rémouleur*.
 - **Faire** : au feu, choisir « Affûter », puis à un autre feu « Oublier » ; au *Rémouleur*, choisir l'affûtage.
 - **Attendu** : à l'affûtage, seule la carte affûtable apparaît, sans carte grisée ; la toucher ouvre le dialogue avec le prix (gratuit au *Rémouleur*, contre 10 % des PV max). « Oublier » liste tout le deck.
 - **Ne doit pas changer** : l'option « Affûter » reste désactivée quand rien n'est affûtable ; le prix et le plafond des runes.
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ### C6 — *La Fontaine Bénie* : « -12 PV Max », un seul signe
 - **Atteindre la situation** : des nœuds événement jusqu'à tomber sur *La Fontaine Bénie* (aucun menu de debug ne force un événement).
 - **Faire** : lire le badge de chacun des trois choix ; prendre « Purifier son esprit » ; refaire en anglais.
 - **Attendu** : le deuxième choix affiche **« -12 PV Max »** (« -12 Max HP »), en rouge avec une icône « moins », puis « +1 Puissance » ; une fois pris, le résultat montre le même badge et les PV max baissent de 12. Le troisième choix garde « +8 PV Max » en rose.
 - **Ne doit pas changer** : le choix reste refusé quand les PV max ne dépassent pas 12 ; les autres événements qui donnent des PV max.
-- **Résultat** : ⬜ — à tester
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## Ce qui doit rester inchangé
 - **La Faiblesse** (−25 % par point, 2 points au plus, avant le gel du héros, même tic de début de tour) et **Vulnérable** (barème de P-1, plafonné à 4 points) : mêmes chiffres, mêmes couleurs, mêmes icônes. Aucun fichier de `proportional_status.dart` ni de `damage_pipeline.dart` n'a bougé.
