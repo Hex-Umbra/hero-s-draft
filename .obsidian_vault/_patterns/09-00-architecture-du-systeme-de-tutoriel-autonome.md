@@ -103,7 +103,7 @@ valeur périmée. Le tutoriel manipule ensuite les vrais modèles du jeu — `Ca
 les chiffres des charges dans ce même catalogue, rien en dur
 ([`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md), étape 10).
 
-Sur la branche de la vague 4 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), les
+Depuis la vague 4 ([ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), les
 signatures ne sont plus des cartes : `TutorialFixtures.signature(id)` les résout, de même
 fail-fast, dans `registry.signatures`, pour le bandeau de l'étape « Votre deck de départ » ;
 `starterPool` filtre par `CardData.isOfferable`, sans id de classe ; et `setStarterDeck` ne pose

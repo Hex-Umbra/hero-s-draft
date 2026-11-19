@@ -82,7 +82,7 @@ Sacré* et *Surtension de Mana* se rechargent comme les quatre autres.
   **et les reliques** qui écoutent une carte jouée — *Amulette du Mage*, *Plume de scribe*,
   *Shuriken*, *Croc Kunaï*. *Flux de Mana* compte les deux signatures du Mage. De la vague 4 à la
   vague 7, *Marque du Mage* (`onAttackPlayed`) ne voyait plus *Projectile Magique*, devenu
-  Compétence ; **depuis la vague 8** (D34, livrée sur la branche, en attente du propriétaire —
+  Compétence ; **depuis la vague 8** (D34, fusionnée dans `main` le 2026-11-19 par la PR #56 —
   [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)), elle écoute
   `onDamagingCardPlayed` et la signature marque de nouveau — hors son évolution *Nova*, de groupe.
 - **Où le joueur les voit** : une barre à gauche du HUD de combat, une tuile par signature, cinq
@@ -131,8 +131,7 @@ choix par défaut ([ADR-099](../_adr/ADR-099-choix-du-passif-et-conditionnement-
 > [ADR-116](../_adr/ADR-116-canalisation-une-banque-de-mana.md)) — `regen_armor` et `fervor`,
 > `rage` et `bloodthirst`, `channeling` et `mana_flux` ; le Mage démarre de nouveau sur
 > *Canalisation*, son premier par `displayOrder`. **Depuis la tranche 3, les neuf sont jouables,
-> trois par classe** (vague 8, livrée sur la branche `feat/v0.6.0-p42-tranche-3`, en attente du
-> test, de la PR, de la fusion et du tag du propriétaire —
+> trois par classe** (vague 8, fusionnée dans `main` le 2026-11-19 par la PR #56 —
 > [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md)) : `blessing`,
 > `frenzy` et `mage_mark` reviennent avec leurs lots, par la donnée ; la règle d'O5 reste, sans
 > plus rien masquer. Le passif choisi par défaut reste le premier de chaque classe. Chaque passif déclare **exactement une classe** dans `classes` (D9) et, dans **`feeds`**, ce

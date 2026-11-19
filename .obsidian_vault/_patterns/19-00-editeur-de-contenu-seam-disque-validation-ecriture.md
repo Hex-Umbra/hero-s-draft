@@ -34,7 +34,7 @@ fichier de dossier, et six familles de métadonnées. Ajouter une catégorie = a
 pas du code d'interface. La 8ᵉ, **récompense de niveau**, l'a démontré : une entrée a suffi, le
 catalogue, les valeurs connues, le formulaire inféré, l'écrivain et l'aller-retour sur les fichiers
 livrés étant tous pilotés par la table ([ADR-100](../_adr/ADR-100-console-de-contenu-vocabulaire-du-moteur-et-ident.md)).
-La 9ᵉ, **signature** (branche de la vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), reprend la propriété de classe que
+La 9ᵉ, **signature** (vague 4, [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md)), reprend la propriété de classe que
 portait la carte : chemin `classes/<classe>/skills/<id>.json`, classe exigée, `requiredKeys`
 `cost`, `cooldown`, `type` (sans `status`, lu sur `SignatureData.playableTypes`) ; `forbiddenKeys`
 `heroClass`, `rarity`, `isExhaust`, `category` ; même vocabulaire que la carte, union des fichiers
@@ -111,7 +111,7 @@ complétion préalable, le contrôle bilingue refuserait exactement ce qu'elle f
 7. **Bilingue** — `_fr` et `_en`
 8. **Références** — contre le registre **uni aux `pendingIds`**, sautées si le registre est nul
 9. **Ressources** — `sfx` déclaré dans `audio.json` ou importé ; import copiable (source, extension, identifiant neuf, destination libre) ; image obligatoire, ou optionnelle et déclarée, présente
-10. **Signatures** — bijection `skills` ↔ `skills/` **lue sur le disque** (`_signatures`, branche de la vague 4) ; une carte neutre qui porterait un propriétaire est refusée
+10. **Signatures** — bijection `skills` ↔ `skills/` **lue sur le disque** (`_signatures`, vague 4) ; une carte neutre qui porterait un propriétaire est refusée
 11. **Construction** — le vrai `fromJson` ne lève pas
 
 **`pendingIds` : ce que la même transaction va écrire.** `Map<EntityCategory, Set<String>>`, uni au
@@ -137,7 +137,7 @@ pendants, qui ne couvrent qu'une partie de la catégorie
   `audio_catalog.dart`) : le fichier est aligné à la main. Le résultat décodé doit valoir
   l'original plus l'entrée, sinon l'insertion lève et tout se défait.
 - **Signature = deux écritures** : son fichier, et son `id` ajouté (trié) au `skills` de
-  `class.json` (`_registerSignature`, branche de la vague 4).
+  `class.json` (`_registerSignature`, vague 4).
 - **Classe = dossier + `skills/` vide** : `referential_integrity_test` appelle `listSync()` sur
   `skills/` sans garde.
 - **Image placeholder copiée si absente et sans import** (`assets/placeholders/images/`) ; l'icône
@@ -146,7 +146,7 @@ pendants, qui ne couvrent qu'une partie de la catégorie
   est conservée.
 
 `ClassRecipe` (`class_recipe.dart`) transforme « une classe et ses signatures »
-(`ClassRecipe.signatures`, des `SignatureInput` sur la branche de la vague 4) en une
+(`ClassRecipe.signatures`, des `SignatureInput` depuis la vague 4) en une
 liste de brouillons pour un seul `writeAll` ; `faults()` refuse deux signatures de même `id`.
 Elle écrit **trois** sortes de brouillons, dans cet ordre imposé : la classe, **un passif de
 départ**, puis les signatures. Le passif porte l'identifiant de la classe — dérivé, jamais saisi,

@@ -11,6 +11,8 @@ description: Amends ADR-102 and ADR-103 after measuring three delivered waves �
 
 **Amendé le 2026-11-04 par [ADR-113](ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md)** (brainstorm v3 D77) pour ce qu'une vague teste : les calculs, les données, les contrôleurs et la sauvegarde ; plus aucun test d'écran, ce qu'il aurait vérifié devenant un point du fichier de tests manuels (D6) ; les tests d'écran existants triés et supprimés dans la vague 5.
 
+**Complété le 2026-11-19 par [ADR-120](ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md)**, à la clôture du chantier : les cinq amendements adoptés en vagues 4 à 6 rejoignent la méthode, D1 est confirmée par la mesure, et le gel des blueprints de D8 est échu — leur installation reste à la décision du propriétaire.
+
 ### Contexte
 
 Trois vagues sont livrées et mesurées ([audit](../../docs/possible_upgrades/05-10-2026_audit_workflow_ia_et_orchestration_par_vagues.md), §1.2). Les specs et les plans prennent 73 à 76 % des jetons de chaque vague, l'implémentation 5 à 8 % ; le coût passe de 172 à 273 puis 389 $ au tarif de l'API, de 0,040 à 0,068 $ par ligne de code ajoutée. Les plans transcrivent le code : celui de la partie 2 d'E3 fait 11 136 lignes et 673 blocs, et ses vérificateurs le rejouent dans un clone. La vérification de la spec a cessé de converger : six tours et trois arrêts en vague 3, chaque tour confiant la spec entière à un panel neuf, les constats « moyens » étant pour l'essentiel des trous de test. Le gabarit de plan imposait la transcription (« cite le code tel qu'il est »), avec pour modèle de forme le plan de P-49, 3 627 lignes et 249 blocs.

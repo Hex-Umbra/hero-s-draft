@@ -25,7 +25,7 @@ P-43 E2, vague 2, fusionnée dans `main` le 2026-10-03) :
 **Responsabilités & Logique métier** :
 - `initializeShop(allCards, bonusShopCards)` : appelé à chaque création de `ShopScreen`. **Ne fait
   rien si `state.nodeId` égale le nœud courant non nul** — l'écran rend alors l'étal retenu. Sinon,
-  tire `3 + bonusShopCards` cartes proposables (`CardData.isOfferable`, sans paramètre depuis la branche de la vague 4 —
+  tire `3 + bonusShopCards` cartes proposables (`CardData.isOfferable`, sans paramètre depuis la vague 4 —
   [ADR-109](../_adr/ADR-109-signatures-hors-du-deck.md) ;
   [ADR-101](../_adr/ADR-101-predicat-de-proposabilite-unique-et-draft-de-depart.md)) scalées par
   l'acte, la copie du deck, et note le nœud. Sans nœud courant — les tests unitaires —, chaque appel
