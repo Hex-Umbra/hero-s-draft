@@ -1,8 +1,8 @@
 # Vague 8 — `0.6.0` — tests manuels
 
 **Branche** : `feat/v0.6.0-p42-tranche-3` · **Compte rendu** : [2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md](2026-11-18-economie-et-catalogue-vague-8-compte-rendu.md)
-**Testé le** : <JJ/MM/AAAA>, sur `<sha>`, sur <plateforme>
-**Résultat** : <K> ✅ · <L> ❌ · <M> non testés
+**Testé le** : 19/11/2026, par le propriétaire ; les tests ont été joués un par un, leurs résultats reportés ici sur sa déclaration
+**Résultat** : 20 ✅ · 0 ❌ · 0 non testé
 
 **Repères communs.** Les tests sont numérotés T1 à T20 **dans l'ordre du risque**. Les seize points de la spec (§9.1, M1 à M16) y sont tous, sous un T, et chaque titre rappelle son M : M3 → T1, M4 → T2 et T13, M5 → T3, M11 → T5 et T8, M13 → T6, M9 → T7, M12 → T9, M10 → T10, M2 → T11, M1 → T12, M8 → T13, M6 → T16, M14 → T17, M15 → T18, M7 → T19, M16 → T20. Les autres tests sont neufs : la Nova (A3), les élémentaires qui changent de dossier (Q12), la rune *Résonant* sur *Prière* (D10).
 
@@ -64,7 +64,7 @@
 - **Faire** : (a) jouer *Projectile Magique* sur lui ; lire son icône. (b) Jouer *Exploitation* sur lui. (c) Jouer *Salve*. (d) « Fin de Tour » ; au tour suivant, jouer *Salve* d'abord, lire l'icône, puis *Exploitation*.
 - **Attendu** : (a) 5 dégâts (100 → 95) et **« Vulnérable 2 »** sur l'ennemi, 2 tours ; l'ennemi n'a pas subi son propre Vulnérable. (b) 4 + 2 = 6, ×1,5 : **9 dégâts** (95 → 86). (c) 3 coups de 2 ×1,5 : **9 dégâts** (86 → 77), et **l'icône reste à « Vulnérable 2 »** : une seconde carte de dégâts ne remarque pas. (d) au tour 2, il reste 1 tour de la première marque ; *Salve* frappe 9 (77 → 68), puis **l'icône passe à « Vulnérable 4 »** (2 de plus : la marque revient) ; *Exploitation* compte alors 4 points : (4 + 4) × 2 = **16 dégâts** (68 → 52).
 - **Ne doit pas changer** : le coût de *Projectile Magique* (1) et sa pioche ; sa recharge ; les dégâts de base des cartes.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T2 — La carte sans dégâts et la carte de groupe ne marquent ni ne consomment (M4)
 *Une carte de groupe n'a pas d'ennemi visé : elle ne marque personne et ne consomme pas la marque du tour (A3, choix du propriétaire).*
@@ -72,7 +72,7 @@
 - **Faire** : (a) jouer *Concentration* (coût 0). (b) Jouer *Balayage*. (c) Jouer *Salve* sur le premier ennemi. Lire les icônes de chaque ennemi après chaque carte.
 - **Attendu** : (a) **aucune** icône de Vulnérable : *Concentration* pioche, sans dégâts. (b) *Balayage* inflige 3 à **tous** les ennemis ; **aucune** icône de Vulnérable, nulle part. (c) *Salve* frappe 3 × 2 = 6 sur sa cible (non vulnérable au moment des coups), **puis** « Vulnérable 2 » **sur cette cible seulement** : les autres n'ont rien. La marque du tour n'a donc été consommée ni par *Concentration* ni par *Balayage*.
 - **Ne doit pas changer** : les 3 dégâts de *Balayage* à chaque ennemi ; la pioche de *Concentration*.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T3 — La carte qui tue sa cible ne consomme pas la marque (M5, A4)
 *L'ennemi tué est encore à 0 PV quand le passif se résout : il doit être tenu pour absent, et la carte de dégâts suivante marque.*
@@ -80,14 +80,14 @@
 - **Faire** : (a) jouer *Projectile Magique* sur le premier ennemi (5 dégâts : il meurt). Lire l'icône des autres. (b) Jouer *Salve* sur le deuxième ennemi.
 - **Attendu** : (a) le premier ennemi meurt, la rangée se resserre ; **aucun** Vulnérable posé, nulle part (la signature n'a pas marqué un mort). (b) *Salve* frappe 6, **puis** « Vulnérable 2 » sur le deuxième ennemi : **la marque du tour n'avait pas été consommée** par la carte qui a tué.
 - **Ne doit pas changer** : la mort d'un ennemi (XP, récompenses), la pioche de *Projectile Magique*.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T4 — *Projectile Magique* évolué en *Nova* ne marque personne (A3)
 - **Atteindre la situation** : « RUN DEBUG », **Mage** sous *Marque du Mage* ; sur la carte, onglet « Heros », section « Évolutions de signature » : prendre *Acuité* (+2 dégâts par niveau) autant de fois que le menu le propose, jusqu'à ce que **le bouton *Nova* apparaisse** (une majeure, proposée quand le prochain palier est majeur) ; la prendre. Noter le nombre d'*Acuité* prises, n. Deck : *Salve* ajoutée, cinq cartes du draft retirées. Acte 3, **au moins deux ennemis**, pleine vie. « Mana » à 9.
 - **Faire** : (a) jouer *Projectile Magique*, qui touche désormais tous les ennemis. (b) Jouer *Salve* sur un ennemi.
 - **Attendu** : (a) chaque ennemi reçoit **5 + 2n** dégâts ; **aucune** icône de Vulnérable. (b) *Salve* frappe 6 ; « Vulnérable 2 » sur sa cible seule : *Nova* n'avait pas consommé la marque.
 - **Ne doit pas changer** : la tuile de la signature, sa recharge, son coût.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T5 — *Sommation* : la Faiblesse réduit deux attaques, pas la troisième (M11, A19)
 *Le décompte n'a pas changé : un ennemi vieillit ses statuts avant d'agir. Une Faiblesse de 3 tours, posée pendant le tour du joueur, est à 2 tours pendant la première attaque, à 1 pendant la deuxième, et **a expiré** avant la troisième.*
@@ -95,7 +95,7 @@
 - **Faire** : noter l'intention affichée A (les dégâts), puis jouer *Sommation* sur l'ennemi. Lire son icône. « Fin de Tour » ; noter les PV perdus (a). Au tour 2, noter l'intention B, **ne rien jouer**, « Fin de Tour » ; noter les PV perdus (b). Au tour 3 : intention C, « Fin de Tour », PV perdus (c). Lire l'icône de l'ennemi après chaque phase.
 - **Attendu** : « Faiblesse 1 » sur l'ennemi, avec ses tours (3). Phase 1 : **a ≈ 75 % de A** (arrondi), l'icône passe à 2 tours. Phase 2 : **b ≈ 75 % de B**, l'icône passe à 1 tour. Phase 3 : **c = C entière**, la Faiblesse a disparu avant l'attaque. Si une intention n'est pas une attaque, le noter : le test ne vaut que pour les phases où l'ennemi frappe.
 - **Ne doit pas changer** : le barème de la Faiblesse (−25 % par point, 2 points au plus) ; l'ordre de la phase ennemie ; les dégâts des statuts.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T6 — *Prière* : la Source de Vie (M13)
 *Un statut neuf, `hp_regen`, « Source de Vie » / « Life Spring » : il rend sa valeur au début des trois tours suivants, borné aux PV max. On règle l'Armure à 99 chaque tour pour que la phase ennemie ne touche pas aux PV.*
@@ -103,7 +103,7 @@
 - **Faire** : (a) jouer *Prière* ; lire le panneau « Effets du Joueur » et la carte. (b) **Armure à 99**, « Fin de Tour » ; lire les PV au début du tour 2. (c) Tour 2 : Armure à 99, **PV à 99**, « Fin de Tour » ; lire les PV au tour 3. (d) Tour 3 : Armure à 99, **PV à 60**, « Fin de Tour » ; PV au tour 4. (e) Tour 4 : Armure à 99, « Fin de Tour » ; PV au tour 5. Refaire (a) en anglais si la langue le permet.
 - **Attendu** : (a) la ligne **« Source de Vie : +2 »** (anglais **« Life Spring: +2 »**) avec un **cœur rose**, 3 tours ; *Prière* quitte la main et **ne revient pas** (un Pouvoir s'épuise). Le statut de Vol de vie, s'il existe, garde son cœur rouge. (b) PV : **52**. (c) PV : **100**, jamais 101 (le soin est borné au max). (d) PV : **62**. (e) PV : **62**, la Source de Vie a disparu après sa troisième tic : **rien au quatrième tour**. La ligne disparaît du panneau.
 - **Ne doit pas changer** : la *Potion de Soin* (3 PV d'un coup, inchangée) ; le panneau pour les autres statuts ; les PV de l'ennemi.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T7 — Carnage sous *Frénésie* : *Moulinet*, +4 Puissance, deux pioches (M9)
 *Chaque mort donne 2 Puissance pour le tour et une pioche ; la Puissance du Berserker va aux Attaques et s'ajoute à chaque ennemi touché. Carnage est un lot des actes suivants : à l'acte 1, un seul ennemi par combat.*
@@ -111,7 +111,7 @@
 - **Faire** : (a) jouer *Moulinet* (7 à tous). (b) Jouer *Tourbillon*. (c) Jouer *Coup de grâce*. Lire la Puissance du héros et les PV du dernier ennemi après chaque carte.
 - **Attendu** : (a) les ennemis 1 et 2 meurent (7 ≥ 7), le troisième perd 7 ; la Puissance monte à **4** (2 par mort), et la main gagne **deux cartes** (N − 1 + 2). (b) le survivant perd **2 + 4 = 6** ; *Tourbillon* pioche 1. (c) le survivant perd **10 + 4 = 14**. Ordre : à pleine vie 100, le survivant passe à 93, puis 87, puis 73. (d) Au tour suivant, la Puissance du tour est retombée à 0.
 - **Ne doit pas changer** : les dégâts de *Moulinet* à chaque ennemi vivant, sans bonus avant la première mort ; la pioche de *Tourbillon*. **À juger, à l'acte 1** (un seul ennemi) : *Moulinet* y frappe une seule cible, et la mort de l'ennemi finit le combat — noter si le lot Carnage y paraît creux.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T8 — *Réprimande* et *Bénédiction* : l'Armure qui survit devient des PV (M11)
 *Le Paladin a 1 de Maîtrise : chaque tranche de 5 points d'Armure survivante rend 2 PV. La Faiblesse de* Réprimande *fait survivre l'Armure.*
@@ -119,14 +119,14 @@
 - **Faire** : jouer *Réprimande* sur l'ennemi puis *Défense* deux fois ; lire l'Armure du héros ; « Fin de Tour » ; lire les PV au début du tour suivant.
 - **Attendu** : *Réprimande* donne **4 Armure** (puis « Faiblesse 1 », 2 tours, sur l'ennemi), l'Armure monte à **14**. L'attaque, réduite de 25 %, vaut environ 0,75 × A ; l'Armure restante S = 14 − 0,75 × A. Au début du tour suivant, PV = **50 + 2 par tranche de 5 de S** : par exemple A = 8 → S = 8 → **+2 PV (52)** ; A = 4 → S = 11 → +4 (54). Si l'intention n'est pas une attaque : S = 14 → +4. L'Armure est ensuite remise à 0.
 - **Ne doit pas changer** : l'Armure qui absorbe les dégâts normaux ; la règle de *Bénédiction* (le texte « chaque tranche de 5 points d'Armure survivante devient 1 PV », la Maîtrise s'ajoute).
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T9 — *Édit* devant trois ennemis (M12)
 - **Atteindre la situation** : « RUN DEBUG », **Paladin** sous *Bénédiction* ; deck : *Édit* ajoutée, cinq cartes du draft retirées. Acte 3, **trois ennemis** (rejouer sinon). PV du héros à 100, aucune Armure jouée. « Mana » 3 (*Édit* coûte 2).
 - **Faire** : noter les intentions de chaque ennemi attaquant ; jouer *Édit* ; lire les trois icônes ; « Fin de Tour » ; noter les PV perdus à chaque attaque ; au tour suivant, « Fin de Tour » de nouveau et noter les PV perdus.
 - **Attendu** : **« Faiblesse 2 »** sur chaque ennemi, 2 tours. Phase 1 : chaque attaque est **réduite de moitié** (−25 % par point). Phase 2 : la Faiblesse a expiré, **attaques entières**. Un ennemi qui n'attaque pas ne montre rien.
 - **Ne doit pas changer** : les dégâts du héros ; la rangée des ennemis ; la durée affichée (2).
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T10 — *Exécution* : 4, +1 par tranche de 5 PV manquants (M10)
 *Pas de multiplicateur : la croissance est la source livrée en vague 5, `targetMissingHp`, à 0,2 par PV manquant. Les chiffres ci-dessous prennent des PV manquants multiples de 5.*
@@ -134,28 +134,28 @@
 - **Faire** : (a) *Exécution* sur l'ennemi à pleine vie. (b) Onglet Combat : PV de l'ennemi à **max − 20**, puis *Exécution*. (c) PV à **8**, puis *Exécution*. (d) Plus tard, devant un **boss** (par la carte du monde) : le mettre à la moitié de ses PV max, jouer *Exécution*, noter les dégâts.
 - **Attendu** : (a) **4 dégâts**. (b) **4 + 4 = 8 dégâts** (max − 20 → max − 28). (c) l'ennemi **meurt** : 4 + (max − 8) / 5 ≥ 8 dès que le max est de 28 ou plus. (d) **à juger** : pour un boss de 100 PV à mi-vie, 4 + 10 = 14 dégâts, soit 28 % de sa vie restante ; noter si le terme grandit assez ou trop vite face aux boss (A8).
 - **Ne doit pas changer** : le coût de la carte (1) ; les autres Attaques à cible unique.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T11 — Le draft de départ des trois lots : 2 + 3, un groupe neutre de 9 (M2)
 - **Atteindre la situation** : « RUN DEBUG » (ou « JOUER »), puis la sélection de classe : **Paladin** sous *Bénédiction*, puis **Berserker** sous *Frénésie*, puis **Mage** sous *Marque du Mage* et sous *Flux de Mana*. Arriver au draft de départ.
 - **Faire** : lire les deux groupes ; compter ; choisir 2 cartes du lot et 3 neutres ; essayer d'en prendre une troisième du lot, une quatrième neutre ; valider.
 - **Attendu** : le **groupe du lot** montre **5 cartes** sous *Bénédiction* (*Sommation*, *Édit*, *Réprimande*, *Prière*, *Métallisation*), **5** sous *Frénésie* (*Moulinet*, *Tourbillon*, *Coup de grâce*, *Exécution*, *Cri de Guerre*), **6** sous *Marque du Mage* (*Boule de Feu*, *Trait de Glace*, *Coup de Tonnerre*, *Coup Empoisonné*, *Exploitation*, *Salve*). Le **groupe neutre** montre **9 cartes**, les mêmes pour les trois : *Frappe*, *Défense*, *Attaque Rapide*, *Frappe Lourde*, *Balayage*, *Mur de Fer*, *Éveil*, *Concentration*, *Potion de Soin*. Quotas : **2 du lot, 3 neutres** ; une troisième du lot ou une quatrième neutre est refusée ; la validation n'est possible qu'à 2 + 3. **Sous *Flux de Mana*** : aucun élémentaire, ni *Métallisation*, ni *Cri de Guerre*, dans aucun groupe.
 - **Ne doit pas changer** : le deck de départ de cinq cartes ; le reste de l'écran.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T12 — La sélection de classe : neuf passifs, trois par classe (M1)
 - **Atteindre la situation** : accueil, « JOUER » ou « RUN DEBUG », sélection de classe. En français, puis la langue de Windows en anglais pour la seconde passe.
 - **Faire** : pour chacune des trois classes, déplier la liste « Passifs », lire les trois passifs et la description du deuxième du Mage ; changer de passif et revenir.
 - **Attendu** : **trois passifs par classe**, **le premier préselectionné** comme avant. Paladin : *Régénération d'Armure*, *Ferveur*, *Bénédiction* (anglais : Armor Regeneration, Fervor, Blessing). Berserker : *Rage*, *Soif de Sang*, *Frénésie* (Rage, Bloodthirst, Frenzy). Mage : *Canalisation*, *Marque du Mage*, *Flux de Mana* (Channeling, Mage's Mark, Mana Flux). *Marque du Mage* dit : « À chaque tour, la première carte de dégâts, Attaque ou Compétence, qui vise un seul ennemi sans le tuer lui applique 2 Vulnérable pendant 2 tours. » / « Each turn, the first damage card, Attack or Skill, that hits a single enemy without killing it applies 2 Vulnerable to it for 2 turns. » Aucun passif n'est absent ni grisé.
 - **Ne doit pas changer** : les descriptions des six autres passifs ; la fiche du héros ; le passif préselectionné par défaut.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T13 — *Salve* et la Foudre : chaque coup reçoit le bonus (M8)
 - **Atteindre la situation** : « RUN DEBUG », **Paladin**, passif au choix, Puissance 0 ; deck : *Coup de Tonnerre* et *Salve* ajoutées, cinq cartes du draft retirées. Un ennemi à 100 PV. « Mana » 3.
 - **Faire** : jouer *Coup de Tonnerre* sur lui, puis *Salve* ; lire les chiffres jaunes et l'icône.
 - **Attendu** : *Coup de Tonnerre* inflige 4 **puis** pose 1 Foudre : « ⚡ 1/3 » ; *Salve* frappe trois fois, chaque coup à **2 + 1 = 3**, avec **trois « +1 » jaunes** et **9 dégâts** en tout (100 → 87). Aucun halo (sous le seuil).
 - **Ne doit pas changer** : l'ordre « les coups d'abord » du *Coup de Tonnerre* ; le coût des cartes.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T14 — Les quatre élémentaires dans leur lot : encore des Attaques (Q12)
 *Elles changent de dossier, pas de type ; sous* Marque du Mage, *une Attaque de dégâts marque aussi.*
@@ -163,7 +163,7 @@
 - **Faire** : jouer *Boule de Feu* sur l'ennemi ; lire son icône ; jouer *Trait de Glace* ; « Fin de Tour ».
 - **Attendu** : *Boule de Feu* : 6 dégâts (100 → 94), **« Feu 2 »** (sans durée) et **« Vulnérable 2 »** (la première carte de dégâts du tour marque). *Trait de Glace* : 4 × 1,5 = **6 dégâts** (94 → 88), « Gel 2/3 » ; pas de nouvelle marque. Au début de la phase ennemie, le Feu inflige **2 × 2 = 4, en rouge, sans être amplifié par Vulnérable** (88 → 84). Les deux cartes sont **des Attaques** (leur bandeau, leur couleur).
 - **Ne doit pas changer** : les valeurs de la vague 7 (6 + 2 Feu, 4 + 2 Gel) ; les règles des charges.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T15 — *Prière* reçoit la rune *Résonant* à la forge ; *Tourbillon* non (D10)
 *Les règles de la forge ne changent pas : Résonant n'est refusée qu'aux cartes qui rendent du mana ou piochent. Prière ne fait ni l'un ni l'autre. Persistant ne s'offre à aucun Pouvoir.*
@@ -171,21 +171,21 @@
 - **Faire** : sur *Prière* (3 exemplaires), choisir « Fusionner » et confirmer ; à l'écran « FUSION — CHOISISSEZ UNE RUNE », lire les runes offertes ; choisir *Résonant*. Refaire avec *Tourbillon*.
 - **Attendu** : pour *Prière*, **deux runes** : *Allégé* et **Résonant** (« 15 % de chances de se rejouer » au niveau 1) ; jamais *Persistant*. Une *Prière* qui résonne pose deux Sources de Vie, soit +4 PV par tour (15 % de chances par jeu : le noter si on le voit, ne pas le chercher). Pour *Tourbillon* : *Résonant* **absent** (la carte pioche), les autres runes d'Attaque offertes.
 - **Ne doit pas changer** : les runes des autres cartes ; le coût de la fusion ; les niveaux.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T16 — Les textes des faces, en français et en anglais (M6)
 - **Atteindre la situation** : accueil « DICTIONNAIRE », onglet « Cartes » ; puis en combat (face Flame, infobulle d'appui long) les cartes en main : *Exécution*, *Exploitation*, *Salve*, *Prière*, *Sommation*, *Édit*, *Réprimande*, *Moulinet*, *Tourbillon*, *Coup de grâce*. En français puis en anglais.
 - **Faire** : ouvrir chaque face et chaque infobulle ; en combat, regarder la face avant puis après avoir visé un ennemi.
 - **Attendu** : *Exécution* : « Inflige 4 dégâts, +1 par tranche de 5 PV manquants de la cible. » / « Deal 4 damage, +1 per 5 missing HP on the target. » *Exploitation* : « Inflige 4 dégâts, +1 par point de Vulnérable de la cible. » / « Deal 4 damage, +1 per point of Vulnerable on the target. » — **en anglais, « Vulnerable », jamais « Vulnérable »**. *Salve* : « Inflige 2 dégâts 3 fois. » / « Deal 2 damage 3 times. » (noter si le badge dit « 2×3 »). *Prière* : en combat, « Pendant 3 tours, récupère 2 PV au début du tour. » / « For 3 turns, heals 2 HP at turn start. » ; au dictionnaire, la description du fichier : « For 3 turns, heal 2 HP at the start of your turn. » *Sommation* : « Applique 1 Faiblesse pendant 3 tours. » ; *Édit* : « Applique 2 Faiblesse à tous les ennemis pendant 2 tours. » ; *Réprimande* : « Gagne 4 d'Armure. Applique 1 Faiblesse pendant 2 tours. » ; *Moulinet*, *Coup de grâce* : « Inflige 7 / 10 dégâts à tous les ennemis. » ; *Tourbillon* : « … 2 dégâts à tous les ennemis et pioche 1 carte. » Les icônes de *Prière* (cœur rose) et de la Faiblesse sont celles du panneau ; **aucune icône en point d'interrogation**, aucune accolade `{…}`. **En main, la face d'une carte à cible affiche la base (4) tant qu'aucune cible n'est visée : à juger** (noter si le terme de croissance manque ou trompe).
 - **Ne doit pas changer** : les faces des autres cartes ; le dictionnaire, ses onglets et son tri (toutes les cartes du registre, **58**, y figurent, dont les seize des trois lots).
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T17 — Le tutoriel : *Boule de Feu* à l'étape des cartes, trois passifs au Mage (M14)
 - **Atteindre la situation** : accueil « TUTORIEL » ; en français, puis en anglais si possible. Faire le tutoriel avec le Paladin, puis avec le Mage.
 - **Faire** : à l'étape des cartes, lire les cartes montrées ; à l'étape de la classe, lire les passifs du Mage ; aller jusqu'au bout.
 - **Attendu** : l'étape des cartes montre **toujours *Boule de Feu*** (6 dégâts, 2 Feu) à toute classe, même au Paladin : c'est une démonstration, pas une offre. Le Mage voit **trois passifs**, le premier préselectionné ; la description de *Marque du Mage* est la nouvelle. Le tutoriel ne simule aucun passif : *Marque du Mage* n'y fait rien. **Rien ne casse** jusqu'au bout.
 - **Ne doit pas changer** : les étapes et leur ordre ; la galerie des statuts ; le Paladin et le Berserker du tutoriel.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T18 — Les autres passifs n'offrent plus les cartes déplacées (M15)
 *Sous les six autres passifs, la boutique, la trouvaille et le draft de départ n'offrent plus les quatre élémentaires, la* Métallisation *ni le* Cri de Guerre. *Un test d'absence ne prouve rien seul : le groupe neutre du draft de départ (T11) en est la preuve ; celui-ci n'est qu'un contrôle.*
@@ -193,7 +193,7 @@
 - **Faire** : jouer trois combats ; à chaque boutique et à chaque offre de carte (trouvaille), lire toutes les cartes proposées.
 - **Attendu** : **aucune** *Boule de Feu*, *Trait de Glace*, *Coup de Tonnerre*, *Coup Empoisonné*, *Métallisation* ou *Cri de Guerre*, dans la boutique ni dans la trouvaille ; seules les neuf neutres et le lot du passif choisi.
 - **Ne doit pas changer** : les prix, les tirages de relique, le draft de niveau.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T19 — Vulnérable qui s'accumule : le plafond du barème (M7, A9)
 *Sous* Marque du Mage, *les points s'additionnent d'un tour à l'autre sur la même cible ; le barème plafonne à 4 points (+100 %), mais l'ennemi affiche la somme brute et* Exploitation *la compte.*
@@ -201,7 +201,7 @@
 - **Faire** : quatre tours de suite, jouer *Salve* sur lui (elle marque) et fin de tour ; au quatrième tour, jouer *Salve*, puis *Exploitation* ; lire l'icône et les dégâts à chaque tour.
 - **Attendu** : l'icône monte de 2 à chaque tour : **2, 4, 6, 8** points. Au quatrième tour, après *Salve* : « Vulnérable 8 » ; *Exploitation* compte **8** (4 + 8 = 12) et le pipeline plafonne à +100 % : **24 dégâts**. **À juger** : noter la valeur réellement affichée (la durée peut limiter l'accumulation) et si le terme qui grandit au fil d'un long combat est trop fort.
 - **Ne doit pas changer** : le barème de Vulnérable ; les dégâts des autres cartes.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## T20 — *Sentence* : le nombre d'attaques réduites (M16)
 *Le décalage « une Faiblesse de N tours réduit N − 1 attaques » est antérieur à la vague (`0.5.7`) ; il est porté à la file. Ce test n'en fait que le point d'observation.*
@@ -209,7 +209,7 @@
 - **Faire** : jouer *Châtiment* sur l'ennemi (il applique 1 Faiblesse pendant 2 tours) ; « Fin de Tour » ; noter les PV perdus ; refaire sur un second tour.
 - **Attendu** : la première attaque est **réduite de 25 %**, la seconde est **entière** (la Faiblesse de 2 tours a vieilli à 1, puis expiré avant l'attaque). Une seule attaque réduite : c'est ce que la tranche 3 ne change pas.
 - **Ne doit pas changer** : les dégâts et l'Armure de *Châtiment* ; sa recharge.
-- **Résultat** :
+- **Résultat** : ✅ — validé par le propriétaire le 19/11
 
 ## Ce qui doit rester inchangé
 - **La Faiblesse** (−25 % par point, 2 points au plus, avant le gel du héros, même tic de début de tour) et **Vulnérable** (barème de P-1, plafonné à 4 points) : mêmes chiffres, mêmes couleurs, mêmes icônes. Aucun fichier de `proportional_status.dart` ni de `damage_pipeline.dart` n'a bougé.
