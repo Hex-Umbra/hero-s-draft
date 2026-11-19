@@ -63,7 +63,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-[20 tests](2026-11-18-economie-et-catalogue-vague-8-tests-manuels.md), les seize points M1 à M16 de la spec et trois de plus (*Nova*, les élémentaires dans leur lot, *Résonant* sur *Prière*) ; à remplir par le propriétaire.
+[20 tests](2026-11-18-economie-et-catalogue-vague-8-tests-manuels.md), les seize points M1 à M16 de la spec et trois de plus (*Nova*, les élémentaires dans leur lot, *Résonant* sur *Prière*) ; validés par le propriétaire le 19/11. Six de plus, C1 à C6, pour les corrections du §7, à tester.
 
 ## 4. Trouvé périmé, et pour la file
 
@@ -97,3 +97,22 @@ Prix lus le 18/11 sur https://platform.claude.com/docs/en/about-claude/pricing �
 | Coût API — $ / € | 23,60 / 21,52 | 17,86 / 16,28 | 7,36 / 6,71 | 8,62 / 7,86 | 16,28 / 14,84 | **73,72 / 67,21** |
 
 *Hors cache* : l'entrée hors cache et les écritures en cache. La session `bb0be5f8` (clôture de la vague 7, avant l'ouverture de la branche), la session parallèle `adf7b095` (un brainstorming sans branche) et l'agent de cette mesure ne sont pas comptés. Les reprises par message (deux à la spec, une au plan) comptent à leur agent ; la porte d'entrée et la levée d'arrêt comptent à l'orchestrateur.
+
+## 7. Les corrections de fin de vague (19/11)
+
+*Ajouté après la §3.8, à la demande du propriétaire : six lignes de `docs/possible_upgrades/upgrade_ideas.md`, corrigées sur la branche avant la fusion.* Options sur maquettes dans `docs/presentations/2026-11-19_corrections_fin_vague_8_lot_1_maquettes.pptx`, retenues le 19/11 ; décision : [ADR-119](../../../.obsidian_vault/_adr/ADR-119-les-corrections-de-fin-de-vague-8.md) ; tests manuels C1 à C6.
+
+| | Défaut | Option retenue | Commit |
+|:---|:---|:---|:---|
+| C1 | Le panneau des intentions cache « Fin de Tour » sur un petit écran | B, et une infobulle par intention (ajout du propriétaire) : une ligne par ennemi, hauteur bornée, défilement | `c921d52e` |
+| C2 | F5 sur l'écran de mort rend le combat perdu | A : la sauvegarde s'efface à la mort, plus au clic ; `save` refuse un héros mort | `70fce82b` |
+| C3 | Des cartes du milieu d'une grande main ne se survolent pas | A + B : un arbitre géométrique unique, l'éventail ouvert à la largeur disponible | `c64f66ff` |
+| C4 | La tuile de signature affiche les dégâts sans la Puissance | B : un calcul partagé avec les cartes, `DisplayedEffectValue` | `4db6c1bb` |
+| C5 | L'affûtage liste des cartes grisées | A : ne lister que les cartes affûtables | `2e6c440f` |
+| C6 | *La Fontaine Bénie* affiche « +-12 PV Max » | Sans présentation : « -12 PV Max », en rouge | `ee60f62f` |
+
+**Chiffres** : **1826 → 1859 tests**, `dart analyze` propre, `sync_assets --check` à jour — mesurés le 19/11 sur `ee60f62f` ; aucun test d'écran neuf (D77), deux tests d'écran adaptés. Note de version : une section « Corrections et Améliorations » de sept phrases dans l'entrée `0.6.0`, sans changer de version (`40974c0f`, puis `ee60f62f`).
+
+**Fait sans le propriétaire** : la règle d'hystérésis du survol (C3), corrigée par l'agent parce que la règle écrite sautait des cartes — la carte au repos la plus haute l'emporte, la carte survolée n'est gardée qu'où aucune carte au repos ne contient le pointeur ; `SaveService.save` gardé contre un héros mort (C2), pour qu'un checkpoint tardif ne recrée pas la sauvegarde ; le rouge du badge de C6, comme les autres pertes.
+
+**Pour la file** : la main ne se redessine pas sur un changement du seul état de combat (antérieur) ; l'appui long d'une signature n'écrit pas « ×N » (aucune signature multi-coups aujourd'hui, une clé ARB à créer) ; **quitter un combat avant d'y mourir** rejoue le combat (ADR-069), question à trancher, consignée dans `upgrade_ideas.md`.
