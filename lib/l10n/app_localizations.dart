@@ -1706,6 +1706,12 @@ abstract class AppLocalizations {
   /// **'+{amount} Max HP'**
   String eventGainMaxHp(int amount);
 
+  /// No description provided for @eventLoseMaxHp.
+  ///
+  /// In en, this message translates to:
+  /// **'-{amount} Max HP'**
+  String eventLoseMaxHp(int amount);
+
   /// No description provided for @eventGainMight.
   ///
   /// In en, this message translates to:

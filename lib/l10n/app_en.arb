@@ -812,6 +812,12 @@
       "amount": { "type": "int" }
     }
   },
+  "eventLoseMaxHp": "-{amount} Max HP",
+  "@eventLoseMaxHp": {
+    "placeholders": {
+      "amount": { "type": "int" }
+    }
+  },
   "eventGainMight": "+{amount} Might",
   "@eventGainMight": {
     "placeholders": {

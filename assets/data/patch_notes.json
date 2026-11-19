@@ -35,7 +35,8 @@
           "Mourir efface désormais la partie sur-le-champ : recharger la page, fermer le jeu ou revenir en arrière sur l'écran de mort ne permet plus de reprendre avant le combat perdu.",
           "Avec plus de cinq cartes en main, c'est bien la carte visible sous le curseur qui s'agrandit, et la main s'étale davantage quand l'écran a la place. Une carte survolée pendant que la main se réorganise ne reste plus figée à mi-chemin.",
           "Les dégâts affichés sur les signatures tiennent compte de votre Puissance, comme ceux des cartes : sous Posture de Rage, Frappe Téméraire affiche 17 et non plus 15.",
-          "Au feu de camp comme chez le Rémouleur, le menu d'affûtage ne propose plus que les cartes dont une rune peut encore gagner un niveau."
+          "Au feu de camp comme chez le Rémouleur, le menu d'affûtage ne propose plus que les cartes dont une rune peut encore gagner un niveau.",
+          "Dans l'événement « La Fontaine Bénie », le choix « Purifier son esprit » affiche désormais « -12 PV Max », en rouge, au lieu de « +-12 PV Max »."
         ]
       }
     ]

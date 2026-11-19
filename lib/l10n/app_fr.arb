@@ -274,6 +274,7 @@
   "eventLoseHp": "-{amount} PV",
   "eventGainHp": "+{amount} PV",
   "eventGainMaxHp": "+{amount} PV Max",
+  "eventLoseMaxHp": "-{amount} PV Max",
   "eventGainMight": "+{amount} Puissance",
   "eventGainRelic": "+1 Relique",
   "eventTradeRelic": "Cède {relic} : +{amount} Or",

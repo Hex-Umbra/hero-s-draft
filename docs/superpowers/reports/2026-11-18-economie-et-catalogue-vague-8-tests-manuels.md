@@ -211,8 +211,8 @@
 - **Ne doit pas changer** : les dégâts et l'Armure de *Châtiment* ; sa recharge.
 - **Résultat** : ✅ — validé par le propriétaire le 19/11
 
-## Corrections de fin de vague (19/11) — C1 à C5
-*Cinq lignes de `docs/possible_upgrades/upgrade_ideas.md`, corrigées avant la clôture de la vague. Les options retenues sont dans la présentation `docs/presentations/2026-11-19_corrections_fin_vague_8_lot_1_maquettes.pptx`.*
+## Corrections de fin de vague (19/11) — C1 à C6
+*Six lignes de `docs/possible_upgrades/upgrade_ideas.md`, corrigées avant la clôture de la vague. Les options retenues pour C1 à C5 sont dans la présentation `docs/presentations/2026-11-19_corrections_fin_vague_8_lot_1_maquettes.pptx` ; C6, un signe en trop, n'en avait pas besoin.*
 
 ### C1 — Le panneau des intentions ne cache plus « Fin de Tour »
 - **Atteindre la situation** : « RUN DEBUG », fenêtre de **768 px de haut** ; un combat à **5 ennemis** (menu de debug), dont un gelé par une charge de Glace.
@@ -247,6 +247,13 @@
 - **Faire** : au feu, choisir « Affûter », puis à un autre feu « Oublier » ; au *Rémouleur*, choisir l'affûtage.
 - **Attendu** : à l'affûtage, seule la carte affûtable apparaît, sans carte grisée ; la toucher ouvre le dialogue avec le prix (gratuit au *Rémouleur*, contre 10 % des PV max). « Oublier » liste tout le deck.
 - **Ne doit pas changer** : l'option « Affûter » reste désactivée quand rien n'est affûtable ; le prix et le plafond des runes.
+- **Résultat** : ⬜ — à tester
+
+### C6 — *La Fontaine Bénie* : « -12 PV Max », un seul signe
+- **Atteindre la situation** : des nœuds événement jusqu'à tomber sur *La Fontaine Bénie* (aucun menu de debug ne force un événement).
+- **Faire** : lire le badge de chacun des trois choix ; prendre « Purifier son esprit » ; refaire en anglais.
+- **Attendu** : le deuxième choix affiche **« -12 PV Max »** (« -12 Max HP »), en rouge avec une icône « moins », puis « +1 Puissance » ; une fois pris, le résultat montre le même badge et les PV max baissent de 12. Le troisième choix garde « +8 PV Max » en rose.
+- **Ne doit pas changer** : le choix reste refusé quand les PV max ne dépassent pas 12 ; les autres événements qui donnent des PV max.
 - **Résultat** : ⬜ — à tester
 
 ## Ce qui doit rester inchangé

@@ -1051,6 +1051,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String eventLoseMaxHp(int amount) {
+    return '-$amount Max HP';
+  }
+
+  @override
   String eventGainMight(int amount) {
     return '+$amount Might';
   }
