@@ -1,6 +1,6 @@
 # Cadrage — le bestiaire (P-05) : trente décisions, et la première vague
 
-> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8). **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
+> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
 >
 > **Les maquettes** sur lesquelles le propriétaire a tranché sont dans un deck privé, <https://claude.ai/artifact/9LxzmnszyErbptiiJh8LDZ> (59 diapositives). Font foi : 31 (panneau des intentions), 37 à 40 (barre, carte, fiche, plateau), 41 (armure), 54 (rat libre et meute), 58 (la famille du Rat). Ce sont des approximations — polices de remplacement, troncatures estimées : ce document et les specs portent en texte ce qu'elles fixent.
 >
@@ -10,7 +10,7 @@
 
 ## 1. Les décisions acquises
 
-Numérotées B1 à B30, dans l'ordre où les questions ont été posées. Une décision corrigée par une suivante est écrite sous sa forme finale.
+Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception.
 
 ### 1.1. Le langage et le contenu
 
@@ -36,6 +36,17 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B14** | Les languettes : à gauche de la carte les bonus (vert), à droite les altérations et les charges (rouge). Au repos, l'icône et sa valeur dessous. Au survol de la carte, elles se déroulent : le nom, la valeur, et la durée quand il y en a une ; une charge sous son seuil garde son compte (« 2/3 »). Le même mécanisme sert la carte du héros. Au doigt, pas de survol : la fiche donne le détail. | 21/11 |
 | **B15** | Le voile d'armure ne se mesure pas aux PV : c'est la jauge de l'armure seule. Plein quand l'armure est à son plus haut, il recule à chaque coup qui l'entame et disparaît à zéro. 6 d'armure couvrent la barre d'un Kobold comme 40 celle d'un boss. | 21/11 |
 | **B16** | Si l'ennemi regagne de l'armure, le voile se remplit à nouveau et le nouveau montant devient son plein. | 21/11 |
+| **B31** | La pastille d'un ennemi qui gagne de la Puissance garde la flèche montante violette : l'éclair orange de la Puissance se confond, dans le panneau, avec l'éclair d'une petite attaque. Exception à « la couleur de son statut » de B6. | 21/11 |
+| **B32** | *Amende B14.* La Foudre chargée s'affiche en jaune dans la languette de droite, comme depuis la vague des charges élémentaires ; tout le reste de cette languette reste rouge. | 21/11 |
+| **B33** | Une charge qui a pris et n'a plus de chiffre à montrer — l'ennemi gelé — écrit au repos le nom de son état (« Gelé ») sous son icône. | 21/11 |
+| **B34** | Dans la fiche : une section vide ne s'affiche pas ; un effet qui dure tout le combat n'affiche pas de durée ; seules la Faiblesse et le Vulnérable ont une ligne de description. | 21/11 |
+| **B35** | La fiche ne s'ouvre qu'au tour du joueur, et se ferme quand il finit. | 21/11 |
+| **B36** | La fiche estompe le plateau seul — le décor, le héros, la main, les autres ennemis. Les panneaux et les boutons restent nets. | 21/11 |
+| **B37** | Le tutoriel dit la fiche en une phrase, à l'étape des intentions ennemies. | 21/11 |
+| **B38** | Le panneau des effets du héros reste, à côté de ses languettes : au doigt, c'est le seul détail du héros. | 21/11 |
+| **B39** | Une languette qui sortirait de l'écran se déroule vers l'intérieur, par-dessus sa propre carte. | 21/11 |
+| **B40** | La carte dont la fiche s'ouvre garde sa barre à la hauteur des autres et grandit vers le bas : autour de son centre, la barre d'un boss sortirait de l'écran. | 21/11 |
+| **B41** | Sur la languette du héros : 💎 pour la régénération de Mana, 💖 pour celle des PV. | 21/11 |
 | **B8** | *Ouverte.* Où se lit l'esquive du Kobold. Recommandation faite : un indicateur dans la languette de gauche, le pourcentage à la place de la durée, et un texte flottant « Esquive ». Elle attend la vague du Kobold. | — |
 
 ### 1.3. La famille du Rat
@@ -59,6 +70,7 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 
 Aucun de ces points ne concerne la première vague.
 
+- La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. La première vague ne le construit pas, aucune intention n'ayant encore deux effets ; il se fixe avec B1.
 - Trois propositions du cadrage, sans numéro : l'invocation s'annonce comme une intention, un tour avant ; un rat invoqué n'agit qu'au tour suivant ; l'invocation et le lien s'écrivent en données, pour toute famille, de façon symétrique (le héros pourrait un jour invoquer).
 - La meute compte-t-elle pour 2 dès l'entrée de l'alpha, avant toute invocation ? C'est la lecture du cadrage, pas une décision.
 - Le sprite du Rat géant déjà produit sert-il le Rat ou le Rat alpha ? L'autre est à produire, comme les slimes.
@@ -93,14 +105,14 @@ Lu le 21/11 sur `8d544a3d`. À revérifier par commande avant de s'y appuyer.
 
 | Vague | Version | Branche | Spec | Plan | Tests | État |
 |:---|:---|:---|:---|:---|:---|:---|
-| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — trois tours | — | base 1866 | **arrêtée** · 3.3 · tour 3 |
+| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — trois tours | — | base 1866 | **arrêtée** · 3.3 · tour 4 |
 | suivantes | à définir | — | — | — | — | non ouvertes |
 
-**Arrêts** : le 21/11, à la spec, après le troisième tour de vérification — il reste un constat moyen de classe T, et l'autonomie est `strict` ; onze questions visibles du joueur (31 à 41 du deck, [fichier de vérifications](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md) §2) attendent aussi le propriétaire. La spec les applique à titre provisoire.
+**Arrêts** : le 21/11, à la spec, après le troisième tour de vérification — il reste un constat moyen de classe T, et l'autonomie est `strict` ; onze questions visibles du joueur (31 à 41 du deck, [fichier de vérifications](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md) §2) attendaient aussi le propriétaire. **Levé le même jour** : le propriétaire répond aux onze questions (B31 à B41), accepte les corrections recommandées du troisième tour et accorde un quatrième tour, différentiel. **Second arrêt le même jour** : le quatrième tour rend « à corriger » pour un constat moyen de classe T, né de la correction précédente ; la correction recommandée est appliquée, non revérifiée ; le propriétaire dit si la vague passe au plan ou refait un tour.
 
 ### 4.2. Vague 1 — `0.6.1` — l'interface des ennemis
 
-**Ce qu'elle livre** : B9, B10, B11, B12, B13, B14, B15, B16, et de B6 la part qui ne dépend pas de B1 — une pastille par intention d'aujourd'hui (attaque, Armure, Puissance) ; les pastilles de statut viendront avec le langage des intentions. Elle emporte la correction S9, déjà sur la branche de départ.
+**Ce qu'elle livre** : B9, B10, B11, B12, B13, B14, B15, B16, B31 à B41, et de B6 la part qui ne dépend pas de B1 — une pastille par intention d'aujourd'hui (attaque, Armure, Puissance) ; les pastilles de statut viendront avec le langage des intentions. Elle emporte la correction S9, déjà sur la branche de départ.
 
 **Fichiers** : `p05-interface-des-ennemis` pour la spec et le plan ; `bestiaire-vague-1` pour le compte rendu et les tests manuels.
 

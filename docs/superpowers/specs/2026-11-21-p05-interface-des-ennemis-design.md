@@ -4,7 +4,7 @@ Date : 2026-11-21
 Statut : **Conception** — vague 1 du chantier du bestiaire (`0.6.1`), branche `feat/v0.6.1-interface-des-ennemis`
 
 Chantier ROADMAP : **P-05** « Bestiaire ». Les décisions font foi dans le
-[cadrage du 21/11](../../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), §1 (B1 à B30) ; la fiche de
+[cadrage du 21/11](../../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), §1 (B1 à B41) ; la fiche de
 cette vague est son §4.2. La méthode est celle du
 [fichier d'orchestration](../../possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md),
 §3 à §6, lu pour ce chantier.
@@ -29,7 +29,7 @@ widget Flutter de largeur fixe.
 
 | # | Ce que le lot en livre | Où |
 |:---|:---|:---|
-| **B6** (part sans B1) | Une pastille par intention d'aujourd'hui — attaque, Armure, Puissance —, à la couleur de son statut. Une intention n'a qu'un effet (`enemy_intent.dart:3-7`) : la règle du « +1 » n'a rien à compter en `0.6.1` et se fixe avec B1 (§2) | §4.2, §5.1 |
+| **B6** (part sans B1) | Une pastille par intention d'aujourd'hui — attaque, Armure, Puissance —, à la couleur de son statut, sauf la Puissance (B31). Une intention n'a qu'un effet (`enemy_intent.dart:3-7`) : la règle du « +1 » n'a rien à compter en `0.6.1` et se fixe avec B1 (§2) | §4.2, §5.1 |
 | **B9** | Trois colonnes fixes : « Niv. N », le nom, les pastilles ; plus de PV ; seul le nom se tronque | §5.1 |
 | **B10** | Une seule infobulle par intention, quelle que soit la pastille visée, au survol et à l'appui long ; l'ennemi gelé garde ses pastilles, grisées et barrées | §5.1 |
 | **B11** | La Puissance quitte le dessus de la carte ; la fiche l'affiche | §5.2, §5.4 |
@@ -58,6 +58,23 @@ qu'elles fixent est porté en texte en §5 ; ce tableau dit seulement laquelle t
 | **La languette** (la « variante » de droite retenue) | Déroulée, la languette ajoute ce que le repos ne montre pas — le nom et la durée —, au lieu de seulement mettre l'icône et la valeur côte à côte |
 | **La fiche de l'ennemi** (retenue, 4 sur 5) | La carte agrandie, bordée d'or, le reste du plateau estompé ; à côté, un cadre : le nom en capitales et le niveau ; PV, Armure, Puissance ; « INTENTION » : la pastille, le nom de l'intention, sa phrase ; « BONUS » ; « ALTÉRATIONS » |
 | **Le plateau à cinq ennemis** (retenue, 5 sur 5) | À cinq ennemis, deux languettes au repos qui se font face tiennent entre deux cartes ; déroulée, une languette passe par-dessus la carte voisine |
+
+Les réponses du propriétaire du 21/11 aux questions que la spec avait laissées ouvertes, sous les numéros que le
+cadrage leur donne :
+
+| N° | Réponse | Où |
+|:---|:---|:---|
+| **B31** | La pastille de Puissance d'un ennemi garde **la flèche montante violette d'aujourd'hui** (`Icons.trending_up`, `#E040FB`) : l'éclair orange de la table se confondrait avec l'éclair d'une petite attaque | A5, §4.2 |
+| **B32** *(amende B14)* | La Foudre chargée s'affiche **en jaune** (`yellowAccent`) dans la languette de droite, comme depuis la vague des charges ; tout le reste de la languette de droite reste rouge | §4.3, §5.3 |
+| **B33** | Une charge rompue sans chiffre montre au repos le nom de son état (« Gelé ») | §4.3 |
+| **B34** | Une section vide de la fiche ne s'affiche pas ; un statut de 99 tours n'affiche pas de durée ; une ligne de description seulement pour la Faiblesse et le Vulnérable | §4.3, §4.4 |
+| **B35** | La fiche ne s'ouvre qu'au tour du joueur et se ferme quand il finit | A10, A12 |
+| **B36** | L'estompage couvre le plateau seul (décor, héros, main, autres ennemis) ; les panneaux et les boutons restent nets | A11 |
+| **B37** | Le tutoriel gagne une phrase à l'étape des intentions ennemies (§6.3) | §6.3, §7 |
+| **B38** | Le panneau des effets du héros reste, à côté de ses languettes : au doigt, c'est le seul détail du héros | §2 |
+| **B39** | Une languette qui sortirait de l'écran se déroule vers l'intérieur, par-dessus sa propre carte | §5.3 |
+| **B40** | La carte dont la fiche s'ouvre garde sa barre à la hauteur des autres et grandit vers le bas | A11 |
+| **B41** | 💎 pour la régénération de Mana, 💖 pour celle des PV, sur la languette du héros | A8, §4.3 |
 
 ### 1.3. Les arbitrages
 
@@ -99,8 +116,13 @@ tombe avec lui. `FlameShieldIcon` reste, la barre neuve le dessine.
 `StatBadge`, composant à `TapCallbacks` (`stat_badge.dart:13-14`), avalait aujourd'hui ces touchers, que le décor
 recevrait sinon (`heros_draft_game.dart:255-260`). `EnemyHealthBar` porte `TapCallbacks` et renvoie son `onTapDown`
 à l'`onTapEnemy` de sa carte (`enemy_card.dart:413-416`) : pour ouvrir la fiche, la garder ouverte et cibler, la barre
-est l'ennemi. La zone de l'ennemi que lisent `_livingEnemyAt` (`heros_draft_game.dart:244-249`), l'arbitre du survol
-(§4.5) et la fermeture d'A12 comprend la barre.
+est l'ennemi. **Sa zone d'appui descend jusqu'à y 0**, le haut de la carte : la bande de 4 unités qui sépare la barre
+dessinée (y −17 à −4, A4) de la carte n'est pas un trou. **La zone de l'ennemi** est donc le rectangle continu qui va
+du haut de la barre (y −17) au bas de la carte (y 140), plus ses languettes ; c'est elle, et elle seule, que lisent
+`_livingEnemyAt` (`heros_draft_game.dart:244-249`), l'arbitre du survol (A9, §4.5) et `findHoveredEnemy`, qui cherche
+la cible d'une carte qu'on glisse et ne lit aujourd'hui que `enemy.containsPoint`, la carte seule
+(`card_interaction_handler.dart:86-90`, `:160-165`) : toucher la barre ou une languette joue la carte (A10), la lâcher
+dessus la cible aussi.
 
 **A4 — La géométrie de la barre, en unités de la carte** *(T, filtre 6)*. La carte mesure 100 × 140 unités, mises à
 l'échelle par `baseScale` = `scaleFactor` × 1,45 (× 1,25 pour un boss) × `scaleMultiplier`
@@ -109,18 +131,21 @@ l'échelle par `baseScale` = `scaleFactor` × 1,45 (× 1,25 pour un boss) × `sc
 1,9). Rayon 4 ; fond, bordure et dégradé des PV de `LinearProgressBarComponent` inchangés. Les textes sont centrés
 sur la barre : « PV/PV max » blanc gras 9, ombré de noir ; si l'armure est positive, 3 unités plus loin, le
 bouclier bleu `#2196F3` de 8 unités et, 2 plus loin, le montant en `#00E5FF` gras 9 — les couleurs du badge
-d'aujourd'hui (`stat_badge.dart:117-128`). Sans armure, le seul « PV/PV max ».
+d'aujourd'hui (`stat_badge.dart:117-128`). Sans armure, le seul « PV/PV max ». Ces mesures sont des constantes de
+`GameConstants` (`lib/game/game_constants.dart`), posées une seule fois en tâche 1 (§10) et lues par la barre (tâche
+3) comme par la zone de l'ennemi (tâche 4).
 
-**A5 — Les pastilles d'une intention sont un calcul pur, `IntentPips` ; l'attaque garde ses paliers, l'Armure et la
-Puissance prennent l'entrée de la table d'icônes** *(T, filtres 4 puis 6 ; l'apparence de la Puissance est P-2)*.
-L'attaque garde ses quatre paliers d'icône et de couleur (`enemy_intents_panel.dart:68-78`) : la maquette dessine
-celui des petites attaques, l'éclair ambre `#F39C12`, et le tutoriel les enseigne (§7). La Défense prend l'entrée
-`armor` de `effect_icons.json` (`:3`, `shield_rounded`, `blueAccent`) — le bouclier `#448AFF` d'aujourd'hui, sans
-changement visible ; la Puissance, l'entrée `status:might` (`:7`, `bolt_rounded`, `orangeAccent`) *(provisoire,
-P-2)*. La table est le mécanisme que B1 étendra à chaque effet d'une intention : une pastille par effet, l'icône et la
-couleur de sa sorte. La valeur reste celle de `compactValue` (`enemy_intents_panel.dart:27-30`). `IntentPips` ne
-calcule aucun débordement : aucune intention de `0.6.1` n'a deux effets, et un compteur sans lecteur serait du code
-mort (filtre 7). Règle en §4.2.
+**A5 — Les pastilles d'une intention sont un calcul pur, `IntentPips`, qui reprend les icônes et les couleurs
+d'aujourd'hui** *(T, filtres 1, 6 puis 8 ; l'apparence de la Puissance est B31)*. `IntentPips` reçoit le calcul
+`_visuals` du panneau (`enemy_intents_panel.dart:68-84`), tel quel. L'attaque garde ses quatre paliers d'icône et de
+couleur (`:69-78`) : la maquette dessine celui des petites attaques, l'éclair ambre `#F39C12`, et le tutoriel les
+enseigne (§7). La Puissance garde la flèche montante violette (`Icons.trending_up`, `#E040FB`, `:81-82`) : c'est la
+réponse du propriétaire, B31. La Défense garde le bouclier `Icons.shield` `#448AFF` (`:79-80`) : c'est le plus simple,
+et sans changement visible — l'entrée `armor` de la table (`effect_icons.json:3`) dessinerait `shield_rounded`, une
+autre forme. `IntentPips` ne lit donc pas la table d'icônes : la vague de B1 dira comment chaque effet d'une
+intention prend sa pastille. La valeur reste celle de `compactValue` (`enemy_intents_panel.dart:27-30`).
+`IntentPips` ne calcule aucun débordement : aucune intention de `0.6.1` n'a deux effets, et un compteur sans lecteur
+serait du code mort (filtre 7). Règle en §4.2.
 
 **A6 — Le panneau : les largeurs des colonnes et la clé du niveau** *(T, filtres 5 puis 6)*. Le panneau garde sa
 largeur de 250, sa marge de 16, sa bordure de 1,5 et la réserve de 8 à droite de sa liste défilante
@@ -151,7 +176,7 @@ deux Puissances de sources différentes ([ADR-104](../../../.obsidian_vault/_adr
 passer les statuts ennemis sur la table d'icônes est une ligne de la ROADMAP
 ([`_patterns/05-13`](../../../.obsidian_vault/_patterns/05-13-table-d-icones-d-effet.md), note), hors de ce lot. Le
 héros porte deux statuts que la fonction ne connaît pas : `mana_regen` prend 💎 et `hp_regen` 💖, les formes de leur
-entrée de table (diamant, cœur) *(provisoire, P-4 (vii))* ; les compteurs de reliques gardent ✨. `statusEmoji` passe
+entrée de table (diamant, cœur), réponse du propriétaire, B41 ; les compteurs de reliques gardent ✨. `statusEmoji` passe
 dans `status_readout.dart`, pur (tâche 1), que lisent les languettes, la fiche et son second lecteur, le « +N 🔥 » de
 la vague du Feu (`combat_visual_system.dart:71`) : la fiche Flutter n'importe aucun composant Flame. La géométrie est
 en §5.3.
@@ -161,16 +186,17 @@ en §5.3.
 premier composant à `TapCallbacks` qui contient le point, et la carte qui porte la languette ne le contient pas
 (`component.dart:879-883`, flame 1.38) — : avec une carte focalisée, la carte se jouerait sur la voisine. `StatusTabs`
 porte `TapCallbacks` et renvoie l'appui à sa carte (`onTapEnemy` pour un ennemi, le `onTapDown` de `HeroCard`,
-`hero_card.dart:82-102`, pour le héros) ; `_livingEnemyAt` suit la même règle : la languette déroulée de la carte
-survolée compte pour sa carte, avant le rectangle des autres. Au repos, une languette ne passe sur aucune carte et
-renvoie de même ses appuis.
+`hero_card.dart:82-102`, pour le héros) ; `_livingEnemyAt` suit la même règle : la zone de l'ennemi (A3) comprend
+ses languettes, et celle de la carte survolée passe avant les autres. Au repos, une languette ne passe sur aucune
+carte et renvoie de même ses appuis.
 
 **A9 — Le survol d'une carte de combat est un arbitre géométrique pur, `pickHoveredEntity`** *(T, filtres 6 puis
 8)*. Il vit dans `onPointerMove` (`heros_draft_game.dart:166-175`), à côté de `refreshHover`. Un `PointerMoveEvent`
 de Flame est un événement de survol (`PointerHoverEvent`, flame 1.38) : un doigt n'en produit jamais, ni une souris
 bouton enfoncé — un glisser de carte ne déroule rien, et B14 (« au doigt, pas de survol ») tient par construction.
-L'arbitre reçoit le rectangle de chaque carte vivante, ennemis et héros, et, pour la carte déjà survolée, celui de
-ses languettes déroulées : le pointeur qui glisse de la carte sur sa languette ouverte la garde ouverte, comme la
+L'arbitre lit la zone de chaque carte vivante (A3) — pour un ennemi, le rectangle continu de sa barre au bas de sa
+carte, plus ses languettes, au repos ou déroulées ; pour le héros, sa carte et ses languettes — : survoler une
+languette au repos déroule sa carte, et le pointeur qui glisse de la carte sur sa languette ouverte la garde ouverte, comme la
 carte survolée de la main est gardée (`pickHoveredCard`, [ADR-119](../../../.obsidian_vault/_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)).
 La carte survolée passe à la priorité `priorityEntityHovered` (5) : ses languettes déroulées passent sur la carte
 voisine (maquette 5 sur 5), sous la main (10 et plus). Le pointeur qui quitte le jeu (`pointerLeft`), une carte
@@ -180,7 +206,7 @@ morte ou mourante, la fiche ouverte : plus rien n'est survolé. Règle en §4.5.
 5)*. Dans `_handlePlayerTargeting` (`heros_draft_game.dart:407-438`), l'ordre devient : une carte focalisée, quelle
 que soit sa cible, garde le toucher, comme aujourd'hui (`:414-430`) ; une signature en attente reçoit l'ennemi vivant
 (`:434-437`) ; sinon, un ennemi vivant touché ouvre sa fiche — ou la garde ouverte si c'est la sienne, ou remplace
-celle d'un autre. La garde d'entrée reste (`:408-412`) : run vivante, tour du joueur *(provisoire, P-4 (iv))*. Un
+celle d'un autre. La garde d'entrée reste (`:408-412`) : run vivante, tour du joueur (B35). Un
 ennemi mort ou mourant n'ouvre rien. `onSelectEnemy` et `selectedEnemyId` ne servent pas : la fiche n'est pas une
 cible et ne touche pas à la résolution des cartes (`combat_controller.dart:191-195`).
 
@@ -190,11 +216,11 @@ risque)*. La carte ouverte grandit de **1,25**, le facteur de la carte focalisé
 ramènent la carte à son échelle de base (`combat_entity.dart:33-57`, `:59-77`, `:291-306`) la ramènent à son échelle
 agrandie ; elle descend de 0,25 × 87 unités, pour que le haut de sa barre reste où il était et ne passe pas sous la
 barre du haut du HUD (`combat_top_bar.dart:36-92`, `top: 10`) ; `LayoutSystem.repositionEnemies` garde ce décalage
-pour elle (`layout_system.dart:133-135`). **Écart à la maquette** *(provisoire, P-7)* : la maquette 4 sur 5 hausse la
-barre agrandie au-dessus de celle des voisines (`h-fiche.html`, `mv-bar` à `top: 16px` contre `mv-ghost-bar` à
-`top: 68px`, à l'échelle 2) ; la spec la garde en place, parce qu'un boss, déjà à × 1,25 (`enemy_card.dart:59`), dont
-le haut de barre est vers 10 px à 1280 × 800, la verrait sortir de l'écran (vers −29 px : 168 − 87 × 1,8125 × 1,25) en grandissant autour de son
-centre.
+pour elle (`layout_system.dart:133-135`). **Écart à la maquette, tranché par le propriétaire (B40)** : la maquette 4
+sur 5 hausse la barre agrandie au-dessus de celle des voisines (`h-fiche.html`, `mv-bar` à `top: 16px` contre
+`mv-ghost-bar` à `top: 68px`, à l'échelle 2) ; la carte garde sa barre à la hauteur des autres et grandit vers le bas,
+parce qu'un boss, déjà à × 1,25 (`enemy_card.dart:59`), dont le haut de barre est vers 10 px à 1280 × 800, la verrait
+sortir de l'écran (vers −29 px : 168 − 87 × 1,8125 × 1,25) en grandissant autour de son centre.
 
 **Sa bordure vient d'un état propre, `isInspected`**, que `_refreshBorderVisuals` (`enemy_card.dart:296-307`) lit en
 premier — ambre de 4, la bordure dorée de la maquette — avant `isSelected` et la surbrillance. Ni la synchronisation
@@ -204,7 +230,8 @@ de la sélection (`state_sync_system.dart:185-192`, à chaque état), ni `highli
 (`:408-412`) — garde son ambre propre, que la fermeture de la fiche ne touche pas. `setSelection` et `setHighlight`
 passent par `_refreshBorderVisuals` au lieu d'écrire la bordure eux-mêmes.
 
-**Le voile d'estompage** — noir à 55 % sur toute la scène Flame : décor, héros, main, autres ennemis — est à la
+**Le voile d'estompage** — noir à 55 % sur toute la scène Flame : décor, héros, main, autres ennemis ; le HUD Flutter,
+panneaux et boutons, reste net (B36) — est à la
 priorité `priorityInspectionVeil` (**180**), au-dessus de la carte survolée (100) et de la carte focalisée (150) de la
 main ; la carte ouverte passe à `priorityInspectedEnemy` (**190**), et ses particules de coup à 200
 (`combat_entity.dart:144`, priorité de la carte + 10). **Passent au-dessus du voile** : les textes flottants et les
@@ -219,25 +246,35 @@ agrandies avec elle (maquette 4 sur 5).
 
 **A12 — Tout toucher qui n'est pas sur la carte ouverte ferme la fiche ; Flame en est le seul propriétaire** *(T,
 filtres 1 puis 5)*. B13 : « Un toucher ailleurs la referme. » `GameScreen` enveloppe son `Stack` d'un `Listener`
-(`HitTestBehavior.translucent`, ancêtre de tout ce qui se touche) qui, à chaque appui, appelle
-`_game.closeInspectionUnlessOn(point)` — HUD compris, cadre de la fiche compris. **La décision de fermer est dans
-Flame, et une seule règle dit si un point est sur un ennemi** : la zone d'un ennemi est sa carte, sa barre (A3) et
-ses languettes (A8), au repos ou déroulées — la règle que lit aussi `_livingEnemyAt` (§4.5). `closeInspectionUnlessOn`
-garde la fiche si le point est dans la zone de l'ennemi ouvert **au moment de l'appel**, la ferme sinon ; elle ne lit
-jamais le reflet que `GameScreen` tient. **L'ordre est fixe : Flame d'abord.** La `RawGestureDetector` du jeu est plus
-profonde que le `Listener` de l'écran, et la distribution d'un appui va du plus profond au plus haut
-(`box.dart:2953-2954`, `binding.dart:496`) ; le `MultiTapGestureRecognizer` de Flame rend son `onTapDown` dès
-l'appui (`multitap.dart:515-534` ; flame `gesture_detector_builder.dart:40`, `multi_tap_dispatcher.dart:37-45`,
-`:133-135`). Un appui sur un autre ennemi, sa barre ou sa languette : Flame ouvre sa fiche, puis le `Listener` trouve
-le point sur l'ennemi désormais ouvert et la garde. Un appui sur la carte ouverte ou sur sa languette : Flame ne
-change rien (ce n'est pas « ailleurs »), le `Listener` non plus. Un appui sur le HUD ou sur le cadre de la fiche :
-Flame ne le reçoit pas, le `Listener` ferme. Flame ferme aussi de
+(`HitTestBehavior.translucent`, ancêtre de tout ce qui se touche) qui, à chaque appui du **bouton principal**
+(`event.buttons == kPrimaryButton`, le seul que Flame accepte, `multi_tap_dispatcher.dart:161-163`), appelle
+`_game.closeInspectionUnlessOn(event.pointer)` — HUD compris, cadre de la fiche compris.
+
+**La décision de fermer est dans Flame, et elle ne lit que le pointeur.** **L'ordre est fixe : Flame d'abord.** La `RawGestureDetector` du jeu est plus profonde
+que le `Listener` de l'écran, et la distribution d'un appui va du plus profond au plus haut (`box.dart:2953-2954`,
+`binding.dart:496`) ; le `MultiTapGestureRecognizer` de Flame rend son `onTapDown` dès l'appui (`multitap.dart:515-534`
+; flame `gesture_detector_builder.dart:40`, `multi_tap_dispatcher.dart:37-45`, `:133-135`). **Flame retient le
+pointeur de l'appui qui a ouvert ou gardé une fiche** : le `pointerId` de son `TapDownEvent` est le `pointer` du
+`PointerDownEvent` que reçoit le `Listener` (`multitap.dart:524-526`). `closeInspectionUnlessOn(pointer)` garde la
+fiche **si et seulement si** ce pointeur est celui que Flame vient de retenir, puis l'oublie ; elle la ferme sinon ;
+elle ne lit ni un point ni le reflet que `GameScreen` tient. Tout appui que Flame reçoit sur la carte ouverte, sa
+barre ou sa languette passe par `_handlePlayerTargeting`, qui garde la fiche et retient le pointeur (ce n'est pas
+« ailleurs ») ; un appui sur un autre ennemi vivant, sa barre ou sa languette : Flame ouvre sa fiche et retient le
+pointeur, le `Listener` la garde. La géométrie que `inspectEnemy` change pendant l'appel n'entre donc pas dans la
+décision. Un appui sur le HUD — fût-ce un bouton peint au-dessus de la barre de la carte ouverte, Son ou Deck devant
+l'ennemi de droite à cinq ennemis (`combat_top_bar.dart:36-75`, peint au-dessus du `GameWidget`,
+`game_screen.dart:573-581`) — ou sur le cadre de la fiche : Flame ne le reçoit pas, le `Listener` ferme. **Effet de
+bord, accepté** : un appui sur une carte jouée en vol au-dessus de la carte ouverte ferme la fiche — la carte en vol
+consomme l'appui sans rien faire (`isPlayed`, `card_interaction_handler.dart:17`), et rien ne retient le pointeur.
+Flame ferme aussi de
 lui-même, par garde : une carte focalisée (`setFocusedCard`, `heros_draft_game.dart:153-158`), une signature armée
-(le mutateur de `awaitingEnemyTarget`), le décor (`:255-260`), la fin du tour du joueur (`executeTurn`, `:440-457`),
+(le mutateur de `awaitingEnemyTarget`), le décor (`:255-260`), la fin du tour du joueur (`executeTurn`, `:440-457`, B35),
 et, à chaque état de combat appliqué (`state_sync_system.dart:97-195`), l'ennemi parti, la phase quittée ou le combat
 fini. Chaque ouverture et chaque fermeture passent par un seul rappel, `onInspectionChanged(EnemyInspection?)` —
-l'id de l'ennemi et le rectangle de sa carte agrandie, barre comprise, à l'échelle d'arrivée —, que `GameScreen`
-reflète ; **ce rectangle ne sert qu'à placer le cadre** (`SheetPlacement`, §4.6). **Quand les ennemis se replacent
+l'id de l'ennemi et le rectangle de sa carte agrandie, barre et languettes au repos comprises, à l'échelle
+d'arrivée —, que `GameScreen` reflète ; **ce rectangle ne sert qu'à placer le cadre** (`SheetPlacement`, §4.6) :
+l'écart de 24 se mesure depuis les languettes, et le cadre ne recouvre pas la languette au repos du côté où il se pose,
+qui reste touchable — sauf quand aucun côté ne tient (§4.6). **Quand les ennemis se replacent
 fiche ouverte**, il change : redimensionnement de la fenêtre (`onGameResize`, `heros_draft_game.dart:294-301`), mort
 ou entrée d'un ennemi pendant qu'une carte vole (`resolvePendingDeaths`, `:355-378` ; l'apparition d'un ennemi de la
 réserve, `state_sync_system.dart:171-175`). `repositionEnemies` réémet alors `onInspectionChanged` avec le nouveau
@@ -256,7 +293,8 @@ fonction pure, `SheetPlacement`** *(T, filtres 5 puis 6)*. Le texte, la mise en 
 du HUD ; les coordonnées du canevas Flame sont celles du `Stack` de `GameScreen`, où le `GameWidget` est en
 `Positioned.fill` (`game_screen.dart:573-578`) : le cadre se pose dans ce `Stack`, **hors** de la `SafeArea` du HUD
 (`:581`), après elle, pour ne jamais passer dessous. Il lit l'ennemi dans `combatProvider` à chaque construction :
-il suit l'état sans copie. Il absorbe ses touchers, pour qu'un appui sur lui n'atteigne pas un ennemi estompé
+il suit l'état sans copie. Un id reflété absent de `combatState.enemies` — une ou deux images, le reflet étant
+différé (A12) — : le cadre ne se dessine pas. Il absorbe ses touchers, pour qu'un appui sur lui n'atteigne pas un ennemi estompé
 dessous. Règles en §4.4 et §4.6.
 
 **A14 — Les textes** *(P, délégués à la spec par la fiche de la vague — cadrage §4.2, « La spec doit fixer », point
@@ -264,62 +302,15 @@ dessous. Règles en §4.4 et §4.6.
 partent, aucune n'a d'autre lecteur (`grep` du 21/11, §6.2).
 
 **A15 — Le tutoriel réaligne sa maquette de combat ; son étape des intentions suit le panneau réel** *(T, filtre 6 ;
-la phrase sur la fiche est P-5)*. §7.
+la phrase sur la fiche est B37)*. §7.
 
 **A16 — Un seul plan, six tâches** *(T, filtre 7)* : §10.
 
 ### 1.4. Les questions ouvertes
 
-Chaque question P est appliquée à titre provisoire selon la recommandation, et marquée « (provisoire) » là où elle
-s'applique. **Une question de classe D**, D-1 ; la spec applique la lettre de la décision en attendant.
-
-**P-2 — L'icône et la couleur de la pastille de Puissance** *(P)*. « À la couleur de son statut » (B6) a trois
-couleurs possibles dans le jeu : (a) l'entrée `status:might` de la table (`bolt_rounded`, `orangeAccent`), celle du
-panneau du héros et des faces de cartes — proche de l'éclair ambre des petites attaques, que seule la valeur signée
-(« +2 ») distingue ; (b) la flèche montante violette `#E040FB` d'aujourd'hui, qui n'est la couleur de la Puissance
-nulle part ; (c) l'éclair rouge `#FF5252` de la ligne « Puissance » de la fiche (maquette 4 sur 5) et du badge
-d'aujourd'hui. **Recommandé : (a)**, la table étant le mécanisme de B6 et de B1. Appliqué *(provisoire)* ; la fiche
-garde son rouge, que la maquette fixe.
-
-**D-1 — La Foudre chargée dans la languette de droite** *(D : seul le propriétaire amende B14)*. B14 : « à droite
-les altérations et les charges (rouge) » (cadrage, l. 36), et la maquette 3 sur 5 les dessine en rouge ; la vague 7
-avait fixé une Foudre chargée en jaune vif (spec P-53, §5.1 ; `status_indicator.dart:151`). (a) le rouge, comme toute
-charge — la lettre de B14 ; (b) le jaune `yellowAccent`, couleur de son halo, pour le seul état chargé, ce qui amende
-B14. **La spec applique (a)** ; garder le jaune demande au propriétaire d'amender B14, la question lui est posée.
-
-**P-4 — Les états que ni B13, ni B14, ni les maquettes ne dessinent** *(P, posés en une fois)*, chacun recommandé et
-appliqué :
-- (i) **une section vide de la fiche** (« BONUS », « ALTÉRATIONS ») ne s'affiche pas — plutôt qu'un « Aucun » ;
-- (ii) **un statut de 99 tours** — la convention « durée du combat » (`turn_phase_manager.dart:229`,
-  `player_stats_manager.dart:274`) — n'affiche pas de durée, ni dans la languette ni dans la fiche ; la Puissance
-  qu'une intention Buff donne est de ceux-là — plutôt que « 99 tours » ;
-- (iii) **une ligne de description sous une entrée de la fiche** seulement pour celles dont le jeu a déjà la phrase :
-  Faiblesse et Vulnérable (`statusWeaknessHint`, `statusVulnerableHint`, `app_fr.arb:341-342`) — plutôt qu'aucune
-  description, ou une phrase neuve par statut ;
-- (iv) **la fiche ne s'ouvre qu'au tour du joueur** et se ferme quand il finit : pendant la phase ennemie, les cartes
-  s'élancent, se secouent et meurent ; un toucher d'ennemi n'y fait rien, comme aujourd'hui (A10) ;
-- (v) **l'estompage couvre la scène Flame seule** — décor, héros, main, autres ennemis — ; le HUD Flutter (panneaux,
-  barres, boutons) reste net : B13 dit « le reste du plateau » ;
-- (vi) **une charge rompue sans chiffre** (l'ennemi Gelé, le héros gelé) montre au repos le nom de son état en
-  place de la valeur (« Gelé »), comme sous l'indicateur d'aujourd'hui — plutôt que l'icône seule ;
-- (vii) **les émojis des deux statuts du héros que `statusEmoji` ne connaît pas** : `mana_regen` 💎 et `hp_regen` 💖,
-  les formes de leur entrée de table — plutôt que le ✨ de repli, qui ne les distingue pas (A8).
-
-**P-6 — Une languette déroulée qui sortirait de l'écran** *(P)*. À cinq ennemis en 1280 × 800, le bord droit de
-l'ennemi le plus à droite est vers 1184 px (`layout_system.dart:111-135` : centres à 168, 404, 640, 876, 1112 px,
-cartes de 143) ; sa languette droite déroulée (« Poison 2 », environ 109 px, jusqu'à 172 au plus large) sort de
-l'écran, comme la gauche de l'ennemi le plus à gauche. (a) elle se déroule vers l'intérieur, par-dessus sa propre
-carte ; (b) elle reste du côté de la carte, bornée au bord de l'écran, son texte coupé. **Recommandé : (a)**, appliqué
-*(provisoire)* (§5.3) : rien ne se perd du texte, et la carte survolée est déjà au premier plan.
-
-**P-7 — La barre de la carte agrandie** *(P)*. La maquette 4 sur 5 hausse la barre de la carte ouverte au-dessus de
-celles des voisines ; (a) la carte agrandie descend pour garder le haut de sa barre en place ; (b) elle grandit
-autour de son centre, comme la maquette, sa barre montant au-dessus des voisines. **Recommandé : (a)**, appliqué
-*(provisoire)* (A11) : sous (b), un boss sort sa barre de l'écran.
-
-**P-5 — Le tutoriel enseigne-t-il la fiche ?** *(P ; précédent : Q-P2 de la vague 4, la barre des signatures)*. (a)
-une phrase de plus dans l'étape « Les Intentions Ennemies » ; (b) rien ; (c) une démonstration jouable. **Recommandé :
-(a)**, texte en §6.3.
+Aucune. Les questions que la spec avait laissées ouvertes ont reçu leur réponse du propriétaire le 21/11 : B31 à
+B41 (§1.2). Aucune question de classe D : B32 amende B14, par le propriétaire lui-même ; B31 fait une exception à « la
+couleur de son statut » de B6.
 
 ---
 
@@ -338,7 +329,7 @@ dessine aucun compteur.
 |:---|:---|
 | Les intentions écrites avec `effects` (B1), leurs pastilles de statut, la phrase complète d'une intention à plusieurs effets, le « +1 » de B6 | Vague du langage des intentions |
 | L'esquive et son indicateur (B4, B8), tout nouvel ennemi, la demi-place, la meute, le plafond de six cartes, le tier (B3, B5, B7, B17 à B30) | Vagues suivantes |
-| La jauge du héros (`PlayerHealthBar`) et son panneau des effets (`StatusEffectsPanel`), qui gardent leur forme : le héros ne reçoit que ses languettes | — |
+| La jauge du héros (`PlayerHealthBar`) et son panneau des effets (`StatusEffectsPanel`), qui gardent leur forme : le héros ne reçoit que ses languettes ; le panneau reste à côté d'elles, seul détail du héros au doigt (B38) | — |
 | Tout équilibrage ; ce que font les ennemis | — |
 | Les émojis des statuts ennemis passés sur la table d'icônes | ROADMAP ([`_patterns/05-13`](../../../.obsidian_vault/_patterns/05-13-table-d-icones-d-effet.md)) |
 | `health_bar.dart` (`HealthBarComponent`), que rien n'utilise aujourd'hui | À la file |
@@ -350,7 +341,7 @@ dessine aucun compteur.
 | `0.6.0` → `0.6.1` | Le badge au-dessus de la carte montre ⚡ Puissance, 🛡 armure, une barre de 66 et les PV (`stat_badge.dart:74-174`) ; un appui long l'explique | La barre seule (A3, A4) ; la fiche (B13) |
 | L'indicateur d'aujourd'hui → les languettes | Valeur à droite de l'icône, durée ou état rompu dessous, pas de 36 unités (`status_indicator.dart:84-100`, `:177-202`) ; une entrée par `id` | `StatusTabs` (A8) ; une entrée par `id` + source |
 | ADR-119 → B9 | Le panneau en lignes compactes : nom, niveau, PV, une pastille (`enemy_intents_panel.dart:203-251`) | Trois colonnes, plus de PV (A6) |
-| Ce lot → la vague de B1 | Une pastille par intention ; aucun compteur | La vague de B1 donne la liste des effets, la table d'icônes chaque pastille (A5), et fixe le « +1 » de B6 |
+| Ce lot → la vague de B1 | Une pastille par intention ; aucun compteur | La vague de B1 donne la liste des effets, dit comment chaque effet prend sa pastille (A5) et fixe le « +1 » de B6 |
 | Sauvegardes de `0.6.0` | Rien de neuf n'est écrit | §8 |
 
 ### 2.2. L'état mesuré
@@ -431,16 +422,15 @@ Exemples, ceux des maquettes : 6 gagnés → plein, 1 ; un coup en laisse 2 → 
 
 ```dart
 class IntentPip { IconData icon; Color color; String value; bool struck; bool waiting; }
-static List<IntentPip> of(EnemyIntent? intent, {required bool skipped, required EffectIconTable icons,
-    required AppLocalizations l10n});
+static List<IntentPip> of(EnemyIntent? intent, {required bool skipped, required AppLocalizations l10n});
 ```
 
 `IntentPips` écrit aussi la pastille d'attente : le panneau et la fiche la dessinent sans rien savoir de plus, et le
 test la lit en FR et en EN.
 
 - **Attaque** : l'icône et la couleur du palier (`enemy_intents_panel.dart:68-78`, seuils 6, 12, 20), valeur
-  `compactValue`. **Défense** : l'entrée `armor` de la table ; **Buff** : `status:might` (P-2). Une entrée absente de
-  la table retombe sur l'icône d'aujourd'hui, comme le panneau du héros (`status_effects_panel.dart:170-177`).
+  `compactValue`. **Défense** : `Icons.shield`, `#448AFF` (`:79-80`) ; **Buff** : `Icons.trending_up`, `#E040FB`
+  (`:81-82`, B31). Les icônes et les couleurs d'aujourd'hui, sans la table d'icônes (A5).
 - **Sans intention** : une seule pastille, le sablier `white30` et pour valeur `l10n.waitingIntents` (« En
   attente... »), `waiting` vrai — le panneau l'écrit en italique —, comme aujourd'hui (`enemy_intents_panel.dart:99-102`,
   `:175-184`).
@@ -458,7 +448,7 @@ puis les charges (`enemy_card.dart:230-244`).
 ```dart
 class StatusReadout {
   String key; String emoji; StatusSide side;   // left, right
-  String restValue; ReadoutTone tone;          // buff, debuff
+  String restValue; ReadoutTone tone;          // buff, debuff, charged
   String title; String? subtitle;              // le déroulé
   int? turnsLeft; String? hint;                // la fiche
 }
@@ -476,13 +466,13 @@ un ennemi.
 
 | Entrée | `restValue` | `title` | `subtitle` | `turnsLeft` |
 |:---|:---|:---|:---|:---|
-| Statut bonus | sa valeur | « {nom} +{valeur} » | « {n} tours » si 0 < durée < 99 | durée si < 99 (P-4 (ii)) |
+| Statut bonus | sa valeur | « {nom} +{valeur} » | « {n} tours » si 0 < durée < 99 | durée si < 99 (B34) |
 | Statut altération | sa valeur | « {nom} {valeur} » | idem | idem |
 | Charge sous le seuil | « {points}/{seuil} » | « {nom} {points}/{seuil} » | — | — |
 | Charge `explode` (Feu) | ses points | « {nom} {points} » | — | — |
-| Charge `skipAction` en attente (ennemi Gelé) | le nom de l'état (P-4 (vi)) | « {état} » | — | — |
-| Charge `weakenDealt` en attente / active (héros gelé) | le nom de l'état (P-4 (vi)) | « {état} » | « −{%} % de dégâts au prochain tour » / « … ce tour » | — |
-| Charge `amplifyHits` chargée (Foudre) | ses points, ton `debuff` (D-1) | « {état} {points} » | « +{bonus} par coup » | — |
+| Charge `skipAction` en attente (ennemi Gelé) | le nom de l'état (B33) | « {état} » | — | — |
+| Charge `weakenDealt` en attente / active (héros gelé) | le nom de l'état (B33) | « {état} » | « −{%} % de dégâts au prochain tour » / « … ce tour » | — |
+| Charge `amplifyHits` chargée (Foudre) | ses points, ton `charged` (B32) | « {état} {points} » | « +{bonus} par coup » | — |
 
 - **Le nom d'un statut** : `l10n.statusName(id)` pour les ids qu'il couvre — `lifesteal` et les six statuts de
   reliques y entrent (§6.2) — ; **l'id `counterId`** — le compteur d'un passif, `<passif>_count`, posé sous le nom
@@ -490,17 +480,17 @@ un ennemi.
   panneau du héros ne filtre pas (`status_effects_panel.dart:221`, `:166`) — prend la clé neuve `statusPassiveCounter`
   (§6.2) ; sinon le `name` de l'entrée, comme le panneau du héros aujourd'hui (`status_effects_panel.dart:159-167`). Le nom d'une charge et de son état : le catalogue (`charge_data.dart:192`,
   `brokenName`).
-- **Le ton** : `buff` vert `#69F0AE`, `debuff` rouge `#FF5252` — charges comprises, Foudre chargée comprise (B14,
-  D-1) ; l'énumération `ReadoutTone` n'a que ces deux valeurs.
+- **Le ton** : `buff` vert `#69F0AE`, `debuff` rouge `#FF5252` — charges comprises (B14) —, `charged` jaune
+  `yellowAccent` pour la seule Foudre chargée, comme depuis la vague des charges (`status_indicator.dart:151`) : B32
+  amende B14 de cette exception.
 - **`hint`** : `statusWeaknessHint` et `statusVulnerableHint`, avec les valeurs de `ProportionalStatus`, comme les
-  faces de cartes (`card_component.dart:410-420`) ; `null` ailleurs (P-4 (iii)).
-- **L'émoji** : `statusEmoji`, qui vit dans ce fichier, gagné de `mana_regen` 💎 et `hp_regen` 💖 (A8 ; *provisoire,
-  P-4 (vii)*).
+  faces de cartes (`card_component.dart:410-420`) ; `null` ailleurs (B34).
+- **L'émoji** : `statusEmoji`, qui vit dans ce fichier, gagné de `mana_regen` 💎 et `hp_regen` 💖 (A8, B41).
 
 ### 4.4. `EnemySheetView`
 
 ```dart
-static EnemySheetView of(EnemyInstance enemy, {required ChargeCatalog charges, required EffectIconTable icons,
+static EnemySheetView of(EnemyInstance enemy, {required ChargeCatalog charges,
     required AppLocalizations l10n, required String locale});
 ```
 
@@ -510,23 +500,23 @@ Rend, dans l'ordre de la maquette 4 sur 5 : `title` (le nom, en capitales), `lev
 `intentSentence` (« Attaquera le héros pour 4 dégâts. », sans le nom de l'ennemi ; gelé : « Gelé : ne fait rien ce
 tour » ; sans intention : « Intention pas encore connue. ») ; `bonuses` et `alterations` : les deux côtés de
 `StatusReadout`, chaque entrée écrite « {émoji} {title} » et, si `turnsLeft`, « · encore {n} tours », sa `hint`
-dessous. Une section vide est absente (P-4 (i)). L'armure se montre même à 0 (« Armure 0 »), comme la Puissance : la
+dessous. Une section vide est absente (B34). L'armure se montre même à 0 (« Armure 0 »), comme la Puissance : la
 ligne des chiffres ne change pas de forme.
 
 ### 4.5. `pickHoveredEntity`
 
 ```dart
-static int? pickHoveredEntity({required List<Rect> cards, required Rect? currentTabs,
-    required int? current, required Offset pointer});
+static int? pickHoveredEntity({required List<List<Rect>> zones, required int? current,
+    required Offset pointer});
 ```
 
-Le pointeur dans la carte courante ou dans ses languettes déroulées (`currentTabs`) → la courante ; sinon, la
-première carte qui contient le pointeur ; sinon `null`. `HerosDraftGame` passe les ennemis vivants puis le héros,
-au repos (rectangle de `containsPoint`, `size` × `scale`, ancre au centre, agrandi de la barre pour un ennemi, A3) ;
-il n'appelle pas l'arbitre tant que la fiche est ouverte (A12). `_livingEnemyAt` lit la même règle pour le ciblage :
-la languette déroulée de la carte survolée compte pour elle (A8). **La zone d'un ennemi** — sa carte, sa barre, ses
-languettes au repos ou déroulées — est une seule fonction de `EnemyCard`, que lisent `_livingEnemyAt` et
-`closeInspectionUnlessOn` (A12).
+Chaque entrée de `zones` est la zone d'une carte vivante, en rectangles : pour un ennemi, le rectangle continu de sa
+barre au bas de sa carte (y −17 à 140, A3) et ses languettes, au repos ou déroulées ; pour le héros, sa carte et ses
+languettes. Le pointeur dans la zone de la courante → la courante ; sinon, la première zone qui contient le pointeur
+; sinon `null`. Survoler une languette au repos déroule donc sa carte. `HerosDraftGame` passe les ennemis vivants
+puis le héros ; il n'appelle pas l'arbitre tant que la fiche est ouverte (A12). **La zone d'un ennemi est une seule
+fonction de `EnemyCard`**, que lisent l'arbitre, `_livingEnemyAt` et `findHoveredEnemy` (A3) ; la fermeture ne la lit
+pas (A12).
 
 ### 4.6. `SheetPlacement`
 
@@ -535,9 +525,11 @@ static Offset topLeftFor({required Rect card, required Size screen, double width
     double gap = 24, double margin = 16});
 ```
 
-À droite de la carte si `card.right + gap + width <= screen.width − margin` ; sinon à gauche si
-`card.left − gap − width >= margin` ; sinon du côté le plus large, borné à `[margin, screen.width − margin − width]`.
-Le haut : le haut de la barre de la carte agrandie (`card.top`, le rectangle d'A12 la comprenant), borné à `margin`.
+`card` est le rectangle d'A12 : la carte agrandie, sa barre et ses languettes au repos ; l'écart se mesure donc
+depuis la languette du côté où le cadre se pose, qu'il ne recouvre pas. À droite si `card.right + gap + width <=
+screen.width − margin` ; sinon à gauche si `card.left − gap − width >= margin` ; sinon du côté le plus large, borné à
+`[margin, screen.width − margin − width]`. Le haut : le haut de la barre de la carte agrandie (`card.top`), borné à
+`margin`.
 
 ### 4.7. L'ouverture et la fermeture, dans `HerosDraftGame`
 
@@ -546,10 +538,12 @@ EnemyCard? inspectedEnemy;
 void inspectEnemy(EnemyCard enemy);     // ouvre ou remplace
 void closeInspection();                 // sans effet si rien n'est ouvert
 void closeInspectionIfStale(CombatState state);
-void closeInspectionUnlessOn(Vector2 point);   // le Listener de GameScreen, après Flame (A12)
+void closeInspectionUnlessOn(int pointer);   // le Listener de GameScreen, après Flame (A12)
 ```
 
-`_handlePlayerTargeting` suit A10 ; `closeInspection` est appelé par `setFocusedCard(card non nul)`, le mutateur de
+`_handlePlayerTargeting` suit A10 ; il reçoit aussi le `pointerId` du `TapDownEvent` — la carte, sa barre et ses
+languettes le passent avec elles-mêmes à `onTapEnemy` — et le retient quand il ouvre ou garde une fiche ;
+`closeInspectionUnlessOn` le lit (A12), puis l'oublie. `closeInspection` est appelé par `setFocusedCard(card non nul)`, le mutateur de
 `awaitingEnemyTarget` à `true`, `onTapDown` du décor et `executeTurn` ; `closeInspectionIfStale`, appelé par
 `StateSyncSystem._applyCombatState` après l'application, ferme quand l'ennemi ouvert n'est plus dans `state.enemies`,
 quand `state.turnPhase` n'est plus `player` ou quand `state.isCombatEnded`. Chaque changement appelle
@@ -574,7 +568,8 @@ INTENTIONS ENNEMIES » ambre (`enemy_intents_panel.dart:272-321`). Chaque ligne,
 | Pastilles | 96 | les pastilles d'`IntentPips`, alignées à gauche, 4 entre deux ; une pastille plus large que la colonne — « En attente... », 104 à 110 en français — est réduite (`FittedBox`), jamais tronquée, comme la colonne du niveau (B9 : seul le nom se tronque) |
 
 Une pastille : marge 6 × 2, rayon 6, fond de sa couleur à 20, liseré de sa couleur à 60 d'épaisseur 1, icône 14, 4,
-valeur 12 gras de sa couleur — le style d'aujourd'hui (`enemy_intents_panel.dart:162-198`). L'infobulle enveloppe la
+valeur 12 gras de sa couleur — le style d'aujourd'hui (`enemy_intents_panel.dart:162-198`) ; les couleurs aussi :
+paliers de l'attaque, bouclier bleu de la Défense, flèche montante violette de la Puissance (A5, B31). L'infobulle enveloppe la
 rangée (A7). L'ennemi qui ne fait rien ce tour : pastilles `white38`, valeurs barrées, infobulle bordée
 `lightBlueAccent`, sa phrase « Gelé : ne fait rien ce tour » en `lightBlueAccent` gras.
 
@@ -592,11 +587,11 @@ En unités de la carte — 100 × 140 pour un ennemi, 120 × 160 pour le héros,
 
 | | Repos | Déroulée (au survol de la carte) |
 |:---|:---|:---|
-| Place | Collée au bord de la carte, 1 unité dessus ; son haut à 11 sous le haut de la carte | Le même bord reste collé à la carte ; elle s'étend vers l'extérieur (la gauche à gauche, la droite à droite) et passe sur la carte voisine. **Si elle sortait de l'écran**, elle se déroule vers l'intérieur, par-dessus sa propre carte, son bord extérieur collé au bord extérieur de la carte *(provisoire, P-6)* |
+| Place | Collée au bord de la carte, 1 unité dessus ; son haut à 11 sous le haut de la carte | Le même bord reste collé à la carte ; elle s'étend vers l'extérieur (la gauche à gauche, la droite à droite) et passe sur la carte voisine. **Si elle sortait de l'écran**, elle se déroule vers l'intérieur, par-dessus sa propre carte, son bord extérieur collé au bord extérieur de la carte (B39) — à cinq ennemis en 1280 × 800, le bord droit de l'ennemi le plus à droite est vers 1184 px (`layout_system.dart:111-135`), et sa languette droite déroulée irait jusqu'à 172 px plus loin |
 | Cadre | 30 de large, fond `#14141E`, liseré `#766734` de 1, rayon 4, marge 3 | Largeur de son contenu, entre 30 et 120 (au-delà, le texte se coupe par points de suspension) ; marges 8 × 4 |
 | Une entrée | L'émoji (14) et, dessous, `restValue` gras 10, de son ton, réduit s'il dépasse la largeur (« Frozen ») ; une entrée toutes les 31, empilées de haut en bas | L'émoji (14) ; 6 plus loin, `title` gras 9 `#F7F7FA` et, dessous, `subtitle` gras 9 `#FFD740` s'il y en a un ; une entrée toutes les 22, 30 avec un `subtitle` |
 | Vide | Pas de languette | — |
-| Ordre dans la carte | Enfant de la carte à la priorité 6, au-dessus de la gangue (4, `frost_shell.dart:19`) et du halo (5, `charge_halo.dart:14`) que `refreshChargeVisuals` ajoute à la carte (`combat_entity.dart:247`, `:257`) | Idem : déroulée vers l'intérieur (P-6), elle passe sur la gangue et le halo de sa propre carte |
+| Ordre dans la carte | Enfant de la carte à la priorité 6, au-dessus de la gangue (4, `frost_shell.dart:19`) et du halo (5, `charge_halo.dart:14`) que `refreshChargeVisuals` ajoute à la carte (`combat_entity.dart:247`, `:263`) | Idem : déroulée vers l'intérieur (B39), elle passe sur la gangue et le halo de sa propre carte |
 
 À cinq ennemis à 1280 × 800, une languette au repos mesure 43 px ; deux qui se font face en prennent 86 des 93 qui
 séparent deux cartes (maquette 5 sur 5). Les deux languettes de la carte survolée se déroulent ensemble, en 0,1 s.
@@ -606,14 +601,15 @@ valeur se met à jour en place.
 ### 5.4. La fiche de l'ennemi (Flame et Flutter)
 
 **Ouverture** (A10) : au tour du joueur, sans carte focalisée ni signature en attente, toucher un ennemi vivant.
-**Fermeture** (A12) : tout appui hors de sa zone — sa carte, sa barre, ses languettes — ; une carte focalisée ou saisie ; une signature armée ; la fin du
+**Fermeture** (A12) : tout appui que Flame ne reçoit pas sur elle — sa carte, sa barre, ses languettes —, HUD compris ; une carte focalisée ou saisie ; une signature armée ; la fin du
 tour ; l'ennemi qui quitte le combat ; le combat fini. Toucher un autre ennemi ouvre la sienne. Toucher la carte
 ouverte ne fait rien.
 
 **La scène** (Flame, A11) : la carte grandit de 1,25 et descend pour garder le haut de sa barre ; bordure ambre de 4 ;
 le reste de la scène sous un voile noir à 55 % ; 0,15 s.
 
-**Le cadre** (Flutter, A13), 310 de large, à 24 de la carte, son haut au haut de la barre agrandie :
+**Le cadre** (Flutter, A13), 310 de large, à 24 de la languette au repos du côté où il se pose (§4.6), son haut au
+haut de la barre agrandie :
 
 | Élément | Style |
 |:---|:---|
@@ -623,7 +619,7 @@ le reste de la scène sous un voile noir à 55 % ; 0,15 s.
 | Chiffres | « PV 9/14 » 12 gras blanc ; 18 plus loin, le bouclier `#2196F3` de 12 et « Armure 4 » 12 gras `#00E5FF` ; 18 plus loin, « ⚡ Puissance 4 » 12 gras `#FF5252` |
 | Trait | `white12` |
 | « INTENTION » | 12 gras `#8E8E9C`, espacement 1 |
-| Intention | les pastilles du panneau ; 8 plus loin, le nom de l'intention, 12 gras blanc ; dessous, sa phrase, 12 `#C9C9D6` |
+| Intention | les pastilles du panneau — violette pour la Puissance (B31) — ; 8 plus loin, le nom de l'intention, 12 gras blanc ; dessous, sa phrase, 12 `#C9C9D6` |
 | « BONUS » | comme « INTENTION » ; chaque entrée « {émoji} {title} · encore {n} tours » 12 gras `#69F0AE`, sa `hint` dessous 12 `#C9C9D6` |
 | « ALTÉRATIONS » | idem, entrées en `#FF8A80` |
 
@@ -695,7 +691,7 @@ L'infobulle du panneau garde ses clés (`intentQuickAttack` et ses sœurs, `inte
 ### 6.3. Le tutoriel
 
 Une phrase s'ajoute à la fin du texte de l'étape « Les Intentions Ennemies » (`tutorial_data.dart:249-277`)
-*(provisoire, P-5)* :
+(B37) :
 
 - FR : « **Touchez un ennemi** pour ouvrir sa fiche : ses PV, son Armure, sa Puissance, son intention, ses bonus et
   ses altérations. À la souris, survoler sa carte déroule ses deux languettes. »
@@ -713,7 +709,7 @@ rien.
 |:---|:---|
 | 6 — Vue d'ensemble (`tutorial_combat_overview_widget.dart`) | **La maquette de l'ennemi** (`:386-479`) perd sa rangée « ⚡ 5 · 🛡 0 · barre · 28/28 » (`:391-443`) : une barre à la largeur de la carte, « 28/28 » dedans, sans Puissance. **La maquette du panneau** (`:307-363`) perd « Gobelin (Niv. 1) » et « ⚡ Attaque Rapide : 5 » : une ligne « Niv. 1 · Gobelin · [⚡ 5] ». Une maquette du tutoriel suit l'écran réel ([`_rules/08-00`](../../../.obsidian_vault/_rules/08-00-systeme-de-tutoriel-autonome.md), étape 6). La prose ne change pas |
 | 9 — Armure & Dégâts (`tutorial_armor_widget.dart`) | Rien : elle montre l'armure du héros, dont la jauge garde sa forme |
-| 11 — Intentions (`tutorial_enemy_intents_widget.dart`) | Le panneau réel (`:152`) prend de lui-même ses trois colonnes ; ses quatre ennemis d'entraînement y lisent « Niv. 1 » et leur pastille ; la légende des paliers reste. Une phrase de prose (§6.3, P-5) |
+| 11 — Intentions (`tutorial_enemy_intents_widget.dart`) | Le panneau réel (`:152`) prend de lui-même ses trois colonnes ; ses quatre ennemis d'entraînement y lisent « Niv. 1 » et leur pastille ; la légende des paliers reste. Une phrase de prose (§6.3, B37) |
 | 10 — Effets Élémentaires | Rien : sa galerie montre la règle des charges, pas l'indicateur |
 
 Le tutoriel n'a pas de combat Flame : ni languette, ni barre, ni fiche à démontrer.
@@ -737,9 +733,9 @@ cadrage §4.1), re-mesurée au début du plan.
 | Sujet | Fichier | Ce qu'il verrouille |
 |:---|:---|:---|
 | **Le voile** | `test/unit/armor_veil_test.dart` *(nouveau)* | Les exemples de §4.1 : 6 gagnés → 1 ; 2 sur 6 → 1/3 ; 0 → 0 et plein effacé ; boss 40 → 25 → 0,625 → 8 → 0,2 ; 2 restants puis +5 → plein 7, 1 (B16) ; **la part ne dépend pas des PV** : 6 sur un ennemi de 14 PV et 40 sur un boss de 250 donnent 1 (B15) ; `peak` 0 → 0 |
-| **Les pastilles** | `test/unit/intent_pips_test.dart` *(nouveau)* | Une attaque par palier : icône, couleur, valeur (5, 8, 15, 22, et les seuils 6, 12, 20) ; Défense → l'entrée `armor` de la table livrée, Buff → `status:might` ; une table vide → les icônes d'aujourd'hui ; sans intention → le sablier ; gelé → chaque pastille `struck`, `white38` ; **`of` ne rend jamais plus d'une pastille en `0.6.1`** |
+| **Les pastilles** | `test/unit/intent_pips_test.dart` *(nouveau)* | Une attaque par palier : icône, couleur, valeur (5, 8, 15, 22, et les seuils 6, 12, 20) ; Défense → `Icons.shield` `#448AFF`, Buff → `Icons.trending_up` `#E040FB` (B31) ; sans intention → le sablier ; gelé → chaque pastille `struck`, `white38` ; **`of` ne rend jamais plus d'une pastille en `0.6.1`** |
 | Le panneau | `test/unit/enemy_intents_panel_texts_test.dart` | Inchangé pour `compactValue`, `explanation` et `intentsPanelMaxHeight` ; `enemyLevel` FR « Niv. 3 », EN « Lvl. 3 » |
-| **Les entrées de statut** | `test/unit/status_readout_test.dart` *(nouveau)* | Le partage gauche / droite sur un état mêlé (Puissance, Poison, Faiblesse, Gel 2/3, Feu 5) ; **deux Puissances de sources différentes font deux entrées** ; chaque ligne du tableau de §4.3, FR et EN (« Puissance +2 » / « Might +2 », « Poison 2 », « Gel 2/3 » / « Freeze 2/3 », « Gelé » / « Frozen », « Chargé 4 », « +6 par coup ») ; « 2 tours » / « 2 turns », « 1 tour » ; **une durée de 99 → ni `subtitle` ni `turnsLeft`** ; une charge n'a jamais de durée ; les `hint` de Faiblesse et Vulnérable, aucune ailleurs ; les tons — **une Foudre chargée en `debuff`** (D-1) ; un statut d'id `counterId` (`mage_mark_count`) nommé « Compteur » / « Counter » ; `statusEmoji('mana_regen')` 💎, `('hp_regen')` 💖 |
+| **Les entrées de statut** | `test/unit/status_readout_test.dart` *(nouveau)* | Le partage gauche / droite sur un état mêlé (Puissance, Poison, Faiblesse, Gel 2/3, Feu 5) ; **deux Puissances de sources différentes font deux entrées** ; chaque ligne du tableau de §4.3, FR et EN (« Puissance +2 » / « Might +2 », « Poison 2 », « Gel 2/3 » / « Freeze 2/3 », « Gelé » / « Frozen », « Chargé 4 », « +6 par coup ») ; « 2 tours » / « 2 turns », « 1 tour » ; **une durée de 99 → ni `subtitle` ni `turnsLeft`** ; une charge n'a jamais de durée ; les `hint` de Faiblesse et Vulnérable, aucune ailleurs ; les tons — **une Foudre chargée en `charged`**, toute autre charge en `debuff` (B32) ; un statut d'id `counterId` (`mage_mark_count`) nommé « Compteur » / « Counter » ; `statusEmoji('mana_regen')` 💎, `('hp_regen')` 💖 |
 | **La fiche** | `test/unit/enemy_sheet_view_test.dart` *(nouveau)* | Sur un ennemi fixture à 9/14 PV, 4 d'armure, Puissance 4, attaque de 4, Puissance +2 et Poison 2 pendant 3 tours : titre en capitales, « Niv. 1 », « PV 9/14 », « Armure 4 », « Puissance 4 » (`effectiveMight`), « Attaque Rapide », « Attaquera le héros pour 4 dégâts. », un bonus, une altération « … · encore 3 tours » — FR et EN ; gelé : « Gelé : ne fait rien ce tour » ; sans intention ; **sans bonus, pas de section bonus** ; « Armure 0 » ; 1 dégât au singulier |
 | **La place du cadre** | même fichier | Droite si elle tient ; gauche sinon ; bornée quand aucune ne tient ; haut borné à la marge |
 | **Le survol** | `test/unit/entity_hover_test.dart` *(nouveau)* | Le pointeur dans une carte → elle ; dans les languettes déroulées de la courante, hors de sa carte → la courante ; ailleurs → `null` ; deux cartes qui se recouvrent → la courante l'emporte |
@@ -757,8 +753,8 @@ PV d'un ennemi et pose ses charges ; l'onglet Run change d'acte (plusieurs ennem
 | # | Écran | Ce que fait le propriétaire | Ce qu'il doit voir |
 |:---:|:---|:---|:---|
 | M1 | Panneau | Un combat à trois ennemis ou plus, FR puis EN | Trois colonnes alignées : « Niv. N » / « Lvl. N », le nom, la pastille ; plus de PV ; un nom long se tronque, rien d'autre |
-| M2 | Panneau | Survole la pastille d'une attaque, d'une Défense, d'un Buff ; au doigt, appui long | Une infobulle par ligne, titre « Attaque Rapide : 4 » et sa phrase ; la pastille survolée cerclée ; l'Armure en bouclier bleu, la Puissance en éclair orange (P-2) |
-| M3 | Panneau | Un ennemi Gelé (debug : 3 Gel) | Sa pastille grisée et barrée ; l'infobulle « Gelé : ne fait rien ce tour » |
+| M2 | Panneau | Survole la pastille d'une attaque, d'une Défense, d'un Buff ; au doigt, appui long | Une infobulle par ligne, titre « Attaque Rapide : 4 » et sa phrase ; la pastille survolée cerclée ; l'Armure en bouclier bleu, la Puissance en flèche montante violette (B31) |
+| M3 | Panneau | Un ennemi Gelé (debug : 3 Gel sur un ennemi qui n'est pas un boss, encore jamais gelé — `freeze.json` : seuil 3, boss 6, croissance 1) | Sa pastille grisée et barrée ; l'infobulle « Gelé : ne fait rien ce tour » |
 | M4 | Barre | Regarde un ennemi neuf, puis blessé | La barre à la largeur de la carte, « 14/14 » puis « 9/14 » en blanc ; plus de ⚡ ni de 🛡 au-dessus de la carte |
 | M5 | Voile | Un ennemi qui se défend (Orc ou debug), puis frappé deux fois, puis à 0 | Voile plein et « 🛡 6 » cyan ; il recule à chaque coup ; il disparaît à 0 |
 | M6 | Voile | Un ennemi entamé qui regagne de l'armure | Le voile se remplit de nouveau, le nouveau montant pour plein (B16) |
@@ -770,12 +766,12 @@ PV d'un ennemi et pose ses charges ; l'onglet Run change d'acte (plusieurs ennem
 | M12 | Fiche | Sans carte ni signature : touche un ennemi | La carte grandit, bordée d'or, le reste estompé, le HUD net ; le cadre à côté : nom, niveau, PV, Armure, Puissance, intention, bonus, altérations, FR puis EN |
 | M13 | Fiche | Fiche ouverte : touche le décor, la main, un bouton du HUD, le cadre lui-même, la carte ouverte, un autre ennemi | Tout la ferme sauf la carte ouverte ; un autre ennemi ouvre la sienne ; une carte de la main touchée se lève |
 | M14 | Fiche | Carte focalisée, puis touche un ennemi ; signature armée, puis touche un ennemi | La carte se joue, la signature se joue : aucune fiche |
-| M15 | Fiche | Le dernier ennemi à droite, puis le premier à gauche | Le cadre à gauche de la carte, puis à droite ; jamais hors de l'écran ; le haut de la barre agrandie jamais sous la barre du haut |
-| M16 | Fiche | Fiche ouverte, puis Fin de Tour | La fiche se ferme ; pendant la phase ennemie, toucher un ennemi ne fait rien (P-4 (iv)) |
+| M15 | Fiche | Le dernier ennemi à droite, puis le premier à gauche | Le cadre à gauche de la carte, puis à droite ; jamais hors de l'écran ; la barre agrandie garde le haut qu'elle a au repos (B40) — à cinq ennemis en 1280 × 800, celle de l'ennemi de droite passe déjà sous les boutons Son et Deck, fiche ouverte ou non (`combat_top_bar.dart:36-75`) : la fiche ne la couvre pas davantage |
+| M16 | Fiche | Fiche ouverte, puis Fin de Tour | La fiche se ferme ; pendant la phase ennemie, toucher un ennemi ne fait rien (B35) |
 | M17 | Fiche | Joue une attaque sur un ennemi, puis touche-le avant l'impact | La fiche s'ouvre ; à l'impact, la carte agrandie se secoue et revient agrandie, pas à sa taille d'avant ; le cadre suit les chiffres |
-| M18 | Tutoriel | Étapes 6 et 11, FR et EN | La maquette de l'ennemi sans Puissance, la barre à la largeur de la carte ; le panneau en trois colonnes ; la phrase sur la fiche (P-5) |
+| M18 | Tutoriel | Étapes 6 et 11, FR et EN | La maquette de l'ennemi sans Puissance, la barre à la largeur de la carte ; le panneau en trois colonnes ; la phrase sur la fiche (B37) |
 | M19 | S9 | Gagne un combat par le Poison ou le Feu, pendant la phase ennemie | Aucun tour ne se rouvre |
-| M20 | Languettes | Cinq ennemis à 1280 × 800 : survole l'ennemi le plus à droite, puis le plus à gauche, porteurs d'une altération et d'un bonus | Leurs languettes extérieures se déroulent vers l'intérieur, sur leur propre carte, sans sortir de l'écran (P-6) |
+| M20 | Languettes | Cinq ennemis à 1280 × 800 : survole l'ennemi le plus à droite, puis le plus à gauche, porteurs d'une altération et d'un bonus | Leurs languettes extérieures se déroulent vers l'intérieur, sur leur propre carte, sans sortir de l'écran (B39) |
 
 ---
 
@@ -786,10 +782,10 @@ elles, parce qu'elle agrandit la barre et suspend le survol qu'elles posent.
 
 | # | Tâche | Dépend de | Contenu |
 |:---:|:---|:---|:---|
-| 1 | Les règles pures et les textes | — | `ArmorVeil`, `IntentPips`, `StatusReadout` (et `statusEmoji`), `EnemySheetView` et `SheetPlacement`, `pickHoveredEntity` ; les clés ARB, neuves, étendue et retirées — ces dernières au moment où leur lecteur part, tâche 3 ; leurs tests |
+| 1 | Les règles pures et les textes | — | Les constantes de la géométrie de la barre (A4), posées une seule fois et lues par les tâches 3 et 4 ; `ArmorVeil`, `IntentPips`, `StatusReadout` (et `statusEmoji`), `EnemySheetView` et `SheetPlacement`, `pickHoveredEntity` ; les clés ARB, neuves, étendue et retirées — ces dernières au moment où leur lecteur part, tâche 3 ; leurs tests |
 | 2 | Le panneau | 1 | Trois colonnes, pastilles, infobulle sur la rangée, liseré au survol, gelé, `enemyLevel` |
 | 3 | La barre | 1 | `EnemyHealthBar`, qui renvoie ses touchers à sa carte ; le plein du voile sur `EnemyCard` ; retrait de `StatBadge`, `CircleProgressComponent`, des trois tailles de badge, d'`EnemyCard.getTranslation`, des clés sans lecteur ; `onShowTooltip` et `_tooltipCardType` en `CardType` |
-| 4 | Les languettes | 1 | `StatusTabs` sur `EnemyCard` (retrait de `StatusIndicator`) et `HeroCard`, qui renvoient leurs touchers à leur carte et se déroulent vers l'intérieur au bord de l'écran ; l'arbitre du survol dans `onPointerMove`, la priorité de la carte survolée ; la zone d'un ennemi (carte, barre à la géométrie d'A4, languettes), lue par `_livingEnemyAt` et l'arbitre du survol — la tâche 3 n'en dépend pas, la tâche 4 n'attend pas la barre pour en écrire la géométrie |
+| 4 | Les languettes | 1 | `StatusTabs` sur `EnemyCard` (retrait de `StatusIndicator`) et `HeroCard`, qui renvoient leurs touchers à leur carte et se déroulent vers l'intérieur au bord de l'écran ; l'arbitre du survol dans `onPointerMove`, la priorité de la carte survolée ; la zone d'un ennemi (carte, barre à la géométrie d'A4, languettes), lue par `_livingEnemyAt`, l'arbitre du survol et `findHoveredEnemy` (`card_interaction_handler.dart:160-165`) — la tâche 3 n'en dépend pas, la tâche 4 n'attend pas la barre pour en écrire la géométrie |
 | 5 | **La fiche** — *tâche à risque* | 1, 3, 4 | Le geste dans `_handlePlayerTargeting` ; `inspectEnemy` et `closeInspection` ; l'agrandissement par `baseScale` et la descente, gardée par `repositionEnemies`, qui réémet le rectangle ; la bordure `isInspected` ; le voile d'estompage et les priorités ; `onInspectionChanged`, reflété en différé ; le `Listener` de `GameScreen` et `closeInspectionUnlessOn` ; `EnemySheetPanel` ; les fermetures par garde et par l'état ; la suspension du survol ; leurs tests de contrôleur |
 | 6 | Le tutoriel | 2, 3 | Les deux maquettes de l'étape 6 ; la phrase de l'étape 11 |
 
@@ -804,8 +800,8 @@ que les secousses ne doivent pas défaire, une position que la remise en place n
 
 | Quoi | Où, par qui |
 |:---|:---|
-| **ADR « l'interface des ennemis »** — B9 à B16 et la part de B6 livrée ; le plein du voile sur la carte (A2) ; la fiche, état de `HerosDraftGame` reflété par l'écran, fermée par tout appui hors de la carte (A1, A12) ; un seul composant de languettes pour l'ennemi et le héros, une entrée par statut porté (A8) ; les réponses du propriétaire aux questions de §1.4. **Amende [ADR-119](../../../.obsidian_vault/_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)** (point 3 : le panneau perd les PV et passe en trois colonnes ; l'infobulle passe de la pastille à la rangée) ; **complète [ADR-104](../../../.obsidian_vault/_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)** (l'affichage des ennemis ne suppose plus une entrée par `id`) et **[ADR-117](../../../.obsidian_vault/_adr/ADR-117-les-charges-elementaires.md)** (les états des charges se lisent au repos et au déroulé des languettes) ; le texte d'**ADR-013** nomme `StatBadge` et `HealthBar` | `memory-bank-sync` |
-| Fiches `_patterns/05-3` (les lignes `EnemyCard`, `HeroCard`, `StatBadge`, `HealthBar`), `05-3-1` (`CombatEntity` et l'échelle de base agrandie), `05-4` (les trois priorités neuves ; `priorityHero` et `priorityEnemy` qui n'existent pas), `04-00` (le rappel `onInspectionChanged`, l'ordre de `_handlePlayerTargeting`, §4.4 qui nomme `HealthBar` et `StatBadge`), `01-00` (le schéma nomme `StatBadge / HealthBar`), `05-13` (la table lue par les pastilles ; les émojis des languettes), `09-00` (la maquette de l'étape 6) ; `_rules/04-00` (l'avertissement « une entrée par `id` » ; la ligne « États affichés » des charges), `03-2` (l'armure d'un ennemi et son voile), `08-00` (étapes 6 et 11) — un minimum, que le diff complétera | `memory-bank-sync` |
+| **ADR « l'interface des ennemis »** — B9 à B16 et la part de B6 livrée ; le plein du voile sur la carte (A2) ; la fiche, état de `HerosDraftGame` reflété par l'écran, fermée par tout appui que Flame ne reçoit pas sur elle — sa carte, sa barre, ses languettes — (A1, A12) ; un seul composant de languettes pour l'ennemi et le héros, une entrée par statut porté (A8) ; les réponses du propriétaire B31 à B41 (§1.2), dont B32, qui amende B14, et B31, exception à « la couleur de son statut » de B6. **Amende [ADR-119](../../../.obsidian_vault/_adr/ADR-119-les-corrections-de-fin-de-vague-8.md)** (point 3 : le panneau perd les PV et passe en trois colonnes ; l'infobulle passe de la pastille à la rangée) ; **complète [ADR-104](../../../.obsidian_vault/_adr/ADR-104-un-statut-par-source-et-ratio-de-conversion.md)** (l'affichage des ennemis ne suppose plus une entrée par `id`) et **[ADR-117](../../../.obsidian_vault/_adr/ADR-117-les-charges-elementaires.md)** (les états des charges se lisent au repos et au déroulé des languettes) ; le texte d'**ADR-013** nomme `StatBadge` et `HealthBar` | `memory-bank-sync` |
+| Fiches `_patterns/05-3` (les lignes `EnemyCard`, `HeroCard`, `StatBadge`, `HealthBar`), `05-3-1` (`CombatEntity` et l'échelle de base agrandie), `05-4` (les trois priorités neuves ; `priorityHero` et `priorityEnemy` qui n'existent pas), `04-00` (le rappel `onInspectionChanged`, l'ordre de `_handlePlayerTargeting`, §4.4 qui nomme `HealthBar` et `StatBadge`), `01-00` (le schéma nomme `StatBadge / HealthBar`), `05-13` (les émojis des languettes ; les pastilles des intentions ne lisent pas la table, B31), `09-00` (la maquette de l'étape 6) ; `_rules/04-00` (l'avertissement « une entrée par `id` » ; la ligne « États affichés » des charges), `03-2` (l'armure d'un ennemi et son voile), `08-00` (étapes 6 et 11) — un minimum, que le diff complétera | `memory-bank-sync` |
 | `docs/ROADMAP.md`, la ligne P-05 | `memory-bank-sync`, à la fin de la vague — hors de cette spec |
 | La note de version | Celle de la vague, écrite à la fin par `patch-notes-writer` — hors de cette spec |
 
@@ -833,7 +829,7 @@ fait autre chose qu'en `0.6.0`.
 
 ## Pour le Review Focus du plan
 
-Reporté du premier tour de vérification de la spec, à traiter par le plan :
+Reporté des tours de vérification de la spec, à traiter par le plan :
 
 - `heros_draft_game_targeting_test.dart` touche des `EnemyCard` jamais montées : `inspectEnemy` et `closeInspection`
   séparent le changement d'état des effets visuels (`baseScale` lit `game.scaleFactor`) ; le nouveau rappel
@@ -850,12 +846,25 @@ Reporté du premier tour de vérification de la spec, à traiter par le plan :
   nouveau rectangle ; sans fiche, aucun rappel ; si l'ennemi ouvert est parti, aucun rappel ;
 - un test pour `isInspected` : appliquer un état dont `selectedEnemyId` change, ou appeler `highlightEnemy`, fiche
   ouverte, laisse `isInspected` intact ; `closeInspection` le remet à faux sans toucher `isSelected` ;
-- un test de la règle de fermeture : un point sur la carte, la barre ou une languette au repos de la carte ouverte la
-  garde ouverte ; ailleurs, elle se ferme ; après que Flame a ouvert B, un point sur B la garde ouverte ;
 - le renvoi des touchers : `EnemyHealthBar.onTapDown` et `StatusTabs.onTapDown` appellent `onTapEnemy`, ou
   `HeroCard.onTapDown` pour le héros ;
-- le déroulé vers l'intérieur (P-6), calculé comme une fonction pure de la carte, de la largeur déroulée et de la
+- le déroulé vers l'intérieur (B39), calculé comme une fonction pure de la carte, de la largeur déroulée et de la
   largeur de l'écran : bord droit, bord gauche, héros au centre jamais retourné ;
 - `statusPassiveCounter` en FR et EN ;
 - un test manuel : toucher la languette au repos d'un ennemi, sans fiche, puis avec sa propre fiche ouverte, puis avec
-  la fiche d'un autre ennemi.
+  la fiche d'un autre ennemi ;
+- `entity_hover_test` : un pointeur sur une languette au repos désigne sa carte ; un pointeur dans l'ancienne bande
+  entre la barre et la carte (y −4 à 0) désigne l'ennemi ;
+- `heros_draft_game_targeting_test`, la retenue du pointeur : ouvrir avec le pointeur `p`, puis la fermeture appelée
+  avec `p` garde la fiche ; appelée avec `p'` elle la ferme ; un second appel avec `p` la ferme aussi, le pointeur
+  ayant été oublié ; garder la même fiche retient aussi le pointeur ; les chemins carte focalisée et signature ne
+  retiennent rien ;
+- `status_readout_test` : une Foudre en `brokenPending` et en `brokenActive` donne le ton `charged`, une Foudre en
+  `none` donne `debuff` (la règle `broken` de `status_indicator.dart:138-140`) ;
+- `_visuals` passe dans `IntentPips` sans rester en double dans le panneau ;
+- test manuel : à cinq ennemis, fiche ouverte sur l'ennemi de droite, toucher Son puis Deck à hauteur de sa barre — la
+  fiche doit se fermer ;
+- `intent_pips_test` : sans intention, la valeur « En attente... » / « Waiting... » et `waiting` vrai ;
+- tests manuels : toucher la barre, puis le haut de la carte, d'un ennemi sans fiche — la fiche s'ouvre et reste
+  ouverte ; un clic droit sur un autre ennemi, fiche ouverte ; fiche ouverte sur un ennemi qui porte un bonus et une
+  altération — le cadre ne couvre pas sa languette.
