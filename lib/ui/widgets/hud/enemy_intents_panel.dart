@@ -283,7 +283,9 @@ class _IntentPipRowState extends State<_IntentPipRow> {
           TextSpan(
             text: '$label\n',
             style: TextStyle(
-              color: intent == null ? Colors.white70 : pips.first.color,
+              color: intent == null
+                  ? Colors.white70
+                  : IntentPips.of(intent, skipped: false, l10n: l10n).first.color,
               fontSize: 13,
               fontWeight: FontWeight.bold,
               decoration: skipped ? TextDecoration.lineThrough : null,
