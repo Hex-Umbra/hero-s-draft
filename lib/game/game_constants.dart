@@ -36,6 +36,15 @@ class GameConstants {
   static final Vector2 badgeStandardSize = Vector2(48.0, 22.0);
   static final Vector2 badgeCircleSize = Vector2.all(36.0);
 
+  // --- BARRE DE PV D'UN ENNEMI (unités de la carte) ---
+  static const double enemyHealthBarTop = -17.0;
+  static const double enemyHealthBarHeight = 13.0;
+  static const double enemyHealthBarRadius = 4.0;
+  static const double enemyHealthBarFontSize = 9.0;
+  static const double enemyHealthBarShieldSize = 8.0;
+  static const double enemyHealthBarShieldGap = 3.0;
+  static const double enemyHealthBarArmorGap = 2.0;
+
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {
     MapNodeType.combat: (min: 12, max: 22),

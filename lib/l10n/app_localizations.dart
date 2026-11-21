@@ -1559,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @statusName.
   ///
   /// In en, this message translates to:
-  /// **'{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} other{{id}}}'**
+  /// **'{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} lifesteal{Lifesteal} crit_chance{Critical (Relic)} mastery{Mastery (Relic)} kunai_charge{Kunai Charge} shuriken_charge{Shuriken Charge} pen_nib_charge{Pen Nib Charge} incense_charge{Incense Burner Charge} other{{id}}}'**
   String statusName(String id);
 
   /// No description provided for @statusLifesteal.
@@ -2089,6 +2089,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{percent}% damage taken per point, up to +{max}%'**
   String statusVulnerableHint(int percent, int max);
+
+  /// No description provided for @intentNameDevastatingAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Devastating Attack'**
+  String get intentNameDevastatingAttack;
+
+  /// No description provided for @intentNameHeavyAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy Attack'**
+  String get intentNameHeavyAttack;
+
+  /// No description provided for @intentNameAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack'**
+  String get intentNameAttack;
+
+  /// No description provided for @intentNameQuickAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Attack'**
+  String get intentNameQuickAttack;
+
+  /// No description provided for @intentNameDefend.
+  ///
+  /// In en, this message translates to:
+  /// **'Defend'**
+  String get intentNameDefend;
+
+  /// No description provided for @intentNameBuff.
+  ///
+  /// In en, this message translates to:
+  /// **'Buff Might'**
+  String get intentNameBuff;
+
+  /// No description provided for @sheetIntentAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Will attack the hero for {value} damage.'**
+  String sheetIntentAttack(int value);
+
+  /// No description provided for @sheetIntentDefend.
+  ///
+  /// In en, this message translates to:
+  /// **'Will gain {value} Armor.'**
+  String sheetIntentDefend(int value);
+
+  /// No description provided for @sheetIntentBuff.
+  ///
+  /// In en, this message translates to:
+  /// **'Will gain {value} Might.'**
+  String sheetIntentBuff(int value);
+
+  /// No description provided for @sheetIntentWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Intent not known yet.'**
+  String get sheetIntentWaiting;
+
+  /// No description provided for @sheetHp.
+  ///
+  /// In en, this message translates to:
+  /// **'HP {current}/{max}'**
+  String sheetHp(int current, int max);
+
+  /// No description provided for @sheetArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Armor {value}'**
+  String sheetArmor(int value);
+
+  /// No description provided for @sheetMight.
+  ///
+  /// In en, this message translates to:
+  /// **'Might {value}'**
+  String sheetMight(int value);
+
+  /// No description provided for @sheetSectionIntent.
+  ///
+  /// In en, this message translates to:
+  /// **'INTENT'**
+  String get sheetSectionIntent;
+
+  /// No description provided for @sheetSectionBonuses.
+  ///
+  /// In en, this message translates to:
+  /// **'BUFFS'**
+  String get sheetSectionBonuses;
+
+  /// No description provided for @sheetSectionAlterations.
+  ///
+  /// In en, this message translates to:
+  /// **'DEBUFFS'**
+  String get sheetSectionAlterations;
+
+  /// No description provided for @sheetTurnsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 turn left} other{{count} turns left}}'**
+  String sheetTurnsLeft(int count);
+
+  /// No description provided for @tabBuff.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} +{value}'**
+  String tabBuff(String name, int value);
+
+  /// No description provided for @tabDebuff.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {value}'**
+  String tabDebuff(String name, int value);
+
+  /// No description provided for @tabTurns.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 turn} other{{count} turns}}'**
+  String tabTurns(int count);
+
+  /// No description provided for @tabChargePoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {points}/{threshold}'**
+  String tabChargePoints(String name, int points, int threshold);
+
+  /// No description provided for @tabChargeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {points}'**
+  String tabChargeOpen(String name, int points);
+
+  /// No description provided for @tabChargeBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{bonus} per hit'**
+  String tabChargeBonus(int bonus);
+
+  /// No description provided for @tabChargeWeakenNext.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% damage next turn'**
+  String tabChargeWeakenNext(int percent);
+
+  /// No description provided for @tabChargeWeakenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% damage this turn'**
+  String tabChargeWeakenNow(int percent);
+
+  /// No description provided for @statusPassiveCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get statusPassiveCounter;
 
   /// No description provided for @cardCostHp.
   ///

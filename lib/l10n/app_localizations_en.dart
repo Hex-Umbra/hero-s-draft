@@ -931,6 +931,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'mana_regen': 'Mana Spring',
       'armor_regen': 'Plated Armor',
       'hp_regen': 'Life Spring',
+      'lifesteal': 'Lifesteal',
+      'crit_chance': 'Critical (Relic)',
+      'mastery': 'Mastery (Relic)',
+      'kunai_charge': 'Kunai Charge',
+      'shuriken_charge': 'Shuriken Charge',
+      'pen_nib_charge': 'Pen Nib Charge',
+      'incense_charge': 'Incense Burner Charge',
       'other': '$id',
     });
     return '$_temp0';
@@ -1357,6 +1364,126 @@ class AppLocalizationsEn extends AppLocalizations {
   String statusVulnerableHint(int percent, int max) {
     return '+$percent% damage taken per point, up to +$max%';
   }
+
+  @override
+  String get intentNameDevastatingAttack => 'Devastating Attack';
+
+  @override
+  String get intentNameHeavyAttack => 'Heavy Attack';
+
+  @override
+  String get intentNameAttack => 'Attack';
+
+  @override
+  String get intentNameQuickAttack => 'Quick Attack';
+
+  @override
+  String get intentNameDefend => 'Defend';
+
+  @override
+  String get intentNameBuff => 'Buff Might';
+
+  @override
+  String sheetIntentAttack(int value) {
+    return 'Will attack the hero for $value damage.';
+  }
+
+  @override
+  String sheetIntentDefend(int value) {
+    return 'Will gain $value Armor.';
+  }
+
+  @override
+  String sheetIntentBuff(int value) {
+    return 'Will gain $value Might.';
+  }
+
+  @override
+  String get sheetIntentWaiting => 'Intent not known yet.';
+
+  @override
+  String sheetHp(int current, int max) {
+    return 'HP $current/$max';
+  }
+
+  @override
+  String sheetArmor(int value) {
+    return 'Armor $value';
+  }
+
+  @override
+  String sheetMight(int value) {
+    return 'Might $value';
+  }
+
+  @override
+  String get sheetSectionIntent => 'INTENT';
+
+  @override
+  String get sheetSectionBonuses => 'BUFFS';
+
+  @override
+  String get sheetSectionAlterations => 'DEBUFFS';
+
+  @override
+  String sheetTurnsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count turns left',
+      one: '1 turn left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tabBuff(String name, int value) {
+    return '$name +$value';
+  }
+
+  @override
+  String tabDebuff(String name, int value) {
+    return '$name $value';
+  }
+
+  @override
+  String tabTurns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count turns',
+      one: '1 turn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tabChargePoints(String name, int points, int threshold) {
+    return '$name $points/$threshold';
+  }
+
+  @override
+  String tabChargeOpen(String name, int points) {
+    return '$name $points';
+  }
+
+  @override
+  String tabChargeBonus(int bonus) {
+    return '+$bonus per hit';
+  }
+
+  @override
+  String tabChargeWeakenNext(int percent) {
+    return '−$percent% damage next turn';
+  }
+
+  @override
+  String tabChargeWeakenNow(int percent) {
+    return '−$percent% damage this turn';
+  }
+
+  @override
+  String get statusPassiveCounter => 'Counter';
 
   @override
   String cardCostHp(int amount) {

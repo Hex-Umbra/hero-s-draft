@@ -90,6 +90,24 @@ void main() {
     expect(fr.statusName('inconnu'), 'inconnu');
   });
 
+  test('statusName nomme le vol de vie et les six statuts de reliques', () {
+    expect(fr.statusName('lifesteal'), 'Vol de Vie');
+    expect(en.statusName('lifesteal'), 'Lifesteal');
+
+    const relicNames = {
+      'crit_chance': 'Critique (Relique)',
+      'mastery': 'Maîtrise (Relique)',
+      'kunai_charge': 'Charge Kunaï',
+      'shuriken_charge': 'Charge Shuriken',
+      'pen_nib_charge': 'Charge Plume',
+      'incense_charge': 'Charge Encensoir',
+    };
+    for (final MapEntry(key: id, value: name) in relicNames.entries) {
+      expect(fr.statusName(id), name);
+      expect(en.statusName(id), isNot(id));
+    }
+  });
+
   test('les degats : une ligne a coups au-dela d un coup', () {
     expect(
       CardRuleTexts.damage(fr, amount: 3, hits: 3, allEnemies: false),

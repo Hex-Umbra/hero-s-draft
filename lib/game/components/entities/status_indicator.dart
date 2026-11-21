@@ -5,6 +5,7 @@ import '../../../models/charge_track.dart';
 import '../../../models/data/charge_data.dart';
 import '../../../models/status_effect.dart';
 import '../../systems/charge_rules.dart';
+import '../../systems/status_readout.dart';
 
 class StatusIndicator extends PositionComponent {
   List<StatusEffect> statuses;
@@ -220,33 +221,5 @@ class _StatusIcon extends PositionComponent {
     view = newView;
     _valueText?.text = view.value;
     _captionText?.text = view.caption;
-  }
-}
-
-/// L'emoji d'un statut ou d'une charge, par son id.
-String statusEmoji(String id) {
-  switch (id) {
-    case 'poison':
-      return '🧪';
-    case 'might':
-      return '⚡';
-    case 'weakness':
-      return '🥀';
-    case 'vulnerable':
-      return '🎯';
-    case 'might_regen':
-      return '✊';
-    case 'armor_regen':
-      return '🛡️';
-    case 'lifesteal':
-      return '🧛';
-    case 'burn':
-      return '🔥';
-    case 'freeze':
-      return '❄️';
-    case 'shock':
-      return '⚡';
-    default:
-      return '✨';
   }
 }
