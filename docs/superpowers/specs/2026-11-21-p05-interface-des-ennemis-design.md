@@ -118,7 +118,8 @@ recevrait sinon (`heros_draft_game.dart:255-260`). `EnemyHealthBar` porte `TapCa
 à l'`onTapEnemy` de sa carte (`enemy_card.dart:413-416`) : pour ouvrir la fiche, la garder ouverte et cibler, la barre
 est l'ennemi. **Sa zone d'appui descend jusqu'à y 0**, le haut de la carte : la bande de 4 unités qui sépare la barre
 dessinée (y −17 à −4, A4) de la carte n'est pas un trou. **La zone de l'ennemi** est donc le rectangle continu qui va
-du haut de la barre (y −17) au bas de la carte (y 140), plus ses languettes ; c'est elle, et elle seule, que lisent
+du haut de la barre (y −17) au bas de la carte (y 140), plus ses languettes, chacune par son rectangle dessiné et
+par son rectangle au repos *(amendé à la tâche 4)* ; c'est elle, et elle seule, que lisent
 `_livingEnemyAt` (`heros_draft_game.dart:244-249`), l'arbitre du survol (A9, §4.5) et `findHoveredEnemy`, qui cherche
 la cible d'une carte qu'on glisse et ne lit aujourd'hui que `enemy.containsPoint`, la carte seule
 (`card_interaction_handler.dart:86-90`, `:160-165`) : toucher la barre ou une languette joue la carte (A10), la lâcher
@@ -190,7 +191,9 @@ premier composant à `TapCallbacks` qui contient le point, et la carte qui porte
 porte `TapCallbacks` et renvoie l'appui à sa carte (`onTapEnemy` pour un ennemi, le `onTapDown` de `HeroCard`,
 `hero_card.dart:82-102`, pour le héros) ; `_livingEnemyAt` suit la même règle : la zone de l'ennemi (A3) comprend
 ses languettes, et celle de la carte survolée passe avant les autres. Au repos, une languette ne passe sur aucune
-carte et renvoie de même ses appuis.
+carte et renvoie de même ses appuis. **La zone d'appui d'une languette est l'union de son rectangle dessiné et de son
+rectangle au repos**, comme la zone de sa carte (A3, §4.5) : déroulée vers l'intérieur (B39), elle ne couvre plus la
+bande qu'elle occupait au repos, qui reste à sa carte pour le survol comme pour l'appui *(amendé à la tâche 4)*.
 
 **A9 — Le survol d'une carte de combat est un arbitre géométrique pur, `pickHoveredEntity`** *(T, filtres 6 puis
 8)*. Il vit dans `onPointerMove` (`heros_draft_game.dart:166-175`), à côté de `refreshHover`. Un `PointerMoveEvent`
@@ -522,7 +525,10 @@ static int? pickHoveredEntity({required List<List<Rect>> zones, required int? cu
 
 Chaque entrée de `zones` est la zone d'une carte vivante, en rectangles : pour un ennemi, le rectangle continu de sa
 barre au bas de sa carte (y −17 à 140, A3) et ses languettes, au repos ou déroulées ; pour le héros, sa carte et ses
-languettes. Le pointeur dans la zone de la courante → la courante ; sinon, la première zone qui contient le pointeur
+languettes. Une languette y compte par son rectangle dessiné **et** par son rectangle au repos : déroulée vers
+l'intérieur (B39), elle quitte la bande qu'elle occupait au repos, où le pointeur qui l'a déroulée se trouve encore —
+sans ce rectangle, la carte se replierait au mouvement suivant. La zone d'appui de la languette est la même union
+(A8) *(amendé à la tâche 4)*. Le pointeur dans la zone de la courante → la courante ; sinon, la première zone qui contient le pointeur
 ; sinon `null`. Survoler une languette au repos déroule donc sa carte. `HerosDraftGame` passe les ennemis vivants
 puis le héros ; il n'appelle pas l'arbitre tant que la fiche est ouverte (A12). **La zone d'un ennemi est une seule
 fonction de `EnemyCard`**, que lisent l'arbitre, `_livingEnemyAt` et `findHoveredEnemy` (A3) ; la fermeture ne la lit

@@ -12,7 +12,7 @@ import '../../systems/status_readout.dart';
 /// la valeur dessous ; déroulée, le nom, la valeur et la durée. Elle ne décide
 /// rien : elle montre les entrées que sa carte lui donne, et rend ses appuis à
 /// sa carte. Son [position] et sa [size] sont le rectangle dessiné, en unités
-/// de la carte : l'appui se lit sur ce qui est dessiné.
+/// de la carte ; l'appui se lit sur ce rectangle et sur celui du repos.
 class StatusTabs extends PositionComponent with TapCallbacks {
   StatusTabs({
     required this.side,
@@ -188,6 +188,17 @@ class StatusTabs extends PositionComponent with TapCallbacks {
       canvas.drawRRect(frame.deflate(0.5), _stroke);
     }
     canvas.clipRRect(frame);
+  }
+
+  /// L'appui suit la zone de la carte : le rectangle dessiné et le rectangle
+  /// au repos. Déroulée vers l'intérieur (B39), la languette garde ainsi
+  /// l'appui sur la bande qu'elle occupait au repos, que le survol garde aussi.
+  @override
+  bool containsLocalPoint(Vector2 point) {
+    if (super.containsLocalPoint(point)) return true;
+    final rest = restLocalRect;
+    return rest != null &&
+        rest.contains(Offset(point.x + position.x, point.y + position.y));
   }
 
   @override

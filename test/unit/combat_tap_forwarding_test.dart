@@ -36,4 +36,34 @@ void main() {
 
     expect(events.single.pointerId, 3);
   });
+
+  test('une languette deroulee vers l interieur garde son rectangle de repos '
+      'pour l appui', () {
+    final tabs = StatusTabs(
+      side: StatusSide.right,
+      cardWidth: 100,
+      onTap: (_) {},
+    );
+    tabs.setEntries(const [
+      StatusReadout(
+        key: 'poison:',
+        emoji: '🧪',
+        restValue: '3',
+        tone: ReadoutTone.debuff,
+        title: 'Poison 3',
+      ),
+    ]);
+    tabs.setUnfolded(true, inward: true);
+
+    // Dans la carte : 120 est dans le rectangle de repos (99 à 129), hors du
+    // rectangle dessiné, qui finit au bord droit de la carte (100).
+    const inRest = Offset(120, 20);
+    expect(tabs.localRect!.contains(inRest), isFalse);
+    expect(tabs.restLocalRect!.contains(inRest), isTrue);
+
+    Vector2 local(Offset card) =>
+        Vector2(card.dx, card.dy) - tabs.position;
+    expect(tabs.containsLocalPoint(local(inRest)), isTrue);
+    expect(tabs.containsLocalPoint(local(const Offset(150, 20))), isFalse);
+  });
 }
