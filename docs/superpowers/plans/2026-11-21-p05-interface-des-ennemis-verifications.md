@@ -1,0 +1,20 @@
+# P-05 vague 1 — l'interface des ennemis — vérifications du plan
+
+Fichier voisin du [plan](2026-11-21-p05-interface-des-ennemis.md), tenu par l'orchestrateur : les arbitrages nés du plan, puis le journal des tours de vérification.
+
+## 1. Les arbitrages
+
+| # | Question | Classe | Choix | Écarté | Filtre |
+|:---|:---|:---:|:---|:---|:---:|
+| V1 | L'ordre de la bordure d'un ennemi : fiche, sélection, surbrillance de ciblage | T | Fiche, puis sélection, puis surbrillance, puis blanc. Le rédacteur du plan a contesté, preuve à l'appui, l'ordre que le vérificateur proposait : aujourd'hui, dès l'image qui suit la prise d'une carte, l'état de combat réappliqué rend l'ambre à l'ennemi sélectionné et le blanc aux autres, sous leur halo cyan. Avec l'ordre retenu l'ennemi déjà frappé garde son ambre, comme aujourd'hui ; seule différence visible, les autres ennemis ciblables gardent une bordure cyan sous leur halo au lieu de retomber au blanc — signalé au propriétaire dans le compte rendu | La surbrillance avant la sélection, qui passait aussi au cyan l'ennemi déjà frappé ; une bordure qui ignore la surbrillance | 6, 8 |
+| V2 | Les sons quand on prend une carte de la main, fiche ouverte | T | La fermeture qui vient de la carte prise ne relit pas le survol : un seul son, comme aujourd'hui | Laisser jouer le son du survol et celui de la prise ensemble | 7 |
+| V3 | Le niveau écrit dans le panneau | T | Le texte existant « Niv. {level} », déjà lu par la barre des signatures | Une clé neuve qui le doublait | 5 |
+| V4 | Les quatre écarts à la spec que le rédacteur du plan déclare | T | Tous confirmés par le vérificateur, preuve reproduite, et reportés dans la spec : les tests de la fiche donnent une taille au jeu ; une carte morte ou mourante ne rejoue pas l'animation de la fiche ; un import ; l'exemple de la Foudre corrigé | — | — |
+
+## 2. Le journal des tours
+
+| Tour | Mode | Bloquants | Moyens | Mineurs | Rédaction | Suite |
+|:---:|:---|:---:|:---:|:---:|:---:|:---|
+| 1 | complet, tâche 5 rejouée dans un clone | 0 | 3 | 8 | 1 | Le rejeu : analyse propre, 25 tests de la tâche verts, suite entière à 1881. La règle de fermeture de la fiche, que la spec n'avait pas fait relire, tient cas par cas, deux doigts et fin de tour compris. Trois constats moyens : l'ordre de la bordure (V1) ; une secousse en cours qui défaisait l'échelle de la fiche — mesurée à 1,041 au lieu de 1,25 — parce que les effets d'échelle d'un coup vivent dans une séquence ; le renvoi de l'appui d'une languette du héros, gardé par aucun test. Tout corrigé par le rédacteur repris, qui conteste avec preuve l'ordre de bordure proposé (V1) ; il trouve en plus qu'un redimensionnement pendant l'animation de la fiche faussait l'échelle (1,167 au lieu de 1,0) et le corrige. Total attendu : 1932 |
+| 2 | différentiel, tâche 5 rejouée dans un clone | 0 | 1 (T) | 6 | 1 | Douze des quatorze corrections tiennent ; la chaîne de V1 est confirmée ligne à ligne ; le rejeu est reproduit (analyse propre, 25 tests, suite à 1881, échelles 1,25 et 1,0). Le constat moyen, trouvé par la mesure : chaque reconstruction de l'écran rappelle le redimensionnement du jeu, si bien que la correction du tour 1 coupait l'animation de la fiche et faisait se reconstruire l'écran à chaque image tant qu'une fiche était ouverte — 29 reconstructions en 30 images. Correction : la position n'est réémise que si elle a changé, et une animation en cours n'est pas coupée quand sa cible ne change pas. Avec lui, un décalage de position après une secousse, jusqu'à 21 px. Corrigé par le rédacteur repris |
+| 3 | différentiel, tâche 5 rejouée dans un clone | 0 | 0 | 0 | 1 | **« Prêt ».** Les dix corrections du tour 2 tiennent. Le rejeu : analyse propre, 26 tests de la tâche verts, suite entière à 1882. Mesuré sur des cartes réellement montées : une reconstruction et un rappel en 30 images, fiche ouverte ; l'animation continue après un rafraîchissement de l'écran ; aucun décalage après un coup, une mort voisine, un renfort, un redimensionnement, ni après dix ouvertures et fermetures enchaînées. Le constat de rédaction — D14 absente de la liste des décisions — corrigé par l'orchestrateur |
