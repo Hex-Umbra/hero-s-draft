@@ -19,6 +19,17 @@ class GameConstants {
   static const int priorityCardTrail = 200;
   static const int priorityTargetingLine = 300;
   static const int priorityCardDraggingMax = 500;
+  /// Le voile qui estompe le plateau pendant la fiche d'un ennemi : au-dessus
+  /// de la carte focalisée de la main, sous la carte ouverte.
+  static const int priorityInspectionVeil = 180;
+  /// La carte d'un ennemi dont la fiche est ouverte, au-dessus du voile.
+  static const int priorityInspectedEnemy = 190;
+
+  // --- FICHE D'UN ENNEMI ---
+  /// L'agrandissement de la carte ouverte : celui de la carte focalisée.
+  static const double inspectionScale = 1.25;
+  /// Agrandissement, descente et fondu du voile, à l'aller comme au retour.
+  static const double inspectionSeconds = 0.15;
 
   // --- CARD DIMENSIONS ---
   static const double cardWidth = 140.0;

@@ -192,5 +192,6 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
     }
 
     currentCombatState = state;
+    game.closeInspectionIfStale(state);
   }
 }

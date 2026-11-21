@@ -131,7 +131,7 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
     double posY = game.size.y * 0.21;
 
     for (int i = 0; i < count; i++) {
-      enemyCards[i].position = Vector2(startX + (i * spacing), posY);
+      enemyCards[i].place(Vector2(startX + (i * spacing), posY));
     }
 
     // Le plateau vient de changer sous un pointeur peut-être immobile :

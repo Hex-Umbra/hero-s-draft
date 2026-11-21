@@ -18,7 +18,10 @@ import 'combat_entity.dart';
 class EnemyCard extends CombatEntity
     with TapCallbacks, HasPaint {
   EnemyInstance instance;
-  final void Function(EnemyCard) onTapEnemy;
+  /// Le toucher de la carte, de sa barre ou de ses languettes, avec le
+  /// pointeur de l'appui : `HerosDraftGame` le retient quand il ouvre ou
+  /// garde une fiche (spec P-05 vague 1, A12).
+  final void Function(EnemyCard enemy, int pointerId) onTapEnemy;
 
   @override
   bool get isPlayer => false;
@@ -50,10 +53,129 @@ class EnemyCard extends CombatEntity
   set scaleMultiplier(double value) {
     if (_scaleMultiplier == value) return;
     _scaleMultiplier = value;
-    scale = Vector2.all(baseScale);
+    _snapScale();
   }
 
-  double get baseScale => game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0) * _scaleMultiplier;
+  /// L'échelle de la carte au repos, fiche fermée.
+  double get restScale =>
+      game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0) * _scaleMultiplier;
+
+  /// L'échelle à laquelle les effets ramènent la carte : agrandie tant que sa
+  /// fiche est ouverte (spec P-05 vague 1, A11).
+  double get baseScale =>
+      restScale * (_isInspected ? GameConstants.inspectionScale : 1.0);
+
+  bool _isInspected = false;
+
+  /// La fiche de cet ennemi est ouverte. Seul `HerosDraftGame` l'écrit ; ni
+  /// la sélection ni la surbrillance n'y touchent.
+  bool get isInspected => _isInspected;
+  set isInspected(bool value) {
+    _isInspected = value;
+    if (isLoaded) _refreshBorderVisuals();
+  }
+
+  /// La place que la remise en page donne à la carte, fiche fermée.
+  Vector2 restPosition = Vector2.zero();
+
+  /// La place vers laquelle la carte va, effets de la fiche compris : chaque
+  /// déplacement de la fiche ou de la remise en page s'ajoute à la position
+  /// par écart relatif, si bien que les secousses en vol, qui reviennent à 0,
+  /// ne faussent jamais l'arrivée.
+  Vector2 _headingTo = Vector2.zero();
+
+  ScaleEffect? _inspectionScale;
+  double? _inspectionScaleTarget;
+
+  /// Pose l'échelle de base, sauf si l'agrandissement de la fiche y va déjà :
+  /// chaque reconstruction de `GameScreen` rappelle `onGameResize` à taille
+  /// inchangée, et ne doit pas couper l'animation. Une cible neuve (vrai
+  /// redimensionnement) l'arrête, dont le reste s'ajouterait sinon.
+  void _snapScale() {
+    final target = baseScale;
+    final running = _inspectionScale;
+    if (running != null &&
+        !running.isRemoving &&
+        !running.isRemoved &&
+        _inspectionScaleTarget == target) {
+      return;
+    }
+    running?.removeFromParent();
+    _inspectionScale = null;
+    scale = Vector2.all(target);
+  }
+
+  /// Un effet qui écrit l'échelle : un `ScaleEffect`, ou la séquence d'une
+  /// réaction aux coups qui en porte un.
+  static bool _carriesScale(Component c) =>
+      c is ScaleEffect ||
+      (c is SequenceEffect && c.children.any((e) => e is ScaleEffect));
+
+  /// La descente de la carte ouverte : le haut de sa barre reste où il était
+  /// quand elle grandit (B40).
+  double get _inspectionDrop =>
+      (size.y / 2 - GameConstants.enemyHealthBarTop) * (baseScale - restScale);
+
+  Vector2 get _targetPosition => restPosition + Vector2(0, _inspectionDrop);
+
+  /// Pose la carte à sa place, la descente de la fiche comprise, par l'écart
+  /// à sa place précédente : une place inchangée ne touche à rien, une
+  /// descente en vol va à son terme. `LayoutSystem.repositionEnemies` passe
+  /// par ici.
+  void place(Vector2 rest) {
+    restPosition = rest;
+    final target = _targetPosition;
+    position += target - _headingTo;
+    _headingTo = target;
+  }
+
+  /// Joue l'agrandissement ou le retour, la descente et la priorité qui
+  /// suivent [isInspected] ; seulement pour une carte chargée et vivante.
+  void animateInspection() {
+    priority = _isInspected ? GameConstants.priorityInspectedEnemy : 0;
+    removeAll(children.where(_carriesScale).toList());
+    _inspectionScaleTarget = baseScale;
+    add(
+      _inspectionScale = ScaleEffect.to(
+        Vector2.all(baseScale),
+        EffectController(duration: GameConstants.inspectionSeconds),
+      ),
+    );
+    final target = _targetPosition;
+    final delta = target - _headingTo;
+    _headingTo = target;
+    if (!delta.isZero()) {
+      add(
+        MoveEffect.by(
+          delta,
+          EffectController(duration: GameConstants.inspectionSeconds),
+        ),
+      );
+    }
+    // La séquence d'un coup retirée ne rendra pas la bordure qu'elle teintait.
+    _refreshBorderVisuals();
+  }
+
+  /// Le rectangle de la carte ouverte à l'arrivée, barre et languettes au
+  /// repos comprises, sur le canevas : ce que `GameScreen` lit pour placer le
+  /// cadre de la fiche.
+  Rect inspectionRect() {
+    var local = bodyLocalRect;
+    if (isLoaded) {
+      for (final tabs in [leftTabs, rightTabs]) {
+        final rest = tabs.restLocalRect;
+        if (rest != null) local = local.expandToInclude(rest);
+      }
+    }
+    final s = baseScale;
+    final c = _targetPosition;
+    return Rect.fromLTRB(
+      c.x + (local.left - size.x / 2) * s,
+      c.y + (local.top - size.y / 2) * s,
+      c.x + (local.right - size.x / 2) * s,
+      c.y + (local.bottom - size.y / 2) * s,
+    );
+  }
 
   @override
   double get entityBaseScale => baseScale;
@@ -151,8 +273,7 @@ class EnemyCard extends CombatEntity
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    // Mettre à jour l'échelle lors du redimensionnement
-    scale = Vector2.all(baseScale);
+    _snapScale();
   }
 
   void _refreshHealthBar() {
@@ -214,7 +335,7 @@ class EnemyCard extends CombatEntity
   }
 
   void _refreshBorderVisuals() {
-    if (isSelected) {
+    if (_isInspected || isSelected) {
       borderInfo.paint.color = Colors.amber;
       borderInfo.paint.strokeWidth = 4;
     } else if (_isHighlighted) {
@@ -229,13 +350,7 @@ class EnemyCard extends CombatEntity
   void setSelection(bool selected) {
     isSelected = selected;
     if (!isLoaded) return;
-    if (isSelected) {
-      borderInfo.paint.color = Colors.amber;
-      borderInfo.paint.strokeWidth = 4;
-    } else {
-      borderInfo.paint.color = Colors.white;
-      borderInfo.paint.strokeWidth = 2;
-    }
+    _refreshBorderVisuals();
   }
 
   bool _isHighlighted = false;
@@ -247,15 +362,8 @@ class EnemyCard extends CombatEntity
     _isHighlighted = highlight;
     if (!isLoaded) return;
 
-    if (_isHighlighted) {
-      borderInfo.paint.color = Colors.cyanAccent;
-      borderInfo.paint.strokeWidth = 3;
-
-      // Glow animation handled dynamically in update/render
-    } else {
-      borderInfo.paint.color = isSelected ? Colors.amber : Colors.white;
-      borderInfo.paint.strokeWidth = isSelected ? 4 : 2;
-
+    _refreshBorderVisuals();
+    if (!_isHighlighted) {
       _glowAnimation?.removeFromParent();
       _glowAnimation = null;
     }
@@ -332,6 +440,6 @@ class EnemyCard extends CombatEntity
 
   @override
   void onTapDown(TapDownEvent event) {
-    onTapEnemy(this);
+    onTapEnemy(this, event.pointerId);
   }
 }

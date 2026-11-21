@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show kPrimaryButton;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -33,6 +34,7 @@ import '../widgets/hud/turn_control_panel.dart';
 import '../widgets/hud/combat_side_panels.dart';
 import '../widgets/hud/combat_phase_banner.dart';
 import '../widgets/hud/combat_tooltip_overlay.dart';
+import '../widgets/hud/enemy_sheet_panel.dart';
 import '../widgets/hud/signature_bar.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/relic_carousel/relic_carousel_screen.dart';
@@ -73,6 +75,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   /// La signature à cible unique qui attend un ennemi, s'il y en a une.
   SignatureInstance? _armedSignature;
+
+  /// Le reflet de la fiche ouverte (A12) : il ne sert qu'à poser le cadre,
+  /// aucune décision ne le lit.
+  EnemyInspection? _inspection;
 
   void _handleCombatVictory() {
     if (_isVictoryHandled) return;
@@ -399,6 +405,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           });
         }
       },
+      // Toujours différé, réémission comprise : le rappel peut venir pendant
+      // le `build` du `LayoutBuilder` de `GameWidget` (`onGameResize`, puis
+      // `update(0)`), où `setState` est interdit.
+      onInspectionChanged: (inspection) {
+        if (!mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() => _inspection = inspection);
+        });
+      },
       onAnimationStateChanged: () {
         if (mounted) {
           setState(() {});
@@ -565,145 +580,164 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return PopScope(
       canPop: isCompleted || runState.isDead,
       child: Scaffold(
-        body: Stack(
-          children: [
-            // Le jeu prend tout l'écran. `GameWidget` ne signale pas la sortie
-            // de la souris : sans elle, une carte resterait survolée.
-            Positioned.fill(
-              child: MouseRegion(
-                onExit: (_) => _game.pointerLeft(),
-                child: GameWidget(game: _game),
+        // Après Flame dans le même appui (le `GameWidget` est plus profond) :
+        // tout appui du bouton principal que Flame n'a pas retenu sur la
+        // fiche ouverte la ferme, HUD et cadre compris (A12).
+        body: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) {
+            if (event.buttons == kPrimaryButton) {
+              _game.closeInspectionUnlessOn(event.pointer);
+            }
+          },
+          child: Stack(
+            children: [
+              // Le jeu prend tout l'écran. `GameWidget` ne signale pas la sortie
+              // de la souris : sans elle, une carte resterait survolée.
+              Positioned.fill(
+                child: MouseRegion(
+                  onExit: (_) => _game.pointerLeft(),
+                  child: GameWidget(game: _game),
+                ),
               ),
-            ),
 
-            // HUD et Overlays dans une SafeArea
-            SafeArea(
-              child: Stack(
-                children: [
+              // HUD et Overlays dans une SafeArea
+              SafeArea(
+                child: Stack(
+                  children: [
 
-                  if (!_showDraft && runState.isDead) const DeathOverlay(),
+                    if (!_showDraft && runState.isDead) const DeathOverlay(),
 
-                  // Tiroir de debug, ancre au bord gauche. `kDebugMode` etant
-                  // une constante de compilation, il disparait du build
-                  // release avec tout ce qu'il atteint.
-                  if (kDebugMode &&
-                      ref.watch(debugRunProvider).isDebugRun &&
-                      !runState.isDead &&
-                      !_showDraft)
-                    const DebugDrawer(inCombat: true),
+                    // Tiroir de debug, ancre au bord gauche. `kDebugMode` etant
+                    // une constante de compilation, il disparait du build
+                    // release avec tout ce qu'il atteint.
+                    if (kDebugMode &&
+                        ref.watch(debugRunProvider).isDebugRun &&
+                        !runState.isDead &&
+                        !_showDraft)
+                      const DebugDrawer(inCombat: true),
 
-                  if (!runState.isDead && !_showDraft)
-                    CombatTopBar(
-                      act: runState.act,
-                      currentLevel: runState.currentLevel,
-                      onPauseTap: _showPauseMenu,
-                      muted: ref.watch(audioSettingsProvider).muted,
-                      onMuteTap: () {
-                        ref.read(audioSettingsProvider.notifier).toggleMute();
-                        ref.read(musicConductorProvider).refreshVolume();
-                      },
-                    ),
-
-                  if (!runState.isDead && !_showDraft)
-                    CombatBottomHud(
-                      hudHeight: hudHeight,
-                      hudWidth: hudWidth,
-                      currentMana: runState.heroStats.currentMana,
-                      maxMana: runState.heroStats.maxMana,
-                      currentPv: runState.heroStats.currentPv,
-                      maxPv: runState.heroStats.maxPv,
-                      armure: runState.heroStats.armure,
-                      effectiveMight: runState.heroStats.effectiveMight,
-                      reservePreview: reservePreview,
-                    ),
-
-                  if (!runState.isDead && !_showDraft)
-                    CombatSidePanels(
-                      drawPileCount: deckState.drawPile.length,
-                      discardPileCount: deckState.discardPile.length,
-                      heroStatuses: runState.heroStats.statuses,
-                      heroChargeLines: ChargeRules.linesFor(runState.heroStats),
-                      charges: ref.watch(chargeCatalogProvider),
-                      enemies: combatState.enemies,
-                      effectIcons: gameData.effectIcons,
-                    ),
-
-                  // Après les panneaux latéraux : le bouton de fin de tour est
-                  // peint et touché au-dessus du panneau des intentions.
-                  if (!runState.isDead && !_showDraft)
-                    TurnControlPanel(
-                      canEndTurn: isPlayerActionable,
-                      onEndTurnTap: () {
-                        final currentMana = runState.heroStats.currentMana;
-                        if (currentMana > 0 && !_showRemainingManaWarning) {
-                          setState(() {
-                            _showRemainingManaWarning = true;
-                            _showManaWarning = false;
-                          });
-                          return;
-                        }
-                        setState(() {
-                          _showManaWarning = false;
-                          _showRemainingManaWarning = false;
-                        });
-                        _disarmSignature();
-                        ref.read(runProvider.notifier).endTurn();
-                        ref.read(deckProvider.notifier).discardHand();
-                        _game.executeTurn();
-                      },
-                      showManaWarning: _showManaWarning,
-                      showRemainingManaWarning: _showRemainingManaWarning,
-                      turnCount: combatState.turnCount,
-                      reservePreview: reservePreview,
-                    ),
-
-                  // La barre passe au-dessus du panneau de statuts du héros.
-                  if (!runState.isDead &&
-                      !_showDraft &&
-                      runState.signatures.isNotEmpty)
-                    SignatureBar(
-                      signatures: runState.signatures,
-                      combatState: combatState,
-                      heroStats: runState.heroStats,
-                      effectIcons: gameData.effectIcons,
-                      charges: ref.watch(chargeCatalogProvider),
-                      interactive:
-                          isPlayerActionable && !combatState.isCombatEnded,
-                      classColor: ClassIdentity.colorOf(
-                        gameData.heroes.firstWhere(
-                          (h) => h.id == runState.heroClassId,
-                        ),
+                    if (!runState.isDead && !_showDraft)
+                      CombatTopBar(
+                        act: runState.act,
+                        currentLevel: runState.currentLevel,
+                        onPauseTap: _showPauseMenu,
+                        muted: ref.watch(audioSettingsProvider).muted,
+                        onMuteTap: () {
+                          ref.read(audioSettingsProvider.notifier).toggleMute();
+                          ref.read(musicConductorProvider).refreshVolume();
+                        },
                       ),
-                      armedId: _armedSignature?.data.id,
-                      onPlay: (signature) {
-                        // Un seul geste à la fois : jouer une signature
-                        // désarme celle qui attendait une cible.
-                        if (_armedSignature != null) _disarmSignature();
-                        _playSignature(signature);
-                      },
-                      onArm: _armSignature,
-                      onDisarm: _disarmSignature,
-                      onInsufficientMana: () => ref
-                          .read(audioDirectorProvider)
-                          .onMoment(GameMoment.insufficientMana),
+
+                    if (!runState.isDead && !_showDraft)
+                      CombatBottomHud(
+                        hudHeight: hudHeight,
+                        hudWidth: hudWidth,
+                        currentMana: runState.heroStats.currentMana,
+                        maxMana: runState.heroStats.maxMana,
+                        currentPv: runState.heroStats.currentPv,
+                        maxPv: runState.heroStats.maxPv,
+                        armure: runState.heroStats.armure,
+                        effectiveMight: runState.heroStats.effectiveMight,
+                        reservePreview: reservePreview,
+                      ),
+
+                    if (!runState.isDead && !_showDraft)
+                      CombatSidePanels(
+                        drawPileCount: deckState.drawPile.length,
+                        discardPileCount: deckState.discardPile.length,
+                        heroStatuses: runState.heroStats.statuses,
+                        heroChargeLines: ChargeRules.linesFor(runState.heroStats),
+                        charges: ref.watch(chargeCatalogProvider),
+                        enemies: combatState.enemies,
+                        effectIcons: gameData.effectIcons,
+                      ),
+
+                    // Après les panneaux latéraux : le bouton de fin de tour est
+                    // peint et touché au-dessus du panneau des intentions.
+                    if (!runState.isDead && !_showDraft)
+                      TurnControlPanel(
+                        canEndTurn: isPlayerActionable,
+                        onEndTurnTap: () {
+                          final currentMana = runState.heroStats.currentMana;
+                          if (currentMana > 0 && !_showRemainingManaWarning) {
+                            setState(() {
+                              _showRemainingManaWarning = true;
+                              _showManaWarning = false;
+                            });
+                            return;
+                          }
+                          setState(() {
+                            _showManaWarning = false;
+                            _showRemainingManaWarning = false;
+                          });
+                          _disarmSignature();
+                          ref.read(runProvider.notifier).endTurn();
+                          ref.read(deckProvider.notifier).discardHand();
+                          _game.executeTurn();
+                        },
+                        showManaWarning: _showManaWarning,
+                        showRemainingManaWarning: _showRemainingManaWarning,
+                        turnCount: combatState.turnCount,
+                        reservePreview: reservePreview,
+                      ),
+
+                    // La barre passe au-dessus du panneau de statuts du héros.
+                    if (!runState.isDead &&
+                        !_showDraft &&
+                        runState.signatures.isNotEmpty)
+                      SignatureBar(
+                        signatures: runState.signatures,
+                        combatState: combatState,
+                        heroStats: runState.heroStats,
+                        effectIcons: gameData.effectIcons,
+                        charges: ref.watch(chargeCatalogProvider),
+                        interactive:
+                            isPlayerActionable && !combatState.isCombatEnded,
+                        classColor: ClassIdentity.colorOf(
+                          gameData.heroes.firstWhere(
+                            (h) => h.id == runState.heroClassId,
+                          ),
+                        ),
+                        armedId: _armedSignature?.data.id,
+                        onPlay: (signature) {
+                          // Un seul geste à la fois : jouer une signature
+                          // désarme celle qui attendait une cible.
+                          if (_armedSignature != null) _disarmSignature();
+                          _playSignature(signature);
+                        },
+                        onArm: _armSignature,
+                        onDisarm: _disarmSignature,
+                        onInsufficientMana: () => ref
+                            .read(audioDirectorProvider)
+                            .onMoment(GameMoment.insufficientMana),
+                      ),
+
+                    // Phase Banner Overlay (Centre)
+                    if (_showPhaseBanner)
+                      CombatPhaseBanner(text: _phaseBannerText ?? ''),
+
+                    // Tooltip Overlay. Jamais visible à la mort du héros : une
+                    // infobulle encore ouverte ne couvre pas l'écran de mort.
+                    CombatTooltipOverlay(
+                      visible: _showTooltip && !runState.isDead,
+                      title: _tooltipTitle,
+                      description: _tooltipDescription,
+                      borderColor: _getTooltipBorderColor(),
                     ),
-
-                  // Phase Banner Overlay (Centre)
-                  if (_showPhaseBanner)
-                    CombatPhaseBanner(text: _phaseBannerText ?? ''),
-
-                  // Tooltip Overlay. Jamais visible à la mort du héros : une
-                  // infobulle encore ouverte ne couvre pas l'écran de mort.
-                  CombatTooltipOverlay(
-                    visible: _showTooltip && !runState.isDead,
-                    title: _tooltipTitle,
-                    description: _tooltipDescription,
-                    borderColor: _getTooltipBorderColor(),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // Hors de la SafeArea, après elle : le cadre de la fiche ne
+              // passe jamais sous le HUD (A13).
+              if (_inspection case final inspection?)
+                EnemySheetPanel(
+                  enemyId: inspection.enemyId,
+                  card: inspection.rect,
+                ),
+            ],
+          ),
         ),
       ),
     );

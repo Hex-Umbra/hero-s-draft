@@ -315,27 +315,39 @@ class _IntentPipRowState extends State<_IntentPipRow> {
             MouseRegion(
               onEnter: (_) => setState(() => _hovered = i),
               onExit: (_) => setState(() => _hovered = null),
-              child: _pip(pips[i], hovered: _hovered == i, hoverColor: borderColor),
+              child: IntentPipChip(
+                pips[i],
+                hoverColor: _hovered == i ? borderColor : null,
+              ),
             ),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _pip(
-    IntentPip pip, {
-    required bool hovered,
-    required Color hoverColor,
-  }) {
+/// Une pastille d'intention dessinée, celle du panneau et de la fiche d'un
+/// ennemi.
+class IntentPipChip extends StatelessWidget {
+  final IntentPip pip;
+
+  /// Le liseré de la pastille survolée ; `null` hors du survol.
+  final Color? hoverColor;
+
+  const IntentPipChip(this.pip, {super.key, this.hoverColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final hover = hoverColor;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: pip.color.withAlpha(pip.waiting ? 10 : 20),
         borderRadius: BorderRadius.circular(6),
-        border: hovered
-            ? Border.all(color: hoverColor, width: 1.5)
+        border: hover != null
+            ? Border.all(color: hover, width: 1.5)
             : Border.all(color: pip.color.withAlpha(60), width: 1.0),
       ),
       child: Row(
