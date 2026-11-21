@@ -10,6 +10,9 @@ class GameConstants {
   static const int priorityBackground = -100;
   /// Le givre aux coins de l'ecran : au-dessus du fond, sous les cartes.
   static const int priorityFrostVignette = -50;
+  /// La carte de combat survolée : ses languettes déroulées passent sur la
+  /// carte voisine, sous la main.
+  static const int priorityEntityHovered = 5;
   static const int priorityCardBase = 10;
   static const int priorityCardHovered = 100;
   static const int priorityCardFocused = 150;

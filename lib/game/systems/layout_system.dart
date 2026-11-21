@@ -133,5 +133,9 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
     for (int i = 0; i < count; i++) {
       enemyCards[i].position = Vector2(startX + (i * spacing), posY);
     }
+
+    // Le plateau vient de changer sous un pointeur peut-être immobile :
+    // l'arbitre du survol relit les cartes de combat.
+    game.refreshEntityHover();
   }
 }

@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'components/card_component.dart';
+import 'components/entities/combat_entity.dart';
 import 'components/entities/hero_card.dart';
 import 'components/entities/enemy_card.dart';
 import 'components/visual_effects/targeting_line.dart';
@@ -29,6 +30,7 @@ import 'systems/card_animation_system.dart';
 import 'systems/combat_visual_system.dart';
 import 'systems/layout_system.dart';
 import 'systems/hand_geometry.dart';
+import 'systems/entity_hover.dart';
 
 class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
@@ -38,6 +40,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<CardComponent> handCards = [];
   CardComponent? hoveredCard;
   CardComponent? focusedCard;
+
+  /// La carte de combat sous la souris, ennemi ou héros : ses languettes sont
+  /// déroulées. Nulle au doigt, qui ne survole jamais.
+  CombatEntity? hoveredEntity;
 
   StateSyncSystem? stateSyncSystem;
   CardAnimationSystem? cardAnimationSystem;
@@ -70,8 +76,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   final List<String> imagesToPreload;
 
   /// Le catalogue des charges élémentaires, injecté comme [audio] : les
-  /// indicateurs des ennemis y lisent quels statuts sont des charges et le
-  /// nom de leur état rompu (spec P-53, A2).
+  /// languettes des cartes de combat y lisent quels statuts sont des charges
+  /// et le nom de leur état rompu (spec P-53, A2).
   final ChargeCatalog chargeCatalog;
 
   final void Function() onEnemiesDead;
@@ -172,6 +178,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       highlightEnemy(_livingEnemyAt(pointer));
     }
     refreshHover();
+    refreshEntityHover();
   }
 
   /// Oublie le dernier point de la souris : un glisser l'a emportée ailleurs,
@@ -185,6 +192,38 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   void pointerLeft() {
     forgetPointer();
     setHoveredCard(null);
+    _setHoveredEntity(null);
+  }
+
+  /// Le seul arbitre du survol des cartes de combat (voir
+  /// [pickHoveredEntity]) : les ennemis vivants, puis le héros. Appelé à
+  /// chaque mouvement de la souris, et quand le plateau change sous un
+  /// pointeur immobile.
+  void refreshEntityHover() {
+    final pointer = _lastPointerPos;
+    if (pointer == null) return;
+
+    final hero = heroCard;
+    final entities = <CombatEntity>[
+      for (final enemy in enemyCards)
+        if (_isAlive(enemy) && enemy.isLoaded) enemy,
+      if (hero != null && hero.isLoaded) hero,
+    ];
+    final hovered = hoveredEntity;
+    final current = hovered == null ? -1 : entities.indexOf(hovered);
+    final index = pickHoveredEntity(
+      zones: [for (final entity in entities) entity.zone],
+      current: current < 0 ? null : current,
+      pointer: pointer.toOffset(),
+    );
+    _setHoveredEntity(index == null ? null : entities[index]);
+  }
+
+  void _setHoveredEntity(CombatEntity? entity) {
+    if (entity == hoveredEntity) return;
+    hoveredEntity?.setHovered(false);
+    hoveredEntity = entity;
+    entity?.setHovered(true);
   }
 
   /// Le seul arbitre du survol de la main : désigne la carte sous le dernier
@@ -241,9 +280,17 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     return index < 0 ? null : index;
   }
 
+  /// L'ennemi vivant dont la zone contient le point, l'ennemi survolé d'abord :
+  /// ses languettes déroulées passent sur ses voisins (A8).
   EnemyCard? _livingEnemyAt(Vector2 canvasPos) {
-    for (final enemy in enemyCards) {
-      if (_isAlive(enemy) && enemy.containsPoint(canvasPos)) return enemy;
+    final hovered = hoveredEntity;
+    final ordered = [
+      if (hovered is EnemyCard && enemyCards.contains(hovered)) hovered,
+      for (final enemy in enemyCards)
+        if (enemy != hovered) enemy,
+    ];
+    for (final enemy in ordered) {
+      if (_isAlive(enemy) && enemy.zoneContains(canvasPos)) return enemy;
     }
     return null;
   }

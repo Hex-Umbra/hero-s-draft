@@ -1,9 +1,11 @@
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/events.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 import '../../heros_draft_game.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/combat_state.dart';
 import '../../../services/audio/game_moment.dart';
@@ -11,9 +13,12 @@ import '../../../models/charge_track.dart';
 import '../../../models/data/charge_data.dart';
 import '../floating_text.dart';
 import '../../game_constants.dart';
+import '../../systems/entity_hover.dart';
+import '../../systems/status_readout.dart';
 import '../visual_effects/charge_halo.dart';
 import '../visual_effects/fire_wave_effects.dart';
 import '../visual_effects/frost_shell.dart';
+import 'status_tabs.dart';
 
 abstract class CombatEntity extends PositionComponent
     with HasGameReference<HerosDraftGame> {
@@ -27,8 +32,107 @@ abstract class CombatEntity extends PositionComponent
   RectangleComponent get borderInfo;
   double get entityBaseScale;
   bool get isPlayer;
+  EntityStats get stats;
+
+  /// Le corps de la carte sous le pointeur, en unités de la carte : sans ses
+  /// languettes.
+  Rect get bodyLocalRect;
 
   void refreshBorderVisuals();
+
+  String get activeLocale {
+    final context = game.buildContext;
+    if (context != null) {
+      return Localizations.localeOf(context).languageCode;
+    }
+    return 'fr'; // Langue par défaut en secours
+  }
+
+  /// Les textes de la langue active : la couche Flame n'a pas de contexte de
+  /// widget où les lire.
+  AppLocalizations get l10n => lookupAppLocalizations(Locale(activeLocale));
+
+  late final StatusTabs leftTabs;
+  late final StatusTabs rightTabs;
+
+  bool _hovered = false;
+
+  /// Pose les deux languettes, qui rendent leurs appuis à [onTap] : le
+  /// `onTapDown` de la carte (D13).
+  void addStatusTabs(void Function(TapDownEvent event) onTap) {
+    leftTabs = StatusTabs(
+      side: StatusSide.left,
+      cardWidth: size.x,
+      onTap: onTap,
+    );
+    rightTabs = StatusTabs(
+      side: StatusSide.right,
+      cardWidth: size.x,
+      onTap: onTap,
+    );
+    addAll([leftTabs, rightTabs]);
+  }
+
+  /// Relit les entrées des deux languettes sur [stats] ; [counterId] est l'id
+  /// du compteur du passif actif du héros.
+  void refreshStatusTabs({String? counterId}) {
+    final readout = StatusReadout.of(
+      stats,
+      game.chargeCatalog,
+      l10n,
+      activeLocale,
+      counterId: counterId,
+    );
+    leftTabs.setEntries(readout.left);
+    rightTabs.setEntries(readout.right);
+    // Une largeur déroulée neuve peut changer le sens du déroulé.
+    if (_hovered) setHovered(true);
+  }
+
+  /// La zone de la carte sur le canevas (spec P-05, §4.5) : son corps et ses
+  /// languettes, au repos comme déroulées. Le rectangle au repos reste dans la
+  /// zone quand une languette se déroule vers l'intérieur : le pointeur qui l'a
+  /// déroulée y est encore.
+  List<Rect> get zone => [
+        for (final local in [
+          bodyLocalRect,
+          if (isLoaded)
+            for (final tabs in [leftTabs, rightTabs])
+              ...[tabs.restLocalRect, tabs.localRect].nonNulls,
+        ])
+          _absoluteRect(local),
+      ];
+
+  bool zoneContains(Vector2 point) {
+    final offset = point.toOffset();
+    return zone.any((rect) => rect.contains(offset));
+  }
+
+  /// La carte survolée passe au-dessus de ses voisines et déroule ses deux
+  /// languettes, chacune vers l'intérieur si elle sortirait de l'écran (B39).
+  void setHovered(bool hovered) {
+    _hovered = hovered;
+    priority = hovered ? GameConstants.priorityEntityHovered : 0;
+    for (final tabs in [leftTabs, rightTabs]) {
+      tabs.setUnfolded(
+        hovered,
+        inward: hovered &&
+            unfoldsInward(
+              side: tabs.side,
+              attachEdge: absolutePositionOf(
+                Vector2(tabs.side == StatusSide.left ? 0 : size.x, 0),
+              ).x,
+              unfoldedWidth: tabs.unfoldedWidth * absoluteScale.x,
+              screenWidth: game.size.x,
+            ),
+      );
+    }
+  }
+
+  Rect _absoluteRect(Rect local) => Rect.fromPoints(
+        absolutePositionOf(Vector2(local.left, local.top)).toOffset(),
+        absolutePositionOf(Vector2(local.right, local.bottom)).toOffset(),
+      );
 
   void shieldHitAnimation() {
     removeAll(children.whereType<ScaleEffect>());

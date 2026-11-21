@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/entity_hover.dart';
+import 'package:roguelike_card_game/game/systems/status_readout.dart';
 
 /// L'arbitre du survol : une seule carte à la fois (spec P-05, §4.5).
 void main() {
@@ -82,5 +83,53 @@ void main() {
     expect(body.contains(const Offset(50, -2)), isTrue);
     expect(body.contains(const Offset(50, 139)), isTrue);
     expect(body.contains(const Offset(50, -18)), isFalse);
+  });
+
+  group('unfoldsInward', () {
+    test('la languette droite de l ennemi du bord droit se deroule vers l '
+        'interieur', () {
+      expect(
+        unfoldsInward(
+          side: StatusSide.right,
+          attachEdge: 1184,
+          unfoldedWidth: 172,
+          screenWidth: 1280,
+        ),
+        isTrue,
+      );
+    });
+
+    test('la languette gauche de l ennemi du bord gauche aussi', () {
+      expect(
+        unfoldsInward(
+          side: StatusSide.left,
+          attachEdge: 96,
+          unfoldedWidth: 172,
+          screenWidth: 1280,
+        ),
+        isTrue,
+      );
+    });
+
+    test('le heros au centre ne se retourne jamais', () {
+      expect(
+        unfoldsInward(
+          side: StatusSide.left,
+          attachEdge: 562,
+          unfoldedWidth: 156,
+          screenWidth: 1280,
+        ),
+        isFalse,
+      );
+      expect(
+        unfoldsInward(
+          side: StatusSide.right,
+          attachEdge: 718,
+          unfoldedWidth: 156,
+          screenWidth: 1280,
+        ),
+        isFalse,
+      );
+    });
   });
 }

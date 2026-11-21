@@ -6,15 +6,13 @@ import 'package:flutter/material.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
 import '../../../models/enemy_intent.dart';
-import '../../../models/status_effect.dart';
 import '../../../models/enemy_instance.dart';
 import '../../game_constants.dart';
 import '../../systems/armor_veil.dart';
-import '../../systems/charge_rules.dart';
+import '../../systems/entity_hover.dart';
 import '../visual_effects/frost_shell.dart';
 import '../effect_icon.dart';
 import 'enemy_health_bar.dart';
-import 'status_indicator.dart';
 import 'combat_entity.dart';
 
 class EnemyCard extends CombatEntity
@@ -30,11 +28,10 @@ class EnemyCard extends CombatEntity
   late final EnemyHealthBar healthBar;
   @override
   late final SpriteComponent sprite;
-  late final StatusIndicator buffIndicator;
-  late final StatusIndicator debuffIndicator;
 
   String get id => instance.id;
   EnemyData get data => instance.data;
+  @override
   EntityStats get stats => instance.stats;
   EnemyIntent? get currentIntent => instance.currentIntent;
   EnemyIntent? get effectiveIntent => instance.effectiveIntent;
@@ -65,6 +62,9 @@ class EnemyCard extends CombatEntity
   void refreshBorderVisuals() {
     _refreshBorderVisuals();
   }
+
+  @override
+  Rect get bodyLocalRect => enemyBodyRect(size.x, size.y);
 
   /// Le plus haut montant d'armure atteint depuis qu'elle est tombee a 0 : le
   /// plein du voile de la barre de PV (`ArmorVeil`).
@@ -135,23 +135,8 @@ class EnemyCard extends CombatEntity
     healthBar = EnemyHealthBar(width: size.x, onTap: onTapDown);
     add(healthBar);
 
-    // Positionner les buffs (à gauche) et les debuffs (à droite)
-    final view = _indicatorView();
-    buffIndicator = StatusIndicator(
-      statuses: view.buffs,
-      chargeLines: const [],
-      brokenNameOf: _brokenNameOf,
-      position: Vector2(-36, 10),
-    );
-    add(buffIndicator);
-
-    debuffIndicator = StatusIndicator(
-      statuses: view.debuffs,
-      chargeLines: view.chargeLines,
-      brokenNameOf: _brokenNameOf,
-      position: Vector2(size.x + 4, 10),
-    );
-    add(debuffIndicator);
+    addStatusTabs(onTapDown);
+    refreshStatusTabs();
 
     _refreshHealthBar();
 
@@ -170,14 +155,6 @@ class EnemyCard extends CombatEntity
     scale = Vector2.all(baseScale);
   }
 
-  String get activeLocale {
-    final context = game.buildContext;
-    if (context != null) {
-      return Localizations.localeOf(context).languageCode;
-    }
-    return 'fr'; // Langue par défaut en secours
-  }
-
   void _refreshHealthBar() {
     healthBar.setValues(
       currentPv: stats.currentPv,
@@ -187,33 +164,8 @@ class EnemyCard extends CombatEntity
     );
   }
 
-  /// Ce que montrent les deux indicateurs, lu sur l'état : les buffs à
-  /// gauche ; à droite, les altérations qui ne sont pas des charges, puis une
-  /// ligne par charge (spec P-53, §5.1).
-  ({
-    List<StatusEffect> buffs,
-    List<StatusEffect> debuffs,
-    List<ChargeLine> chargeLines,
-  }) _indicatorView() => (
-        buffs: stats.statuses.where((s) => s.type == StatusType.buff).toList(),
-        debuffs: stats.statuses
-            .where(
-              (s) =>
-                  s.type == StatusType.debuff &&
-                  !game.chargeCatalog.isCharge(s.id),
-            )
-            .toList(),
-        chargeLines: ChargeRules.linesFor(stats),
-      );
-
   String _brokenNameOf(String chargeId) =>
       game.chargeCatalog[chargeId]?.brokenName(activeLocale) ?? '';
-
-  void _refreshIndicators() {
-    final view = _indicatorView();
-    buffIndicator.updateStatuses(view.buffs, const []);
-    debuffIndicator.updateStatuses(view.debuffs, view.chargeLines);
-  }
 
   /// [fireDamage] suit l'etat retenu jusqu'a son application : un etat plus
   /// recent qui le remplace garde les degats du Feu qu'il contient.
@@ -258,7 +210,7 @@ class EnemyCard extends CombatEntity
     );
     instance = next;
     _refreshHealthBar();
-    _refreshIndicators();
+    refreshStatusTabs();
   }
 
   void _refreshBorderVisuals() {
