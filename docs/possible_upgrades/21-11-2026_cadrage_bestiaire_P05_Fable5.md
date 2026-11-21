@@ -93,10 +93,10 @@ Lu le 21/11 sur `8d544a3d`. À revérifier par commande avant de s'y appuyer.
 
 | Vague | Version | Branche | Spec | Plan | Tests | État |
 |:---|:---|:---|:---|:---|:---|:---|
-| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | — | — | base 1866 | en cours · 3.2 · fait |
+| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — trois tours | — | base 1866 | **arrêtée** · 3.3 · tour 3 |
 | suivantes | à définir | — | — | — | — | non ouvertes |
 
-**Arrêts** : aucun.
+**Arrêts** : le 21/11, à la spec, après le troisième tour de vérification — il reste un constat moyen de classe T, et l'autonomie est `strict` ; onze questions visibles du joueur (31 à 41 du deck, [fichier de vérifications](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md) §2) attendent aussi le propriétaire. La spec les applique à titre provisoire.
 
 ### 4.2. Vague 1 — `0.6.1` — l'interface des ennemis
 
