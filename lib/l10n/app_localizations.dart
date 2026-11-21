@@ -662,36 +662,6 @@ abstract class AppLocalizations {
   /// **'Hit Points (HP)'**
   String get tooltipHpTitle;
 
-  /// No description provided for @tooltipHpDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Your health pool. If it reaches 0, you die.'**
-  String get tooltipHpDesc;
-
-  /// No description provided for @tooltipArmorTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Block / Armor'**
-  String get tooltipArmorTitle;
-
-  /// No description provided for @tooltipArmorDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Absorbs next attacks\' damage. Removed at turn start.'**
-  String get tooltipArmorDesc;
-
-  /// No description provided for @tooltipAttackTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Might'**
-  String get tooltipAttackTitle;
-
-  /// No description provided for @tooltipAttackDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Strengthens what your class channels it into: Attacks, Skills or alterations.'**
-  String get tooltipAttackDesc;
-
   /// No description provided for @mightTargetAttackShort.
   ///
   /// In en, this message translates to:
@@ -782,12 +752,6 @@ abstract class AppLocalizations {
   /// **'Mana'**
   String get tooltipManaTitle;
 
-  /// No description provided for @tooltipManaDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Energy resource used to play cards each turn.'**
-  String get tooltipManaDesc;
-
   /// No description provided for @cardTypeAttack.
   ///
   /// In en, this message translates to:
@@ -823,12 +787,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'⚠️ ONCE PLAYED (Exhaust)'**
   String get exhaustWarning;
-
-  /// No description provided for @hpAbbreviation.
-  ///
-  /// In en, this message translates to:
-  /// **'HP'**
-  String get hpAbbreviation;
 
   /// No description provided for @enemyIntentsTitle.
   ///
@@ -871,18 +829,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Buff Might: +{value}'**
   String intentBuff(int value);
-
-  /// No description provided for @enemyStatsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'ENEMY STATS'**
-  String get enemyStatsTitle;
-
-  /// No description provided for @enemyStatsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.'**
-  String enemyStatsDesc(int hp, int maxHp, int might, int armor);
 
   /// No description provided for @cardDescDamage.
   ///

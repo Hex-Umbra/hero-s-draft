@@ -31,11 +31,6 @@ class GameConstants {
   /// larges de 250 et posés à 20 du bord, plus 16 de marge (20 + 250 + 16).
   static const double handSideReserve = 286.0;
 
-  // --- STAT BADGE DIMENSIONS ---
-  static final Vector2 badgeHpSize = Vector2(130.0, 16.0);
-  static final Vector2 badgeStandardSize = Vector2(48.0, 22.0);
-  static final Vector2 badgeCircleSize = Vector2.all(36.0);
-
   // --- BARRE DE PV D'UN ENNEMI (unités de la carte) ---
   static const double enemyHealthBarTop = -17.0;
   static const double enemyHealthBarHeight = 13.0;

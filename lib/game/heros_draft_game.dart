@@ -76,7 +76,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
-  final void Function(String title, String description, CardType? cardType) onShowTooltip;
+  final void Function(String title, String description, CardType cardType) onShowTooltip;
   final void Function() onHideTooltip;
   final bool Function(CardInstance, EnemyCard?) onPlayCard;
   final VoidCallback? onEnemiesSpawned;

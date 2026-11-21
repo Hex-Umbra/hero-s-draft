@@ -52,12 +52,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   String? _tooltipTitle;
   String? _tooltipDescription;
-  CardType? _tooltipCardType;
+  CardType _tooltipCardType = CardType.skill;
   bool _showTooltip = false;
 
   Color _getTooltipBorderColor() {
-    if (_tooltipCardType == null) return Colors.blueAccent;
-    switch (_tooltipCardType!) {
+    switch (_tooltipCardType) {
       case CardType.attack:
         return Colors.redAccent;
       case CardType.skill:

@@ -186,11 +186,6 @@
   "rarityLegendary": "Legendary",
 
   "tooltipHpTitle": "Hit Points (HP)",
-  "tooltipHpDesc": "Your health pool. If it reaches 0, you die.",
-  "tooltipArmorTitle": "Block / Armor",
-  "tooltipArmorDesc": "Absorbs next attacks' damage. Removed at turn start.",
-  "tooltipAttackTitle": "Might",
-  "tooltipAttackDesc": "Strengthens what your class channels it into: Attacks, Skills or alterations.",
   "mightTargetAttackShort": "Attacks",
   "mightTargetSkillShort": "Skills",
   "mightTargetAlterationShort": "Alterations",
@@ -246,14 +241,12 @@
     "description": "Short title of the tutorial demo panel for a class that converts its Mana into temporary Might."
   },
   "tooltipManaTitle": "Mana",
-  "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",
   "cardTypeSkill": "Skill",
   "cardTypePower": "Power",
   "cardTypeStatus": "Status",
   "oncePlayed": "ONCE PLAYED",
   "exhaustWarning": "⚠️ ONCE PLAYED (Exhaust)",
-  "hpAbbreviation": "HP",
   "enemyIntentsTitle": "ENEMY INTENTIONS",
   "intentDevastatingAttack": "Devastating Attack: {value}",
   "@intentDevastatingAttack": {
@@ -289,16 +282,6 @@
   "@intentBuff": {
     "placeholders": {
       "value": { "type": "int" }
-    }
-  },
-  "enemyStatsTitle": "ENEMY STATS",
-  "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.",
-  "@enemyStatsDesc": {
-    "placeholders": {
-      "hp": { "type": "int" },
-      "maxHp": { "type": "int" },
-      "might": { "type": "int" },
-      "armor": { "type": "int" }
     }
   },
   "cardDescDamage": "Deals {amount} damage.",

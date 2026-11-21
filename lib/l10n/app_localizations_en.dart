@@ -335,23 +335,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipHpTitle => 'Hit Points (HP)';
 
   @override
-  String get tooltipHpDesc => 'Your health pool. If it reaches 0, you die.';
-
-  @override
-  String get tooltipArmorTitle => 'Block / Armor';
-
-  @override
-  String get tooltipArmorDesc =>
-      'Absorbs next attacks\' damage. Removed at turn start.';
-
-  @override
-  String get tooltipAttackTitle => 'Might';
-
-  @override
-  String get tooltipAttackDesc =>
-      'Strengthens what your class channels it into: Attacks, Skills or alterations.';
-
-  @override
   String get mightTargetAttackShort => 'Attacks';
 
   @override
@@ -419,9 +402,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipManaTitle => 'Mana';
 
   @override
-  String get tooltipManaDesc => 'Energy resource used to play cards each turn.';
-
-  @override
   String get cardTypeAttack => 'Attack';
 
   @override
@@ -438,9 +418,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exhaustWarning => '⚠️ ONCE PLAYED (Exhaust)';
-
-  @override
-  String get hpAbbreviation => 'HP';
 
   @override
   String get enemyIntentsTitle => 'ENEMY INTENTIONS';
@@ -473,14 +450,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String intentBuff(int value) {
     return 'Buff Might: +$value';
-  }
-
-  @override
-  String get enemyStatsTitle => 'ENEMY STATS';
-
-  @override
-  String enemyStatsDesc(int hp, int maxHp, int might, int armor) {
-    return 'Health: $hp/$maxHp HP.\nMight: $might.\nArmor: $armor.';
   }
 
   @override

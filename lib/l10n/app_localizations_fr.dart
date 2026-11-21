@@ -336,24 +336,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipHpTitle => 'Points de Vie (PV)';
 
   @override
-  String get tooltipHpDesc =>
-      'Votre réserve de santé. S\'il tombe à 0, vous mourez.';
-
-  @override
-  String get tooltipArmorTitle => 'Blocage / Armure';
-
-  @override
-  String get tooltipArmorDesc =>
-      'Absorbe les dégâts des prochaines attaques. Retiré au début du tour.';
-
-  @override
-  String get tooltipAttackTitle => 'Puissance';
-
-  @override
-  String get tooltipAttackDesc =>
-      'Renforce ce qu\'oriente votre classe : Attaques, Compétences ou altérations.';
-
-  @override
   String get mightTargetAttackShort => 'Attaques';
 
   @override
@@ -421,10 +403,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipManaTitle => 'Mana';
 
   @override
-  String get tooltipManaDesc =>
-      'Ressource d\'énergie utilisée pour jouer des cartes chaque tour.';
-
-  @override
   String get cardTypeAttack => 'Attaque';
 
   @override
@@ -441,9 +419,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exhaustWarning => '⚠️ USAGE UNIQUE (Épuisement)';
-
-  @override
-  String get hpAbbreviation => 'PV';
 
   @override
   String get enemyIntentsTitle => 'INTENTIONS ENNEMIES';
@@ -476,14 +451,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String intentBuff(int value) {
     return 'Buff Puissance : +$value';
-  }
-
-  @override
-  String get enemyStatsTitle => 'STATS DE L\'ENNEMI';
-
-  @override
-  String enemyStatsDesc(int hp, int maxHp, int might, int armor) {
-    return 'Santé : $hp/$maxHp PV.\nPuissance : $might.\nArmure : $armor.';
   }
 
   @override
