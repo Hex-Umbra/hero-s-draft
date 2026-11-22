@@ -49,7 +49,7 @@ La vague 1 fusionnée dans `main` par la PR #57 (commit de fusion `32e2ad46`) et
 
 ## La spec doit fixer
 
-1. **Le format d'une intention** : sa liste d'effets, ce qu'elle garde à côté (le nom affiché, aujourd'hui tiré de la valeur par les paliers 6, 12 et 20, écrits trois fois — à réunir ici), l'ordre du cycle, inchangé. **Le format se choisit en connaissant ses suites** : les mécanismes des vagues 3 et 4 (catalogue #11 à #16 — invocation, aura, viser un allié, perce-armure, phases, choix d'intention) et P-09, P-14, P-44 lot 2 devront s'y écrire sans reprise.
+1. **Le format d'une intention** : sa liste d'effets, ce qu'elle garde à côté (le nom affiché, aujourd'hui tiré de la valeur par les paliers 6, 12 et 20, écrits trois fois — à réunir ici), l'ordre du cycle, inchangé. **Le format se choisit en connaissant ses suites** : les mécanismes des vagues 3 à 6 (catalogue #11 à #18 — invocation, aura, viser un allié, perce-armure, phases, choix d'intention, l'ouverture d'un tier, les dégâts différés) et P-09, P-14, P-44 lot 2 devront s'y écrire sans reprise.
 2. **L'échelle d'apparition** : ce que deviennent `baseDamage` et le multiplicateur de `effectiveIntent`, et sur quels effets ils portent.
 3. **La résolution symétrique** : le lanceur, la cible d'un effet d'ennemi (le héros, soi), les effets qu'un ennemi ne peut pas porter (piocher, gagner du Mana) et leur refus au chargement ; ce que le chemin du héros garde à l'identique.
 4. **La migration** des quatre ennemis, et la preuve par test que les dégâts, l'Armure et la Puissance d'une phase ennemie ne changent pas.
@@ -79,7 +79,7 @@ Les questions P ont leur réponse dans le cadrage, B53 à B58. Le reste — le f
 
 ## Ne pas absorber
 
-Aucun mécanisme des vagues 3 et suivantes (catalogue #4 et #11 à #17) : ni plusieurs coups (B54), ni Rat alpha, ni invocation, ni aura, ni meute, ni perce-armure, ni phases ; ni cadre de tier, ni fond (vague 5) ; ni épines, étourdissement ou malédictions (P-44 lot 2), ni affixes d'élite (P-14), ni intentions cachées (P-19), ni la fuite du voleur ; ni le « +1 » (B56) ; aucun ennemi hors de la table ; **aucun équilibrage des ennemis existants**, hors du larcin du Gobelin.
+Aucun mécanisme des vagues 3 et suivantes (catalogue #4 et #11 à #19) : ni plusieurs coups (B54), ni Rat alpha, ni invocation, ni aura, ni meute, ni perce-armure, ni phases ; ni cadre de tier, ni fond (vague 7) ; ni épines, étourdissement ou malédictions (P-44 lot 2), ni affixes d'élite (P-14), ni intentions cachées (P-19), ni la fuite du voleur ; ni le « +1 » (B56) ; aucun ennemi hors de la table ; **aucun équilibrage des ennemis existants**, hors du larcin du Gobelin.
 
 ## Tâches à risque
 
@@ -92,4 +92,4 @@ Un ADR pour le langage des intentions, qui complète ADR-061, et un pour les mé
 
 ## Ce que le joueur voit
 
-Sept ennemis neufs dès le premier acte : des rats qui viennent par deux, trois slimes qui gèlent, brûlent ou électrisent, une araignée qui empoisonne, un corbeau qui se soigne en frappant, un kobold qui esquive ; un gobelin qui vole de l'or. Les ennemis d'aujourd'hui frappent comme avant. Les sprites neufs, Slime et Gobelin compris, s'affichent dans la carte actuelle, sans cadre de tier (vague 5).
+Sept ennemis neufs dès le premier acte : des rats qui viennent par deux, trois slimes qui gèlent, brûlent ou électrisent, une araignée qui empoisonne, un corbeau qui se soigne en frappant, un kobold qui esquive ; un gobelin qui vole de l'or. Les ennemis d'aujourd'hui frappent comme avant. Les sprites neufs, Slime et Gobelin compris, s'affichent dans la carte actuelle, sans cadre de tier (vague 7).

@@ -3,7 +3,7 @@
 **Chantier** : donner au jeu des ennemis qui se lisent mieux et qui se servent enfin de ses systèmes — P-05 dans `docs/ROADMAP.md`
 **Versions** : de `0.6.1` à `0.7.0`
 **Ouvert le** : 21/11/2026
-**Avancement** : 1 vague livrée sur 6 — dernière : vague 1, le 22/11/2026
+**Avancement** : 1 vague livrée sur 8 — dernière : vague 1, le 22/11/2026
 **Ce qui fait foi techniquement** : le [chantier du bestiaire](../chantier_bestiaire/README.md) tient le journal de chaque vague ; les décisions de conception sont dans le [cadrage](../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), §1
 **Modèle** : [`_modele_suivi.md`](_modele_suivi.md)
 

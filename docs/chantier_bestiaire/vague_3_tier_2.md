@@ -62,7 +62,7 @@ Les questions P ont leur réponse dans les prérequis. Le reste est de classe T.
 
 ## Ne pas absorber
 
-Les phases et le choix d'intention (vague 4), les soutiens de tier 4 (le Chaman), le cadre et les fonds (vague 5), P-14, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
+Les phases et le choix d'intention (vague 4), le soutien du tier 4 (le Chaman, vague 5), le cadre et les fonds (vague 7), P-14, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
 
 ## Tâche à risque
 

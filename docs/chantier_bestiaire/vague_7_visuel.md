@@ -1,12 +1,12 @@
-# Vague 5 — `0.6.5` — le visuel : cadres de tier et décors
+# Vague 7 — `0.6.7` — le visuel : cadres de tier et décors
 
-> Fiche de vague du [chantier du bestiaire](README.md). Écrite le 22/11, avant les vagues 2 à 4 : revérifie chaque chemin, et relis les comptes rendus des vagues précédentes, qui disent quels anciens sprites restent.
+> Fiche de vague du [chantier du bestiaire](README.md). Écrite le 22/11 pour `0.6.5`, déplacée en `0.6.7` le même jour, après les tiers 4 et 5 (B59) ; avant les vagues 2 à 6 : revérifie chaque chemin, et relis les comptes rendus des vagues précédentes, qui disent quels anciens sprites restent.
 
 **Poids** : moyen — une spec, un plan. Aucun mécanisme de combat.
 
 ## Ce qu'elle livre
 
-- **Le cadre de tier** de chaque ennemi, des tiers 1 à 3 : la fenêtre de 64 × 96 est la même pour tous, le cadre grossit avec le tier, et la menace se lit avant l'illustration ([identité visuelle](../possible_upgrades/18-09-2026_identite_visuelle_pixel_art_Opus5.md), §4).
+- **Le cadre de tier** de chaque ennemi, des tiers 1 à 5 : la fenêtre de 64 × 96 est la même pour tous, le cadre grossit avec le tier, et la menace se lit avant l'illustration ([identité visuelle](../possible_upgrades/18-09-2026_identite_visuelle_pixel_art_Opus5.md), §4).
 - **Le fond de fenêtre** derrière la créature : un asset séparé du cadre, trois variations, choisi par le jeu ([DA évolutive](../possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16.3 ; [workflow des fonds](../../art_src/docs/workflow_fond.md), §2). Cela amende l'identité visuelle §4.3, qui dessinait le fond dans le cadre.
 - **Le décor de combat** redessiné, à la place de `assets/images/bg_dungeon.png` — un JPEG sous une extension `.png` (identité visuelle, §3.3) ([workflow des fonds](../../art_src/docs/workflow_fond.md), §1).
 - **La clôture de P-08** dans la ROADMAP : le cadre en PNG par tier, tranché par l'identité visuelle du 18/09, est construit.
@@ -14,11 +14,11 @@
 ## Prérequis — avant l'ouverture
 
 1. **Les assets, tous validés** :
-   - les cadres des tiers 1, 2 et 3, par `art_src/tools/frame_tier.py` — le tier 2 existe (`art_src/frames/tier_2.aseprite`) ;
+   - les cadres des tiers 1 à 5, par `art_src/tools/frame_tier.py` — le tier 2 existe (`art_src/frames/tier_2.aseprite`) ;
    - les fonds de fenêtre — trois de forêt existent (`art_src/backgrounds/windows/forest/`) ;
    - le décor de combat — `art_src/backgrounds/` en a trois en cours (`dungeon/`, `camp/`, `steampunk/`).
 2. **Les réponses du propriétaire** (classe P), sur maquettes aux vraies tailles :
-   - un combat complet, cadres et décor posés, aux trois tiers ;
+   - un combat complet, cadres et décor posés, aux cinq tiers ;
    - quel décor pour le combat, et si le repos ou d'autres écrans en reçoivent un ;
    - le fond de fenêtre : un seul thème (la forêt) tant que les biomes (P-12) n'existent pas, tiré parmi trois variations ;
    - ce que deviennent les éléments de la vague 1 sur un cadre plus large : la barre de PV à la largeur de la carte (B12), les languettes (B14, B39), la fiche (B40) ;
@@ -27,11 +27,11 @@
 
 ## Porte d'entrée
 
-Celle de l'orchestration §3.1, sur la vague 4 : fusionnée, `v0.6.4` posé sur un commit de `main`, CI et release vertes ; la vague 4 passe à « close ».
+Celle de l'orchestration §3.1, sur la vague 6 : fusionnée, `v0.6.6` posé sur un commit de `main`, CI et release vertes ; la vague 6 passe à « close ».
 
 ## Fichiers
 
-`p05-cadres-et-decors` pour la spec et le plan ; `bestiaire-vague-5` pour le compte rendu et les tests manuels.
+`p05-cadres-et-decors` pour la spec et le plan ; `bestiaire-vague-7` pour le compte rendu et les tests manuels.
 
 ## À lire
 
@@ -52,7 +52,7 @@ Les questions P ont leur réponse dans les prérequis ; une mesure que les maque
 
 ## Ne pas absorber
 
-Les biomes (P-12) ; le médaillon d'élite (identité visuelle §5.1, P-14) ; les cadres des tiers 4, 5 et boss ; la carte du héros ; le juice et les animations (P-06, P-07) ; aucun mécanisme de combat, aucun ennemi neuf.
+Les biomes (P-12) ; le médaillon d'élite (identité visuelle §5.1, P-14) ; le cadre des boss (vague 8) ; la carte du héros ; le juice et les animations (P-06, P-07) ; aucun mécanisme de combat, aucun ennemi neuf.
 
 ## Tâche à risque
 

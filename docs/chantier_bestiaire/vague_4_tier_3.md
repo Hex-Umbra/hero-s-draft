@@ -44,7 +44,7 @@ Le format des intentions de la vague 2, l'invocation et le perce-armure de la va
 
 ## La spec doit fixer
 
-1. **Les phases** : le seuil en donnée, la liste d'intentions de chaque phase, le passage (une seule fois, et à quel moment du tour), ce qui arrive à l'intention déjà annoncée ; **le format se choisit en connaissant la vague 6** : un boss à plusieurs phases (P-09) devra s'y écrire sans reprise.
+1. **Les phases** : le seuil en donnée, la liste d'intentions de chaque phase, le passage (une seule fois, et à quel moment du tour), ce qui arrive à l'intention déjà annoncée ; **le format se choisit en connaissant les vagues 6 et 8** : la rage du Dragon juvénile (tier 5) et un boss à plusieurs phases (P-09) devront s'y écrire sans reprise.
 2. **Le choix d'intention** : le tirage pondéré, la condition, et ce que le panneau annonce ; le cycle fixe reste le cas par défaut, et aucun ennemi existant ne change de comportement.
 3. **Les ennemis** : leurs fichiers, leurs sprites, leurs valeurs, leurs textes en français et en anglais ; l'Orc ; la Faucheuse et le Squelette selon la réponse sur la lignée.
 4. **Ce que le joueur lit** : la phase, le changement, l'intention choisie.
@@ -57,7 +57,7 @@ Les questions P ont leur réponse dans les prérequis. Le reste est de classe T.
 
 ## Ne pas absorber
 
-Le tier boss et les boss (vague 6) ; le cadre et les fonds (vague 5) ; les tiers 4 et 5 ; P-14, P-19, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
+Les tiers 4 et 5 (vagues 5 et 6) ; le cadre et les fonds (vague 7) ; le tier boss et les boss (vague 8) ; P-14, P-19, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
 
 ## Tâche à risque
 
