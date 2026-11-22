@@ -1335,6 +1335,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String statusPoisonHint(int value) {
+    return 'Takes $value damage at the start of its turn';
+  }
+
+  @override
+  String statusMightHint(int value) {
+    return '+$value damage on its attacks';
+  }
+
+  @override
+  String statusMightRegenHint(int value) {
+    return 'Gains $value Might at the start of its turn';
+  }
+
+  @override
+  String statusArmorRegenHint(int value) {
+    return 'Gains $value Armor at the start of its turn';
+  }
+
+  @override
+  String statusManaRegenHint(int value) {
+    return 'Gains $value Mana at the start of its turn';
+  }
+
+  @override
+  String statusHpRegenHint(int value) {
+    return 'Recovers $value HP at the start of its turn';
+  }
+
+  @override
   String get intentNameDevastatingAttack => 'Devastating Attack';
 
   @override

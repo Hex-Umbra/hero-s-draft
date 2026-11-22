@@ -259,7 +259,7 @@ void main() {
     expect(StatusReadout.toneColor(ReadoutTone.charged), Colors.yellowAccent);
   });
 
-  test('seules la Faiblesse et le Vulnerable portent une ligne d aide', () {
+  test('chaque alteration porte sa ligne d aide, FR et EN', () {
     final entity = stats(
       statuses: [
         poison(),
@@ -277,19 +277,101 @@ void main() {
           value: 1,
           duration: 2,
         ),
-        point('burn', 5),
       ],
-      tracks: {'burn': track('burn', ChargeState.none)},
     );
 
-    final hints = {
-      for (final e in read(entity, fr).right) e.key: e.hint,
-    };
+    Map<String, String?> hints(AppLocalizations l10n) =>
+        {for (final e in read(entity, l10n).right) e.key: e.hint};
 
-    expect(hints['weakness:'], "−25 % de dégâts infligés par point, jusqu'à −50 %");
-    expect(hints['vulnerable:'], "+25 % de dégâts subis par point, jusqu'à +100 %");
-    expect(hints['poison:'], isNull);
-    expect(hints['charge:burn'], isNull);
+    expect(hints(fr)['weakness:'], "−25 % de dégâts infligés par point, jusqu'à −50 %");
+    expect(hints(fr)['vulnerable:'], "+25 % de dégâts subis par point, jusqu'à +100 %");
+    expect(hints(fr)['poison:'], 'Subit 2 dégâts au début de son tour');
+    expect(hints(en)['poison:'], 'Takes 2 damage at the start of its turn');
+  });
+
+  test('chaque bonus porte sa ligne d aide, FR et EN', () {
+    StatusEffect buff(String id, int value) => StatusEffect(
+          id: id,
+          name: id,
+          type: StatusType.buff,
+          value: value,
+          duration: 2,
+        );
+    final entity = stats(statuses: [
+      might(value: 3),
+      buff('might_regen', 1),
+      buff('armor_regen', 2),
+      buff('mana_regen', 1),
+      buff('hp_regen', 4),
+    ]);
+
+    Map<String, String?> hints(AppLocalizations l10n) =>
+        {for (final e in read(entity, l10n).left) e.key: e.hint};
+
+    expect(hints(fr), {
+      'might:': '+3 aux dégâts de ses attaques',
+      'might_regen:': 'Gagne 1 Puissance au début de son tour',
+      'armor_regen:': 'Gagne 2 Armure au début de son tour',
+      'mana_regen:': 'Gagne 1 Mana au début de son tour',
+      'hp_regen:': 'Récupère 4 PV au début de son tour',
+    });
+    expect(hints(en)['might:'], '+3 damage on its attacks');
+    expect(hints(en)['hp_regen:'], 'Recovers 4 HP at the start of its turn');
+  });
+
+  test('un statut de relique n a pas de ligne d aide', () {
+    final entity = stats(statuses: [
+      const StatusEffect(
+        id: 'kunai_charge',
+        name: 'Charge Kunaï',
+        type: StatusType.buff,
+        value: 1,
+        duration: 99,
+      ),
+    ]);
+
+    expect(read(entity, fr).left.single.hint, isNull);
+  });
+
+  test('une charge porte sa phrase courte, sous le seuil comme rompue', () {
+    final entity = stats(
+      statuses: [point('freeze', 2), point('burn', 5), point('shock', 3)],
+      tracks: {
+        'freeze': track('freeze', ChargeState.none),
+        'burn': track('burn', ChargeState.none),
+        'shock': track('shock', ChargeState.brokenActive),
+      },
+    );
+
+    Map<String, String?> hints(AppLocalizations l10n) =>
+        {for (final e in read(entity, l10n).right) e.key: e.hint};
+
+    expect(hints(fr), {
+      'charge:freeze': 'Au seuil, gèle : perd sa prochaine action.',
+      'charge:burn':
+          'Brûle à son tour ; chaque tranche de 3 explose sur ses voisins.',
+      'charge:shock': 'Les coups reçus font +1 par point, +2 au seuil.',
+    });
+    expect(hints(en)['charge:freeze'],
+        'At the threshold, freezes: loses its next action.');
+    expect(
+      onlyRight(
+        stats(tracks: {'freeze': track('freeze', ChargeState.brokenPending)}),
+        fr,
+      ).hint,
+      'Au seuil, gèle : perd sa prochaine action.',
+    );
+  });
+
+  test('une charge sur le heros n a pas de ligne d aide : son sous-titre dit '
+      'l effet', () {
+    final hero = stats(tracks: {
+      'freeze': track('freeze', ChargeState.brokenPending,
+          bearer: ChargeBearer.hero),
+    });
+
+    expect(onlyRight(hero, fr).hint, isNull);
+    expect(onlyRight(hero, fr).subtitle, '−50 % de dégâts au prochain tour');
   });
 
   test('le compteur d un passif se nomme Compteur, Counter', () {

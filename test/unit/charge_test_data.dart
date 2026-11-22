@@ -11,6 +11,8 @@ ChargeData testCharge([Map<String, dynamic> overrides = const {}]) {
     'name_en': 'Test charge',
     'description_fr': 'Une charge d essai.',
     'description_en': 'A test charge.',
+    'summary_fr': 'Une phrase d essai.',
+    'summary_en': 'A test sentence.',
     'brokenName_fr': 'Rompue',
     'brokenName_en': 'Broken',
     'threshold': 3,

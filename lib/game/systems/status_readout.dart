@@ -35,7 +35,10 @@ class StatusReadout {
   /// Les tours restants, que la fiche écrit ; nul sans durée (99 ou charge).
   final int? turnsLeft;
 
-  /// La ligne d'aide de la Faiblesse et du Vulnérable.
+  /// La ligne d'aide que la fiche écrit sous l'entrée : ce que fait le
+  /// statut, ou la phrase courte de la charge ; nulle pour un statut sans
+  /// phrase (le compteur d'un passif, un statut de relique) et pour une charge
+  /// sur le héros, dont le sous-titre dit déjà l'effet.
   final String? hint;
 
   const StatusReadout({
@@ -88,6 +91,12 @@ class StatusReadout {
               ProportionalStatus.vulnerable.percentPerPoint,
               ProportionalStatus.vulnerable.maxPercent,
             ),
+          'poison' => l10n.statusPoisonHint(status.value),
+          'might' => l10n.statusMightHint(status.value),
+          'might_regen' => l10n.statusMightRegenHint(status.value),
+          'armor_regen' => l10n.statusArmorRegenHint(status.value),
+          'mana_regen' => l10n.statusManaRegenHint(status.value),
+          'hp_regen' => l10n.statusHpRegenHint(status.value),
           _ => null,
         },
       );
@@ -103,7 +112,7 @@ class StatusReadout {
           if (status.type == StatusType.debuff && !charges.isCharge(status.id))
             ofStatus(status),
         for (final line in ChargeRules.linesFor(stats))
-          _ofCharge(line, charges, l10n, locale),
+          _ofCharge(line, stats.charges[line.chargeId], charges, l10n, locale),
       ],
     );
   }
@@ -121,9 +130,12 @@ class StatusReadout {
   }
 
   /// Une ligne de charge : « Gel 2/3 » sous le seuil, « Feu 5 », l'état rompu
-  /// (« Gelé ») et, pour la Foudre chargée, ses points en jaune.
+  /// (« Gelé ») et, pour la Foudre chargée, ses points en jaune. Sa ligne
+  /// d'aide est la phrase courte de la charge, selon la rupture en vigueur de
+  /// [track].
   static StatusReadout _ofCharge(
     ChargeLine line,
+    ChargeTrack? track,
     ChargeCatalog charges,
     AppLocalizations l10n,
     String locale,
@@ -133,11 +145,13 @@ class StatusReadout {
     final state = data?.brokenName(locale) ?? name;
     final key = 'charge:${line.chargeId}';
     final emoji = statusEmoji(line.chargeId);
+    final hint = data?.summaryFor(locale, track?.rupture);
 
     if (line.kind == RuptureKind.explode) {
       return StatusReadout(
         key: key,
         emoji: emoji,
+        hint: hint,
         restValue: '${line.points}',
         tone: ReadoutTone.debuff,
         title: l10n.tabChargeOpen(name, line.points),
@@ -147,6 +161,7 @@ class StatusReadout {
       return StatusReadout(
         key: key,
         emoji: emoji,
+        hint: hint,
         restValue: '${line.points}/${line.threshold}',
         tone: ReadoutTone.debuff,
         title: l10n.tabChargePoints(name, line.points, line.threshold),
@@ -156,6 +171,7 @@ class StatusReadout {
       RuptureKind.amplifyHits => StatusReadout(
           key: key,
           emoji: emoji,
+          hint: hint,
           restValue: '${line.points}',
           tone: ReadoutTone.charged,
           title: l10n.tabChargeOpen(state, line.points),
@@ -164,6 +180,7 @@ class StatusReadout {
       RuptureKind.weakenDealt => StatusReadout(
           key: key,
           emoji: emoji,
+          hint: hint,
           restValue: state,
           tone: ReadoutTone.debuff,
           title: state,
@@ -174,6 +191,7 @@ class StatusReadout {
       _ => StatusReadout(
           key: key,
           emoji: emoji,
+          hint: hint,
           restValue: state,
           tone: ReadoutTone.debuff,
           title: state,

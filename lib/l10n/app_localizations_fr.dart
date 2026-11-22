@@ -1347,6 +1347,36 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String statusPoisonHint(int value) {
+    return 'Subit $value dégâts au début de son tour';
+  }
+
+  @override
+  String statusMightHint(int value) {
+    return '+$value aux dégâts de ses attaques';
+  }
+
+  @override
+  String statusMightRegenHint(int value) {
+    return 'Gagne $value Puissance au début de son tour';
+  }
+
+  @override
+  String statusArmorRegenHint(int value) {
+    return 'Gagne $value Armure au début de son tour';
+  }
+
+  @override
+  String statusManaRegenHint(int value) {
+    return 'Gagne $value Mana au début de son tour';
+  }
+
+  @override
+  String statusHpRegenHint(int value) {
+    return 'Récupère $value PV au début de son tour';
+  }
+
+  @override
   String get intentNameDevastatingAttack => 'Attaque Dévastatrice';
 
   @override

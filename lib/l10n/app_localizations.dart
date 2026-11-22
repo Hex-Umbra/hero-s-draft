@@ -2036,6 +2036,42 @@ abstract class AppLocalizations {
   /// **'+{percent}% damage taken per point, up to +{max}%'**
   String statusVulnerableHint(int percent, int max);
 
+  /// No description provided for @statusPoisonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes {value} damage at the start of its turn'**
+  String statusPoisonHint(int value);
+
+  /// No description provided for @statusMightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'+{value} damage on its attacks'**
+  String statusMightHint(int value);
+
+  /// No description provided for @statusMightRegenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {value} Might at the start of its turn'**
+  String statusMightRegenHint(int value);
+
+  /// No description provided for @statusArmorRegenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {value} Armor at the start of its turn'**
+  String statusArmorRegenHint(int value);
+
+  /// No description provided for @statusManaRegenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains {value} Mana at the start of its turn'**
+  String statusManaRegenHint(int value);
+
+  /// No description provided for @statusHpRegenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovers {value} HP at the start of its turn'**
+  String statusHpRegenHint(int value);
+
   /// No description provided for @intentNameDevastatingAttack.
   ///
   /// In en, this message translates to:

@@ -1125,6 +1125,42 @@
       "max": { "type": "int" }
     }
   },
+  "statusPoisonHint": "Takes {value} damage at the start of its turn",
+  "@statusPoisonHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusMightHint": "+{value} damage on its attacks",
+  "@statusMightHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusMightRegenHint": "Gains {value} Might at the start of its turn",
+  "@statusMightRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusArmorRegenHint": "Gains {value} Armor at the start of its turn",
+  "@statusArmorRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusManaRegenHint": "Gains {value} Mana at the start of its turn",
+  "@statusManaRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusHpRegenHint": "Recovers {value} HP at the start of its turn",
+  "@statusHpRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
   "intentNameDevastatingAttack": "Devastating Attack",
   "intentNameHeavyAttack": "Heavy Attack",
   "intentNameAttack": "Attack",
