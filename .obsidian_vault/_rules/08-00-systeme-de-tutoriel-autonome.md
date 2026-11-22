@@ -96,7 +96,11 @@ sur l'étape 01.
 6. **Combat — Vue d'ensemble** : maquette annotée de la disposition de l'écran (Héros/Ennemi
    au centre, main/mana/PV en bas, effets joueur + pioche à gauche, Fin de Tour/intentions/
    défausse à droite, boutons Deck/Pause en haut à droite). **Ne montre pas de
-   « Compétences »** — le widget réel n'en affiche pas.
+   « Compétences »** — le widget réel n'en affiche pas. Depuis la vague 1 du bestiaire (sur la
+   branche `feat/v0.6.1-interface-des-ennemis`, [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)),
+   ses deux maquettes suivent l'écran réel : l'ennemi n'a plus de rangée « ⚡ Puissance · 🛡 armure ·
+   barre · PV », mais une barre à la largeur de sa carte, « 28/28 » dedans ; le panneau, une ligne
+   « Niv. 1 · Gobelin · [⚡ 5] ». La prose ne change pas.
 7. **Cartes & Mana** : médaillon de coût, appui pour la description complète, 3 types
    (Attaque/Compétence/Pouvoir), cartes rendues par `UiCard.fromInstance`. *Boule de Feu*
    (`fireball`), lue par son id quel que soit son dossier, y est montrée à toute classe : depuis la
@@ -145,7 +149,11 @@ sur l'étape 01.
     pas au-dessus de l'ennemi — avec ses 4 paliers d'attaque ; depuis la vague 7, la prose dit
     qu'un ennemi Gelé ne fait rien à son tour, au lieu d'une attaque réduite. Depuis les corrections
     de fin de vague 8 (ADR-119), le panneau est en lignes compactes : le libellé de chaque palier est
-    dans l'infobulle de sa pastille, la légende des paliers reste à côté.
+    dans l'infobulle de sa pastille, la légende des paliers reste à côté. Depuis la vague 1 du
+    bestiaire (sur la branche, ADR-121), le panneau réel prend de lui-même ses trois colonnes —
+    « Niv. 1 », le nom, la pastille — et **la prose dit la fiche en une phrase** (B37) : toucher un
+    ennemi ouvre sa fiche, et, à la souris, survoler sa carte déroule ses deux languettes. Le
+    tutoriel n'a pas de combat Flame : ni barre, ni languette, ni fiche à y démontrer.
 12. **Fusion de Cartes** *(fusion effectuée)* : manuelle, hors combat, 3 exemplaires de même
     rareté ; la rareté **augmente** les valeurs sans jamais changer le coût — ×1,2 à ×2,0, et
     toujours d'au moins 1 par fusion —, mais ni la pioche ni le Mana qu'une carte rend (G1, G2,

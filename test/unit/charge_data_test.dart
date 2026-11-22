@@ -40,6 +40,7 @@ void main() {
   test('un nom ou une description sans sa paire _fr / _en est refuse', () {
     _refused(_with('freeze', (j) => j.remove('name_en')), 'name_en');
     _refused(_with('freeze', (j) => j.remove('description_fr')), 'description_fr');
+    _refused(_with('burn', (j) => j.remove('summary_en')), 'summary_en');
   });
 
   test('un seuil inferieur a 1 est refuse', () {
@@ -178,6 +179,11 @@ void main() {
     _refused(
       _with('freeze', (j) => j['description_fr'] = 'Inflige {percent}.'),
       'percent',
+    );
+    // La phrase courte passe par la même liste.
+    _refused(
+      _with('shock', (j) => j['summary_fr'] = 'Inflige {damage}.'),
+      'damage',
     );
   });
 

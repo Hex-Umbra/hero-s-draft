@@ -325,35 +325,30 @@ class _TutorialCombatOverviewWidgetState
                 ),
               ),
               SizedBox(height: 4 * scale),
-              Text(
-                isFrench ? 'Gobelin (Niv. 1)' : 'Goblin (Lvl. 1)',
-                style: TextStyle(color: Colors.white70, fontSize: 8.5 * scale),
-              ),
-              SizedBox(height: 2 * scale),
+              // Niveau, nom, pastille : les trois colonnes du vrai panneau, lues
+              // depuis la gauche. La `Row` prend toute la largeur : la colonne
+              // qui la porte aligne ses enfants à droite.
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.flash_on, color: Colors.amber, size: 10 * scale),
-                  SizedBox(width: 2 * scale),
-                  // La colonne qui contient cette maquette a une largeur
-                  // derivee du viewport : sans `Flexible`, « Attaque Rapide :
-                  // 5 » deborde de la `Row` et Flutter peint la bande
-                  // d'erreur jaune et noire a la place, en plein tutoriel.
-                  //
-                  // Troisieme occurrence du meme motif, apres
-                  // `EnemyIntentsPanel` (PR #28) et `StatusEffectsPanel` :
-                  // une `Icon` et un `Text` sans contrainte dans une `Row`
-                  // de largeur bornee. Meme correctif, meme repli sur
-                  // plusieurs lignes plutot qu'une troncature — la valeur
-                  // chiffree est en fin de libelle.
+                  Text(
+                    isFrench ? 'Niv. 1' : 'Lvl. 1',
+                    style: TextStyle(color: Colors.white38, fontSize: 8.5 * scale),
+                  ),
+                  SizedBox(width: 6 * scale),
                   Flexible(
                     child: Text(
-                      isFrench ? 'Attaque Rapide : 5' : 'Quick Attack: 5',
-                      style: TextStyle(
-                        color: Colors.amber,
-                        fontSize: 8.5 * scale,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      isFrench ? 'Gobelin' : 'Goblin',
+                      style: TextStyle(color: Colors.white70, fontSize: 8.5 * scale),
+                    ),
+                  ),
+                  SizedBox(width: 6 * scale),
+                  Icon(Icons.flash_on, color: Colors.amber, size: 10 * scale),
+                  Text(
+                    '5',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 8.5 * scale,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -387,59 +382,31 @@ class _TutorialCombatOverviewWidgetState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Health Bar & Stats above enemy card
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.flash_on, color: Colors.redAccent, size: 10 * scale),
-            Text(
-              '5',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 10 * scale,
-                fontWeight: FontWeight.bold,
-              ),
+        // La barre de PV au-dessus de la carte : large comme elle, les PV
+        // écrits dedans, ombrés de noir comme sur la vraie barre.
+        Container(
+          width: 54 * scale,
+          height: 13 * scale,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.redAccent,
+            borderRadius: BorderRadius.circular(3 * scale),
+          ),
+          child: Text(
+            '28/28',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9 * scale,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 2 * scale,
+                  offset: Offset(scale, scale),
+                ),
+              ],
             ),
-            SizedBox(width: 6 * scale),
-            Icon(Icons.shield, color: Colors.blueAccent, size: 10 * scale),
-            Text(
-              '0',
-              style: TextStyle(
-                color: Colors.blueAccent,
-                fontSize: 10 * scale,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(width: 8 * scale),
-            Container(
-              width: 50 * scale,
-              height: 6 * scale,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade800,
-                borderRadius: BorderRadius.circular(3 * scale),
-              ),
-              child: Stack(
-                children: [
-                  Container(
-                    width: 50 * scale,
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(3 * scale),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 6 * scale),
-            Text(
-              '28/28',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 10 * scale,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+          ),
         ),
         SizedBox(height: 4 * scale),
         // Card Body

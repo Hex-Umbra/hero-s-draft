@@ -31,6 +31,7 @@ HerosDraftGame _buildGame({List<String> imagesToPreload = const []}) =>
       onEndEnemyTurn: () {},
       onSelectEnemy: (_) {},
       onUpdateEnemyStats: (_, _) {},
+      onInspectionChanged: (_) {},
     );
 
 void main() {

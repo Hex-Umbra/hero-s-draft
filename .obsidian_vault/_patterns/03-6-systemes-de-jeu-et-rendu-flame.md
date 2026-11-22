@@ -14,4 +14,12 @@ Afin de décomposer la classe monolithique de rendu `HerosDraftGame`, ses tâche
   - **`playFireWave(FireWaveReport)`** (vague 7, fusionnée dans `main` le 2026-11-18 — [ADR-117](../_adr/ADR-117-les-charges-elementaires.md)) : anime une vague de la chaîne du Feu à partir du seul compte rendu de l'état — éclair sur chaque porteur résolu, boule de feu vers chaque voisin, retenu jusqu'à l'impact ; appelé par `StateSyncSystem` quand `CombatState.fireWaveReport` change, avant que `HerosDraftGame` demande la vague suivante ([`_patterns/05-8`](05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md) §4).
 - **`LayoutSystem`** (`layout_system.dart`) :
   - Calcule dynamiquement l'agencement géométrique des cartes dans la main du joueur en arc de cercle (`layoutHand`).
-  - Gère le repositionnement automatique et adaptatif des ennemis actifs sur le board (`repositionEnemies`) selon leur nombre (de 1 à 5).
+  - Gère le repositionnement automatique et adaptatif des ennemis actifs sur le board (`repositionEnemies`) selon leur nombre (de 1 à 5). Vague 1 du bestiaire (sur la branche `feat/v0.6.1-interface-des-ennemis`) : il est le **seul écrivain de la position d'un ennemi**, par `EnemyCard.place` (un écart relatif, descente de la fiche comprise), et relit le survol des cartes de combat après chaque replacement, le pointeur pouvant rester immobile.
+
+**Les règles pures d'affichage du combat** (vague 1 du bestiaire, sur la branche —
+[ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)) vivent à côté de ces systèmes,
+sans composant ni écran, testées seules : `ArmorVeil` (`armor_veil.dart`, le plein et la part du
+voile d'armure), `StatusReadout` et `statusEmoji` (`status_readout.dart`, ce qu'une entrée de statut
+ou de charge écrit et de quel côté, lu par Flame et par la fiche Flutter), `pickHoveredEntity`,
+`enemyBodyRect` et `unfoldsInward` (`entity_hover.dart`, l'arbitre du survol des cartes de combat,
+sur le modèle de `pickHoveredCard` dans `hand_geometry.dart`).

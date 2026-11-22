@@ -21,6 +21,13 @@ class TurnPhaseManager {
 
   TurnPhaseManager(this.controller, this.ref);
 
+  /// Vrai dès qu'un camp a perdu : le dernier ennemi est mort, ou le héros.
+  /// La phase ennemie peut finir le combat des deux façons — par les statuts
+  /// des ennemis, par leurs attaques — et l'écran enchaîne quand même sa fin
+  /// de phase : plus aucun tour ne doit alors s'ouvrir.
+  bool get _isCombatOver =>
+      controller.currentState.isCombatEnded || ref.read(runProvider).isDead;
+
   /// Ouvre le combat côté joueur : nettoyage des statuts, mana au max,
   /// reliques `startOfCombat`, puis main d'ouverture.
   ///
@@ -47,7 +54,10 @@ class TurnPhaseManager {
   ///
   /// L'ordre est celui d'avant P-02 et doit le rester : inverser les deux
   /// appels décalerait toute relique `startOfTurn` d'un tour.
+  ///
+  /// Sans effet sur un combat fini.
   void startPlayerTurn() {
+    if (_isCombatOver) return;
     ref.read(audioDirectorProvider).onMoment(GameMoment.turnStart);
     final runController = ref.read(runProvider.notifier);
 
@@ -150,8 +160,9 @@ class TurnPhaseManager {
   }
 
   /// Fin de la phase ennemie : sa fermeture (spec P-53, A9), puis roll
-  /// intents et retour au joueur.
+  /// intents et retour au joueur. Sans effet sur un combat fini.
   void endEnemyTurn() {
+    if (_isCombatOver) return;
     _closePhase(endsPlayerTurn: false);
     final List<EnemyInstance> rolledEnemies = controller.currentState.enemies
         .map((enemy) => controller.rollIntent(enemy))

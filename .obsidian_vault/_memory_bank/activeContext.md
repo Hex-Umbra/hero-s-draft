@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-19 | commit: ddcd5b97 -->
+<!-- last-sync: 2026-11-22 | commit: 477e9b12 -->
 
 # 🧠 Contexte Actuel
 
@@ -7,33 +7,43 @@
 
 ## Focus courant
 
-**Le chantier « Économie unifiée et catalogue » est clos (2026-11-19)** — P-43, P-42, P-44 lot 1 et
-P-53, de `0.5.2` à `0.6.0`, en neuf vagues, de la vague 0 à la vague 8. **Le focus revient à
-`docs/ROADMAP.md`** : aucun chantier n'est ouvert, et le prochain est celui que le propriétaire y
-choisira. La session de clôture (orchestration §8.9) écrit sur la branche
-`docs/cloture-chantier-economie-et-catalogue` : le journal (`004753db`), le bilan du suivi et les
-en-têtes (`ddcd5b97`), puis cette synchronisation ; **ce qu'elle dit clos le devient sur `main` à
-sa fusion**, sans test ni tag.
+**Le chantier du bestiaire (P-05) est ouvert** — cadrage clos le 21/11 avec le propriétaire,
+[`21-11-2026_cadrage_bestiaire_P05_Fable5.md`](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) :
+**source de vérité des décisions** (§1, B1 à B41, B8 ouverte) **et journal des vagues** (§4.1). Il se
+livre par vagues. **La vague 1, l'interface des ennemis, est livrée sur la branche
+`feat/v0.6.1-interface-des-ennemis` — vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la
+PR, de la fusion et du tag du propriétaire** ; elle emporte la correction S9 (`8d544a3d`), qui n'est
+pas dans `main`. **Les vagues suivantes ne sont pas ouvertes** : le langage des intentions (B1), les
+nouveaux ennemis (B5 : la famille du Rat, les slimes élémentaires), la meute (B3, B7, B17 à B30).
+Suivi en clair : [`docs/suivi_vagues_chantier/bestiaire.md`](../../docs/suivi_vagues_chantier/bestiaire.md).
 
-**La vague 8 est close** : fusionnée dans `main` le 2026-11-19 par la PR #56 (commit de fusion
-`84a1ee34`), taguée `v0.6.0` sur ce commit, CI de tête `44548499546` et `release.yml` run
-`44556736195` verts, release `v0.6.0` publiée le 2026-11-19, `verify_version.sh 0.6.0` cohérent —
-re-vérifié par `gh` à cette synchronisation. ADR-118 et ADR-119 sont désormais vrais sur `main`.
-
-**La méthode du chantier** : [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
-amendé par [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
+**La méthode** est celle du chantier précédent — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
+[ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
 [ADR-108](../_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md),
-[ADR-110](../_adr/ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md) et
-[ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md) ; **ce qu'elle lègue au
-prochain chantier** : [ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md)
-— cinq amendements adoptés en vagues 4 à 6, cinq propositions et R31 laissées au propriétaire, le
-gel des blueprints d'ADR-108 D8 échu. Le
+[ADR-113](../_adr/ADR-113-les-tests-gardent-les-calculs-et-les-donnees.md) et les cinq amendements
+d'[ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1 —,
+avec le cycle et les gabarits du
 [fichier d'orchestration](../../docs/possible_upgrades/01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md)
-reste le texte de ce chantier, figé ; le
-[brainstorm v3](../../docs/possible_upgrades/22-09-2026_brainstorm_heros_et_cartes_v3_Fable5.md)
-garde ses décisions de conception.
+§3 à §6, figé ; ni D3, ni D4, ni R31 ; autonomie `strict`. **Trois écarts du propriétaire pour la
+vague 1** (cadrage §4) : la session de cadrage l'orchestre, la branche part de la correction S9, la
+porte d'entrée ne contrôle ni fusion ni CI d'une vague précédente.
+
+**Le chantier « Économie unifiée et catalogue » est clos depuis le 2026-11-19** — P-43, P-42, P-44
+lot 1 et P-53, en neuf vagues ; sa clôture est fusionnée dans `main` (`f1ecddce`).
 
 Réserves à ne pas perdre de vue :
+
+- **Ce que la vague 1 du bestiaire laisse ouvert**, consigné dans
+  [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md) et au compte rendu de la vague
+  (§0, §4) : **le voile d'armure d'un ennemi est dormant** — aucun ennemi n'en gagne, le menu de
+  debug n'en pose pas sur un ennemi : B12, B15, B16 ne se testent pas en jeu (T20) ; le cadre de la
+  fiche sans hauteur maximale ; une languette intérieure plus large que sa carte recouvre l'autre ;
+  `onGameResize`, rappelé à chaque reconstruction de l'écran, coupe encore les secousses et la mort
+  d'un ennemi ; Puissance et Foudre partagent ⚡ ; les seuils 6, 12, 20 des paliers d'attaque écrits
+  trois fois (à réunir avec B1) ; `lib/game/components/entities/health_bar.dart` sans lecteur. **Un
+  changement visible non tranché** (V1) : les ennemis non sélectionnés gardent une bordure cyan sous
+  une carte focalisée. **Aux tests manuels, joués le 22/11** : 25 ✅, T20 non testé (le voile), une
+  correction C1 (`1876a07b`) ; V1 et les points vus laissés tels quels par le propriétaire.
 
 - **Ce que la vague 8 laisse ouvert**, consigné à la spec §2 et dans ADR-118 : **une Faiblesse de N
   tours réduit N − 1 attaques ennemies** — le porteur décompte avant d'agir ; moteur gardé (A19), les
@@ -48,8 +58,8 @@ Réserves à ne pas perdre de vue :
 - **Ce que la vague 7 laisse ouvert**, consigné au compte rendu §4 et dans ADR-117 : **la phase
   ennemie se joue jusqu'au bout après une victoire constatée par les statuts** (`_enemyRipostePhase`
   ne regarde jamais `isCombatEnded`) — un soin de trop de *Bénédiction*, et depuis la vague 8 de la
-  *Source de Vie* de *Prière* —, **bloquant pour le premier contenu qui posera du Feu ou du Poison
-  sur le héros** (S9) — non bloquant pour la vague 8, dont aucune carte n'en pose sur le héros ; un harnais de test
+  *Source de Vie* de *Prière* — (S9) : **corrigé sur la branche de la vague 1 du bestiaire**
+  ([ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)), encore ouvert sur `main` ; un harnais de test
   commun qui surcharge le chargement du registre (S11) ; `FrostVignette` recrée ses dégradés à
   chaque frame, `ChargeHalo` et `FireBurst` leur `Paint`, la règle « 1,5 largeur de carte » est
   écrite deux fois ; `shippedCard(id)` ne lit pas les cartes de lot. **Aux tests manuels** : le
@@ -84,7 +94,7 @@ Réserves à ne pas perdre de vue :
   imports, a échoué une fois dans une suite complète pendant la vague 1 ;
   `test/unit/content_editor/entity_writer_test.dart` (« une sauvegarde ratée ne laisse aucune copie
   partielle ») une fois pendant la partie 1 de la vague 7. Tous deux verts dans la suite complète
-  de cette synchronisation (2026-11-19). À surveiller.
+  de cette synchronisation (2026-11-22). À surveiller.
 - **Ce que la vague 3 laisse ouvert**, consigné dans ADR-107 : le boss « XP » ne monte rien en
   début de run ; l'or dort (constat de P-16) ; **à la file** : l'écart de « Butin de Reliques » de
   la fiche des probabilités, `DebugActions.gainLevel` qui peut donner deux niveaux, une garde de
@@ -98,11 +108,13 @@ Réserves à ne pas perdre de vue :
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
   `assets/data/patch_notes.json`, jamais ici.** Sur `main`, les trois porteurs de version portent
-  celle de la vague 8, taguée et publiée ; la clôture n'en pose aucune. Les versions qu'ont visées
-  les vagues font foi dans le fichier d'orchestration, §1.
+  celle de la vague 8 du chantier clos ; sur la branche du bestiaire, la note de la vague 1 est
+  écrite (`5ea848fb`). Les versions des vagues font foi au fichier d'orchestration, §1, pour le
+  chantier clos, et au journal du cadrage, §4.1, pour le bestiaire.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
-  note — la porte ne suppose jamais.
+  note — la porte ne suppose jamais. La vague 1 du bestiaire en est dispensée (cadrage §4,
+  troisième écart).
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
@@ -110,7 +122,30 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
+1. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
+   `feat/v0.6.1-interface-des-ennemis`, partie de la correction S9 `8d544a3d` ; cadrage `c2e2dacb`,
+   spec et plan `0eec1467` → `86a0f9db`, code `a356cabc` → `23c9823a`, note de version `5ea848fb` —
+   **livrée sur la branche, vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la PR, de la
+   fusion et du tag du propriétaire**) — **l'ennemi se lit.** **Le panneau des intentions** en trois
+   colonnes — « Niv. N », le nom, seul tronqué, les pastilles —, sans PV, une infobulle par rangée
+   (B9, B10 ; la Puissance garde sa flèche violette, B31). **La barre de PV** à la largeur de la
+   carte, l'armure en cyan à côté, un voile qui est la jauge de l'armure seule, plein au plus haut
+   montant (B12, B15, B16 — dormant) ; la Puissance quitte le dessus de la carte (B11). **Les
+   languettes**, sur les ennemis et le héros : bonus à gauche, altérations et charges à droite,
+   déroulées au survol de la souris, vers l'intérieur au bord de l'écran (B14, B32, B33, B39, B41).
+   **La fiche** : toucher un ennemi sans carte ni signature en attente agrandit sa carte, estompe le
+   plateau et ouvre à côté un cadre Flutter ; tout autre appui la ferme (B13, B35, B36, B40). Les
+   règles en fonctions pures, la fiche état d'affichage de `HerosDraftGame` reflété en différé, une
+   zone par carte de combat, la fermeture par le pointeur retenu, des écarts relatifs d'échelle et
+   de place ; `StatBadge`, `StatusIndicator`, `CircleProgressComponent` supprimés. Le tutoriel suit
+   (B37). **S9** : un combat fini pendant la phase ennemie ne rouvre aucun tour. Deux arrêts à la
+   spec, levés par les réponses B31 à B41 ; plan prêt au troisième tour ; sept tâches, une passe de
+   corrections. **Testée par le propriétaire le 22/11** (25 ✅, T20 non atteignable) ; **une correction,
+   C1** (`1876a07b`, note `477e9b12`) : la fiche écrit une ligne d'aide sous chaque entrée, la phrase
+   courte d'une charge venant de son fichier (`summary_fr` / `summary_en`, obligatoire). **1939 tests**
+   (+73 sur la base de **1866**), `dart analyze` propre (**vérifié le 2026-11-22**) — [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md),
+   [ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md).
+2. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
    `docs/cloture-chantier-economie-et-catalogue`, sur `main` à `84a1ee34` — **sans code, sans
    version, sans tag**, orchestration §8.9) — **le chantier est clos.** La porte d'entrée constate
    la vague 8 fusionnée, taguée, publiée, CI/CD verte ; le journal passe la vague 8 à « close » et
@@ -121,7 +156,7 @@ Réserves à ne pas perdre de vue :
    [ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md).
    **1859 tests**, `dart analyze` propre (**vérifié le 2026-11-19**, `lib/`, `test/` et `assets/`
    identiques à `84a1ee34`).
-2. **Vague 8 — P-42 tranche 3 : Sanctifié, Carnage, Marque, les neuf passifs jouables**
+3. **Vague 8 — P-42 tranche 3 : Sanctifié, Carnage, Marque, les neuf passifs jouables**
    (2026-11-18, branche `feat/v0.6.0-p42-tranche-3`, 13 commits `eb7945fb` → `147f564c` sur `main`
    à `5d894785` — **fusionnée dans `main` le 2026-11-19 par la PR #56, merge `84a1ee34`, taguée
    `v0.6.0`, CI/CD verte**) — **chaque passif a son lot.** **Le
@@ -148,32 +183,9 @@ Réserves à ne pas perdre de vue :
    (2026-11-19, `70fce82b` → `ee60f62f`) : la mort efface la sauvegarde, l'affûtage ne liste que l'affûtable,
    les intentions en lignes compactes à infobulles, un arbitre du survol de la main, la
    Puissance sur les tuiles de signature, « -12 PV Max » — **1859 tests** (vérifié le 2026-11-19), ADR-119.
-3. **Vague 7 — P-53 : les charges élémentaires, le Gel, le Feu et la Foudre** (2026-11-15 →
-   2026-11-17, branche `feat/v0.5.9-p53-charges-elementaires`, 30 commits `b50eca31` → `d15bcd04`
-   sur `main` à `535f9ded` — **fusionnée dans `main` le 2026-11-18 par la PR #55, merge
-   `5d894785`, taguée `v0.5.9`, CI/CD verte**) — **les éléments rompent.** **Le
-   cadre en donnée** : un fichier par charge sous `charges/` — la onzième source et la onzième
-   catégorie de l'éditeur —, qui déclare seuils, montée, surcharge, déclin, moment et sorte de
-   rupture, validé au chargement (un seuil de Feu sous 3 est refusé) ; quatre sortes de rupture
-   seules en Dart, une piste par porteur hors sauvegarde, `ChargeRules` seule écriture des règles.
-   **Le Gel** (seuils 3, 6 en boss, 5 pour le héros, +1 à chaque gel) ôte toute son action à
-   l'ennemi ; le héros gelé frappe moitié moins à son tour suivant, sans le perdre. **Le Feu**
-   s'accumule sans limite et, au tour du porteur, chaque tranche de 3 explose sur ses voisins — 12
-   et 1 Feu chacun —, **une chaîne vague par vague** que le contrôleur joue et que Flame anime.
-   **La Foudre** ajoute +1 par point à chaque coup, +2 une fois chargée, jusqu'à la fin de la phase.
-   Le Gel **quitte le barème proportionnel** ; le pipeline reçoit le catalogue ; l'intention d'un
-   ennemi n'est plus réduite. **Les dix contenus relus** : *Embrasement* 3 Feu, *Congelant* 1 Gel
-   par niveau, les autres inchangés ; la Brûlure devient le Feu, l'Électrocution la Foudre. **À
-   l'écran** : « ❄ 2/3 », « 🔥 5 », « ⚡ Chargé », l'intention barrée d'un ennemi gelé, le panneau du
-   héros, le tutoriel, une section « Charges » au debug ; en partie 2, **la gangue, l'onde et le
-   halo**, et le bonus « +N » de chaque coup de Foudre. **Trois arrêts sur des questions P**, chacun
-   levé par le propriétaire sur maquettes : P-a à P-e (15/11), Q-P1 (16/11), Q-P2 (17/11) ; spec
-   prête au quatrième tour. Note de version écrite (`d15bcd04`). **1772 tests** (+90 sur la base de
-   **1682**, celle de la porte d'entrée), `dart analyze` propre (**vérifié le 2026-11-17**) —
-   [ADR-117](../_adr/ADR-117-les-charges-elementaires.md), qui amende ADR-023 et ADR-111 et clôt
-   ADR-110.
 > [!NOTE]
-> **Rotations.** Sortie le 2026-11-19, dans `../_archive/` : `2026-11-19-activeContext-livraisons.md`
+> **Rotations.** Sortie le 2026-11-22, dans `../_archive/` : `2026-11-22-activeContext-livraisons.md`
+> (la vague 7, P-53). Sortie le 2026-11-19 : `2026-11-19-activeContext-livraisons.md`
 > (la vague 6, P-42 tranche 2). Sortie le 2026-11-18 : `2026-11-18-activeContext-livraisons.md`
 > (la vague 5, P-42 tranche 1 et P-44 lot 1). Sortie le 2026-11-17 : `2026-11-17-activeContext-livraisons.md`
 > (la vague 4, P-43 lot E4). Sortie le 2026-11-15 : `2026-11-15-activeContext-livraisons.md`
@@ -192,14 +204,13 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : il ouvre la PR de `docs/cloture-chantier-economie-et-catalogue` et la
-fusionne — ni test manuel, ni tag (orchestration §8.9, point 6).
+**D'abord le propriétaire** : la vague 1 du bestiaire est testée (le cahier
+`docs/superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md` : 25 ✅, T20 non
+atteignable) et sa correction C1 livrée ; il ouvre la PR de `feat/v0.6.1-interface-des-ennemis`, la
+fusionne et la tague `v0.6.1`. La correction S9 entre dans `main` avec elle.
 
-**Puis le prochain chantier, que le propriétaire choisit dans `docs/ROADMAP.md`** — ce fichier n'en
-choisit aucun. S'il se livre par vagues, il part d'ADR-102, 103, 108, 113 et des amendements
-d'[ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1, et
-tranche à son ouverture D3, D4 et R31. **Le défaut S9** (la phase ennemie après une victoire) reste
-bloquant pour le premier contenu qui posera du Feu ou du Poison sur le héros ; il est porté au Tier E
-de `docs/ROADMAP.md`, avec les autres réserves du chantier. **P-07 doit lire
+**Puis la vague suivante du bestiaire, que le propriétaire ouvre** — ce fichier n'en ouvre aucune ;
+le journal du cadrage, §4.1, en tient l'avancement. Le compte rendu de la vague 1 (§5) propose
+quatre amendements de méthode, laissés au propriétaire. **P-07 doit lire
 [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
 aux animations.**

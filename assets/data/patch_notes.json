@@ -1,5 +1,42 @@
 [
   {
+    "version": "0.6.1",
+    "date": "2026-11-22",
+    "title": "L'Ennemi à Découvert",
+    "sections": [
+      {
+        "category": "Nouvelles Fonctionnalités",
+        "emoji": "✨",
+        "entries": [
+          "Touchez un ennemi pendant votre tour, sans carte sélectionnée, pour ouvrir sa fiche : sa carte s'agrandit, le reste du plateau s'estompe, et la fiche affiche à côté son nom, son niveau, ses PV, son armure, sa Puissance, ce qu'il s'apprête à faire, ses bonus et ses altérations. Touchez ailleurs pour la refermer.",
+          "Dans la fiche, chaque bonus, altération et charge dit en une phrase ce qu'il fait : le Gel au seuil fait perdre son action suivante, le Feu explose sur les voisins, la Foudre fait plus mal à chaque coup reçu, le Poison blesse à chaque tour.",
+          "Avec une carte sélectionnée, toucher un ennemi joue toujours la carte sur lui, comme avant.",
+          "Des languettes bordent désormais les cartes des ennemis et du héros : à gauche les bonus, à droite les altérations et les charges (Gel, Feu, Foudre), chacune avec son icône et sa valeur.",
+          "À la souris, survolez une carte pour dérouler ses languettes et lire le nom de chaque effet, sa valeur et, quand il en a une, sa durée."
+        ]
+      },
+      {
+        "category": "Améliorations",
+        "emoji": "⚡",
+        "entries": [
+          "Le panneau des intentions ennemies est refait : pour chaque ennemi, son niveau (« Niv. 1 »), son nom, puis une pastille qui dit ce qu'il va faire. Les PV n'y figurent plus.",
+          "Survolez la pastille d'un ennemi, ou maintenez-la appuyée sur écran tactile, pour lire toute son intention en une phrase.",
+          "Au-dessus d'un ennemi ne reste qu'une barre de PV, à la largeur de sa carte, avec ses PV écrits dedans ; elle montrera aussi son armure.",
+          "La Puissance d'un ennemi ne s'affiche plus au-dessus de sa carte : elle se lit dans sa fiche, et son intention la compte déjà.",
+          "Le tutoriel présente le nouveau panneau des intentions, la barre de PV des ennemis et leur fiche."
+        ]
+      },
+      {
+        "category": "Corrections",
+        "emoji": "🐛",
+        "entries": [
+          "Un combat gagné pendant le tour des ennemis, par exemple par le Poison ou le Feu, se termine désormais tout de suite, au lieu de rouvrir un tour du joueur.",
+          "De même, un héros vaincu pendant le tour des ennemis ne peut plus être ranimé par un soin de début de tour."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.6.0",
     "date": "2026-11-18",
     "title": "Les Neuf Passifs",

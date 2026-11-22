@@ -591,11 +591,11 @@ final Map<EntityCategory, EntityDescriptor> kEntityDescriptors = {
       'rupture.kind': _names(RuptureKind.values),
       'heroRupture.kind': _names(RuptureKind.values),
     },
-    // `name` et `description` seulement : `brokenName` et `heroDescription`
+    // `name`, `description` et `summary` : `brokenName` et `heroDescription`
     // sont **facultatifs et par paires**, ce que `ChargeData.fromJson`
     // verifie (exiges ou refuses selon la rupture), comme les paires
     // facultatives d'une recompense de niveau.
-    bilingualBases: const ['name', 'description'],
+    bilingualBases: const ['name', 'description', 'summary'],
     construct: ChargeData.fromJson,
     // Le gabarit est celui du Feu, le seul livre sans paire facultative
     // (`brokenName`, `heroDescription`) : elles sont ecartees a dessein, comme

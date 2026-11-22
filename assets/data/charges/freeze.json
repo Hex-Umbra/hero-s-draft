@@ -6,6 +6,8 @@
   "brokenName_en": "Frozen",
   "description_fr": "S'accumule jusqu'à {threshold} ({bossThreshold} pour un boss), sans jamais le dépasser : le porteur gèle et perd toute sa prochaine action. Le seuil monte de {growth} à chaque gel. Perd {decay} point à son tour s'il n'a pas gelé.",
   "description_en": "Builds up to {threshold} ({bossThreshold} for a boss), never beyond: the bearer freezes and loses its whole next action. The threshold rises by {growth} with each freeze. Loses {decay} point on its turn if it did not freeze.",
+  "summary_fr": "Au seuil, gèle : perd sa prochaine action.",
+  "summary_en": "At the threshold, freezes: loses its next action.",
   "heroDescription_fr": "Sur vous : à {heroThreshold}, vos cartes et signatures infligent {percent} % de dégâts en moins pendant votre prochain tour.",
   "heroDescription_en": "On you: at {heroThreshold}, your cards and signatures deal {percent}% less damage during your next turn.",
   "threshold": 3,

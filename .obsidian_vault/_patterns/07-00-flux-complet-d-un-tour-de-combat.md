@@ -109,8 +109,12 @@
 > une vague à la fois et Flame l'appelle (`HerosDraftGame._enemyRipostePhase` : `onStartEnemyTurn`,
 > `onResolveFireWave`, `onResolveEnemyStatuses`) ; l'ennemi gelé se lit sur `skipsAction` **avant**
 > que Flame lance son action, si bien qu'il ne fonce jamais. Aucune règle ne se calcule dans Flame.
-> ⚠️ La phase ennemie se joue jusqu'au bout après une victoire constatée par les statuts (défaut
-> antérieur, porté à la file : compte rendu de la vague 7, §4).
+> **Un combat fini ne rouvre aucun tour** (S9, sur la branche `feat/v0.6.1-interface-des-ennemis`
+> — [ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)). Flame joue encore la phase
+> ennemie jusqu'au bout, mais `endEnemyTurn` (étape 4) et `startPlayerTurn` (étape 1) ne font rien
+> dès qu'un camp a perdu — `isCombatEnded`, ou le héros mort (`RunState.isDead`) : ni intentions,
+> ni statuts, ni pioche, ni `turnCount`. Sur `main`, la phase se joue encore après une victoire
+> constatée par les statuts (compte rendu de la vague 7, §4).
 
 > [!IMPORTANT]
 > **Les étapes 0 et 1 appartiennent à `TurnPhaseManager`, pas à `GameScreen`.** Le widget

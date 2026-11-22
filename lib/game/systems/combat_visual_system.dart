@@ -3,9 +3,9 @@ import '../heros_draft_game.dart';
 import '../game_constants.dart';
 import '../../models/fire_wave_report.dart';
 import '../components/entities/enemy_card.dart';
-import '../components/entities/status_indicator.dart';
 import '../components/visual_effects/fire_wave_effects.dart';
 import '../components/visual_effects/targeting_line.dart';
+import 'status_readout.dart';
 
 class CombatVisualSystem extends Component with HasGameReference<HerosDraftGame> {
   late final TargetingLine targetingLine;
