@@ -9,6 +9,7 @@
         "emoji": "✨",
         "entries": [
           "Touchez un ennemi pendant votre tour, sans carte sélectionnée, pour ouvrir sa fiche : sa carte s'agrandit, le reste du plateau s'estompe, et la fiche affiche à côté son nom, son niveau, ses PV, son armure, sa Puissance, ce qu'il s'apprête à faire, ses bonus et ses altérations. Touchez ailleurs pour la refermer.",
+          "Dans la fiche, chaque bonus, altération et charge dit en une phrase ce qu'il fait : le Gel au seuil fait perdre son action suivante, le Feu explose sur les voisins, la Foudre fait plus mal à chaque coup reçu, le Poison blesse à chaque tour.",
           "Avec une carte sélectionnée, toucher un ennemi joue toujours la carte sur lui, comme avant.",
           "Des languettes bordent désormais les cartes des ennemis et du héros : à gauche les bonus, à droite les altérations et les charges (Gel, Feu, Foudre), chacune avec son icône et sa valeur.",
           "À la souris, survolez une carte pour dérouler ses languettes et lire le nom de chaque effet, sa valeur et, quand il en a une, sa durée."
