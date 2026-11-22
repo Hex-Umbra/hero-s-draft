@@ -1,16 +1,16 @@
 # Cadrage — le bestiaire (P-05) : trente décisions, et la première vague
 
-> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
+> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague ; onze de plus, B42 à B52, le 22/11, pour le programme jusqu'à `0.7.0`. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
 >
 > **Les maquettes** sur lesquelles le propriétaire a tranché sont dans un deck privé, <https://claude.ai/artifact/9LxzmnszyErbptiiJh8LDZ> (59 diapositives). Font foi : 31 (panneau des intentions), 37 à 40 (barre, carte, fiche, plateau), 41 (armure), 54 (rat libre et meute), 58 (la famille du Rat). Ce sont des approximations — polices de remplacement, troncatures estimées : ce document et les specs portent en texte ce qu'elles fixent.
 >
-> **Livraison** : par vagues (§4). La première, `0.6.1`, ne livre que l'interface des ennemis ; le langage des intentions, les nouveaux ennemis et la meute attendent les vagues suivantes, que le propriétaire n'a pas encore ouvertes.
+> **Livraison** : par vagues, un tier par vague jusqu'à `0.7.0` (B45). La première, `0.6.1`, a livré l'interface des ennemis. **Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** — les vagues, le journal, les fiches et le catalogue des mécanismes ; ce document garde les décisions.
 
 ---
 
 ## 1. Les décisions acquises
 
-Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception.
+Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B52 le 22/11, à la préparation de la suite. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception, et B42, que B45 et B50 amendent.
 
 ### 1.1. Le langage et le contenu
 
@@ -63,17 +63,37 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B25** | Un rat invoqué ne rapporte rien, ni or ni autre récompense. Un rat libre et un alpha rapportent comme tout ennemi. | 21/11 |
 | **B21, B30** | À l'écran, une meute compte pour 2 cartes sur les cinq, quel que soit le nombre de ses rats, et un seul chef de meute est à l'écran : un second alpha attend en réserve. Le plateau porte six cartes au plus. | 21/11 |
 | **B19** | Au-delà du plafond, la réserve existante s'applique sans changement ([règle 02-6](../../.obsidian_vault/_rules/)). | 21/11 |
+| **B43** | Le sprite déjà produit, `art_src/creatures/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avant la vague de la meute. | 22/11 |
+
+### 1.4. L'ordre des vagues
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B42** | *Amendée par B45 et B50.* Après l'interface (vague 1), **le langage des intentions d'abord (B1), seul**, en vague 2 ; la famille du Rat et la meute ensuite, en vague 3, écrites directement dans le nouveau format. Rien ne migre deux fois. La vague 2 n'ajoute aucun ennemi. | 22/11 |
+| **B44** | Les slimes élémentaires (B5) sont **trois créatures neuves**, produites de zéro par `/workflow-creature`, et non des variantes du Slime. Ils n'entrent dans aucune vague avant leurs sprites. | 22/11 |
+
+### 1.5. Le programme jusqu'à `0.7.0`
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B45** | *Amende B42.* Le bestiaire se livre **un tier par vague**, jusqu'à `0.7.0` : la vague 2 (`0.6.2`) livre le langage des intentions (B1), les mécanismes du tier 1 et ses ennemis ; la vague 3 (`0.6.3`) le tier 2 ; la vague 4 (`0.6.4`) le tier 3 ; la vague 5 (`0.6.5`) le visuel — le cadre de tier, les fonds de fenêtre, le décor ; la vague 6 (`0.7.0`) le tier boss. Les tiers 4 et 5 viennent après `0.7.0`. Le déroulé : [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md). | 22/11 |
+| **B46** | Une vague ne construit que les mécanismes dont ses ennemis se servent, et les branche dans la même vague ; un mécanisme se teste en jeu avec le premier ennemi qui s'en sert. Tous les mécanismes sont tenus dans un [catalogue](../chantier_bestiaire/catalogue_mecanismes.md), qui dit pour chacun sa vague. | 22/11 |
+| **B47** | Les boss forment **un tier à part**, hors de l'échelle 1 à 5 des ennemis de base. | 22/11 |
+| **B48** | Les quatre ennemis d'aujourd'hui n'ont pas de vague propre : chacun évolue avec sa famille, dans la vague de son tier — le Gobelin au tier 1, le Squelette au tier 2, l'Orc au tier 3. | 22/11 |
+| **B49** | Le larcin du tier 1 est porté par **le Gobelin**, signature de sa famille (B2). Le Bandit de grand chemin n'entre pas au tier 1. | 22/11 |
+| **B50** | *Amende B42.* Le Rat alpha étant de tier 2 (B20), **la meute — l'alpha, l'invocation, le lien — vient avec le tier 2**, en vague 3. Le Rat arrive seul en vague 2, avec sa demi-place. | 22/11 |
+| **B51** | Une vague d'ennemis ne s'ouvre **qu'une fois tous ses sprites validés** ; la liste de ses ennemis est fixée dans sa fiche. | 22/11 |
+| **B52** | **Tout le bestiaire est redessiné** dans le style des sprites neufs : chacun des quatre ennemis d'aujourd'hui reçoit un sprite neuf dans la vague de son tier — le Slime et le Gobelin en vague 2, le Squelette en vague 3, l'Orc en vague 4. | 22/11 |
 
 ---
 
 ## 2. Ce qui reste à trancher
 
-Aucun de ces points ne concerne la première vague.
+Chaque point est repris, sous « Prérequis », par la fiche de la vague qui en a besoin ([`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)).
 
 - La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. La première vague ne le construit pas, aucune intention n'ayant encore deux effets ; il se fixe avec B1.
 - Trois propositions du cadrage, sans numéro : l'invocation s'annonce comme une intention, un tour avant ; un rat invoqué n'agit qu'au tour suivant ; l'invocation et le lien s'écrivent en données, pour toute famille, de façon symétrique (le héros pourrait un jour invoquer).
 - La meute compte-t-elle pour 2 dès l'entrée de l'alpha, avant toute invocation ? C'est la lecture du cadrage, pas une décision.
-- Le sprite du Rat géant déjà produit sert-il le Rat ou le Rat alpha ? L'autre est à produire, comme les slimes.
 - Le prix de l'alpha dans le budget de combat, qui doit couvrir des rats entrant sans rien coûter.
 - Les PV, les dégâts et les pourcentages : à l'équilibrage.
 
@@ -99,14 +119,13 @@ Lu le 21/11 sur `8d544a3d`. À revérifier par commande avant de s'y appuyer.
 
 **La méthode** est celle du chantier précédent — [ADR-102](../../.obsidian_vault/_adr/), ADR-103, [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md), ADR-113 et les cinq amendements d'[ADR-120](../../.obsidian_vault/_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1 —, avec le cycle et les gabarits du [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) §3 à §6, lus pour ce chantier. Les propositions non adoptées d'ADR-120 (D3, D4) ne s'appliquent pas ; R31 non plus : la vague garde sa spec. Autonomie : `strict`.
 
+**Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** (B45) : le journal, les fiches des vagues 2 à 5, le catalogue des mécanismes, et la méthode lue pour ce chantier. Ce §4 garde, pour mémoire, les arrêts et la fiche de la vague 1.
+
 **Trois écarts, décidés par le propriétaire le 21/11** : la session de cadrage orchestre elle-même la première vague ; la branche part de `fix/s9-phase-ennemie-apres-victoire` (`8d544a3d`) et non de `main`, si bien que la correction S9 sort avec `0.6.1` ; la porte d'entrée ne contrôle donc ni la fusion d'une vague précédente ni la CI.
 
 ### 4.1. Le journal
 
-| Vague | Version | Branche | Spec | Plan | Tests | État |
-|:---|:---|:---|:---|:---|:---|:---|
-| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — quatre tours | [plan](../superpowers/plans/2026-11-21-p05-interface-des-ennemis.md) — trois tours, prêt | 1866 → **1935** → **1939** (correction C1) | **livrée sur branche** le 22/11 · [compte rendu](../superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md) · [tests manuels](../superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md) — test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du tag du propriétaire |
-| suivantes | à définir | — | — | — | — | non ouvertes |
+Il a déménagé dans le [README du chantier](../chantier_bestiaire/README.md), §4.
 
 **Arrêts** : le 21/11, à la spec, après le troisième tour de vérification — il reste un constat moyen de classe T, et l'autonomie est `strict` ; onze questions visibles du joueur (31 à 41 du deck, [fichier de vérifications](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md) §2) attendaient aussi le propriétaire. **Levé le même jour** : le propriétaire répond aux onze questions (B31 à B41), accepte les corrections recommandées du troisième tour et accorde un quatrième tour, différentiel. **Second arrêt le même jour** : le quatrième tour rend « à corriger » pour un constat moyen de classe T, né de la correction précédente ; la correction recommandée est appliquée, non revérifiée ; le propriétaire dit si la vague passe au plan ou refait un tour. **Levé** : il choisit le plan ; la fiche, tâche à risque, y est écrite en entier et rejouée par son vérificateur.
 
