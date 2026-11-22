@@ -6,7 +6,7 @@
 
 ## Ce qu'elle livre
 
-- **Les mécanismes du tier 2** ([catalogue](catalogue_mecanismes.md), #11 à #14) : l'invocation, l'aura, viser un allié, le perce-armure.
+- **Les mécanismes du tier 2** ([catalogue](catalogue_mecanismes.md), #4 et #11 à #14) : plusieurs coups, venu de la vague 2 (B54), l'invocation, l'aura, viser un allié, le perce-armure.
 - **La famille du Rat entière** : le Rat alpha (tier 2, B20), qui entre seul et invoque ses rats un par un, deux au plus ; le lien de meute (B22, B29), écrit comme une aura.
 - **Les ennemis de tier 2**, proposés le 22/11 — **la liste est à confirmer** (prérequis 1) :
 
@@ -29,7 +29,8 @@
    - les pourcentages du lien de meute (+20 % par rat, +25 % pour le rat : des exemples, B22, B29) ;
    - les valeurs des ennemis, et la Faiblesse du Squelette ;
    - le perce-armure : ignorer l'armure, la détruire, ou les deux ;
-   - ce que le joueur lit d'une invocation et d'une aura (pastille, languette, fiche).
+   - ce que le joueur lit d'une invocation et d'une aura (pastille, languette, fiche) ;
+   - le « +1 » de B6, si une intention du tier 2 a trois effets (B56).
 
 ## Porte d'entrée
 
@@ -49,10 +50,11 @@ Le format des intentions et la résolution symétrique tels que la vague 2 les a
 2. **L'aura** : un bonus en donnée, qui dépend des alliés vivants ; le lien de meute comme son premier cas (la Puissance seule, B22) ; ce qu'un rat libre n'y gagne pas.
 3. **Viser un allié** : la cible d'un effet d'ennemi parmi les autres ennemis, et le choix de cette cible.
 4. **Le perce-armure** : ignorer l'armure, ou la détruire ; sa place dans le calcul partagé ; ce que la rune du héros en garde.
-5. **Les ennemis** : leurs fichiers, leurs sprites, leurs valeurs, leurs textes en français et en anglais ; le Squelette qui prend la Faiblesse.
-6. **Ce que le joueur lit** : l'invocation annoncée, l'aura et sa source, l'armure détruite.
-7. **Les outils** : l'éditeur de contenu, le menu de debug.
-8. **Les tests** (ADR-113).
+5. **Plusieurs coups** (B54) : chaque coup résolu à part, avec ce qu'il déclenche — esquive, Foudre, statuts.
+6. **Les ennemis** : leurs fichiers, leurs sprites, leurs valeurs, leurs textes en français et en anglais ; le Squelette qui prend la Faiblesse.
+7. **Ce que le joueur lit** : l'invocation annoncée, l'aura et sa source, l'armure détruite.
+8. **Les outils** : l'éditeur de contenu, le menu de debug.
+9. **Les tests** (ADR-113).
 
 ## À arbitrer
 

@@ -7,30 +7,25 @@
 ## Ce qu'elle livre
 
 - **Le socle** : B1. Une intention ennemie s'écrit avec la liste `effects` des cartes ; les trois intentions d'aujourd'hui (attaque, Armure, Puissance) deviennent des écritures de cette liste, et les quatre ennemis (Slime, Gobelin, Squelette, Orc) migrent, **valeurs identiques**. La résolution d'un effet devient symétrique : elle part d'un lanceur, héros ou ennemi, vers sa cible. De B6, la part qui dépend de B1 : une pastille par effet de l'intention.
-- **Les mécanismes du tier 1** ([catalogue](catalogue_mecanismes.md), #2 à #9) : le prix d'un effet, la demi-place, plusieurs coups, poser un statut ou une charge, le vol de vie, le larcin, l'esquive et les traits.
+- **Les mécanismes du tier 1** ([catalogue](catalogue_mecanismes.md), #2, #3 et #5 à #9) : le prix d'un effet, la demi-place, poser un statut ou une charge, le vol de vie, le larcin, l'esquive et les traits. « Plusieurs coups » est parti en vague 3 (B54).
 - **Sept ennemis neufs de tier 1**, branchés sur ces mécanismes :
 
-| Ennemi | Mécanisme | Valeurs proposées *(à confirmer, prérequis 2)* |
+| Ennemi | Mécanisme | Valeurs (B53) |
 |:---|:---|:---|
-| Rat | demi-place (B28), plusieurs coups | 14 PV, 5 dégâts (28/07) ; le nombre de coups est à fixer |
-| Slime de givre | pose du Gel | une charge par coup (B5) ; PV et dégâts à fixer |
-| Slime de braise | pose du Feu | une charge par coup (B5) ; PV et dégâts à fixer |
-| Slime d'orage | pose de la Foudre | une charge par coup (B5) ; PV et dégâts à fixer |
-| Araignée venimeuse | pose du Poison | 16 PV, 2 dégâts, Poison 2 (28/07) |
-| Corbeau charognard | vol de vie | 16 PV, 4 dégâts, 50 % des dégâts infligés (28/07) |
+| Rat | demi-place (B28) | 8 PV, 3 dégâts, un coup (B54) |
+| Slime de givre | pose du Gel | 18 PV, 3 dégâts, 2 Gel par coup |
+| Slime de braise | pose du Feu | 18 PV, 3 dégâts, 1 Feu par coup |
+| Slime d'orage | pose de la Foudre | 18 PV, 4 dégâts, 1 Foudre par coup |
+| Araignée venimeuse | pose du Poison | 16 PV, 2 dégâts, Poison 1 par morsure |
+| Corbeau charognard | vol de vie | 16 PV, 4 dégâts, 50 % des dégâts portés aux PV |
 | Kobold éclaireur | esquive, en trait | 14 PV, 4 dégâts, 20 % par coup (B4) |
 
-- **Le Gobelin vole** (B49) : il garde ses valeurs et gagne le larcin (5 % de l'or, proposé par le 28/07 pour le Bandit).
+- **Le Gobelin vole** (B49) : il garde ses valeurs et gagne le larcin — 5 or par coup, perdu, montré par un texte flottant et une languette de butin (B57).
 
 ## Prérequis — avant l'ouverture
 
 1. **Les sprites, tous validés** (B51) : Rat, Slime de givre, Slime de braise, Slime d'orage, Araignée venimeuse, Corbeau charognard, Kobold éclaireur, **et le Slime et le Gobelin redessinés** (B52) — neuf, par `/workflow-creature` (`art_src/creatures/<famille>/tier_1/`).
-2. **Les réponses du propriétaire** (classe P), sur maquettes quand elles se voient — elles sont développées, chiffres du jeu à l'appui et une recommandation par question, dans le [deck de la vague 2](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK) (22/11) :
-   - les valeurs des sept ennemis et du larcin du Gobelin (table ci-dessus) ;
-   - **B8** : où se lit l'esquive — recommandation du cadrage : un indicateur dans la languette de gauche, le pourcentage à la place de la durée, et un texte flottant « Esquive » ;
-   - **le « +1 » de B6** : une attaque qui empoisonne porte déjà deux pastilles ; deux pastilles puis un compteur, ou une pastille puis un compteur ;
-   - **le larcin** : combien, comment il se voit, et si l'or volé est rendu quand on tue le voleur ;
-   - **le prix d'un effet** : il change le nombre d'ennemis d'un combat ; proposition du 28/07 : +6 par ennemi qui porte un effet, l'esquive × 0,3.
+2. ✅ **Les réponses du propriétaire** — données le 22/11 sur le [deck de la vague 2](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK) : les valeurs (B53, B54), l'esquive (B55), le « +1 » reporté (B56), le larcin (B57), le prix d'un effet (B58). Il ne reste que les sprites.
 
 ## Porte d'entrée
 
@@ -60,14 +55,13 @@ La vague 1 fusionnée dans `main` par la PR #57 (commit de fusion `32e2ad46`) et
 4. **La migration** des quatre ennemis, et la preuve par test que les dégâts, l'Armure et la Puissance d'une phase ennemie ne changent pas.
 5. **Les mécanismes du tier 1**, un par un :
    - **la demi-place** : la place comme donnée de l'ennemi, la composition qui n'est plus un entier, le plateau à six cartes au plus (B30), le Rat à 80 % (B17), la réserve au-delà du plafond (B19) ;
-   - **plusieurs coups** : chaque coup résolu à part, avec ce qu'il déclenche ;
    - **poser un statut ou une charge** sur le héros, par les règles existantes ;
    - **le vol de vie** d'un ennemi ;
-   - **le larcin** : où l'or part, ce qui le rend, ce qui le montre ;
-   - **l'esquive et les traits** : l'esquive dans le calcul partagé (B4), le trait comme effet permanent porté dès l'entrée en combat. **Le nom est à choisir** : `TraitSystem` désigne déjà le répartiteur des passifs du héros (`lib/game/systems/trait_system.dart`).
-6. **Le prix d'un effet** dans le budget d'un combat, selon la réponse du propriétaire.
+   - **le larcin** (B57) : l'or retiré, plafonné à ce que le héros a et perdu ; la languette de butin et le texte flottant ;
+   - **l'esquive et les traits** : l'esquive dans le calcul partagé (B4) et sa languette (B55), le trait comme effet permanent porté dès l'entrée en combat. **Le nom est à choisir** : `TraitSystem` désigne déjà le répartiteur des passifs du héros (`lib/game/systems/trait_system.dart`).
+6. **Le prix d'un effet** dans le budget d'un combat : +6 par ennemi qui en porte un (B58) ; et le prix d'un ennemi qui compte sa place, pour le Rat (B54).
 7. **Les sept ennemis et le Gobelin** : leurs fichiers, leurs dossiers (`dart run tool/sync_assets.dart`), leur tier, leurs valeurs, leurs textes en français et en anglais.
-8. **Ce que le joueur lit** : les pastilles (une par effet, à la couleur de son statut, la flèche violette de la Puissance, B31, et le « +1 »), la phrase d'une intention à plusieurs effets dans l'infobulle et dans la fiche, en français et en anglais ; l'esquive (B8) et le larcin à l'écran.
+8. **Ce que le joueur lit** : les pastilles (une par effet, à la couleur de son statut, la flèche violette de la Puissance, B31 ; deux au plus au tier 1, le « +1 » étant reporté, B56), la phrase d'une intention à plusieurs effets dans l'infobulle et dans la fiche, en français et en anglais ; l'esquive (B55) et le larcin (B57) à l'écran ; l'icône du larcin et sa couleur.
 9. **Les outils** : l'éditeur de contenu, qui écrit le nouveau format ; ce que le menu de debug doit permettre pour tester chaque mécanisme en jeu.
 10. **Les tests** — les calculs, les données et les contrôleurs seulement (ADR-113) ; tout ce qui se voit va au fichier de tests manuels.
 
@@ -81,11 +75,11 @@ Chaque plan s'écrit sur le code que la partie précédente a laissé (orchestra
 
 ## À arbitrer
 
-Les questions P ont leur réponse dans les prérequis. Le reste — le format, la symétrie, la migration, la demi-place dans la composition — est de classe T. Une question P neuve s'écrit et se signale, sans se trancher.
+Les questions P ont leur réponse dans le cadrage, B53 à B58. Le reste — le format, la symétrie, la migration, la demi-place dans la composition — est de classe T. Une question P neuve s'écrit et se signale, sans se trancher.
 
 ## Ne pas absorber
 
-Aucun mécanisme des vagues 3 et suivantes (catalogue #11 à #17) : ni Rat alpha, ni invocation, ni aura, ni meute, ni perce-armure, ni phases ; ni cadre de tier, ni fond (vague 5) ; ni épines, étourdissement ou malédictions (P-44 lot 2), ni affixes d'élite (P-14), ni intentions cachées (P-19) ; aucun ennemi hors de la table ; **aucun équilibrage des ennemis existants**, hors du larcin du Gobelin.
+Aucun mécanisme des vagues 3 et suivantes (catalogue #4 et #11 à #17) : ni plusieurs coups (B54), ni Rat alpha, ni invocation, ni aura, ni meute, ni perce-armure, ni phases ; ni cadre de tier, ni fond (vague 5) ; ni épines, étourdissement ou malédictions (P-44 lot 2), ni affixes d'élite (P-14), ni intentions cachées (P-19), ni la fuite du voleur ; ni le « +1 » (B56) ; aucun ennemi hors de la table ; **aucun équilibrage des ennemis existants**, hors du larcin du Gobelin.
 
 ## Tâches à risque
 
@@ -98,4 +92,4 @@ Un ADR pour le langage des intentions, qui complète ADR-061, et un pour les mé
 
 ## Ce que le joueur voit
 
-Sept ennemis neufs dès le premier acte : des rats qui viennent par deux et mordent plusieurs fois, trois slimes qui gèlent, brûlent ou électrisent, une araignée qui empoisonne, un corbeau qui se soigne en frappant, un kobold qui esquive ; un gobelin qui vole de l'or. Les ennemis d'aujourd'hui frappent comme avant. Les sprites neufs, Slime et Gobelin compris, s'affichent dans la carte actuelle, sans cadre de tier (vague 5).
+Sept ennemis neufs dès le premier acte : des rats qui viennent par deux, trois slimes qui gèlent, brûlent ou électrisent, une araignée qui empoisonne, un corbeau qui se soigne en frappant, un kobold qui esquive ; un gobelin qui vole de l'or. Les ennemis d'aujourd'hui frappent comme avant. Les sprites neufs, Slime et Gobelin compris, s'affichent dans la carte actuelle, sans cadre de tier (vague 5).

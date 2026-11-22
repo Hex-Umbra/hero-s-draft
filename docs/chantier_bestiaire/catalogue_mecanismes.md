@@ -13,13 +13,13 @@
 | # | Mécanisme | Ce qu'il fait | Ennemis qui s'en servent | Côté héros | Vague | Décisions |
 |:---:|:---|:---|:---|:---:|:---:|:---|
 | 1 | **Le langage des intentions** | Une intention est une liste d'effets, celle des cartes ; un effet part d'un lanceur, héros ou ennemi, vers sa cible | tous | ✅ les cartes | **2** | B1, B6, B42 |
-| 2 | **Le prix d'un effet** | Ce qu'un effet ajoute au coût d'un ennemi dans le budget d'un combat ; sans lui, un ennemi qui empoisonne « ne coûte rien » | tous les ennemis neufs | — | **2** | — (le 28/07 proposait +6 fixe, l'esquive × 0,3) |
+| 2 | **Le prix d'un effet** | Ce qu'un effet ajoute au coût d'un ennemi dans le budget d'un combat ; sans lui, un ennemi qui empoisonne « ne coûte rien » | tous les ennemis neufs | — | **2** | B58 (+6) |
 | 3 | **La demi-place** | Un ennemi prend une part de place à la composition d'un combat : deux rats pour une place ; le plateau porte six cartes au plus | Rat | — | **2** | B3, B28, B7, B17, B30 |
-| 4 | **Plusieurs coups** | Une attaque en N coups, chacun résolu à part | Rat, puis Loup | ✅ `hits` | **2** | — |
+| 4 | **Plusieurs coups** | Une attaque en N coups, chacun résolu à part | Loup des ombres | ✅ `hits` | **3** | B54 |
 | 5 | **Poser un statut ou une charge** | Poison, Faiblesse, Vulnérable, Gel, Feu, Foudre, sur le héros | Araignée, slimes de givre, de braise et d'orage ; puis Squelette, Zombie, Harpie, Sorcière | ✅ | **2** | B5 |
 | 6 | **Vol de vie** | L'ennemi se soigne d'une part des dégâts qu'il inflige | Corbeau | ✅ statut et rune | **2** | — |
-| 7 | **Larcin** | L'ennemi vole de l'or au héros | Gobelin | — | **2** | B2, B49 |
-| 8 | **Esquive** | Un jet par coup avant le calcul des dégâts ; un coup esquivé ne pose ni charge ni statut ; le Poison et le Feu déjà posés ne s'esquivent pas | Kobold | — | **2** | B4, B8 (ouverte) |
+| 7 | **Larcin** | L'ennemi vole de l'or au héros | Gobelin | — | **2** | B2, B49, B57 |
+| 8 | **Esquive** | Un jet par coup avant le calcul des dégâts ; un coup esquivé ne pose ni charge ni statut ; le Poison et le Feu déjà posés ne s'esquivent pas | Kobold | — | **2** | B4, B55 |
 | 9 | **Les traits** | Des effets permanents qu'un ennemi porte dès l'entrée en combat — l'esquive en est un | Kobold ; plus tard les boss et les affixes d'élite (P-14) | ~ les passifs | **2** | — |
 | 10 | **Se renforcer** | Armure, Puissance, soin de soi | Golem, Gargouille, Orc | ✅ | existe (Armure, Puissance) ; le soin de soi avec son premier ennemi | — |
 | 11 | **L'invocation** | Un effet qui fait entrer un ennemi du bestiaire, au prix de l'action du tour | Rat alpha, puis Nécromancien | — | **3** | B20, B23 à B27, consigne du cadrage §1.3, §2 |
@@ -41,6 +41,7 @@
 | **Les épines, l'étourdissement, les malédictions** | Symétriques héros / ennemis ; une malédiction est une carte posée dans le deck du héros | la Sorcière en serait candidate ; la carte d'épines due au lot Rempart | P-44 lot 2 |
 | **Les affixes d'élite** | Une liste d'effets ajoutée aux intentions d'un ennemi tiré en élite | tout ennemi | P-14 — ils réutiliseront les traits (#9) |
 | **Les intentions cachées** | En fin de partie, une intention ne se lit plus | tous | P-19 |
+| **La fuite** | Un ennemi quitte le combat, avec ce qu'il a volé | le Gobelin, ou une forme plus haute de sa famille | écartée pour le tier 1 (B57) |
 
 ---
 

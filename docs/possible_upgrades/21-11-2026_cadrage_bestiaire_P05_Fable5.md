@@ -1,6 +1,6 @@
 # Cadrage — le bestiaire (P-05) : trente décisions, et la première vague
 
-> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague ; onze de plus, B42 à B52, le 22/11, pour le programme jusqu'à `0.7.0`. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
+> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague ; dix-sept de plus, B42 à B58, le 22/11, pour le programme jusqu'à `0.7.0` et le tier 1. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
 >
 > **Les maquettes** sur lesquelles le propriétaire a tranché sont dans un deck privé, <https://claude.ai/artifact/9LxzmnszyErbptiiJh8LDZ> (59 diapositives). Font foi : 31 (panneau des intentions), 37 à 40 (barre, carte, fiche, plateau), 41 (armure), 54 (rat libre et meute), 58 (la famille du Rat). Ce sont des approximations — polices de remplacement, troncatures estimées : ce document et les specs portent en texte ce qu'elles fixent.
 >
@@ -10,7 +10,7 @@
 
 ## 1. Les décisions acquises
 
-Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B52 le 22/11, à la préparation de la suite. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception, et B42, que B45 et B50 amendent.
+Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B58 le 22/11, à la préparation de la suite. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception, et B42, que B45 et B50 amendent.
 
 ### 1.1. Le langage et le contenu
 
@@ -47,7 +47,7 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B39** | Une languette qui sortirait de l'écran se déroule vers l'intérieur, par-dessus sa propre carte. | 21/11 |
 | **B40** | La carte dont la fiche s'ouvre garde sa barre à la hauteur des autres et grandit vers le bas : autour de son centre, la barre d'un boss sortirait de l'écran. | 21/11 |
 | **B41** | Sur la languette du héros : 💎 pour la régénération de Mana, 💖 pour celle des PV. | 21/11 |
-| **B8** | *Ouverte.* Où se lit l'esquive du Kobold. Recommandation faite : un indicateur dans la languette de gauche, le pourcentage à la place de la durée, et un texte flottant « Esquive ». Elle attend la vague du Kobold. | — |
+| **B8** | *Tranchée par B55.* Où se lit l'esquive du Kobold. | 22/11 |
 
 ### 1.3. La famille du Rat
 
@@ -85,13 +85,26 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B51** | Une vague d'ennemis ne s'ouvre **qu'une fois tous ses sprites validés** ; la liste de ses ennemis est fixée dans sa fiche. | 22/11 |
 | **B52** | **Tout le bestiaire est redessiné** dans le style des sprites neufs : chacun des quatre ennemis d'aujourd'hui reçoit un sprite neuf dans la vague de son tier — le Slime et le Gobelin en vague 2, le Squelette en vague 3, l'Orc en vague 4. | 22/11 |
 
+### 1.6. Le tier 1
+
+Tranchées le 22/11 sur les recommandations du [deck de la vague 2](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK), qui en donne les chiffres et les options écartées. Ce sont des valeurs de départ : l'équilibrage les ajustera.
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B53** | *Fixe les valeurs que B5 proposait.* Les ennemis du tier 1 : **Rat** 8 PV, 3 dégâts, un coup ; **Slime de givre** 18 PV, 3 dégâts, 2 Gel par coup ; **Slime de braise** 18 PV, 3 dégâts, 1 Feu par coup ; **Slime d'orage** 18 PV, 4 dégâts, 1 Foudre par coup ; **Araignée venimeuse** 16 PV, 2 dégâts, Poison 1 par morsure ; **Corbeau charognard** 16 PV, 4 dégâts, vol de vie de 50 % des dégâts portés aux PV ; **Kobold éclaireur** 14 PV, 4 dégâts, esquive de 20 % par coup (B4). | 22/11 |
+| **B54** | Le Rat ne frappe qu'une fois : **« plusieurs coups » part en vague 3**, avec le Loup des ombres. Une paire de rats vaut à peu près un ennemi, et son prix compte sa demi-place. | 22/11 |
+| **B55** | *Tranche B8.* L'esquive se lit dans **une languette de bonus**, à gauche de la carte, le pourcentage à la place de la durée ; un texte flottant « Esquive ! » à chaque coup esquivé. | 22/11 |
+| **B56** | Le « +1 » de B6 est **reporté** à la première intention à trois effets ; au tier 1, une intention en a deux au plus. | 22/11 |
+| **B57** | Le larcin du Gobelin : **5 or par coup**, plafonné à l'or du héros ; **l'or volé est perdu** ; il se voit par un texte flottant « −5 or » au-dessus du héros et **une languette de butin** à gauche du Gobelin, qui dit ce qu'il a pris. La fuite du voleur reste au catalogue. | 22/11 |
+| **B58** | Le prix d'un effet : **+6** au prix d'un ennemi qui en porte un (proposition du 28/07). Le Gobelin voleur, à 39, ne sort plus à l'acte 1 pour le Mage et le Berserker : accepté. | 22/11 |
+
 ---
 
 ## 2. Ce qui reste à trancher
 
 Chaque point est repris, sous « Prérequis », par la fiche de la vague qui en a besoin ([`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)).
 
-- La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. La première vague ne le construit pas, aucune intention n'ayant encore deux effets ; il se fixe avec B1.
+- La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. **Reportée** à la première intention à trois effets (B56) ; aucune n'existe au tier 1.
 - Trois propositions du cadrage, sans numéro : l'invocation s'annonce comme une intention, un tour avant ; un rat invoqué n'agit qu'au tour suivant ; l'invocation et le lien s'écrivent en données, pour toute famille, de façon symétrique (le héros pourrait un jour invoquer).
 - La meute compte-t-elle pour 2 dès l'entrée de l'alpha, avant toute invocation ? C'est la lecture du cadrage, pas une décision.
 - Le prix de l'alpha dans le budget de combat, qui doit couvrir des rats entrant sans rien coûter.
