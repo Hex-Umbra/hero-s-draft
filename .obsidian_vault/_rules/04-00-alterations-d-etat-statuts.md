@@ -67,6 +67,10 @@ if (isStackable) {
 > gauche les bonus (`buff`), à droite les altérations puis les charges. L'invariant « une entrée par
 > `id` » qu'imposait l'ancien `StatusIndicator` est levé : deux Puissances de sources différentes
 > font deux entrées. Un effet qui dure tout le combat (durée 99) n'affiche pas de durée (B34).
+> Sous chaque entrée, la fiche écrit une **ligne d'aide** : la phrase du statut (Poison, Puissance,
+> Faiblesse, Vulnérable, les quatre régénérations), ou la **phrase courte de la charge**, le
+> `summary` de son fichier, à jetons ; aucune pour un compteur de passif ou de relique, ni pour une
+> charge sur le héros, dont la languette dit l'effet (correction C1 de la vague, `1876a07b`).
 
 ### 4.4. Les statuts proportionnels
 

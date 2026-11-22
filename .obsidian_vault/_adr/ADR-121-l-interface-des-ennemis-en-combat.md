@@ -9,12 +9,23 @@ description: The enemy interface in combat (P-05 bestiary, wave 1) — every dis
 ✅ Accepté — 2026-11-22 (P-05, le bestiaire ; décisions du propriétaire B6 pour sa part, B9 à B16
 et B31 à B41, tranchées sur maquettes les 20 et 21/11). **Livré sur la branche
 `feat/v0.6.1-interface-des-ennemis` — vague 1 du
-[cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), en
-attente du test, de la PR, de la fusion et du tag du propriétaire.** Rien n'en est dans `main`.
+[cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du tag du propriétaire.** Rien n'en est dans `main`.
 [Spec](../../docs/superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) (arbitrages A1 à
 A16, quatre tours) ; [plan](../../docs/superpowers/plans/2026-11-21-p05-interface-des-ennemis.md)
 (décisions D1 à D16, trois tours) ; code `a356cabc`..`23c9823a`, note de version `5ea848fb`. Leurs
 motifs ne se recopient pas ici.
+
+**Testé par le propriétaire le 2026-11-22** : 25 ✅ (T1 à T19, T21 à T25, puis C1), T20 non testé —
+le voile d'armure n'est pas atteignable en jeu —
+([cahier](../../docs/superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md)). **Une
+correction de fin de vague, C1** (`1876a07b`, note de version `477e9b12`) : la fiche écrit une ligne
+d'aide sous chaque entrée — une phrase pour le Poison, la Puissance et les quatre régénérations, et
+pour une charge sa phrase courte, `summary_fr` / `summary_en`, **obligatoire dans son fichier** et à
+jetons contrôlés comme la description, que `ChargeData.summaryFor` remplit ; nulle sur la rupture
+propre du héros, dont la languette écrit déjà l'effet. La description longue reste aux infobulles
+des cartes. C1 touche donc `lib/models/data/charge_data.dart` et les trois fichiers de
+`assets/data/charges/` : le « aucun fichier de `lib/models/` ni `assets/data/` ne bouge » du
+Contexte décrit la vague avant sa correction.
 
 **Amende [ADR-119](ADR-119-les-corrections-de-fin-de-vague-8.md)** sur son point 3 : le panneau perd
 les PV et passe en trois colonnes, l'infobulle passe de la pastille à la rangée. **Complète

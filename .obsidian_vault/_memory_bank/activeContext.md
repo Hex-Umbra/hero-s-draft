@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-22 | commit: 5ea848fb -->
+<!-- last-sync: 2026-11-22 | commit: 477e9b12 -->
 
 # 🧠 Contexte Actuel
 
@@ -11,7 +11,7 @@
 [`21-11-2026_cadrage_bestiaire_P05_Fable5.md`](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) :
 **source de vérité des décisions** (§1, B1 à B41, B8 ouverte) **et journal des vagues** (§4.1). Il se
 livre par vagues. **La vague 1, l'interface des ennemis, est livrée sur la branche
-`feat/v0.6.1-interface-des-ennemis` — vague 1 du cadrage du bestiaire, en attente du test, de la
+`feat/v0.6.1-interface-des-ennemis` — vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la
 PR, de la fusion et du tag du propriétaire** ; elle emporte la correction S9 (`8d544a3d`), qui n'est
 pas dans `main`. **Les vagues suivantes ne sont pas ouvertes** : le langage des intentions (B1), les
 nouveaux ennemis (B5 : la famille du Rat, les slimes élémentaires), la meute (B3, B7, B17 à B30).
@@ -42,7 +42,8 @@ Réserves à ne pas perdre de vue :
   d'un ennemi ; Puissance et Foudre partagent ⚡ ; les seuils 6, 12, 20 des paliers d'attaque écrits
   trois fois (à réunir avec B1) ; `lib/game/components/entities/health_bar.dart` sans lecteur. **Un
   changement visible non tranché** (V1) : les ennemis non sélectionnés gardent une bordure cyan sous
-  une carte focalisée. **Aux tests manuels** : T1 à T25, fiche et ciblage d'abord.
+  une carte focalisée. **Aux tests manuels, joués le 22/11** : 25 ✅, T20 non testé (le voile), une
+  correction C1 (`1876a07b`) ; V1 et les points vus laissés tels quels par le propriétaire.
 
 - **Ce que la vague 8 laisse ouvert**, consigné à la spec §2 et dans ADR-118 : **une Faiblesse de N
   tours réduit N − 1 attaques ennemies** — le porteur décompte avant d'agir ; moteur gardé (A19), les
@@ -124,7 +125,7 @@ Réserves à ne pas perdre de vue :
 1. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
    `feat/v0.6.1-interface-des-ennemis`, partie de la correction S9 `8d544a3d` ; cadrage `c2e2dacb`,
    spec et plan `0eec1467` → `86a0f9db`, code `a356cabc` → `23c9823a`, note de version `5ea848fb` —
-   **livrée sur la branche, vague 1 du cadrage du bestiaire, en attente du test, de la PR, de la
+   **livrée sur la branche, vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la PR, de la
    fusion et du tag du propriétaire**) — **l'ennemi se lit.** **Le panneau des intentions** en trois
    colonnes — « Niv. N », le nom, seul tronqué, les pastilles —, sans PV, une infobulle par rangée
    (B9, B10 ; la Puissance garde sa flèche violette, B31). **La barre de PV** à la largeur de la
@@ -139,8 +140,10 @@ Réserves à ne pas perdre de vue :
    de place ; `StatBadge`, `StatusIndicator`, `CircleProgressComponent` supprimés. Le tutoriel suit
    (B37). **S9** : un combat fini pendant la phase ennemie ne rouvre aucun tour. Deux arrêts à la
    spec, levés par les réponses B31 à B41 ; plan prêt au troisième tour ; sept tâches, une passe de
-   corrections. **1935 tests** (+69 sur la base de **1866**), `dart analyze` propre (**vérifié le
-   2026-11-22**) — [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md),
+   corrections. **Testée par le propriétaire le 22/11** (25 ✅, T20 non atteignable) ; **une correction,
+   C1** (`1876a07b`, note `477e9b12`) : la fiche écrit une ligne d'aide sous chaque entrée, la phrase
+   courte d'une charge venant de son fichier (`summary_fr` / `summary_en`, obligatoire). **1939 tests**
+   (+73 sur la base de **1866**), `dart analyze` propre (**vérifié le 2026-11-22**) — [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md),
    [ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md).
 2. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
    `docs/cloture-chantier-economie-et-catalogue`, sur `main` à `84a1ee34` — **sans code, sans
@@ -201,10 +204,10 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : il teste la vague 1 du bestiaire — le cahier
-`docs/superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md`, T1 à T25, la fiche et le
-ciblage d'abord —, puis ouvre la PR de `feat/v0.6.1-interface-des-ennemis`, la fusionne et la tague.
-La correction S9 entre dans `main` avec elle.
+**D'abord le propriétaire** : la vague 1 du bestiaire est testée (le cahier
+`docs/superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md` : 25 ✅, T20 non
+atteignable) et sa correction C1 livrée ; il ouvre la PR de `feat/v0.6.1-interface-des-ennemis`, la
+fusionne et la tague `v0.6.1`. La correction S9 entre dans `main` avec elle.
 
 **Puis la vague suivante du bestiaire, que le propriétaire ouvre** — ce fichier n'en ouvre aucune ;
 le journal du cadrage, §4.1, en tient l'avancement. Le compte rendu de la vague 1 (§5) propose

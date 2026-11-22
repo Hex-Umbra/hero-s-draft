@@ -3,7 +3,7 @@
 ### Statut
 ✅ Accepté & Implémenté
 **Complété le 2026-11-22 par [ADR-121](ADR-121-l-interface-des-ennemis-en-combat.md)** (P-05 vague 1,
-livré sur la branche `feat/v0.6.1-interface-des-ennemis`, en attente du test, de la PR, de la fusion
+livré sur la branche `feat/v0.6.1-interface-des-ennemis`, test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion
 et du tag du propriétaire) : `StatBadge` et la barre que ce texte nomme sont remplacés, sur la carte
 d'un ennemi, par `EnemyHealthBar` et `StatusTabs`, que le même différé gouverne.
 

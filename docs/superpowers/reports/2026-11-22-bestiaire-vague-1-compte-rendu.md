@@ -67,7 +67,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-[2026-11-22-bestiaire-vague-1-tests-manuels.md](2026-11-22-bestiaire-vague-1-tests-manuels.md) — 25 tests. Résultat : à remplir par le propriétaire.
+[2026-11-22-bestiaire-vague-1-tests-manuels.md](2026-11-22-bestiaire-vague-1-tests-manuels.md) — 25 tests, puis C1. Résultat, le 22/11 : 25 ✅ · 0 ❌ · 1 non testé (T20, non atteignable en jeu). Un défaut, corrigé par C1 (`1876a07b`) : la fiche d'un ennemi écrit une ligne d'aide sous chaque entrée, la phrase courte d'une charge venant de son fichier ; 1935 → **1939** tests.
 
 ## 4. Trouvé périmé, et pour la file
 

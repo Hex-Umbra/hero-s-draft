@@ -10,7 +10,7 @@ description: Fix S9 — a combat that ends during the enemy phase (the last enem
 d'abord sur la branche `fix/s9-phase-ennemie-apres-victoire`, jamais fusionnée seule : **livré sur
 la branche `feat/v0.6.1-interface-des-ennemis`, qui en part — vague 1 du
 [cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) (§4,
-trois écarts du propriétaire), en attente du test, de la PR, de la fusion et du tag du
+trois écarts du propriétaire), test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du tag du
 propriétaire.** Rien n'en est dans `main`.
 
 **Clôt la réserve S9** qu'ont consignée [ADR-117](ADR-117-les-charges-elementaires.md) (vague 7) et

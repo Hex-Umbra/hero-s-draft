@@ -34,8 +34,10 @@ de plus est livrée. Chacun de ces ADR ne change que de Statut. **Clôt P-53** d
 **Complété le 2026-11-22 par [ADR-121](ADR-121-l-interface-des-ennemis-en-combat.md)** (les états des
 charges se lisent au repos et au déroulé des languettes) **et sa réserve S9 close par
 [ADR-122](ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)** — tous deux livrés sur la branche
-`feat/v0.6.1-interface-des-ennemis` (P-05 vague 1), en attente du test, de la PR, de la fusion et du
-tag du propriétaire.
+`feat/v0.6.1-interface-des-ennemis` (P-05 vague 1), test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du
+tag du propriétaire. **Puis par la correction C1 d'ADR-121** : chaque charge déclare aussi
+une phrase courte, `summary_fr` / `summary_en`, obligatoire, que la fiche d'un ennemi écrit sous
+elle ; la description reste celle des infobulles des cartes.
 
 ### Contexte
 
