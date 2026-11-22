@@ -189,7 +189,7 @@ parallèle du code.
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-05** | **Roster tier-1 étendu + mécaniques `onHitEffect`** (5 ennemis) | **2-3 j** *(+ 5 sprites)* | ★★☆☆☆ | 🔥🔥🔥 |
+| **P-05** | **Le bestiaire** — l'interface des ennemis, le langage des intentions, de nouveaux ennemis, la meute · **cadré le 2026-11-21** ([cadrage](possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md)), **livré par vagues** — la vague 1 livrée sur la branche `feat/v0.6.1-interface-des-ennemis`, en attente du test, de la PR, de la fusion et du tag du propriétaire | *par vagues* *(+ sprites)* | ★★☆☆☆ | 🔥🔥🔥 |
 | **P-06** | **Lot P0 de l'audit animations** (12 correctifs : tokens VFX, perf, z-order, bugs) | **2-3 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-07** | **Lot P1 « juice »** (hit-stop, screenshake, héros qui attaque, impacts, idle, mort) | **4-6 j** | ★★★☆☆ | 🔥🔥🔥 |
 | **P-08** | **Cadre d'ennemi** — prototyper puis trancher PNG vs procédural | **0,5 j** *(proto)* **+ 1-3 j** | ★★★☆☆ | 🔥🔥 |
@@ -197,11 +197,11 @@ parallèle du code.
 | **P-46** | **Sourcing des 4 musiques** (menu, carte, combat, boss) — le moteur est livré, seuls les fichiers manquent | **0,5 j** *(+ 4 pistes)* | ★☆☆☆☆ | 🔥🔥 |
 | ~~**P-45**~~ | ~~**Fidélité du tutoriel**~~ ✅ **Livré le 2026-08-23**, publié en `0.4.9` — 50 écarts corrigés entre `lib/tutorial/` et le jeu réel, tutoriel étendu de 13 à 15 étapes — voir [ADR-081](../.obsidian_vault/_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) | — | — | — |
 
-### P-05 — Roster tier-1
-**Le brainstorm le plus abouti du dossier** : stats calibrées, formule `combatRating` étendue (`utilityThreat`), spread de rating vérifié (27,9 → 35,4 à l'Acte 1, comparable à l'écart Slime/Gobelin existant). Prêt à passer en spec sans travail de design supplémentaire.
+### P-05 — Le bestiaire
+**Cadré avec le propriétaire les 20 et 21 novembre 2026** : le [cadrage du bestiaire](possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) est la source de vérité de ses décisions (§1, B1 à B41) et remplace, là où ils divergent, les brainstorms du 27/07 et du 28/07 — notamment : une intention ennemie s'écrira avec la liste `effects` des cartes, et non avec un champ `onHitEffect` (B1). Le lot n'est donc plus « prêt à passer en spec sans travail de design » : il **se livre par vagues**, que le propriétaire ouvre une à une, et **l'avancement vague par vague se lit au journal du cadrage** (§4.1), pas ici. **La vague 1, l'interface des ennemis en combat, est livrée sur la branche `feat/v0.6.1-interface-des-ennemis`, en attente du test, de la PR, de la fusion et du tag du propriétaire.**
+**Reste à faire** : le langage des intentions (B1), les nouveaux ennemis — la famille du Rat, les slimes élémentaires, puis l'Araignée, le Corbeau, le Bandit et le Kobold au rythme des sprites (B5) —, la meute du Rat alpha (B3, B7, B17 à B30), l'esquive du Kobold (B4, B8).
 **Double apport** : résout le backlog ADR-070/072 (fenêtre tier-1-only resserrée aux Actes 1-5 avec seulement Slime et Gobelin), **et** investit pour toute la run endless — les tier-1 restent piochés comme remplissage budgétaire bon marché à tous les actes, puisque `getMaxEnemiesForNormalCombat(act)` croît indéfiniment.
-**Bonus architectural** : introduit `onHitEffect` (`applyStatus`/`lifesteal`/`stealGold`) et `evadeChance`, réutilisés tels quels par P-14 et P-15. Aujourd'hui aucune intention ennemie n'applique le moindre statut.
-**Chemin critique réel** : les 5 sprites, à coordonner avec la décision P-08.
+**Chemin critique réel** : les sprites, à coordonner avec la décision P-08.
 
 ### P-06 — Lot P0 animations
 Douze actions cadrées, dont **3 points chauds de performance** (`TextPaint` reconstruit à chaque frame, particules non throttlées à 60 Hz pendant le drag, ~18 `MaskFilter.blur` par frame pendant le ciblage) et **un bug visible** (échelle absolue dans la zone d'annulation). Crée `vfx_tokens.dart` — palette élémentaire unique (elle existe aujourd'hui en 3 versions divergentes), durées, courbes, priorités z. C'est la fondation de P-07 et P-08 : à faire avant, pas après.

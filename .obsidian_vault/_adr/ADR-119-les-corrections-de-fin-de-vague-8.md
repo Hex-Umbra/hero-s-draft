@@ -25,6 +25,11 @@ partagé, toujours sans widget qui calcule) et **[ADR-118](ADR-118-la-tranche-3-
 
 **Fusionné dans `main` le 2026-11-19 par la PR #56** (commit de fusion `84a1ee34`), avec la vague 8, tagué `v0.6.0` sur ce commit ; CI de tête `44548499546` et `release.yml` run `44556736195` verts — re-vérifié par `gh` le 2026-11-19.
 
+**Point 3 amendé le 2026-11-22 par [ADR-121](ADR-121-l-interface-des-ennemis-en-combat.md)** (P-05
+vague 1, livré sur la branche `feat/v0.6.1-interface-des-ennemis`, en attente du test, de la PR, de
+la fusion et du tag du propriétaire) : le panneau perd les PV et passe en trois colonnes, niveau, nom,
+pastilles ; l'infobulle enveloppe la rangée des pastilles, son contenu inchangé.
+
 ### Contexte
 
 Le propriétaire a relevé, au fil des vagues, des défauts que la vague 8 corrige avant sa fusion :

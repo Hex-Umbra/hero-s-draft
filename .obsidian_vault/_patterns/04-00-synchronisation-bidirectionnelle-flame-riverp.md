@@ -16,7 +16,7 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 
 ### 4.2. Remontée d'Événements (Flame → Riverpod)
 
-**14 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **re-compté le 2026-10-16** sur la branche de la vague 4 (13 le 2026-09-05) : `grep -cE "^\s+final (void Function|bool Function|VoidCallback)" lib/game/heros_draft_game.dart` :
+**17 callbacks fortement typés** injectés via le constructeur de `HerosDraftGame` — **re-compté le 2026-11-22** sur la branche `feat/v0.6.1-interface-des-ennemis` (16 sur `main`, 14 le 2026-10-16, 13 le 2026-09-05) : `grep -cE "^\s+final (void Function|bool Function|VoidCallback)" lib/game/heros_draft_game.dart` :
 
 | Callback | Déclencheur |
 |:---|:---|
@@ -25,11 +25,30 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 | `onEnemyTargetCancelled` | *Branche de la vague 4.* Le jeu abandonne l'attente d'une cible — carte focalisée ou saisie, toucher du décor —, jamais quand l'écran la lève |
 | `onPhaseChanged` | Changement de phase |
 | `onStartEnemyTurn` / `onEndEnemyTurn` | Début/fin de phase ennemie |
+| `onResolveFireWave` / `onResolveEnemyStatuses` | Vague 7 : la vague suivante de la chaîne du Feu, puis les autres statuts des ennemis |
 | `onResolveEnemyIntent` | Résolution séquentielle d'intention |
 | `onEnemiesDead` / `onEnemyKilled` | Nettoyage d'ennemis |
 | `onEnemiesSpawned` | Spawn initial |
 | `onAnimationStateChanged` | Changement d'état d'animation Flame (force un rebuild HUD) |
-| `onShowTooltip` / `onHideTooltip` | Tooltips contextuels |
+| `onShowTooltip` / `onHideTooltip` | Infobulle d'une carte de la main — `CardType` non nul depuis que la jauge d'un ennemi n'en ouvre plus |
+| `onInspectionChanged` | *Branche `feat/v0.6.1-interface-des-ennemis`.* Ouverture, remplacement, fermeture de la fiche d'un ennemi, et tout rectangle neuf d'une fiche ouverte dont la carte se replace (`EnemyInspection?` : id et rectangle de la carte agrandie) |
+
+> [!IMPORTANT]
+> **La fiche d'un ennemi — un état d'affichage que Flame possède et que l'écran reflète** (P-05
+> vague 1, sur la branche — [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)).
+> `_handlePlayerTargeting(target, pointerId)` suit un ordre fixe : run vivante et tour du joueur,
+> sinon rien ; **une carte focalisée garde le toucher** ; un ennemi mort ou mourant n'ouvre rien ;
+> **une signature armée reçoit l'ennemi** ; sinon l'ennemi ouvre sa fiche (`inspectEnemy`), la garde
+> ou remplace celle d'un autre, et **le pointeur de l'appui est retenu**. Le `Listener` translucide
+> de `GameScreen`, servi après Flame dans le même appui, appelle `closeInspectionUnlessOn(pointer)`
+> à chaque appui du bouton principal : la fiche reste si et seulement si ce pointeur est celui que
+> Flame vient de retenir, qui est aussitôt oublié. Flame ferme aussi par garde — `setFocusedCard`,
+> le mutateur de `awaitingEnemyTarget`, le décor, `executeTurn` — et par l'état :
+> `StateSyncSystem._applyCombatState` appelle `closeInspectionIfStale` (ennemi parti, phase
+> quittée, combat fini). `repositionEnemies` réémet le rectangle **s'il a changé** (chaque
+> reconstruction de `GameScreen` rappelle `onGameResize`). **`GameScreen` diffère tout reflet** par
+> `addPostFrameCallback`, comme `onEnemiesSpawned`. Fiche ouverte, ni la main ni les languettes ne
+> réagissent au survol.
 
 > [!IMPORTANT]
 > **Le ciblage d'une signature — le contrat entre la barre et Flame** (lot E4 de P-43, branche de
@@ -60,6 +79,10 @@ Flux asynchrone séquentiel avec animations :
 4. **Boucle** sur chaque ennemi : animation d'attaque/buff → `onResolveEnemyIntent(enemyId)` → délai 400ms
 5. `onEndEnemyTurn()` → re-roll intentions, retour phase joueur
 
+La boucle ne lit pas `isCombatEnded` et se joue jusqu'au bout ; c'est le contrôleur qui refuse :
+sur un combat fini, `endEnemyTurn` et `startPlayerTurn` ne font rien (S9, sur la branche
+`feat/v0.6.1-interface-des-ennemis` — [ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)).
+
 ### 4.4. Système de Mort et de Stats Différé Z-Sync (Delayed Entity Destruction & Visual Stats Synchronization)
 
 Pour éliminer la condition de concurrence visuelle (race condition) où l'état logique de Riverpod met à jour les statistiques (points de vie, armure, statuts) ou supprime instantanément un ennemi alors que l'animation de la carte Flame est encore en route, le jeu implémente le patron Z-Sync étendu aux attributs visuels :
@@ -71,7 +94,7 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
 
 2. **Diffèrement des Statistiques HUD & Effets d'Impact (`updateStats`)** :
    - Lors de la réception de nouvelles statistiques dans `EnemyCard.updateStats(newInstance)` :
-     - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie (`HealthBar`), du badge d'armure (`StatBadge`), de la liste des icônes de buffs/debuffs ainsi que **l'intégralité des effets visuels d'impact** (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, `FloatingText` de dégâts, et éjection de particules `spawnDamageParticles`) sont **différés** et stockés dans `_pendingVisualInstance`.
+     - Si `game.isCardAnimating == true`, la mise à jour de la barre de vie et de son voile d'armure (`EnemyHealthBar`, et le plein du voile, `ArmorVeil.nextPeak`), des languettes de statuts (`StatusTabs`) — `StatBadge` et `StatusIndicator` avant la vague 1 du bestiaire ([ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)) — ainsi que **l'intégralité des effets visuels d'impact** (secousses `Curves.elasticOut`, flashes sprite `ColorEffect`, `FloatingText` de dégâts, et éjection de particules `spawnDamageParticles`) sont **différés** et stockés dans `_pendingVisualInstance`.
      - Si `game.isCardAnimating == false` (dégâts passifs comme le poison ou le Feu), les indicateurs et effets d'impact physiques sont appliqués et déclenchés immédiatement.
 
 3. **Interception du Nettoyage Visuel (`_applyCombatState`)** :

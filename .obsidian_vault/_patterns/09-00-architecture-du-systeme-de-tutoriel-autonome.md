@@ -149,6 +149,13 @@ réécrits : ils sont partagés avec les écrans de production.
   survol à `1.05x`, sélection à `1.12x` avec lueur ambre.
 - **Info-bulles** (`TutorialCardsWidget`) : vrais rendus vectoriels sur Canvas, et
   `TutorialTooltip` localisée au survol ou au toucher.
+- **Maquettes et panneaux réels** : l'étape 11 monte le vrai `EnemyIntentsPanel`, qui suit
+  l'écran de lui-même ; l'étape 6 (`TutorialCombatOverviewWidget`) dessine ses maquettes en
+  Flutter et doit être réalignée à chaque changement de l'écran de combat — dernière fois à la
+  vague 1 du bestiaire, sur la branche `feat/v0.6.1-interface-des-ennemis` : la barre de l'ennemi à
+  la largeur de sa carte, le panneau en trois colonnes
+  ([ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md),
+  [`_rules/08-00`](../_rules/08-00-systeme-de-tutoriel-autonome.md), étapes 6 et 11).
 - **Persistance** : aucune depuis le 2026-09-14. `TutorialProgressService` et le badge « NEW »
   de `HomeScreen`, son seul lecteur, sont supprimés ; `TutorialScreen._handleNext` dépile
   simplement à la dernière étape — [ADR-091](../_adr/ADR-091-menu-d-accueil-quitter-par-plateforme-et-retrait-du.md).

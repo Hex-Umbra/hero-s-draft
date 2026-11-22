@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 240 lignes.** Ce fichier est un index, jamais un contenu. Chaque règle métier vit dans sa fiche sous `../_rules/`. Les arbitrages qui les ont produites vivent dans `../_adr/`.
 
-**Vérifié le 2026-11-18** — 29 fiches, en bijection avec `../_rules/`, colonne « Lignes » re-mesurée par `wc -l`, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
+**Vérifié le 2026-11-22** — 29 fiches, en bijection avec `../_rules/`, colonne « Lignes » re-mesurée par `wc -l`, découpées depuis un `productContext.md` de 807 lignes. La **§5 (Compétences Héroïques) a été retirée le 2026-09-05** : le système qu'elle décrivait est supprimé du jeu ([ADR-084](../_adr/ADR-084-suppression-de-la-chaine-de-competences-heroiques.md)), sa fiche est archivée verbatim dans `../_archive/2026-09-05-competences-heroiques.md`, et son numéro n'est pas réattribué.
 
 ### 1. Boucle de Gameplay Principale (Core Loop)
 
@@ -16,8 +16,8 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 2.1. Génération Procédurale de Carte (`MapGeneratorService`) | [02-1-generation-procedurale-de-carte.md](../_rules/02-1-generation-procedurale-de-carte.md) | 55 |
-| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 170 |
-| 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 127 |
+| 2.2. Système de Héros | [02-2-systeme-de-heros.md](../_rules/02-2-systeme-de-heros.md) | 169 |
+| 2.3. Catalogue de Cartes | [02-3-catalogue-de-cartes.md](../_rules/02-3-catalogue-de-cartes.md) | 126 |
 | 2.4. Progression de Rareté Dynamique et Fusion Interactive | [02-4-progression-de-rarete-dynamique-et-fusion-int.md](../_rules/02-4-progression-de-rarete-dynamique-et-fusion-int.md) | 33 |
 | 2.5. Bestiaire | [02-5-bestiaire.md](../_rules/02-5-bestiaire.md) | 48 |
 | 2.6. Équilibrage Hybride, Budget de Menace et Réserve de Vagues | [02-6-equilibrage-hybride-budget-de-menace-et-reser.md](../_rules/02-6-equilibrage-hybride-budget-de-menace-et-reser.md) | 32 |
@@ -29,12 +29,12 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 3.1. 🔋 Gestion du Mana | [03-1-gestion-du-mana.md](../_rules/03-1-gestion-du-mana.md) | 9 |
-| 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 33 |
+| 3.2. 🛡️ Gestion de l'Armure | [03-2-gestion-de-l-armure.md](../_rules/03-2-gestion-de-l-armure.md) | 49 |
 | 3.3. ⚔️ Pipeline de Dégâts Centralisé | [03-3-pipeline-de-degats-centralise.md](../_rules/03-3-pipeline-de-degats-centralise.md) | 24 |
 | 3.4. 🃏 Système de Piles de Cartes | [03-4-systeme-de-piles-de-cartes.md](../_rules/03-4-systeme-de-piles-de-cartes.md) | 73 |
 | 3.5. 🎒 Système de Reliques | [03-5-systeme-de-reliques.md](../_rules/03-5-systeme-de-reliques.md) | 83 |
-| 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 71 |
-| 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 28 |
+| 3.6. 🎪 Système d'Événements | [03-6-systeme-d-evenements.md](../_rules/03-6-systeme-d-evenements.md) | 74 |
+| 3.7. 🏕️ Feu de Camp / Repos (`RestScreen`) | [03-7-feu-de-camp-repos.md](../_rules/03-7-feu-de-camp-repos.md) | 30 |
 | 3.8. 🔨 Runes — la Fusion qui les Donne, l'Affûtage au Feu et le Puits d'Échange | [03-8-systeme-de-forge-forge-de-fusion.md](../_rules/03-8-systeme-de-forge-forge-de-fusion.md) | 223 |
 | 3.9. 🛒 Boutique (Shop) | [03-9-boutique.md](../_rules/03-9-boutique.md) | 20 |
 | 3.10. 🃏 Poli Visuel et Sélection de Récompenses (Draft Screen Polish) | [03-10-poli-visuel-et-selection-de-recompenses.md](../_rules/03-10-poli-visuel-et-selection-de-recompenses.md) | 10 |
@@ -47,7 +47,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 4. Altérations d'État & Statuts (Status Effects) | [04-00-alterations-d-etat-statuts.md](../_rules/04-00-alterations-d-etat-statuts.md) | 156 |
+| 4. Altérations d'État & Statuts (Status Effects) | [04-00-alterations-d-etat-statuts.md](../_rules/04-00-alterations-d-etat-statuts.md) | 160 |
 
 ### 6. Économie de Jeu
 
@@ -65,7 +65,7 @@
 
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
-| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 189 |
+| 8. Système de Tutoriel Autonome (Tutorial System) | [08-00-systeme-de-tutoriel-autonome.md](../_rules/08-00-systeme-de-tutoriel-autonome.md) | 199 |
 
 ### 9. Système Audio
 

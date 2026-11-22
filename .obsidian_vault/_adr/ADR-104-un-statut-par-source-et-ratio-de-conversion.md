@@ -26,6 +26,10 @@ et décisions d'exécution recopiés au
 livré sur la branche `feat/v0.5.9-p53-charges-elementaires`, en attente du test, de la PR, de la
 fusion et du tag du propriétaire) : devenus des charges, ces statuts restent sans source, leurs
 points en somme par id, leur piste hors sauvegarde.
+**Complété le 2026-11-22 par [ADR-121](ADR-121-l-interface-des-ennemis-en-combat.md)** (P-05 vague 1,
+livré sur la branche `feat/v0.6.1-interface-des-ennemis`, en attente du test, de la PR, de la fusion
+et du tag du propriétaire) : les languettes d'un ennemi et du héros montrent une entrée par statut
+porté, clé `id` + source ; l'affichage ne suppose plus une entrée par `id`.
 
 ### Contexte
 
