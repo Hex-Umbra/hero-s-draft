@@ -191,9 +191,9 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "canvas:Créer un nouveau canvas": false,
       "switcher:Ouvrir le sélecteur rapide": false,
       "graph:Ouvrir la vue graphique": false,
-      "canvas:Créer une nouvelle toile": false,
       "daily-notes:Ouvrir la note quotidienne": false,
       "templates:Insérer le modèle": false,
       "command-palette:Ouvrir la palette de commandes": false,
@@ -202,6 +202,17 @@
   },
   "active": "5ce3a0a02e4732bb",
   "lastOpenFiles": [
+    "possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md",
+    "superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md.tmp",
+    "ROADMAP.md.tmp.18512.a09b24dcbf81",
+    "ROADMAP.md.tmp.18512.f8b3e5a4ac04",
+    "superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md",
+    "superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md",
+    "superpowers/plans/2026-11-21-p05-interface-des-ennemis-verifications.md",
+    "superpowers/plans/2026-11-21-p05-interface-des-ennemis.md",
+    "possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md.tmp.18512.5314d9fe9391",
+    "superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md",
+    "possible_upgrades/upgrade_ideas.md",
     "Canvas des idées/MoodBoard.canvas",
     "ROADMAP.md.tmp.29772.b0922bc82510",
     "ROADMAP.md.tmp.29772.08c506fd585a",
@@ -209,15 +220,11 @@
     "ROADMAP.md.tmp.29772.ad28fb72072f",
     "possible_upgrades/10-09-2026_revue_brainstorms_aout_et_lots.md",
     "Canvas des idées",
-    "possible_upgrades/upgrade_ideas.md",
     "superpowers/plans/sedzINPS9",
-    "superpowers/plans/sedzYA4vr",
     "Idées améliorations classe et cartes.md",
     "superpowers/specs/2026-08-07-s2-identite-de-classe-design.md",
-    "superpowers/specs/2026-08-07-s2-identite-de-classe-design.md.tmp.8796.28982fb40e67",
     "superpowers/specs/2026-07-26-difficulty-scaling-acceleration-design.md",
     "superpowers/plans/2026-07-26-difficulty-scaling-acceleration.md",
-    "superpowers/specs/2026-07-26-difficulty-scaling-acceleration-design.md.tmp.24124.6d2144b891e1",
     "superpowers/specs/2026-07-25-enemy-count-scaling-design.md",
     "superpowers/plans/2026-07-25-enemy-count-scaling.md",
     "possible_upgrades/_archives/idees_regroupees.md",
@@ -231,9 +238,6 @@
     "possible_upgrades/analysis_reports_idee_regroupee_ideas_10-06-2026.md",
     "superpowers/plans/2026-07-24-combat-difficulty-scaling.md",
     "analysis_reports/25-07-2026_animations_juice_analysis_Opus5.md",
-    "analysis_reports/25-07-2026_animations_juice_analysis_Opus5.md.tmp.24124.42edd4f562f8",
-    "analysis_reports/dette_technique_rapport_Gemini3.5_2.md",
-    "analysis_reports/technical_debt_report_Opus4.6_13-06-2026.md",
-    "analysis_reports/dette_technique_rapport_Gemini3.5_5_07-06-2026.md"
+    "analysis_reports/dette_technique_rapport_Gemini3.5_2.md"
   ]
 }
