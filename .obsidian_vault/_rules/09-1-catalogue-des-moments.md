@@ -17,9 +17,9 @@ dans la donnée (`assets/data/audio.json`) et la chaîne de repli est décrite e
 | `armorHit` | Même méthode, **perte** d'armure — `combat_entity.dart:196` |
 | `armorGain` | Même méthode, **gain** d'armure — `combat_entity.dart:208`. Séparé d'`armorHit` le 2026-08-29 : les deux branches opposées partageaient le son du coup encaissé, si bien qu'une carte défensive sonnait comme une carte subie |
 | `heal` | Même méthode, gain de PV actuels — `combat_entity.dart:249`. **Voir l'avertissement [`09-00`](09-00-systeme-audio.md) §9.5** |
-| `enemyAttack` | `HerosDraftGame._enemyRipostePhase()`, avant `dashAnimation()` — `heros_draft_game.dart:401` |
+| `enemyAttack` | `HerosDraftGame._enemyRipostePhase()`, avant `dashAnimation()` — `heros_draft_game.dart:699` |
 | `enemyDeath` | **Deux sites** : `HerosDraftGame.resolvePendingDeaths()` (mort différée pendant une animation de carte, `heros_draft_game.dart:251`) et `StateSyncSystem._applyCombatState()` (suppression immédiate hors animation — poison, effets passifs — `lib/game/systems/state_sync_system.dart:113`) |
-| `turnStart` | `TurnPhaseManager.startPlayerTurn()`, avant le tick des reliques et statuts — `lib/game/controllers/combat/turn_phase_manager.dart:49` |
+| `turnStart` | `TurnPhaseManager.startPlayerTurn()`, avant le tick des reliques et statuts — `lib/game/controllers/combat/turn_phase_manager.dart:61` |
 | `turnEnd` | `HerosDraftGame.executeTurn()`, juste après la garde de validité du tour — `heros_draft_game.dart:327` |
 
 > [!IMPORTANT]
@@ -39,7 +39,7 @@ dans la donnée (`assets/data/audio.json`) et la chaîne de repli est décrite e
 | `cardPickup` | **Deux sites mutuellement exclusifs, un par geste de prise en main** : `CardInteractionHandler.onTapDown()`, quand la carte devient la carte focalisée par un clic (`lib/game/components/widgets/card_interaction_handler.dart:39`), et `onDragStart()`, dans la branche où la carte n'était pas déjà focalisée (`card_interaction_handler.dart:70`). `onTapDown` s'exécute toujours en premier sur un même geste (arène de gestes Flutter) et détermine donc lequel des deux émet : jamais les deux, jamais aucun |
 | `cardDraw` | `DeckNotifier.drawCards()` — `lib/game/controllers/deck_controller.dart:226` |
 | `manaGain` | `GainManaEffectStrategy` — `lib/game/services/effects/strategies.dart:109` |
-| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:289`), `PlayerStatsManager.consumeResource` — refus de mana au jeu d'une carte (`player_stats_manager.dart:441`), `HeroCard` (`hero_card.dart:89`) et `CardInteractionHandler` (`card_interaction_handler.dart:135`) |
+| `insufficientMana` | **Quatre sites** : `HerosDraftGame._handlePlayerTargeting()` (`heros_draft_game.dart:538`), `PlayerStatsManager.consumeResource` — refus de mana au jeu d'une carte (`player_stats_manager.dart:510`), `HeroCard` (`hero_card.dart:102`) et `CardInteractionHandler` (`card_interaction_handler.dart:124`) |
 
 ### Interface et rouleaux *(ajoutés le 2026-08-29)*
 

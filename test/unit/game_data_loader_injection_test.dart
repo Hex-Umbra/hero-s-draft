@@ -268,6 +268,7 @@ void main() {
   "name_fr": "Gel", "name_en": "Freeze",
   "brokenName_fr": "Gelé", "brokenName_en": "Frozen",
   "description_fr": "Gèle.", "description_en": "Freezes.",
+  "summary_fr": "Gèle.", "summary_en": "Freezes.",
   "heroDescription_fr": "Sur vous.", "heroDescription_en": "On you.",
   "threshold": 3, "thresholdGrowth": 1, "overcharge": false, "decay": 1,
   "breaksOn": "threshold",

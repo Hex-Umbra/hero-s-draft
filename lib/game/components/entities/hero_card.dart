@@ -8,10 +8,12 @@ import '../../../models/data/card_data.dart';
 import '../../../models/data/charge_data.dart';
 import '../../../services/audio/game_moment.dart';
 import '../../systems/charge_rules.dart';
+import '../../systems/passives/passive_counters.dart';
 import '../visual_effects/fire_wave_effects.dart';
 import 'combat_entity.dart';
 
 class HeroCard extends CombatEntity with TapCallbacks {
+  @override
   EntityStats stats;
   final String imagePath;
   bool suppressArmorChangeAnimation = false;
@@ -33,6 +35,15 @@ class HeroCard extends CombatEntity with TapCallbacks {
   @override
   void refreshBorderVisuals() {
     _refreshBorderVisuals();
+  }
+
+  @override
+  Rect get bodyLocalRect => Rect.fromLTWH(0, 0, size.x, size.y);
+
+  /// L'id du compteur du passif actif, que la languette nomme « Compteur ».
+  String? get _counterId {
+    final passive = game.currentRunState?.activePassive;
+    return passive == null ? null : PassiveCounters.idOf(passive);
   }
 
   bool _isHighlighted = false;
@@ -127,6 +138,9 @@ class HeroCard extends CombatEntity with TapCallbacks {
         ..strokeWidth = 2,
     );
     add(borderInfo);
+
+    addStatusTabs(onTapDown);
+    refreshStatusTabs(counterId: _counterId);
   }
 
   @override
@@ -192,6 +206,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
     if (ownFire.ember) emberFlash();
     refreshChargeVisuals(stats, newStats);
     stats = newStats;
+    refreshStatusTabs(counterId: _counterId);
   }
 
   /// Le Feu du heros resolu dans la transition (spec P-53, §5.2, F-a), lu sur

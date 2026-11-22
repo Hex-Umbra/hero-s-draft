@@ -31,3 +31,19 @@ part : elle augmente l'effet d'armure de la carte, et ne s'offre qu'à une carte
 - **Suppression d'Animation** : Lors de cette réinitialisation en début de tour, les animations visuelles de perte d'armure (popup textuel négatif comme "-X" et animation de secousse de bouclier) sont désactivées via un drapeau transitoire (`suppressArmorChangeAnimation` sur `HeroCard`) pour éviter d'indiquer à tort que le joueur a subi des dégâts.
 - **Fin de Combat** : L'armure restante est également remise à 0 à la fin de chaque combat (`completeCurrentNode()`).
 - **Maîtrise** : La Maîtrise (`effectiveMastery`), quant à elle, reste persistante tout au long de la partie ou du combat selon son origine.
+
+**L'armure d'un ennemi** — à 0 à son apparition, gagnée pendant sa seule phase (intention Défense,
+statut `armor_regen`), **remise à 0 par aucun tour** : seuls les coups l'entament. Aucun des quatre
+ennemis du jeu n'en gagne aujourd'hui : leurs intentions, fixées dans leur fichier, ne sont
+qu'attaques et Puissance (vérifié le 2026-11-22 sur `assets/data/enemies/`).
+
+> [!NOTE]
+> **Son voile est la jauge de l'armure seule, pas des PV** (B15, B16 — vague 1 du bestiaire, sur la
+> branche `feat/v0.6.1-interface-des-ennemis`, [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)).
+> Sur la barre de PV, le voile couvre `armure / plein` de la largeur, le plein étant le plus haut
+> montant atteint depuis que l'armure est tombée à 0 (`ArmorVeil`, `lib/game/systems/armor_veil.dart`) :
+> tout gain devient le nouveau plein, un coup qui entame le laisse, zéro l'efface. 6 d'armure
+> couvrent la barre d'un petit ennemi comme 40 celle d'un boss. Le plein est un état d'affichage de
+> `EnemyCard`, hors de toute règle et de toute sauvegarde. **Dormant aujourd'hui** : aucun ennemi du
+> jeu ne gagne d'armure. Le montant s'écrit en cyan à côté des PV, dans la barre, et dans la fiche
+> de l'ennemi (« Armure 4 », même à 0).

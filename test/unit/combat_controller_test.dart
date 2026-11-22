@@ -907,6 +907,186 @@ void main() {
         expect(freezeOn('B'), ('freeze', points, 6));
       });
     });
+
+    group('Un combat fini a la phase ennemie ne rouvre aucun tour', () {
+      late ProviderContainer container;
+      late CombatController combat;
+      late RunController run;
+      late DeckNotifier deck;
+
+      setUp(() {
+        container = ProviderContainer(overrides: [shippedChargeOverride()]);
+        combat = container.read(combatProvider.notifier);
+        run = container.read(runProvider.notifier);
+        deck = container.read(deckProvider.notifier);
+        run.startNewRun(paladinHero);
+        deck.initializeStarterDeck([
+          for (var i = 0; i < 10; i++)
+            CardInstance(
+              data: CardData(
+                id: 'c$i',
+                nameEn: 'c$i',
+                nameFr: 'c$i',
+                cost: 1,
+                type: CardType.skill,
+                rarity: CardRarity.common,
+                target: CardTarget.self,
+                effects: const [],
+              ),
+            ),
+        ]);
+        deck.startCombat(
+            handSize: 0, maxHandSize: GameConstants.startingMaxHandSize);
+      });
+
+      tearDown(() => container.dispose());
+
+      StatusEffect status(String id, int value) => StatusEffect(
+            id: id,
+            name: id,
+            type: id == 'poison' ? StatusType.debuff : StatusType.buff,
+            value: value,
+            duration: 3,
+          );
+
+      /// Le dernier ennemi, que son Poison acheve au debut de la phase
+      /// ennemie : la victoire est constatee par le nettoyage des morts.
+      void winByPoison() {
+        combat.state = CombatState(
+          enemies: [
+            EnemyInstance(
+              id: 'A',
+              data: goblinData,
+              stats: EntityStats(maxPv: 3, currentPv: 3, armure: 0, might: 0)
+                  .addStatus(status('poison', 3)),
+            ),
+          ],
+          turnPhase: TurnPhase.player,
+        );
+        runEnemyPhaseStart(combat);
+        expect(combat.currentState.isCombatEnded, isTrue);
+        expect(combat.currentState.isVictory, isTrue);
+      }
+
+      /// Le heros, a 3 PV, que l attaque du seul ennemi acheve.
+      void dieFromIntent() {
+        run.updateHeroStats((s) => s.copyWith(currentPv: 3, currentMana: 0));
+        combat.state = CombatState(
+          enemies: [
+            EnemyInstance(
+              id: 'A',
+              data: goblinData,
+              stats: EntityStats(maxPv: 20, currentPv: 20, armure: 0, might: 5),
+              currentIntent: EnemyIntent(type: IntentType.attack, value: 5),
+            ),
+          ],
+          turnPhase: TurnPhase.player,
+        );
+        runEnemyPhaseStart(combat);
+        combat.resolveEnemyIntent('A');
+        expect(run.currentState.isDead, isTrue);
+      }
+
+      /// La fin de phase ennemie telle que l ecran l enchaine.
+      void endEnemyPhase() {
+        combat.endEnemyTurn();
+        combat.startPlayerTurn();
+      }
+
+      test('le compte des tours ne bouge plus', () {
+        winByPoison();
+        final turn = combat.currentState.turnCount;
+
+        endEnemyPhase();
+
+        expect(combat.currentState.turnCount, turn);
+      });
+
+      test('le Poison du heros ne le tue pas apres sa victoire', () {
+        run.updateHeroStats((s) => s.copyWith(currentPv: 2));
+        run.addStatus(status('poison', 5));
+        winByPoison();
+
+        endEnemyPhase();
+
+        expect(run.currentState.heroStats.currentPv, 2);
+        expect(run.currentState.isDead, isFalse);
+      });
+
+      test('la Source de Vie ne soigne pas un tour de trop', () {
+        run.updateHeroStats((s) => s.copyWith(currentPv: 50));
+        run.addStatus(status('hp_regen', 2));
+        winByPoison();
+
+        endEnemyPhase();
+
+        expect(run.currentState.heroStats.currentPv, 50);
+        final regen = run.currentState.heroStats.statuses
+            .singleWhere((s) => s.id == 'hp_regen');
+        expect(regen.duration, 3);
+      });
+
+      test('aucune carte n est piochee', () {
+        winByPoison();
+
+        endEnemyPhase();
+
+        expect(deck.state.hand, isEmpty);
+      });
+
+      test('le heros mort ne recoit ni tour, ni Mana, ni pioche', () {
+        dieFromIntent();
+        final turn = combat.currentState.turnCount;
+
+        endEnemyPhase();
+
+        expect(combat.currentState.turnCount, turn);
+        expect(run.currentState.heroStats.currentMana, 0);
+        expect(deck.state.hand, isEmpty);
+      });
+
+      test('un soin de debut de tour ne ranime pas le heros mort', () {
+        container.read(inventoryProvider.notifier).addRelic(const RelicData(
+              id: 'soin_de_debut_de_tour',
+              nameEn: 'Start of turn heal',
+              nameFr: 'Soin de debut de tour',
+              trigger: RelicTrigger.startOfTurn,
+              effectType: 'heal',
+              value: 5,
+              rarity: RelicRarity.common,
+              emoji: '+',
+            ));
+        dieFromIntent();
+
+        endEnemyPhase();
+
+        expect(run.currentState.heroStats.currentPv, 0);
+        expect(run.currentState.isDead, isTrue);
+      });
+
+      test('un combat qui continue rouvre bien le tour', () {
+        combat.state = CombatState(
+          enemies: [
+            EnemyInstance(
+              id: 'A',
+              data: goblinData,
+              stats: EntityStats(maxPv: 30, currentPv: 30, armure: 0, might: 0),
+            ),
+          ],
+          turnPhase: TurnPhase.player,
+        );
+        run.updateHeroStats((s) => s.copyWith(currentPv: 50));
+        run.addStatus(status('hp_regen', 2));
+        runEnemyPhaseStart(combat);
+        final turn = combat.currentState.turnCount;
+
+        endEnemyPhase();
+
+        expect(combat.currentState.turnCount, turn + 1);
+        expect(run.currentState.heroStats.currentPv, 52);
+        expect(deck.state.hand, hasLength(5));
+      });
+    });
   });
 
   group('CombatController — moitié joueur du cycle de tour', () {

@@ -59,11 +59,18 @@ if (isStackable) {
 > règles de plafond et de rupture. *Surchargé* sur *Coup de Tonnerre* pose donc sa Foudre avant le
 > coup de la carte.
 
-> [!WARNING]
-> **Les icônes de statut des ennemis supposent une entrée par `id`**
-> (`lib/game/components/entities/status_indicator.dart`). Vrai aujourd'hui : la Puissance
-> d'un ennemi n'a qu'une source, son intention Buff — celle d'Éveil meurt dans l'appel qui la
-> crée. Une carte qui donnerait de la Puissance à un ennemi casserait cet invariant (ADR-104).
+> [!NOTE]
+> **L'affichage montre une entrée par statut porté, clé `id` + source** — les languettes d'un
+> ennemi et du héros, et la fiche d'un ennemi (`StatusReadout`, `lib/game/systems/status_readout.dart`),
+> depuis la vague 1 du bestiaire, sur la branche `feat/v0.6.1-interface-des-ennemis`
+> ([ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md), qui complète ADR-104). À
+> gauche les bonus (`buff`), à droite les altérations puis les charges. L'invariant « une entrée par
+> `id` » qu'imposait l'ancien `StatusIndicator` est levé : deux Puissances de sources différentes
+> font deux entrées. Un effet qui dure tout le combat (durée 99) n'affiche pas de durée (B34).
+> Sous chaque entrée, la fiche écrit une **ligne d'aide** : la phrase du statut (Poison, Puissance,
+> Faiblesse, Vulnérable, les quatre régénérations), ou la **phrase courte de la charge**, le
+> `summary` de son fichier, à jetons ; aucune pour un compteur de passif ou de relique, ni pour une
+> charge sur le héros, dont la languette dit l'effet (correction C1 de la vague, `1876a07b`).
 
 ### 4.4. Les statuts proportionnels
 
@@ -125,7 +132,8 @@ avant le plafond, une fois par résolution ; une explosion n'est pas une carte e
 | Surcharge | **Non** : plafonnée au restant, rien sur un porteur gelé | Libre | Libre |
 | Déclin, au tour du porteur | −1 s'il n'a pas gelé | Aucun : tout se résout | −1 sous le seuil |
 | Rupture | **Au seuil** : l'ennemi gelé **ne fait rien** à son action — attaque, défense ou renforcement —, son intention est consommée, ses statuts se résolvent ; **le héros gelé ne perd pas son tour** : ses cartes et signatures infligent **50 % de moins** pendant son prochain tour, chaque coup compris, après la Faiblesse (8 → 6 → 3) | **Au tour du porteur** : chaque tranche de 3 fait **4 par point** au porteur et **explose** — **12 dégâts et 1 Feu** à chacun de ses voisins ; le reste fait **2 par point** et n'explose pas (5 points : 16 au porteur, 12 et 1 Feu à chaque voisin) | **Sous le seuil** : chaque coup reçu fait **+1 par point** ; **au seuil**, le porteur est **chargé** aussitôt : **+2 par point** à chaque coup, les suivants de la même carte compris, jusqu'à la fin de la phase en cours |
-| États affichés | « ❄ 2/3 », puis « ❄ Gelé » | « 🔥 5 » | « ⚡ 2/3 », puis « ⚡ 4 Chargé » |
+| États affichés — languette au repos | « ❄ 2/3 », puis « ❄ Gelé » (B33) | « 🔥 5 » | « ⚡ 2/3 », puis « ⚡ 3 » en jaune (B32) |
+| États affichés — languette déroulée | « Gel 2/3 », puis « Gelé » ; le héros gelé : « −50 % de dégâts au prochain tour » | « Feu 5 » | « Foudre 2/3 », puis « Chargé 3 · +6 par coup » |
 
 - **Le Feu : la chaîne**, au début de la phase ennemie. Tous les porteurs vivants se résolvent
   ensemble (vague 1) ; le Feu que leurs explosions posent forme la vague suivante, et elle seule ;

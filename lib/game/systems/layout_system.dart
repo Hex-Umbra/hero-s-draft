@@ -103,7 +103,12 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
 
   void repositionEnemies() {
     final enemyCards = game.enemyCards;
-    if (enemyCards.isEmpty) return;
+    if (enemyCards.isEmpty) {
+      // Le dernier ennemi vient de partir : sa carte qui s'efface ne reste pas
+      // survolée.
+      game.refreshEntityHover();
+      return;
+    }
 
     final int count = enemyCards.length;
     double scaleMultiplier = 1.0;
@@ -131,7 +136,11 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
     double posY = game.size.y * 0.21;
 
     for (int i = 0; i < count; i++) {
-      enemyCards[i].position = Vector2(startX + (i * spacing), posY);
+      enemyCards[i].place(Vector2(startX + (i * spacing), posY));
     }
+
+    // Le plateau vient de changer sous un pointeur peut-être immobile :
+    // l'arbitre du survol relit les cartes de combat.
+    game.refreshEntityHover();
   }
 }

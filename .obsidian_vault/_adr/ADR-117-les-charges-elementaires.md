@@ -31,6 +31,13 @@ le Gel quitte le barème proportionnel, *Congelant* pose 1 point par niveau. **C
 l'éditeur). **Clôt [ADR-110](ADR-110-une-vague-de-plus-pour-les-charges-elementaires.md)** : la vague
 de plus est livrée. Chacun de ces ADR ne change que de Statut. **Clôt P-53** dans `docs/ROADMAP.md`.
 **Fusionné dans `main` le 2026-11-18 par la PR #55** (commit de fusion `5d894785`), tagué `v0.5.9` sur ce commit ; CI de tête `44271012349` et `release.yml` run `44271100229` verts — constaté par la porte d'entrée de la vague 8 (`eb7945fb`) et re-vérifié par `gh` le 2026-11-18.
+**Complété le 2026-11-22 par [ADR-121](ADR-121-l-interface-des-ennemis-en-combat.md)** (les états des
+charges se lisent au repos et au déroulé des languettes) **et sa réserve S9 close par
+[ADR-122](ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)** — tous deux livrés sur la branche
+`feat/v0.6.1-interface-des-ennemis` (P-05 vague 1), test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du
+tag du propriétaire. **Puis par la correction C1 d'ADR-121** : chaque charge déclare aussi
+une phrase courte, `summary_fr` / `summary_en`, obligatoire, que la fiche d'un ennemi écrit sous
+elle ; la description reste celle des infobulles des cartes.
 
 ### Contexte
 

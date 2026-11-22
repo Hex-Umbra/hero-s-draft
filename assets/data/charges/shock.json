@@ -6,6 +6,8 @@
   "brokenName_en": "Charged",
   "description_fr": "Chaque coup reçu inflige +{belowValue} par point. À {threshold}, le porteur est chargé jusqu'à la fin du tour : +{bonusPerPoint} par point à chaque coup. Perd {decay} point à son tour sous le seuil.",
   "description_en": "Each hit taken deals +{belowValue} per point. At {threshold}, the bearer is charged until the end of the turn: +{bonusPerPoint} per point on every hit. Loses {decay} point on its turn below the threshold.",
+  "summary_fr": "Les coups reçus font +{belowValue} par point, +{bonusPerPoint} au seuil.",
+  "summary_en": "Hits taken deal +{belowValue} per point, +{bonusPerPoint} at the threshold.",
   "threshold": 3,
   "thresholdGrowth": 0,
   "overcharge": true,

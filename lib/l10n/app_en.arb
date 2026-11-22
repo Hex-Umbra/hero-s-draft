@@ -186,11 +186,6 @@
   "rarityLegendary": "Legendary",
 
   "tooltipHpTitle": "Hit Points (HP)",
-  "tooltipHpDesc": "Your health pool. If it reaches 0, you die.",
-  "tooltipArmorTitle": "Block / Armor",
-  "tooltipArmorDesc": "Absorbs next attacks' damage. Removed at turn start.",
-  "tooltipAttackTitle": "Might",
-  "tooltipAttackDesc": "Strengthens what your class channels it into: Attacks, Skills or alterations.",
   "mightTargetAttackShort": "Attacks",
   "mightTargetSkillShort": "Skills",
   "mightTargetAlterationShort": "Alterations",
@@ -246,14 +241,12 @@
     "description": "Short title of the tutorial demo panel for a class that converts its Mana into temporary Might."
   },
   "tooltipManaTitle": "Mana",
-  "tooltipManaDesc": "Energy resource used to play cards each turn.",
   "cardTypeAttack": "Attack",
   "cardTypeSkill": "Skill",
   "cardTypePower": "Power",
   "cardTypeStatus": "Status",
   "oncePlayed": "ONCE PLAYED",
   "exhaustWarning": "⚠️ ONCE PLAYED (Exhaust)",
-  "hpAbbreviation": "HP",
   "enemyIntentsTitle": "ENEMY INTENTIONS",
   "intentDevastatingAttack": "Devastating Attack: {value}",
   "@intentDevastatingAttack": {
@@ -289,16 +282,6 @@
   "@intentBuff": {
     "placeholders": {
       "value": { "type": "int" }
-    }
-  },
-  "enemyStatsTitle": "ENEMY STATS",
-  "enemyStatsDesc": "Health: {hp}/{maxHp} HP.\nMight: {might}.\nArmor: {armor}.",
-  "@enemyStatsDesc": {
-    "placeholders": {
-      "hp": { "type": "int" },
-      "maxHp": { "type": "int" },
-      "might": { "type": "int" },
-      "armor": { "type": "int" }
     }
   },
   "cardDescDamage": "Deals {amount} damage.",
@@ -660,7 +643,7 @@
       "value": { "type": "int" }
     }
   },
-  "statusName": "{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} other{{id}}}",
+  "statusName": "{id, select, poison{Poison} might{Might} weakness{Weakness} vulnerable{Vulnerable} might_regen{Might Awakening} mana_regen{Mana Spring} armor_regen{Plated Armor} hp_regen{Life Spring} lifesteal{Lifesteal} crit_chance{Critical (Relic)} mastery{Mastery (Relic)} kunai_charge{Kunai Charge} shuriken_charge{Shuriken Charge} pen_nib_charge{Pen Nib Charge} incense_charge{Incense Burner Charge} other{{id}}}",
   "@statusName": {
     "placeholders": {
       "id": { "type": "String" }
@@ -1142,6 +1125,149 @@
       "max": { "type": "int" }
     }
   },
+  "statusPoisonHint": "Takes {value} damage at the start of its turn",
+  "@statusPoisonHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusMightHint": "+{value} damage on its attacks",
+  "@statusMightHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusMightRegenHint": "Gains {value} Might at the start of its turn",
+  "@statusMightRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusArmorRegenHint": "Gains {value} Armor at the start of its turn",
+  "@statusArmorRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusManaRegenHint": "Gains {value} Mana at the start of its turn",
+  "@statusManaRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "statusHpRegenHint": "Recovers {value} HP at the start of its turn",
+  "@statusHpRegenHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "intentNameDevastatingAttack": "Devastating Attack",
+  "intentNameHeavyAttack": "Heavy Attack",
+  "intentNameAttack": "Attack",
+  "intentNameQuickAttack": "Quick Attack",
+  "intentNameDefend": "Defend",
+  "intentNameBuff": "Buff Might",
+  "sheetIntentAttack": "Will attack the hero for {value} damage.",
+  "@sheetIntentAttack": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "sheetIntentDefend": "Will gain {value} Armor.",
+  "@sheetIntentDefend": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "sheetIntentBuff": "Will gain {value} Might.",
+  "@sheetIntentBuff": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "sheetIntentWaiting": "Intent not known yet.",
+  "sheetHp": "HP {current}/{max}",
+  "@sheetHp": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "sheetArmor": "Armor {value}",
+  "@sheetArmor": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "sheetMight": "Might {value}",
+  "@sheetMight": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "sheetSectionIntent": "INTENT",
+  "sheetSectionBonuses": "BUFFS",
+  "sheetSectionAlterations": "DEBUFFS",
+  "sheetTurnsLeft": "{count, plural, =1{1 turn left} other{{count} turns left}}",
+  "@sheetTurnsLeft": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tabBuff": "{name} +{value}",
+  "@tabBuff": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "tabDebuff": "{name} {value}",
+  "@tabDebuff": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "value": { "type": "int" }
+    }
+  },
+  "tabTurns": "{count, plural, =1{1 turn} other{{count} turns}}",
+  "@tabTurns": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tabChargePoints": "{name} {points}/{threshold}",
+  "@tabChargePoints": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "points": { "type": "int" },
+      "threshold": { "type": "int" }
+    }
+  },
+  "tabChargeOpen": "{name} {points}",
+  "@tabChargeOpen": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "points": { "type": "int" }
+    }
+  },
+  "tabChargeBonus": "+{bonus} per hit",
+  "@tabChargeBonus": {
+    "placeholders": {
+      "bonus": { "type": "int" }
+    }
+  },
+  "tabChargeWeakenNext": "−{percent}% damage next turn",
+  "@tabChargeWeakenNext": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "tabChargeWeakenNow": "−{percent}% damage this turn",
+  "@tabChargeWeakenNow": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "statusPassiveCounter": "Counter",
   "cardCostHp": "Costs {amount} HP",
   "@cardCostHp": {
     "placeholders": {

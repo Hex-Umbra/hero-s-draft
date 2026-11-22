@@ -336,24 +336,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipHpTitle => 'Points de Vie (PV)';
 
   @override
-  String get tooltipHpDesc =>
-      'Votre réserve de santé. S\'il tombe à 0, vous mourez.';
-
-  @override
-  String get tooltipArmorTitle => 'Blocage / Armure';
-
-  @override
-  String get tooltipArmorDesc =>
-      'Absorbe les dégâts des prochaines attaques. Retiré au début du tour.';
-
-  @override
-  String get tooltipAttackTitle => 'Puissance';
-
-  @override
-  String get tooltipAttackDesc =>
-      'Renforce ce qu\'oriente votre classe : Attaques, Compétences ou altérations.';
-
-  @override
   String get mightTargetAttackShort => 'Attaques';
 
   @override
@@ -421,10 +403,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipManaTitle => 'Mana';
 
   @override
-  String get tooltipManaDesc =>
-      'Ressource d\'énergie utilisée pour jouer des cartes chaque tour.';
-
-  @override
   String get cardTypeAttack => 'Attaque';
 
   @override
@@ -441,9 +419,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exhaustWarning => '⚠️ USAGE UNIQUE (Épuisement)';
-
-  @override
-  String get hpAbbreviation => 'PV';
 
   @override
   String get enemyIntentsTitle => 'INTENTIONS ENNEMIES';
@@ -476,14 +451,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String intentBuff(int value) {
     return 'Buff Puissance : +$value';
-  }
-
-  @override
-  String get enemyStatsTitle => 'STATS DE L\'ENNEMI';
-
-  @override
-  String enemyStatsDesc(int hp, int maxHp, int might, int armor) {
-    return 'Santé : $hp/$maxHp PV.\nPuissance : $might.\nArmure : $armor.';
   }
 
   @override
@@ -939,6 +906,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'mana_regen': 'Source de Mana',
       'armor_regen': 'Métallisation',
       'hp_regen': 'Source de Vie',
+      'lifesteal': 'Vol de Vie',
+      'crit_chance': 'Critique (Relique)',
+      'mastery': 'Maîtrise (Relique)',
+      'kunai_charge': 'Charge Kunaï',
+      'shuriken_charge': 'Charge Shuriken',
+      'pen_nib_charge': 'Charge Plume',
+      'incense_charge': 'Charge Encensoir',
       'other': '$id',
     });
     return '$_temp0';
@@ -1371,6 +1345,162 @@ class AppLocalizationsFr extends AppLocalizations {
   String statusVulnerableHint(int percent, int max) {
     return '+$percent % de dégâts subis par point, jusqu\'à +$max %';
   }
+
+  @override
+  String statusPoisonHint(int value) {
+    return 'Subit $value dégâts au début de son tour';
+  }
+
+  @override
+  String statusMightHint(int value) {
+    return '+$value aux dégâts de ses attaques';
+  }
+
+  @override
+  String statusMightRegenHint(int value) {
+    return 'Gagne $value Puissance au début de son tour';
+  }
+
+  @override
+  String statusArmorRegenHint(int value) {
+    return 'Gagne $value Armure au début de son tour';
+  }
+
+  @override
+  String statusManaRegenHint(int value) {
+    return 'Gagne $value Mana au début de son tour';
+  }
+
+  @override
+  String statusHpRegenHint(int value) {
+    return 'Récupère $value PV au début de son tour';
+  }
+
+  @override
+  String get intentNameDevastatingAttack => 'Attaque Dévastatrice';
+
+  @override
+  String get intentNameHeavyAttack => 'Attaque Lourde';
+
+  @override
+  String get intentNameAttack => 'Attaque';
+
+  @override
+  String get intentNameQuickAttack => 'Attaque Rapide';
+
+  @override
+  String get intentNameDefend => 'Défense';
+
+  @override
+  String get intentNameBuff => 'Buff Puissance';
+
+  @override
+  String sheetIntentAttack(int value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      value,
+      locale: localeName,
+      other: 'Attaquera le héros pour $value dégâts.',
+      one: 'Attaquera le héros pour 1 dégât.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sheetIntentDefend(int value) {
+    return 'Gagnera $value d\'Armure.';
+  }
+
+  @override
+  String sheetIntentBuff(int value) {
+    return 'Gagnera $value de Puissance.';
+  }
+
+  @override
+  String get sheetIntentWaiting => 'Intention pas encore connue.';
+
+  @override
+  String sheetHp(int current, int max) {
+    return 'PV $current/$max';
+  }
+
+  @override
+  String sheetArmor(int value) {
+    return 'Armure $value';
+  }
+
+  @override
+  String sheetMight(int value) {
+    return 'Puissance $value';
+  }
+
+  @override
+  String get sheetSectionIntent => 'INTENTION';
+
+  @override
+  String get sheetSectionBonuses => 'BONUS';
+
+  @override
+  String get sheetSectionAlterations => 'ALTÉRATIONS';
+
+  @override
+  String sheetTurnsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'encore $count tours',
+      one: 'encore 1 tour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tabBuff(String name, int value) {
+    return '$name +$value';
+  }
+
+  @override
+  String tabDebuff(String name, int value) {
+    return '$name $value';
+  }
+
+  @override
+  String tabTurns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tours',
+      one: '1 tour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tabChargePoints(String name, int points, int threshold) {
+    return '$name $points/$threshold';
+  }
+
+  @override
+  String tabChargeOpen(String name, int points) {
+    return '$name $points';
+  }
+
+  @override
+  String tabChargeBonus(int bonus) {
+    return '+$bonus par coup';
+  }
+
+  @override
+  String tabChargeWeakenNext(int percent) {
+    return '−$percent % de dégâts au prochain tour';
+  }
+
+  @override
+  String tabChargeWeakenNow(int percent) {
+    return '−$percent % de dégâts ce tour';
+  }
+
+  @override
+  String get statusPassiveCounter => 'Compteur';
 
   @override
   String cardCostHp(int amount) {

@@ -108,6 +108,11 @@ class ChargeData {
   final String descriptionFr;
   final String descriptionEn;
 
+  /// La règle d'un ennemi porteur en une phrase, à jetons : ce que la fiche
+  /// de l'ennemi écrit sous la charge (P-05, vague 1, défaut 1).
+  final String summaryFr;
+  final String summaryEn;
+
   /// La règle sur le héros ; exigée si et seulement si [heroRupture] existe.
   final String? heroDescriptionFr;
   final String? heroDescriptionEn;
@@ -131,6 +136,8 @@ class ChargeData {
     required this.brokenNameEn,
     required this.descriptionFr,
     required this.descriptionEn,
+    required this.summaryFr,
+    required this.summaryEn,
     required this.heroDescriptionFr,
     required this.heroDescriptionEn,
     required this.threshold,
@@ -153,6 +160,8 @@ class ChargeData {
     'brokenName_en',
     'description_fr',
     'description_en',
+    'summary_fr',
+    'summary_en',
     'heroDescription_fr',
     'heroDescription_en',
     'threshold',
@@ -200,6 +209,15 @@ class ChargeData {
         _tokens(locale, rupture),
       );
 
+  /// La phrase courte d'un porteur dont la rupture en vigueur est
+  /// [inForce], jetons remplis ; nulle quand c'est la rupture propre du
+  /// héros : sa languette en écrit déjà l'effet.
+  String? summaryFor(String locale, ChargeRupture? inForce) {
+    final hero = heroRupture;
+    if (hero != null && inForce == hero && inForce != rupture) return null;
+    return _fill(locale == 'fr' ? summaryFr : summaryEn, _tokens(locale, rupture));
+  }
+
   Map<String, String> _tokens(String locale, ChargeRupture forRupture) => {
         'name': name(locale),
         'threshold': '$threshold',
@@ -225,6 +243,8 @@ class ChargeData {
         if (brokenNameEn != null) 'brokenName_en': brokenNameEn,
         'description_fr': descriptionFr,
         'description_en': descriptionEn,
+        'summary_fr': summaryFr,
+        'summary_en': summaryEn,
         if (heroDescriptionFr != null) 'heroDescription_fr': heroDescriptionFr,
         if (heroDescriptionEn != null) 'heroDescription_en': heroDescriptionEn,
         'threshold': threshold,
@@ -373,6 +393,8 @@ class ChargeData {
     final nameEn = _text(json, 'name_en', id);
     final descriptionFr = _text(json, 'description_fr', id);
     final descriptionEn = _text(json, 'description_en', id);
+    final summaryFr = _text(json, 'summary_fr', id);
+    final summaryEn = _text(json, 'summary_en', id);
 
     final threshold = _int(json, 'threshold', id, min: 1);
     final bossThreshold = _optionalInt(json, 'bossThreshold', id, min: 1);
@@ -474,6 +496,8 @@ class ChargeData {
       brokenNameEn: brokenEn,
       descriptionFr: descriptionFr,
       descriptionEn: descriptionEn,
+      summaryFr: summaryFr,
+      summaryEn: summaryEn,
       heroDescriptionFr: heroFr,
       heroDescriptionEn: heroEn,
       threshold: threshold,
@@ -497,6 +521,8 @@ class ChargeData {
     final texts = {
       'description_fr': (descriptionFr, 'fr', rupture),
       'description_en': (descriptionEn, 'en', rupture),
+      'summary_fr': (summaryFr, 'fr', rupture),
+      'summary_en': (summaryEn, 'en', rupture),
       if (heroRupture != null) ...{
         'heroDescription_fr': (heroDescriptionFr!, 'fr', heroRupture!),
         'heroDescription_en': (heroDescriptionEn!, 'en', heroRupture!),

@@ -44,8 +44,16 @@ ne lit le registre lui-même** : la table descend par paramètre, comme les autr
 | `test/unit/referential_integrity_test.dart` | Un nom d'icône ou de couleur livré absent de `effectIcons` / `effectColors` ; un `status:<id>` que `EffectResolver.createStatus` ne fabrique pas **et qui n'est pas une charge du catalogue** — `status:burn`, `status:freeze`, `status:shock` depuis la vague 7 ([ADR-117](../_adr/ADR-117-les-charges-elementaires.md)), chaque charge devant avoir son entrée ; **une sorte que les faces des cartes dessinent autrement** — Flutter (`getEffectVisuals`, `ui_card_helpers.dart`) et Flame (`CardTextRenderer.getEffectVisuals`) comparés au document, P-6 (a) |
 
 > [!NOTE]
-> **Trois jeux d'icônes subsistent à côté de la table** : les faces des cartes, qui gardent leur
-> propre code mais doivent rester égales au document ; les émojis des statuts ennemis (Flame,
-> `status_indicator.dart`) ; l'icône de la rune *Précis*, qui reprend le Vulnérable des cartes
-> (`gps_fixed_rounded`) quand le critique de la table est `flare_rounded`. Les passer sur le document
-> est une ligne de `docs/ROADMAP.md`.
+> **Quatre jeux d'icônes subsistent à côté de la table** : les faces des cartes, qui gardent leur
+> propre code mais doivent rester égales au document ; **les émojis des statuts** —
+> `statusEmoji` (`lib/game/systems/status_readout.dart`, pur depuis la vague 1 du bestiaire, sur la
+> branche `feat/v0.6.1-interface-des-ennemis` ; `status_indicator.dart` avant), lus par les
+> languettes des ennemis **et du héros**, la fiche d'un ennemi et le « +N 🔥 » de la vague du Feu ;
+> `mana_regen` 💎 et `hp_regen` 💖 (B41) ; **les pastilles des intentions** (`IntentPips`,
+> `lib/ui/widgets/hud/intent_pips.dart`), qui gardent leurs icônes et couleurs propres — le
+> bouclier `Icons.shield` de la Défense, la flèche montante violette de la Puissance (B31) — et ne
+> lisent pas la table : la vague du langage des intentions dira comment chaque effet prend sa
+> pastille ([ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)) ; l'icône de la rune
+> *Précis*, qui reprend le Vulnérable des cartes (`gps_fixed_rounded`) quand le critique de la
+> table est `flare_rounded`. Passer les faces, les émojis et *Précis* sur le document est la ligne
+> P-55 de `docs/ROADMAP.md`.

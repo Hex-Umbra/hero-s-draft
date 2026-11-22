@@ -159,7 +159,7 @@ class CardInteractionHandler {
 
   EnemyCard? findHoveredEnemy(Vector2 canvasPos) {
     for (var enemy in cardComponent.game.enemyCards) {
-      if (enemy.containsPoint(canvasPos)) {
+      if (enemy.zoneContains(canvasPos)) {
         return enemy;
       }
     }

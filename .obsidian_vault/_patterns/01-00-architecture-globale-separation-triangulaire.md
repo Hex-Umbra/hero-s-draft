@@ -26,7 +26,7 @@ graph TD
         HeroComp["HeroCard"]
         TargetLine["TargetingLine"]
         FloatText["FloatingText"]
-        StatBdg["StatBadge / HealthBar"]
+        StatBdg["EnemyHealthBar / StatusTabs<br/>InspectionVeil"]
     end
 
     RVP -->|"Orchestre"| ER
@@ -34,7 +34,7 @@ graph TD
     CombatCtrl["CombatController"] -->|"Génère via"| ES
     loadGameDataRegistry -->|"Parse JSON →"| GD
     ER -->|"Mutations d'état"| RVP
-    Game <-->|"16 Callbacks typés ↑<br/>syncState/syncDeck/syncCombat ↓"| RVP
+    Game <-->|"17 Callbacks typés ↑<br/>syncState/syncDeck/syncCombat ↓"| RVP
 ```
 
 ### 1.1. Inventaire des fichiers source

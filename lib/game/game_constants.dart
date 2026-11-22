@@ -10,12 +10,26 @@ class GameConstants {
   static const int priorityBackground = -100;
   /// Le givre aux coins de l'ecran : au-dessus du fond, sous les cartes.
   static const int priorityFrostVignette = -50;
+  /// La carte de combat survolée : ses languettes déroulées passent sur la
+  /// carte voisine, sous la main.
+  static const int priorityEntityHovered = 5;
   static const int priorityCardBase = 10;
   static const int priorityCardHovered = 100;
   static const int priorityCardFocused = 150;
   static const int priorityCardTrail = 200;
   static const int priorityTargetingLine = 300;
   static const int priorityCardDraggingMax = 500;
+  /// Le voile qui estompe le plateau pendant la fiche d'un ennemi : au-dessus
+  /// de la carte focalisée de la main, sous la carte ouverte.
+  static const int priorityInspectionVeil = 180;
+  /// La carte d'un ennemi dont la fiche est ouverte, au-dessus du voile.
+  static const int priorityInspectedEnemy = 190;
+
+  // --- FICHE D'UN ENNEMI ---
+  /// L'agrandissement de la carte ouverte : celui de la carte focalisée.
+  static const double inspectionScale = 1.25;
+  /// Agrandissement, descente et fondu du voile, à l'aller comme au retour.
+  static const double inspectionSeconds = 0.15;
 
   // --- CARD DIMENSIONS ---
   static const double cardWidth = 140.0;
@@ -31,10 +45,14 @@ class GameConstants {
   /// larges de 250 et posés à 20 du bord, plus 16 de marge (20 + 250 + 16).
   static const double handSideReserve = 286.0;
 
-  // --- STAT BADGE DIMENSIONS ---
-  static final Vector2 badgeHpSize = Vector2(130.0, 16.0);
-  static final Vector2 badgeStandardSize = Vector2(48.0, 22.0);
-  static final Vector2 badgeCircleSize = Vector2.all(36.0);
+  // --- BARRE DE PV D'UN ENNEMI (unités de la carte) ---
+  static const double enemyHealthBarTop = -17.0;
+  static const double enemyHealthBarHeight = 13.0;
+  static const double enemyHealthBarRadius = 4.0;
+  static const double enemyHealthBarFontSize = 9.0;
+  static const double enemyHealthBarShieldSize = 8.0;
+  static const double enemyHealthBarShieldGap = 3.0;
+  static const double enemyHealthBarArmorGap = 2.0;
 
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {

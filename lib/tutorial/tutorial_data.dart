@@ -259,7 +259,10 @@ const List<TutorialStep> kTutorialSteps = [
         'Until an enemy has an intent, that same panel shows an hourglass and '
         '**Waiting...** instead.\n\n'
         'The number is recalculated live: it grows with the enemy\'s level and '
-        'accumulated Might; a Frozen enemy does nothing on its turn.',
+        'accumulated Might; a Frozen enemy does nothing on its turn.\n\n'
+        '**Tap an enemy** to open its sheet: its HP, Armor, Might, intent, '
+        'buffs and debuffs. With a mouse, hovering its card unfolds its two '
+        'side tabs.',
     bodyFr:
         'Les ennemis annoncent leur action avant que vous ne jouiez. Leur '
         'intention n\'est pas affichée au-dessus d\'eux : elle se lit dans le '
@@ -272,7 +275,10 @@ const List<TutorialStep> kTutorialSteps = [
         'affiche un sablier et l\'indication **En attente...**.\n\n'
         'Le chiffre est recalculé en direct : il monte avec le niveau de '
         'l\'ennemi et sa Puissance accumulée ; un ennemi Gelé ne fait rien à son '
-        'tour.',
+        'tour.\n\n'
+        '**Touchez un ennemi** pour ouvrir sa fiche : ses PV, son Armure, sa '
+        'Puissance, son intention, ses bonus et ses altérations. À la souris, '
+        'survoler sa carte déroule ses deux languettes.',
     type: TutorialStepType.enemies,
   ),
   TutorialStep(
