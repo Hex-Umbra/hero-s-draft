@@ -125,6 +125,9 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
         immediateRemovals = true;
       }
     }
+    // Une carte mourante cesse d'être survolée (A9), même sous un pointeur
+    // immobile ; ses languettes ne restent pas déroulées.
+    if (cardsToRemove.isNotEmpty) game.refreshEntityHover();
 
     // 2. Gérer les apparitions ou mises à jour. Une vague du Feu neuve : chaque
     //    voisin retient son état jusqu'à l'arrivée de sa boule de feu, et

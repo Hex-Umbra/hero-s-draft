@@ -249,9 +249,13 @@ la carte ouverte se lisent, ceux des autres cartes aussi, brefs ; la carte joué
 peut-être la carte ouverte (A10 ne teste pas `isCardAnimating`). La ligne de ciblage n'y passe pas : elle est enfant
 de `CombatVisualSystem` (`combat_visual_system.dart:10-17`), ajouté au jeu à la priorité 0
 (`heros_draft_game.dart:275-278`), donc sous le voile — et cachée pendant la fiche, aucune carte n'étant focalisée.
-Agrandissement, descente et fondu du voile : 0,15 s, à l'aller comme au retour. Ses languettes restent au repos,
-agrandies avec elle (maquette 4 sur 5). Une carte morte ou mourante que la fiche quitte ne rejoue ni agrandissement ni
-descente, pour garder son effet de mort — une garde défensive, qu'un geste ordinaire n'atteint pas (plan, D8).
+Agrandissement, descente et fondu du voile : 0,15 s, à l'aller comme au retour ; à la fermeture, la carte reste
+au-dessus du voile jusqu'au bout de son retour, puis reprend la priorité de son survol — quand une autre fiche
+remplace la sienne, le voile reste et elle repasse dessous tout de suite *(amendé à la vague de corrections)*. Ses
+languettes restent au repos, agrandies avec elle (maquette 4 sur 5). Une carte morte que la fiche quitte ne rejoue ni
+agrandissement ni descente, pour garder son effet de mort — une garde défensive, qu'un geste ordinaire n'atteint pas
+(plan, D8) ; une carte mourante, qui ne porte pas encore cet effet, revient comme les autres *(amendé à la vague de
+corrections)*.
 
 **A12 — Tout toucher qui n'est pas sur la carte ouverte ferme la fiche ; Flame en est le seul propriétaire** *(T,
 filtres 1 puis 5)*. B13 : « Un toucher ailleurs la referme. » `GameScreen` enveloppe son `Stack` d'un `Listener`
@@ -544,13 +548,14 @@ static Offset topLeftFor({required Rect card, required Size screen, double width
 `card` est le rectangle d'A12 : la carte agrandie, sa barre et ses languettes au repos ; l'écart se mesure donc
 depuis la languette du côté où le cadre se pose, qu'il ne recouvre pas. À droite si `card.right + gap + width <=
 screen.width − margin` ; sinon à gauche si `card.left − gap − width >= margin` ; sinon du côté le plus large, borné à
-`[margin, screen.width − margin − width]`. Le haut : le haut de la barre de la carte agrandie (`card.top`), borné à
+`[margin, screen.width − margin − width]` ; sur un écran plus étroit que le cadre et ses deux marges, où cette borne
+s'inverse, le cadre se pose à `margin` et la fonction ne lève rien *(amendé à la vague de corrections)*. Le haut : le haut de la barre de la carte agrandie (`card.top`), borné à
 `margin`.
 
 ### 4.7. L'ouverture et la fermeture, dans `HerosDraftGame`
 
 ```dart
-EnemyCard? inspectedEnemy;
+EnemyCard? get inspectedEnemy;         // seul le jeu l'écrit (A1)
 void inspectEnemy(EnemyCard enemy);     // ouvre ou remplace
 void closeInspection();                 // sans effet si rien n'est ouvert
 void closeInspectionIfStale(CombatState state);

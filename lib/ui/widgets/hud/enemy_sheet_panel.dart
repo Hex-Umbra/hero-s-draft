@@ -19,7 +19,10 @@ class EnemySheetPanel extends ConsumerWidget {
   const EnemySheetPanel({super.key, required this.enemyId, required this.card});
 
   static const double _lineGap = 5;
-  static const double _sectionGap = 10;
+
+  /// Entre la dernière pastille et le nom de l'intention, marge de la pastille
+  /// comprise.
+  static const double _pipToName = 8;
   static const Color _hintColor = Color(0xFFC9C9D6);
 
   @override
@@ -151,7 +154,7 @@ class EnemySheetPanel extends ConsumerWidget {
               IntentPipChip(view.pips[i]),
             ],
             if (view.intentName.isNotEmpty) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: _pipToName - IntentPipChip.marginX),
               Flexible(
                 child: Text(
                   view.intentName,
@@ -173,7 +176,7 @@ class EnemySheetPanel extends ConsumerWidget {
       ];
 
   List<Widget> _entries(String title, List<SheetEntry> entries, Color color) => [
-        const SizedBox(height: _sectionGap),
+        const SizedBox(height: _lineGap),
         _sectionTitle(title),
         for (final entry in entries) ...[
           const SizedBox(height: _lineGap),

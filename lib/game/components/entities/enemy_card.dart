@@ -129,10 +129,26 @@ class EnemyCard extends CombatEntity
     _headingTo = target;
   }
 
+  /// Le temps écoulé du retour d'une carte fermée qui reste au-dessus du voile
+  /// pendant qu'il s'efface ; nul hors de ce retour. Compté par [update], et
+  /// non par la fin de l'effet d'échelle, qu'un coup ou un redimensionnement
+  /// peut retirer avant son terme.
+  double? _returnAboveVeil;
+
+  @override
+  int get layerPriority => _isInspected || _returnAboveVeil != null
+      ? GameConstants.priorityInspectedEnemy
+      : super.layerPriority;
+
   /// Joue l'agrandissement ou le retour, la descente et la priorité qui
-  /// suivent [isInspected] ; seulement pour une carte chargée et vivante.
-  void animateInspection() {
-    priority = _isInspected ? GameConstants.priorityInspectedEnemy : 0;
+  /// suivent [isInspected] ; seulement pour une carte chargée et non morte.
+  /// [aboveVeil] : au retour, la carte reste au-dessus du voile jusqu'à la fin
+  /// de son retour, puis reprend la priorité de son survol.
+  void animateInspection({bool aboveVeil = false}) {
+    _returnAboveVeil = !_isInspected && aboveVeil ? 0 : null;
+    priority = layerPriority;
+    // Un effet ajouté dans la même image n'est pas encore dans `children`.
+    _inspectionScale?.removeFromParent();
     removeAll(children.where(_carriesScale).toList());
     _inspectionScaleTarget = baseScale;
     add(
@@ -373,6 +389,18 @@ class EnemyCard extends CombatEntity
   @override
   void update(double dt) {
     super.update(dt);
+    // Lu avant les effets de la carte, que Flame met à jour après elle : la
+    // fin se constate à l'image qui suit celle où le retour s'est achevé.
+    final returned = _returnAboveVeil;
+    if (returned != null) {
+      if (returned >= GameConstants.inspectionSeconds) {
+        _returnAboveVeil = null;
+        // La priorité du survol, et le sens du déroulé relu à la taille de repos.
+        setHovered(isHovered);
+      } else {
+        _returnAboveVeil = returned + dt;
+      }
+    }
     if (_isHighlighted) {
       _totalTime += dt;
       _glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);

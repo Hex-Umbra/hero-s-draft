@@ -337,11 +337,15 @@ class IntentPipChip extends StatelessWidget {
 
   const IntentPipChip(this.pip, {super.key, this.hoverColor});
 
+  /// La marge de chaque côté de la pastille, que la fiche retire de l'écart
+  /// qui la suit.
+  static const double marginX = 6;
+
   @override
   Widget build(BuildContext context) {
     final hover = hoverColor;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: marginX, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: pip.color.withAlpha(pip.waiting ? 10 : 20),

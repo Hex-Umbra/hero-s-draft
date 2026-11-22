@@ -124,7 +124,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   /// L'ennemi dont la fiche est ouverte : un état d'affichage, que seul ce
   /// jeu écrit et que `GameScreen` reflète par [onInspectionChanged].
-  EnemyCard? inspectedEnemy;
+  EnemyCard? get inspectedEnemy => _inspectedEnemy;
+  EnemyCard? _inspectedEnemy;
 
   /// Le pointeur de l'appui qui vient d'ouvrir ou de garder la fiche, que
   /// [closeInspectionUnlessOn] lit puis oublie, dans le même appui.
@@ -244,9 +245,6 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       _setHoveredEntity(null);
       return;
     }
-    final pointer = _lastPointerPos;
-    if (pointer == null) return;
-
     final hero = heroCard;
     final entities = <CombatEntity>[
       for (final enemy in enemyCards)
@@ -255,6 +253,13 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     ];
     final hovered = hoveredEntity;
     final current = hovered == null ? -1 : entities.indexOf(hovered);
+    final pointer = _lastPointerPos;
+    if (pointer == null) {
+      // Sans point connu, rien ne se désigne ; mais une carte morte ou
+      // mourante cesse d'être survolée (A9).
+      if (current < 0) _setHoveredEntity(null);
+      return;
+    }
     final index = pickHoveredEntity(
       zones: [for (final entity in entities) entity.zone],
       current: current < 0 ? null : current,
@@ -263,10 +268,13 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     _setHoveredEntity(index == null ? null : entities[index]);
   }
 
+  /// La même carte encore survolée relit son déroulé : sa place ou son échelle
+  /// a pu changer sous le pointeur, et le sens du déroulé avec elles (B39).
   void _setHoveredEntity(CombatEntity? entity) {
-    if (entity == hoveredEntity) return;
-    hoveredEntity?.setHovered(false);
-    hoveredEntity = entity;
+    if (entity != hoveredEntity) {
+      hoveredEntity?.setHovered(false);
+      hoveredEntity = entity;
+    }
     entity?.setHovered(true);
   }
 
@@ -560,9 +568,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   void inspectEnemy(EnemyCard enemy) {
     if (inspectedEnemy == enemy) return;
     final previous = inspectedEnemy;
-    if (previous != null) _releaseInspected(previous);
+    // Le voile reste : la carte quittée repasse dessous tout de suite.
+    if (previous != null) _releaseInspected(previous, aboveVeil: false);
 
-    inspectedEnemy = enemy;
+    _inspectedEnemy = enemy;
     // Avant la priorité de la carte ouverte : quitter le survol la remet à 0.
     _setHoveredEntity(null);
     setHoveredCard(null);
@@ -582,8 +591,10 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     if (enemy == null) return;
     _inspectionPointer = null;
     _emittedRect = null;
-    inspectedEnemy = null;
-    _releaseInspected(enemy);
+    _inspectedEnemy = null;
+    // Le voile s'efface en même temps que la carte revient : elle reste
+    // au-dessus jusqu'au bout de son retour.
+    _releaseInspected(enemy, aboveVeil: true);
     _inspectionVeil?.hide();
     onInspectionChanged(null);
     if (rereadHover) {
@@ -613,10 +624,14 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   }
 
   /// Rend sa taille, sa place et sa bordure à une carte qui n'est plus
-  /// ouverte. Une carte morte ou mourante garde ses effets de mort (D8).
-  void _releaseInspected(EnemyCard enemy) {
+  /// ouverte ; [aboveVeil] la garde au-dessus du voile pendant son retour.
+  /// Une carte morte garde ses effets de mort (D8) ; une carte mourante n'en
+  /// porte pas encore, et revient.
+  void _releaseInspected(EnemyCard enemy, {required bool aboveVeil}) {
     enemy.isInspected = false;
-    if (enemy.isLoaded && _isAlive(enemy)) enemy.animateInspection();
+    if (enemy.isLoaded && !enemy.isDead) {
+      enemy.animateInspection(aboveVeil: aboveVeil);
+    }
   }
 
   void _emitInspection(EnemyCard enemy) {

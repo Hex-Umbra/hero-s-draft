@@ -325,13 +325,14 @@ class _TutorialCombatOverviewWidgetState
                 ),
               ),
               SizedBox(height: 4 * scale),
-              // Level, name, pip: the three columns of the real panel.
+              // Niveau, nom, pastille : les trois colonnes du vrai panneau, lues
+              // depuis la gauche. La `Row` prend toute la largeur : la colonne
+              // qui la porte aligne ses enfants à droite.
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     isFrench ? 'Niv. 1' : 'Lvl. 1',
-                    style: TextStyle(color: Colors.white54, fontSize: 8.5 * scale),
+                    style: TextStyle(color: Colors.white38, fontSize: 8.5 * scale),
                   ),
                   SizedBox(width: 6 * scale),
                   Flexible(
@@ -381,10 +382,11 @@ class _TutorialCombatOverviewWidgetState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Health bar above the enemy card: as wide as the card, HP written inside
+        // La barre de PV au-dessus de la carte : large comme elle, les PV
+        // écrits dedans, ombrés de noir comme sur la vraie barre.
         Container(
           width: 54 * scale,
-          height: 11 * scale,
+          height: 13 * scale,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.redAccent,
@@ -394,8 +396,15 @@ class _TutorialCombatOverviewWidgetState
             '28/28',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 8 * scale,
+              fontSize: 9 * scale,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 2 * scale,
+                  offset: Offset(scale, scale),
+                ),
+              ],
             ),
           ),
         ),

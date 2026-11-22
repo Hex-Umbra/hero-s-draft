@@ -109,8 +109,9 @@ class EnemySheetView {
 /// L'endroit où la fiche se pose à côté de la carte agrandie (spec P-05, §4.6).
 abstract final class SheetPlacement {
   /// Le coin haut gauche du cadre : à droite de [card] si le cadre tient, sinon
-  /// à gauche, sinon du côté le plus large, borné à l'écran. Le haut est celui
-  /// de [card], sans passer sous [margin].
+  /// à gauche, sinon du côté le plus large, borné à l'écran ; sur un écran plus
+  /// étroit que le cadre et ses marges, à [margin]. Le haut est celui de
+  /// [card], sans passer sous [margin].
   static Offset topLeftFor({
     required Rect card,
     required Size screen,
@@ -126,9 +127,11 @@ abstract final class SheetPlacement {
       left = card.left - gap - width;
     } else {
       final onLeft = card.left > screen.width - card.right;
-      left = (onLeft ? card.left - gap - width : card.right + gap)
-          .clamp(margin, rightEdge)
-          .toDouble();
+      // `clamp` lèverait si le bord droit passait sous la marge.
+      left = math.max(
+        margin,
+        math.min(onLeft ? card.left - gap - width : card.right + gap, rightEdge),
+      );
     }
     return Offset(left, math.max(card.top, margin));
   }

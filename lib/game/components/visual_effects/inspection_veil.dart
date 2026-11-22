@@ -22,10 +22,15 @@ class InspectionVeil extends RectangleComponent {
 
   void hide() => _fadeTo(0);
 
+  /// Le fondu en cours, gardé ici : ajouté dans la même image, il n'est pas
+  /// encore dans `children`, et ouvrir puis fermer dans la même image
+  /// additionnerait les deux fondus.
+  OpacityEffect? _fade;
+
   void _fadeTo(double opacity) {
-    removeAll(children.whereType<OpacityEffect>());
+    _fade?.removeFromParent();
     add(
-      OpacityEffect.to(
+      _fade = OpacityEffect.to(
         opacity,
         EffectController(duration: GameConstants.inspectionSeconds),
       ),

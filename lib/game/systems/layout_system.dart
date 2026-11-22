@@ -103,7 +103,12 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
 
   void repositionEnemies() {
     final enemyCards = game.enemyCards;
-    if (enemyCards.isEmpty) return;
+    if (enemyCards.isEmpty) {
+      // Le dernier ennemi vient de partir : sa carte qui s'efface ne reste pas
+      // survolée.
+      game.refreshEntityHover();
+      return;
+    }
 
     final int count = enemyCards.length;
     double scaleMultiplier = 1.0;

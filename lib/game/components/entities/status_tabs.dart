@@ -115,6 +115,11 @@ class StatusTabs extends PositionComponent with TapCallbacks {
       ? null
       : Rect.fromLTWH(position.x, position.y, size.x, size.y);
 
+  /// La part de la languette dans la zone de sa carte (spec P-05, §4.5), en
+  /// unités de la carte : son rectangle au repos et son rectangle dessiné ;
+  /// rien sans entrée. Le survol et l'appui lisent la même.
+  Iterable<Rect> get zoneLocalRects => [restLocalRect, localRect].nonNulls;
+
   double get _restX =>
       side == StatusSide.left ? _overlap - _restWidth : cardWidth - _overlap;
 
@@ -190,15 +195,13 @@ class StatusTabs extends PositionComponent with TapCallbacks {
     canvas.clipRRect(frame);
   }
 
-  /// L'appui suit la zone de la carte : le rectangle dessiné et le rectangle
-  /// au repos. Déroulée vers l'intérieur (B39), la languette garde ainsi
-  /// l'appui sur la bande qu'elle occupait au repos, que le survol garde aussi.
+  /// L'appui suit la zone de la carte ([zoneLocalRects]). Déroulée vers
+  /// l'intérieur (B39), la languette garde ainsi l'appui sur la bande qu'elle
+  /// occupait au repos, que le survol garde aussi.
   @override
   bool containsLocalPoint(Vector2 point) {
-    if (super.containsLocalPoint(point)) return true;
-    final rest = restLocalRect;
-    return rest != null &&
-        rest.contains(Offset(point.x + position.x, point.y + position.y));
+    final inCard = Offset(point.x + position.x, point.y + position.y);
+    return zoneLocalRects.any((rect) => rect.contains(inCard));
   }
 
   @override

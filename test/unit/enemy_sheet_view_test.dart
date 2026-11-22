@@ -190,6 +190,19 @@ void main() {
     expect(topLeft.dx, 16);
   });
 
+  test('un ecran plus etroit que le cadre ne fait rien lever', () {
+    late Offset topLeft;
+    expect(
+      () => topLeft = SheetPlacement.topLeftFor(
+        card: const Rect.fromLTRB(100, 100, 200, 400),
+        screen: const Size(300, 800),
+      ),
+      returnsNormally,
+    );
+
+    expect(topLeft.dx, 16);
+  });
+
   test('le haut ne monte pas au-dessus de la marge', () {
     final topLeft = SheetPlacement.topLeftFor(
       card: Rect.fromLTWH(100, 4, 200, 300),

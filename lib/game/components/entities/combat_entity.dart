@@ -97,8 +97,7 @@ abstract class CombatEntity extends PositionComponent
         for (final local in [
           bodyLocalRect,
           if (isLoaded)
-            for (final tabs in [leftTabs, rightTabs])
-              ...[tabs.restLocalRect, tabs.localRect].nonNulls,
+            for (final tabs in [leftTabs, rightTabs]) ...tabs.zoneLocalRects,
         ])
           _absoluteRect(local),
       ];
@@ -108,11 +107,18 @@ abstract class CombatEntity extends PositionComponent
     return zone.any((rect) => rect.contains(offset));
   }
 
+  /// La carte est sous la souris : ses languettes sont déroulées.
+  bool get isHovered => _hovered;
+
+  /// La priorité de la carte parmi ses voisines : au-dessus d'elles quand elle
+  /// est survolée.
+  int get layerPriority => _hovered ? GameConstants.priorityEntityHovered : 0;
+
   /// La carte survolée passe au-dessus de ses voisines et déroule ses deux
   /// languettes, chacune vers l'intérieur si elle sortirait de l'écran (B39).
   void setHovered(bool hovered) {
     _hovered = hovered;
-    priority = hovered ? GameConstants.priorityEntityHovered : 0;
+    priority = layerPriority;
     for (final tabs in [leftTabs, rightTabs]) {
       tabs.setUnfolded(
         hovered,
