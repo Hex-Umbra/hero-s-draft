@@ -4,7 +4,7 @@
 >
 > **Les règles** : une vague ne construit un mécanisme que si l'un de ses ennemis s'en sert, et c'est sa fiche qui le prend ici ; le propriétaire le teste en jeu sur cet ennemi (B46). Un mécanisme s'ajoute, se retire ou change de vague par une décision du propriétaire. **Ce qui est décrit ici est une intention, non une spec** : la forme exacte se fixe dans la spec de la vague qui le construit.
 >
-> **« Côté héros »** : le mécanisme existe déjà pour le héros. Une fois la résolution des effets rendue symétrique (B1, vague 2), il ne demande presque rien de plus pour un ennemi.
+> **« Côté héros »** : le mécanisme existe déjà pour le héros. Une fois la résolution des effets rendue symétrique (B1, vague 3), il ne demande presque rien de plus pour un ennemi.
 
 ---
 
@@ -12,24 +12,24 @@
 
 | # | Mécanisme | Ce qu'il fait | Ennemis qui s'en servent | Côté héros | Vague | Décisions |
 |:---:|:---|:---|:---|:---:|:---:|:---|
-| 1 | **Le langage des intentions** | Une intention est une liste d'effets, celle des cartes ; un effet part d'un lanceur, héros ou ennemi, vers sa cible | tous | ✅ les cartes | **2** | B1, B6, B42 |
-| 2 | **Le prix d'un effet** | Ce qu'un effet ajoute au coût d'un ennemi dans le budget d'un combat ; sans lui, un ennemi qui empoisonne « ne coûte rien » | tous les ennemis neufs | — | **2** | B58 (+6) |
-| 3 | **La demi-place** | Un ennemi prend une part de place à la composition d'un combat : deux rats pour une place ; le plateau porte six cartes au plus | Rat | — | **2** | B3, B28, B7, B17, B30 |
-| 4 | **Plusieurs coups** | Une attaque en N coups, chacun résolu à part | Loup des ombres | ✅ `hits` | **3** | B54 |
-| 5 | **Poser un statut ou une charge** | Poison, Faiblesse, Vulnérable, Gel, Feu, Foudre, sur le héros | Araignée, slimes de givre, de braise et d'orage ; puis Squelette, Zombie, Harpie, Sorcière ; Élémentaires, Aberration, Chimère | ✅ | **2** | B5 |
-| 6 | **Vol de vie** | L'ennemi se soigne d'une part des dégâts qu'il inflige | Corbeau | ✅ statut et rune | **2** | — |
-| 7 | **Larcin** | L'ennemi vole de l'or au héros | Gobelin | — | **2** | B2, B49, B57 |
-| 8 | **Esquive** | Un jet par coup avant le calcul des dégâts ; un coup esquivé ne pose ni charge ni statut ; le Poison et le Feu déjà posés ne s'esquivent pas | Kobold | — | **2** | B4, B55 |
-| 9 | **Les traits** | Des effets permanents qu'un ennemi porte dès l'entrée en combat — l'esquive en est un | Kobold ; plus tard les boss et les affixes d'élite (P-14) | ~ les passifs | **2** | — |
+| 1 | **Le langage des intentions** | Une intention est une liste d'effets, celle des cartes ; un effet part d'un lanceur, héros ou ennemi, vers sa cible | tous | ✅ les cartes | **3** | B1, B6, B42 |
+| 2 | **Le prix d'un effet** | Ce qu'un effet ajoute au coût d'un ennemi dans le budget d'un combat ; sans lui, un ennemi qui empoisonne « ne coûte rien » | tous les ennemis neufs | — | **3** | B58 (+6) |
+| 3 | **La demi-place** | Un ennemi prend une part de place à la composition d'un combat : deux rats pour une place ; le plateau porte six cartes au plus | Rat | — | **3** | B3, B28, B7, B17, B30 |
+| 4 | **Plusieurs coups** | Une attaque en N coups, chacun résolu à part | Loup des ombres | ✅ `hits` | **4** | B54 |
+| 5 | **Poser un statut ou une charge** | Poison, Faiblesse, Vulnérable, Gel, Feu, Foudre, sur le héros | Araignée, slimes de givre, de braise et d'orage ; puis Squelette, Zombie, Harpie, Sorcière ; Élémentaires, Aberration, Chimère | ✅ | **3** | B5 |
+| 6 | **Vol de vie** | L'ennemi se soigne d'une part des dégâts qu'il inflige | Corbeau | ✅ statut et rune | **3** | — |
+| 7 | **Larcin** | L'ennemi vole de l'or au héros | Gobelin | — | **3** | B2, B49, B57 |
+| 8 | **Esquive** | Un jet par coup avant le calcul des dégâts ; un coup esquivé ne pose ni charge ni statut ; le Poison et le Feu déjà posés ne s'esquivent pas | Kobold | — | **3** | B4, B55 |
+| 9 | **Les traits** | Des effets permanents qu'un ennemi porte dès l'entrée en combat — l'esquive en est un | Kobold ; plus tard les boss et les affixes d'élite (P-14) | ~ les passifs | **3** | — |
 | 10 | **Se renforcer** | Armure, Puissance, soin de soi | Golem, Gargouille, Orc ; Liche | ✅ | existe (Armure, Puissance) ; le soin de soi avec son premier ennemi | — |
-| 11 | **L'invocation** | Un effet qui fait entrer un ennemi du bestiaire, au prix de l'action du tour | Rat alpha, puis Nécromancien | — | **3** | B20, B23 à B27, consigne du cadrage §1.3, §2 |
-| 12 | **L'aura** | Un bonus qui dépend des alliés vivants ; le lien de meute en est un cas | Rat alpha et ses rats ; plus tard les soutiens | — | **3** | B22, B24, B29 |
-| 13 | **Viser un allié** | Un effet d'ennemi qui vise un autre ennemi : armure, Puissance, soin | meute ; le Chaman orc, premier soutien (tier 4) | — | **3** | — |
-| 14 | **Le perce-armure** | Le coup ignore l'armure, ou la détruit au lieu de toucher les PV | Voleur des cryptes, puis Chevalier déchu, Chevalier spectral, Liche | ✅ rune `piercing` | **3** | — |
-| 15 | **Les phases** | Sous un seuil de PV, l'ennemi change de liste d'intentions | Ogre (la rage) ; le Dragon juvénile ; puis les boss | — | **4** | P-09 |
-| 16 | **Le choix d'intention** | À côté du cycle fixe d'aujourd'hui : un tirage pondéré, ou une intention sous condition (« si le héros a de l'armure… ») | tier 3, boss | — | **4** | — |
-| 17 | **L'ouverture d'un tier** | Relever `maxTierAuthored` et fixer l'acte où le tier se débloque (aujourd'hui un tier tous les cinq actes) | tout le tier 4, puis le tier 5 | — | **5**, puis **6** | B59, P-15 |
-| 18 | **Les dégâts différés** | Une marque posée sur le héros, qui frappe plus tard | Cavalier de la mort | ~ le Feu, qui se résout au tour du héros | **6** | B59 |
+| 11 | **L'invocation** | Un effet qui fait entrer un ennemi du bestiaire, au prix de l'action du tour | Rat alpha, puis Nécromancien | — | **4** | B20, B23 à B27, consigne du cadrage §1.3, §2 |
+| 12 | **L'aura** | Un bonus qui dépend des alliés vivants ; le lien de meute en est un cas | Rat alpha et ses rats ; plus tard les soutiens | — | **4** | B22, B24, B29 |
+| 13 | **Viser un allié** | Un effet d'ennemi qui vise un autre ennemi : armure, Puissance, soin | meute ; le Chaman orc, premier soutien (tier 4) | — | **4** | — |
+| 14 | **Le perce-armure** | Le coup ignore l'armure, ou la détruit au lieu de toucher les PV | Voleur des cryptes, puis Chevalier déchu, Chevalier spectral, Liche | ✅ rune `piercing` | **4** | — |
+| 15 | **Les phases** | Sous un seuil de PV, l'ennemi change de liste d'intentions | Ogre (la rage) ; le Dragon juvénile ; puis les boss | — | **5** | P-09 |
+| 16 | **Le choix d'intention** | À côté du cycle fixe d'aujourd'hui : un tirage pondéré, ou une intention sous condition (« si le héros a de l'armure… ») | tier 3, boss | — | **5** | — |
+| 17 | **L'ouverture d'un tier** | Relever `maxTierAuthored` et fixer l'acte où le tier se débloque (aujourd'hui un tier tous les cinq actes) | tout le tier 4, puis le tier 5 | — | **6**, puis **7** | B59, B60, P-15 |
+| 18 | **Les dégâts différés** | Une marque posée sur le héros, qui frappe plus tard | Cavalier de la mort | ~ le Feu, qui se résout au tour du héros | **7** | B59 |
 | 19 | **Le tier boss** | Une réserve de boss à part, hors de l'échelle 1 à 5, sans le ×3 des boss d'aujourd'hui | boss | — | **8** | B47 |
 
 ---
@@ -47,7 +47,7 @@
 
 ## 3. Les ennemis au catalogue
 
-Les ennemis prévus par tier sont dans les fiches des vagues 2 à 6. Restent sans vague :
+Les ennemis prévus par tier sont dans les fiches des vagues 3 à 7. Restent sans vague :
 
 - **le Bandit de grand chemin** : son larcin passe au Gobelin (B49) ; il pourrait revenir comme une forme plus haute de la famille Gobelin ;
 - **les boss** : aucun concept encore — la fiche de la vague 8 les cadrera.

@@ -1,12 +1,12 @@
-# Vague 3 — `0.6.3` — le tier 2
+# Vague 4 — `0.6.4` — le tier 2
 
-> Fiche de vague du [chantier du bestiaire](README.md). Les décisions citées sont celles du [cadrage](../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), §1. Écrite le 22/11, avant la vague 2 : **la spec de la vague 2 aura fixé le format des intentions** sur lequel celle-ci s'écrit — relis-la avant tout, et revérifie chaque chemin.
+> Fiche de vague du [chantier du bestiaire](README.md). Les décisions citées sont celles du [cadrage](../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), §1. Écrite le 22/11, avant les vagues 2 et 3 : **la spec de la vague 3 aura fixé le format des intentions** sur lequel celle-ci s'écrit, celle de la vague 2 le placement où la meute se pose — relis-la avant tout, et revérifie chaque chemin.
 
 **Poids** : lourd — une spec, deux parties (les mécanismes, puis les ennemis).
 
 ## Ce qu'elle livre
 
-- **Les mécanismes du tier 2** ([catalogue](catalogue_mecanismes.md), #4 et #11 à #14) : plusieurs coups, venu de la vague 2 (B54), l'invocation, l'aura, viser un allié, le perce-armure.
+- **Les mécanismes du tier 2** ([catalogue](catalogue_mecanismes.md), #4 et #11 à #14) : plusieurs coups, venu de la vague 3 (B54), l'invocation, l'aura, viser un allié, le perce-armure.
 - **La famille du Rat entière** : le Rat alpha (tier 2, B20), qui entre seul et invoque ses rats un par un, deux au plus ; le lien de meute (B22, B29), écrit comme une aura.
 - **Les ennemis de tier 2**, proposés le 22/11 — **la liste est à confirmer** (prérequis 1) :
 
@@ -34,15 +34,15 @@
 
 ## Porte d'entrée
 
-Celle de l'orchestration §3.1, sur la vague 2 : fusionnée, `v0.6.2` posé sur un commit de `main`, CI et release vertes ; la vague 2 passe à « close ».
+Celle de l'orchestration §3.1, sur la vague 3 : fusionnée, `v0.6.3` posé sur un commit de `main`, CI et release vertes ; la vague 3 passe à « close ».
 
 ## Fichiers
 
-`p05-bestiaire-tier-2` pour la spec et le plan ; `bestiaire-vague-3` pour le compte rendu et les tests manuels.
+`p05-bestiaire-tier-2` pour la spec et le plan ; `bestiaire-vague-4` pour le compte rendu et les tests manuels.
 
 ## À lire
 
-Le format des intentions et la résolution symétrique tels que la vague 2 les a livrés (sa spec, son ADR) ; `lib/game/systems/encounter_system.dart` et la demi-place de la vague 2 ; `lib/game/systems/layout_system.dart` ; `lib/game/controllers/combat_controller.dart` (la liste des ennemis d'un combat, la victoire) et `TurnPhaseManager` (l'ordre des actions ennemies) ; `lib/game/services/damage_pipeline.dart` et la rune `assets/data/forge_upgrades/piercing.json` (le perce-armure du héros) ; la récompense d'un combat (`RewardController`) ; ADR-122 (un combat fini ne rouvre aucun tour) ; le cadrage §1.3 et §2.
+Le format des intentions et la résolution symétrique tels que la vague 3 les a livrés (sa spec, son ADR) ; `lib/game/systems/encounter_system.dart` et la demi-place de la vague 3 ; `lib/game/systems/layout_system.dart` (le placement de la vague 2) ; `lib/game/controllers/combat_controller.dart` (la liste des ennemis d'un combat, la victoire) et `TurnPhaseManager` (l'ordre des actions ennemies) ; `lib/game/services/damage_pipeline.dart` et la rune `assets/data/forge_upgrades/piercing.json` (le perce-armure du héros) ; la récompense d'un combat (`RewardController`) ; ADR-122 (un combat fini ne rouvre aucun tour) ; le cadrage §1.3 et §2.
 
 ## La spec doit fixer
 
@@ -62,7 +62,7 @@ Les questions P ont leur réponse dans les prérequis. Le reste est de classe T.
 
 ## Ne pas absorber
 
-Les phases et le choix d'intention (vague 4), le soutien du tier 4 (le Chaman, vague 5), le cadre et les fonds (vague 7), P-14, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
+Les phases et le choix d'intention (vague 5), le soutien du tier 4 (le Chaman, vague 6), aucune reprise des cadres ni des fonds (vague 2), P-14, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
 
 ## Tâche à risque
 

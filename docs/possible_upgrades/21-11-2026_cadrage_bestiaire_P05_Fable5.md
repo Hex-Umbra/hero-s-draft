@@ -1,16 +1,16 @@
 # Cadrage — le bestiaire (P-05) : trente décisions, et la première vague
 
-> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague ; dix-huit de plus, B42 à B59, le 22/11, pour le programme jusqu'à `0.7.0` et le tier 1. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
+> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague ; vingt de plus, B42 à B61, le 22/11, pour le programme jusqu'à `0.7.0` et le tier 1. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
 >
 > **Les maquettes** sur lesquelles le propriétaire a tranché sont dans un deck privé, <https://claude.ai/artifact/9LxzmnszyErbptiiJh8LDZ> (59 diapositives). Font foi : 31 (panneau des intentions), 37 à 40 (barre, carte, fiche, plateau), 41 (armure), 54 (rat libre et meute), 58 (la famille du Rat). Ce sont des approximations — polices de remplacement, troncatures estimées : ce document et les specs portent en texte ce qu'elles fixent.
 >
-> **Livraison** : par vagues, un tier par vague jusqu'à `0.7.0` (B45, B59). La première, `0.6.1`, a livré l'interface des ennemis. **Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** — les vagues, le journal, les fiches et le catalogue des mécanismes ; ce document garde les décisions.
+> **Livraison** : par vagues, un tier par vague jusqu'à `0.7.0` (B45, B59, B61). La première, `0.6.1`, a livré l'interface des ennemis. **Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** — les vagues, le journal, les fiches et le catalogue des mécanismes ; ce document garde les décisions.
 
 ---
 
 ## 1. Les décisions acquises
 
-Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B59 le 22/11, à la préparation de la suite. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception, B42, que B45 et B50 amendent, et B45, que B59 amende.
+Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B61 le 22/11, à la préparation de la suite. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception, B42, que B45 et B50 amendent, B45, que B59 et B61 amendent, et B59, que B61 amende.
 
 ### 1.1. Le langage et le contenu
 
@@ -76,24 +76,26 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 
 | N° | Décision | Date |
 |:---|:---|:---|
-| **B45** | *Amende B42 ; amendée par B59.* Le bestiaire se livre **un tier par vague**, jusqu'à `0.7.0` : la vague 2 (`0.6.2`) livre le langage des intentions (B1), les mécanismes du tier 1 et ses ennemis ; la vague 3 (`0.6.3`) le tier 2 ; la vague 4 (`0.6.4`) le tier 3 ; la vague 5 (`0.6.5`) le visuel — le cadre de tier, les fonds de fenêtre, le décor ; la vague 6 (`0.7.0`) le tier boss. Les tiers 4 et 5 viennent après `0.7.0`. Le déroulé : [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md). | 22/11 |
+| **B45** | *Amende B42 ; amendée par B59 et B61.* Le bestiaire se livre **un tier par vague**, jusqu'à `0.7.0` : la vague 2 (`0.6.2`) livre le langage des intentions (B1), les mécanismes du tier 1 et ses ennemis ; la vague 3 (`0.6.3`) le tier 2 ; la vague 4 (`0.6.4`) le tier 3 ; la vague 5 (`0.6.5`) le visuel — le cadre de tier, les fonds de fenêtre, le décor ; la vague 6 (`0.7.0`) le tier boss. Les tiers 4 et 5 viennent après `0.7.0`. Le déroulé : [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md). | 22/11 |
 | **B46** | Une vague ne construit que les mécanismes dont ses ennemis se servent, et les branche dans la même vague ; un mécanisme se teste en jeu avec le premier ennemi qui s'en sert. Tous les mécanismes sont tenus dans un [catalogue](../chantier_bestiaire/catalogue_mecanismes.md), qui dit pour chacun sa vague. | 22/11 |
 | **B47** | Les boss forment **un tier à part**, hors de l'échelle 1 à 5 des ennemis de base. | 22/11 |
 | **B48** | Les quatre ennemis d'aujourd'hui n'ont pas de vague propre : chacun évolue avec sa famille, dans la vague de son tier — le Gobelin au tier 1, le Squelette au tier 2, l'Orc au tier 3. | 22/11 |
 | **B49** | Le larcin du tier 1 est porté par **le Gobelin**, signature de sa famille (B2). Le Bandit de grand chemin n'entre pas au tier 1. | 22/11 |
-| **B50** | *Amende B42.* Le Rat alpha étant de tier 2 (B20), **la meute — l'alpha, l'invocation, le lien — vient avec le tier 2**, en vague 3. Le Rat arrive seul en vague 2, avec sa demi-place. | 22/11 |
+| **B50** | *Amende B42.* Le Rat alpha étant de tier 2 (B20), **la meute — l'alpha, l'invocation, le lien — vient avec le tier 2**, en vague 4. Le Rat arrive seul en vague 3, avec sa demi-place. | 22/11 |
 | **B51** | Une vague d'ennemis ne s'ouvre **qu'une fois tous ses sprites validés** ; la liste de ses ennemis est fixée dans sa fiche. | 22/11 |
-| **B52** | **Tout le bestiaire est redessiné** dans le style des sprites neufs : chacun des quatre ennemis d'aujourd'hui reçoit un sprite neuf dans la vague de son tier — le Slime et le Gobelin en vague 2, le Squelette en vague 3, l'Orc en vague 4. | 22/11 |
-| **B59** | *Amende B45.* **Les tiers 4 et 5 entrent au programme**, toujours un tier par vague : la vague 5 (`0.6.5`) livre le tier 4, la vague 6 (`0.6.6`) le tier 5. Le visuel passe en vague 7 (`0.6.7`), juste avant les boss, pour que le cadre de tier se pose une fois sur les cinq tiers. Le tier boss reste `0.7.0`, en vague 8. | 22/11 |
+| **B52** | **Tout le bestiaire est redessiné** dans le style des sprites neufs : chacun des quatre ennemis d'aujourd'hui reçoit un sprite neuf dans la vague de son tier — le Slime et le Gobelin en vague 3, le Squelette en vague 4, l'Orc en vague 5. | 22/11 |
+| **B59** | *Amende B45 ; amendée par B61.* **Les tiers 4 et 5 entrent au programme**, toujours un tier par vague : la vague 5 (`0.6.5`) livre le tier 4, la vague 6 (`0.6.6`) le tier 5. Le visuel passe en vague 7 (`0.6.7`), juste avant les boss, pour que le cadre de tier se pose une fois sur les cinq tiers. Le tier boss reste `0.7.0`, en vague 8. | 22/11 |
+| **B60** | **La cadence de déblocage des tiers ne change pas** : un tier de plus tous les cinq actes (`EncounterSystem.getUnlockedTier`) — le tier 4 à l'acte 16, le tier 5 à l'acte 21. | 22/11 |
+| **B61** | *Amende B45 et B59.* **Le visuel passe en tête**, en vague 2 (`0.6.2`) : le cadre de tier, les fonds de fenêtre et le décor de combat arrivent avant le tier 1. Chaque sprite neuf se valide sur son vrai fond, et la demi-place puis la meute se posent une seule fois sur le placement définitif. Les tiers suivent, un par vague : le tier 1 en vague 3 (`0.6.3`), le tier 2 en vague 4, le tier 3 en vague 5, le tier 4 en vague 6, le tier 5 en vague 7 (`0.6.7`) ; le tier boss reste `0.7.0`, en vague 8. Le code du visuel reçoit les cinq tiers, mais seuls les cadres des tiers 1 à 3 sont dessinés pour lui ; les cadres 4 et 5 viennent avec leurs vagues. Les anciens sprites passent dans les cadres jusqu'à leur refonte (B52). B50, B52 et B54 sont écrites avec cette numérotation. | 22/11 |
 
 ### 1.6. Le tier 1
 
-Tranchées le 22/11 sur les recommandations du [deck de la vague 2](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK), qui en donne les chiffres et les options écartées. Ce sont des valeurs de départ : l'équilibrage les ajustera.
+Tranchées le 22/11 sur les recommandations du [deck du tier 1](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK), qui en donne les chiffres et les options écartées. Ce sont des valeurs de départ : l'équilibrage les ajustera.
 
 | N° | Décision | Date |
 |:---|:---|:---|
 | **B53** | *Fixe les valeurs que B5 proposait.* Les ennemis du tier 1 : **Rat** 8 PV, 3 dégâts, un coup ; **Slime de givre** 18 PV, 3 dégâts, 2 Gel par coup ; **Slime de braise** 18 PV, 3 dégâts, 1 Feu par coup ; **Slime d'orage** 18 PV, 4 dégâts, 1 Foudre par coup ; **Araignée venimeuse** 16 PV, 2 dégâts, Poison 1 par morsure ; **Corbeau charognard** 16 PV, 4 dégâts, vol de vie de 50 % des dégâts portés aux PV ; **Kobold éclaireur** 14 PV, 4 dégâts, esquive de 20 % par coup (B4). | 22/11 |
-| **B54** | Le Rat ne frappe qu'une fois : **« plusieurs coups » part en vague 3**, avec le Loup des ombres. Une paire de rats vaut à peu près un ennemi, et son prix compte sa demi-place. | 22/11 |
+| **B54** | Le Rat ne frappe qu'une fois : **« plusieurs coups » part en vague 4**, avec le Loup des ombres. Une paire de rats vaut à peu près un ennemi, et son prix compte sa demi-place. | 22/11 |
 | **B55** | *Tranche B8.* L'esquive se lit dans **une languette de bonus**, à gauche de la carte, le pourcentage à la place de la durée ; un texte flottant « Esquive ! » à chaque coup esquivé. | 22/11 |
 | **B56** | Le « +1 » de B6 est **reporté** à la première intention à trois effets ; au tier 1, une intention en a deux au plus. | 22/11 |
 | **B57** | Le larcin du Gobelin : **5 or par coup**, plafonné à l'or du héros ; **l'or volé est perdu** ; il se voit par un texte flottant « −5 or » au-dessus du héros et **une languette de butin** à gauche du Gobelin, qui dit ce qu'il a pris. La fuite du voleur reste au catalogue. | 22/11 |
