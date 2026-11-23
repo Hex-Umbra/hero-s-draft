@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 23/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, n'a jamais été lancée**, et deux outils restent à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 23/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, vérifié sur une seule tuile** ; ses réglages restent à trouver, et l'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -111,7 +111,7 @@ Le prompt, les exclusions, les mots de chaque calque, les réglages des deux pas
 - **La scène fait 640 × 360.** `scene.py` accepte une taille, mais ses constantes et les trois scripts existants sont écrits pour 320 × 180 : un décor neuf déclare sa taille lui-même.
 - **Une vraie perspective**, calculée pixel par pixel, et un calque complet par objet, posé à sa profondeur.
 - **La palette Apollo** dès cette étape.
-- **Le script écrit** le `.aseprite` de base, l'image guide et les deux cartes de guidage : la profondeur et les contours. Pour la passe de détail, les cartes s'écrivent aussi à 8 fois la taille de la scène, 5120 × 2880, où chaque tuile découpe son morceau.
+- **Le script écrit** le `.aseprite` de base, l'image guide et les deux cartes de guidage : la profondeur et les contours. Pour la passe de détail, `decor_tuiles.py` les agrandit à 8 fois la taille de la scène, 5120 × 2880, et chaque tuile y découpe son morceau ; il ramène les contours, épais d'une case, à 4 pixels (`--trait`).
 
 **Ce que la structure a appris sur les trois premiers décors :**
 - **Une carte des contours trop chargée** — chaque pavé, chaque brique — fige le générateur. On simplifie les formes avant de tracer les contours.
@@ -151,23 +151,30 @@ Ces réglages sont ceux des trois décors existants, à une différence près : 
 
 ### 4. La passe de détail, par tuiles
 
-**À éprouver : rien de cette étape n'a été lancé, et son outil reste à écrire.** Ce qui suit est la méthode à essayer, avec ses réglages de départ.
+**À éprouver.** L'outil existe, `decor_tuiles.py`, et une tuile du campement a été repeinte pour le vérifier (voir [les essais](#les-essais-à-mener)) ; les réglages qui suivent sont des points de départ, pas des valeurs trouvées.
+
+`python decor_tuiles.py peindre <scène> <préfixe> <image d'ensemble> "<prompt>" --exclure "<exclusions>"`, puis `python decor_tuiles.py assembler <nom> <image assemblée.png>`.
+
+L'outil fait, dans l'ordre :
 
 1. **Agrandir l'image d'ensemble** quatre fois, à 5120 × 2880 : une case de la passe d'ensemble couvre alors 4 × 4 cases du décor.
 2. **Découper en tuiles de 1280 × 720**, soit 160 × 90 cases chacune. Seize tuiles couvrent le décor sans recouvrement ; avec recouvrement, il en faut davantage. **Chaque tuile se pose sur un multiple de 8 pixels**, pour que les grilles de deux tuiles voisines restent en phase.
 3. **Faire repeindre chaque tuile** par ComfyUI, en partant de son morceau de l'image agrandie, guidée par son morceau des cartes de profondeur et de contours. La même graine, le même style ; le prompt de chaque tuile est décrit plus bas.
 4. **Assembler les tuiles.** Dans un recouvrement, le raccord se coupe sur une ligne de cases, jamais au milieu d'une case.
-5. **Mesurer la netteté de la grille** de l'image assemblée, en largeur et en hauteur. Le minimum est 3 ; une génération directe atteint 30.
+5. **Mesurer la netteté de la grille**, en largeur et en hauteur : celle de chaque tuile dès qu'elle est peinte, puis celle de l'image assemblée. Le minimum est 3 ; une génération directe atteint 30.
 
-**Trois réglages sont à trouver par l'essai :**
+**Pour essayer sans tout peindre :** `--tuiles 0,1 2,1` ne repeint que les tuiles nommées, par colonne et rangée ; `--nom` range un essai dans son propre dossier ; `--a-blanc` affiche le plan des tuiles et leurs prompts sans rien générer. Une tuile se relance seule : son image remplace l'ancienne, et l'assemblage se refait.
+
+**Quatre réglages sont à trouver par l'essai :**
 
 | Réglage | Le point de départ | Ce qui le borne |
 |:---|:---|:---|
-| Le débruitage | Entre 0.5 et 0.6 | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
-| Le recouvrement | Aucun, puis un quart de tuile | Sans recouvrement, un raccord peut se voir ; avec, le nombre de tuiles monte |
-| Un guide de couleur | Sans, puis le guide « tile » de ControlNet Union, nourri de l'image d'ensemble | Il tient les couleurs d'une tuile à l'autre ; trop fort, il garde aussi les grosses cases de la passe d'ensemble. Sa présence dans le modèle installé est à vérifier |
+| Le débruitage (`--denoise`) | 0.55 | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
+| Le recouvrement (`--recouvrement`, en cases) | Aucun, puis un quart de tuile | Sans recouvrement, un raccord peut se voir ; avec, le nombre de tuiles monte |
+| Un guide de couleur (`--couleur`) | Sans, puis le guide « tile » de ControlNet Union, nourri de l'image d'ensemble | Il tient les couleurs d'une tuile à l'autre ; trop fort, il garde aussi les grosses cases de la passe d'ensemble. ComfyUI 0.46.2 propose bien ce type de guide ; il n'a pas été essayé |
+| L'agrandissement de l'image d'ensemble (`--agrandir`) | Bicubique | Au plus proche, l'image de départ garde ses grosses cases, que la repeinte peut conserver |
 
-**Le prompt d'une tuile ne décrit pas la scène entière.** Une tuile ne voit qu'un seizième du décor : lui donner le prompt de l'ensemble, c'est lui demander une clairière dans un coin de ciel. **La proposition, à éprouver :** chaque calque de la scène déclare ses mots, comme la recette de calques d'une créature, et le prompt d'une tuile réunit le style commun et les mots des calques qu'elle montre — la structure sait quel objet occupe chaque pixel.
+**Le prompt d'une tuile ne décrit pas la scène entière.** Une tuile ne voit qu'un seizième du décor : lui donner le prompt de l'ensemble, c'est lui demander une clairière dans un coin de ciel. **La proposition, à éprouver :** chaque calque de la scène déclare ses mots, comme la recette de calques d'une créature, et le prompt d'une tuile réunit le style commun et les mots des calques qu'elle montre — la structure sait quel objet occupe chaque pixel. `--mots <fichier.json>` le fait : un calque compte dès qu'il occupe 8 % de la tuile (`--seuil`). Sans ce fichier, toutes les tuiles reçoivent le prompt donné.
 
 ```json
 {
@@ -176,7 +183,7 @@ Ces réglages sont ceux des trois décors existants, à une différence près : 
 }
 ```
 
-**Le coût.** Une tuile prend environ une minute (72 secondes pour une créature en 1024 × 1536). La passe de détail d'un décor prend donc un quart d'heure au moins, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
+**Le coût.** Une tuile de 1280 × 720 a pris 53 secondes. La passe de détail d'un décor de seize tuiles prend donc un quart d'heure environ, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
 
 ### 5. Ramener sur la grille et découper en calques
 
@@ -211,9 +218,9 @@ On reprend à la main les raccords, les bords d'objets et les détails que la gr
 | Étape | État | Outil |
 |:---|:---|:---|
 | 1. Le brief | Repris des créatures ; jamais mené pour un décor | — |
-| 2. La structure | Éprouvée sur trois décors, en 320 × 180 ; jamais en 640 × 360 | `scene.py` et un script par décor : existent. Les cartes à 8 fois la taille : à ajouter |
+| 2. La structure | Éprouvée sur trois décors, en 320 × 180 ; jamais en 640 × 360 | `scene.py` et un script par décor : existent. `decor_tuiles.py` agrandit lui-même les cartes de guidage |
 | 3. La passe d'ensemble | Éprouvée en 1360 × 768 ; 1280 × 720 à confirmer | `comfy_gen.py` : existe |
-| 4. La passe de détail | **Jamais lancée** | **À écrire** : le découpage, le prompt par tuile, l'assemblage, la mesure |
+| 4. La passe de détail | **Une tuile peinte, pour vérifier l'outil** ; aucun réglage trouvé, aucun décor assemblé | `decor_tuiles.py` : existe. Le découpage, les mots par calque et l'assemblage sont vérifiés hors génération |
 | 5. L'import | Éprouvé quand la grille tombe juste, sur les fonds de fenêtre ; jamais à cette taille | `bg_import.py` : existe |
 | 6. Le contrôle en situation | Fait à la main, pour les maquettes du 23/11 | **À écrire** |
 | 7. La retouche | — | Aseprite |
@@ -228,6 +235,10 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 | 2. Les raccords | Quatre tuiles voisines, sans recouvrement puis avec | Ce qui se voit aux raccords, une fois sur la grille Apollo | Aucun raccord ne se lit à la taille du jeu |
 | 3. Le prompt | Les mêmes tuiles, avec le prompt de l'ensemble puis avec les mots des calques | Les objets inventés dans une tuile | Les mots des calques retirent les inventions |
 | 4. Le décor entier | Les seize tuiles, l'import, le contrôle en situation | La durée de chaque étape ; le jugement du propriétaire | Le décor passe les quatre questions de l'étape 6 |
+
+**Ce qui a déjà été mesuré, le 23/11/2026, en vérifiant l'outil.** Ce n'est pas l'essai 1 : une seule tuile, un seul débruitage.
+- **L'image d'ensemble du campement** (1360 × 768) porte une grille nette de 170 × 96 cases : 31,7 et 23,6. Lue comme une grille de 320 × 180, sa netteté tombe à 1,3 et 2,6 : la grille visée n'y est pas.
+- **La tuile du bas à gauche**, repeinte à 0.55 avec le prompt de l'ensemble, sans recouvrement ni guide de couleur : 53 secondes, une grille de 160 × 90 cases nette à 90,8 et 43,0. La composition tient — le tronc, le sac de couchage, la natte, le feu au bord. Deux écarts à surveiller : des objets changent de nature (la lanterne devient un brasero, les caisses des tonneaux) et les couleurs partent vers des verts plus vifs que l'image d'ensemble.
 
 **Si la passe de détail échoue,** deux replis, à ne considérer qu'après l'essai 1 :
 - **le décor par éléments :** chaque objet, ou chaque plan, généré seul à sa taille, comme une créature, puis posé par le code — la lumière et la perspective sont alors à tenir à la main ;
