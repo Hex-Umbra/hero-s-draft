@@ -1,16 +1,18 @@
-# Cadrage — le bestiaire (P-05) : trente décisions, et la première vague
+# Cadrage — le bestiaire (P-05) : les décisions du chantier
 
-> **Statut** : cadrage clos le 21/11/2026 avec le propriétaire, en deux séances (20 et 21 novembre). Trente questions posées, vingt-neuf tranchées, une en attente (B8) ; onze de plus, B31 à B41, tranchées le même jour sur la spec de la première vague. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
+> **Statut** : cadrage ouvert les 20 et 21/11/2026 avec le propriétaire, et complété depuis. B1 à B30 en deux séances, les 20 et 21 novembre ; B31 à B41 le 21/11, sur la spec de la première vague ; B42 à B61 le 22/11, pour le programme jusqu'à `0.7.0` et le tier 1 ; B62 à B74 le 23/11, après l'audit du chantier. Toutes sont tranchées ; ce qui reste ouvert est en §2. **Ce document est la source de vérité des décisions du bestiaire** : il remplace, là où ils divergent, les brainstormings du [27/07](27-07-2026_nouveaux_ennemis_par_tier_Sonnet5.md) et du [28/07](28-07-2026_roster_tier1_mecaniques_onhit_Sonnet5.md), écrits pour un jeu qui n'avait ni charges à seuil ni grammaire d'effets en donnée. La ligne P-05 de [`ROADMAP.md`](../ROADMAP.md) (« cinq ennemis, `onHitEffect`, 2 à 3 jours, prêt à passer en spec ») est périmée par ce cadrage.
 >
 > **Les maquettes** sur lesquelles le propriétaire a tranché sont dans un deck privé, <https://claude.ai/artifact/9LxzmnszyErbptiiJh8LDZ> (59 diapositives). Font foi : 31 (panneau des intentions), 37 à 40 (barre, carte, fiche, plateau), 41 (armure), 54 (rat libre et meute), 58 (la famille du Rat). Ce sont des approximations — polices de remplacement, troncatures estimées : ce document et les specs portent en texte ce qu'elles fixent.
 >
-> **Livraison** : par vagues (§4). La première, `0.6.1`, ne livre que l'interface des ennemis ; le langage des intentions, les nouveaux ennemis et la meute attendent les vagues suivantes, que le propriétaire n'a pas encore ouvertes.
+> **Livraison** : par vagues, un tier par vague (B45). La première, `0.6.1`, a livré l'interface des ennemis. **Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** — les vagues, le journal, les fiches, le catalogue des mécanismes et celui des ennemis ; ce document garde les décisions. **Les décisions nomment les tiers ; seul le README du chantier leur donne un numéro de vague et une version.**
+>
+> **L'audit du 23/11** sur lequel B62 à B74 ont été tranchées : <https://claude.ai/artifact/GqvVVedFnU9ZBSYQL1ME2P> (33 diapositives, privé). Ses diapositives 24 à 31 portent, en maquettes, les trois questions de la vague du visuel que B72 à B74 tranchent.
 
 ---
 
 ## 1. Les décisions acquises
 
-Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague. Une décision corrigée par une suivante est écrite sous sa forme finale, sauf B14, que B32 amende par une exception.
+Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cadrage, B31 à B41 le même jour, nées de la spec de la première vague, B42 à B61 le 22/11, à la préparation de la suite, B62 à B74 le 23/11, après l'audit. **Une décision corrigée par une suivante est écrite sous sa forme en vigueur**, sauf B14, que B32 amende par une exception. L'ordre des vagues a été réécrit cinq fois : ses décisions (B42, B45, B59, B61) sont écrites telles qu'elles valent aujourd'hui, et leur histoire est en §1.8.
 
 ### 1.1. Le langage et le contenu
 
@@ -19,7 +21,7 @@ Numérotées dans l'ordre où les questions ont été posées : B1 à B30 au cad
 | **B1** | Une intention ennemie s'écrit avec la liste `effects` des cartes, et non avec un champ `onHitEffect` : un seul langage, des deux côtés. Les intentions d'aujourd'hui (attaque, Armure, Puissance) deviennent des écritures de cette liste ; les quatre ennemis existants migrent. | 20/11 |
 | **B2** | Le bestiaire s'organise en familles, une signature par famille — Rat : la meute ; Slime : les charges ; Araignée : le Poison ; Gobelin : le larcin ; Squelette : la Faiblesse ; Orc : la Puissance. L'évolution d'une forme à l'autre attend. | 20/11 |
 | **B4** | Le Kobold esquive au hasard, 20 % par attaque : un jet avant le calcul des dégâts, dans le calcul que le héros et les ennemis partagent, comme le coup critique. Restent à fixer à sa spec : un jet par coup et non par carte ; un coup esquivé ne pose ni charge ni statut ; le Poison et le Feu déjà posés ne s'esquivent pas. | 20/11 |
-| **B5** | Le premier lot d'ennemis : la famille du Rat et les slimes élémentaires (de givre, de braise, d'orage — 1 Gel, 1 Feu ou 1 Foudre par coup, valeurs proposées). L'Araignée venimeuse, le Corbeau charognard, le Bandit de grand chemin et le Kobold éclaireur viennent au rythme des sprites. | 20/11 |
+| **B5** | Le premier lot d'ennemis neufs est le tier 1 : le Rat, les trois slimes élémentaires (de givre, de braise, d'orage), l'Araignée venimeuse, le Corbeau charognard et le Kobold éclaireur — leurs valeurs en B53. Le Bandit de grand chemin n'y entre pas (B49), et aucun n'entre sans son sprite (B51). | 20/11, complétée le 22/11 |
 
 P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de boss), P-14 (un affixe d'élite est une liste d'effets ajoutée aux intentions) et P-44 lot 2 (épines, étourdissement, malédictions, symétriques) : le format des intentions se choisit en connaissant ces trois suites.
 
@@ -47,14 +49,14 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B39** | Une languette qui sortirait de l'écran se déroule vers l'intérieur, par-dessus sa propre carte. | 21/11 |
 | **B40** | La carte dont la fiche s'ouvre garde sa barre à la hauteur des autres et grandit vers le bas : autour de son centre, la barre d'un boss sortirait de l'écran. | 21/11 |
 | **B41** | Sur la languette du héros : 💎 pour la régénération de Mana, 💖 pour celle des PV. | 21/11 |
-| **B8** | *Ouverte.* Où se lit l'esquive du Kobold. Recommandation faite : un indicateur dans la languette de gauche, le pourcentage à la place de la durée, et un texte flottant « Esquive ». Elle attend la vague du Kobold. | — |
+| **B8** | *Tranchée par B55.* Où se lit l'esquive du Kobold. | 22/11 |
 
 ### 1.3. La famille du Rat
 
 | N° | Décision | Date |
 |:---|:---|:---|
 | **B3, B28** | Un ennemi peut prendre moins d'une place à la composition d'un combat : la place est une donnée de l'ennemi. Le Rat en prend une demie — deux rats pour une place, dès l'acte 1 — et lui seul s'en sert au départ. | 20 et 21/11 |
-| **B7, B17, B18** | Chaque rat a sa carte et se cible seul. Le Rat est dessiné à 80 % de la taille d'une carte, libre ou en meute ; les rats invoqués se placent de part et d'autre de leur alpha, plus serrés que deux ennemis ordinaires. | 21/11 |
+| **B7, B17, B18** | Chaque rat a sa carte et se cible seul. Le Rat se lit plus petit qu'un autre ennemi, libre ou en meute : son sprite est dessiné réduit à 80 % dans son image, et sa carte garde un cadre de tier 1 entier, sans mise à l'échelle (B72) ; les rats invoqués se placent de part et d'autre de leur alpha, plus serrés que deux ennemis ordinaires. | 21/11 |
 | **B20, B26, B27** | Deux ennemis : le Rat, tier 1 (dès l'acte 1), et le Rat alpha, tier 2 (dès l'acte 6). Le Rat existe seul : un ennemi invoqué reste un ennemi du bestiaire, qui peut aussi être tiré à la composition. La règle vaut pour toute famille — un nécromancien invoquera le Squelette existant. | 21/11 |
 | **Consigne** | Le Rat alpha entre seul et invoque ses rats un par un, deux au plus. | 21/11 |
 | **B23** | Invoquer prend l'action de l'alpha pour le tour. Un rat tué se réinvoque, au même prix. | 21/11 |
@@ -63,17 +65,93 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B25** | Un rat invoqué ne rapporte rien, ni or ni autre récompense. Un rat libre et un alpha rapportent comme tout ennemi. | 21/11 |
 | **B21, B30** | À l'écran, une meute compte pour 2 cartes sur les cinq, quel que soit le nombre de ses rats, et un seul chef de meute est à l'écran : un second alpha attend en réserve. Le plateau porte six cartes au plus. | 21/11 |
 | **B19** | Au-delà du plafond, la réserve existante s'applique sans changement ([règle 02-6](../../.obsidian_vault/_rules/)). | 21/11 |
+| **B43** | Le sprite déjà produit, `art_src/creatures/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avec ceux du tier 1. | 22/11 |
+
+### 1.4. L'ordre des vagues
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B42** | **Le langage des intentions (B1) se livre seul**, dans sa propre vague, avant tout ennemi neuf : les ennemis suivants s'écrivent directement dans le nouveau format, rien ne migre deux fois, et cette vague n'ajoute aucun ennemi. B62 dit sa place. | 22/11, rétablie le 23/11 |
+| **B44** | Les slimes élémentaires (B5) sont **trois créatures neuves**, produites de zéro par `/workflow-creature`, et non des variantes du Slime. Ils n'entrent dans aucune vague avant leurs sprites. | 22/11 |
+
+### 1.5. Le programme jusqu'à `0.7.0`
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B45** | Le bestiaire se livre **un tier par vague** : chaque vague de tier livre ses mécanismes et ses ennemis ; le visuel — le cadre de tier, les fonds de fenêtre, le décor — a sa propre vague, le langage des intentions la sienne (B42), les boss la leur. Le déroulé, les numéros de vague et les versions : [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md). | 22/11 |
+| **B46** | Une vague ne construit que les mécanismes dont ses ennemis se servent, et les branche dans la même vague ; un mécanisme se teste en jeu avec le premier ennemi qui s'en sert. Tous les mécanismes sont tenus dans un [catalogue](../chantier_bestiaire/catalogue_mecanismes.md), qui dit pour chacun sa vague. | 22/11 |
+| **B47** | Les boss forment **un tier à part**, hors de l'échelle 1 à 5 des ennemis de base. | 22/11 |
+| **B48** | Les quatre ennemis d'aujourd'hui n'ont pas de vague propre : chacun évolue avec sa famille, dans la vague de son tier — le Gobelin au tier 1, le Squelette au tier 2, l'Orc au tier 3. | 22/11 |
+| **B49** | Le larcin du tier 1 est porté par **le Gobelin**, signature de sa famille (B2). Le Bandit de grand chemin n'entre pas au tier 1. | 22/11 |
+| **B50** | Le Rat alpha étant de tier 2 (B20), **la meute — l'alpha, l'invocation, le lien — vient avec le tier 2**. Le Rat arrive seul, avec le tier 1 et sa demi-place. | 22/11 |
+| **B51** | Une vague d'ennemis ne s'ouvre **qu'une fois tous ses sprites validés** ; la liste de ses ennemis est fixée dans sa fiche. | 22/11 |
+| **B52** | **Tout le bestiaire est redessiné** dans le style des sprites neufs : chacun des quatre ennemis d'aujourd'hui reçoit un sprite neuf dans la vague de son tier — le Slime et le Gobelin avec le tier 1, le Squelette avec le tier 2, l'Orc avec le tier 3. | 22/11 |
+| **B59** | **Les tiers 4 et 5 font partie du programme du bestiaire**, toujours un tier par vague, après le tier 3. Leur place par rapport aux boss : B63. | 22/11 |
+| **B60** | **La cadence de déblocage des tiers ne change pas** : un tier de plus tous les cinq actes (`EncounterSystem.getUnlockedTier`) — le tier 4 à l'acte 16, le tier 5 à l'acte 21. Elle se réexamine avec la difficulté (B64). | 22/11 |
+| **B61** | **Le visuel passe en tête**, juste après l'interface : le cadre de tier, les fonds de fenêtre et le décor de combat arrivent avant le langage des intentions et avant le tier 1. Chaque sprite neuf se valide sur son vrai fond, et la demi-place puis la meute se posent une seule fois sur le placement définitif. Le code du visuel reçoit les cinq tiers, mais seuls les cadres des tiers 1 à 3 sont dessinés pour lui ; les cadres 4 et 5 viennent avec leurs tiers. Les anciens sprites passent dans les cadres jusqu'à leur refonte (B52). Le tier boss reste le jalon `0.7.0`. | 22/11 |
+
+### 1.6. Le tier 1
+
+Tranchées le 22/11 sur les recommandations du [deck du tier 1](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK), qui en donne les chiffres et les options écartées. Ce sont des valeurs de départ : l'équilibrage les ajustera.
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B53** | *Fixe les valeurs que B5 proposait.* Les ennemis du tier 1 : **Rat** 8 PV, 3 dégâts, un coup ; **Slime de givre** 18 PV, 3 dégâts, 2 Gel par coup ; **Slime de braise** 18 PV, 3 dégâts, 1 Feu par coup ; **Slime d'orage** 18 PV, 4 dégâts, 1 Foudre par coup ; **Araignée venimeuse** 16 PV, 2 dégâts, Poison 1 par morsure ; **Corbeau charognard** 16 PV, 4 dégâts, vol de vie de 50 % des dégâts portés aux PV ; **Kobold éclaireur** 14 PV, 4 dégâts, esquive de 20 % par coup (B4). | 22/11 |
+| **B54** | Le Rat ne frappe qu'une fois : **« plusieurs coups » part avec le tier 2**, avec le Loup des ombres. Une paire de rats vaut à peu près un ennemi, et son prix compte sa demi-place. | 22/11 |
+| **B55** | *Tranche B8.* L'esquive se lit dans **une languette de bonus**, à gauche de la carte, le pourcentage à la place de la durée ; un texte flottant « Esquive ! » à chaque coup esquivé. | 22/11 |
+| **B56** | Le « +1 » de B6 est **reporté** à la première intention à trois effets ; au tier 1, une intention en a deux au plus. | 22/11 |
+| **B57** | Le larcin du Gobelin : **5 or par coup**, plafonné à l'or du héros ; **l'or volé est perdu** ; il se voit par un texte flottant « −5 or » au-dessus du héros et **une languette de butin** à gauche du Gobelin, qui dit ce qu'il a pris. La fuite du voleur reste au catalogue. | 22/11 |
+| **B58** | Le prix d'un effet : **+6** au prix d'un ennemi qui en porte un (proposition du 28/07). Le Gobelin voleur, à 39, ne sort plus à l'acte 1 pour le Mage et le Berserker : accepté. Ce prix se réexamine avec la difficulté (B64). | 22/11 |
+
+### 1.7. La révision du 23/11
+
+Tranchées le 23/11 avec le propriétaire, sur l'audit du chantier (lien en tête du document).
+
+| N° | Décision | Date |
+|:---|:---|:---|
+| **B62** | *Rétablit B42.* **Le langage des intentions (B1) a sa propre vague**, entre le visuel et le tier 1 : le jeu y reste identique, elle n'ajoute aucun ennemi et ne demande aucun sprite. Le tier 1, le tier 2 et le tier 3 suivent, un par vague. | 23/11 |
+| **B63** | *Amende B59.* **Les tiers 4 et 5 se font après la refonte de la difficulté** (B64), et avant les boss : leurs valeurs se fixent sur la formule revue. B69 dit l'ordre. | 23/11 |
+| **B64** | **La difficulté sera retravaillée dans son ensemble** — sa formule et sa mise à l'échelle —, par un cadrage propre, un brainstorm tenu après le tier 3 (B69). Le prix d'un effet (B58) et la cadence des tiers (B60) s'y réexaminent ; ils valent jusque-là. Un fait donné par le propriétaire : ses runs atteignent l'acte 20 et au-delà, mais très difficilement. | 23/11 |
+| **B65** | *Complète B51.* Tous les ennemis du programme sont tenus dans un [catalogue des ennemis](../chantier_bestiaire/catalogue_ennemis.md), tier par tier : dictionnaire initial du bestiaire, il dit pour chacun sa famille, ses valeurs, ses intentions, ses mécanismes, et **si son sprite est livré**. La porte de B51 se lit dans ce tableau. | 23/11 |
+| **B66** | **La couture de lieu** : dans la vague du visuel, le décor de combat et le thème du fond de fenêtre passent par un identifiant de lieu, à valeur unique tant que les biomes (P-12) n'existent pas ; les assets se rangent par lieu. Les biomes eux-mêmes ont leur cadrage, hors vague, et n'entrent pas dans cette vague. | 23/11 |
+| **B67** | **Le fond de fenêtre est un asset séparé du cadre**, trois variations par lieu, choisi par le jeu. Amende l'[identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4.3, qui le dessinait dans le cadre ; la fiche du visuel le posait depuis le 22/11 sans numéro. | 23/11 |
+| **B68** | *Applique B46.* Trois mécanismes n'avaient aucun ennemi dans la vague qui devait les construire ; chacun se construit désormais avec son premier ennemi : **viser un allié** avec le Chaman orc (tier 4) ; **le soin de soi** avec la Liche (tier 5) ; **le choix d'intention** avec un ennemi du tier 2 (B70). | 23/11 |
+| **B69** | *Tranche la suite du programme.* Après le tier 3 : **la refonte de la difficulté**, puis **le tier 4**, puis **le tier 5**, puis **les boss**, qui restent le jalon `0.7.0`. La difficulté se retravaille donc après les tests des tiers 1 à 3 et de leurs intentions, et avant les tiers 4 et 5. **Les lieux** (biomes, P-12) se placent après `0.7.0`. | 23/11 |
+| **B70** | *Complète B68.* **Le choix d'intention entre dès le tier 2**, pour y préparer le joueur : un ennemi de ce tier le porte, à désigner à la confirmation de sa liste. Un ennemi du tier 3 peut le reprendre. | 23/11 |
+| **B71** | **La riposte**, un mécanisme neuf, qui fonctionne comme l'esquive (B4) : quand le héros attaque un ennemi qui la porte, cet ennemi a une chance de contre-attaquer, ou de lui poser un statut ou une charge. Premier usage : **le héros a 50 % de chance de prendre 1 Gel en attaquant un Slime de givre** ; de même 1 Feu pour le Slime de braise, 1 Foudre pour le Slime d'orage. C'est la première réponse à la faiblesse des doses posées par coup — au tier 1, une charge par coup ne gèle presque jamais le héros ; l'échelle des doses selon l'acte reste au cadrage de la difficulté (B64). | 23/11 |
+| **B72** | **La règle d'échelle.** Un cadre s'affiche à un palier **pair**, le plus grand qui laisse tenir la rangée : ×2 en 1080p, ×4 en 1440p, ×6 en 4K. La créature et son fond de fenêtre sont à la moitié, donc sur des pixels entiers. **Le plateau ne rétrécit plus en continu** : à ×2, six cartes tiennent en 1080p, et la réserve joue au-delà du plafond. *Amende B17* : le Rat n'est pas mis à l'échelle 0,8 — son sprite est déjà réduit dans son image —, il garde un cadre de tier 1 entier, et sa demi-place se lit par un écart plus serré. **La fiche ouverte double la carte**, au palier pair suivant, au lieu de l'agrandir de 1,25 ; sa barre garde sa hauteur (B40). Le décor a sa propre grille (B74). | 23/11 |
+| **B73** | **Les géométries des cadres** : une fenêtre de 64 × 96 pour tous, et 4 pixels de bordure de plus à chaque tier — tier 1 : 88 × 120 (bordure 12) ; tier 2 : 96 × 128 (16) ; tier 3 : 104 × 136 (20) ; tier 4 : 112 × 144 (24) ; tier 5 : 120 × 152 (28). Amende l'[identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §4.1, où les tiers 2 et 3 avaient la même taille. **Les cadres d'aujourd'hui sont provisoires** : ils seront redessinés, moins pleins, avec des parties transparentes — comme des racines autour de la carte ; ces tailles sont celles de leur canevas. **Le cadre des boss** n'a pas de géométrie avant leur cadrage : d'ici là, un boss porte le cadre de son tier. | 23/11 |
+| **B74** | **Le lieu unique du visuel est la forêt** (B66) : les trois fonds de fenêtre de forêt restent, et **un décor de combat neuf se produit avant la vague**. **Un décor d'écran se dessine désormais en 640 × 360**, le double de 320 × 180 : 3 pixels d'écran par pixel en 1080p, 4 en 1440p, 6 en 4K. | 23/11 |
+
+### 1.8. L'histoire de l'ordre des vagues
+
+Pour mémoire : seule la dernière ligne vaut, et le [README du chantier](../chantier_bestiaire/README.md) en tient les numéros.
+
+| Date | Décision | L'ordre qu'elle posait |
+|:---|:---|:---|
+| 22/11 | B42 | Le langage des intentions seul en vague 2 ; la famille du Rat et la meute en vague 3. |
+| 22/11 | B45 | Un tier par vague : le langage et le tier 1 en vague 2 (`0.6.2`), le tier 2 en 3, le tier 3 en 4, le visuel en 5, les boss en 6 (`0.7.0`) ; les tiers 4 et 5 après `0.7.0`. |
+| 22/11 | B59 | Les tiers 4 et 5 entrent, en vagues 5 et 6 ; le visuel en vague 7 (`0.6.7`) ; les boss en vague 8. |
+| 22/11 | B61 | Le visuel en tête, en vague 2 ; les tiers 1 à 5 en vagues 3 à 7 ; les boss en vague 8 (`0.7.0`). |
+| 23/11 | B62, B63 | Le visuel en vague 2, le langage seul en vague 3, les tiers 1 à 3 en vagues 4 à 6 (`0.6.4` à `0.6.6`) ; la difficulté, les tiers 4 et 5, les lieux et les boss à placer ensuite. |
+| 23/11 | B69 | La difficulté en vague 7 (`0.6.7`), le tier 4 en vague 8, le tier 5 en vague 9, les boss en vague 10 (`0.7.0`) ; les lieux après `0.7.0`. |
 
 ---
 
 ## 2. Ce qui reste à trancher
 
-Aucun de ces points ne concerne la première vague.
+Chaque point est repris, sous « Prérequis », par la fiche de la vague qui en a besoin ([`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)) — sauf les lieux et les boss, qui n'ont pas encore de fiche.
 
-- La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. La première vague ne le construit pas, aucune intention n'ayant encore deux effets ; il se fixe avec B1.
+- **La difficulté** (B64, B69) : ce qu'elle doit viser ; ce que deviennent la formule du budget et sa mise à l'échelle, le prix d'un effet, la cadence des tiers, l'échelle des doses d'un statut posé par un ennemi, la table d'XP au-delà de l'acte 15. Rien n'est écrit : c'est l'objet d'un brainstorm, tenu après le tier 3. **Un instrument de mesure** — un tableau de ce que le tirage des combats produit, acte par acte — a été proposé à l'audit, à poser dès la vague du langage des intentions : non décidé.
+- **La vague du visuel** : sa règle d'échelle, ses cadres et son lieu sont tranchés (B72 à B74). Restent : ce que deviennent les anciens sprites dans la fenêtre — recadrés sur leur illustration, ou gardés avec leur cadre peint —, si d'autres écrans que le combat reçoivent un décor, et la méthode des décors à 640 × 360, à recaler.
+- **La riposte** (B71) : un jet par coup ou par carte ; ce qui compte comme une attaque du héros ; si elle s'ajoute à ce que le slime pose en attaquant (B53) ou le remplace ; ce que le joueur en lit ; quel ennemi contre-attaquera en dégâts.
+- **Le choix d'intention** (B70) : l'ennemi du tier 2 qui le porte.
+- **Les lieux** (biomes, P-12), après `0.7.0` (B69) : leur modèle — un lieu par acte, ou par créature —, leur nombre, leur lien avec les familles et les boss. Un cadrage propre.
+- **Les boss** : aucun concept. Un cadrage, avant la fiche de leur vague.
+
+- La lecture du « +1 » de B6, quand une intention aura plus de deux effets : deux pastilles puis un compteur, ou une pastille puis un compteur. **Reportée** à la première intention à trois effets (B56) ; aucune n'existe au tier 1.
 - Trois propositions du cadrage, sans numéro : l'invocation s'annonce comme une intention, un tour avant ; un rat invoqué n'agit qu'au tour suivant ; l'invocation et le lien s'écrivent en données, pour toute famille, de façon symétrique (le héros pourrait un jour invoquer).
 - La meute compte-t-elle pour 2 dès l'entrée de l'alpha, avant toute invocation ? C'est la lecture du cadrage, pas une décision.
-- Le sprite du Rat géant déjà produit sert-il le Rat ou le Rat alpha ? L'autre est à produire, comme les slimes.
 - Le prix de l'alpha dans le budget de combat, qui doit couvrir des rats entrant sans rien coûter.
 - Les PV, les dégâts et les pourcentages : à l'équilibrage.
 
@@ -99,14 +177,13 @@ Lu le 21/11 sur `8d544a3d`. À revérifier par commande avant de s'y appuyer.
 
 **La méthode** est celle du chantier précédent — [ADR-102](../../.obsidian_vault/_adr/), ADR-103, [ADR-108](../../.obsidian_vault/_adr/ADR-108-methode-par-vagues-calibree-plans-de-decisions-sans-simulation.md), ADR-113 et les cinq amendements d'[ADR-120](../../.obsidian_vault/_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md) D1 —, avec le cycle et les gabarits du [fichier d'orchestration](01-10-2026_orchestration_chantier_economie_et_catalogue_Fable5.md) §3 à §6, lus pour ce chantier. Les propositions non adoptées d'ADR-120 (D3, D4) ne s'appliquent pas ; R31 non plus : la vague garde sa spec. Autonomie : `strict`.
 
+**Depuis le 22/11, le déroulé vit dans [`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)** (B45) : le journal, les fiches des vagues et des tiers, le catalogue des mécanismes, celui des ennemis, et la méthode lue pour ce chantier. Ce §4 garde, pour mémoire, les arrêts et la fiche de la vague 1.
+
 **Trois écarts, décidés par le propriétaire le 21/11** : la session de cadrage orchestre elle-même la première vague ; la branche part de `fix/s9-phase-ennemie-apres-victoire` (`8d544a3d`) et non de `main`, si bien que la correction S9 sort avec `0.6.1` ; la porte d'entrée ne contrôle donc ni la fusion d'une vague précédente ni la CI.
 
 ### 4.1. Le journal
 
-| Vague | Version | Branche | Spec | Plan | Tests | État |
-|:---|:---|:---|:---|:---|:---|:---|
-| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — quatre tours | [plan](../superpowers/plans/2026-11-21-p05-interface-des-ennemis.md) — trois tours, prêt | 1866 → **1935** → **1939** (correction C1) | **livrée sur branche** le 22/11 · [compte rendu](../superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md) · [tests manuels](../superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md) — test du propriétaire passé le 2026-11-22, en attente de la PR, de la fusion et du tag du propriétaire |
-| suivantes | à définir | — | — | — | — | non ouvertes |
+Il a déménagé dans le [README du chantier](../chantier_bestiaire/README.md), §4.
 
 **Arrêts** : le 21/11, à la spec, après le troisième tour de vérification — il reste un constat moyen de classe T, et l'autonomie est `strict` ; onze questions visibles du joueur (31 à 41 du deck, [fichier de vérifications](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design-verifications.md) §2) attendaient aussi le propriétaire. **Levé le même jour** : le propriétaire répond aux onze questions (B31 à B41), accepte les corrections recommandées du troisième tour et accorde un quatrième tour, différentiel. **Second arrêt le même jour** : le quatrième tour rend « à corriger » pour un constat moyen de classe T, né de la correction précédente ; la correction recommandée est appliquée, non revérifiée ; le propriétaire dit si la vague passe au plan ou refait un tour. **Levé** : il choisit le plan ; la fiche, tâche à risque, y est écrite en entier et rejouée par son vérificateur.
 

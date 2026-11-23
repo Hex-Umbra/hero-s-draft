@@ -7,14 +7,16 @@
 
 ## Focus courant
 
-**Le chantier du bestiaire (P-05) est ouvert** — cadrage clos le 21/11 avec le propriétaire,
-[`21-11-2026_cadrage_bestiaire_P05_Fable5.md`](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) :
-**source de vérité des décisions** (§1, B1 à B41, B8 ouverte) **et journal des vagues** (§4.1). Il se
-livre par vagues. **La vague 1, l'interface des ennemis, est livrée sur la branche
-`feat/v0.6.1-interface-des-ennemis` — vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la
-PR, de la fusion et du tag du propriétaire** ; elle emporte la correction S9 (`8d544a3d`), qui n'est
-pas dans `main`. **Les vagues suivantes ne sont pas ouvertes** : le langage des intentions (B1), les
-nouveaux ennemis (B5 : la famille du Rat, les slimes élémentaires), la meute (B3, B7, B17 à B30).
+**Le chantier du bestiaire (P-05) est ouvert.** Ses décisions sont au
+[cadrage](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) (§1) ; son
+déroulé — les vagues, leurs versions, le journal, les fiches, le catalogue des mécanismes et celui
+des ennemis — dans [`docs/chantier_bestiaire/`](../../docs/chantier_bestiaire/README.md). **La
+vague 1, l'interface des ennemis, est fusionnée dans `main` (PR #57) et taguée depuis le
+2026-11-22**, avec la correction S9. **Le programme a été révisé le 2026-11-23, après un audit** :
+le visuel et une couture de lieu, puis le langage des intentions seul, puis les tiers 1 à 3, un par
+vague, puis une refonte de la difficulté, les tiers 4 et 5 et les boss ; les lieux viennent après.
+**Aucune vague n'est ouverte** : la vague 2 attend ses prérequis, et ce programme n'est encore que
+sur sa branche de documentation.
 Suivi en clair : [`docs/suivi_vagues_chantier/bestiaire.md`](../../docs/suivi_vagues_chantier/bestiaire.md).
 
 **La méthode** est celle du chantier précédent — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
@@ -58,8 +60,8 @@ Réserves à ne pas perdre de vue :
 - **Ce que la vague 7 laisse ouvert**, consigné au compte rendu §4 et dans ADR-117 : **la phase
   ennemie se joue jusqu'au bout après une victoire constatée par les statuts** (`_enemyRipostePhase`
   ne regarde jamais `isCombatEnded`) — un soin de trop de *Bénédiction*, et depuis la vague 8 de la
-  *Source de Vie* de *Prière* — (S9) : **corrigé sur la branche de la vague 1 du bestiaire**
-  ([ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)), encore ouvert sur `main` ; un harnais de test
+  *Source de Vie* de *Prière* — (S9) : **corrigé par la vague 1 du bestiaire, fusionnée dans `main`**
+  ([ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md)) ; un harnais de test
   commun qui surcharge le chargement du registre (S11) ; `FrostVignette` recrée ses dégradés à
   chaque frame, `ChargeHalo` et `FireBurst` leur `Paint`, la règle « 1,5 largeur de carte » est
   écrite deux fois ; `shippedCard(id)` ne lit pas les cartes de lot. **Aux tests manuels** : le
@@ -108,9 +110,8 @@ Réserves à ne pas perdre de vue :
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
   `assets/data/patch_notes.json`, jamais ici.** Sur `main`, les trois porteurs de version portent
-  celle de la vague 8 du chantier clos ; sur la branche du bestiaire, la note de la vague 1 est
-  écrite (`5ea848fb`). Les versions des vagues font foi au fichier d'orchestration, §1, pour le
-  chantier clos, et au journal du cadrage, §4.1, pour le bestiaire.
+  celle de la vague 1 du bestiaire. Les versions des vagues font foi au fichier d'orchestration,
+  §1, pour le chantier clos, et au README du chantier du bestiaire, §1, pour le bestiaire.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
   note — la porte ne suppose jamais. La vague 1 du bestiaire en est dispensée (cadrage §4,
@@ -125,8 +126,8 @@ Réserves à ne pas perdre de vue :
 1. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
    `feat/v0.6.1-interface-des-ennemis`, partie de la correction S9 `8d544a3d` ; cadrage `c2e2dacb`,
    spec et plan `0eec1467` → `86a0f9db`, code `a356cabc` → `23c9823a`, note de version `5ea848fb` —
-   **livrée sur la branche, vague 1 du cadrage du bestiaire, test du propriétaire passé le 2026-11-22, en attente de la PR, de la
-   fusion et du tag du propriétaire**) — **l'ennemi se lit.** **Le panneau des intentions** en trois
+   **vague 1 du bestiaire, test du propriétaire passé le 2026-11-22, fusionnée dans `main` par la
+   PR #57 et taguée le même jour**) — **l'ennemi se lit.** **Le panneau des intentions** en trois
    colonnes — « Niv. N », le nom, seul tronqué, les pastilles —, sans PV, une infobulle par rangée
    (B9, B10 ; la Puissance garde sa flèche violette, B31). **La barre de PV** à la largeur de la
    carte, l'armure en cyan à côté, un voile qui est la jauge de l'armure seule, plein au plus haut
@@ -204,13 +205,15 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : la vague 1 du bestiaire est testée (le cahier
-`docs/superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md` : 25 ✅, T20 non
-atteignable) et sa correction C1 livrée ; il ouvre la PR de `feat/v0.6.1-interface-des-ennemis`, la
-fusionne et la tague `v0.6.1`. La correction S9 entre dans `main` avec elle.
+**D'abord le propriétaire** : fusionner dans `main` la branche de documentation du chantier — le
+prompt de lancement d'une vague lit `docs/chantier_bestiaire/` depuis `main` —, lever les prérequis
+de la vague 2 (sa fiche), et lancer la production des sprites du tier 1, dont l'état se tient au
+catalogue des ennemis. Deux cadrages restent à tenir avant leurs vagues : la difficulté, après le
+tier 3, et les boss.
 
-**Puis la vague suivante du bestiaire, que le propriétaire ouvre** — ce fichier n'en ouvre aucune ;
-le journal du cadrage, §4.1, en tient l'avancement. Le compte rendu de la vague 1 (§5) propose
-quatre amendements de méthode, laissés au propriétaire. **P-07 doit lire
+**Puis la vague 2 du bestiaire, que le propriétaire ouvre** — ce fichier n'en ouvre aucune ; le
+journal du chantier (README §4) en tient l'avancement, et sa porte d'entrée passe la vague 1 à
+« close ». Le compte rendu de la vague 1 (§5) propose quatre amendements de méthode, laissés au
+propriétaire. **P-07 doit lire
 [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
 aux animations.**
