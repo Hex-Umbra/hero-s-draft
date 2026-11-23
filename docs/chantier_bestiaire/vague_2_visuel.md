@@ -21,7 +21,7 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
 1. **Les assets, tous validés** :
    - **les cadres des tiers 1, 2 et 3, redessinés** (B73) : aux canevas de 88 × 120, 96 × 128 et 104 × 136, avec leurs transparences. Le cadre du tier 2 qui existe (`art_src/frames/tier_2.aseprite`) et l'outil `art_src/tools/frame_tier.py`, qui porte encore les anciennes tailles, sont provisoires. **Le dessin suit la contrainte de B77** : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre ; au-delà du gabarit de 88 × 120 centré sur la fenêtre, le dessin peut passer sous la barre et les languettes ;
    - les fonds de fenêtre — trois de forêt existent (`art_src/backgrounds/windows/forest/`) ;
-   - **le décor de combat de forêt, en 640 × 360** (B74) : à produire avant l'ouverture. La méthode des décors est écrite pour 320 × 180 ([workflow des fonds](../../art_src/docs/workflow_fond.md), §1) : ses scripts de scène, son image guide et sa taille de génération sont à recaler, et son problème ouvert — une grille générée plus grossière que la grille visée — pèse deux fois plus à cette taille.
+   - **le décor de combat de forêt, en 640 × 360** (B74) : à produire avant l'ouverture. Sa méthode est écrite depuis le 23/11 ([workflow des décors](../../art_src/docs/workflow_decor.md)) et **pas encore éprouvée** : une génération ne peint qu'une grille de 160 × 90, le décor se fait donc en deux passes, dont une par tuiles, qui n'a jamais été lancée et dont l'outil reste à écrire. Ses essais passent avant la production du décor.
 2. **Les réponses du propriétaire** (classe P) :
    - ✅ **la règle d'échelle** : B72 ;
    - ✅ **les géométries des cadres** : B73, celle des boss attendant leur cadrage ;
@@ -42,7 +42,7 @@ La vague 1 fusionnée dans `main` par la PR #57 (commit de fusion `32e2ad46`) et
 
 ## À lire
 
-L'identité visuelle §3 à §5 et §7 à §8 ; la DA évolutive §16 ; `art_src/docs/workflow_creature.md` et `workflow_fond.md` ; `art_src/tools/README.md` (`frame_tier.py`, `creature_controle.py`) ; `lib/game/components/entities/enemy_card.dart`, `combat_entity.dart`, `health_bar.dart` ; `lib/game/systems/layout_system.dart` (`repositionEnemies` : la largeur d'un ennemi y est une constante, `visualWidthPerEnemy`) ; `lib/game/heros_draft_game.dart` (le décor, sa priorité) ; ADR-121 (l'interface des ennemis) ; le cadrage §1.3 (B17, B21, B30 : la demi-place, la meute, les six cartes, que les vagues 4 et 5 poseront sur ce placement).
+L'identité visuelle §3 à §5 et §7 à §8 ; la DA évolutive §16 ; `art_src/docs/workflow_creature.md`, `workflow_fond.md` et `workflow_decor.md` ; `art_src/tools/README.md` (`frame_tier.py`, `creature_controle.py`) ; `lib/game/components/entities/enemy_card.dart`, `combat_entity.dart`, `health_bar.dart` ; `lib/game/systems/layout_system.dart` (`repositionEnemies` : la largeur d'un ennemi y est une constante, `visualWidthPerEnemy`) ; `lib/game/heros_draft_game.dart` (le décor, sa priorité) ; ADR-121 (l'interface des ennemis) ; le cadrage §1.3 (B17, B21, B30 : la demi-place, la meute, les six cartes, que les vagues 4 et 5 poseront sur ce placement).
 
 ## La spec doit fixer
 

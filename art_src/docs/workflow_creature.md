@@ -6,7 +6,7 @@
 
 ## Le principe
 
-**La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds](workflow_fond.md), § 2). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
+**La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds de fenêtre](workflow_fond.md)). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
 
 **Tout part d'un brief, établi avec le propriétaire avant toute génération** (étape 1). On sait dès le premier tour quelle créature le générateur doit dessiner, dans quelle pose et avec quel équipement : c'est ce qui réduit le nombre de tours et de générations.
 

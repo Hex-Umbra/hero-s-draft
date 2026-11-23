@@ -1,6 +1,6 @@
 # Exemple — les fonds de fenêtre du biome forêt
 
-Le parcours des trois premiers fonds de fenêtre, produits par [le workflow des fonds](../workflow_fond.md) § 2, le 10/11/2026 : les tours, les prompts exacts, les graines et ce que chaque ajout a corrigé. Les fichiers sont dans `art_src/backgrounds/windows/forest/`.
+Le parcours des trois premiers fonds de fenêtre, produits par [le workflow des fonds de fenêtre](../workflow_fond.md), le 10/11/2026 : les tours, les prompts exacts, les graines et ce que chaque ajout a corrigé. Les fichiers sont dans `art_src/backgrounds/windows/forest/`.
 
 Toutes les générations sont libres, en 1024 × 1536, avec le LoRA à 0.8.
 

@@ -1,49 +1,22 @@
-# Produire un fond en pixel art
+# Produire un fond de fenêtre en pixel art
 
-**État au 10/11/2026.** La méthode est encore en itération. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images. Des cas complets sont racontés dans [les exemples](exemples/).
+**État au 23/11/2026.** La méthode est encore en itération. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images. Des cas complets sont racontés dans [les exemples](exemples/).
 
-Il existe deux sortes de fonds, et elles ne se font pas de la même façon.
+Il existe deux sortes de fonds, et elles ne se font pas de la même façon. **Depuis le 23/11/2026, le décor d'écran a son propre document** : [le workflow des décors](workflow_decor.md). Celui-ci ne décrit plus que le fond de fenêtre.
 
-| | Fond d'écran | Fond de fenêtre |
+| | Décor d'écran | Fond de fenêtre |
 |:---|:---|:---|
 | **Où on le voit** | Derrière tout un écran : combat, aire de repos… | Dans la fenêtre du cadre d'un ennemi, derrière la créature |
-| **Taille** | 640 × 360 depuis le 23/11/2026 ; 320 × 180 jusque-là | 128 × 192 |
-| **Combien** | Un par écran, ou par biome de combat | Trois variations par biome |
-| **Méthode** | La structure d'abord, par le code ; ComfyUI ajoute le détail | ComfyUI compose librement ; on choisit |
+| **Taille** | 640 × 360 | 128 × 192 |
+| **Combien** | Un par lieu et par écran | Trois variations par lieu |
+| **Méthode** | La structure par le code, puis deux passes de génération, dont une par tuiles | ComfyUI compose librement, en une génération ; on choisit |
 | **Calques** | Un calque par objet | Un seul : c'est une surface |
-| **Rangement** | `backgrounds/<thème>/` | `backgrounds/windows/<biome>/` |
+| **Rangement** | `backgrounds/<lieu>/<écran>/` | `backgrounds/windows/<lieu>/` |
+| **Document** | [Le workflow des décors](workflow_decor.md) | Celui-ci |
 
 ---
 
-## 1. Fond d'écran (320 × 180)
-
-> **Décision du propriétaire, le 23/11/2026** ([cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), B74) : **un fond d'écran se dessine désormais en 640 × 360**, le double. Le prochain, un décor de combat de forêt, se fait à cette taille. **La méthode ci-dessous est encore celle de 320 × 180 et reste à recaler** : les scripts de scène et `scene.py`, l'échelle de l'image guide, la taille de génération, `bg_import.py`. Le problème ouvert en fin de section — une grille générée plus grossière que la grille visée — pèse deux fois plus à 640 de large. Les trois fonds existants restent en 320 × 180.
-
-L'écran a des zones réservées à l'interface : l'emplacement des ennemis et du héros, la main du joueur, un menu. La composition ne se laisse donc pas au hasard : on la construit d'abord.
-
-### Les étapes
-
-1. **Écrire le script de la scène**, `bg_<nom>.py`, en copiant un script de scène existant. Tous sont construits sur `scene.py`.
-   - Une vraie perspective, calculée pixel par pixel.
-   - Un calque complet par objet, posé à sa profondeur, avec sa lumière cuite dedans.
-   - La palette Apollo dès cette étape.
-   - Le script écrit le `.aseprite` de base, l'image guide et les deux cartes de guidage (profondeur et contours).
-2. **Vérifier la composition sur le vrai écran.** Les zones de l'interface doivent rester calmes : rien d'important sous les éléments du jeu qui s'affichent par-dessus.
-3. **Faire peindre le détail par ComfyUI**, en mode guidé, avec trois graines par tour. Les réglages par défaut de `comfy_gen.py` (1360 × 768, denoise 0.7, profondeur 0.7, contours 0.45, LoRA 0.9) sont un bon point de départ.
-4. **Ramener sur la grille et découper** avec `bg_import.py`. Chaque pixel généré va au calque de l'objet visible à cet endroit, et les autres calques gardent le rendu de l'étape 1.
-5. **Retoucher dans Aseprite.**
-
-### Les pièges
-
-- **Une carte des contours trop chargée** (chaque pavé, chaque brique) fige le générateur. On simplifie les formes avant de tracer les contours.
-- **Les éléments fins se perdent.** Il faut les dessiner assez gros dans la géométrie.
-- **Une forme ambiguë est réinterprétée** par le générateur, à sa façon. Chaque forme claire du guide doit être sans ambiguïté.
-- **La lumière se cuit dans chaque objet**, jamais dans un calque de lumière posé par-dessus. Sinon, masquer un objet laisse sa lueur flotter.
-- **Problème ouvert :** à 1360 de large, le LoRA peint une grille de 170 de large, deux fois plus grossière que celle de 320, ce qui donne des blocs de 2 × 2.
-
----
-
-## 2. Fond de fenêtre (128 × 192)
+## Le fond de fenêtre (128 × 192)
 
 Le fond de fenêtre est un asset à part. Le jeu y greffe la créature qui apparaît, selon le biome. Chaque biome en a **trois variations**, pour que le même ennemi ne se présente pas toujours dans le même décor.
 

@@ -4,16 +4,17 @@ Les scripts qui produisent les sources `.aseprite` du projet. Ils sont rangés h
 
 ## La méthode
 
-Deux documents décrivent le travail pas à pas :
-- [**Produire un fond**](../docs/workflow_fond.md) : le fond d'écran de 320 × 180, avec la structure par le code et le détail par ComfyUI ; et le fond de fenêtre de 128 × 192, généré librement, en trois variations par biome.
+Trois documents décrivent le travail pas à pas :
+- [**Produire un décor d'écran**](../docs/workflow_decor.md) : le décor de 640 × 360, avec la structure par le code, puis deux passes de génération, dont une par tuiles. Méthode écrite le 23/11/2026, pas encore éprouvée : son outil de tuiles reste à écrire.
+- [**Produire un fond de fenêtre**](../docs/workflow_fond.md) : le fond de 128 × 192, généré librement, en trois variations par lieu.
 - [**Produire une créature ou un personnage**](../docs/workflow_creature.md) : la créature décrite d'abord dans un brief établi avec le propriétaire, puis générée seule, avec la pose imposée en OpenPose, puis détourée et séparée en calques, et livrée comme un sprite que le jeu greffe sur un fond de fenêtre. Une fois son design validé, elle reçoit un liseré de lumière dans son propre calque.
 
-Les deux finissent de la même façon : un `.aseprite` en palette Apollo, à retoucher à la main. Des cas réels, racontés en détail avec leurs prompts et leurs graines, sont dans [`../docs/exemples/`](../docs/exemples/).
+Tous finissent de la même façon : un `.aseprite` en palette Apollo, à retoucher à la main. Des cas réels, racontés en détail avec leurs prompts et leurs graines, sont dans [`../docs/exemples/`](../docs/exemples/).
 
 ## Règles communes
 
 - **La palette [Apollo](https://lospec.com/palette-list/apollo), exacte.** ComfyUI ne la connaît pas : le prompt la décrit en mots (« muted cold palette of deep navy blue, slate blue and teal greys, with sparse warm accents of rust, ember orange and old ivory »), puis la mise sur la grille la rend exacte. Chaque case prend la couleur du groupe dominant de son bloc, puis la couleur Apollo la plus proche à l'œil, tramée avec sa voisine quand la palette n'a pas le ton.
-- **Générer à 8 fois la taille voulue.** Le LoRA pixel art peint des cases de 8 pixels. À 1024 × 1536, elles tombent pile sur une grille de 128 × 192, et l'import lit le cœur de chaque case au lieu de mélanger ses bords.
+- **Générer à 8 fois la taille voulue.** Le LoRA pixel art peint des cases de 8 pixels. À 1024 × 1536, elles tombent pile sur une grille de 128 × 192, et l'import lit le cœur de chaque case au lieu de mélanger ses bords. Un décor d'écran dépasse ce qu'une génération sait peindre : il se génère par tuiles ([workflow des décors](../docs/workflow_decor.md)).
 - **Plusieurs graines par tour, une chose changée à la fois.** Trois pour un fond. Pour une créature, six au premier tour, puis moins à mesure que le design se fixe ([workflow des créatures](../docs/workflow_creature.md), étape 3). Une image qu'on aime se relance avec sa graine quand on retouche le prompt : la composition reste souvent proche. Pour une créature, on ne garde une graine qu'une fois son design validé.
 - **Garder la source.** L'image générée se range en PNG à côté de son `.aseprite`, jamais en JPEG. Une image corrigée garde l'originale à côté (`_brute`).
 - **Ne rien supprimer.** Une version remplacée, ou un essai abandonné, va dans [`../archives/`](../archives/README.md), au même chemin que l'original (`<famille>/tier_<n>/` pour une créature), puis dans `<date>_<ce que c'est>/`, avec ses noms de fichiers d'origine. Les archives sont en lecture seule, et aucun outil n'y lit : c'est l'historique de ce qui a été fait. Les outils de l'ancienne méthode des créatures (`creature_squelette.py`, `sprite_import.py`) ont été retirés le 13/11/2026 : leurs sorties sont aux archives, et leur code dans l'historique git.
@@ -100,7 +101,7 @@ Toutes se lancent depuis ce dossier.
 | `aseprite_io.py`, `aseprite_build.lua`, `aseprite_verify.lua`, `aseprite_export.lua` | Le pont vers Aseprite : assemblage en mode indexé, aller-retour vérifié, contrôle des calques, relecture d'un fichier existant calque par calque. |
 
 **À savoir :**
-- **Les fonds sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`…), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée. Les fonds de fenêtre sont dans `../backgrounds/windows/<biome>/`, trois par biome.
+- **Un décor neuf se range par lieu, puis par écran**, dans `../backgrounds/<lieu>/<écran>/` ([workflow des décors](../docs/workflow_decor.md)). **Les trois décors existants sont rangés par thème** dans `../backgrounds/<thème>/` (`dungeon/`, `steampunk/`, `camp/`), chacun avec ses fichiers annexes : image guide, cartes de guidage, source générée. Les fonds de fenêtre sont dans `../backgrounds/windows/<biome>/`, trois par biome.
 - **Les créatures sont rangées par famille, puis par tier,** dans `../creatures/<famille>/tier_<n>/` : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. Chaque dossier contient le sprite, un aperçu sur un fond, la figure générée brute, la figure corrigée et les guides de génération (`<nom>_pose.png`, `<nom>_edges.png`).
 - **Chaque fond a son propre script de géométrie**, construit sur `scene.py`, avec `bg_plaza.py` et `bg_camp.py` pour modèles : un calque complet par objet, posé à sa profondeur. Le script de la scène ne décrit que ce qui lui est propre ; l'export, les contrôles et les cartes de guidage sont communs.
 - **Le manifeste de la scène guide l'étape 3.** Il dit quels calques sont des surfaces (autorisés à laisser un vide quand on les masque), lesquels l'import doit ignorer, comme l'ombre tramée des bords de la salle, et quelles couleurs il ne doit pas utiliser. Aucune scène n'exclut de couleur aujourd'hui : l'ancien Squelette pleine fenêtre écartait les deux verts pâles d'Apollo, qui faisaient virer l'ivoire des os au vert maladif.
