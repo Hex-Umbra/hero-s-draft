@@ -12,7 +12,8 @@ Voir ../docs/workflow_decor.md, etape 4. ComfyUI doit tourner, sauf pour --a-bla
 
 <scene> est le nom du manifeste ecrit par le script de la scene (camp, hall...) : il donne la
 taille de la scene et ses calques. <prefixe> est celui des fichiers de la structure :
-<prefixe>_depth.png et <prefixe>_edges.png. Les tuiles vont dans .work/tuiles/<nom>/, avec leur
+<prefixe>_depth.png et <prefixe>_edges.png. --taille donne une autre taille de decor que celle de
+la scene, pour un essai a l'echelle d'un decor plus grand. Les tuiles vont dans .work/tuiles/<nom>/, avec leur
 plan (plan.json) ; <nom> est celui de la scene, ou celui donne par --nom.
 
 peindre repeint toutes les tuiles, ou celles nommees par --tuiles (colonne,rangee, a partir de 0),
@@ -109,18 +110,19 @@ def tile_prompt(words, shares, threshold):
     return ", ".join([words["mots"][name] for name in kept] + [words["style"]])
 
 
-def thin(edges, width):
-    """Les contours d'une scene font une case d'epaisseur, soit 8 pixels sur l'image pleine : trop
-    pour le guide d'une tuile. On les ramene a `width` pixels, en rognant leurs deux bords."""
+def thin(edges, width, thickness):
+    """Les contours d'une scene font un pixel de scene d'epaisseur, soit `thickness` pixels sur
+    l'image pleine : trop pour le guide d'une tuile. On les ramene a `width` pixels, en rognant
+    leurs deux bords."""
     lines = edges.point(lambda v: 255 if v > 127 else 0)
-    for _ in range(max(0, (CELL - width) // 2)):
+    for _ in range(max(0, (thickness - width) // 2)):
         lines = lines.filter(ImageFilter.MinFilter(3))
     return lines
 
 
 def paint(a):
     entry = json.load(open(work(f"{a.scene}_manifest.json"), encoding="utf-8"))[0]
-    scene_size = (entry["w"], entry["h"])
+    scene_size = tuple(int(v) for v in a.taille.split("x")) if a.taille else (entry["w"], entry["h"])
     name = a.nom or a.scene
     full, tiles = plan_tiles(scene_size, tuple(int(v) for v in a.tuile.split("x")), a.recouvrement)
     chosen = [tuple(int(v) for v in t.split(",")) for t in a.tuiles] if a.tuiles else sorted(tiles, key=lambda t: (t[1], t[0]))
@@ -153,7 +155,7 @@ def paint(a):
 
     base = Image.open(a.ensemble).convert("RGB").resize(full, RESAMPLE[a.agrandir])
     depth = Image.open(f"{a.prefixe}_depth.png").convert("L").resize(full, Image.BICUBIC)
-    edges = thin(Image.open(f"{a.prefixe}_edges.png").convert("L").resize(full, Image.NEAREST), a.trait)
+    edges = thin(Image.open(f"{a.prefixe}_edges.png").convert("L").resize(full, Image.NEAREST), a.trait, round(full[0] / entry["w"]))
     sheet = []
     for t in chosen:
         box = tiles[t]
@@ -217,13 +219,15 @@ def main():
     p.add_argument("--tuile", default="1280x720", help="la taille d'une tuile, LARGEURxHAUTEUR (1280x720 par defaut)")
     p.add_argument("--recouvrement", type=int, default=0, help="le recouvrement de deux tuiles voisines, en cases de 8 pixels (0 par defaut)")
     p.add_argument("--seed", type=int, default=7, help="la graine, la meme pour toutes les tuiles (7 par defaut)")
-    p.add_argument("--denoise", type=float, default=0.55, help="le debruitage (0.55 par defaut)")
+    p.add_argument("--denoise", type=float, default=0.5, help="le debruitage (0.5 par defaut)")
     p.add_argument("--depth", type=float, default=0.7, help="force de la carte de profondeur (0.7 par defaut)")
     p.add_argument("--edges", type=float, default=0.45, help="force de la carte des contours (0.45 par defaut)")
     p.add_argument("--lora", type=float, default=0.9, help="force du LoRA pixel art (0.9 par defaut)")
     p.add_argument("--couleur", type=float, default=0.0, help="force du guide de couleur (ControlNet Union « tile », nourri de l'image d'ensemble ; 0 : sans)")
     p.add_argument("--agrandir", choices=sorted(RESAMPLE), default="bicubique", help="comment l'image d'ensemble est agrandie (bicubique par defaut)")
     p.add_argument("--trait", type=int, default=4, help="l'epaisseur des contours dans le guide d'une tuile, en pixels (4 par defaut)")
+    p.add_argument("--taille", help="la taille du decor vise, LARGEURxHAUTEUR, quand elle n'est pas celle de la scene : "
+                   "pour essayer a l'echelle d'un decor de 640x360 sur une scene de 320x180")
     p.add_argument("--mots", help="le fichier de mots : le style commun et les mots de chaque calque")
     p.add_argument("--seuil", type=float, default=0.08, help="la part d'une tuile qu'un calque doit occuper pour que ses mots comptent (0.08 par defaut)")
     p.add_argument("--exclure", default="", help="ce qui s'ajoute au prompt negatif")

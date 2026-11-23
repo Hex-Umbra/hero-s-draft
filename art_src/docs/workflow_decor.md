@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 23/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, vérifié sur une seule tuile** ; ses réglages restent à trouver, et l'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 23/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, et son premier essai est mené** : elle tient par pas de deux, pas encore à l'échelle d'un décor de 640 × 360. L'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -17,7 +17,7 @@ Ce document remplace la section « Fond d'écran » du [workflow des fonds](work
 
 **Le décor se peint donc en deux passes :**
 1. **une passe d'ensemble**, en une génération : elle fixe la composition, la lumière et les couleurs, sur une grille quatre fois trop grosse ;
-2. **une passe de détail par tuiles** : l'image d'ensemble est agrandie, puis repeinte morceau par morceau, chaque morceau à la taille qu'une génération sait peindre.
+2. **une passe de détail par tuiles** : l'image d'ensemble est agrandie, puis repeinte morceau par morceau, chaque morceau à la taille qu'une génération sait peindre. L'essai du 23/11 dit que cet agrandissement se fait par pas de deux (étape 4).
 
 **La structure vient du code, avant toute génération.** L'interface recouvre une grande part de l'écran : la composition ne se laisse pas au hasard. Le code pose la perspective, les objets et leur profondeur ; le générateur n'ajoute que le détail. C'est aussi ce qui tient les tuiles ensemble : chacune reçoit le morceau de la même structure.
 
@@ -151,13 +151,13 @@ Ces réglages sont ceux des trois décors existants, à une différence près : 
 
 ### 4. La passe de détail, par tuiles
 
-**À éprouver.** L'outil existe, `decor_tuiles.py`, et une tuile du campement a été repeinte pour le vérifier (voir [les essais](#les-essais-à-mener)) ; les réglages qui suivent sont des points de départ, pas des valeurs trouvées.
+**À éprouver.** L'outil existe, `decor_tuiles.py`, et son premier essai est mené (voir [les essais](#les-essais-à-mener)) ; les réglages qui suivent sont des points de départ, pas des valeurs trouvées.
 
 `python decor_tuiles.py peindre <scène> <préfixe> <image d'ensemble> "<prompt>" --exclure "<exclusions>"`, puis `python decor_tuiles.py assembler <nom> <image assemblée.png>`.
 
 L'outil fait, dans l'ordre :
 
-1. **Agrandir l'image d'ensemble** quatre fois, à 5120 × 2880 : une case de la passe d'ensemble couvre alors 4 × 4 cases du décor.
+1. **Agrandir l'image de départ** à 8 fois la taille visée. **Par pas de deux** (essai du 23/11) : l'image d'ensemble, en grille de 160 × 90, se repeint d'abord en 320 × 180, par quatre tuiles ; l'image assemblée se repeint ensuite en 640 × 360, par seize tuiles. D'un seul pas de quatre, la tuile réinvente la scène. Chaque pas se lance par `--taille`, sur l'image assemblée du pas d'avant : `--taille 320x180`, puis `--taille 640x360`.
 2. **Découper en tuiles de 1280 × 720**, soit 160 × 90 cases chacune. Seize tuiles couvrent le décor sans recouvrement ; avec recouvrement, il en faut davantage. **Chaque tuile se pose sur un multiple de 8 pixels**, pour que les grilles de deux tuiles voisines restent en phase.
 3. **Faire repeindre chaque tuile** par ComfyUI, en partant de son morceau de l'image agrandie, guidée par son morceau des cartes de profondeur et de contours. La même graine, le même style ; le prompt de chaque tuile est décrit plus bas.
 4. **Assembler les tuiles.** Dans un recouvrement, le raccord se coupe sur une ligne de cases, jamais au milieu d'une case.
@@ -169,7 +169,7 @@ L'outil fait, dans l'ordre :
 
 | Réglage | Le point de départ | Ce qui le borne |
 |:---|:---|:---|
-| Le débruitage (`--denoise`) | 0.55 | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
+| Le débruitage (`--denoise`) | 0.5 : celui qui tient le mieux un pas de deux à l'essai 1 | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
 | Le recouvrement (`--recouvrement`, en cases) | Aucun, puis un quart de tuile | Sans recouvrement, un raccord peut se voir ; avec, le nombre de tuiles monte |
 | Un guide de couleur (`--couleur`) | Sans, puis le guide « tile » de ControlNet Union, nourri de l'image d'ensemble | Il tient les couleurs d'une tuile à l'autre ; trop fort, il garde aussi les grosses cases de la passe d'ensemble. ComfyUI 0.46.2 propose bien ce type de guide ; il n'a pas été essayé |
 | L'agrandissement de l'image d'ensemble (`--agrandir`) | Bicubique | Au plus proche, l'image de départ garde ses grosses cases, que la repeinte peut conserver |
@@ -183,7 +183,7 @@ L'outil fait, dans l'ordre :
 }
 ```
 
-**Le coût.** Une tuile de 1280 × 720 a pris 53 secondes. La passe de détail d'un décor de seize tuiles prend donc un quart d'heure environ, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
+**Le coût.** Une tuile de 1280 × 720 prend de 30 à 55 secondes, selon le débruitage. Les deux pas d'un décor, quatre tuiles puis seize, prennent donc un quart d'heure environ, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
 
 ### 5. Ramener sur la grille et découper en calques
 
@@ -220,7 +220,7 @@ On reprend à la main les raccords, les bords d'objets et les détails que la gr
 | 1. Le brief | Repris des créatures ; jamais mené pour un décor | — |
 | 2. La structure | Éprouvée sur trois décors, en 320 × 180 ; jamais en 640 × 360 | `scene.py` et un script par décor : existent. `decor_tuiles.py` agrandit lui-même les cartes de guidage |
 | 3. La passe d'ensemble | Éprouvée en 1360 × 768 ; 1280 × 720 à confirmer | `comfy_gen.py` : existe |
-| 4. La passe de détail | **Une tuile peinte, pour vérifier l'outil** ; aucun réglage trouvé, aucun décor assemblé | `decor_tuiles.py` : existe. Le découpage, les mots par calque et l'assemblage sont vérifiés hors génération |
+| 4. La passe de détail | **Essai 1 mené le 23/11** : elle tient par pas de deux, à 0.5 ; à l'échelle d'un décor de 640 × 360, la grille revient faible, et les raccords se voient sans recouvrement | `decor_tuiles.py` : existe. Le découpage, les mots par calque et l'assemblage sont vérifiés hors génération |
 | 5. L'import | Éprouvé quand la grille tombe juste, sur les fonds de fenêtre ; jamais à cette taille | `bg_import.py` : existe |
 | 6. Le contrôle en situation | Fait à la main, pour les maquettes du 23/11 | **À écrire** |
 | 7. La retouche | — | Aseprite |
@@ -231,14 +231,42 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 
 | Essai | Ce qu'on fait | Ce qu'on mesure | Il réussit si |
 |:---|:---|:---|:---|
-| 1. La grille | Une seule tuile, repeinte à quatre débruitages, de 0.4 à 0.7 | La netteté de la grille ; ce que la tuile a gardé de l'ensemble | La netteté dépasse nettement 3 à un débruitage où la tuile ne réinvente rien |
+| 1. La grille — **mené le 23/11**, résultats plus bas | Une seule tuile, repeinte à quatre débruitages, de 0.4 à 0.7 | La netteté de la grille ; ce que la tuile a gardé de l'ensemble | La netteté dépasse nettement 3 à un débruitage où la tuile ne réinvente rien |
 | 2. Les raccords | Quatre tuiles voisines, sans recouvrement puis avec | Ce qui se voit aux raccords, une fois sur la grille Apollo | Aucun raccord ne se lit à la taille du jeu |
 | 3. Le prompt | Les mêmes tuiles, avec le prompt de l'ensemble puis avec les mots des calques | Les objets inventés dans une tuile | Les mots des calques retirent les inventions |
 | 4. Le décor entier | Les seize tuiles, l'import, le contrôle en situation | La durée de chaque étape ; le jugement du propriétaire | Le décor passe les quatre questions de l'étape 6 |
 
-**Ce qui a déjà été mesuré, le 23/11/2026, en vérifiant l'outil.** Ce n'est pas l'essai 1 : une seule tuile, un seul débruitage.
-- **L'image d'ensemble du campement** (1360 × 768) porte une grille nette de 170 × 96 cases : 31,7 et 23,6. Lue comme une grille de 320 × 180, sa netteté tombe à 1,3 et 2,6 : la grille visée n'y est pas.
-- **La tuile du bas à gauche**, repeinte à 0.55 avec le prompt de l'ensemble, sans recouvrement ni guide de couleur : 53 secondes, une grille de 160 × 90 cases nette à 90,8 et 43,0. La composition tient — le tronc, le sac de couchage, la natte, le feu au bord. Deux écarts à surveiller : des objets changent de nature (la lanterne devient un brasero, les caisses des tonneaux) et les couleurs partent vers des verts plus vifs que l'image d'ensemble.
+**L'essai 1, mené le 23/11/2026.** Sur le campement, avec le prompt de l'ensemble, sans recouvrement ni guide de couleur, sur une seule graine. Les images et leurs planches sont dans `.work/tuiles/` (`essai1*`), hors du dépôt.
+
+**Ce que porte l'image existante.** L'image d'ensemble du campement (1360 × 768) porte une grille nette de 170 × 96 cases : 31,7 et 23,6. Lue comme une grille de 320 × 180, sa netteté tombe à 1,3 et 2,6 : la grille visée n'y est pas.
+
+**Un pas de deux : du campement en grille de 170 à une grille de 320.** La tuile du bas à gauche, un quart de la scène :
+
+| Débruitage | Netteté de la grille | Reste de la grosse grille | Écart de couleur à l'ensemble | Ce qu'on voit |
+|:---|:---|:---|:---|:---|
+| 0.4 | 27,4 × 20,9 | 8,1 × 8,1 | 7 | Les objets gardent leur nature ; il reste des traces des grosses cases |
+| 0.5 | 51,9 × 23,2 | 2,4 × 4,7 | 10 | Les objets tiennent ; des sapins remplacent la trame, une bûche apparaît |
+| 0.55 | 90,8 × 43,0 | 2,0 × 2,4 | 11 | La lanterne devient un brasero |
+| 0.6 | 50,3 × 35,8 | 1,8 × 2,3 | 12 | Comme à 0.55 |
+| 0.7 | 41,4 × 29,2 | 3,0 × 2,2 | 15 | La tuile réinvente : un ciel étoilé apparaît, la lanterne devient autre chose |
+
+**À ce pas, l'essai réussit :** de 0.4 à 0.6, la grille est très au-dessus de 3 et la tuile garde la scène. Le point de départ retenu est 0.5. Les quatre tuiles peintes à 0.5 puis assemblées donnent une grille de 320 × 180 nette à 44,4 et 42,5. **Mais les deux raccords se voient** : le ciel change de ton d'une tuile à l'autre, et le feu est coupé en deux. Sans recouvrement, l'assemblage ne tient pas : c'est le premier résultat de l'essai 2.
+
+**À l'échelle d'un décor de 640 × 360** (`--taille 640x360`) : une tuile d'un seizième de la scène, celle des caisses et de la lanterne.
+
+| Image de départ | Débruitage | Netteté de la grille | Écart de couleur | Ce qu'on voit |
+|:---|:---|:---|:---|:---|
+| L'image d'ensemble, agrandie 3,8 fois | 0.4 | 18,1 × 2,3 | 5 | Les grosses cases restent : pas de grille fine |
+| | 0.5 | 22,8 × 5,2 | 8 | Une image molle ; des sapins inventés |
+| | 0.6 | 75,1 × 10,2 | 11 | Une grille nette, une scène réinventée : un tronc à la place des caisses |
+| L'image assemblée en 320 × 180, agrandie 2 fois | 0.4 | 29,5 × 5,2 | 6 | Les objets tiennent ; un rendu lisse, une grille faible en hauteur |
+| | 0.5 | 26,1 × 6,4 | 8 | Les objets tiennent ; le même rendu |
+
+**Ce qu'on en retient :**
+- **D'un seul pas de quatre, aucun débruitage ne donne à la fois la grille et la fidélité.** L'agrandissement se fait par pas de deux.
+- **Par pas de deux, la tuile garde la scène, mais sa grille reste faible en hauteur** — 5 à 6, pour un minimum de 3 — et son rendu est plus lisse que celui d'une génération directe. **La méthode n'est pas validée à 640 × 360.**
+- **Les limites de l'essai :** une seule tuile et une seule graine à cette échelle ; et la structure du campement est écrite en 320 × 180, si bien que ses cartes de guidage sont floues à l'échelle d'un décor de 640 × 360. Une structure écrite à cette taille guidera mieux.
+- **Reste à essayer sur le second pas :** un débruitage de 0.55 à 0.6, le guide de couleur, l'agrandissement au plus proche, les mots par calque ; et le recouvrement, pour les raccords.
 
 **Si la passe de détail échoue,** deux replis, à ne considérer qu'après l'essai 1 :
 - **le décor par éléments :** chaque objet, ou chaque plan, généré seul à sa taille, comme une créature, puis posé par le code — la lumière et la perspective sont alors à tenir à la main ;
