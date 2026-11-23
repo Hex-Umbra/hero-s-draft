@@ -7,7 +7,7 @@ Il existe deux sortes de fonds, et elles ne se font pas de la même façon.
 | | Fond d'écran | Fond de fenêtre |
 |:---|:---|:---|
 | **Où on le voit** | Derrière tout un écran : combat, aire de repos… | Dans la fenêtre du cadre d'un ennemi, derrière la créature |
-| **Taille** | 320 × 180 | 128 × 192 |
+| **Taille** | 640 × 360 depuis le 23/11/2026 ; 320 × 180 jusque-là | 128 × 192 |
 | **Combien** | Un par écran, ou par biome de combat | Trois variations par biome |
 | **Méthode** | La structure d'abord, par le code ; ComfyUI ajoute le détail | ComfyUI compose librement ; on choisit |
 | **Calques** | Un calque par objet | Un seul : c'est une surface |
@@ -16,6 +16,8 @@ Il existe deux sortes de fonds, et elles ne se font pas de la même façon.
 ---
 
 ## 1. Fond d'écran (320 × 180)
+
+> **Décision du propriétaire, le 23/11/2026** ([cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), B74) : **un fond d'écran se dessine désormais en 640 × 360**, le double. Le prochain, un décor de combat de forêt, se fait à cette taille. **La méthode ci-dessous est encore celle de 320 × 180 et reste à recaler** : les scripts de scène et `scene.py`, l'échelle de l'image guide, la taille de génération, `bg_import.py`. Le problème ouvert en fin de section — une grille générée plus grossière que la grille visée — pèse deux fois plus à 640 de large. Les trois fonds existants restent en 320 × 180.
 
 L'écran a des zones réservées à l'interface : l'emplacement des ennemis et du héros, la main du joueur, un menu. La composition ne se laisse donc pas au hasard : on la construit d'abord.
 
