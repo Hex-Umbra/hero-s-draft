@@ -15,8 +15,8 @@ vague 1, l'interface des ennemis, est fusionnée dans `main` (PR #57) et taguée
 2026-11-22**, avec la correction S9. **Le programme a été révisé le 2026-11-23, après un audit** :
 le visuel et une couture de lieu, puis le langage des intentions seul, puis les tiers 1 à 3, un par
 vague, puis une refonte de la difficulté, les tiers 4 et 5 et les boss ; les lieux viennent après.
-**Aucune vague n'est ouverte** : la vague 2 attend ses prérequis, et ce programme n'est encore que
-sur sa branche de documentation.
+**Aucune vague n'est ouverte** : le programme est dans `main` (PR #58) ; les questions de la vague 2
+sont toutes tranchées, elle n'attend plus que ses cadres redessinés et son décor de forêt.
 Suivi en clair : [`docs/suivi_vagues_chantier/bestiaire.md`](../../docs/suivi_vagues_chantier/bestiaire.md).
 
 **La méthode** est celle du chantier précédent — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
@@ -205,9 +205,9 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : fusionner dans `main` la branche de documentation du chantier — le
-prompt de lancement d'une vague lit `docs/chantier_bestiaire/` depuis `main` —, lever les prérequis
-de la vague 2 (sa fiche), et lancer la production des sprites du tier 1, dont l'état se tient au
+**D'abord le propriétaire** : produire les assets qui ouvrent la vague 2 — les cadres des tiers 1 à
+3 redessinés et le décor de forêt, dont la méthode est à recaler (sa fiche, prérequis 1) —,
+et lancer la production des sprites du tier 1, dont l'état se tient au
 catalogue des ennemis. Deux cadrages restent à tenir avant leurs vagues : la difficulté, après le
 tier 3, et les boss.
 
