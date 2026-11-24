@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, et ses quatre essais sont menés** : un décor entier de 640 × 360 se peint et s'importe de bout en bout, sa grille est nette, mais **ses tuiles réinventent la scène et leurs raccords se voient** (essai 4). **L'essai 5 ouvre une autre voie : repeindre l'image entière d'un coup, sans tuiles**, ce qui donne un décor de 640 × 360 sans raccord ; les étapes 3 et 4 de ce document ne sont pas encore réécrites d'après lui. L'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, et ses quatre essais sont menés** : un décor entier de 640 × 360 se peint et s'importe de bout en bout, sa grille est nette, mais **ses tuiles réinventent la scène et leurs raccords se voient** (essai 4). **Les essais 5 et 6 ouvrent une autre voie : un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle a donné le premier décor validé, la forêt du combat, sans raccord ; les étapes 2 à 5 de ce document ne sont pas encore réécrites d'après elle. L'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -372,6 +372,30 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 - **Deux défauts restent à régler :** la bande sombre du bord gauche et du bas, que les repeintes gardent ; et la composition, qui ignore la place de l'interface. Ceux de l'import sont réglés par les couleurs peintes.
 - **Ce que l'essai ne dit pas :** il porte sur une seule image, sans structure ni calques, et n'a pas été posé sous un combat. Une scène écrite par le code se repeindrait de la même façon, avec ses guides agrandis à la taille de l'image entière : à éprouver.
 
+**L'essai 6, la composition par un plan grossier, mené le 24/11/2026.** L'image d'ensemble de l'essai 5, composée librement, ignorait l'interface : ses gros troncs passaient derrière trois cartes sur quatre. Un plan de 1280 × 720, dessiné par le code en aplats d'après la carte des zones, guide maintenant la génération : un fond lointain et pâle derrière la rangée des ennemis, les deux gros troncs aux bords de l'écran, le sol, son sentier et ses rochers dans le bas. Ce plan sert d'image de départ, sans carte de profondeur ni de contours (`comfy_gen.py --guide guide --depth 0 --edges 0`), avec le prompt des fonds de fenêtre et deux mentions en plus : les troncs qui cadrent les bords, les troncs lointains dans la lumière du centre.
+
+| Débruitage | Ce qu'on voit, sur trois graines |
+|:---|:---|
+| 0.8 | Le plan est suivi : les gros troncs aux bords, un fond calme derrière les cartes, le sentier au centre. La bande sombre du bord a disparu |
+| 0.9 | Le plan tient encore, avec plus de liberté : une graine sur trois replace un tronc derrière une carte |
+
+**La repeinte de l'image retenue** (0.8, graine 293903), sous trois formes :
+
+| Repeinte | Durée | Ce qu'on voit |
+|:---|:---|:---|
+| D'un pas, à 5120 × 2880, à 0.7 | 14 min 24 s | La composition tient parfaitement sous le combat, grille nette à 62,0 × 105,4. **Mais l'image est plate** : le sol et les buissons restent des aplats, sans rochers ni mousse — ceux que l'image d'ensemble tenait du plan |
+| D'un pas de deux, à 2560 × 1440, à 0.8 | 129 s | **La matière revient** — rochers, sentier, sous-bois — et la composition tient : troncs aux bords, fond pâle au centre |
+| La graine 832745 du tour à 0.9, à 2560 × 1440, à 0.8 | 127 s | Plus riche encore, mais de gros troncs de second plan reviennent derrière les cartes |
+
+**Le dernier pas, sur la graine 832745, retenue par le propriétaire :** la repeinte de 2560 × 1440 passe à 5120 × 2880 à 0.6, en 14 min 28 s, puis s'importe en couleurs peintes en 12 secondes. La grille de 640 × 360 est nette à 54,1 × 119,3 ; il reste une trace de celle de 320 × 180, à 10,7 × 7,0, que l'œil ne lit pas. Sous le combat, les troncs de second plan, sourds et lointains, ne disputent pas les cartes : la Faucheuse se détache. C'est le premier décor de la chaîne entière — un plan, une image d'ensemble, deux repeintes, l'import — en dix-sept minutes de génération. **Validé par le propriétaire le 24/11**, il est rangé dans `backgrounds/forest/combat/`.
+
+**Une carte de profondeur tirée du plan** (les troncs devant, le sol en pente, le fond loin), seule ou avec le plan, donne des images raides, aux plans découpés comme un décor de théâtre : écartée.
+
+**Ce qu'on en retient :**
+- **Un plan en aplats suffit à tenir la composition**, sans la structure complète de l'étape 2 ; 0.8 le suit mieux que 0.9. La bande sombre du bord ne revient pas.
+- **Une image d'ensemble née d'un plan porte ses aplats** : la repeindre d'un seul pas les garde. Il lui faut le pas intermédiaire à 2560 × 1440, à 0.8, qui redonne la matière en deux minutes et se juge avant de payer les quatorze minutes du dernier pas. Le chemin en deux pas redevient donc la règle pour une image guidée.
+- **Chaque image se juge sous le combat de la maquette** avant d'être repeinte. Les images sont dans `.work/composition/`.
+
 **Si la passe de détail échoue,** deux replis, à ne considérer qu'après l'essai 1 :
 - **le décor par éléments :** chaque objet, ou chaque plan, généré seul à sa taille, comme une créature, puis posé par le code — la lumière et la perspective sont alors à tenir à la main ;
 - **une grille plus grosse :** la question revient au propriétaire, qui a fixé la taille de 640 × 360 (B74).
@@ -386,10 +410,12 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 | `<nom>.aseprite` | La structure : le rendu du code, un calque par objet |
 | `<nom>_detail.aseprite` | Le décor : le livrable, à retoucher |
 | `<nom>_guide_x<n>.png`, `<nom>_depth.png`, `<nom>_edges.png` | L'image guide et les cartes de guidage, que le script de la scène réécrit |
+| `<nom>_plan.png` | Pour un décor guidé par un plan en aplats (essai 6) : le plan, que le script du décor réécrit |
 | `<nom>_ensemble_source.png` | L'image d'ensemble retenue, intacte |
-| `<nom>_detail_source.png` | L'image assemblée des tuiles, intacte, jamais en JPEG |
+| `<nom>_pas1_source.png` | Pour un décor repeint entier : la repeinte en 2560 × 1440 |
+| `<nom>_detail_source.png` | L'image de 5120 × 2880, repeinte entière ou assemblée des tuiles, intacte, jamais en JPEG |
 | `<nom>_mots.json` | Le style commun et les mots de chaque calque, pour le prompt des tuiles |
 
-Le script de la scène, un par décor, va dans `art_src/tools/decor_<nom>.py`. Les fichiers de travail, dont les tuiles, restent dans `art_src/tools/.work/`, que git ignore.
+Le script de la scène, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Les fichiers de travail, dont les tuiles, restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
