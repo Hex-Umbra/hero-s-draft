@@ -48,7 +48,10 @@ Le même prompt et les mêmes exclusions aux trois générations, sur la graine 
 
 - **L'import :** `python window_import.py <image de 5120 × 2880> forest_combat_detail.aseprite --taille 640x360 --couleurs-peintes --source forest_combat_detail_source.png`. La grille est lue telle quelle, chaque case garde sa couleur peinte ; le `.aseprite` est en couleurs libres, la palette Apollo en nuancier.
 - **Le contrôle en situation :** `python decor_controle.py forest_combat_detail.aseprite <sortie.png>`, une maquette — quatre ennemis des tiers 1 à 3 dans leurs cadres provisoires, le héros, une main de cinq cartes. Les troncs de second plan passent derrière la première et la dernière carte ; sourds et lointains, ils ne les disputent pas.
-- **La retouche :** pas encore faite.
+- **Le contrôle du décor seul, agrandi, zone par zone,** fait le 24/11 après celui du cimetière : aucun objet inventé, rien qui flotte ni qui soit posé où il ne peut pas être. Le dernier pas, à 0.6, a ajouté un petit sapin et un tronc couché au bout du sentier : tous deux à leur place dans une forêt.
+- **La retouche :** pas encore faite. Deux points mineurs relevés :
+  - le tronc de second plan, à droite, porte une frange d'aiguilles de sapin le long de son bord gauche, présente dès le premier pas : à effacer, ou à lire comme un sapin derrière lui ;
+  - quelques morceaux d'écorce détachés sur la mousse, de part et d'autre du sentier : à garder comme bois tombé, ou à effacer.
 - **Les deux repeintes** ont été lancées par un script d'essai, devenu depuis `decor_repeindre.py` : `python decor_repeindre.py forest_combat_ensemble_source.png 2560x1440` rejoue le premier pas à l'identique, et `python decor_repeindre.py forest_combat_pas1_source.png 5120x2880 --denoise 0.6` bâtit le même graphe que le second.
 
 ## Les fichiers
