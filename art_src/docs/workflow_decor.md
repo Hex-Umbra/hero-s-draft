@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode éprouvée sur un décor.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur une seule image et une seule graine, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode éprouvée sur deux décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils, sans changer un réglage ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur deux sujets, une graine chacun, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -106,7 +106,7 @@ Le prompt, les exclusions, les réglages des deux passes.
 
 ### 2. Écrire le plan par le code
 
-**Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle.
+**Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle ; [`decor_graveyard_combat.py`](../tools/decor_graveyard_combat.py) en est un second, parti d'une esquisse libre choisie par le propriétaire, dont il replace les objets hors de l'interface.
 
 `python decor_<nom>.py ../backgrounds/<lieu>/<écran>/<nom>_plan.png <zones.png>`
 
@@ -128,7 +128,7 @@ ComfyUI peint toute la scène en une génération, en partant du plan, sans cart
 |:---|:---|:---|
 | Taille | 1280 × 720 : une grille de 160 × 90, le quart exact de celle du décor | `--size` |
 | L'image de départ | Le plan, `<nom>_plan.png` | `--guide plan` |
-| Débruitage | 0.8 : le plan est suivi. À 0.9, l'image a plus de matière, et une graine sur trois replace un objet derrière une carte | `--denoise` |
+| Débruitage | 0.8 : le plan est suivi. À 0.9, l'image a plus de matière, et une graine sur trois replace un objet derrière une carte ; un objet unique, comme une lune, s'y dédouble ou se déplace (essai 7) | `--denoise` |
 | Profondeur, contours | 0 : aucune carte de guidage | `--depth 0 --edges 0` |
 | LoRA | 0.8, comme les fonds de fenêtre | `--lora` |
 
@@ -201,21 +201,22 @@ On reprend à la main les bords d'objets et les détails à préciser, en couleu
 | Étape | État | Outil |
 |:---|:---|:---|
 | 1. Le brief | Repris des créatures ; **jamais mené en session** : le décor de la forêt est né des essais, son brief les résume | — |
-| 2. Le plan | Éprouvé sur un décor, le 24/11 | Un script par décor ; `decor_forest_combat.py` pour modèle |
-| 3. La passe d'ensemble | Éprouvée sur un décor, trois graines, à 0.8 et 0.9 | `comfy_gen.py` |
-| 4. La passe de détail | Éprouvée sur un décor et une graine : aucun raccord, grille nette | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt |
-| 5. L'import | Éprouvé en 640 × 360, en couleurs peintes | `window_import.py --couleurs-peintes` |
+| 2. Le plan | Éprouvé sur deux décors, le 24/11 | Un script par décor ; `decor_forest_combat.py` et `decor_graveyard_combat.py` pour modèles |
+| 3. La passe d'ensemble | Éprouvée sur deux décors, trois graines chacun, à 0.8 et 0.9 | `comfy_gen.py` |
+| 4. La passe de détail | Éprouvée sur deux décors, une graine chacun : aucun raccord, grille nette | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt, et a peint les deux pas de celui du cimetière |
+| 5. L'import | Éprouvé en 640 × 360, en couleurs peintes, sur deux décors | `window_import.py --couleurs-peintes` |
 | 6. Le contrôle en situation | Fait sur une maquette, pas sur le jeu | `decor_controle.py` |
 | 7. La retouche | Pas encore faite sur un décor | Aseprite |
 
 **Ce qui reste ouvert :**
 - **Les calques.** Le décor est une image à plat ; la règle du calque par objet n'est pas tenue.
-- **Un second décor.** Tout repose sur la forêt du combat : une image, une graine. Le prochain décor dira ce qui tient de la méthode et ce qui tenait du sujet — une forêt se recompose sans dommage, une salle ou un campement peut-être pas.
+- **Un intérieur.** La forêt et le cimetière sont deux extérieurs, qui se recomposent sans dommage : un arbre ou une tombe déplacés restent à leur place. Une salle ou un campement, aux lignes droites et aux objets comptés, peut-être pas.
+- **La dérive du dernier pas.** Sur le cimetière, le ciel a viré du bleu sarcelle au bleu nuit et s'est chargé de nuages entre 2560 × 1440 et 5120 × 2880 (essai 7). Un dernier pas à 0.5 resterait peut-être plus près du premier : à éprouver.
 - **La carte des zones** est lue dans le code, pas mesurée sur une capture du jeu.
 
 ## Les essais
 
-Six essais, les 23 et 24/11/2026, ont mené à cette méthode. Les quatre premiers éprouvent la passe de détail par tuiles, sur une scène existante, le campement ; les deux derniers partent d'un décor neuf, à la demande du propriétaire. Chaque essai est écrit ici, avec ses mesures.
+Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la rejoue sur un second sujet. Les quatre premiers éprouvent la passe de détail par tuiles, sur une scène existante, le campement ; les deux suivants partent d'un décor neuf, à la demande du propriétaire. Chaque essai est écrit ici, avec ses mesures.
 
 | Essai | Ce qu'on fait | Ce qu'il dit |
 |:---|:---|:---|
@@ -225,6 +226,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode. Les quatre premie
 | 4. Le décor entier, par tuiles | Le campement en 640 × 360, 25 tuiles | **Échec** : chaque tuile repeint un campement, et les raccords se voient |
 | 5. L'image entière, sans tuiles | La forêt, composée librement, repeinte d'un coup | **Aucun raccord.** Le décor garde ses couleurs peintes (B80), en 640 × 360 |
 | 6. La composition | Un plan en aplats comme image de départ | Le plan tient la composition ; il faut deux pas pour retrouver la matière. **Premier décor validé** |
+| 7. Un second sujet | Le cimetière, par toute la chaîne, sans changer un réglage | La méthode tient ; le dernier pas fait dériver le ciel. **Second décor validé** |
 
 **L'essai 1, mené le 23/11/2026.** Sur le campement, avec le prompt de l'ensemble, sans recouvrement ni guide de couleur, sur une seule graine. Les images et leurs planches sont dans `.work/tuiles/` (`essai1*`), hors du dépôt.
 
@@ -379,6 +381,28 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode. Les quatre premie
 
 **Le dernier pas, sur la graine 832745, retenue par le propriétaire :** la repeinte de 2560 × 1440 passe à 5120 × 2880 à 0.6, en 14 min 28 s, puis s'importe en couleurs peintes en 12 secondes. La grille de 640 × 360 est nette à 54,1 × 119,3 ; il reste une trace de celle de 320 × 180, à 10,7 × 7,0, que l'œil ne lit pas. Sous le combat, les troncs de second plan, sourds et lointains, ne disputent pas les cartes : la Faucheuse se détache. C'est le premier décor de la chaîne entière — un plan, une image d'ensemble, deux repeintes, l'import — en dix-sept minutes de génération. **Validé par le propriétaire le 24/11**, il est rangé dans `backgrounds/forest/combat/`.
 
+**L'essai 7, un second sujet, mené le 24/11/2026.** La méthode ne reposait que sur la forêt. Le propriétaire a demandé un autre décor : un cimetière, choisi sur douze esquisses libres (quatre idées, trois graines). Il a retenu « sous les arbres morts », graine 121064 : un grand arbre mort à gauche, une grande lune pâle à droite, des croix, un sentier clair.
+
+**L'esquisse sous le combat.** Posée telle quelle sous la maquette, elle perd l'essentiel : la lune est coupée par la dernière carte d'ennemi et ses languettes, les tombes et le sentier passent sous la main, la ramure tombe derrière les deux premières cartes. Le plan (`decor_graveyard_combat.py`) garde ses éléments et les replace : l'horizon et ses tombes remontent dans la bande restée visible, entre la rangée des ennemis et la main ; la lune descend dans cette bande, à droite du héros ; le tronc se range à gauche de la première carte.
+
+**La passe d'ensemble,** avec les réglages de la forêt, 28 à 30 secondes par image :
+
+| Débruitage | Ce qu'on voit, sur trois graines |
+|:---|:---|
+| 0.8 | Le plan est suivi sur les trois : l'arbre à gauche, la lune visible à droite du héros, le haut calme. Une graine peint un arbre feuillu |
+| 0.9 | Le plan lâche sur l'objet unique : une graine peint deux lunes, une autre enterre la lune à moitié derrière les tombes |
+
+**Le premier pas de détail,** sur les trois images à 0.8, en 2560 × 1440 à 0.8, 127 à 128 secondes chacune : les grilles de 320 × 180 sont nettes, de 50 à 82. Sous le combat, la graine 121064 garde ses croix dans la bande visible, des deux côtés du héros ; la graine 832745 les redescend sous la main et laisse la bande presque vide ; la graine 293903 garde son arbre feuillu.
+
+**Le dernier pas, sur la graine 121064 :** 5120 × 2880 à 0.6, en 14 min 29 s, puis l'import en couleurs peintes. La grille de 640 × 360 est nette à 91,1 × 99,1 ; il reste de celle de 320 × 180 une trace à 8,6 × 9,7. La composition du plan a tenu jusqu'au bout. **Validé par le propriétaire le 24/11**, le décor est rangé dans `backgrounds/graveyard/combat/`.
+
+**Ce que dit l'essai 7 :**
+- **La méthode tient sur un autre sujet,** sans changer un réglage, en dix-sept minutes de génération pour l'image retenue.
+- **Le plan sert aussi à reprendre une esquisse libre** que le propriétaire a choisie : il en garde les objets et les replace hors de l'interface.
+- **0.9 est à éviter à la passe d'ensemble** quand le décor porte un objet unique : il se dédouble ou se déplace.
+- **Le dernier pas a fait dériver le ciel :** du bleu sarcelle au bleu nuit, avec des nuages derrière la rangée des ennemis et un petit disque pâle, comme une seconde lune, laissé à la retouche. Le premier pas ne portait rien de cela.
+- **Ce que l'essai ne dit pas :** c'est encore un extérieur. Le cimetière n'a pas de fonds de fenêtre : il a été jugé sous ceux de la forêt.
+
 **Une carte de profondeur tirée du plan** (les troncs devant, le sol en pente, le fond loin), seule ou avec le plan, donne des images raides, aux plans découpés comme un décor de théâtre : écartée.
 
 **Ce qu'on en retient :**
@@ -502,6 +526,6 @@ L'outil fait, dans l'ordre :
 
 **Avec la première méthode** s'y ajoutent `<nom>.aseprite`, la structure rendue par le code, un calque par objet ; `<nom>_guide_x<n>.png`, `<nom>_depth.png` et `<nom>_edges.png`, l'image guide et ses cartes de guidage ; et `<nom>_mots.json`, les mots de chaque calque pour le prompt des tuiles.
 
-Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
+Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Le second est `backgrounds/graveyard/combat/`, validé le même jour ([brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
