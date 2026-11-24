@@ -86,10 +86,15 @@ CONTROLS = {
 }
 
 
-def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, size):
+VAE_TILES = dict(tile_size=1024, overlap=64, temporal_size=64, temporal_overlap=8)  # le VAE par morceaux, pour une grande image
+
+
+def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, size, tiled=False):
     """Le graphe ComfyUI, au format API : chaque noeud par son numero.
 
-    controls : [(image envoyee, type Union, force, fin d'effet)], appliques l'un apres l'autre."""
+    controls : [(image envoyee, type Union, force, fin d'effet)], appliques l'un apres l'autre.
+    tiled : l'image est encodee et decodee par morceaux, ce qu'une image de 5120 x 2880 demande a
+    une carte de 8 Go ; le debruitage, lui, porte toujours sur l'image entiere."""
     def scaled(node):
         return {"class_type": "ImageScale", "inputs": {"image": [node, 0], "upscale_method": "bicubic", "width": size[0], "height": size[1], "crop": "disabled"}}
 
@@ -113,6 +118,9 @@ def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, si
     g["8"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["7", 0], "vae": ["1", 2]}}
     g["9"] = {"class_type": "KSampler", "inputs": {"model": ["2", 0], "positive": cond[0], "negative": cond[1], "latent_image": ["8", 0], "seed": seed, "steps": STEPS, "cfg": CFG, "sampler_name": SAMPLER, "scheduler": SCHEDULER, "denoise": denoise}}
     g["98"] = {"class_type": "VAEDecode", "inputs": {"samples": ["9", 0], "vae": ["1", 2]}}
+    if tiled:
+        g["8"] = {"class_type": "VAEEncodeTiled", "inputs": dict(g["8"]["inputs"], **VAE_TILES)}
+        g["98"] = {"class_type": "VAEDecodeTiled", "inputs": dict(g["98"]["inputs"], **VAE_TILES)}
     g["99"] = {"class_type": "SaveImage", "inputs": {"images": ["98", 0], "filename_prefix": "heros_draft/generation"}}
     return g
 

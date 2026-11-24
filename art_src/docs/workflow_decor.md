@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode écrite, pas encore éprouvée.** Les étapes 1 à 3 reprennent ce que les trois décors existants ont appris. **L'étape 4, la passe de détail par tuiles, a son outil, et ses quatre essais sont menés** : un décor entier de 640 × 360 se peint et s'importe de bout en bout, sa grille est nette, mais **ses tuiles réinventent la scène et leurs raccords se voient** (essai 4). **Les essais 5 et 6 ouvrent une autre voie : un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle a donné le premier décor validé, la forêt du combat, sans raccord ; les étapes 2 à 5 de ce document ne sont pas encore réécrites d'après elle. L'outil du contrôle en situation reste à écrire. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais à mener »](#les-essais-à-mener) dit ce qu'il faut mesurer avant de produire un vrai décor. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode éprouvée sur un décor.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur une seule image et une seule graine, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -8,24 +8,24 @@ Ce document remplace la section « Fond d'écran » du [workflow des fonds](work
 
 **Un décor est l'image posée derrière tout un écran** : le combat, l'aire de repos, une boutique. Il se désigne par un lieu et par un écran ([cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md), B66 et B76) : la forêt a son décor de combat, elle aura un jour son décor de repos.
 
-**Il se dessine en 640 × 360** (B74). Le jeu l'agrandit par pixels entiers : 3 pixels d'écran par pixel en 1080p, 4 en 1440p, 6 en 4K.
+**Il se dessine en 640 × 360** (B74, confirmé sous un combat par B80). Le jeu l'agrandit par pixels entiers : 3 pixels d'écran par pixel en 1080p, 4 en 1440p, 6 en 4K. Ce sont ces trois écrans qui fixent la taille : seuls 640 de large et ses diviseurs tombent juste sur les trois.
 
-**Une génération ne peut pas le peindre d'un coup.** C'est ce qui sépare ce workflow de celui des créatures :
-- le LoRA pixel art peint des cases de 8 pixels : une image générée porte une grille huit fois plus petite qu'elle ;
-- le générateur compose proprement autour d'un mégapixel, soit environ 1280 × 720 ;
-- une génération donne donc au mieux une grille de 160 × 90 cases. Un décor de 640 × 360 en demande seize fois plus : il faudrait générer en 5120 × 2880.
+**Une génération ne peut pas le composer d'un coup, mais elle peut le repeindre.** C'est ce qui sépare ce workflow de celui des créatures :
+- le LoRA pixel art peint des cases de 8 pixels : une image générée porte une grille huit fois plus petite qu'elle, et un décor de 640 × 360 se peint donc en 5120 × 2880 ;
+- le générateur ne compose proprement qu'autour d'un mégapixel, soit environ 1280 × 720 : une grille de 160 × 90, seize fois trop grosse ;
+- **cette limite vaut pour composer une image, pas pour la repeindre** : une image déjà composée se repeint entière, bien plus grande, sur une carte de 8 Go (essai 5).
 
 **Le décor se peint donc en deux passes :**
-1. **une passe d'ensemble**, en une génération : elle fixe la composition, la lumière et les couleurs, sur une grille quatre fois trop grosse ;
-2. **une passe de détail par tuiles** : l'image d'ensemble est agrandie, puis repeinte morceau par morceau, chaque morceau à la taille qu'une génération sait peindre. L'essai du 23/11 dit que cet agrandissement se fait par pas de deux (étape 4).
+1. **une passe d'ensemble**, en une génération de 1280 × 720 : elle fixe la composition, la lumière et les couleurs, sur une grille quatre fois trop grosse ;
+2. **une passe de détail** : l'image entière est agrandie et repeinte d'un coup, en deux pas, jusqu'à 5120 × 2880. Sans tuiles, il n'y a aucun raccord.
 
-**La structure vient du code, avant toute génération.** L'interface recouvre une grande part de l'écran : la composition ne se laisse pas au hasard. Le code pose la perspective, les objets et leur profondeur ; le générateur n'ajoute que le détail. C'est aussi ce qui tient les tuiles ensemble : chacune reçoit le morceau de la même structure.
+**La composition vient du code, avant toute génération.** L'interface recouvre une grande part de l'écran : la composition ne se laisse pas au hasard. Un plan en aplats, dessiné par le code d'après la place de l'interface, sert d'image de départ à la passe d'ensemble ; le générateur y met la matière.
 
 **Les règles communes aux décors :**
-- **Un calque par objet,** complet, posé à sa profondeur, avec sa lumière cuite dedans. Seules les surfaces — le ciel, le sol — n'ont rien derrière elles.
-- **Le décor garde ses couleurs peintes** (tranché par le propriétaire le 24/11, essai 5) : l'import lit la grille, il ne ramène pas le décor sur la palette Apollo, qui lui retire sa mousse, le modelé de ses rochers et la profondeur de son fond. Sous un combat, c'est aussi ce qui détache le décor des cartes, restées en Apollo exact. La phrase de palette du prompt continue de tenir le décor dans les tons d'Apollo.
-- **Le décor reste derrière.** Sur un écran de combat se superposent trois grilles : en 1080p, un pixel de décor fait 3 pixels d'écran, un pixel de cadre 2, un pixel de créature 1. Le décor porte donc moins de détail que ce qu'il reçoit, et reste calme là où l'interface se pose.
+- **Le décor garde ses couleurs peintes** (B80, tranché par le propriétaire le 24/11) : l'import lit la grille, il ne ramène pas le décor sur la palette Apollo, qui lui retire sa mousse, le modelé de ses rochers et la profondeur de son fond. Sous un combat, c'est aussi ce qui détache le décor des cartes, restées en Apollo exact. La phrase de palette du prompt continue de tenir le décor dans les tons d'Apollo.
+- **Le décor reste derrière.** Sur un écran de combat se superposent trois grilles : en 1080p, un pixel de décor fait 3 pixels d'écran, un pixel de cadre 2, un pixel de créature 1. Le décor reste calme là où l'interface se pose.
 - **Pas de brume**, comme pour les fonds de fenêtre : elle aplatit l'image et tue le détail.
+- **Un calque par objet,** complet, posé à sa profondeur, avec sa lumière cuite dedans : c'est la règle de toutes les images du jeu, et **cette chaîne ne la tient pas encore.** Elle donne une image à plat. La structure par le code et l'import par calques de [la première méthode](#la-première-méthode--la-structure-les-tuiles-limport-par-calques) restent la piste pour y revenir.
 
 ## Les étapes
 
@@ -92,114 +92,97 @@ Ce qui reste visible d'un décor de combat : les intervalles entre les cartes, l
 (dans chaque bloc : les réponses, puis le résumé validé)
 
 ## Le prompt en cours
-Le prompt, les exclusions, les mots de chaque calque, les réglages des deux passes.
+Le prompt, les exclusions, les réglages des deux passes.
 
 ## Le journal des tours
 | Tour | Passe | Ce qui change | Graine retenue | Pourquoi |
 |:---|:---|:---|:---|:---|
 
 ## Après la génération
-- La passe de détail : le découpage en tuiles, le recouvrement, le débruitage, la netteté de la grille.
-- Les tuiles relancées, et pourquoi.
-- L'import : les calques ignorés, les couleurs exclues.
+- La passe de détail : le débruitage de chaque pas, la netteté de la grille.
+- L'import, et le contrôle en situation : ce qu'on y a vu.
+- La retouche.
 ```
 
-### 2. Écrire la structure par le code
+### 2. Écrire le plan par le code
 
-**Un script par décor, `decor_<nom>.py`,** construit sur `scene.py`, à partir d'un script de scène existant (`bg_camp.py` est le plus proche). Il ne contient que ce qui est propre au décor.
+**Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle.
 
-- **La scène fait 640 × 360.** `scene.py` accepte une taille, mais ses constantes et les trois scripts existants sont écrits pour 320 × 180 : un décor neuf déclare sa taille lui-même.
-- **Une vraie perspective**, calculée pixel par pixel, et un calque complet par objet, posé à sa profondeur.
-- **La palette Apollo** dès cette étape.
-- **Le script écrit** le `.aseprite` de base, l'image guide et les deux cartes de guidage : la profondeur et les contours. Pour la passe de détail, `decor_tuiles.py` les agrandit à 8 fois la taille de la scène, 5120 × 2880, et chaque tuile y découpe son morceau ; il ramène les contours, épais d'une case, à 4 pixels (`--trait`).
+`python decor_<nom>.py ../backgrounds/<lieu>/<écran>/<nom>_plan.png <zones.png>`
 
-**Ce que la structure a appris sur les trois premiers décors :**
-- **Une carte des contours trop chargée** — chaque pavé, chaque brique — fige le générateur. On simplifie les formes avant de tracer les contours.
-- **Les éléments fins se perdent.** Il faut les dessiner assez gros dans la géométrie.
-- **Une forme ambiguë est réinterprétée** par le générateur, à sa façon. Chaque forme claire du guide doit être sans ambiguïté.
-- **La lumière se cuit dans chaque objet**, jamais dans un calque de lumière posé par-dessus. Sinon, masquer un objet laisse sa lueur flotter.
+- **Le plan se cale sur la carte des zones** du bloc 2 du brief : ce que l'interface recouvre reste calme, ce qui doit se voir tombe dans ce qui reste visible. Pour le combat de la forêt : un fond lointain et pâle derrière la rangée des ennemis, les deux gros troncs aux bords de l'écran, le sol, son sentier et ses rochers dans le bas.
+- **Des aplats aux couleurs du lieu**, à peine floutés pour le lointain. Le générateur garde la place et la teinte des masses, et y met la matière.
+- **Le second argument écrit le plan sous la carte des zones**, celle de `decor_controle.py`.
 
-**À montrer au propriétaire avant toute génération :** le rendu de la structure, agrandi, avec la carte des zones posée dessus. Rien d'important ne passe sous l'interface ; ce que l'interface vient habiter est à sa place.
+**À montrer au propriétaire avant toute génération :** le plan sous la carte des zones. Rien d'important ne passe sous l'interface ; ce que l'interface vient habiter est à sa place.
+
+**Ce que le plan ne fait pas :** il ne donne ni calques, ni carte de profondeur. Une carte de profondeur tirée du plan a été essayée : elle raidit l'image, aux plans découpés comme un décor de théâtre (essai 6).
 
 ### 3. La passe d'ensemble
 
-ComfyUI peint toute la scène en une génération, guidé par l'image guide, la profondeur et les contours :
+ComfyUI peint toute la scène en une génération, en partant du plan, sans carte de guidage :
 
-`python comfy_gen.py <préfixe> "<prompt>" --size 1280x720 --graines 3 --exclure "<exclusions>"`
+`python comfy_gen.py ../backgrounds/<lieu>/<écran>/<nom> "<prompt>" --guide plan --depth 0 --edges 0 --denoise 0.8 --size 1280x720 --lora 0.8 --seed <a>,<b>,<c> --exclure "<exclusions>"`
 
 | Réglage | Valeur | Option |
 |:---|:---|:---|
 | Taille | 1280 × 720 : une grille de 160 × 90, le quart exact de celle du décor | `--size` |
-| Denoise | 0.7 | `--denoise` |
-| Profondeur | 0.7 | `--depth` |
-| Contours | 0.45 | `--edges` |
-| LoRA | 0.9 | `--lora` |
+| L'image de départ | Le plan, `<nom>_plan.png` | `--guide plan` |
+| Débruitage | 0.8 : le plan est suivi. À 0.9, l'image a plus de matière, et une graine sur trois replace un objet derrière une carte | `--denoise` |
+| Profondeur, contours | 0 : aucune carte de guidage | `--depth 0 --edges 0` |
+| LoRA | 0.8, comme les fonds de fenêtre | `--lora` |
 
-Ces réglages sont ceux des trois décors existants, à une différence près : ils ont été générés en 1360 × 768, dont la grille de 170 × 96 ne tombe sur aucun multiple de la grille visée. La taille de 1280 × 720 est à confirmer au premier essai.
-
-**Le gabarit du prompt** est celui des fonds de fenêtre ([workflow des fonds de fenêtre](workflow_fond.md), « Le gabarit du prompt »), sans les mots qui gardent la place d'une créature :
-
-> dark fantasy pixel art illustration of **[le lieu et le sujet]**, empty scene, highly detailed background with **[les matières et les éléments du lieu]**, moody lighting, **[la phrase de palette]**, 16-bit, crisp pixels, highly detailed
+**Le prompt est celui des fonds de fenêtre du lieu** ([workflow des fonds de fenêtre](workflow_fond.md), « Le gabarit du prompt »), avec leurs exclusions : c'est ce qui donne au décor la même forêt que celle des cartes. On y ajoute ce que le plan pose — pour la forêt, « two massive pine trunks framing the left and right edges » et « distant thin trunks fading into pale light in the center » — et on en retire « a small open clearing in the center », qui gardait la place d'une créature.
 
 **Les exclusions de base** (`--exclure`), à compléter selon le lieu :
 
-> halloween, cartoon, cute, plain background, fog, mist, haze, animal
+> halloween, cartoon, cute, plain background, fog, mist, haze, people, person, character, creature, skeleton, animal
 
-`comfy_gen.py` ajoute les siennes tout seul, dont les personnages et les créatures : un décor reste vide.
+`comfy_gen.py` ajoute les siennes tout seul. Composer sans plan, en génération libre, donne la même forêt mais ignore l'interface : ses gros troncs passent derrière les cartes, et une bande sombre borde l'image (essai 5).
 
-**Trois graines par tour, une chose changée à la fois.** Le propriétaire choisit l'image d'ensemble sur trois questions seulement : la composition, la lumière, les couleurs. Son détail ne compte pas : il sera repeint.
+**Trois graines par tour, une chose changée à la fois.** Chaque image se pose sous le combat avant d'être jugée :
 
-### 4. La passe de détail, par tuiles
+`python decor_controle.py .work/comfy/<image d'ensemble>.png <sortie.png>`
 
-**À éprouver.** L'outil existe, `decor_tuiles.py`, et ses quatre essais sont menés (voir [les essais](#les-essais-à-mener)) : le dernier échoue sur la fidélité. Les réglages qui suivent sont des points de départ, pas des valeurs trouvées.
+Le propriétaire choisit l'image d'ensemble sur trois questions seulement : la composition, la lumière, les couleurs. Son détail ne compte pas : il sera repeint.
 
-`python decor_tuiles.py peindre <scène> <préfixe> <image d'ensemble> "<prompt>" --exclure "<exclusions>"`, puis `python decor_tuiles.py assembler <nom> <image assemblée.png>`.
+### 4. La passe de détail : l'image entière, repeinte en deux pas
 
-L'outil fait, dans l'ordre :
+`python decor_repeindre.py <image d'ensemble> 2560x1440`, puis `python decor_repeindre.py <repeinte en 2560 × 1440> 5120x2880 --denoise 0.6`
 
-1. **Agrandir l'image de départ** à 8 fois la taille visée. **Par pas de deux** (essai du 23/11) : l'image d'ensemble, en grille de 160 × 90, se repeint d'abord en 320 × 180, par quatre tuiles ; l'image assemblée se repeint ensuite en 640 × 360, par seize tuiles. D'un seul pas de quatre, la tuile réinvente la scène. Chaque pas se lance par `--taille`, sur l'image assemblée du pas d'avant : `--taille 320x180`, puis `--taille 640x360`.
-2. **Découper en tuiles de 1280 × 720**, soit 160 × 90 cases chacune. Seize tuiles couvrent le décor sans recouvrement ; avec recouvrement, il en faut davantage. **Chaque tuile se pose sur un multiple de 8 pixels**, pour que les grilles de deux tuiles voisines restent en phase.
-3. **Faire repeindre chaque tuile** par ComfyUI, en partant de son morceau de l'image agrandie, guidée par son morceau des cartes de profondeur et de contours. La même graine, le même style ; le prompt de chaque tuile est décrit plus bas.
-4. **Assembler les tuiles.** Dans un recouvrement, le raccord se coupe sur une ligne de cases, jamais au milieu d'une case. **Avec `--continuer`, une tuile reprend tel quel ce que ses voisines déjà peintes couvrent, et ne peint que le reste :** un objet n'est plus coupé d'une tuile à l'autre (essai 2). Cela ne suffit pas : sur une surface unie, la texture et le ton changent encore là où une tuile commence à peindre (essai 4).
-5. **Mesurer la netteté de la grille**, en largeur et en hauteur : celle de chaque tuile dès qu'elle est peinte, puis celle de l'image assemblée. Le minimum est 3 ; une génération directe atteint 30.
+L'outil agrandit l'image de départ et la fait repeindre entière par ComfyUI. Il relit dans l'image son prompt, ses exclusions, sa graine et la force du LoRA, et les reprend tels quels. Il affiche la netteté de la grille peinte, et ce qu'il reste de celle de l'image de départ.
 
-**Pour essayer sans tout peindre :** `--tuiles 0,1 2,1` ne repeint que les tuiles nommées, par colonne et rangée ; `--nom` range un essai dans son propre dossier ; `--a-blanc` affiche le plan des tuiles et leurs prompts sans rien générer. Une tuile se relance seule : son image remplace l'ancienne, et l'assemblage se refait.
+| Pas | Taille | Débruitage | Durée | Ce qu'il fait |
+|:---|:---|:---|:---|:---|
+| 1 | 2560 × 1440, une grille de 320 × 180 | 0.8 | 2 minutes | Il redonne sa matière à l'image — l'écorce, les racines, la mousse — et efface la grosse grille. La scène est en partie recomposée, sans sortir du sujet |
+| 2 | 5120 × 2880, la grille du décor | 0.6 | 14 minutes | Il précise les formes sans les déplacer |
 
-**Les réglages, et ce que les essais en disent :**
+- **Le premier pas se juge avant le second.** L'image se pose sous le combat (`decor_controle.py`) : la matière est-elle revenue, la composition a-t-elle tenu ? On ne paie le quart d'heure du second pas que sur une image retenue.
+- **Une image née d'un plan passe par les deux pas.** Elle porte les aplats du plan : repeinte d'un seul pas jusqu'à 5120 × 2880, elle les garde, et le décor sort plat (essai 6). Une image composée librement, qui porte déjà sa matière, tient en un seul pas à 0.7 (essai 5).
+- **La netteté de la grille** se lit à la fin de chaque pas. Le minimum est 3 ; le décor de la forêt atteint 54 × 119. Il peut rester une trace de la grille du pas précédent — 10 × 7 sur ce décor — que l'œil ne lit pas.
+- **Au-delà de 2560 × 1440, l'image est encodée et décodée par morceaux**, pour tenir sur une carte de 8 Go ; le débruitage, lui, porte toujours sur l'image entière. C'est ce qui garantit l'absence de raccord.
 
-| Réglage | Le point de départ | Ce qui le borne |
-|:---|:---|:---|
-| Le débruitage (`--denoise`) | 0.5 au premier pas, 0.6 au second | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
-| Le recouvrement (`--recouvrement`, en cases) | Avec `--continuer`. Essayé à 40 cases, puis à 20 demandées (essai 4) | Sans recouvrement, les raccords se voient ; avec, le nombre de tuiles monte. L'outil répartit les tuiles d'un bord à l'autre : pour 20 cases demandées sur un décor de 640 × 360, le recouvrement réel est de 40 cases en largeur et de 22 en hauteur. Le rétrécir n'a pas retenu les inventions |
-| Un guide de couleur (`--couleur`) | Sans, puis le guide « tile » de ControlNet Union, nourri de l'image d'ensemble | Il tient les couleurs d'une tuile à l'autre ; trop fort, il garde aussi les grosses cases de la passe d'ensemble. **Écarté à 0.5 :** la grille fine ne se forme pas. Une force plus basse n'a pas été essayée |
-| L'agrandissement de l'image de départ (`--agrandir`) | Bicubique | Au plus proche, la grille revient plus nette en largeur à 0.5 (76 contre 26), sans autre différence visible : à confirmer |
+**Ce que les essais disent des réglages :** à 0.5, le premier pas rend une image molle, aux aplats lissés ; il lui faut 0.7 à 0.8. Par tuiles, ces mêmes débruitages faisaient réinventer la scène à chaque tuile : l'image entière voit toute la scène, et le prompt lui convient.
 
-**Le prompt d'une tuile ne décrit pas la scène entière.** Une tuile ne voit qu'un seizième du décor : lui donner le prompt de l'ensemble, c'est lui demander une clairière dans un coin de ciel. **La proposition, à éprouver :** chaque calque de la scène déclare ses mots, comme la recette de calques d'une créature, et le prompt d'une tuile réunit le style commun et les mots des calques qu'elle montre — la structure sait quel objet occupe chaque pixel. `--mots <fichier.json>` le fait : un calque compte dès qu'il occupe 8 % de la tuile (`--seuil`). Sans ce fichier, toutes les tuiles reçoivent le prompt donné.
+### 5. Ramener sur la grille
 
-```json
-{
-  "style": "dark fantasy pixel art, moody lighting, <phrase de palette>, 16-bit, crisp pixels, highly detailed",
-  "mots": {"Ciel": "night sky, thin clouds", "Troncs": "gnarled tree bark, roots", "Sol": "forest floor, moss, dead leaves"}
-}
-```
+`python window_import.py <image de 5120 × 2880> ../backgrounds/<lieu>/<écran>/<nom>_detail.aseprite --taille 640x360 --couleurs-peintes --source ../backgrounds/<lieu>/<écran>/<nom>_detail_source.png`
 
-**Le coût.** Une tuile de 1280 × 720 prend de 30 à 55 secondes, selon le débruitage. Avec recouvrement, le premier pas compte 9 tuiles et le second 25 : mesuré à l'essai 4, le second pas prend 16 minutes à lui seul, à 38 secondes la tuile. Les deux pas d'un décor prennent donc un peu plus de vingt minutes, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
+- **La grille se lit sur l'image elle-même.** Générée à 8 fois la taille du décor, l'image porte une grille qui tombe juste : l'import lit le cœur de chaque case.
+- **Chaque case garde sa couleur peinte** (B80) : `--couleurs-peintes`. Le `.aseprite` reste en couleurs libres, la palette Apollo en nuancier pour la retouche. Sans l'option, l'import ramène l'image sur Apollo, comme pour un fond de fenêtre : sur un décor, il trame le sol et lui retire sa mousse (essai 5).
+- **Le décor tient en un seul calque.** `--source` garde l'image de 5120 × 2880 à côté, intacte.
 
-### 5. Ramener sur la grille et découper en calques
-
-`python bg_import.py <scène> <image assemblée> <sortie.aseprite> <copie PNG de la source>`
-
-- **La grille se lit sur l'image elle-même.** Générée à 8 fois la taille de la scène, l'image porte une grille qui tombe juste : l'import lit le cœur de chaque case, au lieu d'aligner sur les contours et de moyenner des blocs. C'est ce repli, pris par les trois décors existants, qui leur donne leur trame en damier.
-- **Chaque pixel va au calque de l'objet visible à cet endroit** dans la structure ; les autres calques gardent le rendu de l'étape 2.
-- **Le manifeste de la scène guide l'import :** les calques qui sont des surfaces, ceux qu'il ignore, les couleurs qu'il n'utilise pas.
-
-**Sur une scène de 640 × 360, l'import prend 21 secondes** (essai 4) : il lit une grille de 8,00 × 8,00 pixels, sans décalage, et l'aller-retour dans Aseprite rend le même fichier. Il lit la taille de la grille sur le rendu de la scène : une scène écrite en 320 × 180 s'importe en 320 × 180, quelle que soit l'image qu'on lui donne.
-
-**À contrôler :** l'aperçu agrandi. Aucun bloc de 2 × 2 ou de 4 × 4 ne doit rester ; aucun raccord de tuile ne doit se lire.
+L'import prend 12 secondes, et l'aller-retour dans Aseprite rend le même fichier.
 
 ### 6. Contrôler en situation, puis faire valider
 
-Le décor se juge sous son interface, à la taille réelle du jeu, jamais seul. **L'outil reste à écrire** ; les maquettes du 23/11/2026 en donnent le principe : le décor agrandi trois fois, un combat complet posé dessus — des cartes d'ennemi des tiers 1 à 3 dans leurs cadres, sur les fonds de fenêtre du lieu, avec leurs barres et leurs languettes, le héros, la main — et la carte des zones pour ce que la maquette ne montre pas.
+Le décor se juge sous son interface, à la taille réelle du jeu, jamais seul :
+
+`python decor_controle.py ../backgrounds/<lieu>/<écran>/<nom>_detail.aseprite <sortie.png> [--zones]`
+
+L'outil agrandit le décor à la taille d'un écran en 1080p et pose dessus un combat : une rangée d'ennemis dans les cadres de leurs tiers, sur les fonds de fenêtre du lieu, avec leurs barres et leurs languettes, le héros, et une main de cinq cartes. Il accepte aussi une image générée — l'image d'ensemble, une repeinte — qu'il lit à un pixel par case : c'est ainsi qu'on juge les étapes 3 et 4. `--zones` ajoute, en voile clair, ce que l'interface recouvre.
+
+**C'est une maquette, pas le jeu.** Ses places viennent des maquettes du 23/11 (B72, B73, B77), ses cadres sont ceux, provisoires, de `frame_tier.py`, et les cartes de sa main sont factices. Elle se revérifie sur le jeu une fois la vague du visuel livrée.
 
 Quatre questions :
 - Les cartes se détachent-elles du décor, et leurs barres se lisent-elles ?
@@ -207,34 +190,41 @@ Quatre questions :
 - Le lieu se lit-il dans ce qui reste visible ?
 - Le décor et les fonds de fenêtre du même lieu vont-ils ensemble ?
 
-Tant que le propriétaire ne l'a pas validé, on revient aux étapes précédentes : à la structure pour une composition, à la passe d'ensemble pour une lumière ou une couleur, à une tuile pour un détail.
+Tant que le propriétaire ne l'a pas validé, on revient aux étapes précédentes : au plan pour une composition, à la passe d'ensemble pour une lumière ou une couleur, au premier pas de la passe de détail pour la matière.
 
 ### 7. Retoucher dans Aseprite
 
-On reprend à la main les raccords, les bords d'objets et les détails que la grille a perdus. Le chemin du `.aseprite` vers l'image du jeu est fixé par la vague qui pose le décor dans le jeu, pas par ce workflow.
+On reprend à la main les bords d'objets et les détails à préciser, en couleurs libres, la palette Apollo en nuancier. Le chemin du `.aseprite` vers l'image du jeu est fixé par la vague qui pose le décor dans le jeu, pas par ce workflow.
 
 ## Ce qui est éprouvé, et ce qui ne l'est pas
 
 | Étape | État | Outil |
 |:---|:---|:---|
-| 1. Le brief | Repris des créatures ; jamais mené pour un décor | — |
-| 2. La structure | Éprouvée sur trois décors, en 320 × 180 ; jamais en 640 × 360 | `scene.py` et un script par décor : existent. `decor_tuiles.py` agrandit lui-même les cartes de guidage |
-| 3. La passe d'ensemble | Éprouvée en 1360 × 768 ; 1280 × 720 à confirmer | `comfy_gen.py` : existe |
-| 4. La passe de détail | **Essais 1 à 4 menés, les 23 et 24/11** : elle tient par pas de deux, à 0.5 puis 0.6, et un décor entier de 640 × 360 porte une grille nette. **Elle échoue sur deux points** : avec le prompt de l'ensemble, les tuiles réinventent la scène ; et leurs raccords se voient sur les surfaces unies, malgré `--continuer` | `decor_tuiles.py` : existe. Le découpage, les mots par calque et l'assemblage sont vérifiés hors génération |
-| 5. L'import | **Éprouvé en 640 × 360 le 24/11** : 21 secondes, la grille lue telle quelle | `bg_import.py` : existe |
-| 6. Le contrôle en situation | Fait à la main, pour les maquettes du 23/11 | **À écrire** |
-| 7. La retouche | — | Aseprite |
+| 1. Le brief | Repris des créatures ; **jamais mené en session** : le décor de la forêt est né des essais, son brief les résume | — |
+| 2. Le plan | Éprouvé sur un décor, le 24/11 | Un script par décor ; `decor_forest_combat.py` pour modèle |
+| 3. La passe d'ensemble | Éprouvée sur un décor, trois graines, à 0.8 et 0.9 | `comfy_gen.py` |
+| 4. La passe de détail | Éprouvée sur un décor et une graine : aucun raccord, grille nette | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt |
+| 5. L'import | Éprouvé en 640 × 360, en couleurs peintes | `window_import.py --couleurs-peintes` |
+| 6. Le contrôle en situation | Fait sur une maquette, pas sur le jeu | `decor_controle.py` |
+| 7. La retouche | Pas encore faite sur un décor | Aseprite |
 
-## Les essais à mener
+**Ce qui reste ouvert :**
+- **Les calques.** Le décor est une image à plat ; la règle du calque par objet n'est pas tenue.
+- **Un second décor.** Tout repose sur la forêt du combat : une image, une graine. Le prochain décor dira ce qui tient de la méthode et ce qui tenait du sujet — une forêt se recompose sans dommage, une salle ou un campement peut-être pas.
+- **La carte des zones** est lue dans le code, pas mesurée sur une capture du jeu.
 
-Avant de produire un vrai décor, sur une scène existante — le campement, dont la structure et une image d'ensemble existent. On change une chose à la fois, et chaque essai s'écrit ici, avec ses mesures.
+## Les essais
 
-| Essai | Ce qu'on fait | Ce qu'on mesure | Il réussit si |
-|:---|:---|:---|:---|
-| 1. La grille — **mené le 23/11**, résultats plus bas | Une seule tuile, repeinte à quatre débruitages, de 0.4 à 0.7 | La netteté de la grille ; ce que la tuile a gardé de l'ensemble | La netteté dépasse nettement 3 à un débruitage où la tuile ne réinvente rien |
-| 2. Les raccords — **mené le 23/11** | Quatre tuiles voisines, sans recouvrement puis avec | Ce qui se voit aux raccords, une fois sur la grille Apollo | Aucun raccord ne se lit à la taille du jeu |
-| 3. Le prompt — **une tuile, le 23/11** | Les mêmes tuiles, avec le prompt de l'ensemble puis avec les mots des calques | Les objets inventés dans une tuile | Les mots des calques retirent les inventions |
-| 4. Le décor entier — **mené le 24/11**, sans le contrôle en situation | Les seize tuiles, l'import, le contrôle en situation | La durée de chaque étape ; le jugement du propriétaire | Le décor passe les quatre questions de l'étape 6 |
+Six essais, les 23 et 24/11/2026, ont mené à cette méthode. Les quatre premiers éprouvent la passe de détail par tuiles, sur une scène existante, le campement ; les deux derniers partent d'un décor neuf, à la demande du propriétaire. Chaque essai est écrit ici, avec ses mesures.
+
+| Essai | Ce qu'on fait | Ce qu'il dit |
+|:---|:---|:---|
+| 1. La grille, par tuiles | Une tuile du campement, à plusieurs débruitages | La grille revient par pas de deux ; d'un seul pas de quatre, la tuile réinvente |
+| 2. Les raccords | Le campement en quatre et en neuf tuiles | Un recouvrement et `--continuer` retirent les objets coupés, pas les changements de texture |
+| 3. Le prompt | Une tuile, avec les mots des calques | La grille la plus nette ; un petit objet sans mots change de nature |
+| 4. Le décor entier, par tuiles | Le campement en 640 × 360, 25 tuiles | **Échec** : chaque tuile repeint un campement, et les raccords se voient |
+| 5. L'image entière, sans tuiles | La forêt, composée librement, repeinte d'un coup | **Aucun raccord.** Le décor garde ses couleurs peintes (B80), en 640 × 360 |
+| 6. La composition | Un plan en aplats comme image de départ | Le plan tient la composition ; il faut deux pas pour retrouver la matière. **Premier décor validé** |
 
 **L'essai 1, mené le 23/11/2026.** Sur le campement, avec le prompt de l'ensemble, sans recouvrement ni guide de couleur, sur une seule graine. Les images et leurs planches sont dans `.work/tuiles/` (`essai1*`), hors du dépôt.
 
@@ -392,13 +382,110 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 **Une carte de profondeur tirée du plan** (les troncs devant, le sol en pente, le fond loin), seule ou avec le plan, donne des images raides, aux plans découpés comme un décor de théâtre : écartée.
 
 **Ce qu'on en retient :**
-- **Un plan en aplats suffit à tenir la composition**, sans la structure complète de l'étape 2 ; 0.8 le suit mieux que 0.9. La bande sombre du bord ne revient pas.
+- **Un plan en aplats suffit à tenir la composition**, sans la structure complète de la première méthode ; 0.8 le suit mieux que 0.9. La bande sombre du bord ne revient pas.
 - **Une image d'ensemble née d'un plan porte ses aplats** : la repeindre d'un seul pas les garde. Il lui faut le pas intermédiaire à 2560 × 1440, à 0.8, qui redonne la matière en deux minutes et se juge avant de payer les quatorze minutes du dernier pas. Le chemin en deux pas redevient donc la règle pour une image guidée.
 - **Chaque image se juge sous le combat de la maquette** avant d'être repeinte. Les images sont dans `.work/composition/`.
 
-**Si la passe de détail échoue,** deux replis, à ne considérer qu'après l'essai 1 :
+**Deux replis avaient été écrits,** pour le cas où la passe de détail échouerait. L'image repeinte entière les rend inutiles pour la forêt ; ils restent, pour un sujet qui ne supporterait pas d'être recomposé :
 - **le décor par éléments :** chaque objet, ou chaque plan, généré seul à sa taille, comme une créature, puis posé par le code — la lumière et la perspective sont alors à tenir à la main ;
 - **une grille plus grosse :** la question revient au propriétaire, qui a fixé la taille de 640 × 360 (B74).
+
+## La première méthode : la structure, les tuiles, l'import par calques
+
+**Écrite le 23/11/2026, avant les essais.** Sa passe de détail par tuiles est écartée (essai 4) ; `decor_tuiles.py` reste dans les outils, avec ses mesures. Sa structure par le code et son import par calques ne sont pas écartés : ce sont eux qui donnaient un calque par objet, et la piste pour y revenir. Ni l'un ni l'autre n'a servi à 640 × 360 sur un vrai décor.
+
+### La structure par le code
+
+**Un script par décor, `decor_<nom>.py`,** construit sur `scene.py`, à partir d'un script de scène existant (`bg_camp.py` est le plus proche). Il ne contient que ce qui est propre au décor.
+
+- **La scène fait 640 × 360.** `scene.py` accepte une taille, mais ses constantes et les trois scripts existants sont écrits pour 320 × 180 : un décor neuf déclare sa taille lui-même.
+- **Une vraie perspective**, calculée pixel par pixel, et un calque complet par objet, posé à sa profondeur.
+- **La palette Apollo** dès cette étape.
+- **Le script écrit** le `.aseprite` de base, l'image guide et les deux cartes de guidage : la profondeur et les contours. Pour la passe de détail, `decor_tuiles.py` les agrandit à 8 fois la taille de la scène, 5120 × 2880, et chaque tuile y découpe son morceau ; il ramène les contours, épais d'une case, à 4 pixels (`--trait`).
+
+**Ce que la structure a appris sur les trois premiers décors :**
+- **Une carte des contours trop chargée** — chaque pavé, chaque brique — fige le générateur. On simplifie les formes avant de tracer les contours.
+- **Les éléments fins se perdent.** Il faut les dessiner assez gros dans la géométrie.
+- **Une forme ambiguë est réinterprétée** par le générateur, à sa façon. Chaque forme claire du guide doit être sans ambiguïté.
+- **La lumière se cuit dans chaque objet**, jamais dans un calque de lumière posé par-dessus. Sinon, masquer un objet laisse sa lueur flotter.
+
+**À montrer au propriétaire avant toute génération :** le rendu de la structure, agrandi, avec la carte des zones posée dessus. Rien d'important ne passe sous l'interface ; ce que l'interface vient habiter est à sa place.
+
+### La passe d'ensemble guidée par la structure
+
+ComfyUI peint toute la scène en une génération, guidé par l'image guide, la profondeur et les contours :
+
+`python comfy_gen.py <préfixe> "<prompt>" --size 1280x720 --graines 3 --exclure "<exclusions>"`
+
+| Réglage | Valeur | Option |
+|:---|:---|:---|
+| Taille | 1280 × 720 : une grille de 160 × 90, le quart exact de celle du décor | `--size` |
+| Denoise | 0.7 | `--denoise` |
+| Profondeur | 0.7 | `--depth` |
+| Contours | 0.45 | `--edges` |
+| LoRA | 0.9 | `--lora` |
+
+Ces réglages sont ceux des trois décors existants, à une différence près : ils ont été générés en 1360 × 768, dont la grille de 170 × 96 ne tombe sur aucun multiple de la grille visée. La taille de 1280 × 720 est à confirmer au premier essai.
+
+**Le gabarit du prompt** est celui des fonds de fenêtre ([workflow des fonds de fenêtre](workflow_fond.md), « Le gabarit du prompt »), sans les mots qui gardent la place d'une créature :
+
+> dark fantasy pixel art illustration of **[le lieu et le sujet]**, empty scene, highly detailed background with **[les matières et les éléments du lieu]**, moody lighting, **[la phrase de palette]**, 16-bit, crisp pixels, highly detailed
+
+**Les exclusions de base** (`--exclure`), à compléter selon le lieu :
+
+> halloween, cartoon, cute, plain background, fog, mist, haze, animal
+
+`comfy_gen.py` ajoute les siennes tout seul, dont les personnages et les créatures : un décor reste vide.
+
+**Trois graines par tour, une chose changée à la fois.** Le propriétaire choisit l'image d'ensemble sur trois questions seulement : la composition, la lumière, les couleurs. Son détail ne compte pas : il sera repeint.
+
+### La passe de détail par tuiles
+
+**Écartée.** L'outil existe, `decor_tuiles.py`, et ses quatre essais sont menés (voir [les essais](#les-essais)) : le dernier échoue sur la fidélité et sur les raccords. Les réglages qui suivent sont ceux que ces essais ont mesurés.
+
+`python decor_tuiles.py peindre <scène> <préfixe> <image d'ensemble> "<prompt>" --exclure "<exclusions>"`, puis `python decor_tuiles.py assembler <nom> <image assemblée.png>`.
+
+L'outil fait, dans l'ordre :
+
+1. **Agrandir l'image de départ** à 8 fois la taille visée. **Par pas de deux** (essai du 23/11) : l'image d'ensemble, en grille de 160 × 90, se repeint d'abord en 320 × 180, par quatre tuiles ; l'image assemblée se repeint ensuite en 640 × 360, par seize tuiles. D'un seul pas de quatre, la tuile réinvente la scène. Chaque pas se lance par `--taille`, sur l'image assemblée du pas d'avant : `--taille 320x180`, puis `--taille 640x360`.
+2. **Découper en tuiles de 1280 × 720**, soit 160 × 90 cases chacune. Seize tuiles couvrent le décor sans recouvrement ; avec recouvrement, il en faut davantage. **Chaque tuile se pose sur un multiple de 8 pixels**, pour que les grilles de deux tuiles voisines restent en phase.
+3. **Faire repeindre chaque tuile** par ComfyUI, en partant de son morceau de l'image agrandie, guidée par son morceau des cartes de profondeur et de contours. La même graine, le même style ; le prompt de chaque tuile est décrit plus bas.
+4. **Assembler les tuiles.** Dans un recouvrement, le raccord se coupe sur une ligne de cases, jamais au milieu d'une case. **Avec `--continuer`, une tuile reprend tel quel ce que ses voisines déjà peintes couvrent, et ne peint que le reste :** un objet n'est plus coupé d'une tuile à l'autre (essai 2). Cela ne suffit pas : sur une surface unie, la texture et le ton changent encore là où une tuile commence à peindre (essai 4).
+5. **Mesurer la netteté de la grille**, en largeur et en hauteur : celle de chaque tuile dès qu'elle est peinte, puis celle de l'image assemblée. Le minimum est 3 ; une génération directe atteint 30.
+
+**Pour essayer sans tout peindre :** `--tuiles 0,1 2,1` ne repeint que les tuiles nommées, par colonne et rangée ; `--nom` range un essai dans son propre dossier ; `--a-blanc` affiche le plan des tuiles et leurs prompts sans rien générer. Une tuile se relance seule : son image remplace l'ancienne, et l'assemblage se refait.
+
+**Les réglages, et ce que les essais en disent :**
+
+| Réglage | Le point de départ | Ce qui le borne |
+|:---|:---|:---|
+| Le débruitage (`--denoise`) | 0.5 au premier pas, 0.6 au second | Trop bas, le LoRA ne repeint pas sa grille de 8 pixels : une repeinte à 0.35 rend une grille affaiblie (7,4 et 3,8 sur le Squelette réduit). Trop haut, la tuile réinvente une scène à elle seule |
+| Le recouvrement (`--recouvrement`, en cases) | Avec `--continuer`. Essayé à 40 cases, puis à 20 demandées (essai 4) | Sans recouvrement, les raccords se voient ; avec, le nombre de tuiles monte. L'outil répartit les tuiles d'un bord à l'autre : pour 20 cases demandées sur un décor de 640 × 360, le recouvrement réel est de 40 cases en largeur et de 22 en hauteur. Le rétrécir n'a pas retenu les inventions |
+| Un guide de couleur (`--couleur`) | Sans, puis le guide « tile » de ControlNet Union, nourri de l'image d'ensemble | Il tient les couleurs d'une tuile à l'autre ; trop fort, il garde aussi les grosses cases de la passe d'ensemble. **Écarté à 0.5 :** la grille fine ne se forme pas. Une force plus basse n'a pas été essayée |
+| L'agrandissement de l'image de départ (`--agrandir`) | Bicubique | Au plus proche, la grille revient plus nette en largeur à 0.5 (76 contre 26), sans autre différence visible : à confirmer |
+
+**Le prompt d'une tuile ne décrit pas la scène entière.** Une tuile ne voit qu'un seizième du décor : lui donner le prompt de l'ensemble, c'est lui demander une clairière dans un coin de ciel. **La proposition, à éprouver :** chaque calque de la scène déclare ses mots, comme la recette de calques d'une créature, et le prompt d'une tuile réunit le style commun et les mots des calques qu'elle montre — la structure sait quel objet occupe chaque pixel. `--mots <fichier.json>` le fait : un calque compte dès qu'il occupe 8 % de la tuile (`--seuil`). Sans ce fichier, toutes les tuiles reçoivent le prompt donné.
+
+```json
+{
+  "style": "dark fantasy pixel art, moody lighting, <phrase de palette>, 16-bit, crisp pixels, highly detailed",
+  "mots": {"Ciel": "night sky, thin clouds", "Troncs": "gnarled tree bark, roots", "Sol": "forest floor, moss, dead leaves"}
+}
+```
+
+**Le coût.** Une tuile de 1280 × 720 prend de 30 à 55 secondes, selon le débruitage. Avec recouvrement, le premier pas compte 9 tuiles et le second 25 : mesuré à l'essai 4, le second pas prend 16 minutes à lui seul, à 38 secondes la tuile. Les deux pas d'un décor prennent donc un peu plus de vingt minutes, sur une seule image d'ensemble : on ne la lance qu'après le choix de l'étape 3, et on relance une tuile, pas le décor, pour corriger un endroit.
+
+### L'import par calques
+
+`python bg_import.py <scène> <image assemblée> <sortie.aseprite> <copie PNG de la source>`
+
+- **La grille se lit sur l'image elle-même.** Générée à 8 fois la taille de la scène, l'image porte une grille qui tombe juste : l'import lit le cœur de chaque case, au lieu d'aligner sur les contours et de moyenner des blocs. C'est ce repli, pris par les trois décors existants, qui leur donne leur trame en damier.
+- **Chaque pixel va au calque de l'objet visible à cet endroit** dans la structure ; les autres calques gardent le rendu de la structure.
+- **Le manifeste de la scène guide l'import :** les calques qui sont des surfaces, ceux qu'il ignore, les couleurs qu'il n'utilise pas.
+
+**Sur une scène de 640 × 360, l'import prend 21 secondes** (essai 4) : il lit une grille de 8,00 × 8,00 pixels, sans décalage, et l'aller-retour dans Aseprite rend le même fichier. Il lit la taille de la grille sur le rendu de la scène : une scène écrite en 320 × 180 s'importe en 320 × 180, quelle que soit l'image qu'on lui donne.
+
+**À contrôler :** l'aperçu agrandi. Aucun bloc de 2 × 2 ou de 4 × 4 ne doit rester ; aucun raccord de tuile ne doit se lire.
 
 ## Le dossier d'un décor
 
@@ -406,16 +493,15 @@ Avant de produire un vrai décor, sur une scène existante — le campement, don
 
 | Fichier | Rôle |
 |:---|:---|
-| `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt en cours, le journal des tours |
-| `<nom>.aseprite` | La structure : le rendu du code, un calque par objet |
-| `<nom>_detail.aseprite` | Le décor : le livrable, à retoucher |
-| `<nom>_guide_x<n>.png`, `<nom>_depth.png`, `<nom>_edges.png` | L'image guide et les cartes de guidage, que le script de la scène réécrit |
-| `<nom>_plan.png` | Pour un décor guidé par un plan en aplats (essai 6) : le plan, que le script du décor réécrit |
+| `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt, le journal des tours |
+| `<nom>_plan.png` | Le plan en aplats, que le script du décor réécrit |
 | `<nom>_ensemble_source.png` | L'image d'ensemble retenue, intacte |
-| `<nom>_pas1_source.png` | Pour un décor repeint entier : la repeinte en 2560 × 1440 |
-| `<nom>_detail_source.png` | L'image de 5120 × 2880, repeinte entière ou assemblée des tuiles, intacte, jamais en JPEG |
-| `<nom>_mots.json` | Le style commun et les mots de chaque calque, pour le prompt des tuiles |
+| `<nom>_pas1_source.png` | La repeinte en 2560 × 1440 |
+| `<nom>_detail_source.png` | La repeinte en 5120 × 2880, intacte, jamais en JPEG |
+| `<nom>_detail.aseprite` | Le décor : le livrable, à retoucher |
 
-Le script de la scène, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Les fichiers de travail, dont les tuiles, restent dans `art_src/tools/.work/`, que git ignore.
+**Avec la première méthode** s'y ajoutent `<nom>.aseprite`, la structure rendue par le code, un calque par objet ; `<nom>_guide_x<n>.png`, `<nom>_depth.png` et `<nom>_edges.png`, l'image guide et ses cartes de guidage ; et `<nom>_mots.json`, les mots de chaque calque pour le prompt des tuiles.
+
+Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).

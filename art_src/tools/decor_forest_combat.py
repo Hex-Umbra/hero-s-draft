@@ -8,17 +8,18 @@ pose les deux gros troncs aux bords de l'ecran, et le sol, son sentier et ses ro
 
     python decor_forest_combat.py ../backgrounds/forest/combat/forest_combat_plan.png [<zones.png>]
 
-L'image fait 1280 x 720, deux fois la grille. <zones.png> recoit le plan sous la carte des zones :
-ce que l'interface recouvre.
+L'image fait 1280 x 720, deux fois la grille. <zones.png> recoit le plan sous la carte des zones
+de decor_controle.py : ce que l'interface recouvre.
 """
 import random
 import sys
 
 from PIL import Image, ImageDraw, ImageFilter
 
-W, H, K = 1280, 720, 2
+from decor_controle import with_zones
+
+W, H, K = 1280, 720, 2  # K : pixels du plan par pixel de la grille du decor
 HORIZON = 400  # le pied du fond lointain : y = 200 sur la grille, sous la rangee des ennemis
-ZONES = {"ennemis": (40, 14, 600, 126), "heros": (285, 137, 355, 231), "main": (95, 238, 545, 360)}  # sur la grille
 
 
 def plan():
@@ -64,17 +65,8 @@ def plan():
     return img
 
 
-def with_zones(img):
-    """Le plan sous la carte des zones : ce que l'interface recouvre, en voile clair."""
-    veil = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    v = ImageDraw.Draw(veil)
-    for x0, y0, x1, y1 in ZONES.values():
-        v.rectangle([x0 * K, y0 * K, x1 * K, y1 * K], fill=(255, 255, 255, 70), outline=(255, 255, 255, 220), width=3)
-    return Image.alpha_composite(img.convert("RGBA"), veil).convert("RGB")
-
-
 if __name__ == "__main__":
     image = plan()
     image.save(sys.argv[1])
     if len(sys.argv) > 2:
-        with_zones(image).save(sys.argv[2])
+        with_zones(image, K).convert("RGB").save(sys.argv[2])

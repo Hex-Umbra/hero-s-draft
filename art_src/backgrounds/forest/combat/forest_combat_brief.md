@@ -47,9 +47,9 @@ Le même prompt et les mêmes exclusions aux trois générations, sur la graine 
 ## Après la génération
 
 - **L'import :** `python window_import.py <image de 5120 × 2880> forest_combat_detail.aseprite --taille 640x360 --couleurs-peintes --source forest_combat_detail_source.png`. La grille est lue telle quelle, chaque case garde sa couleur peinte ; le `.aseprite` est en couleurs libres, la palette Apollo en nuancier.
-- **Le contrôle en situation :** fait sur une maquette — quatre ennemis des tiers 1 à 3 dans leurs cadres provisoires, le héros, une main de cinq cartes. Les troncs de second plan passent derrière la première et la dernière carte ; sourds et lointains, ils ne les disputent pas.
+- **Le contrôle en situation :** `python decor_controle.py forest_combat_detail.aseprite <sortie.png>`, une maquette — quatre ennemis des tiers 1 à 3 dans leurs cadres provisoires, le héros, une main de cinq cartes. Les troncs de second plan passent derrière la première et la dernière carte ; sourds et lointains, ils ne les disputent pas.
 - **La retouche :** pas encore faite.
-- **Ce qui reste des essais :** les deux repeintes ont été lancées par un script d'essai, resté dans le dossier de travail ; il deviendra un outil.
+- **Les deux repeintes** ont été lancées par un script d'essai, devenu depuis `decor_repeindre.py` : `python decor_repeindre.py forest_combat_ensemble_source.png 2560x1440` rejoue le premier pas à l'identique, et `python decor_repeindre.py forest_combat_pas1_source.png 5120x2880 --denoise 0.6` bâtit le même graphe que le second.
 
 ## Les fichiers
 
