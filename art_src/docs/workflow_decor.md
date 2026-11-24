@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode éprouvée sur deux décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur deux sujets, une graine chacun, avec un dernier pas ramené de 0.6 à 0.5 après l'analyse du second, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode éprouvée sur trois décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)) ; celui du donjon, une cave voûtée, est le troisième et le premier intérieur ([son brief](../backgrounds/dungeon/combat/dungeon_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur trois sujets, une graine chacun, avec un dernier pas ramené de 0.6 à 0.5 après l'analyse du second, et un premier pas tenu par une carte de contours pour l'intérieur ; elle donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -106,12 +106,13 @@ Le prompt, les exclusions, les réglages des deux passes.
 
 ### 2. Écrire le plan par le code
 
-**Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle ; [`decor_graveyard_combat.py`](../tools/decor_graveyard_combat.py) en est un second, parti d'une esquisse libre choisie par le propriétaire, dont il replace les objets hors de l'interface.
+**Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle ; [`decor_graveyard_combat.py`](../tools/decor_graveyard_combat.py) en est un second, parti d'une esquisse libre choisie par le propriétaire, dont il replace les objets hors de l'interface. [`decor_dungeon_combat.py`](../tools/decor_dungeon_combat.py) pose une perspective : un point de fuite derrière le héros, des cadres qui se resserrent vers lui.
 
 `python decor_<nom>.py ../backgrounds/<lieu>/<écran>/<nom>_plan.png <zones.png>`
 
 - **Le plan se cale sur la carte des zones** du bloc 2 du brief : ce que l'interface recouvre reste calme, ce qui doit se voir tombe dans ce qui reste visible. Pour le combat de la forêt : un fond lointain et pâle derrière la rangée des ennemis, les deux gros troncs aux bords de l'écran, le sol, son sentier et ses rochers dans le bas.
 - **Des aplats aux couleurs du lieu**, à peine floutés pour le lointain. Le générateur garde la place et la teinte des masses, et y met la matière.
+- **Le plan fixe aussi la luminosité du décor.** Le prompt seul ne donne pas un décor très sombre : le générateur ramène l'image vers le gris. Pour la cave du donjon, les esquisses libres poussées vers le noir restaient à une luminosité moyenne de 41 à 49 sur 255 ; avec un plan dessiné à 34, l'image d'ensemble sort à 36 et le décor à 30 (essai 8).
 - **Le second argument écrit le plan sous la carte des zones**, celle de `decor_controle.py`.
 
 **À montrer au propriétaire avant toute génération :** le plan sous la carte des zones. Rien d'important ne passe sous l'interface ; ce que l'interface vient habiter est à sa place.
@@ -159,6 +160,8 @@ L'outil agrandit l'image de départ et la fait repeindre entière par ComfyUI. I
 
 - **Le premier pas se juge avant le second.** L'image se pose sous le combat (`decor_controle.py`) : la matière est-elle revenue, la composition a-t-elle tenu ? On ne paie le quart d'heure du second pas que sur une image retenue.
 - **Une image née d'un plan passe par les deux pas.** Elle porte les aplats du plan : repeinte d'un seul pas jusqu'à 5120 × 2880, elle les garde, et le décor sort plat (essai 6). Une image composée librement, qui porte déjà sa matière, tient en un seul pas à 0.7 (essai 5).
+- **Un intérieur se peint au premier pas avec une carte de contours.** À 0.8, le premier pas recompose la scène : sans dommage pour une forêt, mais un intérieur y perd ses objets comptés et ses lignes droites — une grille, des portes, une arche. À 0.6 la scène tient, mais l'image reste lisse et le dernier pas ne la rattrape pas. On peint donc deux fois en 2560 × 1440 : `python decor_repeindre.py <image d'ensemble> 2560x1440 --denoise 0.6`, puis `python decor_repeindre.py <image d'ensemble> 2560x1440 --contours <la repeinte à 0.6>`. L'outil lit les contours de la première sur sa grille et les donne en guide à la seconde, à 0.8 : la scène de l'une, la matière de l'autre, pour 25 secondes de plus (essai 8).
+- **Un objet à retirer se retire avant le dernier pas,** sur l'image de 2560 × 1440. Le dernier pas, à 0.5, ne change presque rien d'autre : sur la cave du donjon, 0,3 % des pixels. Faire repeindre la zone par le générateur y remet un objet de la même forme ; quand l'objet se tient devant un fond uni, recopier ce fond par-dessus suffit (essai 8).
 - **Le dernier pas se règle à 0.5.** Il faut du débruitage pour affiner les pixels, et c'est ce même débruitage qui invente. À 0.4, l'image garde les gros pixels du premier pas : la grille de 320 × 180 y reste plus nette que celle de 640 × 360. À 0.6, le générateur replace dans les matières ce que le prompt nomme : sur le cimetière, des tombes dans les branches d'un arbre, une croix privée de son pied (essai 7). Le décor de la forêt a été peint à 0.6 : une écorce ou une mousse réinventée reste une écorce.
 - **Le prompt reste celui du décor.** Un prompt qui ne nomme plus aucun objet ne retient plus le sujet : à 0.6, les croix deviennent des tours en ruine (essai 7).
 - **La netteté de la grille** se lit à la fin de chaque pas. Le minimum est 3 ; le décor de la forêt atteint 54 × 119. Il peut rester une trace de la grille du pas précédent — 10 × 7 sur ce décor — que l'œil ne lit pas.
@@ -205,22 +208,24 @@ On reprend à la main les bords d'objets et les détails à préciser, en couleu
 | Étape | État | Outil |
 |:---|:---|:---|
 | 1. Le brief | Repris des créatures ; **jamais mené en session** : le décor de la forêt est né des essais, son brief les résume | — |
-| 2. Le plan | Éprouvé sur deux décors, le 24/11 | Un script par décor ; `decor_forest_combat.py` et `decor_graveyard_combat.py` pour modèles |
-| 3. La passe d'ensemble | Éprouvée sur deux décors, trois graines chacun, à 0.8 et 0.9 | `comfy_gen.py` |
-| 4. La passe de détail | Éprouvée sur deux décors, une graine chacun : aucun raccord, grille nette | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt, et a peint les deux pas de celui du cimetière |
-| 5. L'import | Éprouvé en 640 × 360, en couleurs peintes, sur deux décors | `window_import.py --couleurs-peintes` |
+| 2. Le plan | Éprouvé sur trois décors, le 24/11 | Un script par décor ; `decor_forest_combat.py`, `decor_graveyard_combat.py` et `decor_dungeon_combat.py` pour modèles |
+| 3. La passe d'ensemble | Éprouvée sur trois décors, trois graines chacun, de 0.7 à 0.9 | `comfy_gen.py` |
+| 4. La passe de détail | Éprouvée sur trois décors, une graine chacun : aucun raccord, grille nette ; la carte de contours, sur un intérieur et deux scènes | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt, a peint les deux pas de celui du cimetière, et rejoue à l'identique le pas tenu par les contours de celui du donjon |
+| 5. L'import | Éprouvé en 640 × 360, en couleurs peintes, sur trois décors | `window_import.py --couleurs-peintes` |
 | 6. Le contrôle en situation | Fait sur une maquette, pas sur le jeu ; le contrôle du décor seul, agrandi, se fait à l'œil, sans outil | `decor_controle.py` |
 | 7. La retouche | Pas encore faite sur un décor | Aseprite |
 
 **Ce qui reste ouvert :**
 - **Les calques.** Le décor est une image à plat ; la règle du calque par objet n'est pas tenue.
-- **Un intérieur.** La forêt et le cimetière sont deux extérieurs, qui se recomposent sans dommage : un arbre ou une tombe déplacés restent à leur place. Une salle ou un campement, aux lignes droites et aux objets comptés, peut-être pas.
+- **Un intérieur sans perspective simple.** La cave du donjon est un couloir vu de face, à un seul point de fuite. Une salle vue de biais, un campement aux objets épars, restent à éprouver.
+- **Le fond d'une ouverture.** Derrière l'arche de la cave, le passage est un noir uni : y montrer un couloir qui continue faisait rétrécir l'arche (essai 8).
+- **La mesure de netteté sur un intérieur.** Des pierres et des barreaux droits s'alignent d'eux-mêmes sur la grosse grille : le « reste de la grille de départ » y est haut même sur un décor net. L'œil juge.
 - **Les inventions du dernier pas.** À 0.5, il en reste quelques-unes sur un décor d'objets nets — une stèle dans un arbre, des brindilles sur une croix — laissées à la retouche (essai 7). Tenir les formes par une carte de contours au dernier pas n'a pas été essayé.
 - **La carte des zones** est lue dans le code, pas mesurée sur une capture du jeu.
 
 ## Les essais
 
-Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la rejoue sur un second sujet. Les quatre premiers éprouvent la passe de détail par tuiles, sur une scène existante, le campement ; les deux suivants partent d'un décor neuf, à la demande du propriétaire. Chaque essai est écrit ici, avec ses mesures.
+Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la rejoue sur un second sujet, un huitième sur un intérieur. Les quatre premiers éprouvent la passe de détail par tuiles, sur une scène existante, le campement ; les deux suivants partent d'un décor neuf, à la demande du propriétaire. Chaque essai est écrit ici, avec ses mesures.
 
 | Essai | Ce qu'on fait | Ce qu'il dit |
 |:---|:---|:---|
@@ -231,6 +236,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 | 5. L'image entière, sans tuiles | La forêt, composée librement, repeinte d'un coup | **Aucun raccord.** Le décor garde ses couleurs peintes (B80), en 640 × 360 |
 | 6. La composition | Un plan en aplats comme image de départ | Le plan tient la composition ; il faut deux pas pour retrouver la matière. **Premier décor validé** |
 | 7. Un second sujet | Le cimetière, par toute la chaîne, puis son dernier pas à 0.4, 0.5 et 0.6 | La méthode tient ; à 0.6 le dernier pas invente des objets, à 0.5 il affine. **Second décor validé** |
+| 8. Un intérieur | Le donjon : un couloir de geôles, puis une cave voûtée, à la demande du propriétaire | Le premier pas à 0.8 refait un intérieur ; tenu par une carte de contours, il garde la scène et la matière. **Troisième décor validé** |
 
 **L'essai 1, mené le 23/11/2026.** Sur le campement, avec le prompt de l'ensemble, sans recouvrement ni guide de couleur, sur une seule graine. Les images et leurs planches sont dans `.work/tuiles/` (`essai1*`), hors du dépôt.
 
@@ -434,6 +440,42 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 - **Le contrôle sous le combat ne suffit pas.** Le premier décor du cimetière a été validé sous la maquette avec sept inventions que l'interface cachait en partie : le décor se regarde aussi seul, agrandi.
 - **Ce que l'essai ne dit pas :** c'est encore un extérieur. Le cimetière n'a pas de fonds de fenêtre : il a été jugé sous ceux de la forêt.
 
+**L'essai 8, un intérieur, mené le 24/11/2026.** Le donjon, dont le jeu affiche déjà un décor de combat (`bg_dungeon.png`). Deux scènes s'y sont succédé : un couloir de geôles, mené jusqu'au décor entier puis écarté par le propriétaire — « ça fait prison plutôt que donjon » — et une cave voûtée, plus sombre, calée sur le décor du jeu.
+
+**Le prompt d'abord.** Les mots font le lieu : « stone dungeon hall » donne une salle de temple, claire et propre ; « dungeon prison corridor » donne des geôles et des barreaux ; « old underground cellar » donne la cave, mais une cave de taverne au bois orange, tant que « tavern », « orange wood » et « warm colors » ne sont pas exclus. Et le noir ne vient pas du prompt : « almost pitch black, chiaroscuro » ramène les esquisses libres d'une luminosité moyenne de 43 à 56 vers 41 à 49, quand le décor du jeu est à 34. C'est le plan, dessiné à 34, qui donne le noir : l'image d'ensemble sort à 36, le décor à 30.
+
+**Le premier pas, sur le couloir des geôles** (graine 293903), depuis une image d'ensemble qui suit le plan — une grille au fond, une porte de geôle sur chaque mur, des lanternes, des tonneaux :
+
+| Premier pas, 2560 × 1440 | Durée | Grille de 320 × 180 | Ce qu'on voit |
+|:---|:---|:---|:---|
+| 0.8, le réglage de la forêt et du cimetière | 132 s | 37,6 × 28,0 | La plus belle matière, la plus sombre. **Mais la scène est refaite** : plus de grille, plus de portes de geôle, le couloir devient une salle |
+| 0.7 | 127 s | 33,0 × 19,2 | La grille du fond devient une porte noire ; une seule geôle reste |
+| 0.6 | 125 s | 40,0 × 18,4 | La scène tient : la grille, les deux geôles, les lanternes, les tonneaux. La pierre est lisse |
+| 0.8, guidé par les contours de l'image à 0.6 | 153 s | 59,3 × 31,3 | **La scène de l'une et la matière de l'autre** : la grille, les geôles, la perspective, dans le noir du 0.8 |
+
+**Le dernier pas, à 0.5,** dit lequel des deux départs vaut : depuis l'image à 0.6, le décor sort mou — la pierre est lisse, sans matière de pixel art, et la grille de 320 × 180 y reste presque aussi nette (34,0 × 11,5) que celle de 640 × 360 (40,3 × 16,2). Depuis l'image tenue par les contours, la matière est là : la pierre est mouchetée, les lanternes dessinées au pixel près.
+
+**La carte des contours** se lit sur la grille de l'image qui tient la scène : un contour là où deux cases voisines diffèrent de plus de 14 en luminosité, agrandi à la taille visée, aminci à 4 pixels. Elle guide la repeinte par ControlNet Union, à la force 0.5, pendant les six premiers dixièmes du débruitage. `decor_repeindre.py --contours` la bâtit et l'applique ; rejouée par l'outil, la repeinte de la cave revient à l'identique.
+
+**La cave voûtée,** choisie par le propriétaire sur quinze esquisses, avec une demande : centrer le fond, pour que la perspective mène l'œil vers lui et vers un chemin placé juste derrière la scène de combat, et ouvrir le mur du fond. Le plan (`decor_dungeon_combat.py`) pose donc le point de fuite derrière le héros, des cadres de bois qui se resserrent vers lui, et une arche plus large que le héros.
+
+| Image d'ensemble | Ce qu'on voit, sur trois graines |
+|:---|:---|
+| Le plan, à 0.8 | L'arche s'ouvre, mais sur un trou noir ; les cadres de bois deviennent des piliers de pierre |
+| Le plan avec des arcs et des torches dans le passage, à 0.8 | Les arcs sont lus comme les moulures d'une porte : l'arche rétrécit, et tombe derrière le héros |
+| Le plan simplifié, à 0.8 puis à 0.7 | À 0.7, la graine 293903 garde les cadres de bois et la large arche. C'est l'image retenue, pas la graine de l'esquisse |
+
+**Les pas de détail de la cave :** 0.6 en 133 s (grille à 15,7 × 19,5, lisse), puis 0.8 par les contours en 153 s (38,7 × 41,4), puis le dernier pas à 0.5 en 14 min 26 s (114,4 × 37,7). Regardé seul, agrandi : rien d'inventé, rien qui flotte. Le propriétaire demande de retirer deux tonneaux en feu posés devant l'arche. Sur l'image de 2560 × 1440, le générateur chargé de repeindre les deux zones y remet un tas de pierres de la forme du tonneau ; recopier par-dessus le noir du passage, devant lequel ils se tenaient, donne une arche vide. Le dernier pas refait, en 14 min 27 s, ne change que 0,3 % des pixels ; la grille est nette à 143,3 × 31,2. **Validé par le propriétaire le 24/11**, le décor est rangé dans `backgrounds/dungeon/combat/`.
+
+**Ce que dit l'essai 8 :**
+- **Le premier pas à 0.8 refait un intérieur.** Il garde « un donjon » et perd « les geôles ». La forêt et le cimetière supportaient cette recomposition ; un intérieur, non.
+- **Une carte de contours règle le dilemme** entre la scène (0.6) et la matière (0.8), pour 25 secondes. Elle n'a servi qu'au premier pas : au dernier, à 0.5, rien ne bouge.
+- **Le plan fixe la luminosité,** et le prompt le sujet : un mot de trop — « prison », « tavern » — change le lieu.
+- **Un plan trop détaillé se retourne :** des arcs dessinés dans le passage ont été lus comme les moulures d'une porte.
+- **La graine d'une esquisse libre ne vaut plus une fois le plan posé :** c'est une autre graine qui a tenu le plan de la cave.
+- **Un objet se retire avant le dernier pas,** qui ne change alors presque rien d'autre.
+- **Ce que l'essai ne dit pas :** c'est un couloir vu de face, à un seul point de fuite. Le donjon n'a pas de fonds de fenêtre : il a été jugé sous ceux de la forêt.
+
 **Une carte de profondeur tirée du plan** (les troncs devant, le sol en pente, le fond loin), seule ou avec le plan, donne des images raides, aux plans découpés comme un décor de théâtre : écartée.
 
 **Ce qu'on en retient :**
@@ -551,12 +593,13 @@ L'outil fait, dans l'ordre :
 | `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt, le journal des tours |
 | `<nom>_plan.png` | Le plan en aplats, que le script du décor réécrit |
 | `<nom>_ensemble_source.png` | L'image d'ensemble retenue, intacte |
+| `<nom>_contours.png` | Pour un intérieur : la carte des contours qui a tenu le premier pas |
 | `<nom>_pas1_source.png` | La repeinte en 2560 × 1440 |
 | `<nom>_detail_source.png` | La repeinte en 5120 × 2880, intacte, jamais en JPEG |
 | `<nom>_detail.aseprite` | Le décor : le livrable, à retoucher |
 
 **Avec la première méthode** s'y ajoutent `<nom>.aseprite`, la structure rendue par le code, un calque par objet ; `<nom>_guide_x<n>.png`, `<nom>_depth.png` et `<nom>_edges.png`, l'image guide et ses cartes de guidage ; et `<nom>_mots.json`, les mots de chaque calque pour le prompt des tuiles.
 
-Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Le second est `backgrounds/graveyard/combat/`, validé le même jour ([brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
+Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Le second est `backgrounds/graveyard/combat/`, validé le même jour ([brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)), et le troisième `backgrounds/dungeon/combat/` ([brief](../backgrounds/dungeon/combat/dungeon_combat_brief.md)). Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
