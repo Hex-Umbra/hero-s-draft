@@ -39,7 +39,7 @@ from pose import EDGE, START, H, W, at
 
 SOL = 183 / 192  # la ligne de sol, en fraction de la hauteur
 # le guide de la figure retenue, garde avec la creature
-RETAINED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "creatures", "rat", "tier_1", "rat_geant_edges.png")
+RETAINED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sprites", "rat", "tier_1", "rat_geant_edges.png")
 
 # en fractions de l'image
 # les lignes des queues, du dos vers la pointe

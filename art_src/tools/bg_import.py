@@ -168,8 +168,11 @@ def to_grid(src, t, gw, gh, palette=APOLLO, inset=0.0):
     la pierre garde sa luminosite au lieu de chercher une teinte qu'elle n'a pas. Quand la couleur
     tombe entre deux couleurs voisines de la palette, une trame de Bayer les melange, pour rendre
     les tons que la palette n'a pas. inset retire cette part de chaque bord du bloc : sur la grille
-    du LoRA, on ne lit que le coeur de chaque case."""
-    pal_lab = [_lab(c) for c in palette]
+    du LoRA, on ne lit que le coeur de chaque case.
+
+    Sans palette (None), chaque case garde la couleur peinte : seule la grille est lue. C'est le
+    mode d'un decor d'ecran, que la palette aplatit trop."""
+    pal_lab = [_lab(c) for c in palette or ()]
     sp = src.convert("RGB").load()
     a, c, e, f = t
     out = Image.new("RGB", (gw, gh))
@@ -180,6 +183,9 @@ def to_grid(src, t, gw, gh, palette=APOLLO, inset=0.0):
                                   e * (y + inset) + f, e * (y + 1 - inset) + f)
             if rep is None:  # bord hors de l'image source : on prolonge le pixel le plus proche
                 rep = sp[min(src.width - 1, max(0, int(a * x + c))), min(src.height - 1, max(0, int(e * y + f)))]
+            if palette is None:
+                op[x, y] = tuple(round(v) for v in rep)
+                continue
             L = _lab(rep)
             wl = min(1.0, max(0.3, 1 - math.hypot(L[1], L[2]) / 30))  # le poids de la clarte, selon la vivacite
             dist = lambda u, v: (wl * (u[0] - v[0])) ** 2 + (u[1] - v[1]) ** 2 + (u[2] - v[2]) ** 2

@@ -4,7 +4,7 @@ Envoie a ComfyUI l'image guide et ses cartes de guidage (profondeur, contours, p
 ControlNet Union), lance un img2img SDXL avec le LoRA pixel art, puis recupere l'image. ComfyUI
 doit tourner (http://127.0.0.1:8188) ; on lui parle avec la bibliotheque standard seulement.
 
-    python comfy_gen.py ../backgrounds/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]
+    python comfy_gen.py ../decors/anciens_320x180/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]
 
 Le premier argument est le prefixe des fichiers de l'etape 1 : <prefixe>_guide_x4.png (ou
 le nom donne par --guide), <prefixe>_depth.png et <prefixe>_edges.png. --size fixe la taille de
@@ -86,10 +86,15 @@ CONTROLS = {
 }
 
 
-def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, size):
+VAE_TILES = dict(tile_size=1024, overlap=64, temporal_size=64, temporal_overlap=8)  # le VAE par morceaux, pour une grande image
+
+
+def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, size, tiled=False):
     """Le graphe ComfyUI, au format API : chaque noeud par son numero.
 
-    controls : [(image envoyee, type Union, force, fin d'effet)], appliques l'un apres l'autre."""
+    controls : [(image envoyee, type Union, force, fin d'effet)], appliques l'un apres l'autre.
+    tiled : l'image est encodee et decodee par morceaux, ce qu'une image de 5120 x 2880 demande a
+    une carte de 8 Go ; le debruitage, lui, porte toujours sur l'image entiere."""
     def scaled(node):
         return {"class_type": "ImageScale", "inputs": {"image": [node, 0], "upscale_method": "bicubic", "width": size[0], "height": size[1], "crop": "disabled"}}
 
@@ -113,6 +118,9 @@ def workflow(guide, controls, prompt, negative, seed, denoise, lora_strength, si
     g["8"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["7", 0], "vae": ["1", 2]}}
     g["9"] = {"class_type": "KSampler", "inputs": {"model": ["2", 0], "positive": cond[0], "negative": cond[1], "latent_image": ["8", 0], "seed": seed, "steps": STEPS, "cfg": CFG, "sampler_name": SAMPLER, "scheduler": SCHEDULER, "denoise": denoise}}
     g["98"] = {"class_type": "VAEDecode", "inputs": {"samples": ["9", 0], "vae": ["1", 2]}}
+    if tiled:
+        g["8"] = {"class_type": "VAEEncodeTiled", "inputs": dict(g["8"]["inputs"], **VAE_TILES)}
+        g["98"] = {"class_type": "VAEDecodeTiled", "inputs": dict(g["98"]["inputs"], **VAE_TILES)}
     g["99"] = {"class_type": "SaveImage", "inputs": {"images": ["98", 0], "filename_prefix": "heros_draft/generation"}}
     return g
 

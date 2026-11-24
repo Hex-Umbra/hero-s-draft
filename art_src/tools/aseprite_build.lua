@@ -1,5 +1,6 @@
 -- Assemble les fichiers .aseprite decrits par le manifeste : un calque par PNG,
--- puis passage en mode indexe sur la palette exacte de l'image.
+-- puis passage en mode indexe sur la palette exacte de l'image. Un fichier marque « rgb » reste
+-- en couleurs libres : sa palette n'est alors qu'un nuancier pour la retouche.
 local f = assert(io.open(app.params.manifest, "r"))
 local cards = json.decode(f:read("a"))
 f:close()
@@ -17,7 +18,9 @@ for _, card in ipairs(cards) do
     layer.name = L.name
     spr:newCel(layer, 1, Image{ fromFile = L.png }, Point(0, 0))
   end
-  app.command.ChangePixelFormat{ format = "indexed", dithering = "none" }
+  if not card.rgb then
+    app.command.ChangePixelFormat{ format = "indexed", dithering = "none" }
+  end
   spr:saveAs(card.out)
   print(card.out .. "  " .. #spr.layers .. " calques, " .. #spr.palettes[1] .. " couleurs")
   spr:close()

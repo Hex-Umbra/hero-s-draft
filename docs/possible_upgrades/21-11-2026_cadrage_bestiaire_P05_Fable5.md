@@ -65,7 +65,7 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B25** | Un rat invoqué ne rapporte rien, ni or ni autre récompense. Un rat libre et un alpha rapportent comme tout ennemi. | 21/11 |
 | **B21, B30** | À l'écran, une meute compte pour 2 cartes sur les cinq, quel que soit le nombre de ses rats, et un seul chef de meute est à l'écran : un second alpha attend en réserve. Le plateau porte six cartes au plus. | 21/11 |
 | **B19** | Au-delà du plafond, la réserve existante s'applique sans changement ([règle 02-6](../../.obsidian_vault/_rules/)). | 21/11 |
-| **B43** | Le sprite déjà produit, `art_src/creatures/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avec ceux du tier 1. | 22/11 |
+| **B43** | Le sprite déjà produit, `art_src/sprites/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avec ceux du tier 1. | 22/11 |
 
 ### 1.4. L'ordre des vagues
 
@@ -127,6 +127,7 @@ Tranchées le 23/11 avec le propriétaire, sur l'audit du chantier (lien en têt
 | **B77** | *Amende B12 et B14.* **L'ancrage à la fenêtre.** La barre de PV et les languettes ne s'ancrent pas au bord du cadre, mais à **un gabarit de 88 × 120** — le canevas du tier 1 —, centré sur la fenêtre, le même sur les cinq cadres. La barre se pose au-dessus du gabarit, à sa largeur ; les languettes, contre ses côtés. **La rangée s'aligne sur les fenêtres** : les créatures ont le même sol, les barres la même hauteur. Au-delà du tier 1, la barre et les languettes passent sur le bord extérieur du cadre. **Contrainte pour le dessin des cadres** (B73) : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre ; au-delà du gabarit, le dessin peut passer sous la barre et les languettes. | 23/11 |
 | **B78** | **Le contour de ciblage entoure la fenêtre**, à la même taille sur les cinq cadres : cyan pour une cible possible, ambre pour une carte choisie ou dont la fiche est ouverte. Le liseré blanc du repos disparaît : le cadre le remplace. | 23/11 |
 | **B79** | *Complète B72.* **La fiche ouverte double tout** : la carte, sa barre et ses languettes. Le panneau de la fiche, élément d'interface, garde sa taille. | 23/11 |
+| **B80** | *Confirme B74, et amende l'[identité visuelle](18-09-2026_identite_visuelle_pixel_art_Opus5.md) §6 pour les décors.* **Un décor d'écran garde ses couleurs peintes** : seule sa grille de 640 × 360 est lue, il n'est pas ramené sur la palette Apollo. La palette lui retirait sa mousse, le modelé de ses rochers et la profondeur de son fond ; en couleurs peintes, il garde son caractère de décor et se détache des dessins des cartes. Les créatures, les cadres et les fonds de fenêtre restent en Apollo exact. **La taille de 640 × 360 est confirmée** sous un combat, face à 320 × 180. Tranché le 24/11 sur les maquettes de l'essai 5 du [workflow des décors](../../art_src/docs/workflow_decor.md), hors de l'audit. | 24/11 |
 
 ### 1.8. L'histoire de l'ordre des vagues
 
@@ -148,7 +149,7 @@ Pour mémoire : seule la dernière ligne vaut, et le [README du chantier](../cha
 Chaque point est repris, sous « Prérequis », par la fiche de la vague qui en a besoin ([`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)) — sauf les lieux et les boss, qui n'ont pas encore de fiche.
 
 - **La difficulté** (B64, B69) : ce qu'elle doit viser ; ce que deviennent la formule du budget et sa mise à l'échelle, le prix d'un effet, la cadence des tiers, l'échelle des doses d'un statut posé par un ennemi, la table d'XP au-delà de l'acte 15. Rien n'est écrit : c'est l'objet d'un brainstorm, tenu après le tier 3. **Un instrument de mesure** — un tableau de ce que le tirage des combats produit, acte par acte — a été proposé à l'audit, à poser dès la vague du langage des intentions : non décidé.
-- **La vague du visuel** : toutes ses questions sont tranchées (B72 à B79). Reste la méthode des décors à 640 × 360, à recaler, avant de produire le décor de forêt ; et, hors de cette vague, le décor du repos (B76).
+- **La vague du visuel** : toutes ses questions sont tranchées (B72 à B80). Le décor de forêt est validé depuis le 24/11 (`art_src/decors/forest/combat/`, [workflow des décors](../../art_src/docs/workflow_decor.md)) ; restent les cadres redessinés des tiers 1 à 3 ; et, hors de cette vague, le décor du repos (B76).
 - **La riposte** (B71) : un jet par coup ou par carte ; ce qui compte comme une attaque du héros ; si elle s'ajoute à ce que le slime pose en attaquant (B53) ou le remplace ; ce que le joueur en lit ; quel ennemi contre-attaquera en dégâts.
 - **Le choix d'intention** (B70) : l'ennemi du tier 2 qui le porte.
 - **Les lieux** (biomes, P-12), après `0.7.0` (B69) : leur modèle — un lieu par acte, ou par créature —, leur nombre, leur lien avec les familles et les boss. Un cadrage propre.

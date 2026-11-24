@@ -9,7 +9,7 @@ for _, card in ipairs(cards) do
   for _, layer in ipairs(spr.layers) do
     names[#names + 1] = layer.name
   end
-  local mode = (spr.colorMode == ColorMode.INDEXED) and "indexe" or "AUTRE"
+  local mode = (spr.colorMode == ColorMode.INDEXED) and "indexe" or (card.rgb and "couleurs libres" or "AUTRE")
   print(app.fs.fileName(card.out) .. " | " .. spr.width .. "x" .. spr.height .. " | " .. mode .. " | " .. table.concat(names, ", "))
   app.command.FlattenLayers{ visibleOnly = false }
   spr:saveCopyAs(card.ref:gsub("_ref%.png$", "_back.png"))

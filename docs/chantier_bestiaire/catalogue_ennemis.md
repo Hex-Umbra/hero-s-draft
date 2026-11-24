@@ -13,7 +13,7 @@
 | Marque | Ce qu'elle dit |
 |:---:|:---|
 | ✅ | Le sprite neuf (128 × 192) est validé par le propriétaire : la vague peut s'en servir. La date de validation suit la marque. |
-| 🟡 | Le sprite est produit dans `art_src/creatures/`, mais pas encore livré : en itération, ou sa validation n'est pas tracée. |
+| 🟡 | Le sprite est produit dans `art_src/sprites/`, mais pas encore livré : en itération, ou sa validation n'est pas tracée. |
 | ❌ | Le sprite est à produire, par `/workflow-creature`. |
 
 Les quatre ennemis d'aujourd'hui ont un sprite en jeu, une peinture de 1696 × 2528 : il ne compte pas, tout le bestiaire est redessiné (B52).
@@ -60,8 +60,8 @@ Liste fixée. Valeurs des ennemis neufs : B53, des valeurs de départ. Les méca
 
 | Ennemi | Famille (B2) | État | PV · dégâts · critique | XP · or | Intentions | Mécanismes | Sprite livré |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| **Rat alpha** | Rat — la meute | Neuf (B20) | à fixer | à fixer | Entre seul ; invoque ses rats un par un, deux au plus, au prix de son action (B23) ; lien de meute sur la Puissance (B22) | #11 invocation, #12 aura | 🟡 produit le 14/11 (`art_src/creatures/rat/tier_1/rat_geant.aseprite`, B43) — fait comme un tier 1 : le garder ou le retoucher reste à trancher |
-| **Squelette** | Squelette — la Faiblesse | Existant, redessiné (B52) ; prend la Faiblesse (B48) | 22 · 8 · 10 % | 50 · 15 | Attaque 8, puis attaque 10 ; la Faiblesse est à placer dans ce cycle | #5 pose d'un statut | 🟡 produit, encore en itération (`art_src/creatures/squelette/tier_2/`) |
+| **Rat alpha** | Rat — la meute | Neuf (B20) | à fixer | à fixer | Entre seul ; invoque ses rats un par un, deux au plus, au prix de son action (B23) ; lien de meute sur la Puissance (B22) | #11 invocation, #12 aura | 🟡 produit le 14/11 (`art_src/sprites/rat/tier_1/rat_geant.aseprite`, B43) — fait comme un tier 1 : le garder ou le retoucher reste à trancher |
+| **Squelette** | Squelette — la Faiblesse | Existant, redessiné (B52) ; prend la Faiblesse (B48) | 22 · 8 · 10 % | 50 · 15 | Attaque 8, puis attaque 10 ; la Faiblesse est à placer dans ce cycle | #5 pose d'un statut | 🟡 produit, encore en itération (`art_src/sprites/squelette/tier_2/`) |
 | **Zombie enragé** | à nommer | Neuf | à fixer | à fixer | Cycle à deux coups ; chaque coup pose du Poison | #5 pose d'un statut | ❌ |
 | **Loup des ombres** | à nommer | Neuf | à fixer | à fixer | Cycle rapide, critique haut, plusieurs coups | #4 plusieurs coups | ❌ |
 | **Voleur des cryptes** | à nommer | Neuf | à fixer | à fixer | Deux coups, dont un détruit l'armure au lieu de toucher les PV | #14 perce-armure | ❌ |
@@ -77,7 +77,7 @@ Liste fixée. Valeurs des ennemis neufs : B53, des valeurs de départ. Les méca
 | Ennemi | Famille (B2) | État | PV · dégâts · critique | XP · or | Intentions | Mécanismes | Sprite livré |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | **Orc Furieux** | Orc — la Puissance | Existant, redessiné (B52) ; sa forme est à fixer | 50 · 8 · 15 % | 100 · 25 | Attaque 8, puis Puissance +2, puis attaque 12 | #10 se renforcer | ❌ |
-| **Squelette faucheuse** | Squelette — la Faiblesse | Neuve ; forme haute du Squelette ou ennemi à part : la lignée est à trancher | à fixer | à fixer | La Faiblesse, à la forme de tier 3 | #5 pose d'un statut | 🟡 produite (`art_src/creatures/squelette/tier_3/`) — sa validation n'est pas tracée |
+| **Squelette faucheuse** | Squelette — la Faiblesse | Neuve ; forme haute du Squelette ou ennemi à part : la lignée est à trancher | à fixer | à fixer | La Faiblesse, à la forme de tier 3 | #5 pose d'un statut | 🟡 produite (`art_src/sprites/squelette/tier_3/`) — sa validation n'est pas tracée |
 | **Nécromancien novice** | à nommer | Neuf | à fixer | à fixer | Invoque le Squelette (B27) | #11 invocation | ❌ |
 | **Chevalier déchu** | à nommer | Neuf | à fixer | à fixer | Attaque, puis Armure, puis frappe perce-armure | #10 se renforcer, #14 perce-armure | ❌ |
 | **Sorcière des marais** | à nommer | Neuve | à fixer | à fixer | Poison et Gel en alternance | #5 pose d'un statut ou d'une charge | ❌ |
@@ -124,7 +124,7 @@ Liste fixée. Valeurs des ennemis neufs : B53, des valeurs de départ. Les méca
 ## 8. Ce que ce dictionnaire ne sait pas encore
 
 - **Le critique, l'XP et l'or des sept ennemis neufs du tier 1** : B53 fixe leurs PV, leurs dégâts et leur effet, pas le reste. À fixer avant la spec de la vague 4.
-- **Les familles** : B2 en nomme six (Rat, Slime, Araignée, Gobelin, Squelette, Orc). Le Corbeau, le Kobold et tous les ennemis neufs des tiers 2 à 5 n'en ont pas ; or le chemin d'un sprite, `art_src/creatures/<famille>/tier_<n>/`, en demande une.
+- **Les familles** : B2 en nomme six (Rat, Slime, Araignée, Gobelin, Squelette, Orc). Le Corbeau, le Kobold et tous les ennemis neufs des tiers 2 à 5 n'en ont pas ; or le chemin d'un sprite, `art_src/sprites/<famille>/tier_<n>/`, en demande une.
 - **Les identifiants** : le nom du dossier de chaque ennemi neuf, fixé par la spec de sa vague.
 - **Toutes les valeurs des tiers 2 à 5**, et la place de la Faiblesse dans le cycle du Squelette.
 - **L'ennemi du tier 2 qui porte le choix d'intention** (B70), et **le premier ennemi qui contre-attaque en dégâts** par la riposte (B71).

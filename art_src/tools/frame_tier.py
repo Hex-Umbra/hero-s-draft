@@ -4,7 +4,7 @@ La fenetre est l'invariant : 64 x 96 sur tous les tiers. Le canevas et l'epaisse
 bordure grandissent avec le tier, si bien que la menace se lit avant l'illustration. Le cadre
 porte son propre fond de fenetre, opaque. Tout est fait par le code : c'est de la geometrie.
 
-    python frame_tier.py 2 ../frames/tier_2.aseprite
+    python frame_tier.py 2 ../cadres/tier_2.aseprite
 """
 import math
 import sys

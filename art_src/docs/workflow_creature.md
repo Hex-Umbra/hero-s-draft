@@ -6,7 +6,7 @@
 
 ## Le principe
 
-**La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds](workflow_fond.md), § 2). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
+**La créature est un sprite à part, sur fond transparent.** Le jeu la greffe sur un fond de fenêtre, choisi selon le biome (voir [le workflow des fonds de fenêtre](workflow_fond.md)). Une créature ne se dessine donc qu'une fois, puis apparaît dans tous les décors.
 
 **Tout part d'un brief, établi avec le propriétaire avant toute génération** (étape 1). On sait dès le premier tour quelle créature le générateur doit dessiner, dans quelle pose et avec quel équipement : c'est ce qui réduit le nombre de tours et de générations.
 
@@ -339,7 +339,7 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 
 ## Le dossier d'une créature
 
-**Les créatures sont rangées par famille, puis par tier :** `art_src/creatures/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. **La famille est la créature elle-même, jamais un groupe de créatures** comme « vermine » ou « bêtes » : le Rat géant est dans `rat/tier_1/` (décision du propriétaire du 13/11/2026). Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
+**Les créatures sont rangées par famille, puis par tier :** `art_src/sprites/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. **La famille est la créature elle-même, jamais un groupe de créatures** comme « vermine » ou « bêtes » : le Rat géant est dans `rat/tier_1/` (décision du propriétaire du 13/11/2026). Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
 
 | Fichier | Rôle |
 |:---|:---|
