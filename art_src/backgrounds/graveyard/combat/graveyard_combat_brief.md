@@ -1,6 +1,6 @@
 # Brief — Cimetière, combat
 
-**État :** décor validé le 24/11/2026.
+**État :** décor validé le 24/11/2026, dans sa seconde version : le dernier pas refait à 0.5, après l'analyse de la première.
 
 Le décor de combat du lieu « cimetière » (`graveyard`), en 640 × 360 (B74), en couleurs peintes (B80). C'est le second décor produit par le [workflow des décors](../../../docs/workflow_decor.md), et le premier mené d'un bout à l'autre par ses outils : il sert d'essai 7, celui qui dit si la méthode tient sur un autre sujet que la forêt. Il n'a pas eu de session de brief en quatre blocs : le propriétaire a choisi le sujet sur des esquisses libres, que ce document résume. Il ne porte **ni structure ni calques** : c'est une image à plat.
 
@@ -47,17 +47,20 @@ Le même prompt et les mêmes exclusions aux trois générations, sur la graine 
 | 0 | Esquisses libres, 1280 × 720 | Quatre idées, trois graines chacune, sans plan | 121064, idée « sous les arbres morts » | Choisie par le propriétaire pour son sujet et son ambiance |
 | 1 | Ensemble, 1280 × 720 | Le plan en aplats comme image de départ ; débruitage 0.8 puis 0.9, trois graines chacun | 121064, à 0.8 | À 0.8 le plan tient sur les trois graines ; à 0.9 la lune se dédouble ou s'enterre |
 | 2 | Détail, premier pas, 2560 × 1440 | Les trois images à 0.8 repeintes entières, à 0.8 | 121064 | La plus proche de l'esquisse ; ses croix se lisent des deux côtés du héros, sa lune est dégagée |
-| 3 | Détail, dernier pas, 5120 × 2880 | L'image entière repeinte d'un coup, à 0.6 | 121064 | Grille de 640 × 360 nette à 91,1 × 99,1 ; validé sous la maquette du combat |
+| 3 | Détail, dernier pas, 5120 × 2880 | L'image entière repeinte d'un coup, à 0.6 | 121064 | Grille nette à 91,1 × 99,1 ; validé sous la maquette du combat, puis **écarté** : regardé seul, le décor portait sept objets inventés par ce pas — une croix sans pied, des tombes dans un arbre, une seconde lune |
+| 4 | Détail, dernier pas refait | Le même pas à 0.4, à 0.5, et à 0.6 avec un prompt sans objet | 121064, à 0.5 | 0.4 garde les gros pixels du premier pas ; le prompt sans objet change les croix en tours ; 0.5 affine sans refaire la scène, grille nette à 81,5 × 96,3 |
 
 ## Après la génération
 
 - **L'import :** `python window_import.py <image de 5120 × 2880> graveyard_combat_detail.aseprite --taille 640x360 --couleurs-peintes --source graveyard_combat_detail_source.png`. La grille est lue telle quelle, chaque case garde sa couleur peinte ; le `.aseprite` est en couleurs libres, la palette Apollo en nuancier.
 - **Le contrôle en situation :** `python decor_controle.py graveyard_combat_detail.aseprite <sortie.png>`, une maquette — quatre ennemis des tiers 1 à 3 dans leurs cadres provisoires, le héros, une main de cinq cartes.
-- **La retouche :** pas encore faite. Trois points relevés à la validation :
-  - un petit disque pâle dans le ciel, entre la deuxième et la troisième carte d'ennemi, comme une seconde lune : à effacer ;
-  - des nuages dans le ciel, derrière la rangée des ennemis : sourds, mais le haut est moins calme que sur la forêt ;
-  - le ciel a viré du bleu sarcelle de l'esquisse à un bleu nuit, au dernier pas.
-- **Pour rejouer les deux repeintes :** `python decor_repeindre.py graveyard_combat_ensemble_source.png 2560x1440`, puis `python decor_repeindre.py graveyard_combat_pas1_source.png 5120x2880 --denoise 0.6`.
+- **La retouche :** pas encore faite. Cinq points relevés sur le décor seul, agrandi :
+  - une stèle et deux petites croix dans les branches de l'arbre de gauche : à effacer ;
+  - des brindilles rouges sur deux croix, à gauche du héros : à effacer ;
+  - une branche qui pousse sur la croix du centre, présente dès le premier pas : à effacer ;
+  - une étoile trop grosse dans le ciel, entre la deuxième et la troisième carte d'ennemi : à réduire ;
+  - deux coins sombres sans forme, en bas de l'image, venus des masses de premier plan du plan : l'interface en cache une part.
+- **Pour rejouer les deux repeintes :** `python decor_repeindre.py graveyard_combat_ensemble_source.png 2560x1440`, puis `python decor_repeindre.py graveyard_combat_pas1_source.png 5120x2880 --denoise 0.5`.
 
 ## Les fichiers
 

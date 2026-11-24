@@ -10,7 +10,8 @@ graine et la force du LoRA sont relus dans l'image, et repris tels quels. Voir
 
 Le decor de 640 x 360 se peint en 5120 x 2880, huit fois sa taille : le LoRA pixel art pose des
 cases de 8 pixels. Une image d'ensemble nee d'un plan en aplats passe par 2560x1440 a 0.8, qui lui
-redonne sa matiere en deux minutes, puis par 5120x2880 a 0.6, en un quart d'heure. Au-dela de
+redonne sa matiere en deux minutes, puis par 5120x2880 a 0.5, en un quart d'heure : a 0.6, ce
+dernier pas invente des objets ; a 0.4, il garde les gros pixels du premier. Au-dela de
 2560 x 1440, l'image est encodee et decodee par morceaux, pour tenir sur une carte de 8 Go.
 
 L'image arrive dans .work/comfy/, sous le nom de l'image de depart, ou celui donne par --nom, suivi
@@ -43,7 +44,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("image", help="l'image de depart, sortie de ComfyUI : l'image d'ensemble, ou une repeinte")
     ap.add_argument("taille", help="la taille a peindre, LARGEURxHAUTEUR, en multiples de 8")
-    ap.add_argument("--denoise", type=float, default=0.8, help="le debruitage (0.8 par defaut ; 0.6 pour le dernier pas)")
+    ap.add_argument("--denoise", type=float, default=0.8, help="le debruitage (0.8 par defaut ; 0.5 pour le dernier pas)")
     ap.add_argument("--seed", type=int, help="la graine (celle de l'image de depart par defaut)")
     ap.add_argument("--nom", help="le nom de l'image de sortie, a la place de celui de l'image de depart")
     a = ap.parse_args()

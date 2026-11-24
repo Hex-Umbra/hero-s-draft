@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode éprouvée sur deux décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils, sans changer un réglage ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur deux sujets, une graine chacun, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode éprouvée sur deux décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur deux sujets, une graine chacun, avec un dernier pas ramené de 0.6 à 0.5 après l'analyse du second, et donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -148,17 +148,19 @@ Le propriétaire choisit l'image d'ensemble sur trois questions seulement : la c
 
 ### 4. La passe de détail : l'image entière, repeinte en deux pas
 
-`python decor_repeindre.py <image d'ensemble> 2560x1440`, puis `python decor_repeindre.py <repeinte en 2560 × 1440> 5120x2880 --denoise 0.6`
+`python decor_repeindre.py <image d'ensemble> 2560x1440`, puis `python decor_repeindre.py <repeinte en 2560 × 1440> 5120x2880 --denoise 0.5`
 
 L'outil agrandit l'image de départ et la fait repeindre entière par ComfyUI. Il relit dans l'image son prompt, ses exclusions, sa graine et la force du LoRA, et les reprend tels quels. Il affiche la netteté de la grille peinte, et ce qu'il reste de celle de l'image de départ.
 
 | Pas | Taille | Débruitage | Durée | Ce qu'il fait |
 |:---|:---|:---|:---|:---|
 | 1 | 2560 × 1440, une grille de 320 × 180 | 0.8 | 2 minutes | Il redonne sa matière à l'image — l'écorce, les racines, la mousse — et efface la grosse grille. La scène est en partie recomposée, sans sortir du sujet |
-| 2 | 5120 × 2880, la grille du décor | 0.6 | 14 minutes | Il précise les formes sans les déplacer |
+| 2 | 5120 × 2880, la grille du décor | 0.5 | 14 minutes | Il affine les pixels sans refaire la scène |
 
 - **Le premier pas se juge avant le second.** L'image se pose sous le combat (`decor_controle.py`) : la matière est-elle revenue, la composition a-t-elle tenu ? On ne paie le quart d'heure du second pas que sur une image retenue.
 - **Une image née d'un plan passe par les deux pas.** Elle porte les aplats du plan : repeinte d'un seul pas jusqu'à 5120 × 2880, elle les garde, et le décor sort plat (essai 6). Une image composée librement, qui porte déjà sa matière, tient en un seul pas à 0.7 (essai 5).
+- **Le dernier pas se règle à 0.5.** Il faut du débruitage pour affiner les pixels, et c'est ce même débruitage qui invente. À 0.4, l'image garde les gros pixels du premier pas : la grille de 320 × 180 y reste plus nette que celle de 640 × 360. À 0.6, le générateur replace dans les matières ce que le prompt nomme : sur le cimetière, des tombes dans les branches d'un arbre, une croix privée de son pied (essai 7). Le décor de la forêt a été peint à 0.6 : une écorce ou une mousse réinventée reste une écorce.
+- **Le prompt reste celui du décor.** Un prompt qui ne nomme plus aucun objet ne retient plus le sujet : à 0.6, les croix deviennent des tours en ruine (essai 7).
 - **La netteté de la grille** se lit à la fin de chaque pas. Le minimum est 3 ; le décor de la forêt atteint 54 × 119. Il peut rester une trace de la grille du pas précédent — 10 × 7 sur ce décor — que l'œil ne lit pas.
 - **Au-delà de 2560 × 1440, l'image est encodée et décodée par morceaux**, pour tenir sur une carte de 8 Go ; le débruitage, lui, porte toujours sur l'image entière. C'est ce qui garantit l'absence de raccord.
 
@@ -184,7 +186,9 @@ L'outil agrandit le décor à la taille d'un écran en 1080p et pose dessus un c
 
 **C'est une maquette, pas le jeu.** Ses places viennent des maquettes du 23/11 (B72, B73, B77), ses cadres sont ceux, provisoires, de `frame_tier.py`, et les cartes de sa main sont factices. Elle se revérifie sur le jeu une fois la vague du visuel livrée.
 
-Quatre questions :
+**Le décor se regarde aussi seul, agrandi, zone par zone, avant d'être validé.** Sous le combat, l'interface cache une part des défauts, et l'œil suit les cartes. C'est seul qu'on voit un objet qui flotte, un objet posé où il ne peut pas être, deux objets soudés, une matière qui a changé de nature. Chaque défaut se cherche ensuite dans les images des étapes précédentes : celui qui est né au dernier pas se règle par son débruitage, celui qui vient du plan se règle dans le plan.
+
+Quatre questions, sous le combat :
 - Les cartes se détachent-elles du décor, et leurs barres se lisent-elles ?
 - Le décor reste-t-il calme sous l'interface ?
 - Le lieu se lit-il dans ce qui reste visible ?
@@ -205,13 +209,13 @@ On reprend à la main les bords d'objets et les détails à préciser, en couleu
 | 3. La passe d'ensemble | Éprouvée sur deux décors, trois graines chacun, à 0.8 et 0.9 | `comfy_gen.py` |
 | 4. La passe de détail | Éprouvée sur deux décors, une graine chacun : aucun raccord, grille nette | `decor_repeindre.py` : il rejoue à l'identique le premier pas du décor de la forêt, et a peint les deux pas de celui du cimetière |
 | 5. L'import | Éprouvé en 640 × 360, en couleurs peintes, sur deux décors | `window_import.py --couleurs-peintes` |
-| 6. Le contrôle en situation | Fait sur une maquette, pas sur le jeu | `decor_controle.py` |
+| 6. Le contrôle en situation | Fait sur une maquette, pas sur le jeu ; le contrôle du décor seul, agrandi, se fait à l'œil, sans outil | `decor_controle.py` |
 | 7. La retouche | Pas encore faite sur un décor | Aseprite |
 
 **Ce qui reste ouvert :**
 - **Les calques.** Le décor est une image à plat ; la règle du calque par objet n'est pas tenue.
 - **Un intérieur.** La forêt et le cimetière sont deux extérieurs, qui se recomposent sans dommage : un arbre ou une tombe déplacés restent à leur place. Une salle ou un campement, aux lignes droites et aux objets comptés, peut-être pas.
-- **La dérive du dernier pas.** Sur le cimetière, le ciel a viré du bleu sarcelle au bleu nuit et s'est chargé de nuages entre 2560 × 1440 et 5120 × 2880 (essai 7). Un dernier pas à 0.5 resterait peut-être plus près du premier : à éprouver.
+- **Les inventions du dernier pas.** À 0.5, il en reste quelques-unes sur un décor d'objets nets — une stèle dans un arbre, des brindilles sur une croix — laissées à la retouche (essai 7). Tenir les formes par une carte de contours au dernier pas n'a pas été essayé.
 - **La carte des zones** est lue dans le code, pas mesurée sur une capture du jeu.
 
 ## Les essais
@@ -226,7 +230,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 | 4. Le décor entier, par tuiles | Le campement en 640 × 360, 25 tuiles | **Échec** : chaque tuile repeint un campement, et les raccords se voient |
 | 5. L'image entière, sans tuiles | La forêt, composée librement, repeinte d'un coup | **Aucun raccord.** Le décor garde ses couleurs peintes (B80), en 640 × 360 |
 | 6. La composition | Un plan en aplats comme image de départ | Le plan tient la composition ; il faut deux pas pour retrouver la matière. **Premier décor validé** |
-| 7. Un second sujet | Le cimetière, par toute la chaîne, sans changer un réglage | La méthode tient ; le dernier pas fait dériver le ciel. **Second décor validé** |
+| 7. Un second sujet | Le cimetière, par toute la chaîne, puis son dernier pas à 0.4, 0.5 et 0.6 | La méthode tient ; à 0.6 le dernier pas invente des objets, à 0.5 il affine. **Second décor validé** |
 
 **L'essai 1, mené le 23/11/2026.** Sur le campement, avec le prompt de l'ensemble, sans recouvrement ni guide de couleur, sur une seule graine. Les images et leurs planches sont dans `.work/tuiles/` (`essai1*`), hors du dépôt.
 
@@ -394,13 +398,40 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 
 **Le premier pas de détail,** sur les trois images à 0.8, en 2560 × 1440 à 0.8, 127 à 128 secondes chacune : les grilles de 320 × 180 sont nettes, de 50 à 82. Sous le combat, la graine 121064 garde ses croix dans la bande visible, des deux côtés du héros ; la graine 832745 les redescend sous la main et laisse la bande presque vide ; la graine 293903 garde son arbre feuillu.
 
-**Le dernier pas, sur la graine 121064 :** 5120 × 2880 à 0.6, en 14 min 29 s, puis l'import en couleurs peintes. La grille de 640 × 360 est nette à 91,1 × 99,1 ; il reste de celle de 320 × 180 une trace à 8,6 × 9,7. La composition du plan a tenu jusqu'au bout. **Validé par le propriétaire le 24/11**, le décor est rangé dans `backgrounds/graveyard/combat/`.
+**Le dernier pas, sur la graine 121064, d'abord à 0.6 :** 5120 × 2880 en 14 min 29 s, puis l'import en couleurs peintes. La grille de 640 × 360 est nette à 91,1 × 99,1, et la composition du plan a tenu. Validé sous le combat, ce décor a été repris le jour même : le propriétaire y a vu des détails incohérents.
+
+**L'analyse du décor seul, agrandi, zone par zone,** relève neuf incohérences, et l'origine de chacune se lit dans les images des étapes :
+
+| Ce qui ne va pas | Né à quelle étape |
+|:---|:---|
+| Une croix flotte dans le ciel, sans pied | Dernier pas : c'était une croix sur une colonne et son socle |
+| Des stèles sur les branches de l'arbre, et une corniche de pierre portant trois croix, en l'air | Dernier pas : il n'y avait là que des branches et un nuage |
+| Un petit disque pâle dans le ciel, comme une seconde lune | Dernier pas : c'était une grosse étoile |
+| Deux croix soudées sur un seul socle | Dernier pas |
+| Les stèles du premier plan devenues des tas de pierres | Dernier pas |
+| Un amas de tombes empilées derrière l'arbre de droite | Dernier pas |
+| Une petite croix sur une branche de l'arbre de droite | Dernier pas |
+| Une branche qui pousse sur une croix de pierre ; un sentier qui bifurque vers un tas de pierres | Premier pas |
+| Deux coins sombres sans forme, en bas de l'image | Le plan : ses masses de premier plan, que le générateur n'a pas su lire |
+
+**Le dernier pas, refait depuis la même repeinte de 2560 × 1440,** avec la même graine :
+
+| Dernier pas | Durée | Grille de 640 × 360 | Reste de celle de 320 × 180 | Ce qu'on voit |
+|:---|:---|:---|:---|:---|
+| 0.4 | 14 min 24 s | 39,0 × 53,2 | 59,3 × 38,4 | Rien d'inventé, mais l'image garde les gros pixels du premier pas : ce n'est pas un décor de 640 × 360 |
+| 0.5 | 13 min 55 s | 81,5 × 96,3 | 19,7 × 25,4 | La croix garde sa colonne, les stèles restent des stèles, le ciel reste plus près de l'esquisse. Restent une stèle et deux petites croix dans l'arbre, des brindilles sur deux croix |
+| 0.6 | 14 min 29 s | 91,1 × 99,1 | 8,6 × 9,7 | Les sept inventions du tableau ci-dessus |
+| 0.6, avec un prompt qui ne nomme aucun objet | 13 min 57 s | 205,9 × 167,3 | 12,7 × 11,1 | **Pire** : les croix et les stèles deviennent des tours en ruine aux fenêtres éclairées. Le prompt tenait le sujet |
+
+**La version à 0.5, validée par le propriétaire le 24/11,** remplace la première dans `backgrounds/graveyard/combat/`.
 
 **Ce que dit l'essai 7 :**
-- **La méthode tient sur un autre sujet,** sans changer un réglage, en dix-sept minutes de génération pour l'image retenue.
+- **La méthode tient sur un autre sujet,** en dix-sept minutes de génération pour l'image retenue ; un seul réglage change, le débruitage du dernier pas.
 - **Le plan sert aussi à reprendre une esquisse libre** que le propriétaire a choisie : il en garde les objets et les replace hors de l'interface.
 - **0.9 est à éviter à la passe d'ensemble** quand le décor porte un objet unique : il se dédouble ou se déplace.
-- **Le dernier pas a fait dériver le ciel :** du bleu sarcelle au bleu nuit, avec des nuages derrière la rangée des ennemis et un petit disque pâle, comme une seconde lune, laissé à la retouche. Le premier pas ne portait rien de cela.
+- **Le dernier pas à 0.6 invente.** À 5120 × 2880, le générateur voit chaque objet en très gros et replace dans les matières ce que le prompt nomme. C'est le défaut des tuiles, en plus discret ; la forêt le cachait.
+- **0.5 est le compromis :** assez pour affiner les pixels, pas assez pour refaire la scène. Retirer les objets du prompt n'est pas une issue.
+- **Le contrôle sous le combat ne suffit pas.** Le premier décor du cimetière a été validé sous la maquette avec sept inventions que l'interface cachait en partie : le décor se regarde aussi seul, agrandi.
 - **Ce que l'essai ne dit pas :** c'est encore un extérieur. Le cimetière n'a pas de fonds de fenêtre : il a été jugé sous ceux de la forêt.
 
 **Une carte de profondeur tirée du plan** (les troncs devant, le sol en pente, le fond loin), seule ou avec le plan, donne des images raides, aux plans découpés comme un décor de théâtre : écartée.
