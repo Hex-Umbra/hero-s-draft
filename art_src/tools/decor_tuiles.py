@@ -17,7 +17,8 @@ la scene, pour un essai a l'echelle d'un decor plus grand. Les tuiles vont dans 
 plan (plan.json) ; <nom> est celui de la scene, ou celui donne par --nom.
 
 peindre repeint toutes les tuiles, ou celles nommees par --tuiles (colonne,rangee, a partir de 0),
-et affiche la nettete de la grille de chacune. --mots donne un fichier de mots : le prompt de
+et affiche la nettete de la grille de chacune. --continuer, avec un recouvrement, fait reprendre a
+chaque tuile ce que ses voisines ont deja peint : elle ne peint que le reste. --mots donne un fichier de mots : le prompt de
 chaque tuile reunit alors le style commun et les mots des calques qu'elle montre. --a-blanc
 affiche le plan et les prompts sans rien generer.
 """
@@ -120,6 +121,30 @@ def thin(edges, width, thickness):
     return lines
 
 
+def frozen(graph, mask):
+    """Fige une part de la tuile : seule la zone blanche du masque est repeinte, le reste revient
+    a l'identique. graph est le graphe de comfy_gen.workflow, mask le masque envoye a ComfyUI."""
+    graph["80"] = {"class_type": "LoadImage", "inputs": {"image": mask}}
+    graph["81"] = {"class_type": "ImageToMask", "inputs": {"image": ["80", 0], "channel": "red"}}
+    graph["82"] = {"class_type": "SetLatentNoiseMask", "inputs": {"samples": ["8", 0], "mask": ["81", 0]}}
+    graph["9"]["inputs"]["latent_image"] = ["82", 0]
+    graph["83"] = {"class_type": "ImageCompositeMasked", "inputs": {"destination": ["7", 0], "source": ["98", 0], "x": 0, "y": 0, "resize_source": False, "mask": ["81", 0]}}
+    graph["99"]["inputs"]["images"] = ["83", 0]
+    return graph
+
+
+def neighbours(box, tiles, painted):
+    """Ce que les tuiles deja peintes couvrent d'une tuile : [(rectangle dans la tuile, morceau de la voisine)]."""
+    out = []
+    for other, path in painted.items():
+        ob = tiles[other]
+        x0, y0, x1, y1 = max(box[0], ob[0]), max(box[1], ob[1]), min(box[2], ob[2]), min(box[3], ob[3])
+        if x0 < x1 and y0 < y1:
+            piece = Image.open(path).convert("RGB").crop((x0 - ob[0], y0 - ob[1], x1 - ob[0], y1 - ob[1]))
+            out.append(((x0 - box[0], y0 - box[1], x1 - box[0], y1 - box[1]), piece))
+    return out
+
+
 def paint(a):
     entry = json.load(open(work(f"{a.scene}_manifest.json"), encoding="utf-8"))[0]
     scene_size = tuple(int(v) for v in a.taille.split("x")) if a.taille else (entry["w"], entry["h"])
@@ -139,7 +164,8 @@ def paint(a):
     for t in chosen:
         prompts[t] = tile_prompt(words, layer_shares(a.scene, tiles[t], full), a.seuil) if words else a.prompt
     plan = dict(scene=a.scene, full=list(full), tile=a.tuile, recouvrement=a.recouvrement, seed=a.seed, denoise=a.denoise,
-                depth=a.depth, edges=a.edges, lora=a.lora, couleur=a.couleur, agrandir=a.agrandir, ensemble=os.path.abspath(a.ensemble),
+                depth=a.depth, edges=a.edges, lora=a.lora, couleur=a.couleur, agrandir=a.agrandir, continuer=a.continuer,
+                ensemble=os.path.abspath(a.ensemble),
                 tiles={f"{c},{r}": dict(box=list(tiles[(c, r)]), prompt=prompts.get((c, r))) for c, r in tiles})
     plan_path = work("tuiles", name, "plan.json")
     if os.path.isfile(plan_path):  # une relance de quelques tuiles garde le prompt des autres
@@ -157,21 +183,43 @@ def paint(a):
     depth = Image.open(f"{a.prefixe}_depth.png").convert("L").resize(full, Image.BICUBIC)
     edges = thin(Image.open(f"{a.prefixe}_edges.png").convert("L").resize(full, Image.NEAREST), a.trait, round(full[0] / entry["w"]))
     sheet = []
+    tile_path = lambda t: work("tuiles", name, f"t_{t[0]}_{t[1]}.png")
+    painted = {t: tile_path(t) for t in tiles if t not in chosen and os.path.isfile(tile_path(t))} if a.continuer else {}
     for t in chosen:
         box = tiles[t]
         size = (box[2] - box[0], box[3] - box[1])
         stem = f"t_{t[0]}_{t[1]}"
+        crops = {"base": base.crop(box), "depth": depth.crop(box), "edges": edges.crop(box)}
+        mask = None
+        if a.continuer:  # ce que les voisines ont deja peint est repris tel quel, et la tuile peint le reste
+            mask = Image.new("L", size, 255)
+            for area, piece in neighbours(box, tiles, painted):
+                crops["base"].paste(piece, area[:2])
+                mask.paste(0, area)
+            if mask.getextrema() == (255, 255):
+                mask = None
+            elif mask.getextrema()[1] == 0:
+                print(f"tuile {t[0]},{t[1]} : entierement couverte par ses voisines, rien a peindre")
+                crops["base"].save(tile_path(t))
+                painted[t] = tile_path(t)
+                continue
         files = {}
-        for kind, image in (("base", base), ("depth", depth), ("edges", edges)):
+        for kind, image in crops.items():
             files[kind] = work("tuiles", name, "guides", f"{stem}_{kind}.png")
-            image.crop(box).save(files[kind])
+            image.save(files[kind])
         strengths = {"depth": a.depth, "edges": a.edges}
         controls = [(upload(files[k]), CONTROLS[k][1], strengths[k], CONTROLS[k][2]) for k in ("depth", "edges") if strengths[k] > 0]
         guide = upload(files["base"])
         if a.couleur > 0:
             controls.append((guide, TILE_CONTROL[0], a.couleur, TILE_CONTROL[1]))
-        out = work("tuiles", name, f"{stem}.png")
-        took = run(workflow(guide, controls, prompts[t], negative, a.seed, a.denoise, a.lora, size), out)
+        out = tile_path(t)
+        graph = workflow(guide, controls, prompts[t], negative, a.seed, a.denoise, a.lora, size)
+        if mask:
+            files["masque"] = work("tuiles", name, "guides", f"{stem}_masque.png")
+            mask.save(files["masque"])
+            graph = frozen(graph, upload(files["masque"]))
+        took = run(graph, out)
+        painted[t] = out
         sharp = grid_sharpness(Image.open(out).convert("RGB"), size[0] // CELL, size[1] // CELL)
         print(f"tuile {t[0]},{t[1]} : {out}  ({took:.0f} s) ; nettete de la grille {sharp[0]:.1f} x {sharp[1]:.1f} (minimum {MIN_SHARPNESS})")
         sheet.append((f"{t[0]},{t[1]}  {sharp[0]:.0f} x {sharp[1]:.0f}", out))
@@ -224,6 +272,7 @@ def main():
     p.add_argument("--edges", type=float, default=0.45, help="force de la carte des contours (0.45 par defaut)")
     p.add_argument("--lora", type=float, default=0.9, help="force du LoRA pixel art (0.9 par defaut)")
     p.add_argument("--couleur", type=float, default=0.0, help="force du guide de couleur (ControlNet Union « tile », nourri de l'image d'ensemble ; 0 : sans)")
+    p.add_argument("--continuer", action="store_true", help="une tuile reprend tel quel ce que ses voisines deja peintes couvrent, et ne peint que le reste : pour des raccords sans couture, avec un recouvrement")
     p.add_argument("--agrandir", choices=sorted(RESAMPLE), default="bicubique", help="comment l'image d'ensemble est agrandie (bicubique par defaut)")
     p.add_argument("--trait", type=int, default=4, help="l'epaisseur des contours dans le guide d'une tuile, en pixels (4 par defaut)")
     p.add_argument("--taille", help="la taille du decor vise, LARGEURxHAUTEUR, quand elle n'est pas celle de la scene : "
