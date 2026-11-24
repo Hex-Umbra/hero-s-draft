@@ -339,7 +339,7 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 
 ## Le dossier d'une créature
 
-**Les créatures sont rangées par famille, puis par tier :** `art_src/creatures/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. **La famille est la créature elle-même, jamais un groupe de créatures** comme « vermine » ou « bêtes » : le Rat géant est dans `rat/tier_1/` (décision du propriétaire du 13/11/2026). Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
+**Les créatures sont rangées par famille, puis par tier :** `art_src/sprites/<famille>/tier_<n>/`. Une famille regroupe les formes d'une même créature d'un tier à l'autre : la Faucheuse est le Squelette de tier 3, dans `squelette/tier_3/`. **La famille est la créature elle-même, jamais un groupe de créatures** comme « vermine » ou « bêtes » : le Rat géant est dans `rat/tier_1/` (décision du propriétaire du 13/11/2026). Les fichiers portent le nom de la forme, `<nom>` (`squelette`, `squelette_faucheuse`) :
 
 | Fichier | Rôle |
 |:---|:---|

@@ -22,7 +22,7 @@
 ## Prérequis — avant l'ouverture
 
 1. **La liste des ennemis**, confirmée ou réduite par le propriétaire.
-2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 3 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Existe : la Squelette faucheuse (`art_src/creatures/squelette/tier_3/`). À produire : les autres, et l'Orc, redessiné (B52).
+2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 3 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Existe : la Squelette faucheuse (`art_src/sprites/squelette/tier_3/`). À produire : les autres, et l'Orc, redessiné (B52).
 3. **Les réponses du propriétaire** (classe P), sur maquettes quand elles se voient :
    - **la lignée** : la Faucheuse est-elle une forme qui succède au Squelette (une évolution d'une forme à l'autre, que B2 laissait en attente, et la [DA évolutive](../possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md) §16.3 aussi), ou un ennemi à part de la même famille ;
    - **comment une phase se lit** : le seuil visible ou non, un signal au changement, ce que la fiche en dit ;

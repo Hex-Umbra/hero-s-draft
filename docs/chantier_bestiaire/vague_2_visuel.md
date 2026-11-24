@@ -19,9 +19,9 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
 ## Prérequis — avant l'ouverture
 
 1. **Les assets, tous validés** :
-   - **les cadres des tiers 1, 2 et 3, redessinés** (B73) : aux canevas de 88 × 120, 96 × 128 et 104 × 136, avec leurs transparences. Le cadre du tier 2 qui existe (`art_src/frames/tier_2.aseprite`) et l'outil `art_src/tools/frame_tier.py`, qui porte encore les anciennes tailles, sont provisoires. **Le dessin suit la contrainte de B77** : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre ; au-delà du gabarit de 88 × 120 centré sur la fenêtre, le dessin peut passer sous la barre et les languettes ;
-   - les fonds de fenêtre — trois de forêt existent (`art_src/backgrounds/windows/forest/`) ;
-   - ✅ **le décor de combat de forêt, en 640 × 360** (B74), en couleurs peintes (B80) : **validé le 24/11**, rangé dans `art_src/backgrounds/forest/combat/`. Sa méthode ([workflow des décors](../../art_src/docs/workflow_decor.md), essais 5 et 6) : un plan en aplats d'après la place de l'interface, une image d'ensemble, puis l'image entière repeinte en 5120 × 2880, sans tuiles. C'est une image à plat, sans calque par objet, et elle n'est pas encore retouchée.
+   - **les cadres des tiers 1, 2 et 3, redessinés** (B73) : aux canevas de 88 × 120, 96 × 128 et 104 × 136, avec leurs transparences. Le cadre du tier 2 qui existe (`art_src/cadres/tier_2.aseprite`) et l'outil `art_src/tools/frame_tier.py`, qui porte encore les anciennes tailles, sont provisoires. **Le dessin suit la contrainte de B77** : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre ; au-delà du gabarit de 88 × 120 centré sur la fenêtre, le dessin peut passer sous la barre et les languettes ;
+   - les fonds de fenêtre — trois de forêt existent (`art_src/fonds/forest/`) ;
+   - ✅ **le décor de combat de forêt, en 640 × 360** (B74), en couleurs peintes (B80) : **validé le 24/11**, rangé dans `art_src/decors/forest/combat/`. Sa méthode ([workflow des décors](../../art_src/docs/workflow_decor.md), essais 5 et 6) : un plan en aplats d'après la place de l'interface, une image d'ensemble, puis l'image entière repeinte en 5120 × 2880, sans tuiles. C'est une image à plat, sans calque par objet, et elle n'est pas encore retouchée.
 2. **Les réponses du propriétaire** (classe P) :
    - ✅ **la règle d'échelle** : B72 ;
    - ✅ **les géométries des cadres** : B73, celle des boss attendant leur cadrage ;

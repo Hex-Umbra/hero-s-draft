@@ -20,7 +20,7 @@ from aseprite_io import HERE
 from creature_lisere import NAME as RIM, read_layers
 from frame_tier import frame
 
-FOREST = [os.path.join(HERE, "..", "backgrounds", "windows", "forest", f"forest_window_{i}.aseprite") for i in (1, 2, 3)]
+FOREST = [os.path.join(HERE, "..", "fonds", "forest", f"forest_window_{i}.aseprite") for i in (1, 2, 3)]
 ZOOM, GAP, LABEL = 3, 20, 50  # l'agrandissement de la planche, l'espace entre deux vignettes, la hauteur des titres
 
 

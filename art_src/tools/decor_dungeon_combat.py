@@ -9,7 +9,7 @@ ennemis tient de y = 14 a 126, le heros est centre en (320, 184), la main part d
 x = 95 et 545 : l'arche est plus large que le heros, et les torches l'encadrent dans la bande restee
 visible. Les aplats sont sombres : c'est le plan, pas le prompt, qui donne le noir du decor.
 
-    python decor_dungeon_combat.py ../backgrounds/dungeon/combat/dungeon_combat_plan.png [<zones.png>]
+    python decor_dungeon_combat.py ../decors/dungeon/combat/dungeon_combat_plan.png [<zones.png>]
 
 L'image fait 1280 x 720, deux fois la grille. <zones.png> recoit le plan sous la carte des zones
 de decor_controle.py : ce que l'interface recouvre.

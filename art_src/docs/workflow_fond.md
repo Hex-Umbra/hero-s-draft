@@ -11,7 +11,7 @@ Il existe deux sortes de fonds, et elles ne se font pas de la même façon. **De
 | **Combien** | Un par lieu et par écran | Trois variations par lieu |
 | **Méthode** | La structure par le code, puis deux passes de génération, dont une par tuiles | ComfyUI compose librement, en une génération ; on choisit |
 | **Calques** | Un calque par objet | Un seul : c'est une surface |
-| **Rangement** | `backgrounds/<lieu>/<écran>/` | `backgrounds/windows/<lieu>/` |
+| **Rangement** | `decors/<lieu>/<écran>/` | `fonds/<lieu>/` |
 | **Document** | [Le workflow des décors](workflow_decor.md) | Celui-ci |
 
 ---

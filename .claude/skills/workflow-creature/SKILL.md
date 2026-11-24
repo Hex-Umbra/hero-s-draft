@@ -15,7 +15,7 @@ La demande du propriétaire : **$ARGUMENTS**
 ## 1. Avant le premier message
 
 1. **Lis en entier** `art_src/docs/workflow_creature.md`, puis les sections « Règles communes », « Prérequis » et « Les commandes » de `art_src/tools/README.md`. Les exemples de `art_src/docs/exemples/` ne se lisent que pour voir comment un cas précis a été résolu.
-2. **Cherche un brief existant :** `art_src/creatures/**/*_brief.md`. S'il y en a un pour cette créature, tu reprends là où il s'arrête (§4). Sinon, tu pars de l'étape 1.
+2. **Cherche un brief existant :** `art_src/sprites/**/*_brief.md`. S'il y en a un pour cette créature, tu reprends là où il s'arrête (§4). Sinon, tu pars de l'étape 1.
 3. **N'invoque pas `superpowers:brainstorming`.** La session de brief de l'étape 1 en tient lieu.
 
 **Le périmètre s'arrête au sprite.** Tu livres des fichiers dans `art_src/`. Tu ne crées ni l'ennemi jouable (`assets/data/enemies/`), ni son `sprite.png` : c'est une autre demande.
@@ -77,7 +77,7 @@ Une autre session doit pouvoir reprendre la créature sans te lire. **À chaque 
 ## 5. La livraison
 
 La créature est livrée à la fin de l'étape 8. Ton dernier message donne :
-- les fichiers du dossier `art_src/creatures/<famille>/tier_<n>/`, selon le tableau du workflow, et le script de pose s'il y en a un ;
+- les fichiers du dossier `art_src/sprites/<famille>/tier_<n>/`, selon le tableau du workflow, et le script de pose s'il y en a un ;
 - ce qui reste à retoucher à la main dans Aseprite, calque par calque ;
 - ce que cette créature a appris, et que tu as écrit dans le workflow ;
 - les lots de commits que tu proposes.

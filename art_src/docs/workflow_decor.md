@@ -1,6 +1,6 @@
 # Produire un décor d'écran en pixel art
 
-**État au 24/11/2026 : méthode éprouvée sur trois décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../backgrounds/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils ([son brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)) ; celui du donjon, une cave voûtée, est le troisième et le premier intérieur ([son brief](../backgrounds/dungeon/combat/dungeon_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur trois sujets, une graine chacun, avec un dernier pas ramené de 0.6 à 0.5 après l'analyse du second, et un premier pas tenu par une carte de contours pour l'intérieur ; elle donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
+**État au 24/11/2026 : méthode éprouvée sur trois décors.** Le décor de combat de la forêt est le premier sorti de cette chaîne, validé par le propriétaire ([son brief](../decors/forest/combat/forest_combat_brief.md)) ; celui du cimetière est le second, mené d'un bout à l'autre par les outils ([son brief](../decors/graveyard/combat/graveyard_combat_brief.md)) ; celui du donjon, une cave voûtée, est le troisième et le premier intérieur ([son brief](../decors/dungeon/combat/dungeon_combat_brief.md)). La méthode écrite le 23/11 passait par des tuiles ; ses essais l'ont écartée — les tuiles réinventent la scène, et leurs raccords se voient — et ont trouvé celle-ci : **un plan en aplats pour la composition, puis l'image entière repeinte d'un coup, sans tuiles.** Elle tient sur trois sujets, une graine chacun, avec un dernier pas ramené de 0.6 à 0.5 après l'analyse du second, et un premier pas tenu par une carte de contours pour l'intérieur ; elle donne une **image à plat** : le calque par objet reste à concevoir. Le tableau [« Ce qui est éprouvé »](#ce-qui-est-éprouvé-et-ce-qui-ne-lest-pas) dit où en est chaque étape ; [« Les essais »](#les-essais) racontent comment on y est arrivé, mesures à l'appui. Les commandes exactes et les prérequis sont dans le [README des outils](../tools/README.md), avec les règles communes à toutes les images.
 
 Ce document remplace la section « Fond d'écran » du [workflow des fonds](workflow_fond.md), qui ne garde que les fonds de fenêtre.
 
@@ -108,7 +108,7 @@ Le prompt, les exclusions, les réglages des deux passes.
 
 **Un script par décor, `decor_<nom>.py`,** dessine un plan de 1280 × 720 en aplats : pas de perspective calculée, pas de détail, seulement la place des masses. [`decor_forest_combat.py`](../tools/decor_forest_combat.py) est le modèle ; [`decor_graveyard_combat.py`](../tools/decor_graveyard_combat.py) en est un second, parti d'une esquisse libre choisie par le propriétaire, dont il replace les objets hors de l'interface. [`decor_dungeon_combat.py`](../tools/decor_dungeon_combat.py) pose une perspective : un point de fuite derrière le héros, des cadres qui se resserrent vers lui.
 
-`python decor_<nom>.py ../backgrounds/<lieu>/<écran>/<nom>_plan.png <zones.png>`
+`python decor_<nom>.py ../decors/<lieu>/<écran>/<nom>_plan.png <zones.png>`
 
 - **Le plan se cale sur la carte des zones** du bloc 2 du brief : ce que l'interface recouvre reste calme, ce qui doit se voir tombe dans ce qui reste visible. Pour le combat de la forêt : un fond lointain et pâle derrière la rangée des ennemis, les deux gros troncs aux bords de l'écran, le sol, son sentier et ses rochers dans le bas.
 - **Des aplats aux couleurs du lieu**, à peine floutés pour le lointain. Le générateur garde la place et la teinte des masses, et y met la matière.
@@ -123,7 +123,7 @@ Le prompt, les exclusions, les réglages des deux passes.
 
 ComfyUI peint toute la scène en une génération, en partant du plan, sans carte de guidage :
 
-`python comfy_gen.py ../backgrounds/<lieu>/<écran>/<nom> "<prompt>" --guide plan --depth 0 --edges 0 --denoise 0.8 --size 1280x720 --lora 0.8 --seed <a>,<b>,<c> --exclure "<exclusions>"`
+`python comfy_gen.py ../decors/<lieu>/<écran>/<nom> "<prompt>" --guide plan --depth 0 --edges 0 --denoise 0.8 --size 1280x720 --lora 0.8 --seed <a>,<b>,<c> --exclure "<exclusions>"`
 
 | Réglage | Valeur | Option |
 |:---|:---|:---|
@@ -171,7 +171,7 @@ L'outil agrandit l'image de départ et la fait repeindre entière par ComfyUI. I
 
 ### 5. Ramener sur la grille
 
-`python window_import.py <image de 5120 × 2880> ../backgrounds/<lieu>/<écran>/<nom>_detail.aseprite --taille 640x360 --couleurs-peintes --source ../backgrounds/<lieu>/<écran>/<nom>_detail_source.png`
+`python window_import.py <image de 5120 × 2880> ../decors/<lieu>/<écran>/<nom>_detail.aseprite --taille 640x360 --couleurs-peintes --source ../decors/<lieu>/<écran>/<nom>_detail_source.png`
 
 - **La grille se lit sur l'image elle-même.** Générée à 8 fois la taille du décor, l'image porte une grille qui tombe juste : l'import lit le cœur de chaque case.
 - **Chaque case garde sa couleur peinte** (B80) : `--couleurs-peintes`. Le `.aseprite` reste en couleurs libres, la palette Apollo en nuancier pour la retouche. Sans l'option, l'import ramène l'image sur Apollo, comme pour un fond de fenêtre : sur un décor, il trame le sol et lui retire sa mousse (essai 5).
@@ -183,7 +183,7 @@ L'import prend 12 secondes, et l'aller-retour dans Aseprite rend le même fichie
 
 Le décor se juge sous son interface, à la taille réelle du jeu, jamais seul :
 
-`python decor_controle.py ../backgrounds/<lieu>/<écran>/<nom>_detail.aseprite <sortie.png> [--zones]`
+`python decor_controle.py ../decors/<lieu>/<écran>/<nom>_detail.aseprite <sortie.png> [--zones]`
 
 L'outil agrandit le décor à la taille d'un écran en 1080p et pose dessus un combat : une rangée d'ennemis dans les cadres de leurs tiers, sur les fonds de fenêtre du lieu, avec leurs barres et leurs languettes, le héros, et une main de cinq cartes. Il accepte aussi une image générée — l'image d'ensemble, une repeinte — qu'il lit à un pixel par case : c'est ainsi qu'on juge les étapes 3 et 4. `--zones` ajoute, en voile clair, ce que l'interface recouvre.
 
@@ -389,7 +389,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 | D'un pas de deux, à 2560 × 1440, à 0.8 | 129 s | **La matière revient** — rochers, sentier, sous-bois — et la composition tient : troncs aux bords, fond pâle au centre |
 | La graine 832745 du tour à 0.9, à 2560 × 1440, à 0.8 | 127 s | Plus riche encore, mais de gros troncs de second plan reviennent derrière les cartes |
 
-**Le dernier pas, sur la graine 832745, retenue par le propriétaire :** la repeinte de 2560 × 1440 passe à 5120 × 2880 à 0.6, en 14 min 28 s, puis s'importe en couleurs peintes en 12 secondes. La grille de 640 × 360 est nette à 54,1 × 119,3 ; il reste une trace de celle de 320 × 180, à 10,7 × 7,0, que l'œil ne lit pas. Sous le combat, les troncs de second plan, sourds et lointains, ne disputent pas les cartes : la Faucheuse se détache. C'est le premier décor de la chaîne entière — un plan, une image d'ensemble, deux repeintes, l'import — en dix-sept minutes de génération. **Validé par le propriétaire le 24/11**, il est rangé dans `backgrounds/forest/combat/`.
+**Le dernier pas, sur la graine 832745, retenue par le propriétaire :** la repeinte de 2560 × 1440 passe à 5120 × 2880 à 0.6, en 14 min 28 s, puis s'importe en couleurs peintes en 12 secondes. La grille de 640 × 360 est nette à 54,1 × 119,3 ; il reste une trace de celle de 320 × 180, à 10,7 × 7,0, que l'œil ne lit pas. Sous le combat, les troncs de second plan, sourds et lointains, ne disputent pas les cartes : la Faucheuse se détache. C'est le premier décor de la chaîne entière — un plan, une image d'ensemble, deux repeintes, l'import — en dix-sept minutes de génération. **Validé par le propriétaire le 24/11**, il est rangé dans `decors/forest/combat/`.
 
 **L'essai 7, un second sujet, mené le 24/11/2026.** La méthode ne reposait que sur la forêt. Le propriétaire a demandé un autre décor : un cimetière, choisi sur douze esquisses libres (quatre idées, trois graines). Il a retenu « sous les arbres morts », graine 121064 : un grand arbre mort à gauche, une grande lune pâle à droite, des croix, un sentier clair.
 
@@ -429,7 +429,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 | 0.6 | 14 min 29 s | 91,1 × 99,1 | 8,6 × 9,7 | Les sept inventions du tableau ci-dessus |
 | 0.6, avec un prompt qui ne nomme aucun objet | 13 min 57 s | 205,9 × 167,3 | 12,7 × 11,1 | **Pire** : les croix et les stèles deviennent des tours en ruine aux fenêtres éclairées. Le prompt tenait le sujet |
 
-**La version à 0.5, validée par le propriétaire le 24/11,** remplace la première dans `backgrounds/graveyard/combat/`.
+**La version à 0.5, validée par le propriétaire le 24/11,** remplace la première dans `decors/graveyard/combat/`.
 
 **Ce que dit l'essai 7 :**
 - **La méthode tient sur un autre sujet,** en dix-sept minutes de génération pour l'image retenue ; un seul réglage change, le débruitage du dernier pas.
@@ -465,7 +465,7 @@ Six essais, les 23 et 24/11/2026, ont mené à cette méthode ; un septième la 
 | Le plan avec des arcs et des torches dans le passage, à 0.8 | Les arcs sont lus comme les moulures d'une porte : l'arche rétrécit, et tombe derrière le héros |
 | Le plan simplifié, à 0.8 puis à 0.7 | À 0.7, la graine 293903 garde les cadres de bois et la large arche. C'est l'image retenue, pas la graine de l'esquisse |
 
-**Les pas de détail de la cave :** 0.6 en 133 s (grille à 15,7 × 19,5, lisse), puis 0.8 par les contours en 153 s (38,7 × 41,4), puis le dernier pas à 0.5 en 14 min 26 s (114,4 × 37,7). Regardé seul, agrandi : rien d'inventé, rien qui flotte. Le propriétaire demande de retirer deux tonneaux en feu posés devant l'arche. Sur l'image de 2560 × 1440, le générateur chargé de repeindre les deux zones y remet un tas de pierres de la forme du tonneau ; recopier par-dessus le noir du passage, devant lequel ils se tenaient, donne une arche vide. Le dernier pas refait, en 14 min 27 s, ne change que 0,3 % des pixels ; la grille est nette à 143,3 × 31,2. **Validé par le propriétaire le 24/11**, le décor est rangé dans `backgrounds/dungeon/combat/`.
+**Les pas de détail de la cave :** 0.6 en 133 s (grille à 15,7 × 19,5, lisse), puis 0.8 par les contours en 153 s (38,7 × 41,4), puis le dernier pas à 0.5 en 14 min 26 s (114,4 × 37,7). Regardé seul, agrandi : rien d'inventé, rien qui flotte. Le propriétaire demande de retirer deux tonneaux en feu posés devant l'arche. Sur l'image de 2560 × 1440, le générateur chargé de repeindre les deux zones y remet un tas de pierres de la forme du tonneau ; recopier par-dessus le noir du passage, devant lequel ils se tenaient, donne une arche vide. Le dernier pas refait, en 14 min 27 s, ne change que 0,3 % des pixels ; la grille est nette à 143,3 × 31,2. **Validé par le propriétaire le 24/11**, le décor est rangé dans `decors/dungeon/combat/`.
 
 **Ce que dit l'essai 8 :**
 - **Le premier pas à 0.8 refait un intérieur.** Il garde « un donjon » et perd « les geôles ». La forêt et le cimetière supportaient cette recomposition ; un intérieur, non.
@@ -586,7 +586,7 @@ L'outil fait, dans l'ordre :
 
 ## Le dossier d'un décor
 
-**Un décor se range par lieu, puis par écran :** `art_src/backgrounds/<lieu>/<écran>/`, par exemple `backgrounds/forest/combat/`. Les trois décors existants — `dungeon/`, `steampunk/`, `camp/` — sont en 320 × 180 et restent où ils sont : aucun n'est repris tel quel (B74, B76). Les fonds de fenêtre gardent leur dossier, `backgrounds/windows/<lieu>/`.
+**Un décor se range par lieu, puis par écran :** `art_src/decors/<lieu>/<écran>/`, par exemple `decors/forest/combat/`. Les trois décors de la première méthode — `dungeon/`, `steampunk/`, `camp/` — sont en 320 × 180 : ils sont rangés à part, dans `decors/anciens_320x180/`, et aucun n'est repris tel quel (B74, B76). Les fonds de fenêtre ont leur dossier, `fonds/<lieu>/`. L'[index des images](../INDEX.md) montre tout ce qui existe.
 
 | Fichier | Rôle |
 |:---|:---|
@@ -600,6 +600,6 @@ L'outil fait, dans l'ordre :
 
 **Avec la première méthode** s'y ajoutent `<nom>.aseprite`, la structure rendue par le code, un calque par objet ; `<nom>_guide_x<n>.png`, `<nom>_depth.png` et `<nom>_edges.png`, l'image guide et ses cartes de guidage ; et `<nom>_mots.json`, les mots de chaque calque pour le prompt des tuiles.
 
-Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `backgrounds/forest/combat/`**, validé le 24/11 : son [brief](../backgrounds/forest/combat/forest_combat_brief.md) dit comment il a été fait. Le second est `backgrounds/graveyard/combat/`, validé le même jour ([brief](../backgrounds/graveyard/combat/graveyard_combat_brief.md)), et le troisième `backgrounds/dungeon/combat/` ([brief](../backgrounds/dungeon/combat/dungeon_combat_brief.md)). Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
+Le script du décor, un par décor, va dans `art_src/tools/decor_<nom>.py`. **Le premier décor rangé ainsi est `decors/forest/combat/`**, validé le 24/11 : son [brief](../decors/forest/combat/forest_combat_brief.md) dit comment il a été fait. Le second est `decors/graveyard/combat/`, validé le même jour ([brief](../decors/graveyard/combat/graveyard_combat_brief.md)), et le troisième `decors/dungeon/combat/` ([brief](../decors/dungeon/combat/dungeon_combat_brief.md)). Les fichiers de travail, dont les images générées et les maquettes du contrôle, restent dans `art_src/tools/.work/`, que git ignore.
 
 **On ne supprime rien :** une version remplacée ou un essai abandonné va dans les archives (voir les règles communes du [README des outils](../tools/README.md)).
