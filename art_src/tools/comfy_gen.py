@@ -4,7 +4,7 @@ Envoie a ComfyUI l'image guide et ses cartes de guidage (profondeur, contours, p
 ControlNet Union), lance un img2img SDXL avec le LoRA pixel art, puis recupere l'image. ComfyUI
 doit tourner (http://127.0.0.1:8188) ; on lui parle avec la bibliotheque standard seulement.
 
-    python comfy_gen.py ../backgrounds/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]
+    python comfy_gen.py ../decors/anciens_320x180/steampunk/clockwork_plaza "<prompt>" [--seed N] [--denoise D]
 
 Le premier argument est le prefixe des fichiers de l'etape 1 : <prefixe>_guide_x4.png (ou
 le nom donne par --guide), <prefixe>_depth.png et <prefixe>_edges.png. --size fixe la taille de

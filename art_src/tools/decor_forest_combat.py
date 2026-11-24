@@ -6,7 +6,7 @@ tient de y = 14 a 126, sur presque toute la largeur ; le heros est centre en (32
 part de y = 238, entre x = 95 et 545. Le plan garde donc le haut calme, un fond lointain et pale,
 pose les deux gros troncs aux bords de l'ecran, et le sol, son sentier et ses rochers dans le bas.
 
-    python decor_forest_combat.py ../backgrounds/forest/combat/forest_combat_plan.png [<zones.png>]
+    python decor_forest_combat.py ../decors/forest/combat/forest_combat_plan.png [<zones.png>]
 
 L'image fait 1280 x 720, deux fois la grille. <zones.png> recoit le plan sous la carte des zones
 de decor_controle.py : ce que l'interface recouvre.

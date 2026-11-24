@@ -65,7 +65,7 @@ P-05 prépare, sans les construire, P-09 (une liste d'intentions par phase de bo
 | **B25** | Un rat invoqué ne rapporte rien, ni or ni autre récompense. Un rat libre et un alpha rapportent comme tout ennemi. | 21/11 |
 | **B21, B30** | À l'écran, une meute compte pour 2 cartes sur les cinq, quel que soit le nombre de ses rats, et un seul chef de meute est à l'écran : un second alpha attend en réserve. Le plateau porte six cartes au plus. | 21/11 |
 | **B19** | Au-delà du plafond, la réserve existante s'applique sans changement ([règle 02-6](../../.obsidian_vault/_rules/)). | 21/11 |
-| **B43** | Le sprite déjà produit, `art_src/creatures/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avec ceux du tier 1. | 22/11 |
+| **B43** | Le sprite déjà produit, `art_src/sprites/rat/tier_1/rat_geant.aseprite`, est celui du **Rat alpha**. Le sprite du Rat reste à produire, par `/workflow-creature`, avec ceux du tier 1. | 22/11 |
 
 ### 1.4. L'ordre des vagues
 
@@ -149,7 +149,7 @@ Pour mémoire : seule la dernière ligne vaut, et le [README du chantier](../cha
 Chaque point est repris, sous « Prérequis », par la fiche de la vague qui en a besoin ([`docs/chantier_bestiaire/`](../chantier_bestiaire/README.md)) — sauf les lieux et les boss, qui n'ont pas encore de fiche.
 
 - **La difficulté** (B64, B69) : ce qu'elle doit viser ; ce que deviennent la formule du budget et sa mise à l'échelle, le prix d'un effet, la cadence des tiers, l'échelle des doses d'un statut posé par un ennemi, la table d'XP au-delà de l'acte 15. Rien n'est écrit : c'est l'objet d'un brainstorm, tenu après le tier 3. **Un instrument de mesure** — un tableau de ce que le tirage des combats produit, acte par acte — a été proposé à l'audit, à poser dès la vague du langage des intentions : non décidé.
-- **La vague du visuel** : toutes ses questions sont tranchées (B72 à B80). Le décor de forêt est validé depuis le 24/11 (`art_src/backgrounds/forest/combat/`, [workflow des décors](../../art_src/docs/workflow_decor.md)) ; restent les cadres redessinés des tiers 1 à 3 ; et, hors de cette vague, le décor du repos (B76).
+- **La vague du visuel** : toutes ses questions sont tranchées (B72 à B80). Le décor de forêt est validé depuis le 24/11 (`art_src/decors/forest/combat/`, [workflow des décors](../../art_src/docs/workflow_decor.md)) ; restent les cadres redessinés des tiers 1 à 3 ; et, hors de cette vague, le décor du repos (B76).
 - **La riposte** (B71) : un jet par coup ou par carte ; ce qui compte comme une attaque du héros ; si elle s'ajoute à ce que le slime pose en attaquant (B53) ou le remplace ; ce que le joueur en lit ; quel ennemi contre-attaquera en dégâts.
 - **Le choix d'intention** (B70) : l'ennemi du tier 2 qui le porte.
 - **Les lieux** (biomes, P-12), après `0.7.0` (B69) : leur modèle — un lieu par acte, ou par créature —, leur nombre, leur lien avec les familles et les boss. Un cadrage propre.

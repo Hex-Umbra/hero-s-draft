@@ -39,8 +39,8 @@ PITCH = 310        # d'une carte d'ennemi a la suivante
 TIERS = {1: ((88, 120), 12), 2: ((96, 128), 16), 3: ((104, 136), 20), 4: ((112, 144), 24), 5: ((120, 152), 28)}  # B73
 OLD_CROP = (308, 329, 1388, 1949)  # l'illustration d'un ancien sprite, la meme sur les quatre peintures (B75)
 ZONES = {"ennemis": (40, 14, 600, 126), "heros": (285, 137, 355, 231), "main": (95, 238, 545, 360)}  # sur la grille du decor
-DEFAULT_ROW = ["1:creatures/rat/tier_1/rat_geant.aseprite", "1:ancien:gobelin",
-               "2:creatures/squelette/tier_2/squelette.aseprite", "3:creatures/squelette/tier_3/squelette_faucheuse.aseprite"]
+DEFAULT_ROW = ["1:sprites/rat/tier_1/rat_geant.aseprite", "1:ancien:gobelin",
+               "2:sprites/squelette/tier_2/squelette.aseprite", "3:sprites/squelette/tier_3/squelette_faucheuse.aseprite"]
 
 RED, GREEN, CYAN = (255, 82, 82), (105, 240, 174), (0, 229, 255)
 FIRE, SHOCK, FROST = ("\U0001F525", "1", RED), ("⚡", "1/3", RED), ("❄", "2/3", RED)
@@ -231,7 +231,7 @@ def main():
     ap.add_argument("--ennemis", nargs="+", default=DEFAULT_ROW, help="la rangee : <tier>:<sprite.aseprite depuis art_src/>, ou <tier>:ancien:<id>")
     ap.add_argument("--zones", action="store_true", help="ajoute ce que l'interface recouvre, en voile clair")
     a = ap.parse_args()
-    windows = sorted(glob.glob(os.path.join(ART, "backgrounds", "windows", a.lieu, "*.aseprite")))
+    windows = sorted(glob.glob(os.path.join(ART, "fonds", a.lieu, "*.aseprite")))
     if not windows:
         raise SystemExit(f"pas de fond de fenetre pour le lieu « {a.lieu} »")
     canvas = backdrop(a.decor)

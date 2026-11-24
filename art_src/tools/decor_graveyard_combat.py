@@ -8,7 +8,7 @@ clair. Mais il les replace : sur la grille de 640 x 360, la rangee des ennemis t
 ses tombes remontent donc dans la bande restee visible, de y = 126 a 238 ; la lune descend dans
 cette bande, a droite du heros ; le tronc se range a gauche de la premiere carte.
 
-    python decor_graveyard_combat.py ../backgrounds/graveyard/combat/graveyard_combat_plan.png [<zones.png>]
+    python decor_graveyard_combat.py ../decors/graveyard/combat/graveyard_combat_plan.png [<zones.png>]
 
 L'image fait 1280 x 720, deux fois la grille. <zones.png> recoit le plan sous la carte des zones
 de decor_controle.py : ce que l'interface recouvre.

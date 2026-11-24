@@ -4,7 +4,7 @@
 
 Le décor de combat du lieu « donjon » (`dungeon`), en 640 × 360 (B74), en couleurs peintes (B80) : une cave voûtée, très sombre. C'est le troisième décor produit par le [workflow des décors](../../../docs/workflow_decor.md), et le premier intérieur : il sert d'essai 8. Il n'a pas eu de session de brief en quatre blocs : le propriétaire a choisi le sujet sur des esquisses libres, puis l'a réorienté deux fois, ce que ce document résume. Il ne porte **ni structure ni calques** : c'est une image à plat.
 
-L'ancien décor du donjon, `backgrounds/dungeon/dungeon_hall*` en 320 × 180, reste où il est. Le jeu affiche encore `assets/images/bg_dungeon.png` : poser ce décor dans le jeu est le travail d'une vague, pas de ce brief.
+L'ancien décor du donjon, `decors/anciens_320x180/dungeon/dungeon_hall*` en 320 × 180, est gardé à part. Le jeu affiche encore `assets/images/bg_dungeon.png` : poser ce décor dans le jeu est le travail d'une vague, pas de ce brief.
 
 ## 1. Identité
 

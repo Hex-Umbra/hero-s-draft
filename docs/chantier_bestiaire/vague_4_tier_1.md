@@ -24,7 +24,7 @@
 
 ## Prérequis — avant l'ouverture
 
-1. **Les sprites, tous livrés** (B51, B65) : les neuf lignes du tier 1 du [catalogue des ennemis](catalogue_ennemis.md) à ✅ — Rat, Slime de givre, Slime de braise, Slime d'orage, Araignée venimeuse, Corbeau charognard, Kobold éclaireur, **et le Slime et le Gobelin redessinés** (B52). Ils se produisent par `/workflow-creature` (`art_src/creatures/<famille>/tier_1/`) et **se valident sur le cadre du tier 1 et les fonds de la vague 2** (B61).
+1. **Les sprites, tous livrés** (B51, B65) : les neuf lignes du tier 1 du [catalogue des ennemis](catalogue_ennemis.md) à ✅ — Rat, Slime de givre, Slime de braise, Slime d'orage, Araignée venimeuse, Corbeau charognard, Kobold éclaireur, **et le Slime et le Gobelin redessinés** (B52). Ils se produisent par `/workflow-creature` (`art_src/sprites/<famille>/tier_1/`) et **se valident sur le cadre du tier 1 et les fonds de la vague 2** (B61).
 2. ✅ **Les réponses du propriétaire** — données le 22/11 sur le [deck du tier 1](https://claude.ai/artifact/88qAGkoUHeX1Yi1YqzFSZK) : les valeurs (B53, B54), l'esquive (B55), le « +1 » reporté (B56), le larcin (B57), le prix d'un effet (B58).
 3. ✅ **Le Rat dans un cadre** — tranché le 23/11 (B72) : aucune mise à l'échelle. Le Rat garde un cadre de tier 1 entier, son sprite est dessiné réduit dans son image, et sa demi-place se lit par un écart plus serré.
 4. **Ce que B53 ne fixe pas** : le critique, l'XP et l'or des sept ennemis neufs, et les familles du Corbeau et du Kobold ([catalogue des ennemis](catalogue_ennemis.md), §8).

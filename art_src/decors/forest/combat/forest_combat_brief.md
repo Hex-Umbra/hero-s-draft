@@ -8,7 +8,7 @@ Le décor de combat du lieu « forêt », en 640 × 360 (B74), en couleurs peint
 
 - **Le lieu et l'écran :** la forêt, le combat.
 - **Ce qu'on comprend au premier regard :** un sous-bois sombre de grands pins, un sentier qui s'enfonce vers une lumière pâle.
-- **Les fonds de fenêtre du lieu :** les trois de `backgrounds/windows/forest/`. Le décor reprend leur prompt, leurs exclusions et l'une de leurs graines.
+- **Les fonds de fenêtre du lieu :** les trois de `fonds/forest/`. Le décor reprend leur prompt, leurs exclusions et l'une de leurs graines.
 
 ## 2. L'écran et son interface
 
