@@ -32,7 +32,7 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
 
    Plus aucune question du propriétaire n'est ouverte, et ses assets sont tous validés : **les prérequis de la vague sont remplis depuis le 25/11**.
 
-   *Ajouté le 25/11, à la spec* : six questions nées en l'écrivant ont arrêté la vague, et le propriétaire les a tranchées le même jour — le palier selon la règle, ×2 en 1440p et ×4 en 4K (B83), la fiche qui double à tout palier (B84), le plateau réduit et lissé sous le 1080p (B85), **la fenêtre Windows ouverte maximisée, qui entre dans la vague** (B86), le fond tiré par ennemi (B87), le décor hors 16:9 (B88), la carte ouverte décalée vers l'intérieur (B89).
+   *Ajouté le 25/11, à la spec* : six questions nées en l'écrivant ont arrêté la vague, et le propriétaire les a tranchées le même jour — le palier selon la règle, ×2 en 1440p et ×4 en 4K (B83), la fiche qui double à tout palier (B84), le plateau réduit et lissé sous le 1080p (B85), **la fenêtre Windows ouverte maximisée, qui entre dans la vague** (B86), le fond tiré par ennemi (B87), le décor hors 16:9 (B88), la carte ouverte décalée vers l'intérieur (B89). Puis, après son test de la vague livrée sur branche, où les ennemis paraissaient trop petits sur un écran de 2880 × 1800 à 200 % : la taille des ennemis suit celle du héros, nette quand elle est presque entière (B90, qui amende B72 et B83).
 
 ## Porte d'entrée
 

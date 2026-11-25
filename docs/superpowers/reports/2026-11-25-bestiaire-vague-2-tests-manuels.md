@@ -246,3 +246,4 @@
 ## Défauts trouvés
 | # | Test | Ce qui a été vu | Gravité ressentie | Corrigé par |
 |:---:|:---|:---|:---|:---|
+| 1 | T18, T23 | Sur un écran de 2880 × 1800 à 200 %, dans Chrome, les cartes ennemies sont trop petites face au héros (un ennemi de tier 1 à 0,57 fois sa hauteur) | — | B90, `30e09645` : la taille des ennemis suit celle du héros |

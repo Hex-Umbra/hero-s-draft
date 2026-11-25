@@ -96,3 +96,23 @@ Prix lus le 25/11 sur https://platform.claude.com/docs/en/about-claude/pricing �
 | Coût API — $ / € | 36,61 / 33,40 | 24,09 / 21,97 | 19,72 / 17,99 | 2,67 / 2,43 | 19,98 / 18,23 | **103,07 / 94,02** |
 
 La vague commence à sa porte d'entrée. « Spec » compte les maquettes des questions et l'arrêt ; « Implémentation », le coup d'œil dans le jeu lancé ; « Fin de vague », la note de version, la mémoire, les tests manuels et la mesure elle-même, incomplète à sa propre lecture.
+
+## Corrections du 25/11/2026
+
+À votre demande, dans la même session :
+
+- **`CLAUDE.md`** retouché sur les trois points du §4 (`7d1a4da2`) ; l'ADR-123, le contexte actif et ce compte rendu alignés.
+- **Les ennemis trop petits sur un écran haute définition** (votre test, 2880 × 1800 à 200 % dans Chrome : un ennemi de tier 1 à 0,57 fois la hauteur du héros, contre 0,85 en 1080p). Ce n'était pas un défaut de code mais la règle de B83, qui gardait ×2 jusqu'à 3644 pixels de large. Posé sur maquettes (section D4 de la page des questions), tranché par vous : **B90**, la taille des ennemis suit celle du héros, arrondie à l'entier quand elle en est à 10 % au plus (seuil relevé de 5 à 10 % pour garder nette la fenêtre maximisée de 1080p). ×2 en 1080p, ×3 net sur votre écran, ×4 en 4K, 2,667 lissé en 1440p. Code et tests `30e09645`, revus et approuvés, mutations du seuil et de l'arrondi prises ; 2023 → **2030** tests, `dart analyze` propre. Spec, cadrage, tests manuels (T18 repris, **T23 neuf en tête** : votre écran), note de version, mémoire, suivi et fiche suivent (`81d0a760`, `1d7d0c02`, `dd1f0e98`).
+- Les fins de ligne des trois `lib/l10n/app_localizations*.dart`, réécrites par votre `flutter run`, rétablies sans commit.
+
+**Mesuré le 25/11/2026 à 16:19** — sessions : 1 · arrêts : 0 · durée : 1 h 28 de bout en bout (25/11 14:51 → 16:19), dont 29 min de travail de l'orchestrateur · questions au propriétaire : 3, dont deux sur maquettes
+Prix lus le 25/11 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,0963 $ (BCE, 24/11/2026) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
+
+| | Corrections | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|
+| Temps actif | 18 min | 29 min | 47 min |
+| Agents — Opus / Sonnet | 1 / 6 | Opus 5.5 | 1 / 6 |
+| Appels au modèle | 68 | 39 | 107 |
+| Jetons traités, dont hors cache | 8,25 M, dont 0,75 M | 24,29 M, dont 0,08 M | 32,54 M, dont 0,83 M |
+| Sortie (minimum) | 85 228 | 37 896 | 123 124 |
+| Coût API — $ / € | 4,76 / 4,34 | 6,21 / 5,67 | **10,97 / 10,01** |
