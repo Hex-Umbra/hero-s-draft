@@ -31,10 +31,14 @@ const double frameBelowWindowCenter = GameConstants.enemyWindowHeight / 2 + 28;
 const double referenceRowFrameWidth =
     6 * enemySlotWidth + 5 * GameConstants.enemyRowMinGap;
 
-/// Le palier du plateau : le plus grand pas pair, en pixels physiques par
-/// pixel de cadre, que l'écran permet à la rangée de [referenceRowWidth], à la
-/// barre au-dessus de [rowCenterY] et au cadre au-dessus de [rowFloorY]. Sous
-/// 2, l'échelle est lissée.
+/// La taille d'un pixel de cadre, en pixels physiques (B90). Le plafond
+/// `limit` est le plus petit de trois rapports : la rangée de
+/// [referenceRowWidth] dans sa part de la largeur, la barre sous le haut de
+/// l'écran, le cadre au-dessus de [rowFloorY]. La cible suit le héros : 2 pixels
+/// d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée
+/// par `limit`. Si elle est à 10 % près d'un entier `n` d'au moins 2 qui tient
+/// sous `limit`, elle s'y arrondit et tout reste net ; sinon elle reste
+/// continue et lissée (B85).
 BoardScale boardScaleFor({
   required Size screen,
   required double devicePixelRatio,
@@ -51,7 +55,18 @@ BoardScale boardScaleFor({
     center / barTopAboveWindowCenter,
     (rowFloorY * devicePixelRatio - center) / frameBelowWindowCenter,
   ].reduce(min);
-  final even = 2 * (limit / 2).floorToDouble();
-  if (even >= 2) return BoardScale(frame: even / devicePixelRatio, crisp: true);
-  return BoardScale(frame: limit / devicePixelRatio, crisp: false);
+  final target = min(
+    2 *
+        screen.height *
+        devicePixelRatio /
+        GameConstants.enemyFrameReferenceHeight,
+    limit,
+  );
+  final n = target.roundToDouble();
+  if (n >= 2 &&
+      n <= limit &&
+      (target - n).abs() <= GameConstants.enemyFrameSnapTolerance * n) {
+    return BoardScale(frame: n / devicePixelRatio, crisp: true);
+  }
+  return BoardScale(frame: target / devicePixelRatio, crisp: false);
 }

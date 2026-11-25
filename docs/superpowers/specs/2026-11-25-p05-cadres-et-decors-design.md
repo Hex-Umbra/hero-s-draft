@@ -45,6 +45,7 @@ logiques quand il est un widget Flutter, en pixels physiques quand la mesure dé
 | **B83** | *Amende les exemples de B72.* Le palier suit la règle : ×2 en 1080p, ×2 en 1440p, ×4 en 4K | §5.1 |
 | **B84** | La fiche ouverte double la carte à tout palier : ×4 à ×2, ×8 à ×4 | §5.9 |
 | **B85** | Sous le plus petit écran qui tient ×2, la mise en page du palier ×2 réduite en continu jusqu'à tenir, lissée | §5.1, §5.3 |
+| **B90** | *Amende B72 et B83, précise B85.* La taille des ennemis suit celle du héros : 2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée, arrondie à l'entier à 10 % près (nette), lissée sinon | A8, §5.1 |
 | **B86** | La fenêtre Windows du jeu s'ouvre maximisée | §5.10 |
 | **B87** | Le fond de fenêtre tiré au hasard, pour chaque ennemi, à son entrée sur le plateau | §5.5 |
 | **B88** | Hors 16:9, le décor couvre l'écran au plus petit facteur qui le couvre, centré, rogné, jamais lissé | §5.2 |
@@ -136,8 +137,9 @@ pixels physiques, quand Flame travaille en pixels logiques. Sur un écran Window
 physiques. La règle reçoit donc la taille logique et le rapport de pixels, et rend le palier en pixels logiques,
 les positions — abscisses et ordonnée des centres des fenêtres — calées sur le pixel physique. Elle est écrite pour la rangée la plus large que B72 annonce — six
 cartes, « à ×2, six cartes tiennent en 1080p » — et non pour la rangée du combat en cours : le palier est choisi par
-l'écran, le plateau ne rétrécit plus avec le nombre d'ennemis. Ses résultats sont ceux de B83 — ×2 en 1080p, ×2 en
-1440p, ×4 en 4K —, et sous le plus petit écran qui tient ×2, ceux de B85. Règle : §5.1.
+l'écran, le plateau ne rétrécit plus avec le nombre d'ennemis. Sa règle est celle de B90, qui amende B83 : la taille suit
+celle du héros, nette quand elle est presque entière — ×2 en 1080p, ×3 sur un écran de 2880 × 1800, ×4 en 4K, 2,667
+lissé en 1440p — et lissée sinon (B85). Règle : §5.1.
 
 **A9 — La place d'une carte vaut 146 pixels de cadre à tout tier ; l'écart minimal, 7 ; l'étalement d'aujourd'hui
 est relu en largeurs réelles** *(T, mesure qui suit l'échelle existante)*. La place se compte sur le plus large du
@@ -261,6 +263,7 @@ recommandation de la spec. Ce qu'elles fixent ici :
 | **B83** | Les paliers de `boardScaleFor` : la règle de B72, non ses exemples — ×2 en 1080p et en 1440p, ×4 en 4K ; en 1440p, les ennemis gardent leur taille du 1080p face au héros et à la main, qui grandissent | A8, §5.1, §11 |
 | **B84** | `inspectionScale` = 2 à tout palier | A18, §5.9 |
 | **B85** | Sous le plus petit écran qui tient ×2 : `frame` réduit en continu, `crisp` faux, le cadre, le fond et la créature lissés ; le décor garde sa règle (B88) | §5.1, §5.3 |
+| **B90** | *Amende B83.* La taille suit celle du héros (hauteur physique / 1080), nette à 10 % près d'un entier d'au moins 2 qui tient, lissée sinon : ×3 en 2880 × 1800, 2,667 lissé en 1440p | A8, §5.1 |
 | **B86** | La fenêtre Windows s'ouvre maximisée : elle entre dans le lot (A22) | §2, §3, §5.10, §12, M22 |
 | **B87** | `pickWindowBackground` : un tirage uniforme, par ennemi, à son entrée | A13, §5.5 |
 | **B88** | `decorFitFor` : le plus petit facteur qui couvre, centré, rogné, jamais lissé | §5.2 |
@@ -476,7 +479,7 @@ BoardScale boardScaleFor({
 
 class BoardScale {
   final double frame;      // pixels logiques par pixel de cadre
-  final bool crisp;        // vrai sur un palier pair entier en pixels physiques
+  final bool crisp;        // vrai sur un pas entier en pixels physiques (B90)
   double get creature => frame / 2;
 }
 ```
@@ -484,23 +487,32 @@ class BoardScale {
 En pixels physiques, un palier `p` **tient** quand : la rangée de référence — six places de 146 et cinq écarts de
 7, soit 911 pixels de cadre — tient dans 0,95 de la largeur ; le haut de la barre reste dans l'écran
 (`rowCenterY − 77 p ≥ 0`) ; le bas du plus grand cadre reste au-dessus du héros (`rowCenterY + 76 p ≤ rowFloorY`,
-76 = 48 + 28). **Le palier est le plus grand pair qui tient** (B72, B83) ; `frame` = `p / devicePixelRatio`, `crisp` vrai.
+76 = 48 + 28). **La taille suit celle du héros** (B90, qui amende B72 et B83). `limit` est le plus petit des trois rapports
+ci-dessus : le plus grand pas réel qui tient. `target` = min(2 × hauteur physique de la zone de jeu / 1080, `limit`),
+la hauteur physique étant `screen.height × devicePixelRatio`. `n` = `target` arrondi à l'entier le plus proche ; si
+`n ≥ 2`, `n ≤ limit` et `|target − n| ≤ 0,10 × n`, `frame` = `n / devicePixelRatio` et `crisp` vrai ; sinon
+`frame` = `target / devicePixelRatio` et `crisp` faux (B85). Les constantes 1080 et 0,10 sont
+`GameConstants.enemyFrameReferenceHeight` et `enemyFrameSnapTolerance`. *Le propriétaire a tranché le 25/11, après son
+test : B90 — sur un écran de 2880 × 1800 à 200 %, la règle du plus grand pair gardait ×2 jusqu'à 3644 pixels de
+large, et un ennemi de tier 1 y faisait 0,57 fois la hauteur du héros, contre 0,85 en 1080p.*
 `rowFloorY` est le haut de la carte du héros, telle qu'elle est posée aujourd'hui (`heros_draft_game.dart:403`,
 `hero_card.dart:33`) : la fonction ne la déplace pas, elle la reçoit.
 
 | Écran (logique, rapport) | Palier | Commentaire |
 |:---|:---|:---|
-| 1920 × 1080, 1 | ×2 | La rangée de six : 1822 pixels sur 1824 |
-| 1920 × 1009, 1 (fenêtre maximisée) | ×2 | La hauteur tient : barre à 58, cadre jusqu'à 364, héros à 383 |
-| 1536 × 864, 1,25 | ×2 physique, 1,6 logique | Un 1080p à 125 % |
-| 2560 × 1440, 1 | ×2 (B83) | ×4 ne tient ni en largeur (3644 > 2432) ni en hauteur |
-| 3840 × 2160, 1 | ×4 (B83) | À 4 pixels près : 3644 sur 3648 |
-| 1280 × 720, 1 | 1,335, lissé (B85) | Cas synthétique |
-| 1264 × 681, 1 | 1,318, lissé (B85) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
+| 1920 × 1080, 1 | ×2 net | La rangée de six : 1822 pixels sur 1824 |
+| 1920 × 1009, 1 (fenêtre maximisée) | ×2 net | Cible 1,87, arrondie (B86) ; la hauteur tient : barre à 58, cadre jusqu'à 364, héros à 383 |
+| 1536 × 864, 1,25 | ×2 physique net, 1,6 logique | Un 1080p à 125 % |
+| 2560 × 1440, 1 | 2,667, lissé (B90) | À 0,33 de ×3, plus de 10 % ; les ennemis gardent leur taille du 1080p face au héros |
+| 2880 × 1626, 1 | ×3 net | Cible 3,011 |
+| 1440 × 813, 2 | ×3 physique net, 1,5 logique | Le même écran dans Chrome |
+| 2880 × 1800, 1 (1440 × 900 à 2) | ×3 net | Cible 3,333 plafonnée à 3,003 par la rangée, qui tient ×3 |
+| 3840 × 2160, 1 | ×4 net | À 4 pixels près : 3644 sur 3648 |
+| 1280 × 720, 1 | 1,333, lissé (B85) | Cas synthétique ; la hauteur décide, sous la largeur (1,335) |
+| 1264 × 681, 1 | 1,261, lissé (B85) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
 
-**Quand aucun palier pair ne tient** (B85) : `frame` est le plus grand réel inférieur à 2 qui tient — le plus petit
-des trois rapports —, divisé par le rapport de pixels, et `crisp` faux : la mise en page du palier ×2, réduite en
-continu. Le cadre, le fond et la créature se lissent alors (§5.3), en `FilterQuality.medium` *(T, filtre 8)* : la
+**Quand la cible n'est pas presque entière, ou que son entier ne tient pas** (B85, B90) : `frame` est `target`, divisé
+par le rapport de pixels, et `crisp` faux : la mise en page réduite en continu. Le cadre, le fond et la créature se lissent alors (§5.3), en `FilterQuality.medium` *(T, filtre 8)* : la
 valeur que l'ancien sprite prend déjà (§5.4), une seule pour « lissé » ; et sous B85 la créature, à `frame / 2`, peut
 passer sous la moitié de sa taille, où le filtrage bilinéaire seul de `FilterQuality.low` crénelle, quand les niveaux
 de détail de `medium` ne le font pas. Le décor garde sa règle, jamais lissé (B88).

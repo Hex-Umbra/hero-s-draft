@@ -75,6 +75,13 @@ class GameConstants {
   static const double enemyRowUsableWidth = 0.95;
   static const double enemyRowCenterY = 0.21;
 
+  /// La taille d'un ennemi suit celle du héros (B90) : le cadre vaut 2 pixels
+  /// d'écran par pixel de cadre pour [enemyFrameReferenceHeight] pixels
+  /// physiques de hauteur de jeu, et s'arrondit à l'entier le plus proche s'il
+  /// en est à [enemyFrameSnapTolerance] près (part de cet entier).
+  static const double enemyFrameReferenceHeight = 1080.0;
+  static const double enemyFrameSnapTolerance = 0.10;
+
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {
     MapNodeType.combat: (min: 12, max: 22),
