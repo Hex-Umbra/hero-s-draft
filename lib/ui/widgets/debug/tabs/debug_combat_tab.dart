@@ -22,6 +22,14 @@ class DebugCombatTab extends ConsumerWidget {
     final enemies = ref.watch(combatProvider).enemies;
     final stats = ref.watch(runProvider).heroStats;
     final charges = ref.watch(chargeCatalogProvider);
+    // Tout le bestiaire, par tier puis par nom.
+    final catalogue = [
+      ...?ref.watch(gameDataLoaderProvider).valueOrNull?.enemies,
+    ]..sort(
+        (a, b) => a.tier != b.tier
+            ? a.tier.compareTo(b.tier)
+            : a.nameFr.compareTo(b.nameFr),
+      );
 
     return ListView(
       children: [
@@ -99,6 +107,19 @@ class DebugCombatTab extends ConsumerWidget {
               ],
             ),
           ),
+        const Text('Faire apparaitre'),
+        Wrap(
+          spacing: 4,
+          children: [
+            for (final data in catalogue)
+              TextButton(
+                onPressed: enemies.length < DebugActions.maxEnemiesOnBoard
+                    ? () => DebugActions.spawnEnemy(ref.read, data)
+                    : null,
+                child: Text('+ ${data.nameFr} (tier ${data.tier})'),
+              ),
+          ],
+        ),
         const Divider(),
         TextButton(
           onPressed: () {

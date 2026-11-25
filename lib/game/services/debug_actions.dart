@@ -4,12 +4,14 @@ import '../../models/card_instance.dart';
 import '../../models/combat_state.dart';
 import '../../models/data/card_data.dart';
 import '../../models/data/charge_data.dart';
+import '../../models/data/enemy_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../models/signature_instance.dart';
 import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
 import '../systems/charge_rules.dart';
+import '../systems/encounter_system.dart';
 import '../systems/signature_evolution_rules.dart';
 import '../controllers/combat_controller.dart';
 import '../controllers/debug_run_controller.dart';
@@ -211,6 +213,38 @@ class DebugActions {
   static void loseCombat(RefReader read) {
     if (!_allowed(read)) return;
     updateHeroStats(read, (s) => s.copyWith(currentPv: 0));
+  }
+
+  /// La rangee la plus longue que le plateau sait placer (spec P-05, vague 2,
+  /// B91). Un combat n'en met jamais plus de cinq a la fois ; le menu de debug
+  /// peut aller jusqu'a six pour essayer la rangee pleine.
+  static const int maxEnemiesOnBoard = 6;
+
+  /// Fait entrer un ennemi de [data] sur le plateau, aux PV et a la Puissance
+  /// d'un combat normal de l'acte et du niveau courants, intention tiree.
+  /// Rien hors d'un combat en cours, ni au-dela de [maxEnemiesOnBoard].
+  static void spawnEnemy(RefReader read, EnemyData data) {
+    if (!_allowed(read)) return;
+    final combat = read(combatProvider.notifier);
+    final state = combat.currentState;
+    if (state.isCombatEnded || state.enemies.length >= maxEnemiesOnBoard) {
+      return;
+    }
+    final run = read(runProvider);
+    final enemy = CombatController.scaledEnemy(
+      data,
+      enemyLevel: EncounterSystem.getEnemyLevel(
+        playerLevel: run.heroStats.level,
+        isBoss: false,
+        isElite: false,
+      ),
+      act: run.act,
+      isBoss: false,
+      isElite: false,
+    );
+    combat.updateState(
+      state.copyWith(enemies: [...state.enemies, combat.rollIntent(enemy)]),
+    );
   }
 
   /// Pose un point de la charge [chargeId] par `ChargeRules.pose` : plafond,

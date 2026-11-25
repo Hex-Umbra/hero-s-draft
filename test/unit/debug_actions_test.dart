@@ -335,6 +335,64 @@ void main() {
       expect(container.read(runProvider).heroStats, same(posed));
     });
 
+    test('spawnEnemy ajoute l ennemi a l echelle de l acte, intention tiree', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      DebugActions.updateRun(container.read, (s) => s.copyWith(act: 3));
+      final a = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a]));
+
+      DebugActions.spawnEnemy(container.read, goblinData);
+
+      final enemies = container.read(combatProvider).enemies;
+      expect(enemies.length, 2);
+      expect(enemies.first.id, a.id);
+      final spawned = enemies.last;
+      expect(spawned.id, isNot(a.id));
+      // Acte 3, niveau 1 : PV x1,35 et Puissance x1,25 (EncounterSystem).
+      expect(spawned.stats.maxPv, 27);
+      expect(spawned.stats.currentPv, 27);
+      expect(spawned.stats.might, 6);
+      expect(spawned.currentIntent?.type, IntentType.attack);
+    });
+
+    test('spawnEnemy s arrete a six ennemis et hors d un combat en cours', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final combat = container.read(combatProvider.notifier);
+      combat.updateState(CombatState(enemies: [freshGoblin()]));
+
+      for (var i = 0; i < 8; i++) {
+        DebugActions.spawnEnemy(container.read, goblinData);
+      }
+      expect(
+        container.read(combatProvider).enemies.length,
+        DebugActions.maxEnemiesOnBoard,
+      );
+
+      combat.updateState(
+        CombatState(enemies: [freshGoblin()], isCombatEnded: true),
+      );
+      DebugActions.spawnEnemy(container.read, goblinData);
+      expect(container.read(combatProvider).enemies.length, 1);
+    });
+
+    test('hors d une run debug, spawnEnemy n ajoute rien', () {
+      final container = ProviderContainer(overrides: [shippedChargeOverride()]);
+      addTearDown(container.dispose);
+      container.read(debugRunProvider.notifier).requestNormalRun();
+      container.read(runProvider.notifier).startNewRun(paladin);
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [freshGoblin()]));
+
+      DebugActions.spawnEnemy(container.read, goblinData);
+
+      expect(container.read(combatProvider).enemies.length, 1);
+    });
+
     test('clearCharges vide les points et les pistes du heros et des ennemis', () {
       final container = _startedRun();
       addTearDown(container.dispose);
