@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import '../heros_draft_game.dart';
@@ -9,6 +10,7 @@ import '../../models/fire_wave_report.dart';
 import '../components/entities/hero_card.dart';
 import '../components/entities/enemy_card.dart';
 import '../components/card_component.dart';
+import 'window_background.dart';
 
 class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
   RunState? currentState;
@@ -20,6 +22,9 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
   /// Le dernier compte rendu de vague du Feu montré : chaque vague en écrit un
   /// neuf, que l'état garde tel quel jusqu'à la suivante.
   FireWaveReport? _lastFireWaveReport;
+
+  /// L'aléa du fond de fenêtre de chaque carte qui naît (B87).
+  final Random _backgroundRandom = Random();
 
   @override
   void update(double dt) {
@@ -161,8 +166,24 @@ class StateSyncSystem extends Component with HasGameReference<HerosDraftGame> {
           fireDamage: fireIds.contains(enemyInstance.id),
         );
       } else {
+        final tier = enemyInstance.data.tier;
+        final frame = game.tierFrames.of(tier);
+        if (frame == null) {
+          throw StateError(
+            "L'ennemi ${enemyInstance.id} est du tier $tier, "
+            "dont aucun cadre n'est declare",
+          );
+        }
+        final backgrounds = game.location?.windowBackgrounds ?? const [];
         final enemyCard = EnemyCard(
           instance: enemyInstance,
+          frame: frame,
+          windowBackground: backgrounds.isEmpty
+              ? null
+              : backgrounds[pickWindowBackground(
+                  count: backgrounds.length,
+                  random: _backgroundRandom,
+                )],
           onTapEnemy: game.handlePlayerTargeting,
         );
         game.enemyCards.add(enemyCard);

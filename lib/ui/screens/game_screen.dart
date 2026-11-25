@@ -315,6 +315,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       imagesToPreload:
           ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
       chargeCatalog: ref.read(chargeCatalogProvider),
+      tierFrames: ref.read(gameDataLoaderProvider).requireValue.tierFrames,
       location: ref.read(currentLocationProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {

@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/gestures.dart';
-import 'dart:ui' show FilterQuality;
+import 'dart:ui' show FilterQuality, Rect;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/components/card_component.dart';
 import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
@@ -20,6 +20,8 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/services/audio/audio_director.dart';
 import 'package:roguelike_card_game/services/audio/audio_settings.dart';
 import 'package:roguelike_card_game/services/audio/silent_audio_backend.dart';
+
+import 'tier_frame_fixture.dart';
 
 const _slime = EnemyData(
   id: 'slime',
@@ -46,8 +48,10 @@ EnemyInstance _instance(String id) => EnemyInstance(
 
 /// Une carte jamais montée : `game` posé à la main, pour que `baseScale` le
 /// lise ; aucun effet visuel ne joue sur une carte non chargée.
-EnemyCard _enemy(HerosDraftGame game, String id) => EnemyCard(
+EnemyCard _enemy(HerosDraftGame game, String id, {int tier = 1}) => EnemyCard(
       instance: _instance(id),
+      frame: testFrameOf(tier),
+      windowBackground: null,
       onTapEnemy: (_, _) {},
     )..game = game;
 
@@ -116,6 +120,13 @@ void main() {
 
   test('sans contexte, le rapport de pixels vaut 1', () {
     expect(game.devicePixelRatio, 1);
+  });
+
+  test('la carte d un ennemi mesure le canevas de son tier, sa fenetre a l offset de la table', () {
+    final card = _enemy(game, 'e3', tier: 3);
+
+    expect(card.size, Vector2(104, 136));
+    expect(card.windowLocalRect, const Rect.fromLTWH(20, 20, 64, 96));
   });
 
   test('le sprite du decor n est jamais lisse et reste au fond (B88)', () async {

@@ -5,10 +5,12 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
+import '../../../models/data/tier_frame_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/enemy_instance.dart';
 import '../../game_constants.dart';
 import '../../systems/armor_veil.dart';
+import '../../systems/creature_fit.dart';
 import '../../systems/entity_hover.dart';
 import '../visual_effects/frost_shell.dart';
 import '../effect_icon.dart';
@@ -208,9 +210,26 @@ class EnemyCard extends CombatEntity
   /// plein du voile de la barre de PV (`ArmorVeil`).
   int _armorPeak;
 
-  EnemyCard({required this.instance, required this.onTapEnemy})
-    : _armorPeak = instance.stats.armure,
-      super(size: Vector2(100, 140));
+  /// Le cadre du tier de l'ennemi : le canevas de la carte et sa fenêtre.
+  final TierFrame frame;
+
+  /// Le fond de la fenêtre, tiré à la naissance de la carte ; nul, la fenêtre
+  /// n'en a pas.
+  final String? windowBackground;
+
+  /// Vrai quand la créature est un ancien sprite, que la fenêtre lisse.
+  late final bool _smoothCreature;
+
+  @override
+  Rect get windowLocalRect => enemyWindowRect(frame);
+
+  EnemyCard({
+    required this.instance,
+    required this.frame,
+    required this.windowBackground,
+    required this.onTapEnemy,
+  }) : _armorPeak = instance.stats.armure,
+       super(size: Vector2(frame.width.toDouble(), frame.height.toDouble()));
 
   @override
   Future<void> onLoad() async {
@@ -219,50 +238,51 @@ class EnemyCard extends CombatEntity
     // Appliquer l'échelle initiale
     scale = Vector2.all(baseScale);
 
-    final spriteName = data.spritePath;
+    final window = windowLocalRect;
+    final windowPosition = Vector2(window.left, window.top);
+    final windowSize = Vector2(window.width, window.height);
 
-    // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
-    final image = await game.images.load(spriteName);
-
-    // Préserver le ratio d'aspect original de l'image (type BoxFit.contain)
-    final double imgWidth = image.width.toDouble();
-    final double imgHeight = image.height.toDouble();
-    final double imgRatio = imgWidth / imgHeight;
-    final double cardRatio =
-        size.x / size.y; // Ratio de la carte (100 / 140 = 0.714)
-
-    Vector2 spriteSize;
-    Vector2 spritePosition;
-
-    if (imgRatio > cardRatio) {
-      // L'image est plus large/carrée que le ratio de la carte (ex. le slime 320x320) -> Ajuster sur la largeur
-      final double width = size.x;
-      final double height = size.x / imgRatio;
-      spriteSize = Vector2(width, height);
-      spritePosition = Vector2(
-        0,
-        (size.y - height) / 2,
-      ); // Centrer verticalement
-    } else {
-      // L'image est plus élancée/haute que le ratio de la carte -> Ajuster sur la hauteur
-      final double height = size.y;
-      final double width = size.y * imgRatio;
-      spriteSize = Vector2(width, height);
-      spritePosition = Vector2(
-        (size.x - width) / 2,
-        0,
-      ); // Centrer horizontalement
+    // `images.load` lit le cache s'il est rempli, et charge sinon (D4).
+    final background = windowBackground;
+    if (background != null) {
+      add(
+        SpriteComponent(
+          sprite: Sprite(await game.images.load(background)),
+          position: windowPosition,
+          size: windowSize,
+          priority: 0,
+        )..paint.filterQuality = FilterQuality.none,
+      );
     }
 
+    final image = await game.images.load(data.spritePath);
+    final fit = creatureFitOf(image.width, image.height);
+    _smoothCreature = fit.smooth;
     sprite = SpriteComponent(
-      sprite: Sprite(image),
-      size: spriteSize,
-      position: spritePosition,
-    );
+      sprite: Sprite(
+        image,
+        srcPosition: Vector2(fit.source.left, fit.source.top),
+        srcSize: Vector2(fit.source.width, fit.source.height),
+      ),
+      position: windowPosition,
+      size: windowSize,
+      priority: 1,
+    )..paint.filterQuality = _smoothCreature
+        ? FilterQuality.medium
+        : FilterQuality.none;
     add(sprite);
+
+    add(
+      SpriteComponent(
+        sprite: Sprite(await game.images.load(frame.imagePath)),
+        size: size.clone(),
+        priority: 2,
+      )..paint.filterQuality = FilterQuality.none,
+    );
 
     borderInfo = RectangleComponent(
       size: size,
+      priority: 3,
       paint: Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke

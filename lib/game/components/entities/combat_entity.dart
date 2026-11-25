@@ -38,6 +38,10 @@ abstract class CombatEntity extends PositionComponent
   /// languettes.
   Rect get bodyLocalRect;
 
+  /// La fenêtre de la carte, en unités de la carte : où se posent la gangue
+  /// de givre et le halo. Le défaut est la carte entière.
+  Rect get windowLocalRect => Rect.fromLTWH(0, 0, size.x, size.y);
+
   void refreshBorderVisuals();
 
   String get activeLocale {
@@ -354,7 +358,13 @@ abstract class CombatEntity extends PositionComponent
     final wasHaloed = _hasActiveAmplify(oldStats);
     final isHaloed = _hasActiveAmplify(newStats);
     if (isHaloed && !wasHaloed) {
-      add(ChargeHalo(size: size.clone()));
+      final window = windowLocalRect;
+      add(
+        ChargeHalo(
+          size: Vector2(window.width, window.height),
+          position: Vector2(window.left, window.top),
+        ),
+      );
     } else if (wasHaloed && !isHaloed) {
       for (final halo in children.whereType<ChargeHalo>()) {
         halo.fadeOut();
@@ -364,8 +374,10 @@ abstract class CombatEntity extends PositionComponent
     final oldFrost = _frostKind(oldStats);
     final newFrost = _frostKind(newStats);
     if (newFrost != null && oldFrost == null) {
+      final window = windowLocalRect;
       _frostShell = FrostShell(
-        size: size.clone(),
+        size: Vector2(window.width, window.height),
+        position: Vector2(window.left, window.top),
         opacity: newFrost == RuptureKind.skipAction
             ? FrostShell.enemyOpacity
             : FrostShell.heroOpacity,

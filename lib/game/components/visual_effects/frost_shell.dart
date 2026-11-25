@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// bleu glace borde de blanc qui monte du bas vers le haut a la pose, reste
 /// tant que le gel dure, puis se brise en eclats ou fond.
 class FrostShell extends PositionComponent {
-  FrostShell({required Vector2 size, required this.opacity})
+  FrostShell({required Vector2 size, required this.opacity, super.position})
       : super(size: size, priority: _shellPriority);
 
   static const Color veilColor = Color(0xFF81D4FA);

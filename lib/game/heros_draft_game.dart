@@ -18,6 +18,7 @@ import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
 import '../models/data/charge_data.dart';
 import '../models/data/location_data.dart';
+import '../models/data/tier_frame_data.dart';
 import '../models/entity_stats.dart';
 import 'game_constants.dart';
 
@@ -101,6 +102,11 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// languettes des cartes de combat y lisent quels statuts sont des charges
   /// et le nom de leur état rompu (spec P-53, A2).
   final ChargeCatalog chargeCatalog;
+
+  /// Les cadres des tiers, injectés comme [chargeCatalog] : la carte d'un
+  /// ennemi y prend son canevas et sa fenêtre. Vide, aucun ennemi n'a de
+  /// carte (`StateSyncSystem` le refuse).
+  final TierFrameTable tierFrames;
 
   /// Le lieu dont le décor habille le combat, injecté comme [audio] ; nul,
   /// le fond reste la couleur du jeu.
@@ -191,6 +197,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
     required this.onInspectionChanged,
+    this.tierFrames = const TierFrameTable.empty(),
     this.location,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
