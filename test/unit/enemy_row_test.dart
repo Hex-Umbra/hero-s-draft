@@ -52,6 +52,14 @@ void main() {
     expect(centers.last - centers.first + 292, 1270);
   });
 
+  test('le pas se calle sur le pixel physique le plus proche, pas en dessous',
+      () {
+    // 0,85 x 1910 / 5 / 2 x 2 = 324,7 : le pas vaut 325, pas 324.
+    final centers = row(List.filled(4, ordinary), width: 1910);
+
+    expect(gaps(centers), everyElement(325));
+  });
+
   test('deux places en 1080p a x2 : 536 et 828', () {
     final centers = row(List.filled(2, ordinary));
 
