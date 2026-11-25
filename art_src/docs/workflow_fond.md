@@ -35,6 +35,7 @@ Chaque fond doit laisser la place à n'importe quelle créature :
 3. **Ramener sur la grille** avec `window_import.py`, en gardant la source.
 4. **Vérifier en greffant une créature** dessus : la créature se lit-elle bien ? Ses pieds tombent-ils sur le sol ?
 5. **Recommencer jusqu'à trois variations** qui se distinguent : lumière, sol, densité.
+6. **Exporter vers le jeu**, depuis `art_src/tools/` : `python export_jeu.py ../fonds/<lieu>/<lieu>_window_<n>.aseprite ../../assets/data/locations/<lieu>/window_<n>.png --taille 128x192`. Le livrable est ce PNG de 128 × 192, `window_1.png` à `window_3.png` : trois par lieu, exactement (B67). Il garde les couleurs d'Apollo telles quelles.
 
 ### Le gabarit du prompt
 

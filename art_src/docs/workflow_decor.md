@@ -201,7 +201,11 @@ Tant que le propriétaire ne l'a pas validé, on revient aux étapes précédent
 
 ### 7. Retoucher dans Aseprite
 
-On reprend à la main les bords d'objets et les détails à préciser, en couleurs libres, la palette Apollo en nuancier. Le chemin du `.aseprite` vers l'image du jeu est fixé par la vague qui pose le décor dans le jeu, pas par ce workflow.
+On reprend à la main les bords d'objets et les détails à préciser, en couleurs libres, la palette Apollo en nuancier. Une fois le décor retouché, on l'exporte vers le jeu, depuis `art_src/tools/` :
+
+`python export_jeu.py ../decors/<lieu>/combat/<lieu>_combat_detail.aseprite ../../assets/data/locations/<lieu>/combat.png --taille 640x360`
+
+Le PNG fait 640 × 360 et garde les couleurs peintes (B80) : l'outil n'en convertit aucune. Il affiche les calques exportés et ceux qu'il laisse, masqués. Un autre écran reçoit son décor en déposant `<écran>.png` dans le même dossier du lieu (A6) : le nom est celui que `DecorScreen` donne à l'écran.
 
 ## Ce qui est éprouvé, et ce qui ne l'est pas
 

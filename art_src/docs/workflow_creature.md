@@ -239,7 +239,7 @@ Trois fichiers sortent : la figure cadrée (`<préfixe>_cadree.png`), sa silhoue
 ### 6. Ramener sur la grille et séparer en calques
 
 `python creature_mots_layers.py <préfixe> <nom>.aseprite --recette <nom>_calques.json --apercu <fond.aseprite> <nom>_<biome>.aseprite`. On obtient :
-- **le sprite seul**, sur fond transparent : c'est le livrable ;
+- **le sprite seul**, sur fond transparent : c'est le livrable. Il entre dans le jeu par `python export_jeu.py ../sprites/<famille>/tier_<n>/<nom>.aseprite ../../assets/data/enemies/<id>/sprite.png --taille 128x192`, calques Ombre et Liseré visibles ;
 - **un aperçu**, la créature posée sur un fond de fenêtre de son biome, pour la retoucher en situation. Tant qu'un biome n'a pas ses fonds, on prend ceux de la forêt ;
 - **la planche des calques** (`<préfixe>_calques.png`), chaque calque seul sur un fond vif.
 
@@ -344,7 +344,7 @@ On essaie plusieurs facteurs, et le propriétaire choisit. L'image retenue devie
 | Fichier | Rôle |
 |:---|:---|
 | `<nom>_brief.md` | Le brief : les réponses du propriétaire, le prompt en cours et le journal des tours |
-| `<nom>.aseprite` | Le sprite, sur fond transparent : le livrable. Ses calques : Ombre, puis ceux de sa recette, puis Liseré une fois le design validé |
+| `<nom>.aseprite` | Le sprite, sur fond transparent : le livrable, exporté en `assets/data/enemies/<id>/sprite.png`, 128 × 192, Ombre et Liseré visibles. Ses calques : Ombre, puis ceux de sa recette, puis Liseré une fois le design validé |
 | `<nom>_calques.json` | La recette de calques : l'ordre des calques, et les mots qui désignent chacun (étape 6) |
 | `<nom>_<biome>.aseprite` | Un aperçu de la créature posée sur un fond de son biome : le calque Décor, puis ceux du sprite |
 | `<nom>_figure_brute.png` | La dernière génération, intacte : celle d'où la figure est tirée. Quand la figure vient d'une réduction ou d'une variation, c'est l'image repeinte ; les générations d'avant vont aux archives. Elle embarque ses réglages (`comfy_meta.py lire`) |
