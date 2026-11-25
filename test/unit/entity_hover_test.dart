@@ -80,11 +80,11 @@ void main() {
   });
 
   test('la bande entre la barre et la carte appartient a l ennemi', () {
-    final body = enemyBodyRect(100, 140);
+    final zone = enemyZoneRect(testFrameOf(1));
 
-    expect(body.contains(const Offset(50, -2)), isTrue);
-    expect(body.contains(const Offset(50, 139)), isTrue);
-    expect(body.contains(const Offset(50, -18)), isFalse);
+    expect(zone.contains(const Offset(50, -2)), isTrue);
+    expect(zone.contains(const Offset(50, 119)), isTrue);
+    expect(zone.contains(const Offset(50, -18)), isFalse);
   });
 
   group('unfoldsInward', () {

@@ -70,3 +70,25 @@ double rowCenterYFor(double screenHeight, {double devicePixelRatio = 1}) =>
     (GameConstants.enemyRowCenterY * screenHeight * devicePixelRatio)
         .roundToDouble() /
     devicePixelRatio;
+
+/// Le décalage horizontal, logique, qui garde la carte ouverte dans l'écran
+/// (B89), arrondi vers l'intérieur. [left] et [right] bornent la carte ouverte
+/// à son arrivée, AVANT décalage : sa zone au repos — canevas, barre,
+/// languettes au repos —, à l'échelle de la fiche, posée sur `restPosition`
+/// plus la descente. Une carte plus large que l'écran se centre.
+double inspectionShift({
+  required double left,
+  required double right,
+  required double screenWidth,
+  double devicePixelRatio = 1,
+}) {
+  if (right - left > screenWidth) return (screenWidth - right - left) / 2;
+  // La grandeur s'arrondit au pixel physique supérieur : sous B85, le bord de
+  // la carte ne tombe pas sur un pixel physique, et la carte ne doit jamais
+  // dépasser l'écran. Le millionième absorbe l'erreur d'arrondi d'un produit.
+  double inward(double overflow) =>
+      ((overflow * devicePixelRatio) - 1e-6).ceilToDouble() / devicePixelRatio;
+  if (left < 0) return inward(-left);
+  if (right > screenWidth) return -inward(right - screenWidth);
+  return 0;
+}

@@ -21,7 +21,6 @@ class HeroCard extends CombatEntity with TapCallbacks {
   @override
   bool get isPlayer => true;
 
-  @override
   late final RectangleComponent borderInfo;
   @override
   late final SpriteComponent sprite;
@@ -42,6 +41,12 @@ class HeroCard extends CombatEntity with TapCallbacks {
   @override
   void refreshBorderVisuals() {
     _refreshBorderVisuals();
+  }
+
+  @override
+  void flashArmorHit() {
+    borderInfo.paint.color = Colors.cyanAccent;
+    borderInfo.paint.strokeWidth = 4;
   }
 
   @override
@@ -146,7 +151,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
     );
     add(borderInfo);
 
-    addStatusTabs(onTapDown);
+    addStatusTabs();
     refreshStatusTabs(counterId: _counterId);
   }
 

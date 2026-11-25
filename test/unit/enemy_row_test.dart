@@ -134,4 +134,68 @@ void main() {
     expect(rowCenterYFor(1080), 227);
     expect(rowCenterYFor(864, devicePixelRatio: 1.25) * 1.25, closeTo(227, 1e-9));
   });
+
+  group('inspectionShift (B89)', () {
+    test('nul quand la carte tient, aux deux bords exacts compris', () {
+      expect(inspectionShift(left: 100, right: 400, screenWidth: 1920), 0);
+      expect(inspectionShift(left: 0, right: 400, screenWidth: 1920), 0);
+      expect(inspectionShift(left: 1500, right: 1920, screenWidth: 1920), 0);
+    });
+
+    test('cinq places en 1080p : la carte ouverte du bord tient, bord droit a '
+        '1864', () {
+      final xs = placeRow(
+        slots: List.filled(5, slotOf(testFrameOf(1))),
+        unit: 2,
+        screenWidth: 1920,
+      );
+      final right = xs.last + 73 * 4;
+      expect(right, 1864);
+      expect(inspectionShift(left: right - 584, right: right, screenWidth: 1920), 0);
+    });
+
+    test('la carte du bord droit d une rangee de six en 1080p se decale de 97 '
+        'vers la gauche', () {
+      final xs = placeRow(
+        slots: List.filled(6, slotOf(testFrameOf(1))),
+        unit: 2,
+        screenWidth: 1920,
+      );
+      final right = xs.last + 73 * 4;
+      expect(right, 2017);
+      final shift =
+          inspectionShift(left: right - 584, right: right, screenWidth: 1920);
+      expect(shift, -97);
+      expect(right + shift, 1920);
+    });
+
+    test('la carte du bord gauche, symetrique : +97', () {
+      expect(inspectionShift(left: -97, right: 487, screenWidth: 1920), 97);
+    });
+
+    test('une carte plus large que l ecran se centre', () {
+      final shift = inspectionShift(left: 100, right: 2100, screenWidth: 1920);
+      expect(100 + shift, -40);
+      expect(2100 + shift, 1960);
+    });
+
+    test('a 1,25, la grandeur s arrondit au pixel physique superieur', () {
+      final right = inspectionShift(
+        left: 1300,
+        right: 1536.3,
+        screenWidth: 1536,
+        devicePixelRatio: 1.25,
+      );
+      expect(right, -0.8);
+      expect(1536.3 + right, lessThanOrEqualTo(1536));
+      final left = inspectionShift(
+        left: -0.3,
+        right: 200,
+        screenWidth: 1536,
+        devicePixelRatio: 1.25,
+      );
+      expect(left, 0.8);
+      expect(-0.3 + left, greaterThanOrEqualTo(0));
+    });
+  });
 }

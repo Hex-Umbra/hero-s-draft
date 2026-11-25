@@ -26,8 +26,8 @@ class GameConstants {
   static const int priorityInspectedEnemy = 190;
 
   // --- FICHE D'UN ENNEMI ---
-  /// L'agrandissement de la carte ouverte : celui de la carte focalisée.
-  static const double inspectionScale = 1.25;
+  /// L'agrandissement de la carte ouverte : le double, à tout palier (B79, B84).
+  static const double inspectionScale = 2.0;
   /// Agrandissement, descente et fondu du voile, à l'aller comme au retour.
   static const double inspectionSeconds = 0.15;
 

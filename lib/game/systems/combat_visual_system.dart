@@ -51,7 +51,7 @@ class CombatVisualSystem extends Component with HasGameReference<HerosDraftGame>
       game.add(
         FireBurst(
           position: bearer.position.clone(),
-          radius: 1.5 * bearer.size.x * bearer.scale.x,
+          radius: 1.5 * bearer.anchorLocalRect.width * bearer.scale.x,
           onComplete: () {
             for (final splash in resolution.splashes) {
               final neighbour = _cardOf(splash.targetId);
@@ -71,7 +71,7 @@ class CombatVisualSystem extends Component with HasGameReference<HerosDraftGame>
                       '+$charge ${statusEmoji(resolution.chargeId)}',
                       FireBurst.edge,
                       neighbour.position +
-                          Vector2(0, -neighbour.size.y * neighbour.scale.y / 2),
+                          Vector2(0, -neighbour.anchorLocalRect.height * neighbour.scale.y / 2),
                     );
                   },
                 ),

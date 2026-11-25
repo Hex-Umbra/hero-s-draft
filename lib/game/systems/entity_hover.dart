@@ -25,11 +25,6 @@ Rect enemyZoneRect(TierFrame frame) => Rect.fromLTRB(
       frame.height.toDouble(),
     );
 
-/// La zone d'un ennemi sous le pointeur : le rectangle continu de sa barre de
-/// PV au bas de sa carte (spec P-05, §4.5).
-Rect enemyBodyRect(double cardWidth, double cardHeight) =>
-    Rect.fromLTRB(0, GameConstants.enemyHealthBarTop, cardWidth, cardHeight);
-
 /// Vrai quand la languette déroulée vers l'extérieur sortirait de l'écran :
 /// elle se déroule alors vers l'intérieur, par-dessus sa propre carte (B39).
 /// [attachEdge] est le bord de la carte du côté de la languette et

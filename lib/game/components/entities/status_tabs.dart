@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 import '../../game_constants.dart';
@@ -11,22 +10,23 @@ import '../../systems/status_readout.dart';
 /// La languette d'un côté d'une carte de combat : les bonus à gauche, les
 /// altérations et les charges à droite (spec P-05, §5.3). Au repos, l'émoji et
 /// la valeur dessous ; déroulée, le nom, la valeur et la durée. Elle ne décide
-/// rien : elle montre les entrées que sa carte lui donne, et rend ses appuis à
-/// sa carte. Son [position] et sa [size] sont le rectangle dessiné, en unités
-/// de la carte ; l'appui se lit sur ce rectangle et sur celui du repos.
-class StatusTabs extends PositionComponent with TapCallbacks {
+/// rien : elle montre les entrées que sa carte lui donne. Son [position] et sa
+/// [size] sont le rectangle dessiné, en unités de la carte ; elle ne reçoit
+/// aucun appui, sa carte le prend sur [zoneLocalRects] (A17).
+class StatusTabs extends PositionComponent {
   StatusTabs({
     required this.side,
-    required this.cardWidth,
-    required this.onTap,
+    required this.anchorRect,
   }) : super(priority: _priority) {
     _target = _emptyRect;
     position.setValues(_target.left, _target.top);
   }
 
   final StatusSide side;
-  final double cardWidth;
-  final void Function(TapDownEvent event) onTap;
+
+  /// Le rectangle auquel la languette s'attache, dans la carte : le gabarit
+  /// d'un ennemi (B77), la carte entière du héros.
+  final Rect anchorRect;
 
   /// Au-dessus de la gangue (4) et du halo (5) que porte la carte.
   static const int _priority = 6;
@@ -88,7 +88,7 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   }
 
   /// Déroule ou replie la languette, en 0,1 s ; [inward] la déroule par-dessus
-  /// sa propre carte (B39).
+  /// le gabarit de sa carte (B39).
   void setUnfolded(bool unfolded, {bool inward = false}) {
     final nextInward = unfolded && inward;
     if (unfolded == _unfolded && nextInward == _inward) return;
@@ -119,14 +119,17 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   /// rien sans entrée. Le survol et l'appui lisent la même.
   Iterable<Rect> get zoneLocalRects => [restLocalRect, localRect].nonNulls;
 
-  double get _restX =>
-      side == StatusSide.left ? GameConstants.statusTabOverlap - GameConstants.statusTabRestWidth : cardWidth - GameConstants.statusTabOverlap;
+  double get _restX => side == StatusSide.left
+      ? anchorRect.left + GameConstants.statusTabOverlap - GameConstants.statusTabRestWidth
+      : anchorRect.right - GameConstants.statusTabOverlap;
 
-  Rect get _emptyRect => Rect.fromLTWH(_restX, _top, 0, 0);
+  double get _topY => anchorRect.top + _top;
+
+  Rect get _emptyRect => Rect.fromLTWH(_restX, _topY, 0, 0);
 
   Rect get _restRect => Rect.fromLTWH(
         _restX,
-        _top,
+        _topY,
         GameConstants.statusTabRestWidth,
         2 * _restPadding + _rows.length * _restPitch,
       );
@@ -134,13 +137,13 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   Rect get _unfoldedRect {
     final width = unfoldedWidth;
     final x = switch ((side, _inward)) {
-      (StatusSide.left, false) => GameConstants.statusTabOverlap - width,
-      (StatusSide.left, true) => 0.0,
-      (StatusSide.right, false) => cardWidth - GameConstants.statusTabOverlap,
-      (StatusSide.right, true) => cardWidth - width,
+      (StatusSide.left, false) => anchorRect.left + GameConstants.statusTabOverlap - width,
+      (StatusSide.left, true) => anchorRect.left,
+      (StatusSide.right, false) => anchorRect.right - GameConstants.statusTabOverlap,
+      (StatusSide.right, true) => anchorRect.right - width,
     };
     final height = _rows.fold(2 * _padY, (sum, row) => sum + row.pitch);
-    return Rect.fromLTWH(x, _top, width, height);
+    return Rect.fromLTWH(x, _topY, width, height);
   }
 
   Rect get _currentTarget {
@@ -193,18 +196,6 @@ class StatusTabs extends PositionComponent with TapCallbacks {
     }
     canvas.clipRRect(frame);
   }
-
-  /// L'appui suit la zone de la carte ([zoneLocalRects]). Déroulée vers
-  /// l'intérieur (B39), la languette garde ainsi l'appui sur la bande qu'elle
-  /// occupait au repos, que le survol garde aussi.
-  @override
-  bool containsLocalPoint(Vector2 point) {
-    final inCard = Offset(point.x + position.x, point.y + position.y);
-    return zoneLocalRects.any((rect) => rect.contains(inCard));
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) => onTap(event);
 }
 
 /// Une entrée de la languette : ses deux dessins, au repos et déroulé, dont

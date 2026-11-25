@@ -425,4 +425,37 @@ void main() {
 
     expect(cancellations, 0);
   });
+
+  test('la carte ouverte qui sortirait se decale : le decalage se lit sur le '
+      'rectangle avant decalage, inspectionRect rend le rectangle decale', () {
+    game.enemyCards.add(e1);
+    e1.place(Vector2(1250, 168));
+
+    game.handlePlayerTargeting(e1, 1);
+
+    // Ouverte à 2 × 1,3348, la carte de 88 de large déborde de 87,46 à
+    // droite : décalée de 88 vers la gauche, son bord droit à 1279,46.
+    final rect = inspections.single!.rect;
+    expect(rect.right, lessThanOrEqualTo(1280));
+    expect(rect.right, greaterThan(1279));
+    expect(rect.center.dx, closeTo(1250 - 88, 1e-6));
+    expect(e1.inspectionRect(), rect);
+  });
+
+  for (var tier = 1; tier <= 5; tier++) {
+    test('tier $tier : la carte ouverte est au double, sa descente garde le '
+        'haut de sa barre', () {
+      final enemy = _enemy(game, 'e$tier', tier: tier);
+      game.enemyCards.add(enemy);
+      enemy.place(Vector2(640, 300));
+      final f = game.boardScale.frame;
+
+      game.handlePlayerTargeting(enemy, 1);
+
+      expect(enemy.baseScale, closeTo(2 * enemy.restScale, 1e-12));
+      // 1e-3 : la place passe par `Vector2`, en Float32
+      // (`vector_math-2.2.0/lib/src/vector_math/vector2.dart:9`).
+      expect(inspections.single!.rect.top, closeTo(300 - 77 * f, 1e-3));
+    });
+  }
 }
