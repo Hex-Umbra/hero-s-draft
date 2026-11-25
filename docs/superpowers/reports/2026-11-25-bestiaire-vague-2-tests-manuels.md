@@ -227,7 +227,7 @@
 - **Faire** : regarder les ennemis de tier 1 face à la carte du héros ; mesurer le cadre d'un ennemi de tier 1 (capture d'écran).
 - **Attendu** : sur 2880 × 1800 à 200 %, le cadre d'un tier 1 mesure environ **264 × 360 pixels physiques** (88 × 120 pixels de cadre à ×3), **net** (pixels carrés et égaux), et l'ennemi fait environ **0,85 fois la hauteur du héros**, comme en 1080p (au lieu de 0,57). La rangée de cinq tient dans l'écran, sans chevauchement. En 1440p, si possible : environ **235 × 320 pixels physiques, lissé** (2,667).
 - **Ne doit pas changer** : la carte du héros et la main ; le décor ; le 1080p, toujours ×2 net.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, sur 2880 × 1800 à 200 % dans Chrome, après la correction B90 : « les ennemis ont la bonne taille maintenant »
 
 ## Ce qui doit rester inchangé
 - **Ce que font les ennemis** : mêmes intentions, mêmes valeurs, même ordre de la phase ennemie, mêmes dégâts, aucune règle de combat changée.
