@@ -36,6 +36,8 @@ des charges se lisent au repos et au déroulé des languettes — et
 `StatBadge` et `HealthBar` : le différé de Z-Sync vaut désormais pour la barre et les languettes.
 Chacun de ces ADR ne change que de Statut.
 
+**Amendé par [ADR-123](ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)** (vague 2 du bestiaire, sur la branche `feat/v0.6.2-cadres-et-decors`, en attente du test, de la PR, de la fusion et du tag) : la barre à la largeur du gabarit, les languettes contre lui, la zone du canevas devenue le test d'appui de la carte, la fiche doublée au lieu de 1,25, le contour autour de la fenêtre. Le corps ci-dessous décrit la vague 1 telle que livrée ; où l'ADR-123 le contredit, il fait foi.
+
 ### Contexte
 
 Au-dessus de la carte d'un ennemi, un badge serrait sa Puissance, son armure et ses PV, et la

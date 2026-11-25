@@ -1,10 +1,13 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:ui' show FilterQuality, Rect;
+import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/components/card_component.dart';
 import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/game/heros_draft_game.dart';
 import 'package:roguelike_card_game/game/systems/state_sync_system.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
@@ -18,6 +21,8 @@ import 'package:roguelike_card_game/models/entity_stats.dart';
 import 'package:roguelike_card_game/services/audio/audio_director.dart';
 import 'package:roguelike_card_game/services/audio/audio_settings.dart';
 import 'package:roguelike_card_game/services/audio/silent_audio_backend.dart';
+
+import 'tier_frame_fixture.dart';
 
 const _slime = EnemyData(
   id: 'slime',
@@ -44,8 +49,10 @@ EnemyInstance _instance(String id) => EnemyInstance(
 
 /// Une carte jamais montée : `game` posé à la main, pour que `baseScale` le
 /// lise ; aucun effet visuel ne joue sur une carte non chargée.
-EnemyCard _enemy(HerosDraftGame game, String id) => EnemyCard(
+EnemyCard _enemy(HerosDraftGame game, String id, {int tier = 1}) => EnemyCard(
       instance: _instance(id),
+      frame: testFrameOf(tier),
+      windowBackground: null,
       onTapEnemy: (_, _) {},
     )..game = game;
 
@@ -105,11 +112,52 @@ void main() {
           might: 0,
         ),
       );
-    // Un canevas de 1280 x 800 : `scaleFactor` vaut 1, et le rectangle de la
-    // fiche se calcule sans que le jeu soit charge.
+    // Un canevas de 1280 x 800 : `scaleFactor` vaut 1, le palier 1,6296,
+    // lisse (B85), et le rectangle de la fiche se calcule sans que le jeu
+    // soit charge.
     game.onGameResize(Vector2(1280, 800));
     e1 = _enemy(game, 'e1');
     e2 = _enemy(game, 'e2');
+  });
+
+  test('sans contexte, le rapport de pixels vaut 1', () {
+    expect(game.devicePixelRatio, 1);
+  });
+
+  test('la carte au repos est a l echelle du palier, un boss aussi', () {
+    final boss = EnemyCard(
+      instance: EnemyInstance(
+        id: 'boss',
+        data: _slime,
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, might: 4),
+        isBoss: true,
+      ),
+      frame: testFrameOf(1),
+      windowBackground: null,
+      onTapEnemy: (_, _) {},
+    )..game = game;
+
+    // En 1280 × 800, la carte entière tient entre la barre du haut (56) et
+    // le héros (304) : (304 − 56) / 153, sous la cible 2,2 × 800 / 1080 (B93).
+    expect(game.boardScale.frame, closeTo((304 - 56) / 153, 1e-9));
+    expect(e1.restScale, game.boardScale.frame);
+    expect(boss.restScale, game.boardScale.frame);
+  });
+
+  test('la carte d un ennemi mesure le canevas de son tier, sa fenetre a l offset de la table', () {
+    final card = _enemy(game, 'e3', tier: 3);
+
+    expect(card.size, Vector2(104, 136));
+    expect(card.windowLocalRect, const Rect.fromLTWH(20, 20, 64, 96));
+  });
+
+  test('le sprite du decor n est jamais lisse et reste au fond (B88)', () async {
+    final image = await createTestImage(width: 2, height: 2);
+
+    final decor = decorSpriteFor(image);
+
+    expect(decor.paint.filterQuality, FilterQuality.none);
+    expect(decor.priority, GameConstants.priorityBackground);
   });
 
   test('une cible attendue : toucher un ennemi vivant le rapporte et cesse d attendre', () {
@@ -380,4 +428,57 @@ void main() {
 
     expect(cancellations, 0);
   });
+
+  test('la carte ouverte qui sortirait se decale : le decalage se lit sur le '
+      'rectangle avant decalage, inspectionRect rend le rectangle decale', () {
+    game.enemyCards.add(e1);
+    e1.place(Vector2(1250, 168));
+
+    game.handlePlayerTargeting(e1, 1);
+
+    // Ouverte à 2 × 1,6209, la carte de 88 de large déborde de 112,64 à
+    // droite : décalée de 113 vers la gauche, son bord droit à 1279,64.
+    final rect = inspections.single!.rect;
+    expect(rect.right, lessThanOrEqualTo(1280));
+    expect(rect.right, greaterThan(1279));
+    expect(rect.center.dx, closeTo(1250 - 113, 1e-6));
+    expect(e1.inspectionRect(), rect);
+  });
+
+  test('la selection et la surbrillance posees avant le chargement se voient '
+      'au chargement', () async {
+    // Sans monter le jeu (D1) : les images sont mises au cache, et `onLoad`
+    // est appelé à la main sur des cartes jamais montées.
+    final image = await createTestImage(width: 2, height: 2);
+    game.images.add(_slime.spritePath, image);
+    game.images.add(testFrameOf(1).imagePath, image);
+
+    final highlighted = _enemy(game, 'h')..setHighlight(true);
+    final selected = _enemy(game, 's')..setSelection(true);
+    await highlighted.onLoad();
+    await selected.onLoad();
+
+    final window = highlighted.windowLocalRect;
+    expect(highlighted.outline.color, Colors.cyanAccent);
+    expect(highlighted.outline.strokeRect, window.inflate(1.5));
+    expect(selected.outline.color, Colors.amber);
+    expect(selected.outline.strokeRect, window.inflate(2));
+  });
+
+  for (var tier = 1; tier <= 5; tier++) {
+    test('tier $tier : la carte ouverte est au double, sa descente garde le '
+        'haut de sa barre', () {
+      final enemy = _enemy(game, 'e$tier', tier: tier);
+      game.enemyCards.add(enemy);
+      enemy.place(Vector2(640, 300));
+      final f = game.boardScale.frame;
+
+      game.handlePlayerTargeting(enemy, 1);
+
+      expect(enemy.baseScale, closeTo(2 * enemy.restScale, 1e-12));
+      // 1e-3 : la place passe par `Vector2`, en Float32
+      // (`vector_math-2.2.0/lib/src/vector_math/vector2.dart:9`).
+      expect(inspections.single!.rect.top, closeTo(300 - 77 * f, 1e-3));
+    });
+  }
 }

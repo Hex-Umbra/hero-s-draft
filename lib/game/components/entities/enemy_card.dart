@@ -1,24 +1,27 @@
-import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../../../models/entity_stats.dart';
 import '../../../models/data/enemy_data.dart';
+import '../../../models/data/tier_frame_data.dart';
 import '../../../models/enemy_intent.dart';
 import '../../../models/enemy_instance.dart';
 import '../../game_constants.dart';
 import '../../systems/armor_veil.dart';
+import '../../systems/creature_fit.dart';
+import '../../systems/enemy_row.dart';
 import '../../systems/entity_hover.dart';
 import '../visual_effects/frost_shell.dart';
 import '../effect_icon.dart';
 import 'enemy_health_bar.dart';
 import 'combat_entity.dart';
+import 'target_outline.dart';
 
 class EnemyCard extends CombatEntity
     with TapCallbacks, HasPaint {
   EnemyInstance instance;
-  /// Le toucher de la carte, de sa barre ou de ses languettes, avec le
+  /// Le toucher de la carte, n'importe où dans sa zone (A17), avec le
   /// pointeur de l'appui : `HerosDraftGame` le retient quand il ouvre ou
   /// garde une fiche (spec P-05 vague 1, A12).
   final void Function(EnemyCard enemy, int pointerId) onTapEnemy;
@@ -26,8 +29,7 @@ class EnemyCard extends CombatEntity
   @override
   bool get isPlayer => false;
 
-  @override
-  late final RectangleComponent borderInfo;
+  late final TargetOutline outline;
   late final EnemyHealthBar healthBar;
   @override
   late final SpriteComponent sprite;
@@ -39,7 +41,6 @@ class EnemyCard extends CombatEntity
   EnemyIntent? get currentIntent => instance.currentIntent;
   EnemyIntent? get effectiveIntent => instance.effectiveIntent;
   bool get skipsAction => instance.skipsAction;
-  bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
   bool isDead = false;
@@ -48,17 +49,9 @@ class EnemyCard extends CombatEntity
   bool _pendingFireDamage = false;
   bool _holdingVisualStats = false;
 
-  double _scaleMultiplier = 1.0;
-  double get scaleMultiplier => _scaleMultiplier;
-  set scaleMultiplier(double value) {
-    if (_scaleMultiplier == value) return;
-    _scaleMultiplier = value;
-    _snapScale();
-  }
-
-  /// L'échelle de la carte au repos, fiche fermée.
-  double get restScale =>
-      game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0) * _scaleMultiplier;
+  /// L'échelle de la carte au repos, fiche fermée : le palier du plateau, le
+  /// même pour un boss (B73).
+  double get restScale => game.boardScale.frame;
 
   /// L'échelle à laquelle les effets ramènent la carte : agrandie tant que sa
   /// fiche est ouverte (spec P-05 vague 1, A11).
@@ -111,12 +104,33 @@ class EnemyCard extends CombatEntity
       c is ScaleEffect ||
       (c is SequenceEffect && c.children.any((e) => e is ScaleEffect));
 
-  /// La descente de la carte ouverte : le haut de sa barre reste où il était
-  /// quand elle grandit (B40).
+  /// La descente de la carte ouverte : le haut de sa barre, en haut de sa
+  /// zone, reste où il était quand elle grandit (B40) — 77 pixels de cadre
+  /// par palier sur les cinq cadres (A18).
   double get _inspectionDrop =>
-      (size.y / 2 - GameConstants.enemyHealthBarTop) * (baseScale - restScale);
+      (size.y / 2 - bodyLocalRect.top) * (baseScale - restScale);
 
-  Vector2 get _targetPosition => restPosition + Vector2(0, _inspectionDrop);
+  /// La place de la carte, la descente comprise, avant le décalage de B89.
+  Vector2 get _droppedPosition => restPosition + Vector2(0, _inspectionDrop);
+
+  /// La place vers laquelle la carte va. Ouverte, elle se décale vers
+  /// l'intérieur juste assez pour tenir dans l'écran (B89) ; le décalage se
+  /// lit sur le rectangle de la carte ouverte AVANT décalage (spec §5.9).
+  Vector2 get _targetPosition {
+    final dropped = _droppedPosition;
+    if (!_isInspected) return dropped;
+    final open = _openRect(dropped);
+    return dropped +
+        Vector2(
+          inspectionShift(
+            left: open.left,
+            right: open.right,
+            screenWidth: game.size.x,
+            devicePixelRatio: game.devicePixelRatio,
+          ),
+          0,
+        );
+  }
 
   /// Pose la carte à sa place, la descente de la fiche comprise, par l'écart
   /// à sa place précédente : une place inchangée ne touche à rien, une
@@ -172,10 +186,14 @@ class EnemyCard extends CombatEntity
     _refreshBorderVisuals();
   }
 
-  /// Le rectangle de la carte ouverte à l'arrivée, barre et languettes au
-  /// repos comprises, sur le canevas : ce que `GameScreen` lit pour placer le
-  /// cadre de la fiche.
-  Rect inspectionRect() {
+  /// Le rectangle de la carte ouverte à l'arrivée, décalée, barre et
+  /// languettes au repos comprises, sur le canevas : ce que `GameScreen` lit
+  /// pour placer le cadre de la fiche.
+  Rect inspectionRect() => _openRect(_targetPosition);
+
+  /// La zone au repos de la carte — canevas, barre, languettes au repos —, à
+  /// l'échelle de base, centrée sur [center].
+  Rect _openRect(Vector2 center) {
     var local = bodyLocalRect;
     if (isLoaded) {
       for (final tabs in [leftTabs, rightTabs]) {
@@ -184,12 +202,11 @@ class EnemyCard extends CombatEntity
       }
     }
     final s = baseScale;
-    final c = _targetPosition;
     return Rect.fromLTRB(
-      c.x + (local.left - size.x / 2) * s,
-      c.y + (local.top - size.y / 2) * s,
-      c.x + (local.right - size.x / 2) * s,
-      c.y + (local.bottom - size.y / 2) * s,
+      center.x + (local.left - size.x / 2) * s,
+      center.y + (local.top - size.y / 2) * s,
+      center.x + (local.right - size.x / 2) * s,
+      center.y + (local.bottom - size.y / 2) * s,
     );
   }
 
@@ -202,15 +219,39 @@ class EnemyCard extends CombatEntity
   }
 
   @override
-  Rect get bodyLocalRect => enemyBodyRect(size.x, size.y);
+  Rect get bodyLocalRect => enemyZoneRect(frame);
+
+  @override
+  Rect get anchorLocalRect => enemyTemplateRect(frame);
 
   /// Le plus haut montant d'armure atteint depuis qu'elle est tombee a 0 : le
   /// plein du voile de la barre de PV (`ArmorVeil`).
   int _armorPeak;
 
-  EnemyCard({required this.instance, required this.onTapEnemy})
-    : _armorPeak = instance.stats.armure,
-      super(size: Vector2(100, 140));
+  /// Le cadre du tier de l'ennemi : le canevas de la carte et sa fenêtre.
+  final TierFrame frame;
+
+  /// Le fond de la fenêtre, tiré à la naissance de la carte ; nul, la fenêtre
+  /// n'en a pas.
+  final String? windowBackground;
+
+  /// Vrai quand la créature est un ancien sprite, que la fenêtre lisse.
+  late final bool _smoothCreature;
+
+  /// Le fond de la fenêtre et le cadre, que [_refreshFiltering] lisse ou non.
+  SpriteComponent? _backgroundSprite;
+  late final SpriteComponent _frameSprite;
+
+  @override
+  Rect get windowLocalRect => enemyWindowRect(frame);
+
+  EnemyCard({
+    required this.instance,
+    required this.frame,
+    required this.windowBackground,
+    required this.onTapEnemy,
+  }) : _armorPeak = instance.stats.armure,
+       super(size: Vector2(frame.width.toDouble(), frame.height.toDouble()));
 
   @override
   Future<void> onLoad() async {
@@ -219,77 +260,84 @@ class EnemyCard extends CombatEntity
     // Appliquer l'échelle initiale
     scale = Vector2.all(baseScale);
 
-    final spriteName = data.spritePath;
+    final window = windowLocalRect;
+    final windowPosition = Vector2(window.left, window.top);
+    final windowSize = Vector2(window.width, window.height);
 
-    // Chargement asynchrone robuste (lit le cache si déjà chargé, ou charge depuis les assets sinon)
-    final image = await game.images.load(spriteName);
-
-    // Préserver le ratio d'aspect original de l'image (type BoxFit.contain)
-    final double imgWidth = image.width.toDouble();
-    final double imgHeight = image.height.toDouble();
-    final double imgRatio = imgWidth / imgHeight;
-    final double cardRatio =
-        size.x / size.y; // Ratio de la carte (100 / 140 = 0.714)
-
-    Vector2 spriteSize;
-    Vector2 spritePosition;
-
-    if (imgRatio > cardRatio) {
-      // L'image est plus large/carrée que le ratio de la carte (ex. le slime 320x320) -> Ajuster sur la largeur
-      final double width = size.x;
-      final double height = size.x / imgRatio;
-      spriteSize = Vector2(width, height);
-      spritePosition = Vector2(
-        0,
-        (size.y - height) / 2,
-      ); // Centrer verticalement
-    } else {
-      // L'image est plus élancée/haute que le ratio de la carte -> Ajuster sur la hauteur
-      final double height = size.y;
-      final double width = size.y * imgRatio;
-      spriteSize = Vector2(width, height);
-      spritePosition = Vector2(
-        (size.x - width) / 2,
-        0,
-      ); // Centrer horizontalement
+    // `images.load` lit le cache s'il est rempli, et charge sinon (D4).
+    final background = windowBackground;
+    if (background != null) {
+      add(
+        _backgroundSprite = SpriteComponent(
+          sprite: Sprite(await game.images.load(background)),
+          position: windowPosition,
+          size: windowSize,
+          priority: 0,
+        ),
+      );
     }
 
+    final image = await game.images.load(data.spritePath);
+    final fit = creatureFitOf(image.width, image.height);
+    _smoothCreature = fit.smooth;
     sprite = SpriteComponent(
-      sprite: Sprite(image),
-      size: spriteSize,
-      position: spritePosition,
+      sprite: Sprite(
+        image,
+        srcPosition: Vector2(fit.source.left, fit.source.top),
+        srcSize: Vector2(fit.source.width, fit.source.height),
+      ),
+      position: windowPosition,
+      size: windowSize,
+      priority: 1,
     );
     add(sprite);
 
-    borderInfo = RectangleComponent(
-      size: size,
-      paint: Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+    add(
+      _frameSprite = SpriteComponent(
+        sprite: Sprite(await game.images.load(frame.imagePath)),
+        size: size.clone(),
+        priority: 2,
+      ),
     );
-    add(borderInfo);
 
-    healthBar = EnemyHealthBar(width: size.x, onTap: onTapDown);
+    outline = TargetOutline(window: window);
+    add(outline);
+
+    healthBar = EnemyHealthBar(anchorRect: anchorLocalRect);
     add(healthBar);
 
-    addStatusTabs(onTapDown);
+    addStatusTabs();
     refreshStatusTabs();
 
     _refreshHealthBar();
 
-    // Apply visual states now that borderInfo is initialized
-    setSelection(isSelected);
-    if (_isHighlighted) {
-      _isHighlighted = false;
-      setHighlight(true);
-    }
+    // Les états visuels posés avant le chargement, maintenant que le contour
+    // existe : `setSelection` et `setHighlight` n'y touchent pas tant que la
+    // carte n'est pas chargée.
+    outline.glowing = _isHighlighted;
+    _refreshBorderVisuals();
+
+    _refreshFiltering();
   }
 
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     _snapScale();
+    if (isLoaded) _refreshFiltering();
+  }
+
+  /// Sur un palier net, le fond et le cadre ne se lissent pas, la créature
+  /// seulement si c'est un ancien sprite ; sous ×2, tous trois se lissent
+  /// (B85).
+  void _refreshFiltering() {
+    final crisp = game.boardScale.crisp;
+    final framing = crisp ? FilterQuality.none : FilterQuality.medium;
+    _backgroundSprite?.paint.filterQuality = framing;
+    _frameSprite.paint.filterQuality = framing;
+    sprite.paint.filterQuality = _smoothCreature || !crisp
+        ? FilterQuality.medium
+        : FilterQuality.none;
   }
 
   void _refreshHealthBar() {
@@ -352,16 +400,17 @@ class EnemyCard extends CombatEntity
 
   void _refreshBorderVisuals() {
     if (_isInspected || isSelected) {
-      borderInfo.paint.color = Colors.amber;
-      borderInfo.paint.strokeWidth = 4;
+      outline.setStroke(Colors.amber, 4);
     } else if (_isHighlighted) {
-      borderInfo.paint.color = Colors.cyanAccent;
-      borderInfo.paint.strokeWidth = 3;
+      outline.setStroke(Colors.cyanAccent, 3);
     } else {
-      borderInfo.paint.color = Colors.white;
-      borderInfo.paint.strokeWidth = 2;
+      // Au repos, rien : le liseré blanc a disparu (B78).
+      outline.setStroke(null, 0);
     }
   }
+
+  @override
+  void flashArmorHit() => outline.setStroke(Colors.cyanAccent, 4);
 
   void setSelection(bool selected) {
     isSelected = selected;
@@ -370,22 +419,15 @@ class EnemyCard extends CombatEntity
   }
 
   bool _isHighlighted = false;
-  double _glowOpacity = 1.0;
-  dynamic _glowAnimation; // Dynamic to avoid exact type check compile error if Effect is not fully imported
 
   void setHighlight(bool highlight) {
     if (_isHighlighted == highlight) return;
     _isHighlighted = highlight;
     if (!isLoaded) return;
-
+    outline.glowing = highlight;
     _refreshBorderVisuals();
-    if (!_isHighlighted) {
-      _glowAnimation?.removeFromParent();
-      _glowAnimation = null;
-    }
   }
 
-  double _totalTime = 0;
   @override
   void update(double dt) {
     super.update(dt);
@@ -401,25 +443,6 @@ class EnemyCard extends CombatEntity
         _returnAboveVeil = returned + dt;
       }
     }
-    if (_isHighlighted) {
-      _totalTime += dt;
-      _glowOpacity = 0.5 + 0.3 * sin(_totalTime * 4);
-    }
-  }
-
-  @override
-  void render(Canvas canvas) {
-    if (_isHighlighted) {
-      final rect = size.toRect();
-      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(0));
-      final glowPaint = Paint()
-        ..color = Colors.cyanAccent.withValues(alpha: _glowOpacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6 + (2 * _glowOpacity)
-        ..maskFilter = MaskFilter.blur(BlurStyle.outer, 8 + (4 * _glowOpacity));
-      canvas.drawRRect(rrect, glowPaint);
-    }
-    super.render(canvas);
   }
 
   @override
@@ -430,7 +453,7 @@ class EnemyCard extends CombatEntity
   void buffAnimation(IntentType type) {
     final effectIcon = EffectIcon(
       iconType: type == IntentType.defend ? 'defend' : 'buff',
-      position: position + Vector2(0, -size.y * scale.y / 2),
+      position: position + Vector2(0, -anchorLocalRect.height * scale.y / 2),
     );
     effectIcon.priority = 200;
     game.add(effectIcon);
@@ -459,7 +482,7 @@ class EnemyCard extends CombatEntity
           spawnFloatingText(
             name,
             FrostShell.veilColor,
-            position + Vector2(0, -size.y * scale.y / 2),
+            position + Vector2(0, -anchorLocalRect.height * scale.y / 2),
           );
         },
       ),

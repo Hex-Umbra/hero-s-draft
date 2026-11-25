@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../game/controllers/combat_controller.dart';
 import '../../../../game/controllers/run_controller.dart';
 import '../../../../game/services/debug_actions.dart';
-import '../../../../models/data/charge_data.dart';
 import '../../../../services/game_data_service.dart';
 import '../../notification_overlay.dart';
 import '../debug_number_field.dart';
@@ -22,6 +21,21 @@ class DebugCombatTab extends ConsumerWidget {
     final enemies = ref.watch(combatProvider).enemies;
     final stats = ref.watch(runProvider).heroStats;
     final charges = ref.watch(chargeCatalogProvider);
+    final chargeOptions = [
+      for (final charge in charges.all) (charge.id, charge.nameFr),
+    ];
+    final buffs = [
+      for (final id in DebugActions.buffIds)
+        if (DebugActions.buffOf(id) case final buff?) (id, buff.name),
+    ];
+    // Tout le bestiaire, par tier puis par nom.
+    final catalogue = [
+      ...?ref.watch(gameDataLoaderProvider).valueOrNull?.enemies,
+    ]..sort(
+        (a, b) => a.tier != b.tier
+            ? a.tier.compareTo(b.tier)
+            : a.nameFr.compareTo(b.nameFr),
+      );
 
     return ListView(
       children: [
@@ -99,6 +113,19 @@ class DebugCombatTab extends ConsumerWidget {
               ],
             ),
           ),
+        const Text('Faire apparaitre'),
+        Wrap(
+          spacing: 4,
+          children: [
+            for (final data in catalogue)
+              TextButton(
+                onPressed: enemies.length < DebugActions.maxEnemiesOnBoard
+                    ? () => DebugActions.spawnEnemy(ref.read, data)
+                    : null,
+                child: Text('+ ${data.nameFr} (tier ${data.tier})'),
+              ),
+          ],
+        ),
         const Divider(),
         TextButton(
           onPressed: () {
@@ -132,16 +159,37 @@ class DebugCombatTab extends ConsumerWidget {
           child: const Text('Sauter la phase ennemie'),
         ),
         const Divider(),
-        const Text('Charges'),
-        _ChargeButtons(
+        const Text('Bonus (languette de gauche)'),
+        _PoseButtons(
           label: 'Heros',
-          charges: charges,
+          options: buffs,
+          onPose: (buffId) => DebugActions.poseBuff(ref.read, buffId),
+        ),
+        for (var i = 0; i < enemies.length; i++)
+          _PoseButtons(
+            label: '${i + 1}. ${enemies[i].data.nameFr}',
+            options: buffs,
+            onPose: (buffId) => DebugActions.poseBuff(
+              ref.read,
+              buffId,
+              enemyId: enemies[i].id,
+            ),
+          ),
+        TextButton(
+          onPressed: () => DebugActions.clearBuffs(ref.read),
+          child: const Text('Retirer les bonus'),
+        ),
+        const Divider(),
+        const Text('Charges'),
+        _PoseButtons(
+          label: 'Heros',
+          options: chargeOptions,
           onPose: (chargeId) => DebugActions.poseCharge(ref.read, chargeId),
         ),
         for (var i = 0; i < enemies.length; i++)
-          _ChargeButtons(
+          _PoseButtons(
             label: '${i + 1}. ${enemies[i].data.nameFr}',
-            charges: charges,
+            options: chargeOptions,
             onPose: (chargeId) => DebugActions.poseCharge(
               ref.read,
               chargeId,
@@ -157,16 +205,16 @@ class DebugCombatTab extends ConsumerWidget {
   }
 }
 
-/// Une ligne de la section « Charges » : un bouton « +1 » par charge du
-/// catalogue, pour un porteur.
-class _ChargeButtons extends StatelessWidget {
+/// Une ligne des sections « Bonus » et « Charges » : un bouton « +1 » par
+/// option, `(id, nom)`, pour un porteur.
+class _PoseButtons extends StatelessWidget {
   final String label;
-  final ChargeCatalog charges;
-  final void Function(String chargeId) onPose;
+  final List<(String, String)> options;
+  final void Function(String id) onPose;
 
-  const _ChargeButtons({
+  const _PoseButtons({
     required this.label,
-    required this.charges,
+    required this.options,
     required this.onPose,
   });
 
@@ -176,10 +224,10 @@ class _ChargeButtons extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text('$label :'),
-        for (final charge in charges.all)
+        for (final (id, name) in options)
           TextButton(
-            onPressed: () => onPose(charge.id),
-            child: Text('+1 ${charge.nameFr}'),
+            onPressed: () => onPose(id),
+            child: Text('+1 $name'),
           ),
       ],
     );

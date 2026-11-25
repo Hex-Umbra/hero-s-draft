@@ -12,6 +12,7 @@ import '../widgets/ui_card.dart';
 import '../widgets/forge/sharpen_rune_dialog.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
+import '../../models/data/location_data.dart';
 
 /// La sélection d'une carte du deck : au feu de camp, pour en affûter une
 /// rune ou pour l'oublier ; au *Rémouleur*, pour en affûter une sans or.
@@ -89,6 +90,7 @@ class RestCardSelectionScreen extends ConsumerWidget {
     );
 
     return ScreenScaffold(
+      decor: DecorScreen.rest,
       backgroundType: ScreenBackgroundType.dark,
       appBar: appBar,
       body: Padding(

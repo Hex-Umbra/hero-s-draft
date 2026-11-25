@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../models/data/location_data.dart';
+import 'location_backdrop.dart';
+
 enum ScreenBackgroundType { dark, parchment, none }
 
 class ScreenScaffold extends StatelessWidget {
@@ -8,6 +11,10 @@ class ScreenScaffold extends StatelessWidget {
   final Widget body;
   final bool useSafeArea;
   final bool? canPop;
+
+  /// L'écran de décor que le lieu courant habille derrière le contenu ; nul,
+  /// le fond de [backgroundType] reste seul.
+  final DecorScreen? decor;
   final void Function(bool, dynamic)? onPopInvokedWithResult;
 
   const ScreenScaffold({
@@ -17,6 +24,7 @@ class ScreenScaffold extends StatelessWidget {
     this.appBar,
     this.useSafeArea = true,
     this.canPop,
+    this.decor,
     this.onPopInvokedWithResult,
   });
 
@@ -70,6 +78,15 @@ class ScreenScaffold extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: decoration,
+        child: content,
+      );
+    }
+
+    final decorScreen = decor;
+    if (decorScreen != null) {
+      scaffoldBody = LocationBackdrop(
+        screen: decorScreen,
+        fallback: scaffoldBody,
         child: content,
       );
     }

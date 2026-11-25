@@ -1,49 +1,67 @@
+import 'dart:ui';
+
+import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flame/game.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
 import 'package:roguelike_card_game/game/components/entities/enemy_health_bar.dart';
 import 'package:roguelike_card_game/game/components/entities/status_tabs.dart';
 import 'package:roguelike_card_game/game/systems/status_readout.dart';
+import 'package:roguelike_card_game/models/data/enemy_data.dart';
+import 'package:roguelike_card_game/models/enemy_instance.dart';
+import 'package:roguelike_card_game/models/entity_stats.dart';
 
+import 'tier_frame_fixture.dart';
+
+/// La zone de la carte est son test d'appui (spec P-05 vague 2, A17) : ni la
+/// barre ni les languettes ne prennent plus d'appui.
 void main() {
-  test('la barre renvoie son appui a sa carte, pointeur compris', () {
-    final events = <TapDownEvent>[];
-    final bar = EnemyHealthBar(width: 100, onTap: events.add);
+  const gabarit = Rect.fromLTWH(16, 16, 88, 120); // le tier 5
 
-    bar.onTapDown(TapDownEvent(7, FlameGame(), TapDownDetails()));
+  EnemyCard card(int tier) => EnemyCard(
+        instance: EnemyInstance(
+          id: 'e',
+          data: const EnemyData(
+            id: 'slime',
+            maxHp: 18,
+            baseDamage: 4,
+            spritePath: 'slime.png',
+          ),
+          stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, might: 4),
+        ),
+        frame: testFrameOf(tier),
+        windowBackground: null,
+        onTapEnemy: (_, _) {},
+      );
 
-    expect(events.single.pointerId, 7);
-  });
-
-  test('la zone d appui de la barre descend jusqu au haut de la carte', () {
-    final bar = EnemyHealthBar(width: 100, onTap: (_) {});
-
-    expect(bar.position, Vector2(0, -17));
-    expect(bar.size, Vector2(100, 17));
-    expect(bar.containsLocalPoint(Vector2(50, 15)), isTrue);
-  });
-
-  test('les languettes renvoient leur appui a leur carte', () {
-    final events = <TapDownEvent>[];
-    final tabs = StatusTabs(
-      side: StatusSide.right,
-      cardWidth: 100,
-      onTap: events.add,
+  test('ni la barre ni les languettes ne prennent d appui', () {
+    expect(EnemyHealthBar(anchorRect: gabarit), isNot(isA<TapCallbacks>()));
+    expect(
+      StatusTabs(side: StatusSide.right, anchorRect: gabarit),
+      isNot(isA<TapCallbacks>()),
     );
+  });
 
-    tabs.onTapDown(TapDownEvent(3, FlameGame(), TapDownDetails()));
+  test('la zone de la carte recoit l appui jusqu au haut de sa barre, coins '
+      'compris', () {
+    final tier1 = card(1);
+    expect(tier1.containsLocalPoint(Vector2(50, -2)), isTrue);
+    expect(tier1.containsLocalPoint(Vector2(50, -18)), isFalse);
 
-    expect(events.single.pointerId, 3);
+    // Au tier 2, la barre couvre x 4 à 92 ; les coins de part et d'autre,
+    // au-dessus du canevas, sont à la carte.
+    final tier2 = card(2);
+    expect(tier2.containsLocalPoint(Vector2(2, -10)), isTrue);
+    expect(tier2.containsLocalPoint(Vector2(94, -10)), isTrue);
+    expect(tier2.containsLocalPoint(Vector2(2, -14)), isFalse);
+    // Une épine du bord, un jour du cadre sous la fenêtre.
+    expect(tier2.containsLocalPoint(Vector2(1, 60)), isTrue);
+    expect(tier2.containsLocalPoint(Vector2(48, 125)), isTrue);
   });
 
   test('une languette deroulee vers l interieur garde son rectangle de repos '
-      'pour l appui', () {
-    final tabs = StatusTabs(
-      side: StatusSide.right,
-      cardWidth: 100,
-      onTap: (_) {},
-    );
+      'dans la zone', () {
+    final tabs = StatusTabs(side: StatusSide.right, anchorRect: gabarit);
     tabs.setEntries(const [
       StatusReadout(
         key: 'poison:',
@@ -55,15 +73,33 @@ void main() {
     ]);
     tabs.setUnfolded(true, inward: true);
 
-    // Dans la carte : 120 est dans le rectangle de repos (99 à 129), hors du
-    // rectangle dessiné, qui finit au bord droit de la carte (100).
-    const inRest = Offset(120, 20);
+    // Dans la carte : 120 est dans le rectangle de repos (103 à 125,5), hors du
+    // rectangle dessiné, qui finit au bord droit du gabarit (104).
+    const inRest = Offset(120, 30);
     expect(tabs.localRect!.contains(inRest), isFalse);
     expect(tabs.restLocalRect!.contains(inRest), isTrue);
+    expect(tabs.zoneLocalRects.any((r) => r.contains(inRest)), isTrue);
+    expect(
+      tabs.zoneLocalRects.any((r) => r.contains(const Offset(150, 30))),
+      isFalse,
+    );
+  });
 
-    Vector2 local(Offset card) =>
-        Vector2(card.dx, card.dy) - tabs.position;
-    expect(tabs.containsLocalPoint(local(inRest)), isTrue);
-    expect(tabs.containsLocalPoint(local(const Offset(150, 20))), isFalse);
+  test('la languette au repos est reduite d un quart, sa hauteur sur la carte '
+      'non', () {
+    final tabs = StatusTabs(side: StatusSide.right, anchorRect: gabarit);
+    tabs.setEntries(const [
+      StatusReadout(
+        key: 'poison:',
+        emoji: '🧪',
+        restValue: '3',
+        tone: ReadoutTone.debuff,
+        title: 'Poison 3',
+      ),
+    ]);
+
+    // 30 × 37 avant réduction (deux marges de 3 et un pas de 31) ; le haut
+    // reste 11 sous celui du gabarit.
+    expect(tabs.restLocalRect, const Rect.fromLTWH(103, 27, 22.5, 27.75));
   });
 }

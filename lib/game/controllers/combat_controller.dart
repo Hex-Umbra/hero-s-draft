@@ -131,36 +131,16 @@ class CombatController extends Notifier<CombatState> {
       isElite: isElite,
     );
 
-    final List<EnemyInstance> allEnemyInstances = [];
-    for (var data in enemyDataList) {
-      final bool isCustomBoss = data.id.startsWith('boss_');
-      final double enemyHpMultiplier = EncounterSystem.getHpMultiplier(
-        enemyLevel: enemyLevel,
-        act: act,
-        isBoss: isBoss,
-        isElite: isElite,
-        isCustomBoss: isCustomBoss,
-      );
-      final double enemyDamageMultiplier = EncounterSystem.getDamageMultiplier(
-        enemyLevel: enemyLevel,
-        act: act,
-        isBoss: isBoss,
-        isElite: isElite,
-        isCustomBoss: isCustomBoss,
-      );
-
-      final stats = EntityStats(
-        maxPv: (data.maxHp * enemyHpMultiplier).round(),
-        currentPv: (data.maxHp * enemyHpMultiplier).round(),
-        armure: 0,
-        might: (data.baseDamage * enemyDamageMultiplier).round(),
-        level: enemyLevel,
-        critChance: data.critChance,
-      );
-
-      var enemy = EnemyInstance(data: data, stats: stats, isBoss: isBoss);
-      allEnemyInstances.add(enemy);
-    }
+    final List<EnemyInstance> allEnemyInstances = [
+      for (final data in enemyDataList)
+        scaledEnemy(
+          data,
+          enemyLevel: enemyLevel,
+          act: act,
+          isBoss: isBoss,
+          isElite: isElite,
+        ),
+    ];
 
     final List<EnemyInstance> activeEnemies = [];
     final List<EnemyInstance> pendingEnemies = [];
@@ -184,6 +164,46 @@ class CombatController extends Notifier<CombatState> {
       selectedEnemyId: null,
       isCombatEnded: false,
       isVictory: false,
+    );
+  }
+
+  /// Un ennemi de [data] aux PV et à la Puissance de son combat : niveau
+  /// d'ennemi, acte et type de nœud. Sans intention : c'est l'entrée sur le
+  /// plateau qui la tire.
+  static EnemyInstance scaledEnemy(
+    EnemyData data, {
+    required int enemyLevel,
+    required int act,
+    required bool isBoss,
+    required bool isElite,
+  }) {
+    final bool isCustomBoss = data.id.startsWith('boss_');
+    final double hpMultiplier = EncounterSystem.getHpMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+      isCustomBoss: isCustomBoss,
+    );
+    final double damageMultiplier = EncounterSystem.getDamageMultiplier(
+      enemyLevel: enemyLevel,
+      act: act,
+      isBoss: isBoss,
+      isElite: isElite,
+      isCustomBoss: isCustomBoss,
+    );
+    final int maxPv = (data.maxHp * hpMultiplier).round();
+    return EnemyInstance(
+      data: data,
+      stats: EntityStats(
+        maxPv: maxPv,
+        currentPv: maxPv,
+        armure: 0,
+        might: (data.baseDamage * damageMultiplier).round(),
+        level: enemyLevel,
+        critChance: data.critChance,
+      ),
+      isBoss: isBoss,
     );
   }
 

@@ -72,11 +72,12 @@ void main() {
     // l assertion.
     expect(countUnder('assets/data/classes/', 6), 6, reason: 'signatures');
 
-    // Les quatre documents de configuration restent a plat.
+    // Les cinq documents de configuration restent a plat.
     expect(json, contains('assets/data/audio.json'));
     expect(json, contains('assets/data/patch_notes.json'));
     expect(json, contains('assets/data/xp_curve.json'));
     expect(json, contains('assets/data/effect_icons.json'));
+    expect(json, contains('assets/data/tier_frames.json'));
   });
 
   test('les images d entites sont declarees, pas seulement presentes', () async {
@@ -89,7 +90,12 @@ void main() {
     for (final id in ['slime', 'gobelin', 'squelette', 'orc']) {
       expect(assets, contains('assets/data/enemies/$id/sprite.png'));
     }
-    expect(assets, contains('assets/images/bg_dungeon.png'));
+    for (var tier = 1; tier <= 5; tier++) {
+      expect(assets, contains('assets/data/frames/tier_$tier.png'));
+    }
+    for (final name in ['combat', 'window_1', 'window_2', 'window_3']) {
+      expect(assets, contains('assets/data/locations/forest/$name.png'));
+    }
   });
 
   test('le registre se charge entierement depuis le vrai bundle', () async {

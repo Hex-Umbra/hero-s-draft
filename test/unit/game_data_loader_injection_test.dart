@@ -1,33 +1,10 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/card_data.dart';
 import 'package:roguelike_card_game/models/data/charge_data.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-// `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
-// les reexporte : pas d import `dart:typed_data`, comme dans
-// `test/unit/audio/load_audio_data_test.dart`.
-
-class FakeBundle extends CachingAssetBundle {
-  FakeBundle(this.files);
-  final Map<String, String> files;
-
-  @override
-  Future<ByteData> load(String key) async {
-    if (key == 'AssetManifest.bin') {
-      final manifest = <String, Object>{
-        for (final path in files.keys) path: <Object>[],
-      };
-      return const StandardMessageCodec().encodeMessage(manifest)!;
-    }
-    final content = files[key];
-    if (content == null) throw Exception('asset introuvable : $key');
-    return ByteData.sublistView(Uint8List.fromList(utf8.encode(content)));
-  }
-}
+import 'fake_bundle.dart';
 
 /// Modele de test portant exactement les champs que le repertoire injecte.
 class Thing {

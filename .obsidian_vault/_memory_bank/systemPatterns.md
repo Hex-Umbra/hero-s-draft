@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Plafond : 300 lignes.** Ce fichier est un index, jamais un contenu. Chaque pattern d'architecture vit dans sa fiche sous `../_patterns/`. Les arbitrages qui les ont produits vivent dans `../_adr/`.
 
-**Vérifié le 2026-11-22** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
+**Vérifié le 2026-11-25** — 48 fiches, en bijection avec `../_patterns/`, colonne « Lignes » re-mesurée par `wc -l`. Provenance du découpage, sections ajoutées et numéros non réattribués (§2.7, §13, §14) : `../_archive/2026-09-05-systemPatterns-historique.md` et `../_archive/2026-08-25-systemPatterns-historique.md`.
 
 > [!NOTE]
 > **Mise en forme du 2026-09-14**, arbitrage du propriétaire : le plafond passe de 120 à 150 lignes, et les sections qui ne portent qu'une fiche perdent leur en-tête `###`, dont le titre répétait à l'identique la ligne de tableau. Elles sont regroupées dans le premier tableau ; seules les sections à plusieurs fiches gardent un en-tête. Aucune ligne de fiche n'a disparu.
@@ -13,7 +13,7 @@
 | Domaine | Fiche | Lignes |
 |:---|:---|---:|
 | 1. Architecture Globale — Séparation Triangulaire | [01-00-architecture-globale-separation-triangulaire.md](../_patterns/01-00-architecture-globale-separation-triangulaire.md) | 61 |
-| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 113 |
+| 4. Synchronisation Bidirectionnelle Flame ⇄ Riverpod | [04-00-synchronisation-bidirectionnelle-flame-riverp.md](../_patterns/04-00-synchronisation-bidirectionnelle-flame-riverp.md) | 116 |
 | 6. Stratégie de State Management (Riverpod v2.5.1) | [06-00-strategie-de-state-management.md](../_patterns/06-00-strategie-de-state-management.md) | 41 |
 | 7. Flux Complet d'un Tour de Combat | [07-00-flux-complet-d-un-tour-de-combat.md](../_patterns/07-00-flux-complet-d-un-tour-de-combat.md) | 126 |
 | 8. Conventions de Code & Standards Techniques | [08-00-conventions-de-code-standards-techniques.md](../_patterns/08-00-conventions-de-code-standards-techniques.md) | 117 |
@@ -23,7 +23,7 @@
 | 12. Autel d'Échange de Reliques (`RelicExchangeScreen`) | [12-00-autel-d-echange-de-reliques.md](../_patterns/12-00-autel-d-echange-de-reliques.md) | 47 |
 | 15. Chaîne de Release et Site Vitrine (`.github/` et `site/`) | [15-00-chaine-de-release-et-site-vitrine.md](../_patterns/15-00-chaine-de-release-et-site-vitrine.md) | 83 |
 | 16. Architecture du Système Audio | [16-00-architecture-du-systeme-audio.md](../_patterns/16-00-architecture-du-systeme-audio.md) | 149 |
-| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 138 |
+| 17. Chargeur de Données Générique et Motifs de Chemin (`GameDataLoader`) | [17-00-chargeur-de-donnees-generique-et-motifs-de-che.md](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) | 149 |
 | 18. Menu de Debug — Run Déclarée et Tiroir Ancré (P-30, lot 1) | [18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md](../_patterns/18-00-menu-de-debug-run-declaree-et-tiroir-ancre.md) | 143 |
 | 20. Simulation de l'Économie de Deck (`tool/simulations/`) | [20-00-simulation-de-l-economie-de-deck.md](../_patterns/20-00-simulation-de-l-economie-de-deck.md) | 168 |
 
@@ -51,7 +51,7 @@
 | 3.3. `TraitSystem` — Passifs de Héros | [03-3-traitsystem-passifs-de-heros.md](../_patterns/03-3-traitsystem-passifs-de-heros.md) | 108 |
 | 3.4. `EffectResolver` — Résolution d'Effets de Cartes | [03-4-effectresolver-resolution-d-effets-de-cartes.md](../_patterns/03-4-effectresolver-resolution-d-effets-de-cartes.md) | 53 |
 | 3.5. `CombatDebugLogger` — Service de Journalisation Mathématique du Combat | [03-5-combatdebuglogger-service-de-journalisation-m.md](../_patterns/03-5-combatdebuglogger-service-de-journalisation-m.md) | 14 |
-| 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 25 |
+| 3.6. Systèmes de Jeu et Rendu Flame (`lib/game/systems/`) | [03-6-systemes-de-jeu-et-rendu-flame.md](../_patterns/03-6-systemes-de-jeu-et-rendu-flame.md) | 27 |
 | 3.7. Logique des Runes Data-Driven & Puits d'Échange | [03-7-logique-de-forge-data-driven-forge-de-fusion.md](../_patterns/03-7-logique-de-forge-data-driven-forge-de-fusion.md) | 18 |
 | 3.8. `SignatureEvolutionRules` — les Règles Pures des Évolutions de Signature | [03-8-signatureevolutionrules-regles-pures-des-evolutions.md](../_patterns/03-8-signatureevolutionrules-regles-pures-des-evolutions.md) | 50 |
 
@@ -62,15 +62,15 @@
 | 5.1. Écrans Flutter (`lib/ui/screens/`) | [05-1-ecrans-flutter.md](../_patterns/05-1-ecrans-flutter.md) | 19 |
 | 5.2. Widget `UiCard` (`lib/ui/widgets/ui_card.dart`) | [05-2-widget-uicard.md](../_patterns/05-2-widget-uicard.md) | 42 |
 | 5.3. Composants Flame (`lib/game/components/`) | [05-3-composants-flame.md](../_patterns/05-3-composants-flame.md) | 35 |
-| 5.3.1. Abstractions Graphiques Communes (CombatEntity & BaseVisualEffect) | [05-3-1-abstractions-graphiques-communes.md](../_patterns/05-3-1-abstractions-graphiques-communes.md) | 14 |
-| 5.4. Constantes de Z-Indexing (`GameConstants`) | [05-4-constantes-de-z-indexing.md](../_patterns/05-4-constantes-de-z-indexing.md) | 26 |
-| 5.5. Dimensions de Carte | [05-5-dimensions-de-carte.md](../_patterns/05-5-dimensions-de-carte.md) | 13 |
+| 5.3.1. Abstractions Graphiques Communes (CombatEntity & BaseVisualEffect) | [05-3-1-abstractions-graphiques-communes.md](../_patterns/05-3-1-abstractions-graphiques-communes.md) | 15 |
+| 5.4. Constantes de Z-Indexing (`GameConstants`) | [05-4-constantes-de-z-indexing.md](../_patterns/05-4-constantes-de-z-indexing.md) | 28 |
+| 5.5. Dimensions de Carte | [05-5-dimensions-de-carte.md](../_patterns/05-5-dimensions-de-carte.md) | 19 |
 | 5.6. Layout de Main en Arc | [05-6-layout-de-main-en-arc.md](../_patterns/05-6-layout-de-main-en-arc.md) | 8 |
 | 5.7. Courbes de Ciblage Réactives en Bézier Quadratique | [05-7-courbes-de-ciblage-reactives-en-bezier-quadra.md](../_patterns/05-7-courbes-de-ciblage-reactives-en-bezier-quadra.md) | 26 |
-| 5.8. Rendu Vectoriel direct sur Canvas & Auras Sensoriels | [05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md](../_patterns/05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md) | 32 |
+| 5.8. Rendu Vectoriel direct sur Canvas & Auras Sensoriels | [05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md](../_patterns/05-8-rendu-vectoriel-direct-sur-canvas-auras-senso.md) | 33 |
 | 5.9. Pattern de Draft Card Reels Staggered et 3D Flip (Interactive Reels Reveal) | [05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md](../_patterns/05-9-pattern-de-draft-card-reels-staggered-et-3d-f.md) | 27 |
 | 5.10. Optimisations de Rendu GPU/CPU & Effet Physique de Pioche | [05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md](../_patterns/05-10-optimisations-de-rendu-gpu-cpu-effet-physique.md) | 16 |
-| 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 29 |
+| 5.11. Unification UI et Composants Communs (v0.2.2) | [05-11-unification-ui-et-composants-communs.md](../_patterns/05-11-unification-ui-et-composants-communs.md) | 30 |
 | 5.12. Barre de Signatures — le `RenderBox` de la Bande et le Calque `OverlayPortal` | [05-12-barre-de-signatures-bande-et-calque.md](../_patterns/05-12-barre-de-signatures-bande-et-calque.md) | 63 |
 | 5.13. Table d'Icônes d'Effet — `EffectIconTable`, `EffectKind` et `effect_style` | [05-13-table-d-icones-d-effet.md](../_patterns/05-13-table-d-icones-d-effet.md) | 59 |
 

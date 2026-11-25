@@ -10,6 +10,7 @@ import '../../services/game_data_service.dart';
 import '../../services/audio/audio_providers.dart';
 import '../../services/audio/music_scene.dart';
 import '../widgets/screen_scaffold.dart';
+import '../../models/data/location_data.dart';
 
 class RelicExchangeScreen extends ConsumerStatefulWidget {
   final MapNode node;
@@ -110,6 +111,7 @@ class _RelicExchangeScreenState extends ConsumerState<RelicExchangeScreen> {
     final isFr = Localizations.localeOf(context).languageCode == 'fr';
 
     return ScreenScaffold(
+      decor: DecorScreen.relicExchange,
       backgroundType: ScreenBackgroundType.parchment,
       body: gameDataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF8B4513))),

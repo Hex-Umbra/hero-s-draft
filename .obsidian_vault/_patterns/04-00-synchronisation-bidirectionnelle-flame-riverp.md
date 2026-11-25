@@ -45,7 +45,7 @@ Dans `HerosDraftGame.update(dt)`, si `hasLayout == true` et qu'un buffer est non
 > Flame vient de retenir, qui est aussitôt oublié. Flame ferme aussi par garde — `setFocusedCard`,
 > le mutateur de `awaitingEnemyTarget`, le décor, `executeTurn` — et par l'état :
 > `StateSyncSystem._applyCombatState` appelle `closeInspectionIfStale` (ennemi parti, phase
-> quittée, combat fini). `repositionEnemies` réémet le rectangle **s'il a changé** (chaque
+> quittée, combat fini). `repositionEnemies` (qui passe par `placeRow`) réémet le rectangle **s'il a changé** (chaque
 > reconstruction de `GameScreen` rappelle `onGameResize`). **`GameScreen` diffère tout reflet** par
 > `addPostFrameCallback`, comme `onEnemiesSpawned`. Fiche ouverte, ni la main ni les languettes ne
 > réagissent au survol.
@@ -111,3 +111,6 @@ Pour éliminer la condition de concurrence visuelle (race condition) où l'état
      - Cette méthode bascule `game.isCardAnimating = false`.
      - Elle lance simultanément l'animation de mort (réduction de taille via `ScaleEffect` et fondu d'opacité via `OpacityEffect` de Flame) pour toutes les `EnemyCard` ayant `isPendingDeath == true`.
      - Les réactions dupliquées ont été nettoyées de `CardAnimator` pour prévenir tout double déclenchement visuel.
+
+> [!NOTE]
+> **Ce que `GameScreen` passe au jeu depuis la vague 2** (sur la branche `feat/v0.6.2-cadres-et-decors` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)) : la table des cadres (`registry.tierFrames`) et le lieu courant (`currentLocationProvider`), lus une fois dans le registre chargé et reçus par le constructeur de `HerosDraftGame` ; Flame n'en lit aucun provider. Une carte d'ennemi naît avec le cadre de son tier et un fond de fenêtre tiré parmi ceux du lieu ; un tier sans cadre lève une `StateError`.

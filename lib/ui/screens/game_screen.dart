@@ -315,6 +315,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       imagesToPreload:
           ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
       chargeCatalog: ref.read(chargeCatalogProvider),
+      tierFrames: ref.read(gameDataLoaderProvider).requireValue.tierFrames,
+      location: ref.read(currentLocationProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;
@@ -608,15 +610,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
                     if (!_showDraft && runState.isDead) const DeathOverlay(),
 
-                    // Tiroir de debug, ancre au bord gauche. `kDebugMode` etant
-                    // une constante de compilation, il disparait du build
-                    // release avec tout ce qu'il atteint.
-                    if (kDebugMode &&
-                        ref.watch(debugRunProvider).isDebugRun &&
-                        !runState.isDead &&
-                        !_showDraft)
-                      const DebugDrawer(inCombat: true),
-
                     if (!runState.isDead && !_showDraft)
                       CombatTopBar(
                         act: runState.act,
@@ -725,6 +718,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       description: _tooltipDescription,
                       borderColor: _getTooltipBorderColor(),
                     ),
+
+                    // Tiroir de debug, ancre au bord gauche et pose en dernier
+                    // pour passer au-dessus des signatures et des panneaux.
+                    // `kDebugMode` etant une constante de compilation, il
+                    // disparait du build release avec tout ce qu'il atteint.
+                    if (kDebugMode &&
+                        ref.watch(debugRunProvider).isDebugRun &&
+                        !runState.isDead &&
+                        !_showDraft)
+                      const DebugDrawer(inCombat: true),
                   ],
                 ),
               ),

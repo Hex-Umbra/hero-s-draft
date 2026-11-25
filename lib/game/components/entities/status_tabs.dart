@@ -2,54 +2,60 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
+import '../../game_constants.dart';
 import '../../systems/status_readout.dart';
 
 /// La languette d'un côté d'une carte de combat : les bonus à gauche, les
 /// altérations et les charges à droite (spec P-05, §5.3). Au repos, l'émoji et
 /// la valeur dessous ; déroulée, le nom, la valeur et la durée. Elle ne décide
-/// rien : elle montre les entrées que sa carte lui donne, et rend ses appuis à
-/// sa carte. Son [position] et sa [size] sont le rectangle dessiné, en unités
-/// de la carte ; l'appui se lit sur ce rectangle et sur celui du repos.
-class StatusTabs extends PositionComponent with TapCallbacks {
+/// rien : elle montre les entrées que sa carte lui donne. Son [position] et sa
+/// [size] sont le rectangle dessiné, en unités de la carte ; elle ne reçoit
+/// aucun appui, sa carte le prend sur [zoneLocalRects] (A17).
+class StatusTabs extends PositionComponent {
   StatusTabs({
     required this.side,
-    required this.cardWidth,
-    required this.onTap,
+    required this.anchorRect,
   }) : super(priority: _priority) {
     _target = _emptyRect;
     position.setValues(_target.left, _target.top);
   }
 
   final StatusSide side;
-  final double cardWidth;
-  final void Function(TapDownEvent event) onTap;
+
+  /// Le rectangle auquel la languette s'attache, dans la carte : le gabarit
+  /// d'un ennemi (B77), la carte entière du héros.
+  final Rect anchorRect;
 
   /// Au-dessus de la gangue (4) et du halo (5) que porte la carte.
   static const int _priority = 6;
 
-  static const double _restWidth = 30;
-  static const double _overlap = 1;
+  /// Tout ce que la languette dessine, à l'échelle de [GameConstants.statusTabScale] ;
+  /// seule sa hauteur sur la carte, [_top], n'en dépend pas.
+  static const double _k = GameConstants.statusTabScale;
+
   static const double _top = 11;
-  static const double _restPitch = 31;
-  static const double _restPadding = 3;
-  static const double _restValueTop = 17;
-  static const double _minWidth = 30;
-  static const double _maxWidth = 120;
-  static const double _padX = 8;
-  static const double _padY = 4;
-  static const double _emojiBox = 16;
-  static const double _textGap = 6;
-  static const double _pitch = 22;
-  static const double _pitchWithSubtitle = 30;
-  static const double _radius = 4;
+  static const double _restPitch = 31 * _k;
+  static const double _restPadding = 3 * _k;
+  static const double _restValueTop = 17 * _k;
+  static const double _minWidth = 30 * _k;
+  static const double _maxWidth = 120 * _k;
+  static const double _padX = 8 * _k;
+  static const double _padY = 4 * _k;
+  static const double _emojiBox = 16 * _k;
+  static const double _textGap = 6 * _k;
+  static const double _pitch = 22 * _k;
+  static const double _pitchWithSubtitle = 30 * _k;
+  static const double _radius = 4 * _k;
+  static const double _titleTop = 5 * _k;
+  static const double _titleTopWithSubtitle = 3 * _k;
+  static const double _subtitleTop = 15 * _k;
   static const double _seconds = 0.1;
 
   static const double _textX = _padX + _emojiBox + _textGap;
   static const double _maxTextWidth = _maxWidth - _textX - _padX;
-  static const double _maxRestValueWidth = _restWidth - 2 * _restPadding;
+  static const double _maxRestValueWidth = GameConstants.statusTabRestWidth - 2 * _restPadding;
 
   static final Paint _fill = Paint()..color = const Color(0xFF14141E);
   static final Paint _stroke = Paint()
@@ -89,7 +95,7 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   }
 
   /// Déroule ou replie la languette, en 0,1 s ; [inward] la déroule par-dessus
-  /// sa propre carte (B39).
+  /// le gabarit de sa carte (B39).
   void setUnfolded(bool unfolded, {bool inward = false}) {
     final nextInward = unfolded && inward;
     if (unfolded == _unfolded && nextInward == _inward) return;
@@ -100,7 +106,7 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   }
 
   /// La largeur déroulée, en unités de la carte : celle du contenu, bornée à
-  /// `[30, 120]` ; 0 sans entrée.
+  /// `[22,5 ; 90]` ; 0 sans entrée.
   double get unfoldedWidth {
     if (_rows.isEmpty) return 0;
     final text = _rows.map((row) => row.openTextWidth).reduce(max);
@@ -120,28 +126,31 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   /// rien sans entrée. Le survol et l'appui lisent la même.
   Iterable<Rect> get zoneLocalRects => [restLocalRect, localRect].nonNulls;
 
-  double get _restX =>
-      side == StatusSide.left ? _overlap - _restWidth : cardWidth - _overlap;
+  double get _restX => side == StatusSide.left
+      ? anchorRect.left + GameConstants.statusTabOverlap - GameConstants.statusTabRestWidth
+      : anchorRect.right - GameConstants.statusTabOverlap;
 
-  Rect get _emptyRect => Rect.fromLTWH(_restX, _top, 0, 0);
+  double get _topY => anchorRect.top + _top;
+
+  Rect get _emptyRect => Rect.fromLTWH(_restX, _topY, 0, 0);
 
   Rect get _restRect => Rect.fromLTWH(
         _restX,
-        _top,
-        _restWidth,
+        _topY,
+        GameConstants.statusTabRestWidth,
         2 * _restPadding + _rows.length * _restPitch,
       );
 
   Rect get _unfoldedRect {
     final width = unfoldedWidth;
     final x = switch ((side, _inward)) {
-      (StatusSide.left, false) => _overlap - width,
-      (StatusSide.left, true) => 0.0,
-      (StatusSide.right, false) => cardWidth - _overlap,
-      (StatusSide.right, true) => cardWidth - width,
+      (StatusSide.left, false) => anchorRect.left + GameConstants.statusTabOverlap - width,
+      (StatusSide.left, true) => anchorRect.left,
+      (StatusSide.right, false) => anchorRect.right - GameConstants.statusTabOverlap,
+      (StatusSide.right, true) => anchorRect.right - width,
     };
     final height = _rows.fold(2 * _padY, (sum, row) => sum + row.pitch);
-    return Rect.fromLTWH(x, _top, width, height);
+    return Rect.fromLTWH(x, _topY, width, height);
   }
 
   Rect get _currentTarget {
@@ -194,18 +203,6 @@ class StatusTabs extends PositionComponent with TapCallbacks {
     }
     canvas.clipRRect(frame);
   }
-
-  /// L'appui suit la zone de la carte ([zoneLocalRects]). Déroulée vers
-  /// l'intérieur (B39), la languette garde ainsi l'appui sur la bande qu'elle
-  /// occupait au repos, que le survol garde aussi.
-  @override
-  bool containsLocalPoint(Vector2 point) {
-    final inCard = Offset(point.x + position.x, point.y + position.y);
-    return zoneLocalRects.any((rect) => rect.contains(inCard));
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) => onTap(event);
 }
 
 /// Une entrée de la languette : ses deux dessins, au repos et déroulé, dont
@@ -225,12 +222,12 @@ class _TabRow extends PositionComponent {
   final _open = _Layer();
   final _restEmoji = TextComponent(
     anchor: Anchor.topCenter,
-    position: Vector2(StatusTabs._restWidth / 2, 0),
+    position: Vector2(GameConstants.statusTabRestWidth / 2, 0),
     textRenderer: _emojiPaint,
   );
   final _restValue = TextComponent(
     anchor: Anchor.topCenter,
-    position: Vector2(StatusTabs._restWidth / 2, StatusTabs._restValueTop),
+    position: Vector2(GameConstants.statusTabRestWidth / 2, StatusTabs._restValueTop),
   );
   final _openEmoji = TextComponent(
     anchor: Anchor.center,
@@ -242,17 +239,17 @@ class _TabRow extends PositionComponent {
   ReadoutTone? _tone;
   bool _hasSubtitle = false;
 
-  static final _emojiPaint = TextPaint(style: const TextStyle(fontSize: 14));
+  static final _emojiPaint = TextPaint(style: const TextStyle(fontSize: 14 * StatusTabs._k));
   static final _titlePaint = TextPaint(
     style: const TextStyle(
-      fontSize: 9,
+      fontSize: 9 * StatusTabs._k,
       fontWeight: FontWeight.bold,
       color: Color(0xFFF7F7FA),
     ),
   );
   static final _subtitlePaint = TextPaint(
     style: const TextStyle(
-      fontSize: 9,
+      fontSize: 9 * StatusTabs._k,
       fontWeight: FontWeight.bold,
       color: Color(0xFFFFD740),
     ),
@@ -270,7 +267,7 @@ class _TabRow extends PositionComponent {
       _tone = entry.tone;
       _restValue.textRenderer = TextPaint(
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 10 * StatusTabs._k,
           fontWeight: FontWeight.bold,
           color: StatusReadout.toneColor(entry.tone),
         ),
@@ -297,8 +294,11 @@ class _TabRow extends PositionComponent {
       StatusTabs._padX + StatusTabs._emojiBox / 2,
       pitch / 2,
     );
-    _title.position.setValues(StatusTabs._textX, _hasSubtitle ? 3 : 5);
-    _subtitle.position.setValues(StatusTabs._textX, 15);
+    _title.position.setValues(
+      StatusTabs._textX,
+      _hasSubtitle ? StatusTabs._titleTopWithSubtitle : StatusTabs._titleTop,
+    );
+    _subtitle.position.setValues(StatusTabs._textX, StatusTabs._subtitleTop);
   }
 
   /// Le texte coupé par des points de suspension s'il dépasse la largeur

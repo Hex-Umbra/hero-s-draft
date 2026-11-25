@@ -119,6 +119,17 @@ démarrage** (`game_data_loader_test.dart` le garde). Le registre la porte en `x
 `loadGameDataRegistry` la renseigne toujours, et tout lecteur du palier lève sans elle —
 `xpCurveProvider` par une `StateError` explicite.
 
+### 17.8. Les cadres de tier et les lieux (vague 2 du bestiaire)
+
+*Sur la branche `feat/v0.6.2-cadres-et-decors` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md).* Le chargeur gagne deux méthodes **publiques** : `assetsMatching(pattern)` rend les clés du manifeste qu'un motif sélectionne, avec leurs segments capturés, **sans lire aucun fichier** — pour ce que le manifeste suffit à dire, un dossier d'images — ; `fault(message)` ajoute une faute que `throwIfFailed` remontera avec les autres, pour une vérification que le chargeur ne fait pas lui-même. Deux apports passent par elles :
+
+| Apport | Forme | Faute au chargement |
+|:---|:---|:---|
+| `assets/data/tier_frames.json` (document plat, `loadDocument`) + `assets/data/frames/tier_<n>.png` | `TierFrameTable`, `registry.tierFrames` ; `tierFrameFaults` contrôle la taille paire, la fenêtre de 64 × 96 dans le canevas et centrée, l'image présente | un ennemi livré dont le tier n'a pas de cadre |
+| `assets/data/locations/<id>/` — **aucun JSON** | `LocationCatalog.fromAssetKeys` sur le manifeste, `registry.locations`, `currentLocationProvider` ; `combat.png` obligatoire, `window_1..3.png`, autres écrans optionnels | zéro lieu, deux lieux, un id hors `snake_case`, un fichier inconnu ou sans `.png` |
+
+Le registre les porte avec un défaut vide, comme `charges` : un registre construit à la main n'a ni cadre ni lieu, et un écran sans lieu garde son fond d'avant. `entity_id_convention_test.dart` compte `tier_frames.json` parmi les documents de configuration.
+
 ### 17.6. Ce qui garde la structure
 
 | Garde | Ce qu'il rend impossible |

@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/events.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 import '../../heros_draft_game.dart';
@@ -29,14 +28,24 @@ abstract class CombatEntity extends PositionComponent
   static const double chargeHitSpreadX = 28;
 
   SpriteComponent get sprite;
-  RectangleComponent get borderInfo;
+  /// Le flash d'un coup encaissé sur l'armure : cyan de 4, jusqu'à ce que la
+  /// réaction rende la bordure (D12).
+  void flashArmorHit();
   double get entityBaseScale;
   bool get isPlayer;
   EntityStats get stats;
 
-  /// Le corps de la carte sous le pointeur, en unités de la carte : sans ses
+  /// Le corps de la zone de la carte, en unités de la carte : sans ses
   /// languettes.
   Rect get bodyLocalRect;
+
+  /// Le rectangle auquel s'ancrent la barre, les languettes, les textes et les
+  /// effets (A16) : le gabarit d'un ennemi, la carte entière du héros.
+  Rect get anchorLocalRect => Rect.fromLTWH(0, 0, size.x, size.y);
+
+  /// La fenêtre de la carte, en unités de la carte : où se posent la gangue
+  /// de givre et le halo. Le défaut est la carte entière.
+  Rect get windowLocalRect => Rect.fromLTWH(0, 0, size.x, size.y);
 
   void refreshBorderVisuals();
 
@@ -57,19 +66,10 @@ abstract class CombatEntity extends PositionComponent
 
   bool _hovered = false;
 
-  /// Pose les deux languettes, qui rendent leurs appuis à [onTap] : le
-  /// `onTapDown` de la carte (D13).
-  void addStatusTabs(void Function(TapDownEvent event) onTap) {
-    leftTabs = StatusTabs(
-      side: StatusSide.left,
-      cardWidth: size.x,
-      onTap: onTap,
-    );
-    rightTabs = StatusTabs(
-      side: StatusSide.right,
-      cardWidth: size.x,
-      onTap: onTap,
-    );
+  /// Pose les deux languettes contre [anchorLocalRect].
+  void addStatusTabs() {
+    leftTabs = StatusTabs(side: StatusSide.left, anchorRect: anchorLocalRect);
+    rightTabs = StatusTabs(side: StatusSide.right, anchorRect: anchorLocalRect);
     addAll([leftTabs, rightTabs]);
   }
 
@@ -89,22 +89,30 @@ abstract class CombatEntity extends PositionComponent
     if (_hovered) setHovered(true);
   }
 
-  /// La zone de la carte sur le canevas (spec P-05, §4.5) : son corps et ses
-  /// languettes, au repos comme déroulées. Le rectangle au repos reste dans la
-  /// zone quand une languette se déroule vers l'intérieur : le pointeur qui l'a
-  /// déroulée y est encore.
-  List<Rect> get zone => [
-        for (final local in [
-          bodyLocalRect,
-          if (isLoaded)
-            for (final tabs in [leftTabs, rightTabs]) ...tabs.zoneLocalRects,
-        ])
-          _absoluteRect(local),
+  /// La zone de la carte en unités de la carte (spec P-05, §4.5 ; vague 2,
+  /// A17) : son corps et ses languettes, au repos comme déroulées. Le
+  /// rectangle au repos reste dans la zone quand une languette se déroule vers
+  /// l'intérieur : le pointeur qui l'a déroulée y est encore.
+  List<Rect> get _localZone => [
+        bodyLocalRect,
+        if (isLoaded)
+          for (final tabs in [leftTabs, rightTabs]) ...tabs.zoneLocalRects,
       ];
+
+  /// La même zone, sur le canevas : le survol et le lâcher la lisent.
+  List<Rect> get zone => [for (final local in _localZone) _absoluteRect(local)];
 
   bool zoneContains(Vector2 point) {
     final offset = point.toOffset();
     return zone.any((rect) => rect.contains(offset));
+  }
+
+  /// L'appui suit la même zone : la carte reçoit tout appui de sa zone, coins
+  /// au-dessus du canevas et languettes comprises (A17).
+  @override
+  bool containsLocalPoint(Vector2 point) {
+    final offset = point.toOffset();
+    return _localZone.any((rect) => rect.contains(offset));
   }
 
   /// La carte est sous la souris : ses languettes sont déroulées.
@@ -126,7 +134,12 @@ abstract class CombatEntity extends PositionComponent
             unfoldsInward(
               side: tabs.side,
               attachEdge: absolutePositionOf(
-                Vector2(tabs.side == StatusSide.left ? 0 : size.x, 0),
+                Vector2(
+                  tabs.side == StatusSide.left
+                      ? anchorLocalRect.left
+                      : anchorLocalRect.right,
+                  0,
+                ),
               ).x,
               unfoldedWidth: tabs.unfoldedWidth * absoluteScale.x,
               screenWidth: game.size.x,
@@ -161,9 +174,8 @@ abstract class CombatEntity extends PositionComponent
       ]),
     );
 
-    // Bordure bleu cyan temporaire
-    borderInfo.paint.color = Colors.cyanAccent;
-    borderInfo.paint.strokeWidth = 4;
+    // Le flash cyan d'un coup sur l'armure (D12).
+    flashArmorHit();
   }
 
   void shakeAndFlashAnimation({bool isPoison = false, bool isCritical = false}) {
@@ -337,7 +349,7 @@ abstract class CombatEntity extends PositionComponent
         spawnFloatingText(
           text,
           ChargeHalo.color,
-          position + Vector2(offsetX, -size.y * scale.y / 2),
+          position + Vector2(offsetX, -anchorLocalRect.height * scale.y / 2),
         );
       });
     }
@@ -354,7 +366,13 @@ abstract class CombatEntity extends PositionComponent
     final wasHaloed = _hasActiveAmplify(oldStats);
     final isHaloed = _hasActiveAmplify(newStats);
     if (isHaloed && !wasHaloed) {
-      add(ChargeHalo(size: size.clone()));
+      final window = windowLocalRect;
+      add(
+        ChargeHalo(
+          size: Vector2(window.width, window.height),
+          position: Vector2(window.left, window.top),
+        ),
+      );
     } else if (wasHaloed && !isHaloed) {
       for (final halo in children.whereType<ChargeHalo>()) {
         halo.fadeOut();
@@ -364,8 +382,10 @@ abstract class CombatEntity extends PositionComponent
     final oldFrost = _frostKind(oldStats);
     final newFrost = _frostKind(newStats);
     if (newFrost != null && oldFrost == null) {
+      final window = windowLocalRect;
       _frostShell = FrostShell(
-        size: size.clone(),
+        size: Vector2(window.width, window.height),
+        position: Vector2(window.left, window.top),
         opacity: newFrost == RuptureKind.skipAction
             ? FrostShell.enemyOpacity
             : FrostShell.heroOpacity,
@@ -464,7 +484,7 @@ abstract class CombatEntity extends PositionComponent
         spawnFloatingText(
           '-$lostArmor',
           const Color(0xFF3B82F6), // Technical premium blue
-          position + Vector2(0, (size.y / 2 - 20) * scale.y),
+          position + Vector2(0, (anchorLocalRect.height / 2 - 20) * scale.y),
           isShield: true,
         );
         game.audio.onMoment(GameMoment.armorHit);
@@ -474,7 +494,7 @@ abstract class CombatEntity extends PositionComponent
         spawnFloatingText(
           '+$gainedArmor',
           Colors.lightBlueAccent,
-          position + Vector2(0, -size.y * scale.y / 2),
+          position + Vector2(0, -anchorLocalRect.height * scale.y / 2),
         );
         // Gagner de l'armure et en encaisser un coup sont deux evenements
         // opposes : ils partageaient `armorHit` avant le 2026-08-29, si bien
@@ -495,7 +515,9 @@ abstract class CombatEntity extends PositionComponent
               ? const Color(0xFFF59E0B)
               : const Color(0xFFF87171)); // Red spectrum
 
-      final double verticalOffset = isPlayer ? -size.y / 4 : size.y / 2;
+      final double verticalOffset = isPlayer
+          ? -anchorLocalRect.height / 4
+          : anchorLocalRect.height / 2;
 
       spawnFloatingText(
         '-$lostHp',

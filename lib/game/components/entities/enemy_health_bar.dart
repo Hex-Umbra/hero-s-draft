@@ -1,17 +1,14 @@
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../../game_constants.dart';
 import '../widgets/flame_shield_icon.dart';
 import '../widgets/linear_progress_bar.dart';
 
-/// La barre de PV d'un ennemi, posee au-dessus de sa carte et large comme elle,
-/// avec le voile d'armure qui la recouvre. Elle ne decide rien : elle montre ce
-/// que la carte lui donne (spec P-05, §5.2). Sa zone d'appui descend jusqu'au
-/// haut de la carte et renvoie l'appui a celle-ci.
-class EnemyHealthBar extends PositionComponent with TapCallbacks {
-  final void Function(TapDownEvent event) onTap;
-
+/// La barre de PV d'un ennemi, posee au-dessus du gabarit de sa carte et large
+/// comme lui (B77), avec le voile d'armure qui la recouvre. Elle ne decide
+/// rien : elle montre ce que la carte lui donne (spec P-05, §5.2). Elle ne
+/// recoit aucun appui : la zone de sa carte le prend (A17).
+class EnemyHealthBar extends PositionComponent {
   late final LinearProgressBarComponent _bar;
   late final TextComponent _hpText;
   late final PositionComponent _armorGroup;
@@ -19,14 +16,21 @@ class EnemyHealthBar extends PositionComponent with TapCallbacks {
 
   bool _hasArmor = false;
 
-  EnemyHealthBar({required double width, required this.onTap})
+  /// Au-dessus du cadre (2) et des languettes (6) (spec §5.3).
+  static const int _priority = 7;
+
+  EnemyHealthBar({required Rect anchorRect})
     : super(
-        position: Vector2(0, GameConstants.enemyHealthBarTop),
-        size: Vector2(width, -GameConstants.enemyHealthBarTop),
+        position: Vector2(
+          anchorRect.left,
+          anchorRect.top + GameConstants.enemyHealthBarTop,
+        ),
+        size: Vector2(anchorRect.width, GameConstants.enemyHealthBarHeight),
+        priority: _priority,
       ) {
     final centerY = GameConstants.enemyHealthBarHeight / 2;
     _bar = LinearProgressBarComponent(
-      size: Vector2(width, GameConstants.enemyHealthBarHeight),
+      size: Vector2(anchorRect.width, GameConstants.enemyHealthBarHeight),
       percentage: 1.0,
       borderRadius: GameConstants.enemyHealthBarRadius,
     );
@@ -105,7 +109,4 @@ class EnemyHealthBar extends PositionComponent with TapCallbacks {
     _armorGroup.position.x =
         start + _hpText.size.x + GameConstants.enemyHealthBarShieldGap;
   }
-
-  @override
-  void onTapDown(TapDownEvent event) => onTap(event);
 }

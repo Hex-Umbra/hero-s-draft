@@ -63,7 +63,7 @@ graph TD
     P05[P-05 Roster tier-1 + onHitEffect] --> P14[P-14 Variantes d'Élite]
     P05 --> P15[P-15 Tiers 2-5]
     P06[P-06 P0 animations] --> P07[P-07 P1 juice]
-    P06 --> P08[P-08 Cadre ennemi]
+    P06 --> P08["P-08 Cadre ennemi ✅ clos"]
     P10[P-10 Finale + VictoryScreen] --> P11[P-11 Historique des runs]
     P11 --> P13[P-13 Méta-progression]
     P09[P-09 Boss multi-phases] -.mécanisme de seuil HP réutilisable.-> P10
@@ -189,10 +189,10 @@ parallèle du code.
 
 | ID | Chantier | Effort | Difficulté | Apport |
 |:---|:---|:---:|:---:|:---:|
-| **P-05** | **Le bestiaire** — l'interface des ennemis, le langage des intentions, de nouveaux ennemis, la meute · **cadré le 2026-11-21** ([cadrage](possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md)), **livré par vagues** — la vague 1, l'interface des ennemis, fusionnée et taguée le 2026-11-22 ; la suite au [journal du chantier](chantier_bestiaire/README.md) | *par vagues* *(+ sprites)* | ★★☆☆☆ | 🔥🔥🔥 |
+| **P-05** | **Le bestiaire** — l'interface des ennemis, le langage des intentions, de nouveaux ennemis, la meute · **cadré le 2026-11-21** ([cadrage](possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md)), **livré par vagues** — la vague 1, l'interface des ennemis, fusionnée et taguée le 2026-11-22 ; la vague 2, le visuel, livrée sur sa branche le 2026-11-25, en attente du test, de la PR, de la fusion et du tag ; la suite au [journal du chantier](chantier_bestiaire/README.md) | *par vagues* *(+ sprites)* | ★★☆☆☆ | 🔥🔥🔥 |
 | **P-06** | **Lot P0 de l'audit animations** (12 correctifs : tokens VFX, perf, z-order, bugs) | **2-3 j** | ★★☆☆☆ | 🔥🔥 |
 | **P-07** | **Lot P1 « juice »** (hit-stop, screenshake, héros qui attaque, impacts, idle, mort) | **4-6 j** | ★★★☆☆ | 🔥🔥🔥 |
-| **P-08** | **Cadre d'ennemi** — tranché : un cadre en PNG par tier ; se construit dans la vague 2 du [chantier du bestiaire](chantier_bestiaire/README.md), qui clôt cette ligne | *vague 2 du bestiaire* | ★★★☆☆ | 🔥🔥 |
+| ~~**P-08**~~ | ~~**Cadre d'ennemi**~~ ✅ **Clos le 2026-11-25** — le cadre en PNG par tier, tranché par l'identité visuelle du 18/09, est construit par la vague 2 du [chantier du bestiaire](chantier_bestiaire/README.md), sur la branche `feat/v0.6.2-cadres-et-decors`, en attente de la fusion — [ADR-123](../.obsidian_vault/_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md) | — | — | — |
 | **P-09** | **Boss multi-phases** (changement de comportement au seuil 50 % HP) — les phases se construisent avec le tier 3 du [chantier du bestiaire](chantier_bestiaire/README.md), les boss ensuite | **3-4 j** | ★★★★☆ | 🔥🔥 |
 | **P-46** | **Sourcing des 4 musiques** (menu, carte, combat, boss) — le moteur est livré, seuls les fichiers manquent | **0,5 j** *(+ 4 pistes)* | ★☆☆☆☆ | 🔥🔥 |
 | ~~**P-45**~~ | ~~**Fidélité du tutoriel**~~ ✅ **Livré le 2026-08-23**, publié en `0.4.9` — 50 écarts corrigés entre `lib/tutorial/` et le jeu réel, tutoriel étendu de 13 à 15 étapes — voir [ADR-081](../.obsidian_vault/_adr/ADR-081-amendement-autonomie-tutoriel-zero-provider-etat.md) | — | — | — |
@@ -210,6 +210,8 @@ Douze actions cadrées, dont **3 points chauds de performance** (`TextPaint` rec
 Hit-stop et screenshake pilotés par la magnitude `dégâts / PV max`, le héros qui participe visuellement à ses propres attaques (aujourd'hui il ne bouge jamais), impacts réels pour `magic`/`buff`/`status`, idle breathing déphasé, mort d'ennemi mise en scène, rythme du tour ennemi maîtrisé. **Meilleur ratio impact/effort après l'audio**, et se combine avec lui (un hit-stop sans son ne rend que la moitié de l'effet — envisager de livrer P-03 et P-07 dans la même fenêtre).
 
 ### P-08 — Cadre d'ennemi
+> ✅ **Clos le 2026-11-25** : le cadre en PNG par tier est construit (vague 2 du bestiaire, [ADR-123](../.obsidian_vault/_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)), sur sa branche, en attente de la fusion. Le texte qui suit est celui d'avant.
+
 **Tranché depuis** par l'[identité visuelle du 18/09](possible_upgrades/18-09-2026_identite_visuelle_pixel_art_Opus5.md) : un cadre en PNG par tier. Il se construit dans la vague 2 du [chantier du bestiaire](chantier_bestiaire/README.md), avec les fonds de fenêtre et le décor de combat ; la vague clôt cette ligne. Le texte qui suit est celui d'avant la décision.
 **Une décision, deux documents concurrents.** Option PNG (cadre par tier, compositing 3 couches, `windowRect`) : plus fidèle à l'identité visuelle actuelle, mais risque d'alignement du détourage. Option procédurale (bordure Canvas + 4 icônes vectorielles réutilisées d'`EffectIcon`) : zéro asset, aucun problème d'alignement, mais rendu « UI systémique » plutôt que « portrait peint », et risque de perf sur 5 `EnemyCard` animées simultanément.
 **Recommandation** : 0,5 jour de prototype sur un seul ennemi avant d'investir — c'est ce que les deux documents préconisent, et la décision conditionne la production des sprites de P-05.

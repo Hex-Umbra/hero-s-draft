@@ -8,6 +8,7 @@ import 'package:roguelike_card_game/game/services/effect_line_texts.dart';
 import 'package:roguelike_card_game/game/services/effect_resolver.dart';
 import 'package:roguelike_card_game/game/components/widgets/card_text_renderer.dart';
 import 'package:roguelike_card_game/game/services/effects/effect_strategy.dart';
+import 'package:roguelike_card_game/game/systems/creature_fit.dart';
 import 'package:roguelike_card_game/game/systems/passive_availability.dart';
 import 'package:roguelike_card_game/game/systems/passives/passive_strategies.dart';
 import 'package:roguelike_card_game/l10n/app_localizations.dart';
@@ -585,6 +586,34 @@ void main() {
           .map((f) => f.uri.pathSegments.last.replaceAll('.json', ''))
           .toSet();
       expect(onDisk, hero.skills.toSet(), reason: 'classe ${hero.id}');
+    }
+  });
+
+  test('chaque sprite livre est un sprite neuf ou une peinture qui contient '
+      'le rectangle de B75', () {
+    for (final enemy in registry.enemies) {
+      final file = File('assets/data/enemies/${enemy.id}/sprite.png')
+          .openSync();
+      final Uint8List header;
+      try {
+        header = file.readSync(24);
+      } finally {
+        file.closeSync();
+      }
+      final size = ByteData.sublistView(header);
+      final width = size.getUint32(16);
+      final height = size.getUint32(20);
+
+      final fresh = width == 128 && height == 192;
+      final oldPainting =
+          width >= oldSpriteRect.right && height >= oldSpriteRect.bottom;
+      expect(
+        fresh || oldPainting,
+        isTrue,
+        reason: 'ennemi ${enemy.id} : sprite de $width x $height. '
+            'un ennemi cree par l editeur doit recevoir son vrai sprite '
+            '(128 x 192) avant d etre livre',
+      );
     }
   });
 }

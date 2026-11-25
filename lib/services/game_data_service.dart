@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../game/game_constants.dart';
 import '../models/data/charge_data.dart';
 import '../models/data/effect_icon_table.dart';
+import '../models/data/location_data.dart';
+import '../models/data/tier_frame_data.dart';
 import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
@@ -176,6 +179,33 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     EffectIconTable.fromJson,
   );
 
+  // La table des cadres (spec P-05, vague 2, §4.1) : un document plat qui fait
+  // echouer le demarrage, comme la courbe d XP. Les ennemis sont deja
+  // charges : un tier sans cadre est une faute, nommee avec l ennemi.
+  final tierFrames = await loader.loadDocument(
+    'assets/data/tier_frames.json',
+    TierFrameTable.fromJson,
+  );
+
+  // Les lieux se lisent dans le manifeste, tout fichier compris : ce qui n est
+  // pas un PNG est refuse par le catalogue, pas ignore.
+  final locations = LocationCatalog.fromAssetKeys([
+    for (final asset in await loader.assetsMatching('assets/data/locations/*/*'))
+      asset.key,
+  ]);
+  locations.faults.forEach(loader.fault);
+
+  if (tierFrames != null) {
+    tierFrameFaults(
+      enemies: enemies,
+      frames: tierFrames,
+      assetKeys: {
+        for (final asset in await loader.assetsMatching('assets/data/frames/*'))
+          asset.key,
+      },
+    ).forEach(loader.fault);
+  }
+
   // Une fois seulement, a la fin : les fautes de toutes les categories sont
   // remontees ensemble. Corriger une faute par cycle de rebuild, fichier par
   // fichier, serait invivable.
@@ -198,8 +228,63 @@ Future<GameDataRegistry> loadGameDataRegistry(AssetBundle bundle) async {
     xpCurve: xpCurve,
     effectIcons: effectIcons!,
     charges: charges,
+    tierFrames: tierFrames!,
+    locations: locations,
     audio: audio,
   );
+}
+
+/// Les fautes de la table des cadres au regard des ennemis et du manifeste
+/// (spec P-05, vague 2, §4.1, A7) : un tier d ennemi sans cadre, une image de
+/// cadre absente de [assetKeys], un canevas plus petit que le gabarit, une
+/// fenetre qui sort du canevas ou qui n y est pas centree — la carte
+/// s ancre au centre de son canevas, qui doit etre celui de sa fenetre.
+List<String> tierFrameFaults({
+  required List<EnemyData> enemies,
+  required TierFrameTable frames,
+  required Set<String> assetKeys,
+}) {
+  final faults = <String>[];
+  for (final enemy in enemies) {
+    if (frames.of(enemy.tier) == null) {
+      faults.add(
+        'assets/data/enemies/${enemy.id}/enemy.json : tier ${enemy.tier} '
+        'sans cadre dans assets/data/tier_frames.json',
+      );
+    }
+  }
+  for (final frame in frames.frames) {
+    final where = 'assets/data/tier_frames.json : tier ${frame.tier}';
+    if (!assetKeys.contains(frame.imagePath)) {
+      faults.add('$where : ${frame.imagePath} absente du manifeste');
+    }
+    if (frame.width < GameConstants.enemyTemplateWidth ||
+        frame.height < GameConstants.enemyTemplateHeight) {
+      faults.add(
+        '$where : canevas ${frame.width}x${frame.height} plus petit que le '
+        'gabarit ${GameConstants.enemyTemplateWidth.toInt()}x'
+        '${GameConstants.enemyTemplateHeight.toInt()}',
+      );
+    }
+    final centeredX = (frame.width - GameConstants.enemyWindowWidth) / 2;
+    final centeredY = (frame.height - GameConstants.enemyWindowHeight) / 2;
+    if (frame.windowX < 0 ||
+        frame.windowY < 0 ||
+        frame.windowX + GameConstants.enemyWindowWidth > frame.width ||
+        frame.windowY + GameConstants.enemyWindowHeight > frame.height) {
+      faults.add(
+        '$where : la fenetre en (${frame.windowX}, ${frame.windowY}) sort du '
+        'canevas ${frame.width}x${frame.height}',
+      );
+    } else if (frame.windowX != centeredX || frame.windowY != centeredY) {
+      faults.add(
+        '$where : la fenetre en (${frame.windowX}, ${frame.windowY}) n est '
+        'pas centree, elle devrait etre en '
+        '(${centeredX.toInt()}, ${centeredY.toInt()})',
+      );
+    }
+  }
+  return faults;
 }
 
 /// Charge et met en cache toutes les donnees du jeu au demarrage.
@@ -239,4 +324,10 @@ final chargeCatalogProvider = Provider<ChargeCatalog>(
   (ref) =>
       ref.watch(gameDataLoaderProvider).valueOrNull?.charges ??
       const ChargeCatalog.empty(),
+);
+
+/// Le lieu courant, ou `null` tant que le registre n'est pas chargé : les
+/// écrans gardent alors leur fond d'origine (spec P-05, vague 2, B76).
+final currentLocationProvider = Provider<LocationAssets?>(
+  (ref) => ref.watch(gameDataLoaderProvider).valueOrNull?.locations.current,
 );

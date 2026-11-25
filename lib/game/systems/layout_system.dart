@@ -4,6 +4,8 @@ import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import 'board_scale.dart';
+import 'enemy_row.dart';
 import 'hand_geometry.dart';
 
 class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
@@ -110,33 +112,23 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
       return;
     }
 
-    final int count = enemyCards.length;
-    double scaleMultiplier = 1.0;
+    // Le centre de chaque fenêtre, sur le pixel physique (spec P-05, vague 2,
+    // §5.6) ; l'ancre de la carte est le centre de sa fenêtre.
+    final ratio = game.devicePixelRatio;
+    final centers = placeRow(
+      slots: [for (final enemy in enemyCards) slotOf(enemy.frame)],
+      unit: game.boardScale.frame,
+      screenWidth: game.size.x,
+      devicePixelRatio: ratio,
+    );
+    final rowY = enemyRowCenterYFor(
+      game.size.y,
+      scale: game.boardScale,
+      devicePixelRatio: ratio,
+    );
 
-    final double visualWidthPerEnemy = (100.0 + 70.0) * game.scaleFactor * 1.45;
-
-    double totalEstimatedWidth = count * visualWidthPerEnemy;
-    final double maxAvailableWidth = game.size.x * 0.95;
-
-    if (totalEstimatedWidth > maxAvailableWidth) {
-      scaleMultiplier = (maxAvailableWidth / totalEstimatedWidth).clamp(0.4, 1.0);
-    }
-
-    for (var enemy in enemyCards) {
-      enemy.scaleMultiplier = scaleMultiplier;
-    }
-
-    final double minSpacing = 165.0 * game.scaleFactor * 1.45 * scaleMultiplier;
-    final double maxSpacing = 280.0 * game.scaleFactor * 1.45 * scaleMultiplier;
-
-    double spacing = (game.size.x * 0.85) / (count + 1);
-    spacing = spacing.clamp(minSpacing, maxSpacing);
-
-    double startX = (game.size.x / 2) - ((count - 1) * (spacing / 2));
-    double posY = game.size.y * 0.21;
-
-    for (int i = 0; i < count; i++) {
-      enemyCards[i].place(Vector2(startX + (i * spacing), posY));
+    for (int i = 0; i < enemyCards.length; i++) {
+      enemyCards[i].place(Vector2(centers[i], rowY));
     }
 
     // Le plateau vient de changer sous un pointeur peut-être immobile :

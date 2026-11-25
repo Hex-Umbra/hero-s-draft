@@ -2,6 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/models/data/enemy_data.dart';
 import 'package:roguelike_card_game/models/data/game_data_registry.dart';
 import 'package:roguelike_card_game/models/data/hero_data.dart';
+import 'package:roguelike_card_game/models/data/location_data.dart';
+import 'package:roguelike_card_game/models/data/tier_frame_data.dart';
+
+import 'tier_frame_fixture.dart';
 
 void main() {
   group('GameDataRegistry.imagesToPreload', () {
@@ -94,6 +98,38 @@ void main() {
       expect(
         registry.imagesToPreload,
         isNot(contains('assets/data/classes/gambler/icon.png')),
+      );
+    });
+
+    test('imagesToPreload ajoute les cinq cadres et les images du lieu courant',
+        () {
+      final registry = GameDataRegistry(
+        cards: const [],
+        relics: const [],
+        events: const [],
+        passives: const [],
+        forgeUpgrades: const [],
+        heroes: const [],
+        enemies: const [],
+        tierFrames: const TierFrameTable(testTierFrames),
+        locations: LocationCatalog.fromAssetKeys(const [
+          'assets/data/locations/forest/combat.png',
+          'assets/data/locations/forest/window_1.png',
+          'assets/data/locations/forest/window_2.png',
+          'assets/data/locations/forest/window_3.png',
+        ]),
+      );
+
+      expect(
+        registry.imagesToPreload,
+        unorderedEquals([
+          for (var tier = 1; tier <= 5; tier++)
+            'assets/data/frames/tier_$tier.png',
+          'assets/data/locations/forest/combat.png',
+          'assets/data/locations/forest/window_1.png',
+          'assets/data/locations/forest/window_2.png',
+          'assets/data/locations/forest/window_3.png',
+        ]),
       );
     });
   });

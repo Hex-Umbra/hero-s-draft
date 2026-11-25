@@ -24,3 +24,5 @@ Les trois constantes 5, 180 et 190 viennent de la vague 1 du bestiaire
 voile passent les textes flottants et les icônes d'effet (ajoutés au jeu à 200) et la carte jouée
 en vol (500) ; la ligne de ciblage, enfant de `CombatVisualSystem` ajouté à 0, reste dessous. Les
 languettes sont enfants de leur carte à 6, au-dessus de la gangue (4) et du halo (5).
+
+**Les enfants d'une carte d'ennemi** (vague 2, [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)) : fond de la fenêtre 0, créature 1, cadre du tier 2, contour de ciblage 3, gangue 4, halo 5, languettes 6, la barre de PV au-dessus du cadre. La gangue et le halo, ajoutés en cours de combat par `refreshChargeVisuals`, gardent leur priorité et se posent sur la fenêtre, non sur le canevas.

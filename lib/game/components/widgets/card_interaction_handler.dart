@@ -4,6 +4,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../card_component.dart';
 import '../entities/enemy_card.dart';
+import '../../systems/entity_hover.dart';
 import '../../../models/data/card_data.dart';
 import '../../../services/audio/game_moment.dart';
 import '../visual_effects/ribbon_trail.dart';
@@ -157,12 +158,10 @@ class CardInteractionHandler {
     cardComponent.game.highlightEnemy(null);
   }
 
-  EnemyCard? findHoveredEnemy(Vector2 canvasPos) {
-    for (var enemy in cardComponent.game.enemyCards) {
-      if (enemy.zoneContains(canvasPos)) {
-        return enemy;
-      }
-    }
-    return null;
-  }
+  /// L'ennemi sous la carte glissée, celui qui recevra le lâcher : entre deux
+  /// zones qui se chevauchent, le dessiné par-dessus.
+  EnemyCard? findHoveredEnemy(Vector2 canvasPos) => topmostWhere(
+        cardComponent.game.enemiesInDrawOrder,
+        (enemy) => enemy.zoneContains(canvasPos),
+      );
 }

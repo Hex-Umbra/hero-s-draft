@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// contour flou autour de la carte, ne a l'apparition de la rupture, qui
 /// pulse tant que la charge dure. Ni eclair, ni etincelle.
 class ChargeHalo extends PositionComponent {
-  ChargeHalo({required Vector2 size})
+  ChargeHalo({required Vector2 size, super.position})
       : super(size: size, priority: _haloPriority);
 
   static const Color color = Color(0xFFFFEA00);

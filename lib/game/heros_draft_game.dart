@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/widgets.dart' show View;
 import 'components/card_component.dart';
 import 'components/entities/combat_entity.dart';
 import 'components/entities/hero_card.dart';
@@ -16,6 +17,8 @@ import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
 import '../models/data/charge_data.dart';
+import '../models/data/location_data.dart';
+import '../models/data/tier_frame_data.dart';
 import '../models/entity_stats.dart';
 import 'game_constants.dart';
 
@@ -32,6 +35,9 @@ import 'systems/combat_visual_system.dart';
 import 'systems/layout_system.dart';
 import 'systems/hand_geometry.dart';
 import 'systems/entity_hover.dart';
+import 'systems/decor_fit.dart';
+import 'systems/board_scale.dart';
+import 'systems/enemy_row.dart';
 
 /// La fiche ouverte, telle que `GameScreen` la reflète (spec P-05 vague 1,
 /// A12) : l'ennemi, et le rectangle de sa carte agrandie à l'arrivée, barre
@@ -43,6 +49,13 @@ class EnemyInspection {
 
   const EnemyInspection({required this.enemyId, required this.rect});
 }
+
+/// Le sprite du décor de combat. B88 : jamais lissé, quel que soit le facteur
+/// d'échelle ; le filtrage est posé ici, non laissé au défaut de Flame.
+SpriteComponent decorSpriteFor(Image image) =>
+    SpriteComponent(sprite: Sprite(image))
+      ..priority = GameConstants.priorityBackground
+      ..paint.filterQuality = FilterQuality.none;
 
 class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
@@ -69,7 +82,18 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// glisser, qui l'emporte ailleurs.
   Vector2? _lastPointerPos;
 
-  double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
+  /// La part de la hauteur où se pose le centre de la carte du héros.
+  static const double heroRowY = 0.51;
+
+  /// L'échelle du héros et de la main pour une hauteur de jeu.
+  static double scaleFactorFor(double height) => (height / 800).clamp(0.85, 2.5);
+
+  double get scaleFactor => scaleFactorFor(size.y);
+
+  /// Le palier du plateau des ennemis (spec P-05, vague 2, §5.1), relu à
+  /// chaque [onGameResize] avant que la taille ne descende aux cartes.
+  BoardScale get boardScale => _boardScale;
+  late BoardScale _boardScale;
 
   RunState? get currentRunState => stateSyncSystem?.currentState;
   CombatState? get currentCombatState => stateSyncSystem?.currentCombatState;
@@ -91,6 +115,22 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// languettes des cartes de combat y lisent quels statuts sont des charges
   /// et le nom de leur état rompu (spec P-53, A2).
   final ChargeCatalog chargeCatalog;
+
+  /// Les cadres des tiers, injectés comme [chargeCatalog] : la carte d'un
+  /// ennemi y prend son canevas et sa fenêtre. Vide, aucun ennemi n'a de
+  /// carte (`StateSyncSystem` le refuse).
+  final TierFrameTable tierFrames;
+
+  /// Le lieu dont le décor habille le combat, injecté comme [audio] ; nul,
+  /// le fond reste la couleur du jeu.
+  final LocationAssets? location;
+
+  /// Pixels physiques par pixel logique, lu sur la vue qui porte le jeu ; 1
+  /// quand il n'est pas attaché (tests sur cartes non montées).
+  double get devicePixelRatio =>
+      buildContext == null ? 1 : View.maybeOf(buildContext!)?.devicePixelRatio ?? 1;
+
+  SpriteComponent? _decor;
 
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
@@ -170,6 +210,8 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
     required this.onInspectionChanged,
+    this.tierFrames = const TierFrameTable.empty(),
+    this.location,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
     this.onEnemyTargetCancelled,
@@ -246,10 +288,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       return;
     }
     final hero = heroCard;
-    final entities = <CombatEntity>[
-      for (final enemy in enemyCards)
-        if (_isAlive(enemy) && enemy.isLoaded) enemy,
-      if (hero != null && hero.isLoaded) hero,
+    final entities = [
+      for (final entity in _inDrawOrder(children.whereType<CombatEntity>()))
+        if (entity == hero
+            ? entity.isLoaded
+            : entity is EnemyCard &&
+                enemyCards.contains(entity) &&
+                _isAlive(entity) &&
+                entity.isLoaded)
+          entity,
     ];
     final hovered = hoveredEntity;
     final current = hovered == null ? -1 : entities.indexOf(hovered);
@@ -337,20 +384,26 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     return index < 0 ? null : index;
   }
 
-  /// L'ennemi vivant dont la zone contient le point, l'ennemi survolé d'abord :
-  /// ses languettes déroulées passent sur ses voisins (A8).
-  EnemyCard? _livingEnemyAt(Vector2 canvasPos) {
-    final hovered = hoveredEntity;
-    final ordered = [
-      if (hovered is EnemyCard && enemyCards.contains(hovered)) hovered,
-      for (final enemy in enemyCards)
-        if (enemy != hovered) enemy,
-    ];
-    for (final enemy in ordered) {
-      if (_isAlive(enemy) && enemy.zoneContains(canvasPos)) return enemy;
-    }
-    return null;
-  }
+  /// Les cartes de combat [entities], enfants du jeu, dans l'ordre où elles
+  /// sont dessinées : la dernière par-dessus les autres.
+  List<T> _inDrawOrder<T extends CombatEntity>(Iterable<T> entities) =>
+      inDrawOrder(entities, (entity) => entity.priority);
+
+  /// Les ennemis du plateau dans l'ordre où ils sont dessinés : là où deux
+  /// zones se chevauchent, le dernier qui contient le point est celui que le
+  /// joueur voit, et que l'appui de Flame choisit.
+  List<EnemyCard> get enemiesInDrawOrder => _inDrawOrder(
+        children.whereType<EnemyCard>().where(enemyCards.contains),
+      );
+
+  /// L'ennemi vivant dont la zone contient le point, le dessiné par-dessus
+  /// d'abord : l'ennemi survolé, dont les languettes déroulées passent sur
+  /// ses voisins (A8), puis, entre deux languettes voisines qui se
+  /// superposent (B91), celle qui se voit.
+  EnemyCard? _livingEnemyAt(Vector2 canvasPos) => topmostWhere(
+        enemiesInDrawOrder,
+        (enemy) => _isAlive(enemy) && enemy.zoneContains(canvasPos),
+      );
 
   bool _isAlive(EnemyCard enemy) => !enemy.isDead && !enemy.isPendingDeath;
 
@@ -382,25 +435,33 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     await add(visualSys);
     await add(laySys);
 
-    final uniqueImages = <String>{
-      'assets/images/bg_dungeon.png',
-      ...imagesToPreload,
-    }.toList();
-    await images.loadAll(uniqueImages);
+    await images.loadAll(imagesToPreload);
 
-    final bgSprite = Sprite(images.fromCache('assets/images/bg_dungeon.png'));
-    add(
-      SpriteComponent(sprite: bgSprite, size: size)
-        ..priority = GameConstants.priorityBackground,
-    );
+    final decorPath = location?.decorFor(DecorScreen.combat);
+    if (decorPath != null) {
+      final decor = decorSpriteFor(await images.load(decorPath));
+      _decor = decor;
+      await add(decor);
+      _placeDecor();
+    }
     add(_inspectionVeil = InspectionVeil(size: size.clone()));
   }
 
   @override
   void onGameResize(Vector2 size) {
+    final ratio = devicePixelRatio;
+    _boardScale = boardScaleFor(
+      screen: Size(size.x, size.y),
+      devicePixelRatio: ratio,
+      rowCenterY: rowCenterYFor(size.y, devicePixelRatio: ratio),
+      rowFloorY: size.y * heroRowY -
+          HeroCard.cardHeight / 2 *
+              scaleFactorFor(size.y) *
+              HeroCard.boardScaleRatio,
+    );
     super.onGameResize(size);
     if (heroCard != null) {
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
+      heroCard!.position = Vector2(size.x / 2, size.y * heroRowY);
     }
     if (enemyCards.isNotEmpty) {
       repositionEnemies();
@@ -408,9 +469,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     layoutHand();
     _inspectionVeil?.size = size;
 
-    children.whereType<SpriteComponent>().forEach((bg) {
-      if (bg.priority == GameConstants.priorityBackground) bg.size = size;
-    });
+    _placeDecor();
+  }
+
+  /// Le décor couvre le jeu, centré, à l'échelle de [decorFitFor].
+  void _placeDecor() {
+    final decor = _decor;
+    if (decor == null) return;
+    final fit = decorFitFor(
+      screen: Size(size.x, size.y),
+      devicePixelRatio: devicePixelRatio,
+    );
+    decor.position = Vector2(fit.left, fit.top);
+    decor.size = Vector2(decorWidth * fit.scale, decorHeight * fit.scale);
   }
 
   void highlightEnemy(EnemyCard? enemy) {

@@ -26,8 +26,8 @@ class GameConstants {
   static const int priorityInspectedEnemy = 190;
 
   // --- FICHE D'UN ENNEMI ---
-  /// L'agrandissement de la carte ouverte : celui de la carte focalisée.
-  static const double inspectionScale = 1.25;
+  /// L'agrandissement de la carte ouverte : le double, à tout palier (B79, B84).
+  static const double inspectionScale = 2.0;
   /// Agrandissement, descente et fondu du voile, à l'aller comme au retour.
   static const double inspectionSeconds = 0.15;
 
@@ -53,6 +53,54 @@ class GameConstants {
   static const double enemyHealthBarShieldSize = 8.0;
   static const double enemyHealthBarShieldGap = 3.0;
   static const double enemyHealthBarArmorGap = 2.0;
+
+  // --- CADRE ET RANGÉE D'UN ENNEMI (pixels de cadre) ---
+  /// La fenêtre que le cadre entoure, et que le sprite remplit.
+  static const double enemyWindowWidth = 64.0;
+  static const double enemyWindowHeight = 96.0;
+
+  /// Le plus petit cadre admis : la fenêtre et sa marge de chaque côté.
+  static const double enemyTemplateWidth = 88.0;
+  static const double enemyTemplateHeight = 120.0;
+  static const double enemyTemplateMargin = 12.0;
+
+  /// Les languettes d'état : leur échelle, qui réduit d'un quart tout ce
+  /// qu'elles dessinent, cadre, émojis et textes ; leur largeur au repos et
+  /// leur recouvrement sur la carte.
+  static const double statusTabScale = 0.75;
+  static const double statusTabRestWidth = 30.0 * statusTabScale;
+  static const double statusTabOverlap = 1.0;
+
+  /// La part d'une languette dans la place d'un ennemi (B91). Elle ne suit pas
+  /// [statusTabScale] : réduire les languettes ne déplace pas la rangée.
+  static const double enemySlotTabWidth = 29.0;
+
+  /// La rangée des ennemis : écart minimal et maximal entre deux places, part
+  /// utilisable de la largeur d'écran et hauteur du centre (part de l'écran).
+  static const double enemyRowMinGap = 7.0;
+  static const double enemyRowMaxGap = 122.0;
+  static const double enemyRowUsableWidth = 0.95;
+  static const double enemyRowCenterY = 0.21;
+
+  /// Le plus haut que monte le haut d'une barre de PV ennemie, en pixels
+  /// logiques (B93) : sous le bas visible des icônes de la barre du haut du
+  /// combat — posées à 10 du bord avec 8 de marge, 40 de haut, moins la marge
+  /// intérieure de leur dessin. Sur un écran bas, la rangée descend pour le
+  /// tenir, et rétrécit pour rester au-dessus du héros.
+  static const double enemyRowTopClearance = 56.0;
+
+  /// La taille d'un ennemi suit celle du héros (B90, B91) : le cadre vaut
+  /// [enemyFrameReferenceScale] pixels d'écran par pixel de cadre pour
+  /// [enemyFrameReferenceHeight] pixels physiques de hauteur de jeu, et
+  /// s'arrondit à l'entier le plus proche s'il en est à
+  /// [enemyFrameSnapTolerance] près (part de cet entier).
+  /// [enemyFrameSnapEpsilon] est l'erreur de calcul admise à ce seuil, qui
+  /// l'inclut : en double, 2,2 − 2 vaut 0,2000000000000002, et 1080p doit
+  /// s'arrondir à ×2.
+  static const double enemyFrameReferenceScale = 2.2;
+  static const double enemyFrameReferenceHeight = 1080.0;
+  static const double enemyFrameSnapTolerance = 0.10;
+  static const double enemyFrameSnapEpsilon = 1e-9;
 
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {

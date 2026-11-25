@@ -303,7 +303,7 @@ class CardAnimator {
             card.game.add(
               SlashEffect(
                 position: target.position.clone(),
-                size: target.size * 1.5,
+                size: Vector2(target.anchorLocalRect.width, target.anchorLocalRect.height) * 1.5,
                 color: Colors.redAccent,
               ),
             );
@@ -312,7 +312,7 @@ class CardAnimator {
               card.game.add(
                 SlashEffect(
                   position: enemy.position.clone(),
-                  size: enemy.size * 1.5,
+                  size: Vector2(enemy.anchorLocalRect.width, enemy.anchorLocalRect.height) * 1.5,
                   color: Colors.redAccent,
                 ),
               );

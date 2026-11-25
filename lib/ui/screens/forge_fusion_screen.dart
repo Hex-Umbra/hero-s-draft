@@ -17,6 +17,7 @@ import '../widgets/notification_overlay.dart';
 import '../widgets/page_header.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/ui_card.dart';
+import '../../models/data/location_data.dart';
 
 /// Le Puits d'échange (D6, D22 ; spec P-43 E2, A5, §4.8) : une rune d'une
 /// carte contre n'importe quelle autre que le prédicat lui permet, aux deux
@@ -149,6 +150,7 @@ class _ForgeFusionScreenState extends ConsumerState<ForgeFusionScreen> {
     }
 
     return ScreenScaffold(
+      decor: DecorScreen.forgeFusion,
       backgroundType: ScreenBackgroundType.dark,
       // Avant tout échange, le retour ferme l'écran sans résoudre le nœud :
       // le joueur peut revenir. Après, il le résout par le chemin de la
