@@ -151,7 +151,7 @@ Réserves à ne pas perdre de vue :
    (B78) ; **la fiche double la carte** à tout palier et se décale vers l'intérieur au bord (B79, B84,
    B89). **La règle d'échelle** (B90, amendée par B91, tranchées le 25/11 après les tests du propriétaire) : 2,2 pixels
    d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée par la rangée de six
-   cartes (la place d'une carte compte son gabarit et une languette, 117 ; deux languettes voisines se superposent, la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher), la barre et le héros, arrondie à l'entier ≥ 2 quand elle en est à 10 % au plus et qu'il tient
+   cartes (la place d'une carte compte son gabarit et une languette, 117 ; deux languettes voisines se superposent, la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher ; les languettes réduites d'un quart, B92, la place gardée à 117), la barre et le héros, arrondie à l'entier ≥ 2 quand elle en est à 10 % au plus et qu'il tient
    (net), lissée sinon — ×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 dans Chrome, 3,667 en plein écran, ×4 net en 4K (B72, B83, B85, B90, B91) ;
    le plateau ne rétrécit pas avec le nombre d'ennemis. **La couture de lieu** : `assets/data/locations/<id>/`, un seul lieu, la
    forêt, un décor de combat de 640 × 360 en couleurs peintes (B66, B74, B76, B80, B88) ; `bg_dungeon`

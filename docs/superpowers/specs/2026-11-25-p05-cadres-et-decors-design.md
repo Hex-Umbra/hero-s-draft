@@ -144,9 +144,9 @@ celle du héros, nette quand elle est presque entière — ×2 en 1080p, ×3 en 
 **A9 — La place d'une carte vaut 117 pixels de cadre du tier 1 au tier 4, 120 au tier 5 ; l'écart minimal, 7 ;
 l'étalement d'aujourd'hui est relu en largeurs réelles** *(T, mesure qui suit l'échelle existante ; place amendée
 par B91)*. La place se compte sur le plus large du cadre et du gabarit avec **une** languette au repos (B91, qui
-remplace les deux de la fiche, point 3) : 88 + (30 − 1) = 117, sous le plus grand cadre (120), qui garde sa
+remplace les deux de la fiche, point 3) : 88 + 29 = 117, sous le plus grand cadre (120), qui garde sa
 largeur. Une carte porte une languette de chaque côté : deux voisines à l'écart minimal ont leurs centres à 124
-pixels de cadre, et leurs languettes au repos du côté qui les sépare se superposent sur 22 pixels de cadre — la
+pixels de cadre, et leurs languettes au repos du côté qui les sépare se superposent sur 7 pixels de cadre (22 avant B92) — la
 carte dessinée par-dessus reçoit le pointeur (§5.7). La fonction reçoit une largeur et un écart par place. L'écart minimal reprend celui d'aujourd'hui : 165 unités d'un centre à l'autre pour une carte de
 100 et deux languettes de 29 (`layout_system.dart:129`), soit 7 ; l'écart maximal, 280 − 158 = 122
 (`layout_system.dart:130`). L'étalement garde la forme de `layout_system.dart:132-133` : peu d'ennemis
@@ -382,7 +382,7 @@ sprites le couvrent (§2.1).
 
 **Aucun champ neuf** sur `EnemyData`, `EnemyInstance`, `EntityStats`, `CombatState` ni `RunState`. `GameConstants`
 gagne la fenêtre (64 × 96), le gabarit (88 × 120) et sa marge autour de la fenêtre (12), la largeur d'une
-languette au repos (30) et son recouvrement de la carte (1) — **qui quittent `StatusTabs`** (`_restWidth` et
+languette au repos (30, 22,5 depuis B92) et son recouvrement de la carte (1) — **qui quittent `StatusTabs`** (`_restWidth` et
 `_overlap`, `status_tabs.dart:33-34`, lus par `_restX`, `:123-124`) pour n'avoir qu'une source, lue par
 `StatusTabs` et par `slotOf` —, les deux écarts de la rangée (7 et 122), la largeur utile (0,95) et la hauteur des fenêtres (0,21) ;
 `inspectionScale` passe à 2 ; les constantes de la barre gardent leurs valeurs, lues désormais en pixels de cadre
@@ -644,11 +644,11 @@ d'aujourd'hui (`layout_system.dart:132-133`) entre 124 et 239 pixels de cadre. L
 une place seule, au centre. Les abscisses des centres se calent sur le pixel physique, et l'ordonnée commune des
 fenêtres aussi (ci-dessous).
 
-**La place compte le gabarit et une languette** (B91) : `enemySlotWidth` = 88 + (30 − 1) = 117 pixels de cadre,
-lus dans `enemyTemplateWidth`, `statusTabRestWidth` et `statusTabOverlap` ; `slotOf` garde le plus large du cadre et
+**La place compte le gabarit et une languette** (B91) : `enemySlotWidth` = 88 + 29 = 117 pixels de cadre,
+lus dans `enemyTemplateWidth` et `enemySlotTabWidth` — la part d'une languette, que B92 détache de sa taille pour ne pas déplacer la rangée ; `slotOf` garde le plus large du cadre et
 de la place, 120 au tier 5 ; la rangée de référence en dérive, 6 × 117 + 5 × 7 = 737. Deux voisines à l'écart
 minimal ont leurs centres à 124 pixels de cadre : leurs languettes au repos du côté qui les sépare se superposent
-sur 22 (§5.7).
+sur 7 (§5.7), 22 avant B92.
 
 | 1080p, ×2 | Distance des centres | Largeur de la rangée |
 |:---|:---|:---|
@@ -680,7 +680,7 @@ En pixels de cadre, dans les coordonnées de la carte, pour un cadre dont la fen
 | **La fenêtre** | `(b, b)` à `(b + 64, b + 96)` | — |
 | **Le gabarit** (B77) | `(b − 12, b − 12)` à `(b + 76, b + 108)`, le même sur les cinq cadres ; le canevas même au tier 1 | — |
 | **La barre et son voile** | x : le gabarit, 88 de large ; y : de 17 à 4 au-dessus du gabarit — son haut à 77 au-dessus du centre de la fenêtre, sur les cinq cadres | `enemyHealthBarTop` (−17), hauteur 13, rayon 4, texte 9, bouclier 8 à 3, montant à 2 (`game_constants.dart:48-55`) — leurs valeurs ne changent pas, elles se lisent depuis le haut du gabarit. À ×2 : 176 × 26 pixels, contre 196 × 25 aujourd'hui en 1080p |
-| **Les languettes** | Au repos, collées aux côtés du gabarit, 1 dessus ; leur haut à 11 sous le haut du gabarit ; déroulées vers l'extérieur ; **vers l'intérieur (B39) par-dessus le gabarit**, leur bord extérieur au bord du gabarit | Repos 30 de large, déroulé de 30 à 120, pas de 31 et de 22 ou 30 (`status_tabs.dart:33-48`) : `StatusTabs` reçoit le rectangle d'ancrage au lieu de `cardWidth` (`combat_entity.dart:62-74`). Le héros passe le sien, sa carte entière : rien ne change pour lui |
+| **Les languettes** | Au repos, collées aux côtés du gabarit, 1 dessus ; leur haut à 11 sous le haut du gabarit ; déroulées vers l'extérieur ; **vers l'intérieur (B39) par-dessus le gabarit**, leur bord extérieur au bord du gabarit | Repos 30 de large, déroulé de 30 à 120, pas de 31 et de 22 ou 30 (`status_tabs.dart:33-48`) ; **B92 réduit d'un quart tout ce que la languette dessine** — cadre, émojis, textes, `GameConstants.statusTabScale` = 0,75 —, sauf sa hauteur sur la carte (11) : `StatusTabs` reçoit le rectangle d'ancrage au lieu de `cardWidth` (`combat_entity.dart:62-74`). Le héros passe le sien, sa carte entière : rien ne change pour lui |
 | **Le contour de ciblage** (B78) | Autour de la fenêtre, à l'extérieur : le rectangle de la fenêtre agrandi de la moitié du trait | Ambre de 4 pour une carte choisie ou une fiche ouverte, cyan de 3 pour une cible possible, la lueur cyan pulsante de la surbrillance (`enemy_card.dart:353-364`, `:404-423`) ; **au repos, rien** : le liseré blanc disparaît. Le flash cyan d'un coup sur l'armure (`combat_entity.dart:143-167`) passe sur le contour |
 | **La zone** (A17) | Le rectangle `(0, b − 29)` à `(largeur, hauteur)` du canevas — du haut de la barre au bas du cadre, coins de part et d'autre de la barre compris —, plus chaque languette par son rectangle dessiné et son rectangle au repos | La règle d'ADR-121, point 3 : la même zone pour le survol, l'appui et le lâcher, désormais lue aussi par `containsLocalPoint` de la carte. Au tier 1, `b − 29` = −17, la zone d'aujourd'hui ; au tier 5, −1. **Deux zones voisines se chevauchent** (B91) : les languettes au repos de deux cartes à l'écart minimal se superposent. Là, **la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher** — ce que le joueur voit. L'appui le fait par Flame (`componentsAtPoint` parcourt les enfants du dernier dessiné au premier, et le premier qui le reçoit arrête l'événement) ; le survol (`pickHoveredEntity`, sans carte courante — au doigt), le ciblage (`HerosDraftGame._livingEnemyAt`) et le lâcher (`findHoveredEnemy`) lisent les cartes dans l'ordre de dessin, `inDrawOrder` (priorité, puis ordre des enfants, tri stable comme le rééquilibrage de Flame), et prennent la dernière qui contient le point (`topmostWhere`). La carte survolée, dessinée au-dessus de ses voisines, reste choisie |
 | **Les ancres** (A16) | Le haut et le bas du gabarit, à 60 du centre | Les textes flottants, l'icône d'effet, l'entaille (le gabarit × 1,5 : 132 × 180 au lieu de 150 × 210 pixels logiques, dessinés sans le palier comme aujourd'hui), la boule de feu (1,5 × 88 × l'échelle) |
@@ -826,7 +826,7 @@ du plan.
 | **Le décor** | `test/unit/decor_fit_test.dart` *(nouveau)* | 3, 4, 6 en 1080p, 1440p, 4K, sans décalage ; 3 en 1920 × 1009, centré ; 2 en 1280 × 720 ; **1,975 en 1264 × 681**, la fenêtre restaurée ; **2,22 en 1280 × 800, centré, 71 pixels rognés de chaque côté (B88)** ; le rapport de pixels |
 | **Le recadrage** | `test/unit/creature_fit_test.dart` *(nouveau)* | 128 × 192 → l'image entière, net ; 1696 × 2528 et 1694 × 2528 → le rectangle de §5.4, lissé, au rapport 2:3 exact, contenu dans l'image ; 64 × 64 → l'image entière |
 | **Le fond** | `test/unit/window_background_test.dart` *(nouveau)* | Un indice dans `[0, count)` ; un aléa à graine rejoue le même ; sur de nombreux tirages, chacun des trois sort (B87) |
-| **La rangée** | `test/unit/enemy_row_test.dart` *(nouveau)* | `slotOf` rend 117 du tier 1 au tier 4, 120 au tier 5 ; deux voisines à l'écart minimal se recouvrent sur 22 ; les lignes du tableau de §5.6 ; une place seule au centre ; la rangée centrée ; deux places voisines jamais plus proches que leur distance minimale ; deux places à écart serré plus proches que deux ordinaires ; une place serrée à côté d'une ordinaire à l'écart ordinaire ; **une meute de trois places serrées** (rat, alpha, rat) entre deux ordinaires : deux jointures serrées, deux ordinaires, la rangée centrée ; des centres calés sur le pixel physique, ordonnée comprise |
+| **La rangée** | `test/unit/enemy_row_test.dart` *(nouveau)* | `slotOf` rend 117 du tier 1 au tier 4, 120 au tier 5 ; deux voisines à l'écart minimal se recouvrent sur 7 (B92) ; les lignes du tableau de §5.6 ; une place seule au centre ; la rangée centrée ; deux places voisines jamais plus proches que leur distance minimale ; deux places à écart serré plus proches que deux ordinaires ; une place serrée à côté d'une ordinaire à l'écart ordinaire ; **une meute de trois places serrées** (rat, alpha, rat) entre deux ordinaires : deux jointures serrées, deux ordinaires, la rangée centrée ; des centres calés sur le pixel physique, ordonnée comprise |
 | **Le décalage de la carte ouverte** | `test/unit/enemy_row_test.dart` | `inspectionShift` (B89) : 0 quand la carte tient, aux deux bords exacts compris ; la carte du bord droit d'une rangée de six : en 1080p, bord droit à 1872, 0 ; en 1280 × 720, −30, son bord droit ramené à 1280 ; la carte du bord gauche, symétrique → +97 ; une carte plus large que l'écran se centre ; à 1,25, un décalage dont la grandeur est arrondie au pixel physique supérieur, et `right + shift ≤ screenWidth` (de même `left + shift ≥ 0` au bord gauche) ; la règle ne dépend que du rectangle, quel que soit le nombre de cartes |
 | **Les deux rectangles de la carte ouverte** | `test/unit/heros_draft_game_targeting_test.dart` | Une carte ouverte dont le rectangle avant décalage sortait de l'écran : le décalage se calcule sur ce rectangle-là, `inspectionRect` rend le rectangle décalé, qui tient dans l'écran, et c'est lui que reçoit `onInspectionChanged`, donc `SheetPlacement` |
 | **La zone et le gabarit** | `test/unit/entity_hover_test.dart` | `enemyZoneRect` **sur les cinq tiers** (son haut à −17, −13, −9, −5, −1, la largeur du canevas), **coins compris** : un point au-dessus du canevas, de part et d'autre de la barre (au tier 2, x 2, y −10 ; au tier 3, x 4, y −5), est dans la zone ; le gabarit identique autour de la fenêtre sur les cinq cadres ; `unfoldsInward` inchangé ; **`inDrawOrder`** (la priorité, puis l'ordre des enfants : le dernier par-dessus) et **`topmostWhere`** (la dernière dessinée qui contient le point) ; **le recouvrement** de deux languettes voisines : le survol, l'appui et le lâcher choisissent la même carte, celle du dessus (B91) |
@@ -874,7 +874,7 @@ Le fichier de tests manuels de la vague (`bestiaire-vague-2`) les reprend ; voic
 | M4 | Regarde le décor | La forêt neuve, nette, sans flou ni étirement ; plus le donjon d'avant |
 | M5 | Regarde de près un cadre et une barre | Le cadre aux pixels carrés et égaux ; trois grilles — décor, cadre, créature — qui ne se brouillent pas |
 | M6 | Regarde les quatre anciens sprites | Chacun recadré sur son illustration, sans le cadre de parchemin peint, lissé, sans scintillement ; un trait fin de la bordure peinte peut se voir sur le bord de la fenêtre (§5.4) |
-| M7 | Acte 5, cinq ennemis | La rangée tient dans l'écran, centrée, cadres sans chevauchement ; deux languettes voisines au repos peuvent se superposer (20 pixels d'écran à cinq en 1080p), la carte dessinée par-dessus reçoit le pointeur |
+| M7 | Acte 5, cinq ennemis | La rangée tient dans l'écran, centrée, cadres sans chevauchement ; deux languettes voisines au repos peuvent se superposer à six (14 pixels d'écran en 1080p depuis B92 ; plus à cinq), la carte dessinée par-dessus reçoit le pointeur |
 | M8 | Un, deux, trois ennemis | Ils s'écartent, comme aujourd'hui |
 | M9 | Survole un ennemi à une altération et un bonus, puis l'ennemi du bord | Les languettes contre le gabarit, déroulées vers l'extérieur ; vers l'intérieur au bord de l'écran (B39) ; sur un tier 3, elles passent sur le bord du cadre |
 | M10 | Touche un ennemi, puis un ennemi de tier 3, puis celui du bord droit | La carte doublée, barre et languettes comprises, sa barre à la hauteur des autres (B40) ; le panneau de la fiche à sa taille, à côté ; la carte du bord reste dans l'écran |

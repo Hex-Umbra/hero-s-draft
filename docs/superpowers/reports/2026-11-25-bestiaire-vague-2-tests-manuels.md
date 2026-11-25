@@ -4,10 +4,10 @@
 **Testé le** : <JJ/MM/AAAA>, sur `<sha>`, sur <plateforme>
 **Résultat** : <K> ✅ · <L> ❌ · <M> non testés
 
-**Ce que la vague change, en bref.** Rien ne change à ce que les ennemis font ; change ce que le joueur voit du plateau. (1) Chaque ennemi est une carte **composée** : sa créature dans une fenêtre de 64 × 96 pixels de cadre, entourée d'un **cadre de tier** (cinq images, de 88 × 120 à 120 × 152 pixels de cadre ; seuls les tiers 1 à 3 s'atteignent en jeu). (2) Le plateau n'est plus à l'échelle continue : sa taille **suit celle du héros** (B90) : un **palier** en pixels entiers quand elle en est à 10 % près (×2 en 1080p, ×3 en 1440p, ×4 en 4K), lissée sinon (3,31 sur 2880 × 1800 à 200 % dans Chrome, réduite sous le 1080p), et **le boss n'est plus agrandi** : il porte le cadre de son tier à la taille des autres. (3) Le décor de combat est une **forêt neuve** de 640 × 360 pixels, à la place du donjon étiré. (4) Les quatre **anciens sprites** sont recadrés sur leur illustration et lissés. (5) La **rangée** des ennemis est calculée pour six places de 117, deux languettes voisines pouvant se superposer. (6) La barre, les languettes, le contour de ciblage, la zone d'appui et la fiche de la vague 1 sont recalés sur la fenêtre ; la fiche passe au **double** de la carte (× 2 au lieu de × 1,25). (7) La fenêtre Windows s'ouvre **maximisée**. (8) Un fond de fenêtre (trois fonds de forêt) est tiré, mais caché par les illustrations d'aujourd'hui.
+**Ce que la vague change, en bref.** Rien ne change à ce que les ennemis font ; change ce que le joueur voit du plateau. (1) Chaque ennemi est une carte **composée** : sa créature dans une fenêtre de 64 × 96 pixels de cadre, entourée d'un **cadre de tier** (cinq images, de 88 × 120 à 120 × 152 pixels de cadre ; seuls les tiers 1 à 3 s'atteignent en jeu). (2) Le plateau n'est plus à l'échelle continue : sa taille **suit celle du héros** (B90) : un **palier** en pixels entiers quand elle en est à 10 % près (×2 en 1080p, ×3 en 1440p, ×4 en 4K), lissée sinon (3,31 sur 2880 × 1800 à 200 % dans Chrome, réduite sous le 1080p), et **le boss n'est plus agrandi** : il porte le cadre de son tier à la taille des autres. (3) Le décor de combat est une **forêt neuve** de 640 × 360 pixels, à la place du donjon étiré. (4) Les quatre **anciens sprites** sont recadrés sur leur illustration et lissés. (5) La **rangée** des ennemis est calculée pour six places de 117, deux languettes voisines pouvant se superposer ; les **languettes** sont réduites d'un quart (B92). (6) La barre, les languettes, le contour de ciblage, la zone d'appui et la fiche de la vague 1 sont recalés sur la fenêtre ; la fiche passe au **double** de la carte (× 2 au lieu de × 1,25). (7) La fenêtre Windows s'ouvre **maximisée**. (8) Un fond de fenêtre (trois fonds de forêt) est tiré, mais caché par les illustrations d'aujourd'hui.
 
 **Repères communs.**
-- **Deux sortes de run.** « JOUER » lance une run normale, sauvegardée. « RUN DEBUG » (colonne DEBUG de l'accueil, build debug seulement) passe par la même sélection de classe et le même draft, mais ne sauvegarde jamais rien ; seule elle a le tiroir « DEBUG » au bord gauche. **Le menu de debug ne change pas.**
+- **Deux sortes de run.** « JOUER » lance une run normale, sauvegardée. « RUN DEBUG » (colonne DEBUG de l'accueil, build debug seulement) passe par la même sélection de classe et le même draft, mais ne sauvegarde jamais rien ; seule elle a le tiroir « DEBUG » au bord gauche. **Le menu de debug gagne, en combat, la section « Faire apparaitre »** : un bouton par ennemi du jeu (« + Gobelin (tier 1) »…), aux PV et à la Puissance d'un combat normal de l'acte courant, jusqu'à **six** sur le plateau — un combat n'en place jamais plus de cinq.
 - **En combat, un seul onglet, « Combat »** : « PV (max N) », « Mana (max N) », « Armure » (ceux **du héros**), « Soin complet », « Mana plein » ; « Ennemis (N) », une ligne par ennemi (« 1. <nom> (PV/PV max) », champ chiffré, bouton « 0 PV ») ; « Tous les ennemis a 0 PV », « Gagner le combat », « Perdre le combat », « Sauter la phase ennemie » ; la section « Charges » : « Heros : » et « 1. <nom> : » par ennemi, avec **« +1 Gel »**, **« +1 Feu »**, **« +1 Foudre »**, et en bas « Retirer les charges ». Un champ chiffré se valide en tapant la valeur puis Entrée ; ne jamais monter les PV d'un ennemi au-dessus de son max.
 - **Sur la carte du monde**, onglet « Run » : **« Acte suivant (regenere la carte) »** et le champ **« Acte (sans regenerer la carte) »**. Les ennemis par acte : **acte 1 à 5 : Slime, Gobelin (tier 1) ; acte 6 à 10 : Squelette (tier 2) ; acte 11 et plus : Orc Furieux (tier 3)**. Un combat normal compte **au plus un ennemi à l'acte 1, un de plus par acte, plafond de cinq** : c'est un plafond, rejouer un combat si le tirage en donne moins. Fixer l'acte à **5** donne jusqu'à cinq ennemis de tier 1 ; pour des **tiers mêlés** (T11), fixer l'acte à 6 ou 11 ; si le combat tiré n'est pas mêlé, en rejouer un. Le **boss** est sur le nœud boss de la carte du monde, à l'acte voulu.
 - **Statuts utiles** : « +1 Gel » trois fois sur un ennemi le gèle (seuil 3, gangue de givre) ; « +1 Feu » ou « +1 Gel » donne une languette à droite ; la **Puissance** de l'Orc (acte 11, intention « Buff Puissance ») donne une languette à gauche. « +1 Foudre » jusqu'au seuil charge le halo.
@@ -18,40 +18,41 @@
 ## À tester d'abord
 <!-- du plus risqué au moins risqué -->
 **Ce qui peut casser le jeu ou son entrée**
-1. **T24** — Les ennemis encore un peu plus grands, et la carte dessinée par-dessus qui reçoit le pointeur (correction B91, M18, M23).
-2. **T23** — Les ennemis à leur taille sur un écran haute définition : 2880 × 1800 à 200 % (correction B90, M18) ; validé sous B90, remplacé par T24.
-3. **T1** — L'appui : épine du cadre, décor entre deux vrilles, haut de barre, languettes au repos et déroulées vers l'intérieur, ennemis **et** héros (M12).
-4. **T2** — La fenêtre Windows ouverte maximisée, « Restaurer », relance, sans éclair (M22).
-5. **T3** — Le plateau suit la fenêtre : restaurée, maximisée, plein écran, et un écran à 125 % (M16, M18).
+1. **T25** — Les languettes réduites d'un quart : cadre, émojis, textes (correction B92).
+2. **T24** — Les ennemis encore un peu plus grands, et la carte dessinée par-dessus qui reçoit le pointeur (correction B91, M18, M23).
+3. **T23** — Les ennemis à leur taille sur un écran haute définition : 2880 × 1800 à 200 % (correction B90, M18) ; validé sous B90, remplacé par T24.
+4. **T1** — L'appui : épine du cadre, décor entre deux vrilles, haut de barre, languettes au repos et déroulées vers l'intérieur, ennemis **et** héros (M12).
+5. **T2** — La fenêtre Windows ouverte maximisée, « Restaurer », relance, sans éclair (M22).
+6. **T3** — Le plateau suit la fenêtre : restaurée, maximisée, plein écran, et un écran à 125 % (M16, M18).
 
 **La fiche, qui double**
-6. **T4** — La fiche doublée : barre à la hauteur des autres, bord de l'écran, tier 3, la carte sur le héros (M10).
-7. **T5** — La fiche suit le redimensionnement (M17).
+7. **T4** — La fiche doublée : barre à la hauteur des autres, bord de l'écran, tier 3, la carte sur le héros (M10).
+8. **T5** — La fiche suit le redimensionnement (M17).
 
 **Le plateau**
-8. **T6** — Cinq ennemis tiennent dans l'écran, cadres sans chevauchement (M7).
-9. **T7** — Un, deux, trois ennemis s'écartent comme avant (M8).
-10. **T8** — Les tiers : cadres 1, 2, 3, plus grands, même fenêtre (M1, M2) ; tiers mêlés sur le même sol (M3).
-11. **T9** — Le boss : le cadre de son tier, plus d'agrandissement (M15).
+9. **T6** — Cinq ennemis tiennent dans l'écran, cadres sans chevauchement (M7).
+10. **T7** — Un, deux, trois ennemis s'écartent comme avant (M8).
+11. **T8** — Les tiers : cadres 1, 2, 3, plus grands, même fenêtre (M1, M2) ; tiers mêlés sur le même sol (M3).
+12. **T9** — Le boss : le cadre de son tier, plus d'agrandissement (M15).
 
 **Les gestes de ciblage**
-12. **T10** — Glisser-déposer une carte sur le cadre d'un ennemi de tier 3 (M13).
-13. **T11** — Le contour cyan, puis ambre ; plus de liseré blanc (M11) — et le recouvrement du trait sombre du cadre.
-14. **T12** — Les languettes contre le gabarit, vers l'extérieur, vers l'intérieur au bord (M9).
-15. **T13** — Coup, gel, Foudre : textes flottants, gangue, halo, teinte (M14) — et la gangue de gel.
+13. **T10** — Glisser-déposer une carte sur le cadre d'un ennemi de tier 3 (M13).
+14. **T11** — Le contour cyan, puis ambre ; plus de liseré blanc (M11) — et le recouvrement du trait sombre du cadre.
+15. **T12** — Les languettes contre le gabarit, vers l'extérieur, vers l'intérieur au bord (M9).
+16. **T13** — Coup, gel, Foudre : textes flottants, gangue, halo, teinte (M14) — et la gangue de gel.
 
 **Ce que le joueur regarde**
-16. **T14** — Les quatre anciens sprites : recadrés, lissés (M6).
-17. **T15** — Le décor : la forêt neuve, nette (M4).
-18. **T16** — Les grilles de pixels : cadre net, rien ne se brouille (M5).
-19. **T17** — La barre de l'ennemi le plus à droite, sous Son et Deck, fenêtre restaurée (M21).
-20. **T18** — Un écran 1440p, 4K ou à 125 % (M18).
+17. **T14** — Les quatre anciens sprites : recadrés, lissés (M6).
+18. **T15** — Le décor : la forêt neuve, nette (M4).
+19. **T16** — Les grilles de pixels : cadre net, rien ne se brouille (M5).
+20. **T17** — La barre de l'ennemi le plus à droite, sous Son et Deck, fenêtre restaurée (M21).
+21. **T18** — Un écran 1440p, 4K ou à 125 % (M18).
 
 **Ce qui ne doit pas bouger, ou ne se voit pas**
-21. **T19** — Le repos, la boutique, un événement, l'autel, la forge : leur fond d'aujourd'hui (M20).
-22. **T20** — Le décor d'un autre écran : `rest.png` copié puis retiré (M19).
-23. **T21** — Le fond de fenêtre, caché (dormant).
-24. **T22** — Le premier affichage du héros.
+22. **T19** — Le repos, la boutique, un événement, l'autel, la forge : leur fond d'aujourd'hui (M20).
+23. **T20** — Le décor d'un autre écran : `rest.png` copié puis retiré (M19).
+24. **T21** — Le fond de fenêtre, caché (dormant).
+25. **T22** — Le premier affichage du héros.
 
 ## Points que le propriétaire est le premier à juger
 *À regarder dans le jeu lancé (build web, 1920 × 1080 puis 1280 × 720) ; ce qui en est pensé va dans la table des défauts, ou nulle part. Chacun est repris dans le test indiqué.*
@@ -100,7 +101,7 @@
 ## T6 — Cinq ennemis tiennent dans l'écran (M7)
 - **Atteindre la situation** : « RUN DEBUG », onglet « Run » : champ « Acte (sans regenerer la carte) » à **5** ; combats jusqu'à en tirer cinq (c'est un plafond). Un porteur de charge sur chaque ennemi (« +1 Feu ») pour que chaque carte ait sa languette.
 - **Faire** : regarder la rangée, plein écran 1080p, puis fenêtre à 1280 × 720.
-- **Attendu** : la rangée est **centrée** et tient dans l'écran ; les **cadres ne se chevauchent pas**. Les **languettes au repos** de deux voisines qui en portent chacune une du côté qui les sépare se **superposent sur environ 20 pixels d'écran** : la carte du dessus reste visible. À 1080p, ×2 : deux voisins ont leurs centres à environ **272 pixels**, la rangée mesure environ **1322 pixels** ; la dernière carte reste loin du bord.
+- **Attendu** : la rangée est **centrée** et tient dans l'écran ; les **cadres ne se chevauchent pas**. Les **languettes au repos** de deux voisines ne se superposent plus à cinq (B92) ; à six, faits apparaître par le menu de debug, celles qui se font face se **superposent sur environ 14 pixels d'écran** : la carte du dessus reste visible. À 1080p, ×2 : deux voisins ont leurs centres à environ **272 pixels**, la rangée mesure environ **1322 pixels** ; la dernière carte reste loin du bord.
 - **Ne doit pas changer** : le nombre d'ennemis (plafond de cinq) ; l'ordre de la phase ennemie.
 - **Résultat** :
 
@@ -233,11 +234,19 @@
 
 ## T24 — Les ennemis un peu plus grands, et la carte du dessus qui reçoit le pointeur (correction B91)
 *Né du test de T23 : « les ennemis encore un peu petits, à agrandir légèrement ». La cible passe à 2,2 pixels d'écran par pixel de cadre pour 1080 px de haut ; la place d'une carte est le gabarit et une languette (117), si bien que deux languettes voisines peuvent se superposer ; dans le recouvrement, la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher.*
-- **Atteindre la situation** : (a) « RUN DEBUG », un combat à l'acte 5, sur l'écran du propriétaire (2880 × 1800 à 200 %, dans Chrome), puis en 1080p et, si possible, en 1440p. (b) Acte 11, un combat à au moins deux ennemis voisins portant chacun une languette du côté qui les sépare : « +1 Feu » sur l'un (languette à droite), la Puissance de l'Orc sur le suivant (languette à gauche), ou des charges posées par l'onglet Combat du menu de debug. Une carte d'attaque en main, une signature armée possible.
+- **Atteindre la situation** : (a) « RUN DEBUG », un combat à l'acte 5, sur l'écran du propriétaire (2880 × 1800 à 200 %, dans Chrome), puis en 1080p et, si possible, en 1440p. (b) En combat, « Faire apparaitre » jusqu'à **six** ennemis, dont un **Orc** : depuis B92, deux languettes ne se superposent qu'à six. « +1 Feu » sur l'ennemi juste à gauche de l'Orc (languette à droite), puis finir des tours jusqu'à ce que l'Orc se renforce (intention « Buff Puissance », languette à gauche). Une carte d'attaque en main, une signature armée possible.
 - **Faire** : (a) regarder les ennemis de tier 1 face au héros ; mesurer le cadre (capture d'écran). (b) Arriver à la souris de chaque côté, toucher la zone commune, y lâcher une carte d'attaque, y viser avec une signature armée.
 - **Attendu** : (a) sur Chrome à 2880 × 1800 : tier 1 d'environ **291 × 397 pixels physiques, lissé**, environ **0,93 fois la hauteur du héros** ; en 1080p, inchangé (×2 net, 176 × 240, 0,85) ; en 1440p, ×3 net (environ 0,96). (b) chaque fois, la carte dont la languette se voit par-dessus ; à noter : la dernière carte quittée par la souris passe au-dessus de ses voisines.
 - **Ne doit pas changer** : la carte du héros et la main ; le décor ; le 1080p, toujours ×2 net.
 - **Résultat** : la taille ✅ — le 25/11, sur 2880 × 1800 à 200 % dans Chrome, après B91 : « les ennemis ont la bonne taille » ; le chevauchement des languettes : non testé
+
+## T25 — Les languettes réduites d'un quart (correction B92)
+*Demandé après T24 : « réduire de 25 % la taille des icônes et des informations affichées dans les languettes ». Toute la languette rétrécit, cadre, émojis et textes, au repos comme déroulée ; sa hauteur sur la carte et la place de chaque ennemi ne changent pas.*
+- **Atteindre la situation** : « RUN DEBUG », un combat ; « +1 Feu » et « +1 Gel » sur un ennemi et sur le héros (onglet Combat) ; pour une languette de gauche, un Orc renforcé (T24 (b)).
+- **Faire** : regarder les languettes au repos ; survoler la carte pour les dérouler ; sur l'ennemi le plus à droite, la languette déroulée vers l'intérieur.
+- **Attendu** : au repos, une entrée mesure **45 × 55,5 pixels d'écran en 1080p** (22,5 × 27,75 pixels de cadre, au lieu de 60 × 74) ; l'émoji et la valeur restent lisibles. Déroulée, le nom, la valeur et la durée restent lisibles, coupés par « … » au-delà de 90 pixels de cadre (au lieu de 120). Même réduction sur la carte du héros.
+- **Ne doit pas changer** : la taille et la place des ennemis (T24) ; le haut des languettes, 11 pixels de cadre sous celui du gabarit ; ce qu'elles montrent ; le survol, l'appui et le lâcher sur elles.
+- **Résultat** :
 
 ## Ce qui doit rester inchangé
 - **Ce que font les ennemis** : mêmes intentions, mêmes valeurs, même ordre de la phase ennemie, mêmes dégâts, aucune règle de combat changée.
@@ -245,7 +254,7 @@
 - **Les écrans de repos, de boutique, d'événement, d'échange de reliques et de forge** : leur fond d'aujourd'hui, aucun décor de forêt.
 - **Le tutoriel** : mêmes étapes, même ordre ; il n'a pas de combat réel, ni cadre de tier ni palier à démontrer.
 - **Le jeu d'une carte** : le clic (carte, puis cible), le glisser-déposer, la zone d'annulation, la signature armée, leur son.
-- **Le menu de debug** : mêmes onglets, mêmes champs, mêmes boutons.
+- **Le menu de debug** : mêmes onglets, mêmes champs, mêmes boutons, sauf la section « Faire apparaitre » de l'onglet Combat.
 - **La fiche d'un ennemi** : son contenu, ses textes, la façon de l'ouvrir et de la fermer (l'agrandissement est le seul changement).
 - **Le plafond du plateau** : cinq ennemis à l'écran, la réserve au-delà.
 - **La victoire et la défaite** : les récompenses, l'XP, l'or, l'écran de mort.
@@ -258,3 +267,4 @@
 |:---:|:---|:---|:---|:---|
 | 1 | T18, T23 | Sur un écran de 2880 × 1800 à 200 %, dans Chrome, les cartes ennemies sont trop petites face au héros (un ennemi de tier 1 à 0,57 fois sa hauteur) | — | B90, `30e09645` : la taille des ennemis suit celle du héros |
 | 2 | T23, T24 | Les ennemis encore un peu petits, à agrandir légèrement | — | B91, `bcb2f51c` |
+| 3 | T24 | Les icônes et les informations des languettes trop grandes, à réduire de 25 % | — | B92, `defac1cd` |
