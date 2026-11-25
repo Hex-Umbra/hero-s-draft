@@ -7,7 +7,7 @@ description: The enemy card composed in layers (P-05 bestiary, wave 2) — windo
 ### Statut
 
 ✅ Accepté — 2026-11-25 (P-05, le bestiaire ; décisions du propriétaire B66 à B82 au cadrage, B83 à B89
-sur la spec, tranchées sur maquettes le 25/11, B90 à B92 le même jour après ses tests ; B92 réduit les languettes d'un quart sans déplacer la rangée). **Livré sur la branche `feat/v0.6.2-cadres-et-decors` —
+sur la spec, tranchées sur maquettes le 25/11, B90 à B93 le même jour après ses tests ; B92 réduit les languettes d'un quart sans déplacer la rangée ; B93 garde la rangée sous la barre du haut). **Livré sur la branche `feat/v0.6.2-cadres-et-decors` —
 vague 2 du [cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md),
 en attente du test, de la PR, de la fusion et du tag du propriétaire.** Rien n'en est dans `main`.
 [Spec](../../docs/superpowers/specs/2026-11-25-p05-cadres-et-decors-design.md) (deux tours),

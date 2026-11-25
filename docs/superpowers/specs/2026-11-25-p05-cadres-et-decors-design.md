@@ -272,6 +272,7 @@ recommandation de la spec. Ce qu'elles fixent ici :
 | **B89** | La carte ouverte se décale vers l'intérieur juste assez pour tenir ; **le lot la construit**, pour tout nombre de cartes, sans construire la sixième place | §5.9, §11 |
 | **B90** | *Amende B83 ; amendée par B91.* La taille suit celle du héros (hauteur physique / 1080), nette à 10 % près d'un entier d'au moins 2 qui tient, lissée sinon : ×3 en 2880 × 1800, 2,667 lissé en 1440p | A8, §5.1 |
 | **B91** | *Amende B90.* `enemyFrameReferenceScale` = 2,2, le seuil de 10 % compris à `enemyFrameSnapEpsilon` près : ×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur l'écran de 2880 × 1800 dans Chrome, ×4 net en 4K ; `enemySlotWidth` = 88 + 29 = 117, la rangée de référence 737 ; là où deux zones se chevauchent, le survol, l'appui et le lâcher choisissent la carte dessinée par-dessus | A9, §5.1, §5.6, §5.7 |
+| **B93** | *Amende la troisième condition du palier.* La carte entière tient entre la barre du haut (`enemyRowTopClearance`, 56 pixels logiques) et le héros ; `enemyRowCenterYFor` descend la rangée sur un écran bas pour que le haut des barres reste à 56. 1080p, 1009, 1440p, 4K et 2880 × 1800 inchangés ; 1280 × 720 à 1,422, 1264 × 681 à 1,326, 1440 × 813 à 2 à 3,306 physiques | §5.1 |
 
 **Plus aucune question n'est ouverte**, ni de classe D ni de classe P.
 
@@ -489,9 +490,13 @@ class BoardScale {
 ```
 
 En pixels physiques, un palier `p` **tient** quand : la rangée de référence — six places de 117 et cinq écarts de
-7, soit 737 pixels de cadre (B91) — tient dans 0,95 de la largeur ; le haut de la barre reste dans l'écran
-(`rowCenterY − 77 p ≥ 0`) ; le bas du plus grand cadre reste au-dessus du héros (`rowCenterY + 76 p ≤ rowFloorY`,
-76 = 48 + 28). **La taille suit celle du héros** (B90, qui amende B72 et B83). `limit` est le plus petit des trois rapports
+7, soit 737 pixels de cadre (B91) — tient dans 0,95 de la largeur ; le bas du plus grand cadre reste au-dessus du
+héros (`rowCenterY + 76 p ≤ rowFloorY`, 76 = 48 + 28) ; **la carte entière tient entre la barre du haut et le héros**
+(B93, qui remplace « le haut de la barre reste dans l'écran ») : `56 + 153 p ≤ rowFloorY`, en pixels logiques, 56
+étant `enemyRowTopClearance`, le bas visible des icônes de la barre du haut, et 153 = 77 + 76. La rangée se pose
+alors à `enemyRowCenterYFor` : sa part de l'écran, 0,21, **descendue s'il le faut** pour que le haut de ses barres
+reste à 56 au moins, calée sur le pixel physique vers le bas. Le 1080p et la fenêtre maximisée de 1080p n'en
+bougent pas ; 1280 × 720 descend d'environ 14 pixels et passe de 1,467 à 1,422. **La taille suit celle du héros** (B90, qui amende B72 et B83). `limit` est le plus petit des trois rapports
 ci-dessus : le plus grand pas réel qui tient. `target` = min(2,2 × hauteur physique de la zone de jeu / 1080, `limit`)
 (B91, qui amende le 2 de B90), la hauteur physique étant `screen.height × devicePixelRatio`. `n` = `target` arrondi à
 l'entier le plus proche ; si `n ≥ 2`, `n ≤ limit` et `|target − n| ≤ 0,10 × n + ε`, `frame` = `n / devicePixelRatio`
@@ -512,11 +517,11 @@ fois la hauteur du héros, contre 0,85 en 1080p. Le propriétaire a tranché le 
 | 1536 × 864, 1,25 | ×2 physique net, 1,6 logique | Un 1080p à 125 %, au seuil comme lui |
 | 2560 × 1440, 1 | ×3 net | Cible 2,933, arrondie vers le haut |
 | 2880 × 1626, 1 | 3,312, lissé | À 0,312 de ×3, plus de 10 % |
-| 1440 × 813, 2 | 3,312 physique, lissé, 1,656 logique | Le même écran dans Chrome |
+| 1440 × 813, 2 | 3,306 physique, lissé, 1,653 logique | Le même écran dans Chrome ; la carte entre la barre du haut et le héros (B93) |
 | 2880 × 1800, 1 (1440 × 900 à 2) | 3,667, lissé | ×4, à 10 % près, ne tient pas sous la rangée (3,712), qui ne plafonne pas la cible ; à 911, elle la ramenait à ×3 |
 | 3840 × 2160, 1 | ×4 net | Cible 4,4, à 0,4 de ×4 : le seuil, compris ; la rangée : 2948 sur 3648 |
-| 1280 × 720, 1 | 1,467, lissé (B85) | Cas synthétique ; la hauteur décide, sous la largeur (1,650) |
-| 1264 × 681, 1 | 1,387, lissé (B85) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
+| 1280 × 720, 1 | 1,422, lissé (B85) | Cas synthétique ; la carte entre la barre du haut et le héros (B93), sous la cible (1,467) et la largeur (1,650) |
+| 1264 × 681, 1 | 1,326, lissé (B85, B93) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
 
 **Quand la cible n'est pas presque entière, ou que son entier ne tient pas** (B85, B90) : `frame` est `target`, divisé
 par le rapport de pixels, et `crisp` faux : la mise en page réduite en continu. Le cadre, le fond et la créature se lissent alors (§5.3), en `FilterQuality.medium` *(T, filtre 8)* : la
@@ -740,7 +745,7 @@ la sixième place ni la demi-place.
 `Win32Window::Show` (`windows/runner/win32_window.cpp:152-153`) passe `SW_SHOWNORMAL` à `SW_SHOWMAXIMIZED` (A22) :
 sur un écran 1080p, la fenêtre s'ouvre à environ 1920 × 1009 pixels utiles, au palier ×2 net (§5.1). Le bouton
 « Restaurer » la ramène à sa taille de création, en (10, 10) (`main.cpp:28-29`) — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % (`flutter_window.cpp:17-22`) —, où B85
-s'applique (1,387). Rien ne
+s'applique (1,326, B93). Rien ne
 se sauvegarde ; macOS, Linux et le web ne changent pas (A22). Code natif : aucun test automatique (ADR-113), un test
 manuel (M22).
 
@@ -822,7 +827,7 @@ du plan.
 
 | Sujet | Fichier | Ce qu'il verrouille |
 |:---|:---|:---|
-| **Le palier** | `test/unit/board_scale_test.dart` *(nouveau)* | Les lignes du tableau de §5.1 (B90, B91) : ×2 net en 1920 × 1080 (2,2, au seuil) et en 1920 × 1009 (2,055) ; ×2 physique net en 1536 × 864 à 1,25 (1,6 logique) ; `creature` = `frame / 2` ; ×3 net en 2560 × 1440 (2,933) et en 2880 × 1600 (3,259) ; 3,312 lissé en 2880 × 1626 et en 1440 × 813 à 2 (1,656 logique) ; 3,667 lissé en 2880 × 1800 et en 1440 × 900 à 2 ; ×4 net en 3840 × 2160 (4,4, au seuil) ; 1,467 lissé en 1280 × 720 (B85), la hauteur décidant sous la largeur ; 1,387 en 1264 × 681, la zone de jeu de la fenêtre restaurée ; ×4 qui ne tient pas en 2781 × 1800 (3,585, lissé) ; 2,648 lissé en 4000 × 1300 ; le verrou 117 / 737 ; à 911, 2880 × 1800 redevient ×3 net ; en 4K, ×4 net jusqu'à une rangée de 912, lissé à 913 ; un écran trop bas pour la barre ou un héros trop haut pour le cadre fait tomber le palier |
+| **Le palier** | `test/unit/board_scale_test.dart` *(nouveau)* | Les lignes du tableau de §5.1 (B90, B91) : ×2 net en 1920 × 1080 (2,2, au seuil) et en 1920 × 1009 (2,055) ; ×2 physique net en 1536 × 864 à 1,25 (1,6 logique) ; `creature` = `frame / 2` ; ×3 net en 2560 × 1440 (2,933) et en 2880 × 1600 (3,259) ; 3,312 lissé en 2880 × 1626, 3,306 en 1440 × 813 à 2 (B93) ; 3,667 lissé en 2880 × 1800 et en 1440 × 900 à 2 ; ×4 net en 3840 × 2160 (4,4, au seuil) ; 1,422 lissé en 1280 × 720 (B85, B93) ; 1,326 en 1264 × 681, la zone de jeu de la fenêtre restaurée ; ×4 qui ne tient pas en 2781 × 1800 (3,585, lissé) ; 2,648 lissé en 4000 × 1300 ; le verrou 117 / 737 ; à 911, 2880 × 1800 redevient ×3 net ; en 4K, ×4 net jusqu'à une rangée de 912, lissé à 913 ; un héros trop haut sous la barre du haut, ou trop haut pour le cadre, fait tomber le palier ; `enemyRowCenterYFor` garde la part de l'écran en 1080p et descend la rangée en 1280 × 720 (B93) |
 | **Le décor** | `test/unit/decor_fit_test.dart` *(nouveau)* | 3, 4, 6 en 1080p, 1440p, 4K, sans décalage ; 3 en 1920 × 1009, centré ; 2 en 1280 × 720 ; **1,975 en 1264 × 681**, la fenêtre restaurée ; **2,22 en 1280 × 800, centré, 71 pixels rognés de chaque côté (B88)** ; le rapport de pixels |
 | **Le recadrage** | `test/unit/creature_fit_test.dart` *(nouveau)* | 128 × 192 → l'image entière, net ; 1696 × 2528 et 1694 × 2528 → le rectangle de §5.4, lissé, au rapport 2:3 exact, contenu dans l'image ; 64 × 64 → l'image entière |
 | **Le fond** | `test/unit/window_background_test.dart` *(nouveau)* | Un indice dans `[0, count)` ; un aléa à graine rejoue le même ; sur de nombreux tirages, chacun des trois sort (B87) |
@@ -883,13 +888,13 @@ Le fichier de tests manuels de la vague (`bestiaire-vague-2`) les reprend ; voic
 | M13 | Glisse une carte sur un ennemi de tier 3, lâche-la sur son cadre | La carte se joue sur lui |
 | M14 | Un coup, un gel (Onglet Combat : trois « +1 Gel »), une Foudre chargée | Les textes flottants au-dessus de la barre, à la même place sur tous les tiers ; la gangue et le halo sur la fenêtre, pas sur le cadre ; la teinte du coup sur la créature |
 | M15 | Le boss de l'acte | Le cadre de son tier, à la taille des autres ennemis : plus d'agrandissement |
-| M16 | Restaure la fenêtre (fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 %), puis maximise-la, puis plein écran | Le plateau suit, sans saut au-delà du palier ; restauré, 1,387, la mise en page du palier ×2 réduite en continu et lissée (B85, B90) ; maximisé et plein écran, net |
+| M16 | Restaure la fenêtre (fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 %), puis maximise-la, puis plein écran | Le plateau suit, sans saut au-delà du palier ; restauré, 1,326, la mise en page du palier ×2 réduite en continu et lissée (B85, B90) ; maximisé et plein écran, net |
 | M17 | Fiche ouverte, redimensionne la fenêtre | La fiche suit sa carte (ADR-121, point 6) |
 | M18 | Sur un écran 1440p ou 4K, ou sous un réglage d'affichage Windows à 125 % ou 150 %, si le propriétaire en a un | Le palier de B91 — ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 à 200 % dans Chrome (3,667 en plein écran), ×4 net en 4K ; à 125 %, les cadres aussi nets qu'à 100 % |
 | M19 | Copie `combat.png` en `rest.png` dans `assets/data/locations/forest/`, relance, ouvre un repos ; puis retire le fichier | Le décor de forêt derrière le menu du repos ; sans le fichier, le fond d'aujourd'hui |
 | M20 | Le repos, la boutique, un événement, l'autel, la forge | Leurs fonds d'aujourd'hui, inchangés |
 | M21 | Regarde la barre de l'ennemi le plus à droite, dans la fenêtre restaurée | Elle ne passe pas sous les boutons Son et Deck — ou le noter |
-| M22 | Lance le jeu sous Windows, puis « Restaurer », puis « Agrandir », puis relance | La fenêtre s'ouvre maximisée **dès son premier affichage, sans éclair de sa taille de création**, le plateau net au palier ×2 sur un écran 1080p ; restaurée — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % —, plateau réduit (1,387) et lissé ; relancée, maximisée de nouveau (rien ne garde la taille) |
+| M22 | Lance le jeu sous Windows, puis « Restaurer », puis « Agrandir », puis relance | La fenêtre s'ouvre maximisée **dès son premier affichage, sans éclair de sa taille de création**, le plateau net au palier ×2 sur un écran 1080p ; restaurée — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % —, plateau réduit (1,326) et lissé ; relancée, maximisée de nouveau (rien ne garde la taille) |
 | M23 | Deux ennemis voisins portant chacun une languette du côté qui les sépare (+1 Feu à droite de l'un, la Puissance de l'Orc à gauche du suivant, acte 11) : arrive à la souris de chaque côté, touche la zone commune, lâche-y une carte d'attaque, vise-y avec une signature armée | Chaque fois, la carte dont la languette se voit par-dessus ; la dernière carte quittée par la souris passe au-dessus de ses voisines (B91) |
 
 ---
@@ -1006,6 +1011,6 @@ règle — aucun ennemi ne fait autre chose qu'en `0.6.1`.
   `onGameResize` où `crisp` change — fenêtre maximisée ↔ restaurée — et reviennent : la peinture de chaque enfant se
   relit à ce moment, pas seulement à `onLoad`.
 - **Le rejeu monté à 1264 × 681** (la zone de jeu de la fenêtre restaurée) : cinq ennemis, la carte du bord droit
-  ouverte — `frame` ≈ 1,387, décalage 0, bord droit de la carte ouverte, languette au repos comprise, vers 1192.
+  ouverte — `frame` ≈ 1,326 (B93), décalage 0, bord droit de la carte ouverte, languette au repos comprise, vers 1192.
 - **M22 regarde le premier affichage** : `Show()` ne s'appelle qu'à la première image (`flutter_window.cpp:30-31`) ;
   aucun éclair de la fenêtre à sa taille de création avant qu'elle ne s'agrandisse.
