@@ -10,7 +10,7 @@ Tout ce que la chaîne pixel art a produit, par catégorie, avec une vignette de
 | [Fonds de fenêtre](#fonds-de-fenêtre) | `fonds/<lieu>/` | L'image derrière une créature, dans la fenêtre de son cadre, en 128 × 192 | 3 |
 | [Décors d'écran](#décors-décran) | `decors/<lieu>/<écran>/` | L'image derrière tout un écran, en 640 × 360 | 3 |
 | [Décors de la première méthode](#décors-de-la-première-méthode) | `decors/anciens_320x180/<thème>/` | Trois décors en 320 × 180, gardés à part : aucun n'est repris tel quel | 3 |
-| [Cadres](#cadres) | `cadres/` | Le cadre d'un tier d'ennemi, autour de la fenêtre | 1 |
+| [Cadres](#cadres) | `cadres/` | Le cadre d'un tier d'ennemi, autour de la fenêtre | 5 |
 
 Chaque image livrable est un `.aseprite`. À côté d'elle, dans son dossier : ses images sources, ses guides, et son brief quand elle en a un. Les versions remplacées sont dans [`archives/`](archives/README.md) ; les méthodes, dans [`docs/`](docs/) ; les outils et leurs commandes, dans [`tools/`](tools/README.md).
 
@@ -58,4 +58,8 @@ En 320 × 180, par la structure en calques et une seule génération. Chaque dos
 
 | Aperçu | Nom | Taille | Fichier | État |
 |:---|:---|:---|:---|:---|
-| <img src="apercus/cadre_tier_2.png" width="96" alt=""> | **tier_2** | 96 × 128 · 6 calques | `cadres/tier_2.aseprite` | — |
+| <img src="apercus/cadre_tier_1.png" width="96" alt=""> | **tier_1** | 88 × 120 · 4 calques | `cadres/tier_1.aseprite` | — |
+| <img src="apercus/cadre_tier_2.png" width="96" alt=""> | **tier_2** | 96 × 128 · 5 calques | `cadres/tier_2.aseprite` | — |
+| <img src="apercus/cadre_tier_3.png" width="96" alt=""> | **tier_3** | 104 × 136 · 6 calques | `cadres/tier_3.aseprite` | — |
+| <img src="apercus/cadre_tier_4.png" width="96" alt=""> | **tier_4** | 112 × 144 · 7 calques | `cadres/tier_4.aseprite` | — |
+| <img src="apercus/cadre_tier_5.png" width="96" alt=""> | **tier_5** | 120 × 152 · 7 calques | `cadres/tier_5.aseprite` | — |
