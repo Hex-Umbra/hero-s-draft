@@ -3,11 +3,12 @@ import 'package:roguelike_card_game/game/systems/enemy_row.dart';
 
 import 'tier_frame_fixture.dart';
 
-/// La rangée des ennemis (spec P-05, vague 2, §5.6) : 1080p à x2, soit un
-/// écran de 1920 pixels logiques et un pixel de cadre de 2.
+/// La rangée des ennemis (spec P-05, vague 2, §5.6, B91) : 1080p à x2, soit un
+/// écran de 1920 pixels logiques et un pixel de cadre de 2. Une place vaut le
+/// gabarit et une languette, 117 pixels de cadre, 234 à x2.
 void main() {
-  const ordinary = RowSlot(width: 146, gap: 7);
-  const tight = RowSlot(width: 146, gap: 2);
+  const ordinary = RowSlot(width: 117, gap: 7);
+  const tight = RowSlot(width: 117, gap: 2);
 
   List<double> row(List<RowSlot> slots,
           {double unit = 2, double width = 1920, double ratio = 1}) =>
@@ -22,34 +23,47 @@ void main() {
         for (var i = 1; i < centers.length; i++) centers[i] - centers[i - 1],
       ];
 
-  test('slotOf rend 146 aux cinq tiers, a l ecart minimal 7', () {
+  test('slotOf rend 117 du tier 1 au tier 4, le cadre de 120 au tier 5, a l '
+      'ecart minimal 7', () {
     for (final frame in testTierFrames) {
       final slot = slotOf(frame);
 
-      expect(slot.width, 146, reason: 'tier ${frame.tier}');
+      expect(slot.width, frame.tier == 5 ? 120 : 117,
+          reason: 'tier ${frame.tier}');
       expect(slot.gap, 7);
     }
   });
 
-  test('six places en 1080p a x2 : 306 et 1822', () {
+  test('six places en 1080p a x2 : 248 et 1474', () {
     final centers = row(List.filled(6, ordinary));
 
-    expect(gaps(centers), everyElement(306));
-    expect(centers.last - centers.first + 292, 1822);
+    expect(gaps(centers), everyElement(248));
+    expect(centers.last - centers.first + 234, 1474);
   });
 
-  test('cinq places en 1080p a x2 : 306 et 1516', () {
+  test('deux voisines a l ecart minimal : leurs languettes au repos se '
+      'superposent', () {
+    final centers = row(List.filled(6, ordinary));
+    // Du centre de la fenêtre au bout de la languette au repos : la moitié du
+    // gabarit et la languette, 44 + 29, à x2.
+    final rightTabEnd = centers[0] + 73 * 2;
+    final leftTabStart = centers[1] - 73 * 2;
+
+    expect(rightTabEnd - leftTabStart, 44);
+  });
+
+  test('cinq places en 1080p a x2 : 272 et 1322', () {
     final centers = row(List.filled(5, ordinary));
 
-    expect(gaps(centers), everyElement(306));
-    expect(centers.last - centers.first + 292, 1516);
+    expect(gaps(centers), everyElement(272));
+    expect(centers.last - centers.first + 234, 1322);
   });
 
-  test('quatre places en 1080p a x2 : 326 et 1270', () {
+  test('quatre places en 1080p a x2 : 326 et 1212', () {
     final centers = row(List.filled(4, ordinary));
 
     expect(centers, [471, 797, 1123, 1449]);
-    expect(centers.last - centers.first + 292, 1270);
+    expect(centers.last - centers.first + 234, 1212);
   });
 
   test('le pas se calle sur le pixel physique le plus proche, pas en dessous',
@@ -60,11 +74,11 @@ void main() {
     expect(gaps(centers), everyElement(325));
   });
 
-  test('deux places en 1080p a x2 : 536 et 828', () {
+  test('deux places en 1080p a x2 : 478 et 712', () {
     final centers = row(List.filled(2, ordinary));
 
-    expect(gaps(centers), [536]);
-    expect(centers.last - centers.first + 292, 828);
+    expect(gaps(centers), [478]);
+    expect(centers.last - centers.first + 234, 712);
   });
 
   test('une place seule au centre', () {
@@ -73,11 +87,11 @@ void main() {
 
   test('la rangee est centree', () {
     final centers = row(const [
-      RowSlot(width: 146, gap: 7),
+      RowSlot(width: 117, gap: 7),
       RowSlot(width: 200, gap: 7),
     ]);
 
-    final left = centers.first - 73 * 2;
+    final left = centers.first - 58.5 * 2;
     final right = 1920 - (centers.last + 100 * 2);
     expect((left - right).abs(), lessThanOrEqualTo(1));
   });
@@ -93,7 +107,7 @@ void main() {
     );
 
     for (final gap in gaps(centers)) {
-      expect(gap, greaterThanOrEqualTo(153 * unit - 1e-9));
+      expect(gap, greaterThanOrEqualTo(124 * unit - 1e-9));
     }
   });
 
@@ -101,22 +115,22 @@ void main() {
     final close = row(List.filled(2, tight), width: 600);
     final usual = row(List.filled(2, ordinary), width: 600);
 
-    expect(gaps(close), [296]);
-    expect(gaps(usual), [306]);
+    expect(gaps(close), [238]);
+    expect(gaps(usual), [248]);
   });
 
   test('une place serree a cote d une ordinaire garde l ecart ordinaire', () {
     final centers = row(const [tight, ordinary], width: 600);
 
-    expect(gaps(centers), [306]);
+    expect(gaps(centers), [248]);
   });
 
   test('une meute de trois places serrees entre deux ordinaires', () {
     final centers = row(const [ordinary, tight, tight, tight, ordinary]);
 
-    expect(gaps(centers), [306, 296, 296, 306]);
-    final left = centers.first - 73 * 2;
-    final right = 1920 - (centers.last + 73 * 2);
+    expect(gaps(centers), [277, 267, 267, 277]);
+    final left = centers.first - 58.5 * 2;
+    final right = 1920 - (centers.last + 58.5 * 2);
     expect((left - right).abs(), lessThanOrEqualTo(1));
   });
 
@@ -142,31 +156,50 @@ void main() {
       expect(inspectionShift(left: 1500, right: 1920, screenWidth: 1920), 0);
     });
 
+    // La carte ouverte, au double : sa zone au repos, le gabarit et ses deux
+    // languettes, 73 de chaque côté du centre, × 2 × l'échelle.
     test('cinq places en 1080p : la carte ouverte du bord tient, bord droit a '
-        '1864', () {
+        '1796', () {
       final xs = placeRow(
         slots: List.filled(5, slotOf(testFrameOf(1))),
         unit: 2,
         screenWidth: 1920,
       );
       final right = xs.last + 73 * 4;
-      expect(right, 1864);
+      expect(right, 1796);
       expect(inspectionShift(left: right - 584, right: right, screenWidth: 1920), 0);
     });
 
-    test('la carte du bord droit d une rangee de six en 1080p se decale de 97 '
-        'vers la gauche', () {
+    test('six places en 1080p : la carte ouverte du bord droit tient, bord '
+        'droit a 1872 (B91)', () {
       final xs = placeRow(
         slots: List.filled(6, slotOf(testFrameOf(1))),
         unit: 2,
         screenWidth: 1920,
       );
       final right = xs.last + 73 * 4;
-      expect(right, 2017);
-      final shift =
-          inspectionShift(left: right - 584, right: right, screenWidth: 1920);
-      expect(shift, -97);
-      expect(right + shift, 1920);
+      expect(right, 1872);
+      expect(inspectionShift(left: right - 584, right: right, screenWidth: 1920), 0);
+    });
+
+    test('la carte du bord droit d une rangee de six en 1280 x 720 se decale '
+        'de 30 vers la gauche', () {
+      const unit = 2.2 * 720 / 1080;
+      final xs = placeRow(
+        slots: List.filled(6, slotOf(testFrameOf(1))),
+        unit: unit,
+        screenWidth: 1280,
+      );
+      final right = xs.last + 73 * 2 * unit;
+      expect(xs.last, 1095);
+      expect(right, closeTo(1309.13, 1e-2));
+      final shift = inspectionShift(
+        left: right - 146 * 2 * unit,
+        right: right,
+        screenWidth: 1280,
+      );
+      expect(shift, -30);
+      expect(right + shift, lessThanOrEqualTo(1280));
     });
 
     test('la carte du bord gauche, symetrique : +97', () {

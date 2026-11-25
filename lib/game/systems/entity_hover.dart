@@ -40,10 +40,38 @@ bool unfoldsInward({
       StatusSide.right => attachEdge + unfoldedWidth > screenWidth,
     };
 
+/// Les [items] dans l'ordre où Flame les dessine, du dessous au dessus : par
+/// [priorityOf] croissante et, à priorité égale, dans l'ordre de [items] —
+/// celui des enfants de leur parent. Le tri est stable, comme le
+/// rééquilibrage par lequel Flame applique un changement de priorité : il
+/// reprend les enfants dans leur ordre et les replace par priorité. Une
+/// priorité changée et pas encore appliquée compte donc déjà.
+List<T> inDrawOrder<T>(Iterable<T> items, int Function(T item) priorityOf) {
+  final list = items.toList();
+  final order = [for (var index = 0; index < list.length; index++) index]
+    ..sort((a, b) {
+      final byPriority = priorityOf(list[a]).compareTo(priorityOf(list[b]));
+      return byPriority != 0 ? byPriority : a.compareTo(b);
+    });
+  return [for (final index in order) list[index]];
+}
+
+/// Le dernier de [drawn], rangé par [inDrawOrder], qui satisfait [test] :
+/// quand deux zones se chevauchent — deux languettes voisines au repos (B91),
+/// une languette déroulée sur une voisine —, celui que le joueur voit
+/// par-dessus. Le même choix que l'appui, que Flame donne au dernier dessiné.
+T? topmostWhere<T>(List<T> drawn, bool Function(T item) test) {
+  for (final item in drawn.reversed) {
+    if (test(item)) return item;
+  }
+  return null;
+}
+
 /// La carte que le pointeur survole parmi [zones], une entrée par carte
-/// vivante, en rectangles (sa carte et ses languettes). La courante l'emporte
-/// tant que le pointeur reste dans sa zone ; sinon la première zone qui le
-/// contient ; sinon `null`.
+/// vivante dans l'ordre de dessin ([inDrawOrder]), en rectangles (sa carte et
+/// ses languettes). La courante l'emporte tant que le pointeur reste dans sa
+/// zone — survolée, elle est dessinée par-dessus ses voisines ; sinon la
+/// dernière dessinée des zones qui le contiennent ; sinon `null`.
 int? pickHoveredEntity({
   required List<List<Rect>> zones,
   required int? current,
@@ -54,8 +82,8 @@ int? pickHoveredEntity({
   if (current != null && current < zones.length && holds(current)) {
     return current;
   }
-  for (var index = 0; index < zones.length; index++) {
-    if (holds(index)) return index;
-  }
-  return null;
+  return topmostWhere(
+    [for (var index = 0; index < zones.length; index++) index],
+    holds,
+  );
 }

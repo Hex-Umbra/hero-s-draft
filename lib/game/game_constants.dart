@@ -75,12 +75,18 @@ class GameConstants {
   static const double enemyRowUsableWidth = 0.95;
   static const double enemyRowCenterY = 0.21;
 
-  /// La taille d'un ennemi suit celle du héros (B90) : le cadre vaut 2 pixels
-  /// d'écran par pixel de cadre pour [enemyFrameReferenceHeight] pixels
-  /// physiques de hauteur de jeu, et s'arrondit à l'entier le plus proche s'il
-  /// en est à [enemyFrameSnapTolerance] près (part de cet entier).
+  /// La taille d'un ennemi suit celle du héros (B90, B91) : le cadre vaut
+  /// [enemyFrameReferenceScale] pixels d'écran par pixel de cadre pour
+  /// [enemyFrameReferenceHeight] pixels physiques de hauteur de jeu, et
+  /// s'arrondit à l'entier le plus proche s'il en est à
+  /// [enemyFrameSnapTolerance] près (part de cet entier).
+  /// [enemyFrameSnapEpsilon] est l'erreur de calcul admise à ce seuil, qui
+  /// l'inclut : en double, 2,2 − 2 vaut 0,2000000000000002, et 1080p doit
+  /// s'arrondir à ×2.
+  static const double enemyFrameReferenceScale = 2.2;
   static const double enemyFrameReferenceHeight = 1080.0;
   static const double enemyFrameSnapTolerance = 0.10;
+  static const double enemyFrameSnapEpsilon = 1e-9;
 
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {

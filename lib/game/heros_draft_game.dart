@@ -288,10 +288,15 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
       return;
     }
     final hero = heroCard;
-    final entities = <CombatEntity>[
-      for (final enemy in enemyCards)
-        if (_isAlive(enemy) && enemy.isLoaded) enemy,
-      if (hero != null && hero.isLoaded) hero,
+    final entities = [
+      for (final entity in _inDrawOrder(children.whereType<CombatEntity>()))
+        if (entity == hero
+            ? entity.isLoaded
+            : entity is EnemyCard &&
+                enemyCards.contains(entity) &&
+                _isAlive(entity) &&
+                entity.isLoaded)
+          entity,
     ];
     final hovered = hoveredEntity;
     final current = hovered == null ? -1 : entities.indexOf(hovered);
@@ -379,20 +384,26 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     return index < 0 ? null : index;
   }
 
-  /// L'ennemi vivant dont la zone contient le point, l'ennemi survolé d'abord :
-  /// ses languettes déroulées passent sur ses voisins (A8).
-  EnemyCard? _livingEnemyAt(Vector2 canvasPos) {
-    final hovered = hoveredEntity;
-    final ordered = [
-      if (hovered is EnemyCard && enemyCards.contains(hovered)) hovered,
-      for (final enemy in enemyCards)
-        if (enemy != hovered) enemy,
-    ];
-    for (final enemy in ordered) {
-      if (_isAlive(enemy) && enemy.zoneContains(canvasPos)) return enemy;
-    }
-    return null;
-  }
+  /// Les cartes de combat [entities], enfants du jeu, dans l'ordre où elles
+  /// sont dessinées : la dernière par-dessus les autres.
+  List<T> _inDrawOrder<T extends CombatEntity>(Iterable<T> entities) =>
+      inDrawOrder(entities, (entity) => entity.priority);
+
+  /// Les ennemis du plateau dans l'ordre où ils sont dessinés : là où deux
+  /// zones se chevauchent, le dernier qui contient le point est celui que le
+  /// joueur voit, et que l'appui de Flame choisit.
+  List<EnemyCard> get enemiesInDrawOrder => _inDrawOrder(
+        children.whereType<EnemyCard>().where(enemyCards.contains),
+      );
+
+  /// L'ennemi vivant dont la zone contient le point, le dessiné par-dessus
+  /// d'abord : l'ennemi survolé, dont les languettes déroulées passent sur
+  /// ses voisins (A8), puis, entre deux languettes voisines qui se
+  /// superposent (B91), celle qui se voit.
+  EnemyCard? _livingEnemyAt(Vector2 canvasPos) => topmostWhere(
+        enemiesInDrawOrder,
+        (enemy) => _isAlive(enemy) && enemy.zoneContains(canvasPos),
+      );
 
   bool _isAlive(EnemyCard enemy) => !enemy.isDead && !enemy.isPendingDeath;
 

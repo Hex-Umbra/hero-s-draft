@@ -49,7 +49,8 @@ logiques quand il est un widget Flutter, en pixels physiques quand la mesure dé
 | **B87** | Le fond de fenêtre tiré au hasard, pour chaque ennemi, à son entrée sur le plateau | §5.5 |
 | **B88** | Hors 16:9, le décor couvre l'écran au plus petit facteur qui le couvre, centré, rogné, jamais lissé | §5.2 |
 | **B89** | Une carte ouverte qui sortirait de l'écran se décale vers l'intérieur, juste assez, sa barre à sa hauteur | §5.9 |
-| **B90** | *Amende B72 et B83, précise B85.* La taille des ennemis suit celle du héros : 2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée, arrondie à l'entier à 10 % près (nette), lissée sinon | A8, §5.1 |
+| **B90** | *Amende B72 et B83, précise B85 ; amendée par B91.* La taille des ennemis suit celle du héros : 2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée, arrondie à l'entier à 10 % près (nette), lissée sinon | A8, §5.1 |
+| **B91** | *Amende B90 et la place d'une carte (B77).* Les ennemis 10 % plus grands : 2,2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, même plafond, même arrondi ; la place d'une carte compte son gabarit et une seule languette (117), et deux languettes voisines peuvent se superposer, la carte dessinée par-dessus recevant le pointeur | A9, §5.1, §5.6, §5.7 |
 
 Relues sur le nouveau placement, sans changement de texte : **B39** — une languette qui sortirait de l'écran se
 déroule vers l'intérieur, par-dessus sa propre carte, c'est-à-dire désormais par-dessus le gabarit (§5.7) ;
@@ -141,15 +142,18 @@ l'écran, le plateau ne rétrécit plus avec le nombre d'ennemis. Sa règle est 
 celle du héros, nette quand elle est presque entière — ×2 en 1080p, ×3 sur un écran de 2880 × 1800, ×4 en 4K, 2,667
 lissé en 1440p — et lissée sinon (B85). Règle : §5.1.
 
-**A9 — La place d'une carte vaut 146 pixels de cadre à tout tier ; l'écart minimal, 7 ; l'étalement d'aujourd'hui
-est relu en largeurs réelles** *(T, mesure qui suit l'échelle existante)*. La place se compte sur le plus large du
-cadre et du gabarit avec ses deux languettes au repos (fiche, point 3) : 88 + 2 × (30 − 1) = 146, plus large que
-le plus grand cadre (120) — toutes les places sont égales en `0.6.2`, mais la fonction reçoit une largeur et un
-écart par place. L'écart minimal reprend celui d'aujourd'hui : 165 unités d'un centre à l'autre pour une carte de
+**A9 — La place d'une carte vaut 117 pixels de cadre du tier 1 au tier 4, 120 au tier 5 ; l'écart minimal, 7 ;
+l'étalement d'aujourd'hui est relu en largeurs réelles** *(T, mesure qui suit l'échelle existante ; place amendée
+par B91)*. La place se compte sur le plus large du cadre et du gabarit avec **une** languette au repos (B91, qui
+remplace les deux de la fiche, point 3) : 88 + (30 − 1) = 117, sous le plus grand cadre (120), qui garde sa
+largeur. Une carte porte une languette de chaque côté : deux voisines à l'écart minimal ont leurs centres à 124
+pixels de cadre, et leurs languettes au repos du côté qui les sépare se superposent sur 22 pixels de cadre — la
+carte dessinée par-dessus reçoit le pointeur (§5.7). La fonction reçoit une largeur et un écart par place. L'écart minimal reprend celui d'aujourd'hui : 165 unités d'un centre à l'autre pour une carte de
 100 et deux languettes de 29 (`layout_system.dart:129`), soit 7 ; l'écart maximal, 280 − 158 = 122
 (`layout_system.dart:130`). L'étalement garde la forme de `layout_system.dart:132-133` : peu d'ennemis
 s'espacent, beaucoup se serrent jusqu'à l'écart minimal. **La largeur que l'écran laisse reste 0,95 de la sienne**
-(`layout_system.dart:119`) : à ×2 en 1920 pixels, la rangée de référence en prend 1822 sur 1824. Ces trois
+(`layout_system.dart:119`) : à ×2 en 1920 pixels, la rangée de référence — six places de 117 et cinq écarts de
+7, 737 pixels de cadre — en prend 1474 sur 1824. Ces trois
 constantes portent B72 ; un test les verrouille (§11). Règle : §5.6.
 
 **A10 — Les fenêtres se centrent à 0,21 de la hauteur de l'écran** *(T, mesure qui suit l'échelle existante)*.
@@ -268,6 +272,7 @@ recommandation de la spec. Ce qu'elles fixent ici :
 | **B88** | `decorFitFor` : le plus petit facteur qui couvre, centré, rogné, jamais lissé | §5.2 |
 | **B89** | La carte ouverte se décale vers l'intérieur juste assez pour tenir ; **le lot la construit**, pour tout nombre de cartes, sans construire la sixième place | §5.9, §11 |
 | **B90** | *Amende B83.* La taille suit celle du héros (hauteur physique / 1080), nette à 10 % près d'un entier d'au moins 2 qui tient, lissée sinon : ×3 en 2880 × 1800, 2,667 lissé en 1440p | A8, §5.1 |
+| **B91** | *Amende B90.* `enemyFrameReferenceScale` = 2,2, le seuil de 10 % compris à `enemyFrameSnapEpsilon` près : ×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur l'écran de 2880 × 1800 dans Chrome, ×4 net en 4K ; `enemySlotWidth` = 88 + 29 = 117, la rangée de référence 737 ; là où deux zones se chevauchent, le survol, l'appui et le lâcher choisissent la carte dessinée par-dessus | A9, §5.1, §5.6, §5.7 |
 
 **Plus aucune question n'est ouverte**, ni de classe D ni de classe P.
 
@@ -484,32 +489,35 @@ class BoardScale {
 }
 ```
 
-En pixels physiques, un palier `p` **tient** quand : la rangée de référence — six places de 146 et cinq écarts de
-7, soit 911 pixels de cadre — tient dans 0,95 de la largeur ; le haut de la barre reste dans l'écran
+En pixels physiques, un palier `p` **tient** quand : la rangée de référence — six places de 117 et cinq écarts de
+7, soit 737 pixels de cadre (B91) — tient dans 0,95 de la largeur ; le haut de la barre reste dans l'écran
 (`rowCenterY − 77 p ≥ 0`) ; le bas du plus grand cadre reste au-dessus du héros (`rowCenterY + 76 p ≤ rowFloorY`,
 76 = 48 + 28). **La taille suit celle du héros** (B90, qui amende B72 et B83). `limit` est le plus petit des trois rapports
-ci-dessus : le plus grand pas réel qui tient. `target` = min(2 × hauteur physique de la zone de jeu / 1080, `limit`),
-la hauteur physique étant `screen.height × devicePixelRatio`. `n` = `target` arrondi à l'entier le plus proche ; si
-`n ≥ 2`, `n ≤ limit` et `|target − n| ≤ 0,10 × n`, `frame` = `n / devicePixelRatio` et `crisp` vrai ; sinon
-`frame` = `target / devicePixelRatio` et `crisp` faux (B85). Les constantes 1080 et 0,10 sont
-`GameConstants.enemyFrameReferenceHeight` et `enemyFrameSnapTolerance`. *Le propriétaire a tranché le 25/11, après son
-test : B90 — sur un écran de 2880 × 1800 à 200 %, la règle du plus grand pair gardait ×2 jusqu'à 3644 pixels de
-large, et un ennemi de tier 1 y faisait 0,57 fois la hauteur du héros, contre 0,85 en 1080p.*
+ci-dessus : le plus grand pas réel qui tient. `target` = min(2,2 × hauteur physique de la zone de jeu / 1080, `limit`)
+(B91, qui amende le 2 de B90), la hauteur physique étant `screen.height × devicePixelRatio`. `n` = `target` arrondi à
+l'entier le plus proche ; si `n ≥ 2`, `n ≤ limit` et `|target − n| ≤ 0,10 × n + ε`, `frame` = `n / devicePixelRatio`
+et `crisp` vrai ; sinon `frame` = `target / devicePixelRatio` et `crisp` faux (B85). Le seuil est compris : ε = 10⁻⁹
+n'absorbe que l'erreur de calcul, sans laquelle le 1080p se lisserait — en double, 2,2 − 2 vaut
+0,2000000000000002, au-dessus de 0,10 × 2 ; le 4K, à 4,4, tombe de même sur le seuil de ×4. Les constantes 2,2, 1080,
+0,10 et ε sont `GameConstants.enemyFrameReferenceScale`, `enemyFrameReferenceHeight`, `enemyFrameSnapTolerance` et
+`enemyFrameSnapEpsilon`. *Le propriétaire a tranché le 25/11, après son test : B90 — sur un écran de 2880 × 1800 à
+200 %, la règle du plus grand pair gardait ×2 jusqu'à 3644 pixels de large, et un ennemi de tier 1 y faisait 0,57
+fois la hauteur du héros, contre 0,85 en 1080p. Le propriétaire a tranché le 25/11, après son second test : B91.*
 `rowFloorY` est le haut de la carte du héros, telle qu'elle est posée aujourd'hui (`heros_draft_game.dart:403`,
 `hero_card.dart:33`) : la fonction ne la déplace pas, elle la reçoit.
 
 | Écran (logique, rapport) | Palier | Commentaire |
 |:---|:---|:---|
-| 1920 × 1080, 1 | ×2 net | La rangée de six : 1822 pixels sur 1824 |
-| 1920 × 1009, 1 (fenêtre maximisée) | ×2 net | Cible 1,87, arrondie (B86) ; la hauteur tient : barre à 58, cadre jusqu'à 364, héros à 383 |
-| 1536 × 864, 1,25 | ×2 physique net, 1,6 logique | Un 1080p à 125 % |
-| 2560 × 1440, 1 | 2,667, lissé (B90) | À 0,33 de ×3, plus de 10 % ; les ennemis gardent leur taille du 1080p face au héros |
-| 2880 × 1626, 1 | ×3 net | Cible 3,011 |
-| 1440 × 813, 2 | ×3 physique net, 1,5 logique | Le même écran dans Chrome |
-| 2880 × 1800, 1 (1440 × 900 à 2) | ×3 net | Cible 3,333 plafonnée à 3,003 par la rangée, qui tient ×3 |
-| 3840 × 2160, 1 | ×4 net | À 4 pixels près : 3644 sur 3648 |
-| 1280 × 720, 1 | 1,333, lissé (B85) | Cas synthétique ; la hauteur décide, sous la largeur (1,335) |
-| 1264 × 681, 1 | 1,261, lissé (B85) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
+| 1920 × 1080, 1 | ×2 net | Cible 2,2, à 0,2 de ×2 : le seuil, compris ; la rangée de six : 1474 pixels sur 1824 |
+| 1920 × 1009, 1 (fenêtre maximisée) | ×2 net | Cible 2,055, arrondie (B86) ; la hauteur tient : barre à 58, cadre jusqu'à 364, héros à 383 |
+| 1536 × 864, 1,25 | ×2 physique net, 1,6 logique | Un 1080p à 125 %, au seuil comme lui |
+| 2560 × 1440, 1 | ×3 net | Cible 2,933, arrondie vers le haut |
+| 2880 × 1626, 1 | 3,312, lissé | À 0,312 de ×3, plus de 10 % |
+| 1440 × 813, 2 | 3,312 physique, lissé, 1,656 logique | Le même écran dans Chrome |
+| 2880 × 1800, 1 (1440 × 900 à 2) | 3,667, lissé | ×4, à 10 % près, ne tient pas sous la rangée (3,712), qui ne plafonne pas la cible ; à 911, elle la ramenait à ×3 |
+| 3840 × 2160, 1 | ×4 net | Cible 4,4, à 0,4 de ×4 : le seuil, compris ; la rangée : 2948 sur 3648 |
+| 1280 × 720, 1 | 1,467, lissé (B85) | Cas synthétique ; la hauteur décide, sous la largeur (1,650) |
+| 1264 × 681, 1 | 1,387, lissé (B85) | La zone de jeu de la fenêtre restaurée, de 1280 × 720 cadre compris (B86 l'ouvre maximisée) |
 
 **Quand la cible n'est pas presque entière, ou que son entier ne tient pas** (B85, B90) : `frame` est `target`, divisé
 par le rapport de pixels, et `crisp` faux : la mise en page réduite en continu. Le cadre, le fond et la créature se lissent alors (§5.3), en `FilterQuality.medium` *(T, filtre 8)* : la
@@ -626,7 +634,7 @@ List<double> placeRow({
   double devicePixelRatio = 1,
 });
 
-/// La place d'une carte : le plus large de son cadre et du gabarit avec ses deux languettes au repos.
+/// La place d'une carte : le plus large de son cadre et du gabarit avec une languette au repos (B91) — 117, 120 au tier 5.
 RowSlot slotOf(TierFrame frame, {double gap = GameConstants.enemyRowMinGap});
 ```
 
@@ -637,12 +645,20 @@ d'aujourd'hui (`layout_system.dart:132-133`) entre 153 et 268 pixels de cadre. L
 une place seule, au centre. Les abscisses des centres se calent sur le pixel physique, et l'ordonnée commune des
 fenêtres aussi (ci-dessous).
 
+**La place compte le gabarit et une languette** (B91) : `enemySlotWidth` = 88 + (30 − 1) = 117 pixels de cadre,
+lus dans `enemyTemplateWidth`, `statusTabRestWidth` et `statusTabOverlap` ; `slotOf` garde le plus large du cadre et
+de la place, 120 au tier 5 ; la rangée de référence en dérive, 6 × 117 + 5 × 7 = 737. Deux voisines à l'écart
+minimal ont leurs centres à 124 pixels de cadre : leurs languettes au repos du côté qui les sépare se superposent
+sur 22 (§5.7).
+
 | 1080p, ×2 | Distance des centres | Largeur de la rangée |
 |:---|:---|:---|
-| 6 places | 306 | 1822 |
-| 5 places | 306 | 1516 |
-| 4 places | 326 | 1271 |
-| 2 places | 536 | 828 |
+| 6 places | 248 | 1474 |
+| 5 places | 272 | 1322 |
+| 4 places | 326 | 1212 |
+| 2 places | 478 | 712 |
+
+Un rat, l'alpha et un rat à l'écart serré de 2 entre deux ennemis ordinaires, à ×2 en 1080p : 277, 267, 267, 277.
 
 **Ce que les vagues suivantes y posent sans la reprendre** : le Rat, une carte de tier 1 entière (B72), dont la
 place demande un écart plus serré que les autres (`RowSlot.gap`) ; **la meute**, trois cartes physiques — l'alpha
@@ -667,7 +683,7 @@ En pixels de cadre, dans les coordonnées de la carte, pour un cadre dont la fen
 | **La barre et son voile** | x : le gabarit, 88 de large ; y : de 17 à 4 au-dessus du gabarit — son haut à 77 au-dessus du centre de la fenêtre, sur les cinq cadres | `enemyHealthBarTop` (−17), hauteur 13, rayon 4, texte 9, bouclier 8 à 3, montant à 2 (`game_constants.dart:48-55`) — leurs valeurs ne changent pas, elles se lisent depuis le haut du gabarit. À ×2 : 176 × 26 pixels, contre 196 × 25 aujourd'hui en 1080p |
 | **Les languettes** | Au repos, collées aux côtés du gabarit, 1 dessus ; leur haut à 11 sous le haut du gabarit ; déroulées vers l'extérieur ; **vers l'intérieur (B39) par-dessus le gabarit**, leur bord extérieur au bord du gabarit | Repos 30 de large, déroulé de 30 à 120, pas de 31 et de 22 ou 30 (`status_tabs.dart:33-48`) : `StatusTabs` reçoit le rectangle d'ancrage au lieu de `cardWidth` (`combat_entity.dart:62-74`). Le héros passe le sien, sa carte entière : rien ne change pour lui |
 | **Le contour de ciblage** (B78) | Autour de la fenêtre, à l'extérieur : le rectangle de la fenêtre agrandi de la moitié du trait | Ambre de 4 pour une carte choisie ou une fiche ouverte, cyan de 3 pour une cible possible, la lueur cyan pulsante de la surbrillance (`enemy_card.dart:353-364`, `:404-423`) ; **au repos, rien** : le liseré blanc disparaît. Le flash cyan d'un coup sur l'armure (`combat_entity.dart:143-167`) passe sur le contour |
-| **La zone** (A17) | Le rectangle `(0, b − 29)` à `(largeur, hauteur)` du canevas — du haut de la barre au bas du cadre, coins de part et d'autre de la barre compris —, plus chaque languette par son rectangle dessiné et son rectangle au repos | La règle d'ADR-121, point 3 : la même zone pour le survol, l'appui et le lâcher, désormais lue aussi par `containsLocalPoint` de la carte. Au tier 1, `b − 29` = −17, la zone d'aujourd'hui ; au tier 5, −1 |
+| **La zone** (A17) | Le rectangle `(0, b − 29)` à `(largeur, hauteur)` du canevas — du haut de la barre au bas du cadre, coins de part et d'autre de la barre compris —, plus chaque languette par son rectangle dessiné et son rectangle au repos | La règle d'ADR-121, point 3 : la même zone pour le survol, l'appui et le lâcher, désormais lue aussi par `containsLocalPoint` de la carte. Au tier 1, `b − 29` = −17, la zone d'aujourd'hui ; au tier 5, −1. **Deux zones voisines se chevauchent** (B91) : les languettes au repos de deux cartes à l'écart minimal se superposent. Là, **la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher** — ce que le joueur voit. L'appui le fait par Flame (`componentsAtPoint` parcourt les enfants du dernier dessiné au premier, et le premier qui le reçoit arrête l'événement) ; le survol (`pickHoveredEntity`, sans carte courante — au doigt), le ciblage (`HerosDraftGame._livingEnemyAt`) et le lâcher (`findHoveredEnemy`) lisent les cartes dans l'ordre de dessin, `inDrawOrder` (priorité, puis ordre des enfants, tri stable comme le rééquilibrage de Flame), et prennent la dernière qui contient le point (`topmostWhere`). La carte survolée, dessinée au-dessus de ses voisines, reste choisie |
 | **Les ancres** (A16) | Le haut et le bas du gabarit, à 60 du centre | Les textes flottants, l'icône d'effet, l'entaille (le gabarit × 1,5 : 132 × 180 au lieu de 150 × 210 pixels logiques, dessinés sans le palier comme aujourd'hui), la boule de feu (1,5 × 88 × l'échelle) |
 
 Le sens du déroulé (B39) se lit comme aujourd'hui, sur le bord de la carte du côté de la languette
