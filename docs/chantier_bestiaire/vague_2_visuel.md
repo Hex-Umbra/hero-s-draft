@@ -19,8 +19,8 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
 ## Prérequis — avant l'ouverture
 
 1. **Les assets, tous validés** :
-   - **les cadres redessinés** (B73, B81, B82) : **produits le 24/11** pour les cinq tiers, corrigés le 25/11 après une analyse visuelle (B82), `art_src/cadres/tier_1.aseprite` à `tier_5.aseprite`, aux canevas de B73, par `art_src/tools/frame_tier.py`, d'après la maquette retenue ; un calque par objet (filet, ronce, pousses, fleurons, baies, écusson, gemmes), la fenêtre transparente. Ils suivent la contrainte de B77 : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre. **Reste que le propriétaire valide les fichiers**, et les retouche s'il le veut. L'ancien cadre plein du tier 2 est archivé (`art_src/archives/cadres/`) ;
-   - les fonds de fenêtre — trois de forêt existent (`art_src/fonds/forest/`) ;
+   - ✅ **les cadres redessinés** (B73, B81, B82) : **validés le 25/11** par le propriétaire, tels quels. Produits le 24/11 pour les cinq tiers, corrigés le 25/11 après une analyse visuelle (B82), `art_src/cadres/tier_1.aseprite` à `tier_5.aseprite`, aux canevas de B73, par `art_src/tools/frame_tier.py`, d'après la maquette retenue ; un calque par objet (filet, ronce, pousses, fleurons, baies, écusson, gemmes), la fenêtre transparente. Ils suivent la contrainte de B77 : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre. L'ancien cadre plein du tier 2 est archivé (`art_src/archives/cadres/`) ;
+   - ✅ **les fonds de fenêtre** : les trois de forêt, en 128 × 192 (`art_src/fonds/forest/forest_window_1.aseprite` à `forest_window_3.aseprite`), **validés le 25/11** par le propriétaire ;
    - ✅ **le décor de combat de forêt, en 640 × 360** (B74), en couleurs peintes (B80) : **validé le 24/11**, rangé dans `art_src/decors/forest/combat/`. Sa méthode ([workflow des décors](../../art_src/docs/workflow_decor.md), essais 5 et 6) : un plan en aplats d'après la place de l'interface, une image d'ensemble, puis l'image entière repeinte en 5120 × 2880, sans tuiles. C'est une image à plat, sans calque par objet, et elle n'est pas encore retouchée.
 2. **Les réponses du propriétaire** (classe P) :
    - ✅ **la règle d'échelle** : B72 ;
@@ -30,7 +30,7 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
    - ✅ **le décor des autres écrans** : prévu par la couture, le combat seul habillé dans cette vague, B76 ;
    - ✅ **la vague 1 sur les cadres** : l'ancrage à la fenêtre, B77 ; le contour de ciblage, B78 ; la fiche ouverte, B79.
 
-   Plus aucune question du propriétaire n'est ouverte : la vague n'attend que ses assets.
+   Plus aucune question du propriétaire n'est ouverte, et ses assets sont tous validés : **les prérequis de la vague sont remplis depuis le 25/11**.
 
 ## Porte d'entrée
 
