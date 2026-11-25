@@ -6,7 +6,21 @@
 
 ## 0. Pour le propriétaire
 
-*À compléter à la fin de la vague (§3.8).*
+**À tester d'abord**, par risque (le détail est au [cahier des tests manuels](2026-11-25-bestiaire-vague-2-tests-manuels.md), T1 à T22) :
+
+1. **L'appui sur un ennemi** (T1) : la barre et les languettes n'ont plus leur propre appui, c'est la carte qui le reçoit ; toucher une épine, une vrille, le haut de la barre, une languette au repos et une languette déroulée — chez un ennemi et chez le héros : aucun test automatique ne le couvre.
+2. **La fenêtre maximisée et le plateau qui suit la fenêtre** (T2, T3) : ouverture, « Restaurer », relance ; sur ce poste, **Smart App Control a bloqué l'exécutable fraîchement construit** : rien n'a été vu sous Windows, le build web seulement.
+3. **La fiche doublée** (T4) et **les cadres des tiers 2 et 3** (T8) : le coup d'œil n'a croisé que des Gobelins de tier 1.
+
+**Vu dans le jeu lancé** (build web de debug, 1920 × 1080 et 1280 × 720, un à trois Gobelins) : cadre net à ×2, illustration bien recadrée, plus de liseré blanc, décor net, autres écrans inchangés, aucune erreur ; et trois points d'aspect, conformes à la spec, que vous êtes le premier à juger : le contour cyan (6 px à ×2) et surtout l'ambre de la fiche ouverte (16 px) couvrent le trait intérieur du cadre ; la gangue de gel est une bordure blanche de 8 px dans la fenêtre, qui peut rappeler l'ancien liseré ; la carte ouverte d'un ennemi seul descend sur la moitié haute du héros estompé (B40).
+
+**Les arbitrages que le joueur verra** : vos réponses B83 à B89 ; aucun autre. **Faits sans vous** : rien en autonomie `continu` ; la retouche de `CLAUDE.md` n'est pas faite, ses trois textes sont au §4.
+
+**Risques connus** : le tout premier palier se calcule avec un rapport de pixels de 1 (corrigé à la reconstruction suivante, à voir sur un écran à 125 %, T3) ; le héros apparaît un instant à 0,6 de la hauteur avant 0,51 (antérieur à la vague, T22) ; un fichier caché de Windows (`Thumbs.db`, `desktop.ini`) dans `assets/data/locations/forest/` fait échouer le démarrage, comme la spec le veut. Le fond de forêt propre à chaque ennemi existe mais ne se voit pas : les peintures d'aujourd'hui le couvrent (T21).
+
+**Un écart de méthode** : la phrase fausse de la note de version (la forêt « ne se voit pas ») a été corrigée directement dans `patch_notes.json` par l'agent, et non par le skill — une ligne, juste, la version n'étant pas taguée.
+
+**Rejouer l'essentiel** : `flutter test test/unit/board_scale_test.dart test/unit/enemy_row_test.dart test/unit/heros_draft_game_targeting_test.dart` · `dart analyze` · `bash .github/scripts/verify_version.sh 0.6.2`.
 
 ## 1. La branche et ses chiffres
 
@@ -49,16 +63,36 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 3. Les tests manuels
 
-*À compléter à la fin de la vague (§3.8).*
+[2026-11-25-bestiaire-vague-2-tests-manuels.md](2026-11-25-bestiaire-vague-2-tests-manuels.md) — 22 tests. Résultat : à remplir par vous.
 
 ## 4. Trouvé périmé, et pour la file
 
-*À compléter à la fin de la vague (§3.8).*
+- **`CLAUDE.md`, trois descriptions fausses** depuis la Task 1, laissées à vous : l'arbre de « Data-Driven Content Workflow » gagne `tier_frames.json` parmi les documents plats, `frames/tier_<n>.png` et `locations/<id>/{combat.png, window_<1-3>.png}` ; la couche de données gagne `tier_frame_data.dart` et `location_data.dart`, le lieu et les cadres étant lus dans le manifeste sans JSON ; `GameDataLoader` expose `assetsMatching(pattern)` et `fault(message)`.
+- L'identité visuelle §4.1, §7.2 et §9.3 (table `const`, `assets/art/`, migration `assets/images/` → `assets/art/`) est écartée par A2, A3 et A5 : à annoter, ADR-123 le consigne. La DA évolutive §16.2 (3 pixels d'écran par pixel de créature en 1080p) est périmée par B72 : c'est 1.
+- Antérieurs, relevés par les revues : un `onGameResize` à taille égale coupe la fin d'une réaction aux coups (`_snapScale`) ; `OpacityEffect` à la mort d'un ennemi n'estompe pas ses enfants ; `_rules/09-1` cite des lignes de `combat_entity.dart` déjà périmées.
+- Pour la vague 4 : une languette née sur la carte ouverte ne relance pas son décalage (sans effet en `0.6.2`) ; le choix de carte du repos sert aussi au Rémouleur, qui prendrait le décor du repos.
+- Mineurs laissés par la revue d'ensemble, chacun avec sa raison, dans le registre recopié du §2 : gardes de `boardScaleFor` sous 295 px de haut, littéraux 28, 128 et 192, la pose du décor écrite dans Flame et dans Flutter.
 
 ## 5. Les leçons
 
-*À compléter à la fin de la vague (§3.8).*
+1. **Les exemples d'une décision ont contredit sa règle, et seul le calcul l'a montré.** B72 donnait ×4 en 1440p, que la règle de la même décision refusait : la spec l'a trouvé en posant les nombres. *Amendement proposé : une décision qui donne une règle et des exemples chiffrés est recalculée par l'agent qui la propose, avant qu'elle soit tranchée.*
+2. **Des maquettes à la taille réelle de l'écran ont permis de trancher six questions en deux messages**, toutes selon la recommandation. *Amendement : rien — A3 et A5 d'ADR-120 tiennent.*
+3. **Un plan écrit avant ses tâches porte des noms qui dérivent** (`_frameSprite`, `_background`) : la tâche à risque, écrite en entier, a dû se recaler sur les noms réels des Tasks 4 et 5. *Amendement proposé : l'envoi d'une tâche à code complet liste les symboles réels que les tâches précédentes ont laissés, relevés dans le code.*
+4. **La preuve par mutation a trouvé un trou qu'aucun RED n'aurait vu** : l'arrondi du pas de la rangée n'était distingué par aucun test. *Amendement proposé : pour un algorithme imposé ligne à ligne, la revue demande une mutation par opération d'arrondi ou de borne.*
+5. **Le coup d'œil dans le jeu lancé, proposé par la vague 1, a coûté un agent et confirmé l'essentiel** sans trouver de défaut, mais seulement sur le tier 1 et sans Windows. *Amendement proposé : le garder, et lui donner par le menu de debug un combat aux tiers mêlés.*
 
 ## 6. Les statistiques de la session
 
-*À mesurer juste avant le commit de §3.8.*
+**Mesuré le 25/11/2026 à 14:16**, avant le commit de §3.8 — sessions : 1 · arrêts : 1 · durée : 3 h 48 de bout en bout (25/11 10:27 → 14:15), dont 2 h 24 de travail de l'orchestrateur · tours de spec : 2 · tours de plan : 2
+Prix lus le 25/11 sur https://platform.claude.com/docs/en/about-claude/pricing · 1 € = 1,0963 $ (BCE, 24/11/2026) · suppléments : aucun (`server_tool_use`, `speed`, `inference_geo` vérifiés)
+
+| | Spec | Plans | Implémentation | Fin de vague | Orchestrateur(s) | **Total** |
+|:---|---:|---:|---:|---:|---:|---:|
+| Temps actif | 1 h 23 | 59 min | 1 h 23 | 11 min | 2 h 24 | 6 h 21 |
+| Agents — Opus / Sonnet | 4 / 0 | 3 / 0 | 5 / 14 | 0 / 4 | Opus 5.5 | 12 / 18 |
+| Appels au modèle | 290 | 205 | 349 | 60 | 171 | 1 075 |
+| Jetons traités, dont hors cache | 87,60 M, dont 2,26 M | 50,27 M, dont 1,61 M | 47,43 M, dont 2,06 M | 9,39 M, dont 0,39 M | 63,33 M, dont 0,52 M | 258,02 M, dont 6,84 M |
+| Sortie (minimum) | 417 283 | 318 980 | 330 890 | 79 563 | 164 234 | 1 310 950 |
+| Coût API — $ / € | 36,61 / 33,40 | 24,09 / 21,97 | 19,72 / 17,99 | 2,67 / 2,43 | 19,98 / 18,23 | **103,07 / 94,02** |
+
+La vague commence à sa porte d'entrée. « Spec » compte les maquettes des questions et l'arrêt ; « Implémentation », le coup d'œil dans le jeu lancé ; « Fin de vague », la note de version, la mémoire, les tests manuels et la mesure elle-même, incomplète à sa propre lecture.
