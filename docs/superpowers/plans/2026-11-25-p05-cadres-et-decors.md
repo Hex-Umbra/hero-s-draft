@@ -1037,7 +1037,7 @@ void main() {
 
       expect(enemy.baseScale, closeTo(2 * enemy.restScale, 1e-12));
       // 1e-3 : la place passe par `Vector2`, en Float32
-      // (`flame-1.38.2/lib/src/extensions/vector2.dart:4`).
+      // (`vector_math-2.2.0/lib/src/vector_math/vector2.dart:9`).
       expect(inspections.single!.rect.top, closeTo(300 - 77 * f, 1e-3));
     });
   }
@@ -1179,8 +1179,9 @@ void main() {
 
   // Les tolérances, 1e-4 sur une échelle et 1e-3 sur une position, sont
   // celles du Float32 : `Vector2` y range ses composantes
-  // (`flame-1.38.2/lib/src/extensions/vector2.dart:4`), si bien que 381
-  // revient en 381,0000305 et 1,3347969264 en 1,3347969055. Un écart sous ces
+  // (`vector_math-2.2.0/lib/src/vector_math/vector2.dart:9`), si bien que
+  // 1,3347969264 est rangé en 1,3347969055, et que 381 revient en 381,0000305
+  // après des déplacements additionnés en Float32. Un écart sous ces
   // tolérances n'est pas un bogue.
   for (final MapEntry(key: config, value: ids) in configs.entries) {
   for (final screen in [
