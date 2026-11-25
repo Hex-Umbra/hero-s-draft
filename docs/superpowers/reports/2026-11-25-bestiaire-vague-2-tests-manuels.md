@@ -184,7 +184,7 @@
 - **Résultat** :
 
 ## T18 — Un écran 1440p, 4K, ou un réglage à 125 % ou 150 % (M18)
-*Si le propriétaire n'en a pas : noter « non testé ». L'écran de 2880 × 1800 à 200 % du propriétaire est testé à part, en T23.*
+*Si le propriétaire n'en a pas : noter « non testé ». L'écran de 2880 × 1800 à 200 % du propriétaire est testé à part, en T24 (T23 l'a été sous B90).*
 - **Atteindre la situation** : le jeu en plein écran sur un écran 1440p, 4K, ou réglé à 125 % ou 150 % dans Windows.
 - **Faire** : un combat à cinq ennemis ; regarder le plateau et ses cadres.
 - **Attendu** : le palier de B91, qui suit la taille du héros : **×3 net en 1440p** (un tier 1 de 264 × 360 pixels physiques) ; **3,31, lissé, sur 2880 × 1800 à 200 % dans Chrome** (environ 291 × 397 pixels physiques), **3,667, lissé, en plein écran** ; **×4 net en 4K** (un tier 1 de 352 × 480, la rangée de six à 2948 sur 3648) ; à 125 % sur un 1080p, les cadres **aussi nets qu'à 100 %** (le palier ×2 physique vaut 1,6 pixel logique). Le décor est inchangé : facteur 4 en 1440p, 6 en 4K.
