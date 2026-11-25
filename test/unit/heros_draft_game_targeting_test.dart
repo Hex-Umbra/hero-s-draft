@@ -112,6 +112,10 @@ void main() {
     e2 = _enemy(game, 'e2');
   });
 
+  test('sans contexte, le rapport de pixels vaut 1', () {
+    expect(game.devicePixelRatio, 1);
+  });
+
   test('une cible attendue : toucher un ennemi vivant le rapporte et cesse d attendre', () {
     game.awaitingEnemyTarget = true;
 

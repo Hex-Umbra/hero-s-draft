@@ -325,3 +325,9 @@ final chargeCatalogProvider = Provider<ChargeCatalog>(
       ref.watch(gameDataLoaderProvider).valueOrNull?.charges ??
       const ChargeCatalog.empty(),
 );
+
+/// Le lieu courant, ou `null` tant que le registre n'est pas chargé : les
+/// écrans gardent alors leur fond d'origine (spec P-05, vague 2, B76).
+final currentLocationProvider = Provider<LocationAssets?>(
+  (ref) => ref.watch(gameDataLoaderProvider).valueOrNull?.locations.current,
+);

@@ -315,6 +315,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       imagesToPreload:
           ref.read(gameDataLoaderProvider).requireValue.imagesToPreload,
       chargeCatalog: ref.read(chargeCatalogProvider),
+      location: ref.read(currentLocationProvider),
       onEnemiesDead: _handleCombatVictory,
       onPhaseChanged: (phase) {
         final l10n = AppLocalizations.of(context)!;

@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/widgets.dart' show View;
 import 'components/card_component.dart';
 import 'components/entities/combat_entity.dart';
 import 'components/entities/hero_card.dart';
@@ -16,6 +17,7 @@ import '../models/data/enemy_data.dart';
 import '../models/data/hero_data.dart';
 import '../models/data/card_data.dart';
 import '../models/data/charge_data.dart';
+import '../models/data/location_data.dart';
 import '../models/entity_stats.dart';
 import 'game_constants.dart';
 
@@ -32,6 +34,7 @@ import 'systems/combat_visual_system.dart';
 import 'systems/layout_system.dart';
 import 'systems/hand_geometry.dart';
 import 'systems/entity_hover.dart';
+import 'systems/decor_fit.dart';
 
 /// La fiche ouverte, telle que `GameScreen` la reflète (spec P-05 vague 1,
 /// A12) : l'ennemi, et le rectangle de sa carte agrandie à l'arrivée, barre
@@ -91,6 +94,17 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// languettes des cartes de combat y lisent quels statuts sont des charges
   /// et le nom de leur état rompu (spec P-53, A2).
   final ChargeCatalog chargeCatalog;
+
+  /// Le lieu dont le décor habille le combat, injecté comme [audio] ; nul,
+  /// le fond reste la couleur du jeu.
+  final LocationAssets? location;
+
+  /// Pixels physiques par pixel logique, lu sur la vue qui porte le jeu ; 1
+  /// quand il n'est pas attaché (tests sur cartes non montées).
+  double get devicePixelRatio =>
+      buildContext == null ? 1 : View.maybeOf(buildContext!)?.devicePixelRatio ?? 1;
+
+  SpriteComponent? _decor;
 
   final void Function() onEnemiesDead;
   final void Function(TurnPhase) onPhaseChanged;
@@ -170,6 +184,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     required this.onSelectEnemy,
     required this.onUpdateEnemyStats,
     required this.onInspectionChanged,
+    this.location,
     this.onEnemiesSpawned,
     this.onAnimationStateChanged,
     this.onEnemyTargetCancelled,
@@ -382,17 +397,16 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     await add(visualSys);
     await add(laySys);
 
-    final uniqueImages = <String>{
-      'assets/images/bg_dungeon.png',
-      ...imagesToPreload,
-    }.toList();
-    await images.loadAll(uniqueImages);
+    await images.loadAll(imagesToPreload);
 
-    final bgSprite = Sprite(images.fromCache('assets/images/bg_dungeon.png'));
-    add(
-      SpriteComponent(sprite: bgSprite, size: size)
-        ..priority = GameConstants.priorityBackground,
-    );
+    final decorPath = location?.decorFor(DecorScreen.combat);
+    if (decorPath != null) {
+      final decor = SpriteComponent(sprite: Sprite(await images.load(decorPath)))
+        ..priority = GameConstants.priorityBackground;
+      _decor = decor;
+      await add(decor);
+      _placeDecor();
+    }
     add(_inspectionVeil = InspectionVeil(size: size.clone()));
   }
 
@@ -408,9 +422,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
     layoutHand();
     _inspectionVeil?.size = size;
 
-    children.whereType<SpriteComponent>().forEach((bg) {
-      if (bg.priority == GameConstants.priorityBackground) bg.size = size;
-    });
+    _placeDecor();
+  }
+
+  /// Le décor couvre le jeu, centré, à l'échelle de [decorFitFor].
+  void _placeDecor() {
+    final decor = _decor;
+    if (decor == null) return;
+    final fit = decorFitFor(
+      screen: Size(size.x, size.y),
+      devicePixelRatio: devicePixelRatio,
+    );
+    decor.position = Vector2(fit.left, fit.top);
+    decor.size = Vector2(decorWidth * fit.scale, decorHeight * fit.scale);
   }
 
   void highlightEnemy(EnemyCard? enemy) {

@@ -14,6 +14,7 @@ import '../../services/audio/music_scene.dart';
 import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
 import 'rest_card_selection_screen.dart';
+import '../../models/data/location_data.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
   const EventScreen({super.key});
@@ -444,6 +445,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     final gold = inventoryState.gold;
 
     return ScreenScaffold(
+      decor: DecorScreen.event,
       backgroundType: ScreenBackgroundType.dark,
       // Le retour système n'est jamais un pop direct (spec P-43 E3, §4.9,
       // A22) : avant tout choix il reste bloqué ; après, il résout le nœud par

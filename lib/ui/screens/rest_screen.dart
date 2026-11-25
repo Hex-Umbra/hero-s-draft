@@ -14,6 +14,7 @@ import '../../services/audio/music_scene.dart';
 import '../widgets/notification_overlay.dart';
 import 'rest_card_selection_screen.dart';
 import '../widgets/screen_scaffold.dart';
+import '../../models/data/location_data.dart';
 
 class RestScreen extends ConsumerStatefulWidget {
   const RestScreen({super.key});
@@ -135,6 +136,7 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         );
 
     return ScreenScaffold(
+      decor: DecorScreen.rest,
       backgroundType: ScreenBackgroundType.dark,
       // Le retour système n'est jamais un pop direct (spec P-43 E2, A4) :
       // avant toute action il reste bloqué ; après, il résout le nœud par le

@@ -53,18 +53,19 @@ void main() {
     expect(identical(game.images, _buildGame().images), isFalse);
   });
 
-  test('les 17 images se chargent sous des cles distinctes egales a leur chemin', () async {
+  test('les 16 images se chargent sous des cles distinctes egales a leur chemin', () async {
     final registry = await loadGameDataRegistry(rootBundle);
     final game = _buildGame(imagesToPreload: registry.imagesToPreload);
-    final paths = <String>{'assets/images/bg_dungeon.png', ...registry.imagesToPreload};
+    final paths = <String>{...registry.imagesToPreload};
 
     await game.images.loadAll(paths.toList());
 
     // Le prefixe ne fait PAS partie des cles (`flame/.../images.dart:29-32`) :
-    // avec un prefixe par dossier, les trois `icon.png` s ecraseraient. 17 cles
+    // avec un prefixe par dossier, les trois `icon.png` s ecraseraient. 16 cles
     // distinctes egales aux chemins complets, c est la preuve du contraire.
+    // Trois classes, quatre ennemis, cinq cadres, quatre images du lieu.
     expect(game.images.keys.toSet(), paths);
-    expect(game.images.keys, hasLength(17));
+    expect(game.images.keys, hasLength(16));
 
     // Exactement l appel de HeroCard.onLoad (`hero_card.dart:113`), atteint par
     // `state_sync_system.dart:52`. `fromCache` leve si la cle est absente.

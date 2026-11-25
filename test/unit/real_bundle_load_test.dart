@@ -90,7 +90,6 @@ void main() {
     for (final id in ['slime', 'gobelin', 'squelette', 'orc']) {
       expect(assets, contains('assets/data/enemies/$id/sprite.png'));
     }
-    expect(assets, contains('assets/images/bg_dungeon.png'));
     for (var tier = 1; tier <= 5; tier++) {
       expect(assets, contains('assets/data/frames/tier_$tier.png'));
     }

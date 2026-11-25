@@ -16,6 +16,7 @@ import '../widgets/notification_overlay.dart';
 import '../widgets/screen_scaffold.dart';
 import '../widgets/page_header.dart';
 import '../widgets/gold_indicator.dart';
+import '../../models/data/location_data.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -334,6 +335,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     // vider : l'étal reste celui du nœud, achats compris, jusqu'au départ
     // vers un autre (spec P-43 E2, A11, §4.9).
     return ScreenScaffold(
+      decor: DecorScreen.shop,
       backgroundType: ScreenBackgroundType.dark,
       appBar: appBar,
       body: Padding(
