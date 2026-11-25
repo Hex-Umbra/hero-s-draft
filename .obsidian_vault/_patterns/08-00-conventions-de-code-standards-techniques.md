@@ -52,7 +52,7 @@ double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
 ```
 - **Hauteur de référence** : 800px (résolution portrait mobile standard).
 - **Clamp** : de 0.85 (plancher mobile étroit) à 2.5 (plafond 4K).
-- Les composants Flame du héros et de la main (cartes, espacements, rayons d'arc de main, positions) sont multipliés par ce coefficient. **Les ennemis non** : depuis la vague 2 (sur la branche `feat/v0.6.2-cadres-et-decors`), leur carte suit la taille de `boardScaleFor` (celle du héros, B90), en pixels physiques — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), qui amende [ADR-002](../_adr/ADR-002-responsivite-dynamique-par-scalefactor.md).
+- Les composants Flame du héros et de la main (cartes, espacements, rayons d'arc de main, positions) sont multipliés par ce coefficient. **Les ennemis non** : depuis la vague 2 (sur la branche `feat/v0.6.2-cadres-et-decors`), leur carte suit la taille de `boardScaleFor` (celle du héros, B90, B91), en pixels physiques — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), qui amende [ADR-002](../_adr/ADR-002-responsivite-dynamique-par-scalefactor.md).
 
 #### 8.4.2. Stratégies de Responsivité de l'UI Flutter (Patrons Unifiés)
 Pour l'UI Flutter (notamment le système de tutoriel), quatre patrons majeurs de responsivité sont standardisés et doivent être appliqués :

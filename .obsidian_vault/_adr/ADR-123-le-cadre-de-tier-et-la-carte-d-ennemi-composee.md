@@ -1,5 +1,5 @@
 ---
-description: The enemy card composed in layers (P-05 bestiary, wave 2) — window background, creature, tier frame, targeting outline, then charge shell, halo, status tabs and health bar; the 64 x 96 window is invariant and the five frames (88 x 120 to 120 x 152) are PNG files under assets/data/frames/ declared by tier_frames.json, a tier without a frame refused at load; the board draws at a size that follows the hero's (B90) - 2 screen pixels per frame pixel for 1080 physical pixels of height, capped by a reference row of six cards, the bar and the hero, rounded to the nearest integer >= 2 when within 10% of it and it fits (crisp), smoothed otherwise (x2 in 1080p, 2.667 smoothed in 1440p, x3 crisp at 2880 x 1800, x4 crisp in 4K), the creature at half of it; boardScaleFor, placeRow, creatureFitOf, decorFitFor, pickWindowBackground and inspectionShift are pure functions; the location seam is a directory assets/data/locations/<id>/ read from the manifest with no JSON, one location only, a combat decor of 640 x 360 per screen and three window backgrounds, one drawn per enemy at birth; one zone per card, the card's own hit test; the outline hugs the window; the sheet doubles the card and shifts inward at the edge; the Windows window opens maximized; enemies leave scaleFactor; amends ADR-121 and ADR-002; carries owner decisions B66 to B90 and sets aside the visual identity proposals for a const Dart table and assets/art/
+description: The enemy card composed in layers (P-05 bestiary, wave 2) — window background, creature, tier frame, targeting outline, then charge shell, halo, status tabs and health bar; the 64 x 96 window is invariant and the five frames (88 x 120 to 120 x 152) are PNG files under assets/data/frames/ declared by tier_frames.json, a tier without a frame refused at load; the board draws at a size that follows the hero's (B90, B91) - 2.2 screen pixels per frame pixel for 1080 physical pixels of height, capped by a reference row of six cards, the bar and the hero, rounded to the nearest integer >= 2 when within 10% of it and it fits (crisp), smoothed otherwise (x2 crisp in 1080p, x3 crisp in 1440p, 3.31 smoothed at 2880 x 1800 in Chrome, 3.667 full screen, x4 crisp in 4K), the creature at half of it; boardScaleFor, placeRow, creatureFitOf, decorFitFor, pickWindowBackground and inspectionShift are pure functions; the location seam is a directory assets/data/locations/<id>/ read from the manifest with no JSON, one location only, a combat decor of 640 x 360 per screen and three window backgrounds, one drawn per enemy at birth; one zone per card, the card's own hit test; the outline hugs the window; the sheet doubles the card and shifts inward at the edge; the Windows window opens maximized; enemies leave scaleFactor; amends ADR-121 and ADR-002; carries owner decisions B66 to B90 and sets aside the visual identity proposals for a const Dart table and assets/art/
 ---
 
 # ADR-123 — Le Cadre de Tier et la Carte d'Ennemi Composée
@@ -7,7 +7,7 @@ description: The enemy card composed in layers (P-05 bestiary, wave 2) — windo
 ### Statut
 
 ✅ Accepté — 2026-11-25 (P-05, le bestiaire ; décisions du propriétaire B66 à B82 au cadrage, B83 à B89
-sur la spec, tranchées sur maquettes le 25/11, B90 le même jour après son test). **Livré sur la branche `feat/v0.6.2-cadres-et-decors` —
+sur la spec, tranchées sur maquettes le 25/11, B90 et B91 le même jour après ses tests). **Livré sur la branche `feat/v0.6.2-cadres-et-decors` —
 vague 2 du [cadrage du bestiaire](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md),
 en attente du test, de la PR, de la fusion et du tag du propriétaire.** Rien n'en est dans `main`.
 [Spec](../../docs/superpowers/specs/2026-11-25-p05-cadres-et-decors-design.md) (deux tours),
@@ -48,25 +48,27 @@ de `lib/models/` hors `lib/models/data/` ne bouge.
    d'ennemi livré qui n'a pas de cadre** — avec les autres fautes (A2, A7). Le document est chargé par
    `loadDocument`, obligatoire comme la courbe d'XP.
 
-3. **L'échelle suit la taille du héros, nette quand elle est presque entière (B90).** `boardScaleFor` (`lib/game/systems/board_scale.dart`)
-   rend la taille du pixel de cadre, en pixels physiques : **2 pixels d'écran par pixel de cadre pour 1080
+3. **L'échelle suit la taille du héros, nette quand elle est presque entière (B90, B91).** `boardScaleFor` (`lib/game/systems/board_scale.dart`)
+   rend la taille du pixel de cadre, en pixels physiques : **2,2 pixels d'écran par pixel de cadre pour 1080
    pixels physiques de hauteur de jeu**, en continu — la proportion du 1080p face au héros, sur tous les
    écrans —, **plafonnée** par la rangée de référence de six places, la barre au-dessus du centre de la
    rangée et le cadre du tier 5 au-dessus du héros. Quand elle est à 10 % au plus d'un entier ≥ 2 qui tient,
-   elle s'y arrondit et tout reste net : **×2 en 1080p et sur une fenêtre maximisée de 1080p, ×3 net en
-   2880 × 1800, ×4 net en 4K** ; sinon elle reste continue et lissée, **2,667 en 1440p**. B90, tranchée
-   après le test du propriétaire (un ennemi de tier 1 faisait 0,57 fois la hauteur du héros sur 2880 × 1800
+   elle s'y arrondit et tout reste net : **×2 net en 1080p (2,2 s'y arrondit) et sur une fenêtre maximisée de 1080p, ×3 net en 1440p, ×4 net en 4K** ; sinon elle reste continue et lissée, **3,31 sur 2880 × 1800 dans Chrome, 3,667 en plein écran**. B90, tranchée
+   après le test du propriétaire, puis B91 (2,2 au lieu de 2, après un second test) (un ennemi de tier 1 faisait 0,57 fois la hauteur du héros sur 2880 × 1800
    à 200 %), remplace le « plus grand palier pair » de B83 et amende B72 ; elle précise B85. **La créature et son fond sont à la moitié** du pas.
    **Quand la valeur n'est pas presque entière, ou ne tient pas, le plateau reste continu et lissé** (`FilterQuality.medium`, `BoardScale.crisp` faux ; B85) ; sur une taille nette, le cadre et le
    fond ne se lissent pas, la créature non plus sauf un ancien sprite. **Le plateau ne rétrécit pas avec le
    nombre d'ennemis.** Le rapport de pixels se lit sur le contexte du jeu, repli 1 (`HerosDraftGame.devicePixelRatio`).
 
 4. **La rangée est une fonction pure.** `placeRow` (`lib/game/systems/enemy_row.dart`) pose les centres
-   des places — chacune la plus large de son cadre et du gabarit avec ses deux languettes au repos
-   (146 pixels de cadre pour les plus étroites), écart minimal 7, maximal 122, largeur utile 0,95 —,
+   des places — chacune la plus large de son cadre et du gabarit avec **une** languette
+   (117 pixels de cadre pour les plus étroites ; rangée de référence de six : 737), écart minimal 7, maximal 122, largeur utile 0,95 —,
    chaque centre sur un pixel physique ; `LayoutSystem` n'est plus que son appelant et le seul écrivain
    de la position d'un ennemi. Le centre des fenêtres est à 0,21 de la hauteur. Un boss a la taille des
-   autres ennemis.
+   autres ennemis. **Deux languettes voisines peuvent se superposer** (B91) : la carte dessinée par-dessus
+   reçoit le survol, l'appui et le lâcher — `inDrawOrder` et `topmostWhere`
+   (`lib/game/systems/entity_hover.dart`) reprennent l'ordre de dessin de Flame, par priorité puis par ordre
+   d'insertion, une carte qui quitte le survol repassant en fin de son groupe.
 
 5. **Un ancien sprite se recadre par la taille de son image.** `creatureFitOf`
    (`lib/game/systems/creature_fit.dart`) : une image de 128 × 192 se dessine entière et nette ; une

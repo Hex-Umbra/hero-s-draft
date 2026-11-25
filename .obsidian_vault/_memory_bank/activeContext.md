@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-25 | commit: 81d0a760 -->
+<!-- last-sync: 2026-11-25 | commit: bcb2f51c -->
 
 # 🧠 Contexte Actuel
 
@@ -16,7 +16,7 @@ taguée `v0.6.1`, CI/CD verte — constaté le 2026-11-25 à la porte d'entrée 
 **La vague 2, le visuel, est livrée sur la branche `feat/v0.6.2-cadres-et-decors`, en attente du
 test, de la PR, de la fusion et du tag du propriétaire** ; rien n'en est dans `main`. Elle donne
 à chaque ennemi un cadre de tier (cinq cadres, une fenêtre de 64 × 96), une échelle qui suit la taille du héros
-(×2 en 1080p, 2,667 lissé en 1440p, ×3 net en 2880 × 1800, ×4 net en 4K ; B90), un décor de combat de forêt de 640 × 360
+(×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 dans Chrome, ×4 net en 4K ; B90, B91), un décor de combat de forêt de 640 × 360
 désigné par un lieu (la couture de lieu, un seul lieu), un fond de fenêtre tiré par ennemi (dormant
 derrière les anciennes peintures), l'interface de la vague 1 recalée sur la fenêtre, une fiche
 doublée et décalée au bord, une fenêtre Windows maximisée et l'outil d'export
@@ -149,10 +149,10 @@ Réserves à ne pas perdre de vue :
    en calques — fond de fenêtre, créature, cadre, contour — avec barre et languettes ancrées à un
    gabarit de 88 × 120 (B77) ; **le contour entoure la fenêtre**, le liseré blanc du repos disparaît
    (B78) ; **la fiche double la carte** à tout palier et se décale vers l'intérieur au bord (B79, B84,
-   B89). **La règle d'échelle** (B90, tranchée le 25/11 après le test du propriétaire) : 2 pixels
+   B89). **La règle d'échelle** (B90, amendée par B91, tranchées le 25/11 après les tests du propriétaire) : 2,2 pixels
    d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée par la rangée de six
-   cartes, la barre et le héros, arrondie à l'entier ≥ 2 quand elle en est à 10 % au plus et qu'il tient
-   (net), lissée sinon — ×2 en 1080p, 2,667 en 1440p, ×3 en 2880 × 1800, ×4 en 4K (B72, B83, B85, B90) ;
+   cartes (la place d'une carte compte son gabarit et une languette, 117 ; deux languettes voisines se superposent, la carte dessinée par-dessus reçoit le survol, l'appui et le lâcher), la barre et le héros, arrondie à l'entier ≥ 2 quand elle en est à 10 % au plus et qu'il tient
+   (net), lissée sinon — ×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 dans Chrome, 3,667 en plein écran, ×4 net en 4K (B72, B83, B85, B90, B91) ;
    le plateau ne rétrécit pas avec le nombre d'ennemis. **La couture de lieu** : `assets/data/locations/<id>/`, un seul lieu, la
    forêt, un décor de combat de 640 × 360 en couleurs peintes (B66, B74, B76, B80, B88) ; `bg_dungeon`
    supprimé ; **le fond de fenêtre** tiré au hasard à l'entrée de chaque ennemi parmi les trois du lieu
@@ -160,7 +160,7 @@ Réserves à ne pas perdre de vue :
    **La fenêtre Windows s'ouvre maximisée** (B86) ; **l'outil d'export** `art_src/tools/export_jeu.py`.
    Aucune règle de combat ne change. Un arrêt à la spec après son tour 1 (six questions, B83 à B89,
    levées le même jour sur maquettes) ; deux tours de spec, deux tours de plan, sept tâches de SDD
-   et une passe de revue d'ensemble. **2030 tests** (+91 sur la base de **1939**), `dart analyze`
+   et une passe de revue d'ensemble. **2040 tests** (+101 sur la base de **1939**), `dart analyze`
    propre (**vérifié le 2026-11-25**) — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md),
    qui amende ADR-121 et ADR-002.
 2. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche

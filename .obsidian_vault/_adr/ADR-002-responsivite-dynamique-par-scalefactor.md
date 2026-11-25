@@ -3,7 +3,7 @@
 ### Statut
 ✅ Accepté & Implémenté
 
-**Amendé par [ADR-123](ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)** (vague 2 du bestiaire, sur la branche `feat/v0.6.2-cadres-et-decors`) : les cartes d'ennemis quittent `scaleFactor` pour une taille en pixels physiques qui suit celle du héros (B90) ; le héros et la main le gardent.
+**Amendé par [ADR-123](ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)** (vague 2 du bestiaire, sur la branche `feat/v0.6.2-cadres-et-decors`) : les cartes d'ennemis quittent `scaleFactor` pour une taille en pixels physiques qui suit celle du héros (B90, B91) ; le héros et la main le gardent.
 
 ### Contexte
 Le jeu cible des supports variés : smartphones étroits, tablettes et moniteurs PC 4K. Flame utilise un canvas absolu par défaut, ce qui peut tronquer ou déformer l'affichage sur des résolutions non-standard.
