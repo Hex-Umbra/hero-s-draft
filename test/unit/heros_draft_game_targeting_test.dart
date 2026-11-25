@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui' show FilterQuality, Rect;
+import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/components/card_component.dart';
 import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
@@ -440,6 +441,26 @@ void main() {
     expect(rect.right, greaterThan(1279));
     expect(rect.center.dx, closeTo(1250 - 88, 1e-6));
     expect(e1.inspectionRect(), rect);
+  });
+
+  test('la selection et la surbrillance posees avant le chargement se voient '
+      'au chargement', () async {
+    // Sans monter le jeu (D1) : les images sont mises au cache, et `onLoad`
+    // est appelé à la main sur des cartes jamais montées.
+    final image = await createTestImage(width: 2, height: 2);
+    game.images.add(_slime.spritePath, image);
+    game.images.add(testFrameOf(1).imagePath, image);
+
+    final highlighted = _enemy(game, 'h')..setHighlight(true);
+    final selected = _enemy(game, 's')..setSelection(true);
+    await highlighted.onLoad();
+    await selected.onLoad();
+
+    final window = highlighted.windowLocalRect;
+    expect(highlighted.outline.color, Colors.cyanAccent);
+    expect(highlighted.outline.strokeRect, window.inflate(1.5));
+    expect(selected.outline.color, Colors.amber);
+    expect(selected.outline.strokeRect, window.inflate(2));
   });
 
   for (var tier = 1; tier <= 5; tier++) {

@@ -311,12 +311,11 @@ class EnemyCard extends CombatEntity
 
     _refreshHealthBar();
 
-    // Les états visuels, maintenant que le contour existe.
-    setSelection(isSelected);
-    if (_isHighlighted) {
-      _isHighlighted = false;
-      setHighlight(true);
-    }
+    // Les états visuels posés avant le chargement, maintenant que le contour
+    // existe : `setSelection` et `setHighlight` n'y touchent pas tant que la
+    // carte n'est pas chargée.
+    outline.glowing = _isHighlighted;
+    _refreshBorderVisuals();
 
     _refreshFiltering();
   }
