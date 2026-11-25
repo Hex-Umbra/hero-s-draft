@@ -135,9 +135,9 @@ de `lib/models/` hors `lib/models/data/` ne bouge.
   que le combat. Ils ne se voient pas en jeu avant leurs sprites et leurs images.
 - ⚠️ **Le palier ×2 laisse le héros et la main sur `scaleFactor`** : deux échelles cohabitent sur le plateau
   jusqu'à ce qu'une vague les réunisse.
-- ⚠️ `CLAUDE.md` reste faux sur trois points — l'arbre de « Data-Driven Content Workflow » sans `frames/`,
-  `tier_frames.json` et `locations/<id>/`, la couche de données sans `tier_frame_data.dart` et
-  `location_data.dart`, `GameDataLoader` sans `assetsMatching` et `fault` — jusqu'à la retouche du
-  propriétaire (S2 du compte rendu).
+- `CLAUDE.md` est retouché le 25/11, à la demande du propriétaire, sur les trois points que le lot
+  périmait — l'arbre de « Data-Driven Content Workflow » (`tier_frames.json`, `frames/`,
+  `locations/<id>/`), la couche de données (`tier_frame_data.dart`, `location_data.dart`, lus sans
+  JSON) et `GameDataLoader` (`assetsMatching`, `fault`).
 - ⚠️ `build/unit_test_assets` ne se purge jamais : `bg_dungeon.png` y reste, sans lecteur, jusqu'à ce que le
   dossier soit vidé.

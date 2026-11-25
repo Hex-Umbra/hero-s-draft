@@ -14,7 +14,7 @@
 
 **Vu dans le jeu lancé** (build web de debug, 1920 × 1080 et 1280 × 720, un à trois Gobelins) : cadre net à ×2, illustration bien recadrée, plus de liseré blanc, décor net, autres écrans inchangés, aucune erreur ; et trois points d'aspect, conformes à la spec, que vous êtes le premier à juger : le contour cyan (6 px à ×2) et surtout l'ambre de la fiche ouverte (16 px) couvrent le trait intérieur du cadre ; la gangue de gel est une bordure blanche de 8 px dans la fenêtre, qui peut rappeler l'ancien liseré ; la carte ouverte d'un ennemi seul descend sur la moitié haute du héros estompé (B40).
 
-**Les arbitrages que le joueur verra** : vos réponses B83 à B89 ; aucun autre. **Faits sans vous** : rien en autonomie `continu` ; la retouche de `CLAUDE.md` n'est pas faite, ses trois textes sont au §4.
+**Les arbitrages que le joueur verra** : vos réponses B83 à B89 ; aucun autre. **Faits sans vous** : rien en autonomie `continu` ; la retouche de `CLAUDE.md`, laissée par la vague, est faite à votre demande le 25/11 (§4).
 
 **Risques connus** : le tout premier palier se calcule avec un rapport de pixels de 1 (corrigé à la reconstruction suivante, à voir sur un écran à 125 %, T3) ; le héros apparaît un instant à 0,6 de la hauteur avant 0,51 (antérieur à la vague, T22) ; un fichier caché de Windows (`Thumbs.db`, `desktop.ini`) dans `assets/data/locations/forest/` fait échouer le démarrage, comme la spec le veut. Le fond de forêt propre à chaque ennemi existe mais ne se voit pas : les peintures d'aujourd'hui le couvrent (T21).
 
@@ -67,7 +67,7 @@ Une ligne chacun ; les options écartées sont dans les fichiers de vérificatio
 
 ## 4. Trouvé périmé, et pour la file
 
-- **`CLAUDE.md`, trois descriptions fausses** depuis la Task 1, laissées à vous : l'arbre de « Data-Driven Content Workflow » gagne `tier_frames.json` parmi les documents plats, `frames/tier_<n>.png` et `locations/<id>/{combat.png, window_<1-3>.png}` ; la couche de données gagne `tier_frame_data.dart` et `location_data.dart`, le lieu et les cadres étant lus dans le manifeste sans JSON ; `GameDataLoader` expose `assetsMatching(pattern)` et `fault(message)`.
+- **`CLAUDE.md`, trois descriptions périmées** par la Task 1, retouchées à votre demande le 25/11 : l'arbre de « Data-Driven Content Workflow » gagne `tier_frames.json` parmi les documents plats, `frames/tier_<n>.png` et `locations/<id>/{combat.png, window_<1-3>.png}` ; la couche de données gagne `tier_frame_data.dart` et `location_data.dart`, le lieu et les cadres étant lus dans le manifeste sans JSON ; `GameDataLoader` expose `assetsMatching(pattern)` et `fault(message)`.
 - L'identité visuelle §4.1, §7.2 et §9.3 (table `const`, `assets/art/`, migration `assets/images/` → `assets/art/`) est écartée par A2, A3 et A5 : à annoter, ADR-123 le consigne. La DA évolutive §16.2 (3 pixels d'écran par pixel de créature en 1080p) est périmée par B72 : c'est 1.
 - Antérieurs, relevés par les revues : un `onGameResize` à taille égale coupe la fin d'une réaction aux coups (`_snapScale`) ; `OpacityEffect` à la mort d'un ennemi n'estompe pas ses enfants ; `_rules/09-1` cite des lignes de `combat_entity.dart` déjà périmées.
 - Pour la vague 4 : une languette née sur la carte ouverte ne relance pas son décalage (sans effet en `0.6.2`) ; le choix de carte du repos sert aussi au Rémouleur, qui prendrait le décor du repos.

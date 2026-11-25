@@ -40,11 +40,11 @@ The codebase strictly separates three layers — never mix them:
   - `CheckpointNotifier` (`checkpoint_controller.dart`) — `checkpointProvider` / `autosaveOrchestratorProvider`: triggers the autosave when a map node is resolved.
   - All shared/business state lives in Riverpod 2.x `Notifier`s here (`extends Notifier<T>`, exposed via `NotifierProvider`) — never in UI widgets or Flame components, and never as global variables/singletons. The migration off `StateNotifier` is complete for the controllers; the only remaining `StateNotifier` is the UI-local toast queue in `lib/ui/widgets/notification_overlay.dart`, which holds no business state. Do not add new ones.
 
-- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `signature_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `charge_data.dart`, `audio_data.dart`, `xp_curve_data.dart`, `effect_icon_table.dart`), aggregated via `game_data_registry.dart`. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `signature_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
+- **Data layer** — `lib/models/data/` holds models mapping 1:1 to the JSON assets (`card_data.dart`, `enemy_data.dart`, `hero_data.dart`, `relic_data.dart`, `passive_data.dart`, `signature_data.dart`, `event_data.dart`, `forge_upgrade_data.dart`, `level_up_reward_data.dart`, `charge_data.dart`, `audio_data.dart`, `xp_curve_data.dart`, `effect_icon_table.dart`, `tier_frame_data.dart`, `location_data.dart`), aggregated via `game_data_registry.dart`. Two of them read images rather than JSON: `location_data.dart` builds the locations from the asset manifest, without any JSON, and the enemy frames are PNGs whose sizes and windows `tier_frames.json`, a flat document, lists. `lib/models/` (top level) holds runtime instances/state (`card_instance.dart`, `signature_instance.dart`, `enemy_instance.dart`, `combat_state.dart`, `status_effect.dart`, etc.).
 
 - **Services** — `lib/services/`
   - `gameDataLoaderProvider` (`game_data_service.dart`) — a `FutureProvider<GameDataRegistry>` that async-loads and caches all JSON asset data at startup. There is no `GameDataService` class; the provider *is* the entry point. `loadGameDataRegistry(bundle)` is the **single declaration of the game's entity sources**; production and the tutorial test registry both go through it.
-  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/skills/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
+  - `GameDataLoader` / `EntitySource` (`game_data_loader.dart`) — the generic loader. An `EntitySource` is an asset **path pattern** plus a `fromJson`: the pattern both selects the files and injects the fields the directory imposes, from the segments it captures (`*` matches exactly one segment, so segment count alone separates `classes/*/class.json` from `classes/*/skills/*.json`). Errors are accumulated across every category and raised once by `throwIfFailed()`. Two public helpers serve the sources that are not JSON entities: `assetsMatching(pattern)` returns the manifest keys a pattern matches and the segments it captures, without reading any file, and `fault(message)` adds a fault that `throwIfFailed()` raises with the others. The `bundle` is a parameter rather than a hardcoded `rootBundle` — that is the seam that makes the loader testable on a chosen asset tree.
   - `MapGeneratorService` plus `lib/services/map/` (`map_node_generator.dart`, `map_connection_builder.dart`, `map_content_placer.dart`, `map_validator.dart`) — procedural world-map generation, decomposed into generate → connect → place-content → validate stages.
   - `SaveService` (`lib/services/save_service.dart`) — serialises `RunState`/`DeckState`/`InventoryState`, three keys, into a single versioned JSON blob under one `shared_preferences` key. Never called mid-combat.
 
@@ -74,10 +74,13 @@ The codebase strictly separates three layers — never mix them:
 ```
 assets/data/
 ├── audio.json, patch_notes.json,   # flat: single configuration documents, not catalogues
-│   xp_curve.json, effect_icons.json
+│   xp_curve.json, effect_icons.json, tier_frames.json
 ├── cards/<id>.json                 # neutral cards; likewise relics/, events/,
 │                                   #   forge_upgrades/, passives/, level_up_rewards/, charges/
 ├── cards/<passive>/<id>.json       # lot cards: the folder is the passive
+├── frames/tier_<n>.png             # the enemy frames, one per tier (tier_frames.json lists their sizes and windows)
+├── locations/<id>/{combat.png, window_<1-3>.png}  # one location: its combat backdrop and three window
+│                                   #   backgrounds, read from the asset manifest; any non-PNG file fails the load
 ├── classes/<id>/{class.json, <id>.png, skills/<id>.json}
 └── enemies/<id>/{enemy.json, sprite.png}
 ```

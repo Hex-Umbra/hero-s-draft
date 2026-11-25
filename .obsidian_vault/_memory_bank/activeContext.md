@@ -44,10 +44,8 @@ Réserves à ne pas perdre de vue :
 
 - **Ce que la vague 2 du bestiaire laisse ouvert**, consigné dans
   [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md) et au compte rendu de la
-  vague (§2 ; ses §3 à §5 s'écrivent à la fin de la vague) : **`CLAUDE.md` reste faux sur trois
-  points** (l'arbre du workflow de données sans `frames/`, `tier_frames.json` et `locations/<id>/`, la
-  couche de données sans `tier_frame_data.dart` et `location_data.dart`, `GameDataLoader` sans
-  `assetsMatching` et `fault`) jusqu'à la retouche du propriétaire (S2) ; **la pose du décor et la
+  vague : `CLAUDE.md`, que le lot périmait sur trois points, est retouché le 25/11 à la demande du
+  propriétaire ; **la pose du décor et la
   couture Flame n'ont aucun test permanent**, faute de pouvoir monter un jeu sans membres `@internal`
   de Flame — un rejeu monté jetable les a mesurées (S4) ; **dormants** : les fonds de fenêtre derrière
   les anciennes peintures, le décor des six écrans autres que le combat ; **le héros et la main
@@ -220,7 +218,7 @@ Réserves à ne pas perdre de vue :
 ## Prochaine étape
 
 **D'abord le propriétaire** : tester la vague 2 sur la branche `feat/v0.6.2-cadres-et-decors`, puis
-ouvrir la PR, la fusionner et la taguer ; la retouche de `CLAUDE.md` (S2) lui revient. Il lance aussi
+ouvrir la PR, la fusionner et la taguer. Il lance aussi
 la production des sprites du tier 1, dont l'état se tient au catalogue des ennemis : une vague
 d'ennemis ne s'ouvre qu'avec tous ses sprites (B51). Deux cadrages restent à tenir avant leurs
 vagues : la difficulté, après le tier 3, et les boss.
