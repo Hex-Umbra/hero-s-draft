@@ -11,7 +11,7 @@ méthode est celle du [fichier d'orchestration](../../possible_upgrades/01-10-20
 
 > **Ce que le lot livre, en une phrase.** Rien ne change à ce que les ennemis font ; chaque ennemi s'affiche dans
 > le cadre de son tier, une gravure épineuse ajourée qui grossit de tier en tier autour d'une fenêtre de 64 × 96
-> identique pour tous ; le plateau ne rétrécit plus en continu, il s'affiche à un palier pair choisi par l'écran,
+> identique pour tous ; le plateau ne rétrécit plus en continu, il s'affiche à un palier choisi par l'écran, que suit la taille du héros (B90),
 > la créature à la moitié ; le combat se joue devant un décor de forêt neuf en 640 × 360, désigné par un lieu ;
 > la barre de PV, les languettes, la fiche et le ciblage de la vague 1 se recalent sur la fenêtre. Les quatre
 > ennemis d'aujourd'hui gardent leur sprite, recadré sur son illustration.
@@ -31,7 +31,7 @@ logiques quand il est un widget Flutter, en pixels physiques quand la mesure dé
 |:---|:---|:---|
 | **B66** | Le décor de combat et les fonds de fenêtre passent par un identifiant de lieu, à valeur unique ; les assets se rangent par lieu | §4.2, §5.8 |
 | **B67** | Le fond de fenêtre est un asset séparé du cadre, trois par lieu, choisi par le jeu (la règle du tirage : B87) | §5.5 |
-| **B72** | Le cadre à un palier pair, la créature et son fond à la moitié ; plus de rétrécissement continu ; la fiche qui double la carte ; *amende B17* : aucun facteur 0,8, un écart par carte que le placement reçoit | §5.1, §5.6, §5.9 |
+| **B72** | *Règle du palier amendée par B90.* Le cadre à un palier pair, la créature et son fond à la moitié ; plus de rétrécissement continu ; la fiche qui double la carte ; *amende B17* : aucun facteur 0,8, un écart par carte que le placement reçoit | §5.1, §5.6, §5.9 |
 | **B73** | Les cinq géométries, une fenêtre de 64 × 96 ; un boss porte le cadre de son tier, au même palier | §4.1, §5.3 |
 | **B74** | La forêt, lieu unique ; le décor de combat en 640 × 360, à 3, 4 ou 6 pixels d'écran par pixel | §4.2, §5.2 |
 | **B75** | Un ancien sprite recadré sur son illustration, un seul rectangle pour les quatre, lissé ; le recadrage part avec le dernier | §5.4 |
@@ -42,14 +42,14 @@ logiques quand il est un widget Flutter, en pixels physiques quand la mesure dé
 | **B80** | Le décor garde ses couleurs peintes ; cadres et fonds restent en Apollo exact : l'export ne convertit rien | §10 |
 | **B81, B82** | Les cinq cadres dessinés et corrigés, exportés tels quels | §10 |
 | **B61, B52** | L'état transitoire : les anciens sprites dans les cadres jusqu'à la vague de leur tier | §2.1 |
-| **B83** | *Amende les exemples de B72.* Le palier suit la règle : ×2 en 1080p, ×2 en 1440p, ×4 en 4K | §5.1 |
+| **B83** | *Amende les exemples de B72 ; amendée par B90.* Le palier suit la règle : ×2 en 1080p, ×2 en 1440p, ×4 en 4K | §5.1 |
 | **B84** | La fiche ouverte double la carte à tout palier : ×4 à ×2, ×8 à ×4 | §5.9 |
 | **B85** | Sous le plus petit écran qui tient ×2, la mise en page du palier ×2 réduite en continu jusqu'à tenir, lissée | §5.1, §5.3 |
-| **B90** | *Amende B72 et B83, précise B85.* La taille des ennemis suit celle du héros : 2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée, arrondie à l'entier à 10 % près (nette), lissée sinon | A8, §5.1 |
 | **B86** | La fenêtre Windows du jeu s'ouvre maximisée | §5.10 |
 | **B87** | Le fond de fenêtre tiré au hasard, pour chaque ennemi, à son entrée sur le plateau | §5.5 |
 | **B88** | Hors 16:9, le décor couvre l'écran au plus petit facteur qui le couvre, centré, rogné, jamais lissé | §5.2 |
 | **B89** | Une carte ouverte qui sortirait de l'écran se décale vers l'intérieur, juste assez, sa barre à sa hauteur | §5.9 |
+| **B90** | *Amende B72 et B83, précise B85.* La taille des ennemis suit celle du héros : 2 pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur, plafonnée, arrondie à l'entier à 10 % près (nette), lissée sinon | A8, §5.1 |
 
 Relues sur le nouveau placement, sans changement de texte : **B39** — une languette qui sortirait de l'écran se
 déroule vers l'intérieur, par-dessus sa propre carte, c'est-à-dire désormais par-dessus le gabarit (§5.7) ;
@@ -260,14 +260,14 @@ recommandation de la spec. Ce qu'elles fixent ici :
 
 | N° | Ce qu'elle fixe dans la spec | Où |
 |:---|:---|:---|
-| **B83** | Les paliers de `boardScaleFor` : la règle de B72, non ses exemples — ×2 en 1080p et en 1440p, ×4 en 4K ; en 1440p, les ennemis gardent leur taille du 1080p face au héros et à la main, qui grandissent | A8, §5.1, §11 |
+| **B83** | *Amendée par B90.* Les paliers de `boardScaleFor` : la règle de B72, non ses exemples — ×2 en 1080p et en 1440p, ×4 en 4K ; en 1440p, les ennemis gardent leur taille du 1080p face au héros et à la main, qui grandissent | A8, §5.1, §11 |
 | **B84** | `inspectionScale` = 2 à tout palier | A18, §5.9 |
 | **B85** | Sous le plus petit écran qui tient ×2 : `frame` réduit en continu, `crisp` faux, le cadre, le fond et la créature lissés ; le décor garde sa règle (B88) | §5.1, §5.3 |
-| **B90** | *Amende B83.* La taille suit celle du héros (hauteur physique / 1080), nette à 10 % près d'un entier d'au moins 2 qui tient, lissée sinon : ×3 en 2880 × 1800, 2,667 lissé en 1440p | A8, §5.1 |
 | **B86** | La fenêtre Windows s'ouvre maximisée : elle entre dans le lot (A22) | §2, §3, §5.10, §12, M22 |
 | **B87** | `pickWindowBackground` : un tirage uniforme, par ennemi, à son entrée | A13, §5.5 |
 | **B88** | `decorFitFor` : le plus petit facteur qui couvre, centré, rogné, jamais lissé | §5.2 |
 | **B89** | La carte ouverte se décale vers l'intérieur juste assez pour tenir ; **le lot la construit**, pour tout nombre de cartes, sans construire la sixième place | §5.9, §11 |
+| **B90** | *Amende B83.* La taille suit celle du héros (hauteur physique / 1080), nette à 10 % près d'un entier d'au moins 2 qui tient, lissée sinon : ×3 en 2880 × 1800, 2,667 lissé en 1440p | A8, §5.1 |
 
 **Plus aucune question n'est ouverte**, ni de classe D ni de classe P.
 
@@ -469,7 +469,7 @@ ou `null` sans registre chargé (`valueOrNull`, comme `chargeCatalogProvider`) o
 ### 5.1. Le palier — `boardScaleFor`
 
 ```dart
-/// Le palier du plateau pour un écran (B72), en pixels logiques par pixel de cadre.
+/// Le palier du plateau pour un écran (B90, qui amende B72), en pixels logiques par pixel de cadre.
 BoardScale boardScaleFor({
   required Size screen,              // taille logique du jeu
   required double devicePixelRatio,
@@ -728,7 +728,7 @@ la sixième place ni la demi-place.
 `Win32Window::Show` (`windows/runner/win32_window.cpp:152-153`) passe `SW_SHOWNORMAL` à `SW_SHOWMAXIMIZED` (A22) :
 sur un écran 1080p, la fenêtre s'ouvre à environ 1920 × 1009 pixels utiles, au palier ×2 net (§5.1). Le bouton
 « Restaurer » la ramène à sa taille de création, en (10, 10) (`main.cpp:28-29`) — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % (`flutter_window.cpp:17-22`) —, où B85
-s'applique (1,318). Rien ne
+s'applique (1,261). Rien ne
 se sauvegarde ; macOS, Linux et le web ne changent pas (A22). Code natif : aucun test automatique (ADR-113), un test
 manuel (M22).
 
@@ -810,7 +810,7 @@ du plan.
 
 | Sujet | Fichier | Ce qu'il verrouille |
 |:---|:---|:---|
-| **Le palier** | `test/unit/board_scale_test.dart` *(nouveau)* | Les lignes du tableau de §5.1 : ×2 en 1920 × 1080 ; ×2 en 1920 × 1009 ; 1,6 logique en 1536 × 864 à 1,25 ; `creature` = `frame / 2` ; `crisp` ; **la rangée de six tient à ×2 en 1920 et ne tient plus si une place ou un écart grandit d'un pixel de cadre** ; un écran trop bas pour la barre ou pour le cadre fait tomber le palier ; **×2 en 2560 × 1440, ×4 en 3840 × 2160 (B83)**, la 4K à 4 pixels près — elle tombe à ×2 si une place ou un écart grandit d'un pixel de cadre ; **1,335, `crisp` faux, en 1280 × 720 (B85)** ; **1,318, `crisp` faux, en 1264 × 681**, la zone de jeu de la fenêtre restaurée |
+| **Le palier** | `test/unit/board_scale_test.dart` *(nouveau)* | Les lignes du tableau de §5.1 (B90) : ×2 net en 1920 × 1080 ; ×2 net en 1920 × 1009 (1,87 arrondi) ; ×2 physique net en 1536 × 864 à 1,25 (1,6 logique) ; `creature` = `frame / 2` ; **2,667 lissé en 2560 × 1440** ; **×3 net en 2880 × 1626 (3,011), en 2880 × 1600 (2,963) et en 2880 × 1800 (cible 3,333 plafonnée à 3,003)** ; ×3 physique net en 1440 × 813 à 2 (1,5 logique) ; **×4 net en 3840 × 2160** ; **1,333, `crisp` faux, en 1280 × 720 (B85)**, la hauteur décidant sous la largeur ; **1,261, `crisp` faux, en 1264 × 681**, la zone de jeu de la fenêtre restaurée ; ×3 qui ne tient pas en 2781 × 1800 (lissé, à la limite de la rangée) ; 2,407 lissé en 4000 × 1300 ; **la rangée de six tient à ×2 en 1920 et ne tient plus si une place ou un écart grandit d'un pixel de cadre** ; la 4K à ×4 net pour une rangée de 911, lissée dès qu'une place ou un écart grandit (917 donne 3,978) ; un écran trop bas pour la barre ou un héros trop haut pour le cadre fait tomber le palier |
 | **Le décor** | `test/unit/decor_fit_test.dart` *(nouveau)* | 3, 4, 6 en 1080p, 1440p, 4K, sans décalage ; 3 en 1920 × 1009, centré ; 2 en 1280 × 720 ; **1,975 en 1264 × 681**, la fenêtre restaurée ; **2,22 en 1280 × 800, centré, 71 pixels rognés de chaque côté (B88)** ; le rapport de pixels |
 | **Le recadrage** | `test/unit/creature_fit_test.dart` *(nouveau)* | 128 × 192 → l'image entière, net ; 1696 × 2528 et 1694 × 2528 → le rectangle de §5.4, lissé, au rapport 2:3 exact, contenu dans l'image ; 64 × 64 → l'image entière |
 | **Le fond** | `test/unit/window_background_test.dart` *(nouveau)* | Un indice dans `[0, count)` ; un aléa à graine rejoue le même ; sur de nombreux tirages, chacun des trois sort (B87) |
@@ -871,13 +871,13 @@ Le fichier de tests manuels de la vague (`bestiaire-vague-2`) les reprend ; voic
 | M13 | Glisse une carte sur un ennemi de tier 3, lâche-la sur son cadre | La carte se joue sur lui |
 | M14 | Un coup, un gel (Onglet Combat : trois « +1 Gel »), une Foudre chargée | Les textes flottants au-dessus de la barre, à la même place sur tous les tiers ; la gangue et le halo sur la fenêtre, pas sur le cadre ; la teinte du coup sur la créature |
 | M15 | Le boss de l'acte | Le cadre de son tier, à la taille des autres ennemis : plus d'agrandissement |
-| M16 | Restaure la fenêtre (fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 %), puis maximise-la, puis plein écran | Le plateau suit, sans saut au-delà du palier ; restauré, la mise en page du palier ×2 réduite et lissée (B85) ; maximisé et plein écran, net |
+| M16 | Restaure la fenêtre (fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 %), puis maximise-la, puis plein écran | Le plateau suit, sans saut au-delà du palier ; restauré, 1,261, la mise en page du palier ×2 réduite en continu et lissée (B85, B90) ; maximisé et plein écran, net |
 | M17 | Fiche ouverte, redimensionne la fenêtre | La fiche suit sa carte (ADR-121, point 6) |
-| M18 | Sur un écran 1440p ou 4K, ou sous un réglage d'affichage Windows à 125 % ou 150 %, si le propriétaire en a un | Le palier de B83 — ×2 en 1440p, ×4 en 4K —, net ; à 125 %, les cadres aussi nets qu'à 100 % |
+| M18 | Sur un écran 1440p ou 4K, ou sous un réglage d'affichage Windows à 125 % ou 150 %, si le propriétaire en a un | Le palier de B90 — 2,667 lissé en 1440p, ×3 net en 2880 × 1800 à 200 %, ×4 net en 4K ; à 125 %, les cadres aussi nets qu'à 100 % |
 | M19 | Copie `combat.png` en `rest.png` dans `assets/data/locations/forest/`, relance, ouvre un repos ; puis retire le fichier | Le décor de forêt derrière le menu du repos ; sans le fichier, le fond d'aujourd'hui |
 | M20 | Le repos, la boutique, un événement, l'autel, la forge | Leurs fonds d'aujourd'hui, inchangés |
 | M21 | Regarde la barre de l'ennemi le plus à droite, dans la fenêtre restaurée | Elle ne passe pas sous les boutons Son et Deck — ou le noter |
-| M22 | Lance le jeu sous Windows, puis « Restaurer », puis « Agrandir », puis relance | La fenêtre s'ouvre maximisée **dès son premier affichage, sans éclair de sa taille de création**, le plateau net au palier ×2 sur un écran 1080p ; restaurée — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % —, plateau réduit et lissé ; relancée, maximisée de nouveau (rien ne garde la taille) |
+| M22 | Lance le jeu sous Windows, puis « Restaurer », puis « Agrandir », puis relance | La fenêtre s'ouvre maximisée **dès son premier affichage, sans éclair de sa taille de création**, le plateau net au palier ×2 sur un écran 1080p ; restaurée — fenêtre de 1280 × 720, cadre compris ; zone de jeu d'environ 1264 × 681 à 100 % —, plateau réduit (1,261) et lissé ; relancée, maximisée de nouveau (rien ne garde la taille) |
 
 ---
 
@@ -895,7 +895,7 @@ rangée définitives — c'est la tâche à risque, et elle ne doit se jouer qu'
 | 2 | Les fonctions pures | — | `boardScaleFor`, `decorFitFor`, `creatureFitOf`, `pickWindowBackground`, `placeRow` et `slotOf`, `enemyZoneRect` et le gabarit ; les constantes de `GameConstants` ; leurs tests |
 | 3 | Le décor | 1, 2 | Le décor du combat au cadrage de `decorFitFor` ; `GameScreen` passe le lieu et la table au jeu ; `bg_dungeon.png` et `assets/images/` partent ; `ScreenScaffold` et `LocationBackdrop`, déclarés par les six écrans (A6) |
 | 4 | La carte composée | 1, 2 | Le fond, la créature (`creatureFitOf`, le filtrage), le cadre ; la taille du canevas ; la gangue et le halo sur la fenêtre ; le fond tiré à la création. La barre et les languettes restent provisoirement ancrées au canevas |
-| 5 | Le palier et la rangée | 2, 4 | `boardScale` relu à `onGameResize` ; l'échelle de la carte au palier, le boss à la taille des autres, le lissage sous ×2 (B85) ; `repositionEnemies` sur `placeRow`, les fenêtres à 0,21 ; le retrait de `scaleMultiplier`, du facteur 1,45 et du rétrécissement ; **l'ouverture maximisée de la fenêtre Windows (B86, §5.10)**, qui sert le même palier ×2 dès le lancement |
+| 5 | Le palier et la rangée | 2, 4 | `boardScale` relu à `onGameResize` ; l'échelle de la carte au palier, le boss à la taille des autres, le lissage quand le palier n'est pas net (B85, B90) ; `repositionEnemies` sur `placeRow`, les fenêtres à 0,21 ; le retrait de `scaleMultiplier`, du facteur 1,45 et du rétrécissement ; **l'ouverture maximisée de la fenêtre Windows (B86, §5.10)**, qui sert le même palier ×2 dès le lancement |
 | 6 | **La vague 1 sur les cadres** — *tâche à risque* | 4, 5 | La barre et les languettes au gabarit ; la zone, test d'appui de la carte, la barre et les languettes sans `TapCallbacks` (A17) ; le contour de ciblage et sa lueur (A14) ; la fiche doublée et sa descente ; le décalage de la carte ouverte (`inspectionShift`, B89) ; `inspectionRect` ; les ancres des textes, de l'icône, de l'entaille et de la boule de feu (A16) ; leurs tests |
 | 7 | La documentation de `art_src/` | 1 | `tools/README.md` (la commande d'export) ; `workflow_decor.md` étape 7, `workflow_fond.md`, `workflow_creature.md` (le livrable et son chemin vers le jeu) ; `decor_controle.py` n'est pas retouché |
 
@@ -911,7 +911,7 @@ composants montés** (leçon 2 du [compte rendu de la vague 1](../reports/2026-1
 
 | Quoi | Où, par qui |
 |:---|:---|
-| **ADR « le cadre de tier et le compositing »** — la carte composée en cinq calques, la fenêtre invariante et le gabarit (B73, B77) ; le palier pair sur les pixels physiques, la créature à la moitié (B72, A8) ; la rangée en fonction pure, des places de 146 (A9) ; le recadrage des anciens sprites par la taille de l'image (A12) ; la couture de lieu par le répertoire, le lieu unique et le décor par écran (B66, B76, A3 à A6) ; la table des cadres en donnée et le refus d'un tier sans cadre (A2, A7) ; l'export (A19) ; l'ouverture maximisée (B86, A22) ; les réponses B83 à B89 du propriétaire ; **les propositions de l'identité visuelle écartées** — la table `const` Dart (§4.1), `assets/art/frames/` et `assets/art/backgrounds/` (§7.2), et la migration validée `assets/images/` → `assets/art/` (§9, point 3), devenue sans objet (A2, A3, A5). **Amende [ADR-121](../../../.obsidian_vault/_adr/ADR-121-l-interface-des-ennemis-en-combat.md)** (la barre à la largeur du gabarit, les languettes contre lui, la zone du canevas devenue le test d'appui de la carte, la barre et les languettes qui ne renvoient plus d'appui, la fiche doublée au lieu de 1,25, le contour autour de la fenêtre et la fin du liseré blanc) et **[ADR-002](../../../.obsidian_vault/_adr/ADR-002-responsivite-dynamique-par-scalefactor.md)** (les ennemis quittent `scaleFactor`, que gardent le héros et la main). Le numéro suivant est ADR-123 | `memory-bank-sync` |
+| **ADR « le cadre de tier et le compositing »** — la carte composée en cinq calques, la fenêtre invariante et le gabarit (B73, B77) ; le palier sur les pixels physiques, qui suit la taille du héros (B72, B90, A8), la créature à la moitié ; la rangée en fonction pure, des places de 146 (A9) ; le recadrage des anciens sprites par la taille de l'image (A12) ; la couture de lieu par le répertoire, le lieu unique et le décor par écran (B66, B76, A3 à A6) ; la table des cadres en donnée et le refus d'un tier sans cadre (A2, A7) ; l'export (A19) ; l'ouverture maximisée (B86, A22) ; les réponses B83 à B90 du propriétaire ; **les propositions de l'identité visuelle écartées** — la table `const` Dart (§4.1), `assets/art/frames/` et `assets/art/backgrounds/` (§7.2), et la migration validée `assets/images/` → `assets/art/` (§9, point 3), devenue sans objet (A2, A3, A5). **Amende [ADR-121](../../../.obsidian_vault/_adr/ADR-121-l-interface-des-ennemis-en-combat.md)** (la barre à la largeur du gabarit, les languettes contre lui, la zone du canevas devenue le test d'appui de la carte, la barre et les languettes qui ne renvoient plus d'appui, la fiche doublée au lieu de 1,25, le contour autour de la fenêtre et la fin du liseré blanc) et **[ADR-002](../../../.obsidian_vault/_adr/ADR-002-responsivite-dynamique-par-scalefactor.md)** (les ennemis quittent `scaleFactor`, que gardent le héros et la main). Le numéro suivant est ADR-123 | `memory-bank-sync` |
 | Fiches `_patterns` : `05-3` (les lignes `EnemyCard`, `EnemyHealthBar`, `StatusTabs`, le contour neuf), `05-3-1` (`CombatEntity`, son rectangle d'ancrage, l'échelle de base doublée par la fiche), `05-4` (l'ordre des enfants d'une carte d'ennemi), `05-5` (la carte d'un ennemi : son canevas, sa fenêtre, son gabarit, le palier), `03-6` (`LayoutSystem` sur `placeRow`), `08-00` (`scaleFactor`, qui ne sert plus aux ennemis), `17-00` (`assetsMatching`, `fault`, `tier_frames.json`, les lieux), `05-11` (`ScreenScaffold` et son décor), `04-00` (ce que `GameScreen` passe au jeu) — un minimum, que le diff complétera | `memory-bank-sync` |
 | `CLAUDE.md`, trois descriptions factuelles que le lot rend fausses : l'arbre de « Data-Driven Content Workflow » gagne `frames/`, `tier_frames.json` et `locations/<id>/` ; la couche de données (« models mapping 1:1 to the JSON assets », `CLAUDE.md:43`) gagne `tier_frame_data.dart` et `location_data.dart`, ce dernier lu dans le manifeste sans JSON ; `GameDataLoader` (`CLAUDE.md:47`) gagne `assetsMatching` et `fault`, publiques | Le plan les met à jour ; le compte rendu de la vague le signale au propriétaire |
 | `docs/ROADMAP.md` : la ligne **P-08**, qui se clôt, et la ligne **P-05** | `memory-bank-sync`, à la fin de la vague — hors de cette spec |
@@ -973,8 +973,8 @@ règle — aucun ennemi ne fait autre chose qu'en `0.6.1`.
   registre sans lieu donne `currentLocationProvider` nul, et `ScreenScaffold` son fond d'aujourd'hui (§4.2).
 - **La zone sur les cinq tiers, coins compris** : le test de `enemyZoneRect` (§11) prend un point dans chaque coin
   au-dessus du canevas, de part et d'autre de la barre, aux tiers 2 à 5.
-- **La marge de la 4K** : un test verrouille que ×4 tient en 3840 × 2160 à 4 pixels près (3644 sur 3648) et tombe à
-  ×2 si une place ou un écart grandit d'un pixel de cadre (B83).
+- **La marge de la 4K** : un test verrouille que ×4 tient en 3840 × 2160 à 4 pixels près (3644 sur 3648) et devient lissé
+  (3,978 pour une place de 917) si une place ou un écart grandit d'un pixel de cadre (B83, B90).
 - **La descente de la carte ouverte** vaut 77 × le palier sur les cinq tiers : un test par tier.
 - **`entity_id_convention_test.dart`** : son compte de 143 fichiers d'entité (`:72-78`) ne tient que si
   `tier_frames.json` entre dans `_configDocuments` (`:17-22`).
@@ -993,6 +993,6 @@ règle — aucun ennemi ne fait autre chose qu'en `0.6.1`.
   `onGameResize` où `crisp` change — fenêtre maximisée ↔ restaurée — et reviennent : la peinture de chaque enfant se
   relit à ce moment, pas seulement à `onLoad`.
 - **Le rejeu monté à 1264 × 681** (la zone de jeu de la fenêtre restaurée) : cinq ennemis, la carte du bord droit
-  ouverte — `frame` ≈ 1,318, décalage 0, bord droit de la carte ouverte, languette au repos comprise, vers 1228.
+  ouverte — `frame` ≈ 1,261, décalage 0, bord droit de la carte ouverte, languette au repos comprise, vers 1202.
 - **M22 regarde le premier affichage** : `Show()` ne s'appelle qu'à la première image (`flutter_window.cpp:30-31`) ;
   aucun éclair de la fenêtre à sa taille de création avant qu'elle ne s'agrandisse.
