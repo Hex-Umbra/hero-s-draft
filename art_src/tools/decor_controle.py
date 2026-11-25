@@ -15,7 +15,7 @@ un pixel par case. Un ennemi se donne par son tier et son sprite, en .aseprite d
 clair, ce que l'interface recouvre.
 
 C'est une maquette, pas le jeu : les places viennent des maquettes du 23/11/2026 (B72, B73, B77),
-les cadres sont ceux, provisoires, de frame_tier.py, et les cartes de la main sont factices. Elle
+les cadres sont ceux de frame_tier.py (B81), et les cartes de la main sont factices. Elle
 se reverifie sur le jeu une fois la vague du visuel livree.
 """
 import argparse
@@ -78,18 +78,11 @@ def backdrop(path):
 
 
 def tier_frame(tier):
-    """Le cadre du tier, sans son fond de fenetre, a sa taille de B73.
-
-    frame_tier.py porte encore les anciennes tailles : on lui donne celles de B73 le temps du trace."""
-    old, frame_tier.TIERS = frame_tier.TIERS, TIERS
-    try:
-        S, _ = frame_tier.frame(tier)
-    finally:
-        frame_tier.TIERS = old
+    """Le cadre du tier, a sa taille de B73 : ses calques, l'un sur l'autre."""
+    S, _ = frame_tier.frame(tier)
     out = Image.new("RGBA", (S.w, S.h), (0, 0, 0, 0))
     for n in S.order:
-        if n != "Fond de fenêtre":
-            out.alpha_composite(S.img[n])
+        out.alpha_composite(S.img[n])
     return out
 
 
