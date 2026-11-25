@@ -89,8 +89,8 @@ La session de correction garde le prompt de l'orchestration §3.10, en remplaça
 
 | Vague | Version | Branche | Spec | Plan | Tests | État |
 |:---|:---|:---|:---|:---|:---|:---|
-| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — quatre tours | [plan](../superpowers/plans/2026-11-21-p05-interface-des-ennemis.md) — trois tours | 1866 → 1935 → **1939** (correction C1) | **fusionnée le 22/11** par la PR #57 (`32e2ad46`), **taguée `v0.6.1`** · [compte rendu](../superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md) · [tests manuels](../superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md) — passe à « close » à la porte d'entrée de la vague 2 |
-| 2 — le visuel | `0.6.2` | `feat/v0.6.2-cadres-et-decors` | — | — | — | **à faire** — prérequis remplis le 25/11 ([fiche](vague_2_visuel.md)) |
+| 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — quatre tours | [plan](../superpowers/plans/2026-11-21-p05-interface-des-ennemis.md) — trois tours | 1866 → 1935 → **1939** (correction C1) | **fusionnée le 22/11** par la PR #57 (`32e2ad46`), **taguée `v0.6.1`** · [compte rendu](../superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md) · [tests manuels](../superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md) — **close**, constatée le 25/11 à la porte d'entrée de la vague 2 (CI de `main` et release `v0.6.1` vertes) |
+| 2 — le visuel | `0.6.2` | `feat/v0.6.2-cadres-et-decors` | — | — | base **1939** | **en cours** — `3.2 · fait` le 25/11 ([fiche](vague_2_visuel.md)) |
 | 3 — le socle | `0.6.3` | `feat/v0.6.3-langage-des-intentions` | — | — | — | à faire — attend la vague 2 ; aucun autre prérequis |
 | 4 — le tier 1 | `0.6.4` | `feat/v0.6.4-bestiaire-tier-1` | — | — | — | à faire — attend la vague 3 et ses prérequis |
 | 5 — le tier 2 | `0.6.5` | `feat/v0.6.5-bestiaire-tier-2` | — | — | — | à faire — attend la vague 4 et ses prérequis |
