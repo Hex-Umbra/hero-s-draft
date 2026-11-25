@@ -17,7 +17,7 @@
         "emoji": "⚡",
         "entries": [
           "L'illustration de chaque ennemi est recadrée dans la fenêtre de son cadre.",
-          "Le plateau ne rétrécit plus peu à peu quand les ennemis sont nombreux : ils s'affichent à une taille nette, la même pour un boss.",
+          "Le plateau ne rétrécit plus quand les ennemis sont nombreux : leur taille suit celle de l'écran, et sur un grand écran ils grandissent comme le héros. Ils restent nets dans la plupart des cas, et à la même taille pour un boss.",
           "Le contour de ciblage entoure l'illustration : cyan pour une cible possible, ambre pour l'ennemi choisi. Les ennemis au repos n'ont plus de liseré blanc.",
           "La fiche d'un ennemi double sa carte, et près du bord de l'écran elle se décale pour rester entière.",
           "Sous Windows, le jeu s'ouvre en plein écran fenêtré."
