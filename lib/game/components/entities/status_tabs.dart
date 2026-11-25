@@ -31,19 +31,26 @@ class StatusTabs extends PositionComponent {
   /// Au-dessus de la gangue (4) et du halo (5) que porte la carte.
   static const int _priority = 6;
 
+  /// Tout ce que la languette dessine, à l'échelle de [GameConstants.statusTabScale] ;
+  /// seule sa hauteur sur la carte, [_top], n'en dépend pas.
+  static const double _k = GameConstants.statusTabScale;
+
   static const double _top = 11;
-  static const double _restPitch = 31;
-  static const double _restPadding = 3;
-  static const double _restValueTop = 17;
-  static const double _minWidth = 30;
-  static const double _maxWidth = 120;
-  static const double _padX = 8;
-  static const double _padY = 4;
-  static const double _emojiBox = 16;
-  static const double _textGap = 6;
-  static const double _pitch = 22;
-  static const double _pitchWithSubtitle = 30;
-  static const double _radius = 4;
+  static const double _restPitch = 31 * _k;
+  static const double _restPadding = 3 * _k;
+  static const double _restValueTop = 17 * _k;
+  static const double _minWidth = 30 * _k;
+  static const double _maxWidth = 120 * _k;
+  static const double _padX = 8 * _k;
+  static const double _padY = 4 * _k;
+  static const double _emojiBox = 16 * _k;
+  static const double _textGap = 6 * _k;
+  static const double _pitch = 22 * _k;
+  static const double _pitchWithSubtitle = 30 * _k;
+  static const double _radius = 4 * _k;
+  static const double _titleTop = 5 * _k;
+  static const double _titleTopWithSubtitle = 3 * _k;
+  static const double _subtitleTop = 15 * _k;
   static const double _seconds = 0.1;
 
   static const double _textX = _padX + _emojiBox + _textGap;
@@ -99,7 +106,7 @@ class StatusTabs extends PositionComponent {
   }
 
   /// La largeur déroulée, en unités de la carte : celle du contenu, bornée à
-  /// `[30, 120]` ; 0 sans entrée.
+  /// `[22,5 ; 90]` ; 0 sans entrée.
   double get unfoldedWidth {
     if (_rows.isEmpty) return 0;
     final text = _rows.map((row) => row.openTextWidth).reduce(max);
@@ -232,17 +239,17 @@ class _TabRow extends PositionComponent {
   ReadoutTone? _tone;
   bool _hasSubtitle = false;
 
-  static final _emojiPaint = TextPaint(style: const TextStyle(fontSize: 14));
+  static final _emojiPaint = TextPaint(style: const TextStyle(fontSize: 14 * StatusTabs._k));
   static final _titlePaint = TextPaint(
     style: const TextStyle(
-      fontSize: 9,
+      fontSize: 9 * StatusTabs._k,
       fontWeight: FontWeight.bold,
       color: Color(0xFFF7F7FA),
     ),
   );
   static final _subtitlePaint = TextPaint(
     style: const TextStyle(
-      fontSize: 9,
+      fontSize: 9 * StatusTabs._k,
       fontWeight: FontWeight.bold,
       color: Color(0xFFFFD740),
     ),
@@ -260,7 +267,7 @@ class _TabRow extends PositionComponent {
       _tone = entry.tone;
       _restValue.textRenderer = TextPaint(
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 10 * StatusTabs._k,
           fontWeight: FontWeight.bold,
           color: StatusReadout.toneColor(entry.tone),
         ),
@@ -287,8 +294,11 @@ class _TabRow extends PositionComponent {
       StatusTabs._padX + StatusTabs._emojiBox / 2,
       pitch / 2,
     );
-    _title.position.setValues(StatusTabs._textX, _hasSubtitle ? 3 : 5);
-    _subtitle.position.setValues(StatusTabs._textX, 15);
+    _title.position.setValues(
+      StatusTabs._textX,
+      _hasSubtitle ? StatusTabs._titleTopWithSubtitle : StatusTabs._titleTop,
+    );
+    _subtitle.position.setValues(StatusTabs._textX, StatusTabs._subtitleTop);
   }
 
   /// Le texte coupé par des points de suspension s'il dépasse la largeur

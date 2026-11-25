@@ -12,14 +12,13 @@ class RowSlot {
   const RowSlot({required this.width, required this.gap});
 }
 
-/// La place de plus petit cadre : le gabarit et **une** languette au repos,
+/// La place de plus petit cadre : le gabarit et la part d'**une** languette,
 /// 88 + 29 = 117 (B91). Une carte en porte une de chaque côté : quand deux
 /// voisines en portent chacune une du côté qui les sépare, ces deux languettes
 /// se superposent, et la carte dessinée par-dessus reçoit le pointeur
 /// (`inDrawOrder` dans `entity_hover.dart`).
-const double enemySlotWidth = GameConstants.enemyTemplateWidth +
-    GameConstants.statusTabRestWidth -
-    GameConstants.statusTabOverlap;
+const double enemySlotWidth =
+    GameConstants.enemyTemplateWidth + GameConstants.enemySlotTabWidth;
 
 /// La place d'un ennemi de cadre [frame] : la plus large de son cadre et de
 /// [enemySlotWidth] — 117 du tier 1 au tier 4, 120 au tier 5.

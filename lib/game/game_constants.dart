@@ -64,9 +64,16 @@ class GameConstants {
   static const double enemyTemplateHeight = 120.0;
   static const double enemyTemplateMargin = 12.0;
 
-  /// Les languettes d'état : largeur au repos et recouvrement sur la carte.
-  static const double statusTabRestWidth = 30.0;
+  /// Les languettes d'état : leur échelle, qui réduit d'un quart tout ce
+  /// qu'elles dessinent, cadre, émojis et textes ; leur largeur au repos et
+  /// leur recouvrement sur la carte.
+  static const double statusTabScale = 0.75;
+  static const double statusTabRestWidth = 30.0 * statusTabScale;
   static const double statusTabOverlap = 1.0;
+
+  /// La part d'une languette dans la place d'un ennemi (B91). Elle ne suit pas
+  /// [statusTabScale] : réduire les languettes ne déplace pas la rangée.
+  static const double enemySlotTabWidth = 29.0;
 
   /// La rangée des ennemis : écart minimal et maximal entre deux places, part
   /// utilisable de la largeur d'écran et hauteur du centre (part de l'écran).

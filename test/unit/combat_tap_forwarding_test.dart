@@ -73,7 +73,7 @@ void main() {
     ]);
     tabs.setUnfolded(true, inward: true);
 
-    // Dans la carte : 120 est dans le rectangle de repos (103 à 133), hors du
+    // Dans la carte : 120 est dans le rectangle de repos (103 à 125,5), hors du
     // rectangle dessiné, qui finit au bord droit du gabarit (104).
     const inRest = Offset(120, 30);
     expect(tabs.localRect!.contains(inRest), isFalse);
@@ -83,5 +83,23 @@ void main() {
       tabs.zoneLocalRects.any((r) => r.contains(const Offset(150, 30))),
       isFalse,
     );
+  });
+
+  test('la languette au repos est reduite d un quart, sa hauteur sur la carte '
+      'non', () {
+    final tabs = StatusTabs(side: StatusSide.right, anchorRect: gabarit);
+    tabs.setEntries(const [
+      StatusReadout(
+        key: 'poison:',
+        emoji: '🧪',
+        restValue: '3',
+        tone: ReadoutTone.debuff,
+        title: 'Poison 3',
+      ),
+    ]);
+
+    // 30 × 37 avant réduction (deux marges de 3 et un pas de 31) ; le haut
+    // reste 11 sous celui du gabarit.
+    expect(tabs.restLocalRect, const Rect.fromLTWH(103, 27, 22.5, 27.75));
   });
 }
