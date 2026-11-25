@@ -90,7 +90,7 @@ La session de correction garde le prompt de l'orchestration §3.10, en remplaça
 | Vague | Version | Branche | Spec | Plan | Tests | État |
 |:---|:---|:---|:---|:---|:---|:---|
 | 1 — l'interface des ennemis | `0.6.1` | `feat/v0.6.1-interface-des-ennemis` | [spec](../superpowers/specs/2026-11-21-p05-interface-des-ennemis-design.md) — quatre tours | [plan](../superpowers/plans/2026-11-21-p05-interface-des-ennemis.md) — trois tours | 1866 → 1935 → **1939** (correction C1) | **fusionnée le 22/11** par la PR #57 (`32e2ad46`), **taguée `v0.6.1`** · [compte rendu](../superpowers/reports/2026-11-22-bestiaire-vague-1-compte-rendu.md) · [tests manuels](../superpowers/reports/2026-11-22-bestiaire-vague-1-tests-manuels.md) — **close**, constatée le 25/11 à la porte d'entrée de la vague 2 (CI de `main` et release `v0.6.1` vertes) |
-| 2 — le visuel | `0.6.2` | `feat/v0.6.2-cadres-et-decors` | — | — | base **1939** | **en cours** — `3.2 · fait` le 25/11 ([fiche](vague_2_visuel.md)) |
+| 2 — le visuel | `0.6.2` | `feat/v0.6.2-cadres-et-decors` | [spec](../superpowers/specs/2026-11-25-p05-cadres-et-decors-design.md) — un tour, corrigé | — | base **1939** | **en cours, arrêtée** — `3.3 · tour 1 corrigé`, le 25/11 : trois questions D et trois P attendent le propriétaire ([fiche](vague_2_visuel.md)) |
 | 3 — le socle | `0.6.3` | `feat/v0.6.3-langage-des-intentions` | — | — | — | à faire — attend la vague 2 ; aucun autre prérequis |
 | 4 — le tier 1 | `0.6.4` | `feat/v0.6.4-bestiaire-tier-1` | — | — | — | à faire — attend la vague 3 et ses prérequis |
 | 5 — le tier 2 | `0.6.5` | `feat/v0.6.5-bestiaire-tier-2` | — | — | — | à faire — attend la vague 4 et ses prérequis |
@@ -101,7 +101,7 @@ La session de correction garde le prompt de l'orchestration §3.10, en remplaça
 | 10 — le tier boss | `0.7.0` | — | — | — | — | fiche à écrire |
 | la clôture | — | — | — | — | — | après la vague 10 : le bilan du [suivi](../suivi_vagues_chantier/bestiaire.md), et les lignes P-05, P-08, P-09 et P-15 de la ROADMAP |
 
-**Arrêts** : la vague 1 en a eu deux, levés le 21/11 — voir le [cadrage, §4](../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md).
+**Arrêts** : la vague 1 en a eu deux, levés le 21/11 — voir le [cadrage, §4](../possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md). **La vague 2 est arrêtée le 25/11 à la spec**, après son tour 1 de vérification et sa correction : trois questions de classe D, qui ne se tranchent qu'en amendant B72 ou B79 — D1, les exemples de B72 (×4 en 1440p, ×6 en 4K) contredisent sa règle ; D2, la fiche ouverte au palier pair suivant (B72) ou doublée (B79) ; D3, le plateau sous le 1080p, où aucun palier pair ne tient — et trois de classe P : P2, le décor hors 16:9 ; P3, le tirage du fond de fenêtre ; P4, la carte du bord ouverte avec six cartes (non bloquante). Posées sur maquettes : <https://claude.ai/artifact/5fcccZZGtE1xJVW9eLtAAq> ; options et recommandations à la [spec](../superpowers/specs/2026-11-25-p05-cadres-et-decors-design.md) §1.3. **La reprise** : le propriétaire ajoute au prompt de lancement ses réponses ; elles deviennent des décisions B du cadrage, la spec les reprend, puis un tour 2 différentiel.
 
 ---
 
