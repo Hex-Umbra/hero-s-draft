@@ -182,7 +182,7 @@
 - **Faire** : regarder la barre de PV de l'ennemi le plus à droite par rapport aux boutons Son et Deck.
 - **Attendu** : **elle ne passe pas sous les boutons Son et Deck**, ni la barre de l'ennemi le plus à gauche sous « Acte - Niveau » : depuis B93, le haut des barres reste sous le bas visible des icônes (56 pixels logiques), la rangée descendue d'environ 14 pixels en 1280 × 720, à six ennemis compris. Toucher le bouton à cet endroit ferme la fiche et agit.
 - **Ne doit pas changer** : la place des boutons du HUD.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, dans Chrome en 1280 × 720 (outils de développement), après B93 : « la rangée ne passe plus sous la barre »
 
 ## T18 — Un écran 1440p, 4K, ou un réglage à 125 % ou 150 % (M18)
 *Si le propriétaire n'en a pas : noter « non testé ». L'écran de 2880 × 1800 à 200 % du propriétaire est testé à part, en T24 (T23 l'a été sous B90).*
