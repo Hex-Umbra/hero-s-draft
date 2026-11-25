@@ -111,8 +111,9 @@ void main() {
           might: 0,
         ),
       );
-    // Un canevas de 1280 x 800 : `scaleFactor` vaut 1, et le rectangle de la
-    // fiche se calcule sans que le jeu soit charge.
+    // Un canevas de 1280 x 800 : `scaleFactor` vaut 1, le palier 1,3348,
+    // lisse (B85), et le rectangle de la fiche se calcule sans que le jeu
+    // soit charge.
     game.onGameResize(Vector2(1280, 800));
     e1 = _enemy(game, 'e1');
     e2 = _enemy(game, 'e2');
@@ -120,6 +121,24 @@ void main() {
 
   test('sans contexte, le rapport de pixels vaut 1', () {
     expect(game.devicePixelRatio, 1);
+  });
+
+  test('la carte au repos est a l echelle du palier, un boss aussi', () {
+    final boss = EnemyCard(
+      instance: EnemyInstance(
+        id: 'boss',
+        data: _slime,
+        stats: EntityStats(maxPv: 18, currentPv: 18, armure: 0, might: 4),
+        isBoss: true,
+      ),
+      frame: testFrameOf(1),
+      windowBackground: null,
+      onTapEnemy: (_, _) {},
+    )..game = game;
+
+    expect(game.boardScale.frame, closeTo(1.3348, 1e-4));
+    expect(e1.restScale, game.boardScale.frame);
+    expect(boss.restScale, game.boardScale.frame);
   });
 
   test('la carte d un ennemi mesure le canevas de son tier, sa fenetre a l offset de la table', () {

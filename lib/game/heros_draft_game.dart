@@ -36,6 +36,8 @@ import 'systems/layout_system.dart';
 import 'systems/hand_geometry.dart';
 import 'systems/entity_hover.dart';
 import 'systems/decor_fit.dart';
+import 'systems/board_scale.dart';
+import 'systems/enemy_row.dart';
 
 /// La fiche ouverte, telle que `GameScreen` la reflète (spec P-05 vague 1,
 /// A12) : l'ennemi, et le rectangle de sa carte agrandie à l'arrivée, barre
@@ -80,7 +82,18 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   /// glisser, qui l'emporte ailleurs.
   Vector2? _lastPointerPos;
 
-  double get scaleFactor => (size.y / 800).clamp(0.85, 2.5);
+  /// La part de la hauteur où se pose le centre de la carte du héros.
+  static const double heroRowY = 0.51;
+
+  /// L'échelle du héros et de la main pour une hauteur de jeu.
+  static double scaleFactorFor(double height) => (height / 800).clamp(0.85, 2.5);
+
+  double get scaleFactor => scaleFactorFor(size.y);
+
+  /// Le palier du plateau des ennemis (spec P-05, vague 2, §5.1), relu à
+  /// chaque [onGameResize] avant que la taille ne descende aux cartes.
+  BoardScale get boardScale => _boardScale;
+  late BoardScale _boardScale;
 
   RunState? get currentRunState => stateSyncSystem?.currentState;
   CombatState? get currentCombatState => stateSyncSystem?.currentCombatState;
@@ -425,9 +438,19 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
   @override
   void onGameResize(Vector2 size) {
+    final ratio = devicePixelRatio;
+    _boardScale = boardScaleFor(
+      screen: Size(size.x, size.y),
+      devicePixelRatio: ratio,
+      rowCenterY: rowCenterYFor(size.y, devicePixelRatio: ratio),
+      rowFloorY: size.y * heroRowY -
+          HeroCard.cardHeight / 2 *
+              scaleFactorFor(size.y) *
+              HeroCard.boardScaleRatio,
+    );
     super.onGameResize(size);
     if (heroCard != null) {
-      heroCard!.position = Vector2(size.x / 2, size.y * 0.51);
+      heroCard!.position = Vector2(size.x / 2, size.y * heroRowY);
     }
     if (enemyCards.isNotEmpty) {
       repositionEnemies();

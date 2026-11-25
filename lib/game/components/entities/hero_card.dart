@@ -26,11 +26,18 @@ class HeroCard extends CombatEntity with TapCallbacks {
   @override
   late final SpriteComponent sprite;
 
+  /// La carte du héros en pixels de carte, avant son échelle.
+  static const double cardWidth = 120;
+  static const double cardHeight = 160;
+
+  /// Ce qui agrandit la carte du héros sur le plateau, au-delà de `scaleFactor`.
+  static const double boardScaleRatio = 1.3;
+
   HeroCard(this.stats, {required this.imagePath})
-    : super(size: Vector2(120, 160));
+    : super(size: Vector2(cardWidth, cardHeight));
 
   @override
-  double get entityBaseScale => game.scaleFactor * 1.3;
+  double get entityBaseScale => game.scaleFactor * boardScaleRatio;
 
   @override
   void refreshBorderVisuals() {
@@ -117,7 +124,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
     anchor = Anchor.center;
 
     // Appliquer l'échelle initiale (Agrandie pour le terrain)
-    scale = Vector2.all(game.scaleFactor * 1.3);
+    scale = Vector2.all(game.scaleFactor * boardScaleRatio);
 
     // Position par défaut au centre pour le joueur (sera mise à jour par onGameResize du jeu)
     position = Vector2(game.size.x / 2, game.size.y * 0.6);
@@ -147,7 +154,7 @@ class HeroCard extends CombatEntity with TapCallbacks {
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     // Mettre à jour l'échelle lors du redimensionnement (Agrandie pour le terrain)
-    scale = Vector2.all(game.scaleFactor * 1.3);
+    scale = Vector2.all(game.scaleFactor * boardScaleRatio);
   }
 
   /// Etat en attente pendant qu'une carte s'anime, sur le modele de

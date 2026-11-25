@@ -41,7 +41,6 @@ class EnemyCard extends CombatEntity
   EnemyIntent? get currentIntent => instance.currentIntent;
   EnemyIntent? get effectiveIntent => instance.effectiveIntent;
   bool get skipsAction => instance.skipsAction;
-  bool get isBoss => instance.isBoss;
 
   bool isSelected = false;
   bool isDead = false;
@@ -50,17 +49,9 @@ class EnemyCard extends CombatEntity
   bool _pendingFireDamage = false;
   bool _holdingVisualStats = false;
 
-  double _scaleMultiplier = 1.0;
-  double get scaleMultiplier => _scaleMultiplier;
-  set scaleMultiplier(double value) {
-    if (_scaleMultiplier == value) return;
-    _scaleMultiplier = value;
-    _snapScale();
-  }
-
-  /// L'échelle de la carte au repos, fiche fermée.
-  double get restScale =>
-      game.scaleFactor * 1.45 * (isBoss ? 1.25 : 1.0) * _scaleMultiplier;
+  /// L'échelle de la carte au repos, fiche fermée : le palier du plateau, le
+  /// même pour un boss (B73).
+  double get restScale => game.boardScale.frame;
 
   /// L'échelle à laquelle les effets ramènent la carte : agrandie tant que sa
   /// fiche est ouverte (spec P-05 vague 1, A11).
@@ -220,6 +211,10 @@ class EnemyCard extends CombatEntity
   /// Vrai quand la créature est un ancien sprite, que la fenêtre lisse.
   late final bool _smoothCreature;
 
+  /// Le fond de la fenêtre et le cadre, que [_refreshFiltering] lisse ou non.
+  SpriteComponent? _backgroundSprite;
+  late final SpriteComponent _frameSprite;
+
   @override
   Rect get windowLocalRect => enemyWindowRect(frame);
 
@@ -246,12 +241,12 @@ class EnemyCard extends CombatEntity
     final background = windowBackground;
     if (background != null) {
       add(
-        SpriteComponent(
+        _backgroundSprite = SpriteComponent(
           sprite: Sprite(await game.images.load(background)),
           position: windowPosition,
           size: windowSize,
           priority: 0,
-        )..paint.filterQuality = FilterQuality.none,
+        ),
       );
     }
 
@@ -267,17 +262,15 @@ class EnemyCard extends CombatEntity
       position: windowPosition,
       size: windowSize,
       priority: 1,
-    )..paint.filterQuality = _smoothCreature
-        ? FilterQuality.medium
-        : FilterQuality.none;
+    );
     add(sprite);
 
     add(
-      SpriteComponent(
+      _frameSprite = SpriteComponent(
         sprite: Sprite(await game.images.load(frame.imagePath)),
         size: size.clone(),
         priority: 2,
-      )..paint.filterQuality = FilterQuality.none,
+      ),
     );
 
     borderInfo = RectangleComponent(
@@ -304,12 +297,28 @@ class EnemyCard extends CombatEntity
       _isHighlighted = false;
       setHighlight(true);
     }
+
+    _refreshFiltering();
   }
 
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     _snapScale();
+    if (isLoaded) _refreshFiltering();
+  }
+
+  /// Sur un palier net, le fond et le cadre ne se lissent pas, la créature
+  /// seulement si c'est un ancien sprite ; sous ×2, tous trois se lissent
+  /// (B85).
+  void _refreshFiltering() {
+    final crisp = game.boardScale.crisp;
+    final framing = crisp ? FilterQuality.none : FilterQuality.medium;
+    _backgroundSprite?.paint.filterQuality = framing;
+    _frameSprite.paint.filterQuality = framing;
+    sprite.paint.filterQuality = _smoothCreature || !crisp
+        ? FilterQuality.medium
+        : FilterQuality.none;
   }
 
   void _refreshHealthBar() {
