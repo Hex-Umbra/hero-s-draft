@@ -54,6 +54,16 @@ class GameConstants {
   static const double enemyHealthBarShieldGap = 3.0;
   static const double enemyHealthBarArmorGap = 2.0;
 
+  // --- CADRE D'UN ENNEMI (pixels de cadre) ---
+  /// La fenêtre que le cadre entoure, et que le sprite remplit.
+  static const double enemyWindowWidth = 64.0;
+  static const double enemyWindowHeight = 96.0;
+
+  /// Le plus petit cadre admis : la fenêtre et sa marge de chaque côté.
+  static const double enemyTemplateWidth = 88.0;
+  static const double enemyTemplateHeight = 120.0;
+  static const double enemyTemplateMargin = 12.0;
+
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {
     MapNodeType.combat: (min: 12, max: 22),

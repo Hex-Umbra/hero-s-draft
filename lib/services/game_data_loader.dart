@@ -180,6 +180,24 @@ class GameDataLoader {
     }
   }
 
+  /// Les cles du manifeste que [pattern] selectionne, avec les segments qu il
+  /// capture — la regle de [loadAll], sans lire aucun fichier. Pour ce que
+  /// le manifeste suffit a dire : un dossier d images, que le chargeur n a
+  /// pas a decoder.
+  Future<List<({String key, List<String> captures})>> assetsMatching(
+    String pattern,
+  ) async {
+    await _prepare();
+    return [
+      for (final match in _match(pattern))
+        (key: match.key, captures: match.captures),
+    ];
+  }
+
+  /// Ajoute une faute que [throwIfFailed] remontera avec les autres : celle
+  /// d une verification que le chargeur ne fait pas lui-meme.
+  void fault(String message) => _errors.add(message);
+
   /// Lit et decode un fichier JSON du bundle : une entite de [loadAll] ou un
   /// document de [loadDocument].
   Future<Map<String, dynamic>?> _read(String key) async {

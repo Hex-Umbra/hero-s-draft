@@ -1,35 +1,8 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/services/game_data_loader.dart';
 import 'package:roguelike_card_game/services/game_data_service.dart';
 
-// `ByteData` et `Uint8List` viennent de `package:flutter/services.dart`, qui
-// les reexporte : pas d import `dart:typed_data`, comme dans
-// `test/unit/audio/load_audio_data_test.dart`.
-
-/// Bundle factice : sert un `AssetManifest.bin` construit a la volee depuis
-/// les cles de [files]. C est le seul moyen d exercer le chargeur sur une
-/// arborescence choisie sans fabriquer un vrai bundle ni polluer celui de
-/// l application.
-class FakeBundle extends CachingAssetBundle {
-  FakeBundle(this.files);
-  final Map<String, String> files;
-
-  @override
-  Future<ByteData> load(String key) async {
-    if (key == 'AssetManifest.bin') {
-      final manifest = <String, Object>{
-        for (final path in files.keys) path: <Object>[],
-      };
-      return const StandardMessageCodec().encodeMessage(manifest)!;
-    }
-    final content = files[key];
-    if (content == null) throw Exception('asset introuvable : $key');
-    return ByteData.sublistView(Uint8List.fromList(utf8.encode(content)));
-  }
-}
+import 'fake_bundle.dart';
 
 /// Modele de test minimal : le chargeur ne doit connaitre aucun modele du jeu.
 class Thing {
@@ -338,13 +311,60 @@ void main() {
 
     test('le demarrage du jeu refuse un registre sans effect_icons.json',
         () async {
-      // Seule la courbe d XP est servie, valide : l erreur qui remonte ne
-      // peut venir que du document des icones d effet.
+      // Les autres documents manquent aussi (la table des cadres, les lieux) :
+      // le test verifie que la faute des icones d effet est parmi celles qui
+      // remontent.
       await expectLater(
         loadGameDataRegistry(FakeBundle(const {
           'assets/data/xp_curve.json': '{"xpPerLevelByAct":[100]}',
         })),
         throwsA(predicate((e) => e.toString().contains('effect_icons.json'))),
+      );
+    });
+
+    test('le demarrage du jeu refuse un registre sans tier_frames.json',
+        () async {
+      await expectLater(
+        loadGameDataRegistry(FakeBundle(const {
+          'assets/data/xp_curve.json': '{"xpPerLevelByAct":[100]}',
+          'assets/data/effect_icons.json': '{}',
+        })),
+        throwsA(predicate((e) => e.toString().contains('tier_frames.json'))),
+      );
+    });
+  });
+
+  group('GameDataLoader — manifeste et fautes', () {
+    test('assetsMatching rend les cles et leurs segments sans lire les fichiers',
+        () async {
+      final loader = GameDataLoader(FakeBundle({
+        'assets/data/frames/tier_1.png': 'pas du json',
+        'assets/data/frames/tier_2.png': 'pas du json non plus',
+        'assets/data/frames/lisez_moi/a.png': 'trop profond',
+      }));
+
+      final matches = await loader.assetsMatching('assets/data/frames/*');
+
+      expect(matches.map((m) => m.key), unorderedEquals([
+        'assets/data/frames/tier_1.png',
+        'assets/data/frames/tier_2.png',
+      ]));
+      for (final match in matches) {
+        expect(match.captures, [match.key.split('/').last]);
+      }
+      loader.throwIfFailed();
+    });
+
+    test('fault ajoute une faute que throwIfFailed remonte', () {
+      final loader = GameDataLoader(FakeBundle(const {}));
+
+      loader.fault('assets/data/quelque_chose : une faute de verification');
+
+      expect(
+        () => loader.throwIfFailed(),
+        throwsA(predicate((e) =>
+            e.toString().contains('1 erreur(s)') &&
+            e.toString().contains('une faute de verification'))),
       );
     });
   });

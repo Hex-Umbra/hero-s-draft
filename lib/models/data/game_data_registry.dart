@@ -11,6 +11,8 @@ import 'level_up_reward_data.dart';
 import 'signature_data.dart';
 import 'audio_data.dart';
 import 'xp_curve_data.dart';
+import 'location_data.dart';
+import 'tier_frame_data.dart';
 
 class GameDataRegistry {
   final List<EnemyData> enemies;
@@ -49,6 +51,15 @@ class GameDataRegistry {
   /// (A4).
   final ChargeCatalog charges;
 
+  /// Les cadres des cinq tiers (spec P-05, vague 2, §4.1). Vide par défaut,
+  /// comme [charges] : `loadGameDataRegistry` la renseigne toujours, et la
+  /// charge refuse un ennemi dont le tier n'a pas son cadre.
+  final TierFrameTable tierFrames;
+
+  /// Les lieux du jeu (§4.2). Vide par défaut : `loadGameDataRegistry` en
+  /// renseigne un seul, un registre construit à la main n'en porte aucun.
+  final LocationCatalog locations;
+
   final AudioData audio;
 
   static GameDataRegistry? _instance;
@@ -67,6 +78,8 @@ class GameDataRegistry {
     this.xpCurve,
     this.effectIcons = const EffectIconTable.empty(),
     this.charges = const ChargeCatalog.empty(),
+    this.tierFrames = const TierFrameTable.empty(),
+    this.locations = const LocationCatalog.empty(),
     this.audio = const AudioData.disabled(),
   }) {
     _instance = this;
@@ -82,5 +95,7 @@ class GameDataRegistry {
   List<String> get imagesToPreload => <String>{
         ...heroes.map((h) => h.classCard),
         ...enemies.map((e) => e.spritePath),
+        ...tierFrames.frames.map((f) => f.imagePath),
+        ...?locations.current?.images,
       }.where((path) => path.isNotEmpty).toList();
 }

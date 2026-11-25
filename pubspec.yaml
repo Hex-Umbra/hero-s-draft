@@ -56,7 +56,9 @@ flutter:
     - assets/data/enemies/squelette/
     - assets/data/events/
     - assets/data/forge_upgrades/
+    - assets/data/frames/
     - assets/data/level_up_rewards/
+    - assets/data/locations/forest/
     - assets/data/passives/
     - assets/data/relics/
     - assets/images/
