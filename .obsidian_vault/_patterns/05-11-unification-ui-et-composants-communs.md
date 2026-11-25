@@ -6,6 +6,7 @@ Pour éradiquer la duplication massive de code UI et uniformiser l'expérience v
    - Encapsule le widget `Scaffold` standard.
    - Propose un enum `ScreenBackgroundType` (`dark` pour les ambiances de combat/menus avec un dégradé subtil, `parchment` pour une texture papier de la carte/autels, `none` pour la transparence).
    - Intègre de manière transparente la gestion de `SafeArea` et de `PopScope` (cycle de vie des retours arrière sur mobile) de manière paramétrable.
+   - **Vague 2 du bestiaire** (sur la branche `feat/v0.6.2-cadres-et-decors` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)) : un paramètre `decor` (`DecorScreen?`) enveloppe le fond dans `LocationBackdrop` (`lib/ui/widgets/location_backdrop.dart`), qui lit `currentLocationProvider` et pose l'image du lieu pour cet écran par `decorFitFor` (couvre l'écran, centrée, rognée, jamais lissée) ; sans image pour l'écran, le fond de `backgroundType` reste. Six écrans le déclarent — l'événement, le repos et sa sélection de carte, la boutique, l'échange de reliques, la forge de fusion — et aucun n'a d'image : ils sont dormants ; le décor de combat est posé par Flame, non par ce widget.
 
 2. **`PageHeader` (`lib/ui/widgets/page_header.dart`)** :
    - Implémente `PreferredSizeWidget` pour s'insérer en tant qu'appBar ou s'utiliser directement dans le corps d'une page.

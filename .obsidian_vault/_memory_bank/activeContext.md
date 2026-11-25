@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-22 | commit: 477e9b12 -->
+<!-- last-sync: 2026-11-25 | commit: a0c9e60e -->
 
 # 🧠 Contexte Actuel
 
@@ -11,13 +11,20 @@
 [cadrage](../../docs/possible_upgrades/21-11-2026_cadrage_bestiaire_P05_Fable5.md) (§1) ; son
 déroulé — les vagues, leurs versions, le journal, les fiches, le catalogue des mécanismes et celui
 des ennemis — dans [`docs/chantier_bestiaire/`](../../docs/chantier_bestiaire/README.md). **La
-vague 1, l'interface des ennemis, est fusionnée dans `main` (PR #57) et taguée depuis le
-2026-11-22**, avec la correction S9. **Le programme a été révisé le 2026-11-23, après un audit** :
-le visuel et une couture de lieu, puis le langage des intentions seul, puis les tiers 1 à 3, un par
-vague, puis une refonte de la difficulté, les tiers 4 et 5 et les boss ; les lieux viennent après.
-**Aucune vague n'est ouverte** : le programme est dans `main` (PR #58) ; les questions de la vague 2
-sont toutes tranchées, elle n'attend plus que ses cadres redessinés et son décor de forêt.
-Suivi en clair : [`docs/suivi_vagues_chantier/bestiaire.md`](../../docs/suivi_vagues_chantier/bestiaire.md).
+vague 1, l'interface des ennemis, est close** : fusionnée dans `main` le 2026-11-22 par la PR #57,
+taguée `v0.6.1`, CI/CD verte — constaté le 2026-11-25 à la porte d'entrée de la vague 2.
+**La vague 2, le visuel, est livrée sur la branche `feat/v0.6.2-cadres-et-decors`, en attente du
+test, de la PR, de la fusion et du tag du propriétaire** ; rien n'en est dans `main`. Elle donne
+à chaque ennemi un cadre de tier (cinq cadres, une fenêtre de 64 × 96), une échelle à paliers pairs
+(×2 en 1080p et 1440p, ×4 en 4K ; réduit et lissé sous ×2), un décor de combat de forêt de 640 × 360
+désigné par un lieu (la couture de lieu, un seul lieu), un fond de fenêtre tiré par ennemi (dormant
+derrière les anciennes peintures), l'interface de la vague 1 recalée sur la fenêtre, une fiche
+doublée et décalée au bord, une fenêtre Windows maximisée et l'outil d'export
+`art_src/tools/export_jeu.py` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md).
+**Le programme a été révisé le 2026-11-23, après un audit** : le visuel et une couture de lieu,
+puis le langage des intentions seul, puis les tiers 1 à 3, un par vague, puis une refonte de la
+difficulté, les tiers 4 et 5 et les boss ; les lieux viennent après. Suivi en clair :
+[`docs/suivi_vagues_chantier/bestiaire.md`](../../docs/suivi_vagues_chantier/bestiaire.md).
 
 **La méthode** est celle du chantier précédent — [ADR-102](../_adr/ADR-102-chantier-par-vagues-une-version-par-vague.md),
 [ADR-103](../_adr/ADR-103-vagues-fusion-puis-tag-reference-de-simulation-suivi.md),
@@ -35,6 +42,17 @@ lot 1 et P-53, en neuf vagues ; sa clôture est fusionnée dans `main` (`f1ecddc
 
 Réserves à ne pas perdre de vue :
 
+- **Ce que la vague 2 du bestiaire laisse ouvert**, consigné dans
+  [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md) et au compte rendu de la
+  vague (§2 ; ses §3 à §5 s'écrivent à la fin de la vague) : **`CLAUDE.md` reste faux sur trois
+  points** (l'arbre du workflow de données sans `frames/`, `tier_frames.json` et `locations/<id>/`, la
+  couche de données sans `tier_frame_data.dart` et `location_data.dart`, `GameDataLoader` sans
+  `assetsMatching` et `fault`) jusqu'à la retouche du propriétaire (S2) ; **la pose du décor et la
+  couture Flame n'ont aucun test permanent**, faute de pouvoir monter un jeu sans membres `@internal`
+  de Flame — un rejeu monté jetable les a mesurées (S4) ; **dormants** : les fonds de fenêtre derrière
+  les anciennes peintures, le décor des six écrans autres que le combat ; **le héros et la main
+  gardent `scaleFactor`**, deux échelles cohabitent sur le plateau ; `build/unit_test_assets` garde
+  `bg_dungeon.png`, sans lecteur.
 - **Ce que la vague 1 du bestiaire laisse ouvert**, consigné dans
   [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md) et au compte rendu de la vague
   (§0, §4) : **le voile d'armure d'un ennemi est dormant** — aucun ennemi n'en gagne, le menu de
@@ -114,8 +132,8 @@ Réserves à ne pas perdre de vue :
   §1, pour le chantier clos, et au README du chantier du bestiaire, §1, pour le bestiaire.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
-  note — la porte ne suppose jamais. La vague 1 du bestiaire en est dispensée (cadrage §4,
-  troisième écart).
+  note — la porte ne suppose jamais. La vague 1 du bestiaire en était dispensée (cadrage §4,
+  troisième écart) ; la vague 2 a constaté la vague 1 taguée et verte le 2026-11-25.
 - **Les tiers A, B, C et E de `docs/ROADMAP.md` n'ont toujours pas été re-vérifiés contre le
   code** — seuls S et D l'ont été (2026-08-04).
 - **Bouton de téléchargement mort** si le build Windows échoue quand le web réussit — correctif
@@ -123,7 +141,29 @@ Réserves à ne pas perdre de vue :
 
 ## 3 dernières livraisons
 
-1. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
+1. **Bestiaire, vague 2 — les cadres de tier et les décors** (2026-11-25, branche
+   `feat/v0.6.2-cadres-et-decors`, base `e2a96432` ; spec et plan, puis dix commits de code
+   `589917be` → `4b108dfe`, notes de version `252159df` et `a0c9e60e` — **livrée sur la branche, en
+   attente du test, de la PR, de la fusion et du tag du propriétaire ; rien n'en est dans `main`**) —
+   **l'ennemi a un cadre et un décor.** **Cinq cadres de tier**, une gravure de ronce en PNG sous
+   `assets/data/frames/`, déclarés par `tier_frames.json` (un tier sans cadre est refusé au
+   chargement), autour d'une **fenêtre invariante de 64 × 96** (B73, B81, B82). **La carte composée**
+   en calques — fond de fenêtre, créature, cadre, contour — avec barre et languettes ancrées à un
+   gabarit de 88 × 120 (B77) ; **le contour entoure la fenêtre**, le liseré blanc du repos disparaît
+   (B78) ; **la fiche double la carte** à tout palier et se décale vers l'intérieur au bord (B79, B84,
+   B89). **La règle d'échelle** : le plus grand palier pair en pixels physiques qui tient une rangée de
+   six cartes, ×2 en 1080p et 1440p, ×4 en 4K, réduit et lissé sous ×2 (B72, B83, B85) ; le plateau ne
+   rétrécit plus en continu. **La couture de lieu** : `assets/data/locations/<id>/`, un seul lieu, la
+   forêt, un décor de combat de 640 × 360 en couleurs peintes (B66, B74, B76, B80, B88) ; `bg_dungeon`
+   supprimé ; **le fond de fenêtre** tiré au hasard à l'entrée de chaque ennemi parmi les trois du lieu
+   (B67, B87), dormant derrière les anciennes peintures, recadrées par la taille de leur image (B75).
+   **La fenêtre Windows s'ouvre maximisée** (B86) ; **l'outil d'export** `art_src/tools/export_jeu.py`.
+   Aucune règle de combat ne change. Un arrêt à la spec après son tour 1 (six questions, B83 à B89,
+   levées le même jour sur maquettes) ; deux tours de spec, deux tours de plan, sept tâches de SDD
+   et une passe de revue d'ensemble. **2023 tests** (+84 sur la base de **1939**), `dart analyze`
+   propre (**vérifié le 2026-11-25**) — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md),
+   qui amende ADR-121 et ADR-002.
+2. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
    `feat/v0.6.1-interface-des-ennemis`, partie de la correction S9 `8d544a3d` ; cadrage `c2e2dacb`,
    spec et plan `0eec1467` → `86a0f9db`, code `a356cabc` → `23c9823a`, note de version `5ea848fb` —
    **vague 1 du bestiaire, test du propriétaire passé le 2026-11-22, fusionnée dans `main` par la
@@ -146,7 +186,7 @@ Réserves à ne pas perdre de vue :
    courte d'une charge venant de son fichier (`summary_fr` / `summary_en`, obligatoire). **1939 tests**
    (+73 sur la base de **1866**), `dart analyze` propre (**vérifié le 2026-11-22**) — [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md),
    [ADR-122](../_adr/ADR-122-un-combat-fini-ne-rouvre-aucun-tour.md).
-2. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
+3. **Clôture du chantier « Économie unifiée et catalogue »** (2026-11-19, branche
    `docs/cloture-chantier-economie-et-catalogue`, sur `main` à `84a1ee34` — **sans code, sans
    version, sans tag**, orchestration §8.9) — **le chantier est clos.** La porte d'entrée constate
    la vague 8 fusionnée, taguée, publiée, CI/CD verte ; le journal passe la vague 8 à « close » et
@@ -157,35 +197,9 @@ Réserves à ne pas perdre de vue :
    [ADR-120](../_adr/ADR-120-ce-que-le-chantier-economie-et-catalogue-legue-a-la-methode.md).
    **1859 tests**, `dart analyze` propre (**vérifié le 2026-11-19**, `lib/`, `test/` et `assets/`
    identiques à `84a1ee34`).
-3. **Vague 8 — P-42 tranche 3 : Sanctifié, Carnage, Marque, les neuf passifs jouables**
-   (2026-11-18, branche `feat/v0.6.0-p42-tranche-3`, 13 commits `eb7945fb` → `147f564c` sur `main`
-   à `5d894785` — **fusionnée dans `main` le 2026-11-19 par la PR #56, merge `84a1ee34`, taguée
-   `v0.6.0`, CI/CD verte**) — **chaque passif a son lot.** **Le
-   déclencheur de D34** : `onDamagingCardPlayed`, que la suite commune envoie après l'événement du
-   type si la carte porte un effet `damage` — un seul prédicat, `EffectiveCard.dealsDamage`, effets
-   ajoutés compris, sans lire la cible ni les dégâts ; aucune relique ne l'écoute. ***Marque du
-   Mage*** l'écoute : la première carte de dégâts du tour, Attaque ou Compétence, signature
-   comprise, **qui vise un seul ennemi sans le tuer**, lui pose 2 Vulnérable — une carte de groupe
-   ne marque ni ne consomme (A3 (c)), une carte qui tue sa cible non plus (A4 (ii)) ; *Projectile
-   Magique* marque de nouveau, hors *Nova*. **La *Source de Vie*** (`hp_regen`, D55) : posée par
-   *Prière*, elle rend ses PV après le tic, bornée aux PV max, jamais à un porteur mort, symétrique
-   héros / ennemis ; le cœur rose du soin, dix-huitième sorte d'icône. **Le nom du statut** de la
-   croissance `targetStatus` se lit dans la langue du joueur (clé `statusName`). **Trois lots** :
-   Sanctifié (la Faiblesse, *Métallisation*, *Prière*), Carnage (quatre Attaques de groupe,
-   *Exécution* sur `targetMissingHp`), Marque (les quatre élémentaires, *Exploitation* sur
-   `targetStatus`, *Salve* 2 × 3) — dix fichiers neufs, six `git mv` ; neuf neutres restent ; les
-   trois derniers passifs se démasquent par la donnée. **Deux réponses P au lancement** (Q12 oui,
-   D43 non), **un arrêt** sur A3 et A4, levé par le propriétaire le 18/11 ; spec convergée au
-   premier tour, plan prêt au deuxième ; SDD en sept tâches, revue d'ensemble « prête avec
-   corrections » et sa passe (`a65bf4c7`). Note de version écrite (`147f564c`). **1826 tests**
-   (+50 sur la base de **1776**, celle de `main`), `dart analyze` propre (**vérifié le
-   2026-11-18**) — [ADR-118](../_adr/ADR-118-la-tranche-3-carte-de-degats-marque-et-source-de-vie.md),
-   qui complète ADR-112, ADR-111 et ADR-116. **Clôt P-42.** **Puis six corrections de fin de vague**
-   (2026-11-19, `70fce82b` → `ee60f62f`) : la mort efface la sauvegarde, l'affûtage ne liste que l'affûtable,
-   les intentions en lignes compactes à infobulles, un arbitre du survol de la main, la
-   Puissance sur les tuiles de signature, « -12 PV Max » — **1859 tests** (vérifié le 2026-11-19), ADR-119.
 > [!NOTE]
-> **Rotations.** Sortie le 2026-11-22, dans `../_archive/` : `2026-11-22-activeContext-livraisons.md`
+> **Rotations.** Sortie le 2026-11-25, dans `../_archive/` : `2026-11-25-activeContext-livraisons.md`
+> (la vague 8, P-42 tranche 3). Sortie le 2026-11-22, dans `../_archive/` : `2026-11-22-activeContext-livraisons.md`
 > (la vague 7, P-53). Sortie le 2026-11-19 : `2026-11-19-activeContext-livraisons.md`
 > (la vague 6, P-42 tranche 2). Sortie le 2026-11-18 : `2026-11-18-activeContext-livraisons.md`
 > (la vague 5, P-42 tranche 1 et P-44 lot 1). Sortie le 2026-11-17 : `2026-11-17-activeContext-livraisons.md`
@@ -205,15 +219,14 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : produire les assets qui ouvrent la vague 2 — les cadres des tiers 1 à
-3 redessinés et le décor de forêt, dont la méthode est à recaler (sa fiche, prérequis 1) —,
-et lancer la production des sprites du tier 1, dont l'état se tient au
-catalogue des ennemis. Deux cadrages restent à tenir avant leurs vagues : la difficulté, après le
-tier 3, et les boss.
+**D'abord le propriétaire** : tester la vague 2 sur la branche `feat/v0.6.2-cadres-et-decors`, puis
+ouvrir la PR, la fusionner et la taguer ; la retouche de `CLAUDE.md` (S2) lui revient. Il lance aussi
+la production des sprites du tier 1, dont l'état se tient au catalogue des ennemis : une vague
+d'ennemis ne s'ouvre qu'avec tous ses sprites (B51). Deux cadrages restent à tenir avant leurs
+vagues : la difficulté, après le tier 3, et les boss.
 
-**Puis la vague 2 du bestiaire, que le propriétaire ouvre** — ce fichier n'en ouvre aucune ; le
-journal du chantier (README §4) en tient l'avancement, et sa porte d'entrée passe la vague 1 à
-« close ». Le compte rendu de la vague 1 (§5) propose quatre amendements de méthode, laissés au
-propriétaire. **P-07 doit lire
+**Puis la vague 3 du bestiaire (le langage des intentions)**, que le propriétaire ouvre —
+ce fichier n'en ouvre aucune ; le journal du chantier (README §4) en tient l'avancement, et sa porte
+d'entrée passe la vague 2 à « close ». **P-07 doit lire
 [ADR-083](../_adr/ADR-083-latence-et-synchronisation-du-chemin-de-lecture.md) D6 avant de toucher
 aux animations.**
