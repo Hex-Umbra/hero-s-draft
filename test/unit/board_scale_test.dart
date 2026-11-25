@@ -74,11 +74,12 @@ void main() {
     expect(scale.crisp, isTrue);
   });
 
-  test('3,312 physique non net en 1440 x 813 a 2 : le meme ecran dans '
-      'Chrome, 1,656 logique', () {
+  test('3,306 physique non net en 1440 x 813 a 2 : le meme ecran dans '
+      'Chrome, la carte entre la barre du haut et le heros (B93)', () {
     final scale = _scaleAt(1440, 813, ratio: 2);
 
-    expect(scale.frame, closeTo(2.2 * 1626 / 1080 / 2, 1e-9));
+    expect(scale.frame, closeTo((_floorOf(813) - 56) / 153, 1e-9));
+    expect(scale.frame * 2, closeTo(3.306, 1e-3));
     expect(scale.crisp, isFalse);
   });
 
@@ -101,19 +102,20 @@ void main() {
     expect(scale.crisp, isTrue);
   });
 
-  test('1,467 non net en 1280 x 720 : la hauteur decide, sous la largeur '
-      '(1,650)', () {
+  test('1,422 non net en 1280 x 720 : la carte entre la barre du haut et le '
+      'heros, sous la cible (1,467) et la largeur (1,650) (B93)', () {
     final scale = _scaleAt(1280, 720);
 
-    expect(scale.frame, closeTo(2.2 * 720 / 1080, 1e-9));
-    expect(scale.frame, lessThan(0.95 * 1280 / referenceRowFrameWidth));
+    expect(scale.frame, closeTo((_floorOf(720) - 56) / 153, 1e-9));
+    expect(scale.frame, closeTo(1.422, 1e-3));
+    expect(scale.frame, lessThan(2.2 * 720 / 1080));
     expect(scale.crisp, isFalse);
   });
 
-  test('1,387 non net en 1264 x 681', () {
+  test('1,326 non net en 1264 x 681 (B93)', () {
     final scale = _scaleAt(1264, 681);
 
-    expect(scale.frame, closeTo(2.2 * 681 / 1080, 1e-9));
+    expect(scale.frame, closeTo((_floorOf(681) - 56) / 153, 1e-9));
     expect(scale.crisp, isFalse);
   });
 
@@ -155,11 +157,42 @@ void main() {
         closeTo(0.95 * 3840 / 913, 1e-9));
   });
 
-  test('un ecran trop bas pour la barre fait tomber le palier', () {
-    final scale = _scaleAt(1920, 1080, rowCenterY: 150);
+  test('un heros trop haut sous la barre du haut fait tomber le palier, ou '
+      'que soit la rangee (B93)', () {
+    // 56 + 153 x 2 = 362 : un plancher plus haut ne laisse plus x2.
+    final scale = _scaleAt(1920, 1080, rowCenterY: 150, rowFloorY: 361);
 
-    expect(scale.frame, lessThan(2));
+    expect(scale.frame, closeTo((361 - 56) / 153, 1e-9));
     expect(scale.crisp, isFalse);
+  });
+
+  group('enemyRowCenterYFor (B93)', () {
+    test('garde la part de l ecran quand la barre passe sous la barre du '
+        'haut : 1080p, 1009', () {
+      const crisp2 = BoardScale(frame: 2, crisp: true);
+      expect(enemyRowCenterYFor(1080, scale: crisp2), 227);
+      expect(enemyRowCenterYFor(1009, scale: crisp2), rowCenterYFor(1009));
+    });
+
+    test('descend la rangee en 1280 x 720 : le haut des barres a 56, la carte '
+        'au-dessus du heros', () {
+      final scale = _scaleAt(1280, 720);
+      final y = enemyRowCenterYFor(720, scale: scale);
+
+      expect(y, greaterThan(rowCenterYFor(720)));
+      expect(y - barTopAboveWindowCenter * scale.frame, greaterThanOrEqualTo(56));
+      expect(y - barTopAboveWindowCenter * scale.frame, lessThan(57));
+      expect(y + frameBelowWindowCenter * scale.frame,
+          lessThanOrEqualTo(_floorOf(720) + 1));
+    });
+
+    test('se cale sur le pixel physique, vers le bas', () {
+      final scale = _scaleAt(1440, 813, ratio: 2);
+      final y = enemyRowCenterYFor(813, scale: scale, devicePixelRatio: 2);
+
+      expect(y * 2, closeTo((y * 2).roundToDouble(), 1e-9));
+      expect(y - barTopAboveWindowCenter * scale.frame, greaterThanOrEqualTo(56));
+    });
   });
 
   test('un heros trop haut pour le cadre fait tomber le palier', () {

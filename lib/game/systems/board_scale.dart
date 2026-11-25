@@ -31,10 +31,12 @@ const double frameBelowWindowCenter = GameConstants.enemyWindowHeight / 2 + 28;
 const double referenceRowFrameWidth =
     6 * enemySlotWidth + 5 * GameConstants.enemyRowMinGap;
 
-/// La taille d'un pixel de cadre, en pixels physiques (B90, B91). Le plafond
-/// `limit` est le plus petit de trois rapports : la rangée de
-/// [referenceRowWidth] dans sa part de la largeur, la barre sous le haut de
-/// l'écran, le cadre au-dessus de [rowFloorY]. La cible suit le héros : 2,2
+/// La taille d'un pixel de cadre, en pixels physiques (B90, B91, B93). Le
+/// plafond `limit` est le plus petit de trois rapports : la rangée de
+/// [referenceRowWidth] dans sa part de la largeur ; le cadre au-dessus de
+/// [rowFloorY], la rangée à [rowCenterY] ; la carte entière, de la barre au
+/// bas du plus grand cadre, entre `enemyRowTopClearance` et [rowFloorY] — la
+/// place qu'il lui faut quand [enemyRowCenterYFor] la descend. La cible suit le héros : 2,2
 /// pixels d'écran par pixel de cadre pour 1080 pixels physiques de hauteur,
 /// plafonnée par `limit`. Si elle est à 10 % près d'un entier `n` d'au moins 2
 /// qui tient sous `limit`, seuil compris, elle s'y arrondit et tout reste net ;
@@ -52,8 +54,10 @@ BoardScale boardScaleFor({
         screen.width *
         devicePixelRatio /
         referenceRowWidth,
-    center / barTopAboveWindowCenter,
     (rowFloorY * devicePixelRatio - center) / frameBelowWindowCenter,
+    (rowFloorY - GameConstants.enemyRowTopClearance) *
+        devicePixelRatio /
+        (barTopAboveWindowCenter + frameBelowWindowCenter),
   ].reduce(min);
   final target = min(
     GameConstants.enemyFrameReferenceScale *
@@ -71,4 +75,22 @@ BoardScale boardScaleFor({
     return BoardScale(frame: n / devicePixelRatio, crisp: true);
   }
   return BoardScale(frame: target / devicePixelRatio, crisp: false);
+}
+
+/// L'ordonnée logique du centre de la rangée à l'échelle [scale] (B93) : sa
+/// part de l'écran ([rowCenterYFor]), descendue s'il le faut pour que le haut
+/// des barres de PV reste sous `enemyRowTopClearance` ; calée sur le pixel
+/// physique, vers le bas quand elle descend.
+double enemyRowCenterYFor(
+  double screenHeight, {
+  required BoardScale scale,
+  double devicePixelRatio = 1,
+}) {
+  final share = rowCenterYFor(screenHeight, devicePixelRatio: devicePixelRatio);
+  final belowHud = GameConstants.enemyRowTopClearance +
+      barTopAboveWindowCenter * scale.frame;
+  if (share >= belowHud) return share;
+  // Le millionième absorbe l'erreur d'arrondi d'un produit.
+  return ((belowHud * devicePixelRatio) - 1e-6).ceilToDouble() /
+      devicePixelRatio;
 }

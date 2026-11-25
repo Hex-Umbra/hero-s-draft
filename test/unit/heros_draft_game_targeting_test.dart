@@ -137,7 +137,9 @@ void main() {
       onTapEnemy: (_, _) {},
     )..game = game;
 
-    expect(game.boardScale.frame, closeTo(2.2 * 800 / 1080, 1e-9));
+    // En 1280 × 800, la carte entière tient entre la barre du haut (56) et
+    // le héros (304) : (304 − 56) / 153, sous la cible 2,2 × 800 / 1080 (B93).
+    expect(game.boardScale.frame, closeTo((304 - 56) / 153, 1e-9));
     expect(e1.restScale, game.boardScale.frame);
     expect(boss.restScale, game.boardScale.frame);
   });
@@ -434,12 +436,12 @@ void main() {
 
     game.handlePlayerTargeting(e1, 1);
 
-    // Ouverte à 2 × 1,6296, la carte de 88 de large déborde de 113,41 à
-    // droite : décalée de 114 vers la gauche, son bord droit à 1279,41.
+    // Ouverte à 2 × 1,6209, la carte de 88 de large déborde de 112,64 à
+    // droite : décalée de 113 vers la gauche, son bord droit à 1279,64.
     final rect = inspections.single!.rect;
     expect(rect.right, lessThanOrEqualTo(1280));
     expect(rect.right, greaterThan(1279));
-    expect(rect.center.dx, closeTo(1250 - 114, 1e-6));
+    expect(rect.center.dx, closeTo(1250 - 113, 1e-6));
     expect(e1.inspectionRect(), rect);
   });
 

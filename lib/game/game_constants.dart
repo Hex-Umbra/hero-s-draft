@@ -82,6 +82,13 @@ class GameConstants {
   static const double enemyRowUsableWidth = 0.95;
   static const double enemyRowCenterY = 0.21;
 
+  /// Le plus haut que monte le haut d'une barre de PV ennemie, en pixels
+  /// logiques (B93) : sous le bas visible des icônes de la barre du haut du
+  /// combat — posées à 10 du bord avec 8 de marge, 40 de haut, moins la marge
+  /// intérieure de leur dessin. Sur un écran bas, la rangée descend pour le
+  /// tenir, et rétrécit pour rester au-dessus du héros.
+  static const double enemyRowTopClearance = 56.0;
+
   /// La taille d'un ennemi suit celle du héros (B90, B91) : le cadre vaut
   /// [enemyFrameReferenceScale] pixels d'écran par pixel de cadre pour
   /// [enemyFrameReferenceHeight] pixels physiques de hauteur de jeu, et

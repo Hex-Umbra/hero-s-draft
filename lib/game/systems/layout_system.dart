@@ -4,6 +4,7 @@ import 'package:flame/effects.dart';
 import 'package:flutter/material.dart' hide Image;
 import '../heros_draft_game.dart';
 import '../game_constants.dart';
+import 'board_scale.dart';
 import 'enemy_row.dart';
 import 'hand_geometry.dart';
 
@@ -120,7 +121,11 @@ class LayoutSystem extends Component with HasGameReference<HerosDraftGame> {
       screenWidth: game.size.x,
       devicePixelRatio: ratio,
     );
-    final rowY = rowCenterYFor(game.size.y, devicePixelRatio: ratio);
+    final rowY = enemyRowCenterYFor(
+      game.size.y,
+      scale: game.boardScale,
+      devicePixelRatio: ratio,
+    );
 
     for (int i = 0; i < enemyCards.length; i++) {
       enemyCards[i].place(Vector2(centers[i], rowY));
