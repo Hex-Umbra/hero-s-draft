@@ -6,7 +6,7 @@
 
 ## Ce qu'elle livre
 
-- **Le cadre de tier** de chaque ennemi : la fenêtre de 64 × 96 est la même pour tous, le cadre grossit avec le tier, et la menace se lit avant l'illustration. **Le code reçoit les cinq tiers**, aux géométries de B73 : 88 × 120, 96 × 128, 104 × 136, 112 × 144 et 120 × 152, soit 12, 16, 20, 24 et 28 pixels de bordure. **Les cadres dessinés sont ceux des tiers 1 à 3**, les tiers des ennemis d'aujourd'hui ; ceux des tiers 4 et 5 arrivent comme des assets avec leurs tiers, celui des boss avec les boss. **Les cadres d'aujourd'hui sont provisoires** (B73) : ils seront redessinés, moins pleins, avec des parties transparentes, comme des racines autour de la carte.
+- **Le cadre de tier** de chaque ennemi : la fenêtre de 64 × 96 est la même pour tous, le cadre grossit avec le tier, et la menace se lit avant l'illustration. **Le code reçoit les cinq tiers**, aux géométries de B73 : 88 × 120, 96 × 128, 104 × 136, 112 × 144 et 120 × 152, soit 12, 16, 20, 24 et 28 pixels de bordure. **Les cinq cadres sont dessinés** (B81) : une gravure épineuse ajourée, qui part de deux coins opposés et envahit le cadre de tier en tier ; la vague les exporte tous, et seul celui des boss attend les boss.
 - **La règle d'échelle** (B72) : le cadre à un palier pair choisi par l'écran, la créature et son fond à la moitié ; un plateau qui ne rétrécit plus en continu ; la fiche ouverte qui double la carte.
 - **Le fond de fenêtre** derrière la créature : un asset séparé du cadre, trois variations par lieu, choisi par le jeu (B67 ; [DA évolutive](../possible_upgrades/07-11-2026_direction_artistique_evolutive_cartes_Opus5.md), §16.3 ; [workflow des fonds](../../art_src/docs/workflow_fond.md), §2). B67 amende l'identité visuelle §4.3, qui dessinait le fond dans le cadre.
 - **Le décor de combat** : un décor de forêt neuf, en 640 × 360 (B74), à la place de `assets/images/bg_dungeon.png` — un JPEG sous une extension `.png` (identité visuelle, §3.3).
@@ -19,7 +19,7 @@ Les quatre ennemis d'aujourd'hui gardent leur sprite : des peintures de 1696 × 
 ## Prérequis — avant l'ouverture
 
 1. **Les assets, tous validés** :
-   - **les cadres des tiers 1, 2 et 3, redessinés** (B73) : aux canevas de 88 × 120, 96 × 128 et 104 × 136, avec leurs transparences. Le cadre du tier 2 qui existe (`art_src/cadres/tier_2.aseprite`) et l'outil `art_src/tools/frame_tier.py`, qui porte encore les anciennes tailles, sont provisoires. **Le dessin suit la contrainte de B77** : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre ; au-delà du gabarit de 88 × 120 centré sur la fenêtre, le dessin peut passer sous la barre et les languettes ;
+   - **les cadres redessinés** (B73, B81, B82) : **produits le 24/11** pour les cinq tiers, corrigés le 25/11 après une analyse visuelle (B82), `art_src/cadres/tier_1.aseprite` à `tier_5.aseprite`, aux canevas de B73, par `art_src/tools/frame_tier.py`, d'après la maquette retenue ; un calque par objet (filet, ronce, pousses, fleurons, baies, écusson, gemmes), la fenêtre transparente. Ils suivent la contrainte de B77 : la marque du tier tient dans les 12 pixels au-dessus de la fenêtre. **Reste que le propriétaire valide les fichiers**, et les retouche s'il le veut. L'ancien cadre plein du tier 2 est archivé (`art_src/archives/cadres/`) ;
    - les fonds de fenêtre — trois de forêt existent (`art_src/fonds/forest/`) ;
    - ✅ **le décor de combat de forêt, en 640 × 360** (B74), en couleurs peintes (B80) : **validé le 24/11**, rangé dans `art_src/decors/forest/combat/`. Sa méthode ([workflow des décors](../../art_src/docs/workflow_decor.md), essais 5 et 6) : un plan en aplats d'après la place de l'interface, une image d'ensemble, puis l'image entière repeinte en 5120 × 2880, sans tuiles. C'est une image à plat, sans calque par objet, et elle n'est pas encore retouchée.
 2. **Les réponses du propriétaire** (classe P) :
@@ -54,7 +54,7 @@ L'identité visuelle §3 à §5 et §7 à §8 ; la DA évolutive §16 ; `art_src
 6. **Le lieu** (B66, B74, B76) : l'identifiant de lieu comme donnée, ce qu'il désigne (un décor par écran, un thème de fond de fenêtre), où il se lit, et sa valeur unique, la forêt ; les assets rangés par lieu ; le repli d'un écran sans décor sur son fond d'aujourd'hui.
 7. **Le fond de fenêtre** (B67) : parmi les trois variations du lieu, qui le choisit, et quand (par combat, par ennemi).
 8. **Le décor** : le remplacement de `bg_dungeon.png`, son format (PNG seulement, identité visuelle §3.3) — aujourd'hui l'image est étirée à la taille de l'écran.
-9. **Un cadre absent** : ce que le jeu affiche pour un tier dont le cadre n'est pas encore dessiné (les tiers 4 et 5 jusqu'à leurs vagues), et le test qui le refuse au chargement une fois le tier ouvert. **Un boss porte le cadre de son tier**, au même palier que les autres (B73).
+9. **Un cadre absent** : les cinq sont dessinés (B81), si bien qu'aucun tier n'en manque ; le test qui refuse au chargement un tier sans cadre garde son sens pour un tier ajouté plus tard. **Un boss porte le cadre de son tier**, au même palier que les autres (B73).
 10. **L'export** : le chemin d'un `.aseprite` de `art_src/` vers l'asset du jeu, pour un sprite, un cadre et un fond.
 11. **Les tests** (ADR-113) : le calcul du palier et du placement ; tout ce qui se voit va au fichier de tests manuels.
 
@@ -66,7 +66,7 @@ Lus dans le code et dans `art_src/`, sans exécution : à revérifier.
 - **Deux largeurs concurrentes** dans `repositionEnemies` : l'une pour le test de rétrécissement, l'autre pour l'espacement.
 - **Tout le placement est en échelle continue** aujourd'hui — le facteur d'échelle de l'écran, le rétrécissement du plateau, le boss à 1,25, la fiche à 1,25 : c'est ce que B72 remplace, et le plus gros du travail de cette vague.
 - **Aucun filtrage n'est fixé** pour les sprites dans le rendu.
-- **Le cadre provisoire du tier 2 embarque un calque de fond de fenêtre** opaque, alors que le fond est un asset séparé (B67) : les cadres redessinés n'en ont pas.
+- **Le cadre provisoire du tier 2 embarquait un calque de fond de fenêtre** opaque, alors que le fond est un asset séparé (B67) : les cadres redessinés du 24/11 n'en ont pas, leur fenêtre est transparente.
 - **L'ancrage au cadre ne tient pas le plateau plein** : avec ses deux languettes, une carte ancrée au bord de son cadre prend de 292 à 356 pixels en 1080p, et six cartes débordent dès le tier 2. Ancrée au gabarit (B77), elle en prend 292 à tout tier. Mesuré sur les maquettes, pas en jeu.
 - **Trois grilles sur un écran** : en 1080p, un pixel de décor fait 3 pixels d'écran, un pixel de cadre 2, un pixel de créature 1. C'est voulu (B72, B74) ; les maquettes du prérequis 2 le montrent sur les vrais assets.
 
@@ -76,7 +76,7 @@ Les questions P ont leur réponse dans les prérequis ; une mesure que les maque
 
 ## Ne pas absorber
 
-La demi-place et les six cartes (vague 4), la meute (vague 5) : le placement les prévoit, il ne les construit pas ; les cadres des tiers 4, 5 et boss ; aucun sprite refait ; le système de biomes (P-12) — ni pool d'ennemis par lieu, ni second lieu : la couture de lieu le prépare, elle ne le construit pas ; le décor du repos et des autres écrans, le fond plein des options du repos (B76) ; le médaillon d'élite (identité visuelle §5.1, P-14) ; la carte du héros ; le juice et les animations (P-06, P-07) ; aucun mécanisme de combat, aucun ennemi neuf.
+La demi-place et les six cartes (vague 4), la meute (vague 5) : le placement les prévoit, il ne les construit pas ; le cadre des boss ; aucun sprite refait ; le système de biomes (P-12) — ni pool d'ennemis par lieu, ni second lieu : la couture de lieu le prépare, elle ne le construit pas ; le décor du repos et des autres écrans, le fond plein des options du repos (B76) ; le médaillon d'élite (identité visuelle §5.1, P-14) ; la carte du héros ; le juice et les animations (P-06, P-07) ; aucun mécanisme de combat, aucun ennemi neuf.
 
 ## Tâche à risque
 

@@ -7,7 +7,7 @@
 ## Ce qu'elle livre
 
 - **L'ouverture du tier 4** ([catalogue](catalogue_mecanismes.md), #17) : `maxTierAuthored` passe de 3 à 4. Avec la cadence d'aujourd'hui (B60), un tier tous les cinq actes (`EncounterSystem.getUnlockedTier`), le tier 4 se débloque à l'acte 16 ; la refonte de la difficulté (vague 7) aura dit si cette cadence tient.
-- **Le cadre du tier 4**, un asset posé sur la géométrie que la vague 2 a codée pour les cinq tiers.
+- **Le cadre du tier 4** : dessiné le 24/11 et exporté par la vague 2 avec les quatre autres (B81), il s'affiche dès que le tier s'ouvre.
 - **Le soutien** : le Chaman soigne ou renforce un autre ennemi. **Viser un allié** (#13) se construit ici, avec lui, son premier ennemi (B46, B68).
 - **Les ennemis de tier 4**, proposés le 27/07 — **la liste est à confirmer** (prérequis 1) ; leurs lignes complètes sont au [catalogue des ennemis](catalogue_ennemis.md), §5. Elle en compte cinq, quand le tier 1 en a neuf et les tiers 2 et 3 sept :
 
@@ -22,7 +22,7 @@
 ## Prérequis — avant l'ouverture
 
 1. **La liste des ennemis**, confirmée, réduite ou complétée par le propriétaire.
-2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 4 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Aucun n'existe. **Le cadre du tier 4** aussi, par `art_src/tools/frame_tier.py`, et les sprites se valident dessus.
+2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 4 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Aucun n'existe. **Le cadre du tier 4** est produit depuis le 24/11 (B81, `art_src/cadres/tier_4.aseprite`) : les sprites se valident dessus.
 3. **Les réponses du propriétaire** (classe P), sur maquettes quand elles se voient :
    - **les familles** (B2) : les Élémentaires sont-ils les formes hautes des slimes du tier 1, qui posent les mêmes charges, ou une famille à part ; le Chaman est-il de la famille de l'Orc ;
    - **le soutien à l'écran** : quel allié le Chaman vise, et comment le joueur le lit avant qu'il agisse ;
@@ -66,7 +66,7 @@ Les questions P ont leur réponse dans les prérequis. Le reste est de classe T.
 
 ## Ne pas absorber
 
-Le tier 5, son cadre et les dégâts différés (vague 9) ; les boss (`0.7.0`) ; aucune reprise de la formule de difficulté (vague 7) ; P-14, P-19, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
+Le tier 5 et les dégâts différés (vague 9) ; les boss (`0.7.0`) ; aucune reprise de la formule de difficulté (vague 7) ; P-14, P-19, P-44 lot 2 ; aucun ennemi hors de la table ; aucun équilibrage des ennemis des vagues précédentes.
 
 ## Tâche à risque
 

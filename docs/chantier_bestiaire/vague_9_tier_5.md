@@ -7,7 +7,7 @@
 ## Ce qu'elle livre
 
 - **L'ouverture du tier 5** ([catalogue](catalogue_mecanismes.md), #17) : `maxTierAuthored` passe à 5, sur le format que la [vague 8](vague_8_tier_4.md) aura posé. Avec la cadence d'aujourd'hui (B60), le tier 5 se débloque à l'acte 21 ; la refonte de la difficulté (vague 7) aura dit si cette cadence tient.
-- **Le cadre du tier 5**, un asset posé sur la géométrie de la vague 2.
+- **Le cadre du tier 5** : dessiné le 24/11 et exporté par la vague 2 avec les quatre autres (B81), il s'affiche dès que le tier s'ouvre.
 - **Les dégâts différés** (#18) : une marque posée sur le héros, qui frappe plus tard.
 - **Le soin de soi** (#10) : il se construit ici, avec la Liche, son premier ennemi (B46, B68).
 - **Les ennemis de tier 5**, proposés le 27/07 comme des « quasi-boss » — **la liste est à confirmer** (prérequis 1) ; leurs lignes complètes sont au [catalogue des ennemis](catalogue_ennemis.md), §6 :
@@ -23,7 +23,7 @@
 ## Prérequis — avant l'ouverture
 
 1. **La liste des ennemis**, confirmée, réduite ou complétée par le propriétaire.
-2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 5 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Aucun n'existe. **Le cadre du tier 5** aussi, par `art_src/tools/frame_tier.py`, et les sprites se valident dessus.
+2. **Les sprites, tous livrés** (B51, B65) : les lignes du tier 5 du [catalogue des ennemis](catalogue_ennemis.md) à ✅. Aucun n'existe. **Le cadre du tier 5** est produit depuis le 24/11 (B81, `art_src/cadres/tier_5.aseprite`) : les sprites se valident dessus.
 3. **Les réponses du propriétaire** (classe P), sur maquettes quand elles se voient :
    - **un tier 5 ou un boss** : ce qui sépare un ennemi de tier 5, que le 27/07 appelait un « quasi-boss », d'un boss du tier à part (B47) ;
    - **la marque** : un statut à elle, ou une forme du Feu, qui se résout déjà au tour du héros ; combien de tours avant qu'elle frappe, et comment le compte à rebours se lit ; si elle survit à la mort du Cavalier, comme le Poison ;

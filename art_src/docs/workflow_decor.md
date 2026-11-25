@@ -187,7 +187,7 @@ Le décor se juge sous son interface, à la taille réelle du jeu, jamais seul :
 
 L'outil agrandit le décor à la taille d'un écran en 1080p et pose dessus un combat : une rangée d'ennemis dans les cadres de leurs tiers, sur les fonds de fenêtre du lieu, avec leurs barres et leurs languettes, le héros, et une main de cinq cartes. Il accepte aussi une image générée — l'image d'ensemble, une repeinte — qu'il lit à un pixel par case : c'est ainsi qu'on juge les étapes 3 et 4. `--zones` ajoute, en voile clair, ce que l'interface recouvre.
 
-**C'est une maquette, pas le jeu.** Ses places viennent des maquettes du 23/11 (B72, B73, B77), ses cadres sont ceux, provisoires, de `frame_tier.py`, et les cartes de sa main sont factices. Elle se revérifie sur le jeu une fois la vague du visuel livrée.
+**C'est une maquette, pas le jeu.** Ses places viennent des maquettes du 23/11 (B72, B73, B77), ses cadres sont ceux de `frame_tier.py`, la gravure épineuse (B81), et les cartes de sa main sont factices. Elle se revérifie sur le jeu une fois la vague du visuel livrée.
 
 **Le décor se regarde aussi seul, agrandi, zone par zone, avant d'être validé.** Sous le combat, l'interface cache une part des défauts, et l'œil suit les cartes. C'est seul qu'on voit un objet qui flotte, un objet posé où il ne peut pas être, deux objets soudés, une matière qui a changé de nature. Chaque défaut se cherche ensuite dans les images des étapes précédentes : celui qui est né au dernier pas se règle par son débruitage, celui qui vient du plan se règle dans le plan.
 
