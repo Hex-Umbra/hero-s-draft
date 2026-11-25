@@ -1,7 +1,29 @@
 import 'dart:ui';
 
+import '../../models/data/tier_frame_data.dart';
 import '../game_constants.dart';
 import 'status_readout.dart';
+
+/// La fenêtre du cadre : 64 × 96 à son offset.
+Rect enemyWindowRect(TierFrame frame) => Rect.fromLTWH(
+      frame.windowX.toDouble(),
+      frame.windowY.toDouble(),
+      GameConstants.enemyWindowWidth,
+      GameConstants.enemyWindowHeight,
+    );
+
+/// Le gabarit : la fenêtre agrandie de sa marge, le même sur les cinq cadres.
+Rect enemyTemplateRect(TierFrame frame) =>
+    enemyWindowRect(frame).inflate(GameConstants.enemyTemplateMargin);
+
+/// La zone d'un ennemi sous le pointeur : du haut de sa barre de PV, au-dessus
+/// du gabarit, au bas du canevas, sur toute sa largeur.
+Rect enemyZoneRect(TierFrame frame) => Rect.fromLTRB(
+      0,
+      enemyTemplateRect(frame).top + GameConstants.enemyHealthBarTop,
+      frame.width.toDouble(),
+      frame.height.toDouble(),
+    );
 
 /// La zone d'un ennemi sous le pointeur : le rectangle continu de sa barre de
 /// PV au bas de sa carte (spec P-05, §4.5).

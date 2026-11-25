@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/systems/entity_hover.dart';
 import 'package:roguelike_card_game/game/systems/status_readout.dart';
 
+import 'tier_frame_fixture.dart';
+
 /// L'arbitre du survol : une seule carte à la fois (spec P-05, §4.5).
 void main() {
   final first = Rect.fromLTWH(0, 0, 100, 140);
@@ -130,6 +132,50 @@ void main() {
         ),
         isFalse,
       );
+    });
+  });
+
+  group('la zone d un ennemi', () {
+    test('sur les cinq tiers : du haut de la barre au bas du canevas', () {
+      const tops = [-17.0, -13.0, -9.0, -5.0, -1.0];
+
+      for (final frame in testTierFrames) {
+        final zone = enemyZoneRect(frame);
+
+        expect(zone.top, tops[frame.tier - 1], reason: 'tier ${frame.tier}');
+        expect(zone.left, 0);
+        expect(zone.right, frame.width);
+        expect(zone.bottom, frame.height);
+      }
+    });
+
+    test('les coins au-dessus du canevas, de part et d autre de la barre, '
+        'sont dans la zone', () {
+      expect(enemyZoneRect(testFrameOf(2)).contains(const Offset(2, -10)),
+          isTrue);
+      expect(enemyZoneRect(testFrameOf(2)).contains(const Offset(94, -10)),
+          isTrue);
+      expect(enemyZoneRect(testFrameOf(3)).contains(const Offset(4, -5)),
+          isTrue);
+      expect(enemyZoneRect(testFrameOf(3)).contains(const Offset(100, -5)),
+          isTrue);
+      expect(enemyZoneRect(testFrameOf(4)).contains(const Offset(6, -3)),
+          isTrue);
+      expect(enemyZoneRect(testFrameOf(5)).contains(const Offset(8, -0.5)),
+          isTrue);
+    });
+
+    test('le gabarit est le meme autour de la fenetre sur les cinq cadres',
+        () {
+      for (final frame in testTierFrames) {
+        final window = enemyWindowRect(frame);
+        final template = enemyTemplateRect(frame);
+
+        expect(window.size, const Size(64, 96));
+        expect(template.size, const Size(88, 120));
+        expect(template.left, window.left - 12);
+        expect(template.top, window.top - 12);
+      }
     });
   });
 }

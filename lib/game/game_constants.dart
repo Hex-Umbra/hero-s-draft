@@ -54,7 +54,7 @@ class GameConstants {
   static const double enemyHealthBarShieldGap = 3.0;
   static const double enemyHealthBarArmorGap = 2.0;
 
-  // --- CADRE D'UN ENNEMI (pixels de cadre) ---
+  // --- CADRE ET RANGÉE D'UN ENNEMI (pixels de cadre) ---
   /// La fenêtre que le cadre entoure, et que le sprite remplit.
   static const double enemyWindowWidth = 64.0;
   static const double enemyWindowHeight = 96.0;
@@ -63,6 +63,17 @@ class GameConstants {
   static const double enemyTemplateWidth = 88.0;
   static const double enemyTemplateHeight = 120.0;
   static const double enemyTemplateMargin = 12.0;
+
+  /// Les languettes d'état : largeur au repos et recouvrement sur la carte.
+  static const double statusTabRestWidth = 30.0;
+  static const double statusTabOverlap = 1.0;
+
+  /// La rangée des ennemis : écart minimal et maximal entre deux places, part
+  /// utilisable de la largeur d'écran et hauteur du centre (part de l'écran).
+  static const double enemyRowMinGap = 7.0;
+  static const double enemyRowMaxGap = 122.0;
+  static const double enemyRowUsableWidth = 0.95;
+  static const double enemyRowCenterY = 0.21;
 
   // --- MAP GENERATION QUOTAS ---
   static const Map<MapNodeType, ({int min, int max})> nodeQuotas = {

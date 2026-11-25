@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
+import '../../game_constants.dart';
 import '../../systems/status_readout.dart';
 
 /// La languette d'un côté d'une carte de combat : les bonus à gauche, les
@@ -30,8 +31,6 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   /// Au-dessus de la gangue (4) et du halo (5) que porte la carte.
   static const int _priority = 6;
 
-  static const double _restWidth = 30;
-  static const double _overlap = 1;
   static const double _top = 11;
   static const double _restPitch = 31;
   static const double _restPadding = 3;
@@ -49,7 +48,7 @@ class StatusTabs extends PositionComponent with TapCallbacks {
 
   static const double _textX = _padX + _emojiBox + _textGap;
   static const double _maxTextWidth = _maxWidth - _textX - _padX;
-  static const double _maxRestValueWidth = _restWidth - 2 * _restPadding;
+  static const double _maxRestValueWidth = GameConstants.statusTabRestWidth - 2 * _restPadding;
 
   static final Paint _fill = Paint()..color = const Color(0xFF14141E);
   static final Paint _stroke = Paint()
@@ -121,23 +120,23 @@ class StatusTabs extends PositionComponent with TapCallbacks {
   Iterable<Rect> get zoneLocalRects => [restLocalRect, localRect].nonNulls;
 
   double get _restX =>
-      side == StatusSide.left ? _overlap - _restWidth : cardWidth - _overlap;
+      side == StatusSide.left ? GameConstants.statusTabOverlap - GameConstants.statusTabRestWidth : cardWidth - GameConstants.statusTabOverlap;
 
   Rect get _emptyRect => Rect.fromLTWH(_restX, _top, 0, 0);
 
   Rect get _restRect => Rect.fromLTWH(
         _restX,
         _top,
-        _restWidth,
+        GameConstants.statusTabRestWidth,
         2 * _restPadding + _rows.length * _restPitch,
       );
 
   Rect get _unfoldedRect {
     final width = unfoldedWidth;
     final x = switch ((side, _inward)) {
-      (StatusSide.left, false) => _overlap - width,
+      (StatusSide.left, false) => GameConstants.statusTabOverlap - width,
       (StatusSide.left, true) => 0.0,
-      (StatusSide.right, false) => cardWidth - _overlap,
+      (StatusSide.right, false) => cardWidth - GameConstants.statusTabOverlap,
       (StatusSide.right, true) => cardWidth - width,
     };
     final height = _rows.fold(2 * _padY, (sum, row) => sum + row.pitch);
@@ -225,12 +224,12 @@ class _TabRow extends PositionComponent {
   final _open = _Layer();
   final _restEmoji = TextComponent(
     anchor: Anchor.topCenter,
-    position: Vector2(StatusTabs._restWidth / 2, 0),
+    position: Vector2(GameConstants.statusTabRestWidth / 2, 0),
     textRenderer: _emojiPaint,
   );
   final _restValue = TextComponent(
     anchor: Anchor.topCenter,
-    position: Vector2(StatusTabs._restWidth / 2, StatusTabs._restValueTop),
+    position: Vector2(GameConstants.statusTabRestWidth / 2, StatusTabs._restValueTop),
   );
   final _openEmoji = TextComponent(
     anchor: Anchor.center,
