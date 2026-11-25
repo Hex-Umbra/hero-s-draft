@@ -393,6 +393,94 @@ void main() {
       expect(container.read(combatProvider).enemies.length, 1);
     });
 
+    test('chaque bonus du menu est un buff que createStatus sait creer', () {
+      for (final id in DebugActions.buffIds) {
+        final buff = DebugActions.buffOf(id);
+        expect(buff, isNotNull, reason: id);
+        expect(buff!.type, StatusType.buff, reason: id);
+        expect(buff.id, id);
+      }
+      expect(DebugActions.buffOf('poison'), isNull);
+    });
+
+    test('poseBuff ajoute un point au heros ou a l ennemi vise, qui s additionne', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final a = freshGoblin();
+      final b = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a, b]));
+
+      DebugActions.poseBuff(container.read, 'might', enemyId: b.id);
+      DebugActions.poseBuff(container.read, 'might', enemyId: b.id);
+      DebugActions.poseBuff(container.read, 'armor_regen');
+      DebugActions.poseBuff(container.read, 'poison', enemyId: a.id);
+
+      final enemies = container.read(combatProvider).enemies;
+      expect(enemies.first.stats.statuses, isEmpty);
+      final might = enemies.last.stats.statuses.single;
+      expect((might.id, might.type, might.value), ('might', StatusType.buff, 2));
+      final hero = container.read(runProvider).heroStats.statuses;
+      expect(hero.map((s) => s.id), contains('armor_regen'));
+    });
+
+    test('clearBuffs retire les bonus et laisse les alterations', () {
+      final container = _startedRun();
+      addTearDown(container.dispose);
+      final poisoned = freshGoblin().copyWith(
+        stats: EntityStats(
+          maxPv: 20,
+          currentPv: 20,
+          armure: 0,
+          might: 5,
+          statuses: const [
+            StatusEffect(
+              id: 'poison',
+              name: 'Poison',
+              type: StatusType.debuff,
+              value: 3,
+              duration: 3,
+            ),
+          ],
+        ),
+      );
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [poisoned]));
+      DebugActions.poseBuff(container.read, 'hp_regen', enemyId: poisoned.id);
+      DebugActions.poseBuff(container.read, 'might');
+
+      DebugActions.clearBuffs(container.read);
+
+      final statuses =
+          container.read(combatProvider).enemies.single.stats.statuses;
+      expect(statuses.map((s) => s.id), ['poison']);
+      expect(
+        container.read(runProvider).heroStats.statuses
+            .where((s) => s.type == StatusType.buff),
+        isEmpty,
+      );
+    });
+
+    test('hors d une run debug, poseBuff n ecrit rien', () {
+      final container = ProviderContainer(overrides: [shippedChargeOverride()]);
+      addTearDown(container.dispose);
+      container.read(debugRunProvider.notifier).requestNormalRun();
+      container.read(runProvider.notifier).startNewRun(paladin);
+      final a = freshGoblin();
+      container
+          .read(combatProvider.notifier)
+          .updateState(CombatState(enemies: [a]));
+      final heroBefore = container.read(runProvider).heroStats;
+
+      DebugActions.poseBuff(container.read, 'might');
+      DebugActions.poseBuff(container.read, 'might', enemyId: a.id);
+
+      expect(container.read(runProvider).heroStats, same(heroBefore));
+      expect(container.read(combatProvider).enemies.single.stats, same(a.stats));
+    });
+
     test('clearCharges vide les points et les pistes du heros et des ennemis', () {
       final container = _startedRun();
       addTearDown(container.dispose);

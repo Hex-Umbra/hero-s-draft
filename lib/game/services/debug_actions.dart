@@ -8,11 +8,13 @@ import '../../models/data/enemy_data.dart';
 import '../../models/data/relic_data.dart';
 import '../../models/entity_stats.dart';
 import '../../models/signature_instance.dart';
+import '../../models/status_effect.dart';
 import '../../services/game_data_service.dart';
 import '../../services/save_service.dart' show RefReader;
 import '../systems/charge_rules.dart';
 import '../systems/encounter_system.dart';
 import '../systems/signature_evolution_rules.dart';
+import 'effect_resolver.dart';
 import '../controllers/combat_controller.dart';
 import '../controllers/debug_run_controller.dart';
 import '../controllers/deck_controller.dart';
@@ -270,6 +272,60 @@ class DebugActions {
       enemyId,
       ChargeRules.pose(enemy.stats, charge, 1, ChargeRules.bearerOf(enemy)),
     );
+  }
+
+  /// Les bonus que le menu pose, dans l'ordre de ses boutons : ceux que
+  /// `EffectResolver.createStatus` sait creer avec le type `buff`.
+  static const List<String> buffIds = [
+    'might',
+    'might_regen',
+    'armor_regen',
+    'hp_regen',
+    'mana_regen',
+  ];
+
+  /// Le bonus [statusId] tel que le menu le pose : valeur 1, trois tours,
+  /// cree par `EffectResolver.createStatus` ; nul hors de [buffIds].
+  static StatusEffect? buffOf(String statusId) {
+    if (!buffIds.contains(statusId)) return null;
+    final status = EffectResolver.createStatus(statusId, 1, 3);
+    return status?.type == StatusType.buff ? status : null;
+  }
+
+  /// Ajoute un point du bonus [statusId], qui s'additionne a celui deja pose.
+  /// [enemyId] nul : le heros ; un bonus hors de [buffIds], ou un ennemi
+  /// absent du combat : rien.
+  static void poseBuff(RefReader read, String statusId, {String? enemyId}) {
+    if (!_allowed(read)) return;
+    final buff = buffOf(statusId);
+    if (buff == null) return;
+    if (enemyId == null) {
+      read(runProvider.notifier).updateHeroStats((s) => s.addStatus(buff));
+      return;
+    }
+    final combat = read(combatProvider.notifier);
+    final enemy = combat.currentState.enemies
+        .where((e) => e.id == enemyId)
+        .firstOrNull;
+    if (enemy == null) return;
+    combat.updateEnemyStats(enemyId, enemy.stats.addStatus(buff));
+  }
+
+  /// Retire tous les bonus du heros et de chaque ennemi, quelle que soit leur
+  /// source ; les alterations et les charges restent.
+  static void clearBuffs(RefReader read) {
+    if (!_allowed(read)) return;
+    EntityStats cleared(EntityStats s) => s.copyWith(
+      statuses: [
+        for (final status in s.statuses)
+          if (status.type != StatusType.buff) status,
+      ],
+    );
+    read(runProvider.notifier).updateHeroStats(cleared);
+    final combat = read(combatProvider.notifier);
+    for (final enemy in List.of(combat.currentState.enemies)) {
+      combat.updateEnemyStats(enemy.id, cleared(enemy.stats));
+    }
   }
 
   /// Vide les charges du heros et de chaque ennemi : les entrees des ids du
