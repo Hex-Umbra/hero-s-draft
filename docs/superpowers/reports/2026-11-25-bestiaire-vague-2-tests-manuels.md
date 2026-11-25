@@ -1,8 +1,8 @@
 # Vague 2 — `0.6.2` — tests manuels
 
 **Branche** : `feat/v0.6.2-cadres-et-decors` · **Compte rendu** : [2026-11-25-bestiaire-vague-2-compte-rendu.md](2026-11-25-bestiaire-vague-2-compte-rendu.md)
-**Testé le** : <JJ/MM/AAAA>, sur `<sha>`, sur <plateforme>
-**Résultat** : <K> ✅ · <L> ❌ · <M> non testés
+**Testé le** : 25/11/2026, sur `3181979e`, dans Chrome (build web de debug) et sous Windows (T2)
+**Résultat** : 7 ✅ (T1, T2, T8, T17, T23, T24, T25) · 0 ❌ · 18 non testés
 
 **Ce que la vague change, en bref.** Rien ne change à ce que les ennemis font ; change ce que le joueur voit du plateau. (1) Chaque ennemi est une carte **composée** : sa créature dans une fenêtre de 64 × 96 pixels de cadre, entourée d'un **cadre de tier** (cinq images, de 88 × 120 à 120 × 152 pixels de cadre ; seuls les tiers 1 à 3 s'atteignent en jeu). (2) Le plateau n'est plus à l'échelle continue : sa taille **suit celle du héros** (B90) : un **palier** en pixels entiers quand elle en est à 10 % près (×2 en 1080p, ×3 en 1440p, ×4 en 4K), lissée sinon (3,31 sur 2880 × 1800 à 200 % dans Chrome, réduite sous le 1080p), et **le boss n'est plus agrandi** : il porte le cadre de son tier à la taille des autres. (3) Le décor de combat est une **forêt neuve** de 640 × 360 pixels, à la place du donjon étiré. (4) Les quatre **anciens sprites** sont recadrés sur leur illustration et lissés. (5) La **rangée** des ennemis est calculée pour six places de 117, deux languettes voisines pouvant se superposer ; les **languettes** sont réduites d'un quart (B92). (6) La barre, les languettes, le contour de ciblage, la zone d'appui et la fiche de la vague 1 sont recalés sur la fenêtre ; la fiche passe au **double** de la carte (× 2 au lieu de × 1,25). (7) La fenêtre Windows s'ouvre **maximisée**. (8) Un fond de fenêtre (trois fonds de forêt) est tiré, mais caché par les illustrations d'aujourd'hui.
 
@@ -66,7 +66,7 @@
 - **Faire** : (a) toucher une **épine** du cadre, dans la bordure, entre le coin et la fenêtre. (b) Toucher le **décor** vu entre deux vrilles du cadre. (c) Toucher le **haut de la barre de PV**, puis le **coin** du canevas à côté de la barre. (d) Fiche fermée, toucher la **languette au repos** de l'ennemi (celle qui porte le Feu). (e) Prendre une carte d'attaque (carte focalisée, contour cyan), refaire (a) à (d) sur un ennemi. (f) **Au bord de l'écran** : à cinq ennemis, survoler l'ennemi le plus à droite (sa languette extérieure se déroule vers l'intérieur, par-dessus sa carte), **souris immobile**, puis toucher l'endroit où la languette était **au repos**, puis la languette déroulée elle-même ; refaire sur l'ennemi le plus à gauche. (h) **Deux voisines portant chacune une languette du côté qui les sépare** : arriver à la souris de chaque côté, puis toucher la **zone commune** des deux languettes. (g) Refaire (d) et (f) **sur le héros** : sa languette au repos, puis sa languette déroulée vers l'intérieur au bord (le héros est au centre : au besoin, réduire la fenêtre ; sinon noter que la situation ne s'atteint pas), avec une carte qui cible soi prise en main pour (e).
 - **Attendu** : (a) à (d) fiche fermée, chaque touche **ouvre la fiche** de cet ennemi, et elle reste ouverte ; carte prise (e), chaque touche **joue la carte sur cet ennemi**, sans fiche. (f) et (g) **l'appui vise la carte**, jamais le vide ni un voisin : toucher une languette au repos, ou déroulée vers l'intérieur, agit comme toucher sa carte (fiche ouverte sur cet ennemi ; ou carte jouée si elle est focalisée) ; aucune languette ne reste déroulée hors de l'écran. (h) la touche dans la zone commune agit sur la carte dont la languette se voit par-dessus. Le décor vu **à travers** les jours du cadre est, lui aussi, dans la zone : il ouvre la fiche ; au-delà du canevas, il la ferme (fiche ouverte) ou ne fait rien (fiche fermée).
 - **Ne doit pas changer** : les PV ; aucune carte jouée par un appui sur le décor ; le HUD (Son, Deck) garde la priorité là où il recouvre une barre.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, validé par le propriétaire
 
 ## T2 — La fenêtre Windows ouverte maximisée (M22, B86)
 *Une ligne du lanceur natif : `SW_SHOWMAXIMIZED` à la place de `SW_SHOWNORMAL`. Aucun test automatique, par ADR-113. **Smart App Control a déjà bloqué l'exécutable fraîchement construit sur ce poste** : vérifier d'abord que le jeu se lance ; sinon noter « non testé — Windows bloqué ».*
@@ -74,7 +74,7 @@
 - **Faire** : (a) lancer le jeu ; regarder le **premier affichage**. (b) Cliquer « Restaurer » (le bouton à côté de Fermer). (c) Cliquer « Agrandir ». (d) Fermer le jeu et le relancer.
 - **Attendu** : (a) la fenêtre s'ouvre **maximisée dès son premier affichage, sans éclair** de sa taille de création (1280 × 720, cadre compris) ; une zone de jeu d'environ **1920 × 1009** ; en combat, le plateau est net au **palier ×2**. (b) restaurée : fenêtre de **1280 × 720** (cadre compris), **zone de jeu d'environ 1264 × 681** à 100 % ; le plateau est **réduit et lissé** (palier ≈ 1,326) ; il ne déborde pas. (c) maximisée de nouveau : retour au palier ×2 net. (d) la relance s'ouvre de nouveau **maximisée** : rien ne garde la taille restaurée.
 - **Ne doit pas changer** : le menu, la carte du monde et les autres écrans, qui suivent la taille ; aucune sauvegarde de la taille ; la plateforme web.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, validé par le propriétaire, sous Windows
 
 ## T3 — Le plateau suit la fenêtre : restaurée, maximisée, plein écran, 125 % (M16, M18)
 - **Atteindre la situation** : « RUN DEBUG », combat à l'acte 5 (cinq ennemis ou moins), fiche fermée.
@@ -117,7 +117,7 @@
 - **Faire** : regarder chaque ennemi et son cadre.
 - **Attendu** : (a) **tier 1** : cadre de 88 × 120 pixels de cadre (176 × 240 à ×2), **ronce aux coins bas-gauche et haut-droit, une gemme verte**, le décor de forêt entre les vrilles. (b) **tier 2** : 96 × 128 (192 × 256), **deux gemmes violettes, des pousses**. (c) **tier 3** : 104 × 136 (208 × 272), **trois gemmes rouges, des baies**. **La fenêtre est toujours la même** : 128 × 192 pixels d'écran. (d) les créatures sont **sur le même sol** (les centres des fenêtres à la même hauteur), **les barres à la même hauteur quel que soit le cadre** (B77).
 - **Ne doit pas changer** : les ennemis, leurs PV, leurs intentions. **Les tiers 4 et 5 ne s'atteignent pas en jeu** (`maxTierAuthored` = 3) : leurs cadres sont gardés par le test de la table, rien à voir ici.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, validé par le propriétaire
 
 ## T9 — Le boss : le cadre de son tier, plus d'agrandissement (M15)
 - **Atteindre la situation** : le nœud boss de la carte du monde, à l'acte 1 ; puis, si possible, aux actes 6 et 11 (champ « Acte (sans regenerer la carte) »).
@@ -238,7 +238,7 @@
 - **Faire** : (a) regarder les ennemis de tier 1 face au héros ; mesurer le cadre (capture d'écran). (b) Arriver à la souris de chaque côté, toucher la zone commune, y lâcher une carte d'attaque, y viser avec une signature armée.
 - **Attendu** : (a) sur Chrome à 2880 × 1800 : tier 1 d'environ **291 × 397 pixels physiques, lissé**, environ **0,93 fois la hauteur du héros** ; en 1080p, inchangé (×2 net, 176 × 240, 0,85) ; en 1440p, ×3 net (environ 0,96). (b) chaque fois, la carte dont la languette se voit par-dessus ; à noter : la dernière carte quittée par la souris passe au-dessus de ses voisines.
 - **Ne doit pas changer** : la carte du héros et la main ; le décor ; le 1080p, toujours ×2 net.
-- **Résultat** : la taille ✅ — le 25/11, sur 2880 × 1800 à 200 % dans Chrome, après B91 : « les ennemis ont la bonne taille » ; le chevauchement des languettes : non testé
+- **Résultat** : la taille ✅ — le 25/11, sur 2880 × 1800 à 200 % dans Chrome, après B91 : « les ennemis ont la bonne taille » ; le chevauchement des languettes ✅ — le 25/11, validé par le propriétaire, six ennemis faits apparaître par le menu de debug
 
 ## T25 — Les languettes réduites d'un quart (correction B92)
 *Demandé après T24 : « réduire de 25 % la taille des icônes et des informations affichées dans les languettes ». Toute la languette rétrécit, cadre, émojis et textes, au repos comme déroulée ; sa hauteur sur la carte et la place de chaque ennemi ne changent pas.*
@@ -246,7 +246,7 @@
 - **Faire** : regarder les languettes au repos ; survoler la carte pour les dérouler ; sur l'ennemi le plus à droite, la languette déroulée vers l'intérieur.
 - **Attendu** : au repos, une entrée mesure **45 × 55,5 pixels d'écran en 1080p** (22,5 × 27,75 pixels de cadre, au lieu de 60 × 74) ; l'émoji et la valeur restent lisibles. Déroulée, le nom, la valeur et la durée restent lisibles, coupés par « … » au-delà de 90 pixels de cadre (au lieu de 120). Même réduction sur la carte du héros.
 - **Ne doit pas changer** : la taille et la place des ennemis (T24) ; le haut des languettes, 11 pixels de cadre sous celui du gabarit ; ce qu'elles montrent ; le survol, l'appui et le lâcher sur elles.
-- **Résultat** :
+- **Résultat** : ✅ — le 25/11, validé par le propriétaire : « les languettes réduites sont bonnes »
 
 ## Ce qui doit rester inchangé
 - **Ce que font les ennemis** : mêmes intentions, mêmes valeurs, même ordre de la phase ennemie, mêmes dégâts, aucune règle de combat changée.
