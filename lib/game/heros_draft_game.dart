@@ -47,6 +47,13 @@ class EnemyInspection {
   const EnemyInspection({required this.enemyId, required this.rect});
 }
 
+/// Le sprite du décor de combat. B88 : jamais lissé, quel que soit le facteur
+/// d'échelle ; le filtrage est posé ici, non laissé au défaut de Flame.
+SpriteComponent decorSpriteFor(Image image) =>
+    SpriteComponent(sprite: Sprite(image))
+      ..priority = GameConstants.priorityBackground
+      ..paint.filterQuality = FilterQuality.none;
+
 class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
   List<EnemyData> availableEnemies = [];
   List<HeroData> availableHeroes = [];
@@ -401,8 +408,7 @@ class HerosDraftGame extends FlameGame with TapCallbacks, PointerMoveCallbacks {
 
     final decorPath = location?.decorFor(DecorScreen.combat);
     if (decorPath != null) {
-      final decor = SpriteComponent(sprite: Sprite(await images.load(decorPath)))
-        ..priority = GameConstants.priorityBackground;
+      final decor = decorSpriteFor(await images.load(decorPath));
       _decor = decor;
       await add(decor);
       _placeDecor();

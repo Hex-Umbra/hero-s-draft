@@ -1,10 +1,12 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:ui' show FilterQuality;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roguelike_card_game/game/components/card_component.dart';
 import 'package:roguelike_card_game/game/components/entities/enemy_card.dart';
 import 'package:roguelike_card_game/game/controllers/run_controller.dart';
+import 'package:roguelike_card_game/game/game_constants.dart';
 import 'package:roguelike_card_game/game/heros_draft_game.dart';
 import 'package:roguelike_card_game/game/systems/state_sync_system.dart';
 import 'package:roguelike_card_game/models/card_instance.dart';
@@ -114,6 +116,15 @@ void main() {
 
   test('sans contexte, le rapport de pixels vaut 1', () {
     expect(game.devicePixelRatio, 1);
+  });
+
+  test('le sprite du decor n est jamais lisse et reste au fond (B88)', () async {
+    final image = await createTestImage(width: 2, height: 2);
+
+    final decor = decorSpriteFor(image);
+
+    expect(decor.paint.filterQuality, FilterQuality.none);
+    expect(decor.priority, GameConstants.priorityBackground);
   });
 
   test('une cible attendue : toucher un ennemi vivant le rapporte et cesse d attendre', () {
