@@ -237,7 +237,7 @@
 - **Faire** : (a) regarder les ennemis de tier 1 face au héros ; mesurer le cadre (capture d'écran). (b) Arriver à la souris de chaque côté, toucher la zone commune, y lâcher une carte d'attaque, y viser avec une signature armée.
 - **Attendu** : (a) sur Chrome à 2880 × 1800 : tier 1 d'environ **291 × 397 pixels physiques, lissé**, environ **0,93 fois la hauteur du héros** ; en 1080p, inchangé (×2 net, 176 × 240, 0,85) ; en 1440p, ×3 net (environ 0,96). (b) chaque fois, la carte dont la languette se voit par-dessus ; à noter : la dernière carte quittée par la souris passe au-dessus de ses voisines.
 - **Ne doit pas changer** : la carte du héros et la main ; le décor ; le 1080p, toujours ×2 net.
-- **Résultat** :
+- **Résultat** : la taille ✅ — le 25/11, sur 2880 × 1800 à 200 % dans Chrome, après B91 : « les ennemis ont la bonne taille » ; le chevauchement des languettes : non testé
 
 ## Ce qui doit rester inchangé
 - **Ce que font les ennemis** : mêmes intentions, mêmes valeurs, même ordre de la phase ennemie, mêmes dégâts, aucune règle de combat changée.
