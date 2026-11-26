@@ -1,9 +1,12 @@
 {
 	"nodes":[
-		{"id":"de0f25477903f45a","x":-280,"y":-180,"width":250,"height":100,"type":"text","text":"- DiceOMancer\n- Slay the Spire\n- TeamFight Tactics"},
-		{"id":"4e493cb9975c4182","x":-280,"y":-280,"width":250,"height":60,"type":"text","text":"Inspirations"}
+		{"id":"de0f25477903f45a","type":"text","text":"- DiceOMancer\n- Slay the Spire\n- TeamFight Tactics","x":-280,"y":-180,"width":250,"height":100},
+		{"id":"4e493cb9975c4182","type":"text","text":"Inspirations","x":-280,"y":-280,"width":250,"height":60},
+		{"id":"5c4089a4776dc007","type":"text","text":"Dark Fantasy Creatures List","x":60,"y":-280,"width":250,"height":60},
+		{"id":"a3d92fc7d6b30179","x":60,"y":-140,"width":420,"height":60,"type":"text","text":"https://www.boredpanda.com/mythical-creatures/"}
 	],
 	"edges":[
-		{"id":"1a1ad187ecfcde8f","fromNode":"4e493cb9975c4182","fromSide":"bottom","toNode":"de0f25477903f45a","toSide":"top"}
+		{"id":"1a1ad187ecfcde8f","fromNode":"4e493cb9975c4182","fromSide":"bottom","toNode":"de0f25477903f45a","toSide":"top"},
+		{"id":"9967fbdee41d73bc","fromNode":"5c4089a4776dc007","fromSide":"bottom","toNode":"a3d92fc7d6b30179","toSide":"top"}
 	]
 }
