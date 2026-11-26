@@ -15,7 +15,7 @@
 
 > [!IMPORTANT]
 > **Une zone par carte de combat** (P-05 vague 1, [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md), amendée par la vague 2,
-> [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), sur la branche `feat/v0.6.2-cadres-et-decors`).
+> [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), fusionnée dans `main` par la PR #62).
 > `CombatEntity.zone` — pour un ennemi `enemyZoneRect`, du haut de la barre au bas du canevas sur toute sa largeur, coins compris, plus chaque languette
 > par son rectangle dessiné **et** son rectangle au repos — est la seule règle que lisent le survol
 > (`pickHoveredEntity`, `HerosDraftGame.refreshEntityHover`), l'appui (`_livingEnemyAt`) et le

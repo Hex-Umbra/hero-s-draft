@@ -17,4 +17,4 @@
   Les mesures sont dans `GameConstants` (`enemyWindowWidth`, `enemyTemplateWidth`, `enemyRowMinGap`,
   `enemyRowCenterY` = 0,21 …). Le héros et la main gardent `scaleFactor`. Les trois tailles de badge ont disparu
   avec `StatBadge` (vague 1, [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md)) ; la carte composée
-  est l'objet de [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), sur la branche `feat/v0.6.2-cadres-et-decors` ; vérifié le 2026-11-25.
+  est l'objet de [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md), fusionnée dans `main` par la PR #62 ; vérifié le 2026-11-25.

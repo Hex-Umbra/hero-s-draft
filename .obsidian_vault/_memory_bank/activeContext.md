@@ -1,4 +1,4 @@
-<!-- last-sync: 2026-11-25 | commit: bcb2f51c -->
+<!-- last-sync: 2026-11-25 | commit: d45ae32f -->
 
 # 🧠 Contexte Actuel
 
@@ -13,10 +13,10 @@ déroulé — les vagues, leurs versions, le journal, les fiches, le catalogue d
 des ennemis — dans [`docs/chantier_bestiaire/`](../../docs/chantier_bestiaire/README.md). **La
 vague 1, l'interface des ennemis, est close** : fusionnée dans `main` le 2026-11-22 par la PR #57,
 taguée `v0.6.1`, CI/CD verte — constaté le 2026-11-25 à la porte d'entrée de la vague 2.
-**La vague 2, le visuel, est livrée sur la branche `feat/v0.6.2-cadres-et-decors`, en attente du
-test, de la PR, de la fusion et du tag du propriétaire** ; rien n'en est dans `main`. Elle donne
+**La vague 2, le visuel, est fusionnée dans `main`** le 2026-11-25 par la PR #62 (commit de fusion
+`d45ae32f`), CI verte, **le tag `v0.6.2` reste à poser par le propriétaire**. Elle donne
 à chaque ennemi un cadre de tier (cinq cadres, une fenêtre de 64 × 96), une échelle qui suit la taille du héros
-(×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 dans Chrome, ×4 net en 4K ; B90, B91), un décor de combat de forêt de 640 × 360
+(×2 net en 1080p, ×3 net en 1440p, 3,31 lissé sur 2880 × 1800 dans Chrome, ×4 net en 4K ; B90, B91, B93), un décor de combat de forêt de 640 × 360
 désigné par un lieu (la couture de lieu, un seul lieu), un fond de fenêtre tiré par ennemi (dormant
 derrière les anciennes peintures), l'interface de la vague 1 recalée sur la fenêtre, une fiche
 doublée et décalée au bord, une fenêtre Windows maximisée et l'outil d'export
@@ -50,7 +50,10 @@ Réserves à ne pas perdre de vue :
   de Flame — un rejeu monté jetable les a mesurées (S4) ; **dormants** : les fonds de fenêtre derrière
   les anciennes peintures, le décor des six écrans autres que le combat ; **le héros et la main
   gardent `scaleFactor`**, deux échelles cohabitent sur le plateau ; `build/unit_test_assets` garde
-  `bg_dungeon.png`, sans lecteur.
+  `bg_dungeon.png`, sans lecteur. **Un combat ne place jamais plus de cinq ennemis** : la rangée de
+  six ne s'atteint que par le menu de debug, qui fait apparaître un ennemi et pose des bonus ; une
+  carte morte reçoit encore l'appui pendant son effacement. **Aux tests manuels, joués le 25/11** :
+  7 ✅ sur 25 (T1, T2, T8, T17, T23, T24, T25), aucun ❌, 18 non testés ; quatre corrections, B90 à B93.
 - **Ce que la vague 1 du bestiaire laisse ouvert**, consigné dans
   [ADR-121](../_adr/ADR-121-l-interface-des-ennemis-en-combat.md) et au compte rendu de la vague
   (§0, §4) : **le voile d'armure d'un ennemi est dormant** — aucun ennemi n'en gagne, le menu de
@@ -126,7 +129,7 @@ Réserves à ne pas perdre de vue :
   `attackPower`, pas l'id de passif.
 - **La version se lit dans `pubspec.yaml` et la 1ʳᵉ entrée de
   `assets/data/patch_notes.json`, jamais ici.** Sur `main`, les trois porteurs de version portent
-  celle de la vague 1 du bestiaire. Les versions des vagues font foi au fichier d'orchestration,
+  celle de la vague 2 du bestiaire. Les versions des vagues font foi au fichier d'orchestration,
   §1, pour le chantier clos, et au README du chantier du bestiaire, §1, pour le bestiaire.
 - **Une vague vérifie par `gh` que la précédente est taguée et que sa CI/CD est verte.** Si `gh`
   ne joint pas l'API à une porte d'entrée, c'est le propriétaire qui confirme, et le journal le
@@ -141,8 +144,9 @@ Réserves à ne pas perdre de vue :
 
 1. **Bestiaire, vague 2 — les cadres de tier et les décors** (2026-11-25, branche
    `feat/v0.6.2-cadres-et-decors`, base `e2a96432` ; spec et plan, puis dix commits de code
-   `589917be` → `4b108dfe`, notes de version `252159df` et `a0c9e60e` — **livrée sur la branche, en
-   attente du test, de la PR, de la fusion et du tag du propriétaire ; rien n'en est dans `main`**) —
+   `589917be` → `4b108dfe`, notes de version `252159df` et `a0c9e60e`, corrections B90 à B93
+   `30e09645` → `f699ce0a` — **testée par le propriétaire le 25/11, fusionnée dans `main` par la
+   PR #62 (`d45ae32f`), CI verte, tag `v0.6.2` à poser**) —
    **l'ennemi a un cadre et un décor.** **Cinq cadres de tier**, une gravure de ronce en PNG sous
    `assets/data/frames/`, déclarés par `tier_frames.json` (un tier sans cadre est refusé au
    chargement), autour d'une **fenêtre invariante de 64 × 96** (B73, B81, B82). **La carte composée**
@@ -160,8 +164,9 @@ Réserves à ne pas perdre de vue :
    **La fenêtre Windows s'ouvre maximisée** (B86) ; **l'outil d'export** `art_src/tools/export_jeu.py`.
    Aucune règle de combat ne change. Un arrêt à la spec après son tour 1 (six questions, B83 à B89,
    levées le même jour sur maquettes) ; deux tours de spec, deux tours de plan, sept tâches de SDD
-   et une passe de revue d'ensemble. **2040 tests** (+101 sur la base de **1939**), `dart analyze`
-   propre (**vérifié le 2026-11-25**) — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md),
+   et une passe de revue d'ensemble ; après les tests, B90 à B93 et le menu de debug (un ennemi au
+   choix, des bonus). **2051 tests** (+112 sur la base de **1939**), `dart analyze` propre
+   (**vérifié le 2026-11-25**, sur `main`) — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md),
    qui amende ADR-121 et ADR-002.
 2. **Bestiaire, vague 1 — l'interface des ennemis en combat** (2026-11-20 → 2026-11-22, branche
    `feat/v0.6.1-interface-des-ennemis`, partie de la correction S9 `8d544a3d` ; cadrage `c2e2dacb`,
@@ -219,8 +224,7 @@ Réserves à ne pas perdre de vue :
 
 ## Prochaine étape
 
-**D'abord le propriétaire** : tester la vague 2 sur la branche `feat/v0.6.2-cadres-et-decors`, puis
-ouvrir la PR, la fusionner et la taguer. Il lance aussi
+**D'abord le propriétaire** : poser le tag `v0.6.2` sur le commit de fusion `d45ae32f`. Il lance aussi
 la production des sprites du tier 1, dont l'état se tient au catalogue des ennemis : une vague
 d'ennemis ne s'ouvre qu'avec tous ses sprites (B51). Deux cadrages restent à tenir avant leurs
 vagues : la difficulté, après le tier 3, et les boss.

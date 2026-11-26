@@ -26,7 +26,7 @@ assets/data/
 ```
 
 > [!NOTE]
-> **Les cadres de tier et les lieux** (vague 2 du bestiaire, sur la branche `feat/v0.6.2-cadres-et-decors` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)) : `tier_frames.json` est un document plat obligatoire (cinq tiers ; un tier d'ennemi sans cadre fait échouer le démarrage), `locations/<id>/` un dossier d'images lu dans le manifeste, sans JSON, avec un seul lieu admis. Mécanisme : [`_patterns/17-00`](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) §17.8.
+> **Les cadres de tier et les lieux** (vague 2 du bestiaire, fusionnée dans `main` par la PR #62 — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md)) : `tier_frames.json` est un document plat obligatoire (cinq tiers ; un tier d'ennemi sans cadre fait échouer le démarrage), `locations/<id>/` un dossier d'images lu dans le manifeste, sans JSON, avec un seul lieu admis. Mécanisme : [`_patterns/17-00`](../_patterns/17-00-chargeur-de-donnees-generique-et-motifs-de-che.md) §17.8.
 
 **Un fichier est éclaté s'il est un catalogue d'entités interchangeables ; il reste à plat
 s'il est un document de configuration unique** — [ADR-085](../_adr/ADR-085-regle-de-partage-catalogue-configuration.md).

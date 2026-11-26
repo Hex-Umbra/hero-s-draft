@@ -121,7 +121,7 @@ démarrage** (`game_data_loader_test.dart` le garde). Le registre la porte en `x
 
 ### 17.8. Les cadres de tier et les lieux (vague 2 du bestiaire)
 
-*Sur la branche `feat/v0.6.2-cadres-et-decors` — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md).* Le chargeur gagne deux méthodes **publiques** : `assetsMatching(pattern)` rend les clés du manifeste qu'un motif sélectionne, avec leurs segments capturés, **sans lire aucun fichier** — pour ce que le manifeste suffit à dire, un dossier d'images — ; `fault(message)` ajoute une faute que `throwIfFailed` remontera avec les autres, pour une vérification que le chargeur ne fait pas lui-même. Deux apports passent par elles :
+*Fusionné dans `main` par la PR #62 — [ADR-123](../_adr/ADR-123-le-cadre-de-tier-et-la-carte-d-ennemi-composee.md).* Le chargeur gagne deux méthodes **publiques** : `assetsMatching(pattern)` rend les clés du manifeste qu'un motif sélectionne, avec leurs segments capturés, **sans lire aucun fichier** — pour ce que le manifeste suffit à dire, un dossier d'images — ; `fault(message)` ajoute une faute que `throwIfFailed` remontera avec les autres, pour une vérification que le chargeur ne fait pas lui-même. Deux apports passent par elles :
 
 | Apport | Forme | Faute au chargement |
 |:---|:---|:---|
